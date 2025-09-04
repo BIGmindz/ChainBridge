@@ -1,0 +1,10 @@
+services:
+  bot:
+    build: .
+    container_name: bensonbot
+    env_file:
+      - .env
+    volumes:
+      - ./:/app
+    restart: unless-stopped
+    command: python benson_rsi_bot.py
