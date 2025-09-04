@@ -1,0 +1,16 @@
+exchange: coinbase
+
+symbols:
+  - "BTC/USD"
+  - "ETH/USD"
+
+timeframe: "5m"
+poll_seconds: 60
+cooldown_minutes: 10
+csv_log: "benson_signals.csv"
+
+rsi:
+  period: 14
+  buy_threshold: 30
+  sell_threshold: 70
+x
