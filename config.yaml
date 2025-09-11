@@ -1,0 +1,22 @@
+exchange: coinbase
+
+# Trading symbols to monitor
+symbols:
+  - BTC/USD
+  - ETH/USD
+
+# Market data settings
+timeframe: 5m
+poll_seconds: 60
+
+# RSI signal parameters
+rsi:
+  period: 14
+  buy_threshold: 30
+  sell_threshold: 70
+
+# Cooldown between alerts (minutes)
+cooldown_minutes: 10
+
+# CSV log file for signals
+csv_log: benson_signals.csv
