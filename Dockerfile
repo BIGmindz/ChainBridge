@@ -13,4 +13,8 @@ COPY . .
 
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 
-CMD ["python", "benson_rsi_bot.py"]
+# Expose port for API server
+EXPOSE 8000
+
+# Default to API server mode, but can be overridden
+CMD ["python", "benson_system.py", "--mode", "api-server", "--port", "8000"]
