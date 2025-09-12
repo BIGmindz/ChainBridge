@@ -1,10 +1,44 @@
 services:
-  bot:
+  # Main Benson API Server
+  benson-api:
     build: .
-    container_name: bensonbot
+    container_name: benson-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./:/app
+      - ./sample_data:/app/sample_data
+      - ./benson_metrics.json:/app/benson_metrics.json
+    restart: unless-stopped
+    command: python benson_system.py --mode api-server --port 8000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # RSI Bot in compatibility mode (optional)
+  benson-rsi:
+    build: .
+    container_name: benson-rsi
+    env_file:
+      - .env
+    volumes:
+      - ./:/app
+    restart: "no"  # Don't restart automatically
+    command: python benson_system.py --mode rsi-compat --once
+    profiles: ["rsi-only"]  # Only start with --profile rsi-only
+
+  # Original RSI Bot (for backward compatibility)
+  benson-legacy:
+    build: .
+    container_name: benson-legacy
     env_file:
       - .env
     volumes:
       - ./:/app
     restart: unless-stopped
     command: python benson_rsi_bot.py
+    profiles: ["legacy"]  # Only start with --profile legacy
