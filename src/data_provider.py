@@ -24,13 +24,29 @@ def safe_fetch_ticker(exchange, symbol: str) -> float:
     return float(price)
 
 
-def setup_exchange(exchange_id: str) -> ccxt.Exchange:
-    """Set up and configure exchange connection."""
+def setup_exchange(exchange_id: str, api_config: Dict[str, Any] = None) -> ccxt.Exchange:
+    """Set up and configure exchange connection with optional API credentials."""
     if not hasattr(ccxt, exchange_id):
         raise ValueError(f"Unknown exchange id '{exchange_id}' — check your config")
 
     exchange_cls = getattr(ccxt, exchange_id)
-    exchange = exchange_cls({"enableRateLimit": True})
+    
+    # Start with basic configuration
+    config = {"enableRateLimit": True}
+    
+    # Add API credentials if provided and not empty
+    if api_config:
+        api_key = api_config.get("key", "").strip()
+        api_secret = api_config.get("secret", "").strip()
+        
+        if api_key and api_secret:
+            config["apiKey"] = api_key
+            config["secret"] = api_secret
+            print(f"[CONFIG] Using API credentials for {exchange_id}")
+        else:
+            print(f"[CONFIG] No API credentials provided - running in read-only mode")
+    
+    exchange = exchange_cls(config)
     
     # Load markets and return configured exchange
     exchange.load_markets()

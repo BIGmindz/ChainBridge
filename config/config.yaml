@@ -1,9 +1,11 @@
 exchange: kraken
 
 api:
-  # Leave blank to use environment variables API_KEY / API_SECRET from .env
-  key: ""
-  secret: ""
+  # API credentials loaded from environment variables
+  # Set API_KEY and API_SECRET in your .env file for live trading
+  # Leave these blank - they will be populated from environment variables
+  key: ${API_KEY}
+  secret: ${API_SECRET}
 
 market:
   base: ETH
