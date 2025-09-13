@@ -12,6 +12,7 @@ import os
 import signal
 import time
 import math
+import re
 from datetime import datetime, timezone
 import yaml
 from typing import Dict, Any, List
@@ -22,11 +23,23 @@ from .exchange_adapter import ExchangeAdapter
 
 
 def load_config(path: str) -> Dict[str, Any]:
-    """Load configuration from YAML file."""
+    """Load configuration from YAML file with environment variable substitution."""
     if not os.path.exists(path):
         raise FileNotFoundError(f"Config not found at {path}")
+    
     with open(path, "r") as f:
-        return yaml.safe_load(f) or {}
+        content = f.read()
+    
+    # Substitute environment variables in the format ${VAR_NAME}
+    def replace_env_vars(match):
+        var_name = match.group(1)
+        value = os.getenv(var_name, "")
+        # Return empty string quoted to prevent YAML from converting to None
+        return f'"{value}"' if value == "" else value
+    
+    content = re.sub(r'\$\{([^}]+)\}', replace_env_vars, content)
+    
+    return yaml.safe_load(content) or {}
 
 
 def utc_now_str() -> str:
@@ -42,8 +55,11 @@ def run_bot(once: bool = False) -> None:
 
     exchange_id = str(cfg.get("exchange", "coinbase")).lower()
     
+    # Get API configuration
+    api_config = cfg.get("api", {})
+    
     # Setup exchange and validate symbols
-    exchange = setup_exchange(exchange_id)
+    exchange = setup_exchange(exchange_id, api_config)
     symbols: List[str] = list(cfg.get("symbols", []))
     if not symbols:
         symbols = ["BTC/USD", "ETH/USD"]  # sensible Coinbase defaults
