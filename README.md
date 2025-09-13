@@ -34,6 +34,56 @@ python benson_system.py --mode rsi-compat --once
 python benson_rsi_bot.py --once
 ```
 
+## 🔐 Security Configuration
+
+BensonBot prioritizes security by using environment variables for sensitive data. **Never commit API keys or secrets to version control.**
+
+### Setting Up API Credentials
+
+1. **Copy the environment template:**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Edit `.env` with your credentials:**
+   ```bash
+   # Replace placeholder values with your actual API credentials
+   API_KEY="your_actual_api_key_here"
+   API_SECRET="your_actual_api_secret_here"
+   EXCHANGE="kraken"  # or your preferred exchange
+   ```
+
+3. **Verify `.env` is in your `.gitignore`:**
+   The `.env` file should never be committed to version control as it contains sensitive credentials.
+
+### Environment Variables Reference
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `API_KEY` | Exchange API key for live trading | `"ak_1234567890abcdef"` |
+| `API_SECRET` | Exchange API secret for live trading | `"sk_abcdef1234567890"` |
+| `EXCHANGE` | Exchange to use (kraken, coinbase, binance) | `"kraken"` |
+| `PAPER` | Set to "true" for paper trading | `"true"` |
+
+### Configuration Loading
+
+The bot automatically loads environment variables using the `${VARIABLE_NAME}` syntax in `config/config.yaml`:
+
+```yaml
+api:
+  key: ${API_KEY}
+  secret: ${API_SECRET}
+```
+
+### Security Best Practices
+
+- ✅ **DO**: Store API keys in environment variables or secure vaults
+- ✅ **DO**: Use paper trading (`PAPER="true"`) for testing
+- ✅ **DO**: Regularly rotate API keys
+- ❌ **DON'T**: Commit `.env` files or API keys to version control
+- ❌ **DON'T**: Share API keys in chat, logs, or screenshots
+- ❌ **DON'T**: Use production API keys in development environments
+
 ## 🏗️ Architecture Overview
 
 Benson features a modular architecture with the following components:
