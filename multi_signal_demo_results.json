@@ -1,0 +1,809 @@
+{
+  "Bull Market": {
+    "final_signal": "HOLD",
+    "confidence": 0.21915281599229258,
+    "consensus": 0.4,
+    "risk": "HIGH",
+    "individual_signals": {
+      "RSI": {
+        "rsi_value": 99.96484479768776,
+        "signal": "SELL",
+        "confidence": 0.9988281599229254,
+        "current_price": 52822.23,
+        "metadata": {
+          "period_used": 14,
+          "data_points": 120,
+          "thresholds": {
+            "buy": 30,
+            "sell": 70
+          },
+          "module_info": {
+            "name": "RSIModule",
+            "version": "1.0.0"
+          }
+        }
+      },
+      "MACD": {
+        "macd_line": 228.2289123041628,
+        "signal_line": 230.9362864626736,
+        "histogram": -2.707374158510788,
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "signal_strength": "WEAK",
+        "current_price": 52822.23,
+        "trend_analysis": {
+          "macd_above_signal": false,
+          "macd_above_zero": true,
+          "histogram_increasing": true,
+          "momentum_direction": "BEARISH"
+        },
+        "metadata": {
+          "fast_period_used": 12,
+          "slow_period_used": 26,
+          "signal_period_used": 9,
+          "data_points": 120,
+          "calculation_window": 35,
+          "module_info": {
+            "name": "MACDModule",
+            "version": "1.0.0",
+            "signal_type": "momentum_indicator"
+          }
+        }
+      },
+      "BollingerBands": {
+        "upper_band": 52890.326794293265,
+        "middle_band": 52521.634,
+        "lower_band": 52152.94120570673,
+        "band_width": 0.01403965437531007,
+        "percent_b": 0.9076510371950798,
+        "signal": "SELL",
+        "confidence": 0.8,
+        "volatility_state": "NORMAL",
+        "position_in_bands": "WITHIN_BANDS",
+        "current_price": 52822.23,
+        "analysis": {
+          "price_vs_middle": "ABOVE",
+          "band_squeeze_detected": "False",
+          "price_trend": "NEUTRAL",
+          "band_width_percentile": 14.03965437531007,
+          "reversal_probability": 0.8153020743901596
+        },
+        "metadata": {
+          "period_used": 20,
+          "std_multiplier_used": 2.0,
+          "squeeze_threshold_used": 0.1,
+          "data_points": 120,
+          "calculation_window": 30,
+          "module_info": {
+            "name": "BollingerBandsModule",
+            "version": "1.0.0",
+            "signal_type": "volatility_indicator"
+          }
+        }
+      },
+      "VolumeProfile": {
+        "point_of_control": 52607.13125,
+        "value_area_high": 52781.33825,
+        "value_area_low": 51126.37175,
+        "volume_profile": [
+          {
+            "price_level": 52607.13125,
+            "volume": 6464.0,
+            "percentage": 8.366987677332505
+          },
+          {
+            "price_level": 52520.02775,
+            "volume": 5100.0,
+            "percentage": 6.601429015222118
+          },
+          {
+            "price_level": 52781.33825,
+            "volume": 4754.0,
+            "percentage": 6.153567360463912
+          },
+          {
+            "price_level": 51736.09625,
+            "volume": 4510.0,
+            "percentage": 5.837734286010148
+          },
+          {
+            "price_level": 52258.71725,
+            "volume": 4486.0,
+            "percentage": 5.8066687377032205
+          },
+          {
+            "price_level": 51126.37175,
+            "volume": 4460.0,
+            "percentage": 5.773014393704049
+          },
+          {
+            "price_level": 52345.82075,
+            "volume": 4274.0,
+            "percentage": 5.53225639432536
+          },
+          {
+            "price_level": 52084.51025,
+            "volume": 4017.0,
+            "percentage": 5.199596147872009
+          },
+          {
+            "price_level": 51648.99275,
+            "volume": 3688.0,
+            "percentage": 4.773739256497877
+          },
+          {
+            "price_level": 51910.30325,
+            "volume": 3683.0,
+            "percentage": 4.767267267267267
+          }
+        ],
+        "current_price_position": "AT_POC",
+        "volume_trend": "STABLE",
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "current_price": 52822.23,
+        "current_volume": 1336.0,
+        "volume_analysis": {
+          "relative_volume": 0.8753757887434065,
+          "volume_breakout": false,
+          "price_volume_divergence": false,
+          "volume_above_average": false,
+          "high_volume_threshold": false
+        },
+        "support_resistance": {
+          "poc_support_resistance": 52607.13125,
+          "value_area_support": 51126.37175,
+          "value_area_resistance": 52781.33825,
+          "price_in_value_area": false
+        },
+        "metadata": {
+          "lookback_periods_used": 50,
+          "volume_bins_used": 20,
+          "volume_trend_periods_used": 10,
+          "data_points": 120,
+          "has_volume_data": true,
+          "module_info": {
+            "name": "VolumeProfileModule",
+            "version": "1.0.0",
+            "signal_type": "volume_indicator"
+          }
+        }
+      },
+      "SentimentAnalysis": {
+        "composite_sentiment_score": 0.497,
+        "individual_scores": {
+          "brazil_regulatory_score": 0.5,
+          "india_regulatory_score": 0.1,
+          "trump_sentiment_score": 0.9,
+          "market_fear_greed_index": 0.44,
+          "btc_exchange_netflow": 0.4
+        },
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "sentiment_strength": "MODERATE",
+        "dominant_factors": [
+          {
+            "factor": "Trump Sentiment Score",
+            "score": 0.9,
+            "impact": "BULLISH",
+            "strength": 0.9
+          },
+          {
+            "factor": "Brazil Regulatory Score",
+            "score": 0.5,
+            "impact": "BULLISH",
+            "strength": 0.5
+          },
+          {
+            "factor": "Market Fear Greed Index",
+            "score": 0.44,
+            "impact": "BULLISH",
+            "strength": 0.44
+          }
+        ],
+        "sentiment_analysis": {
+          "bullish_factors": [
+            {
+              "factor": "Brazil Regulatory Score",
+              "score": 0.5,
+              "strength": "MODERATE"
+            },
+            {
+              "factor": "Trump Sentiment Score",
+              "score": 0.9,
+              "strength": "STRONG"
+            },
+            {
+              "factor": "Market Fear Greed Index",
+              "score": 0.44,
+              "strength": "MODERATE"
+            },
+            {
+              "factor": "Btc Exchange Netflow",
+              "score": 0.4,
+              "strength": "MODERATE"
+            }
+          ],
+          "bearish_factors": [],
+          "neutral_factors": [
+            {
+              "factor": "India Regulatory Score",
+              "score": 0.1
+            }
+          ]
+        },
+        "raw_data": {
+          "brazil_regulatory_score": 0.5,
+          "india_regulatory_score": 0.1,
+          "trump_sentiment_score": 0.9,
+          "market_fear_greed_index": 72.0,
+          "btc_exchange_netflow": -2000.0
+        },
+        "sentiment_interpretation": {
+          "overall_sentiment": "BULLISH",
+          "sentiment_magnitude": 0.497,
+          "market_conditions": "GREEDY",
+          "risk_factors": [],
+          "opportunity_factors": [
+            "Positive political sentiment"
+          ]
+        },
+        "metadata": {
+          "data_sources_used": 5,
+          "sentiment_weights_used": {
+            "trump_sentiment_score": 0.2,
+            "market_fear_greed_index": 0.3,
+            "brazil_regulatory_score": 0.15,
+            "india_regulatory_score": 0.1,
+            "btc_exchange_netflow": 0.25
+          },
+          "data_freshness": "2025-09-15T14:56:56.700816",
+          "module_info": {
+            "name": "SentimentAnalysisModule",
+            "version": "1.0.0",
+            "signal_type": "fundamental_sentiment"
+          }
+        }
+      }
+    },
+    "price_return": 5.63279813908546
+  },
+  "Bear Market": {
+    "final_signal": "HOLD",
+    "confidence": 0.09320122825620576,
+    "consensus": 0.4,
+    "risk": "HIGH",
+    "individual_signals": {
+      "RSI": {
+        "rsi_value": 99.85863152313827,
+        "signal": "SELL",
+        "confidence": 0.9952877174379424,
+        "current_price": 48334.1,
+        "metadata": {
+          "period_used": 14,
+          "data_points": 100,
+          "thresholds": {
+            "buy": 30,
+            "sell": 70
+          },
+          "module_info": {
+            "name": "RSIModule",
+            "version": "1.0.0"
+          }
+        }
+      },
+      "MACD": {
+        "macd_line": 372.5528773033511,
+        "signal_line": 366.79897481446454,
+        "histogram": 5.753902488886581,
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "signal_strength": "WEAK",
+        "current_price": 48334.1,
+        "trend_analysis": {
+          "macd_above_signal": true,
+          "macd_above_zero": true,
+          "histogram_increasing": false,
+          "momentum_direction": "BULLISH"
+        },
+        "metadata": {
+          "fast_period_used": 12,
+          "slow_period_used": 26,
+          "signal_period_used": 9,
+          "data_points": 100,
+          "calculation_window": 35,
+          "module_info": {
+            "name": "MACDModule",
+            "version": "1.0.0",
+            "signal_type": "momentum_indicator"
+          }
+        }
+      },
+      "BollingerBands": {
+        "upper_band": 48462.27871948804,
+        "middle_band": 47823.837,
+        "lower_band": 47185.39528051196,
+        "band_width": 0.02669972798243006,
+        "percent_b": 0.899615959001846,
+        "signal": "BUY",
+        "confidence": 0.6,
+        "volatility_state": "SQUEEZE",
+        "position_in_bands": "WITHIN_BANDS",
+        "current_price": 48334.1,
+        "analysis": {
+          "price_vs_middle": "ABOVE",
+          "band_squeeze_detected": "True",
+          "price_trend": "UPWARD",
+          "band_width_percentile": 26.699727982430062,
+          "reversal_probability": 0.799231918003692
+        },
+        "metadata": {
+          "period_used": 20,
+          "std_multiplier_used": 2.0,
+          "squeeze_threshold_used": 0.1,
+          "data_points": 100,
+          "calculation_window": 30,
+          "module_info": {
+            "name": "BollingerBandsModule",
+            "version": "1.0.0",
+            "signal_type": "volatility_indicator"
+          }
+        }
+      },
+      "VolumeProfile": {
+        "point_of_control": 45980.4995,
+        "value_area_high": 48275.6805,
+        "value_area_low": 45980.4995,
+        "volume_profile": [
+          {
+            "price_level": 45980.4995,
+            "volume": 9784.0,
+            "percentage": 12.884195001185178
+          },
+          {
+            "price_level": 46101.2985,
+            "volume": 7612.0,
+            "percentage": 10.023966920382417
+          },
+          {
+            "price_level": 47913.2835,
+            "volume": 4564.0,
+            "percentage": 6.010166188206168
+          },
+          {
+            "price_level": 46342.8965,
+            "volume": 4429.0,
+            "percentage": 5.8323895809739525
+          },
+          {
+            "price_level": 47430.0875,
+            "volume": 4388.0,
+            "percentage": 5.7783981669256494
+          },
+          {
+            "price_level": 48275.6805,
+            "volume": 4274.0,
+            "percentage": 5.628275698596223
+          },
+          {
+            "price_level": 46222.097499999996,
+            "volume": 4171.0,
+            "percentage": 5.49263873159683
+          },
+          {
+            "price_level": 46705.2935,
+            "volume": 3754.0,
+            "percentage": 4.943506544812873
+          },
+          {
+            "price_level": 47550.8865,
+            "volume": 3494.0,
+            "percentage": 4.601121967921199
+          },
+          {
+            "price_level": 46826.0925,
+            "volume": 3186.0,
+            "percentage": 4.195527930680292
+          }
+        ],
+        "current_price_position": "AT_POC",
+        "volume_trend": "STABLE",
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "current_price": 48334.1,
+        "current_volume": 1164.0,
+        "volume_analysis": {
+          "relative_volume": 0.7700161706335948,
+          "volume_breakout": false,
+          "price_volume_divergence": false,
+          "volume_above_average": false,
+          "high_volume_threshold": false
+        },
+        "support_resistance": {
+          "poc_support_resistance": 45980.4995,
+          "value_area_support": 45980.4995,
+          "value_area_resistance": 48275.6805,
+          "price_in_value_area": false
+        },
+        "metadata": {
+          "lookback_periods_used": 50,
+          "volume_bins_used": 20,
+          "volume_trend_periods_used": 10,
+          "data_points": 100,
+          "has_volume_data": true,
+          "module_info": {
+            "name": "VolumeProfileModule",
+            "version": "1.0.0",
+            "signal_type": "volume_indicator"
+          }
+        }
+      },
+      "SentimentAnalysis": {
+        "composite_sentiment_score": 0.497,
+        "individual_scores": {
+          "brazil_regulatory_score": 0.5,
+          "india_regulatory_score": 0.1,
+          "trump_sentiment_score": 0.9,
+          "market_fear_greed_index": 0.44,
+          "btc_exchange_netflow": 0.4
+        },
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "sentiment_strength": "MODERATE",
+        "dominant_factors": [
+          {
+            "factor": "Trump Sentiment Score",
+            "score": 0.9,
+            "impact": "BULLISH",
+            "strength": 0.9
+          },
+          {
+            "factor": "Brazil Regulatory Score",
+            "score": 0.5,
+            "impact": "BULLISH",
+            "strength": 0.5
+          },
+          {
+            "factor": "Market Fear Greed Index",
+            "score": 0.44,
+            "impact": "BULLISH",
+            "strength": 0.44
+          }
+        ],
+        "sentiment_analysis": {
+          "bullish_factors": [
+            {
+              "factor": "Brazil Regulatory Score",
+              "score": 0.5,
+              "strength": "MODERATE"
+            },
+            {
+              "factor": "Trump Sentiment Score",
+              "score": 0.9,
+              "strength": "STRONG"
+            },
+            {
+              "factor": "Market Fear Greed Index",
+              "score": 0.44,
+              "strength": "MODERATE"
+            },
+            {
+              "factor": "Btc Exchange Netflow",
+              "score": 0.4,
+              "strength": "MODERATE"
+            }
+          ],
+          "bearish_factors": [],
+          "neutral_factors": [
+            {
+              "factor": "India Regulatory Score",
+              "score": 0.1
+            }
+          ]
+        },
+        "raw_data": {
+          "brazil_regulatory_score": 0.5,
+          "india_regulatory_score": 0.1,
+          "trump_sentiment_score": 0.9,
+          "market_fear_greed_index": 72.0,
+          "btc_exchange_netflow": -2000.0
+        },
+        "sentiment_interpretation": {
+          "overall_sentiment": "BULLISH",
+          "sentiment_magnitude": 0.497,
+          "market_conditions": "GREEDY",
+          "risk_factors": [],
+          "opportunity_factors": [
+            "Positive political sentiment"
+          ]
+        },
+        "metadata": {
+          "data_sources_used": 5,
+          "sentiment_weights_used": {
+            "trump_sentiment_score": 0.2,
+            "market_fear_greed_index": 0.3,
+            "brazil_regulatory_score": 0.15,
+            "india_regulatory_score": 0.1,
+            "btc_exchange_netflow": 0.25
+          },
+          "data_freshness": "2025-09-15T14:56:56.704393",
+          "module_info": {
+            "name": "SentimentAnalysisModule",
+            "version": "1.0.0",
+            "signal_type": "fundamental_sentiment"
+          }
+        }
+      }
+    },
+    "price_return": 7.389351470440553
+  },
+  "Sideways Market": {
+    "final_signal": "HOLD",
+    "confidence": 0.21926334145256343,
+    "consensus": 0.4,
+    "risk": "HIGH",
+    "individual_signals": {
+      "RSI": {
+        "rsi_value": 99.99800243576902,
+        "signal": "SELL",
+        "confidence": 0.9999334145256341,
+        "current_price": 49310.71,
+        "metadata": {
+          "period_used": 14,
+          "data_points": 150,
+          "thresholds": {
+            "buy": 30,
+            "sell": 70
+          },
+          "module_info": {
+            "name": "RSIModule",
+            "version": "1.0.0"
+          }
+        }
+      },
+      "MACD": {
+        "macd_line": 203.900680979139,
+        "signal_line": 191.08922347020118,
+        "histogram": 12.81145750893782,
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "signal_strength": "WEAK",
+        "current_price": 49310.71,
+        "trend_analysis": {
+          "macd_above_signal": true,
+          "macd_above_zero": true,
+          "histogram_increasing": false,
+          "momentum_direction": "BULLISH"
+        },
+        "metadata": {
+          "fast_period_used": 12,
+          "slow_period_used": 26,
+          "signal_period_used": 9,
+          "data_points": 150,
+          "calculation_window": 35,
+          "module_info": {
+            "name": "MACDModule",
+            "version": "1.0.0",
+            "signal_type": "momentum_indicator"
+          }
+        }
+      },
+      "BollingerBands": {
+        "upper_band": 49391.284323924134,
+        "middle_band": 48987.8805,
+        "lower_band": 48584.476676075865,
+        "band_width": 0.016469535722172527,
+        "percent_b": 0.9001319284230586,
+        "signal": "SELL",
+        "confidence": 0.8,
+        "volatility_state": "NORMAL",
+        "position_in_bands": "WITHIN_BANDS",
+        "current_price": 49310.71,
+        "analysis": {
+          "price_vs_middle": "ABOVE",
+          "band_squeeze_detected": "False",
+          "price_trend": "NEUTRAL",
+          "band_width_percentile": 16.469535722172527,
+          "reversal_probability": 0.8002638568461171
+        },
+        "metadata": {
+          "period_used": 20,
+          "std_multiplier_used": 2.0,
+          "squeeze_threshold_used": 0.1,
+          "data_points": 150,
+          "calculation_window": 30,
+          "module_info": {
+            "name": "BollingerBandsModule",
+            "version": "1.0.0",
+            "signal_type": "volatility_indicator"
+          }
+        }
+      },
+      "VolumeProfile": {
+        "point_of_control": 48315.947,
+        "value_area_high": 49160.175,
+        "value_area_low": 48135.041,
+        "volume_profile": [
+          {
+            "price_level": 48315.947,
+            "volume": 7454.0,
+            "percentage": 9.939726904203114
+          },
+          {
+            "price_level": 48135.041,
+            "volume": 6895.0,
+            "percentage": 9.194314060166418
+          },
+          {
+            "price_level": 48255.645,
+            "volume": 6620.0,
+            "percentage": 8.827608278216344
+          },
+          {
+            "price_level": 48376.248999999996,
+            "volume": 5688.0,
+            "percentage": 7.584809046298272
+          },
+          {
+            "price_level": 48195.343,
+            "volume": 5479.0,
+            "percentage": 7.306112652016215
+          },
+          {
+            "price_level": 48496.853,
+            "volume": 4574.0,
+            "percentage": 6.099317260507788
+          },
+          {
+            "price_level": 48436.551,
+            "volume": 3908.0,
+            "percentage": 5.211222530403243
+          },
+          {
+            "price_level": 48858.665,
+            "volume": 3282.0,
+            "percentage": 4.3764668231278
+          },
+          {
+            "price_level": 48918.967,
+            "volume": 3168.0,
+            "percentage": 4.22445060806486
+          },
+          {
+            "price_level": 49160.175,
+            "volume": 3132.0,
+            "percentage": 4.176445487518668
+          }
+        ],
+        "current_price_position": "AT_POC",
+        "volume_trend": "STABLE",
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "current_price": 49310.71,
+        "current_volume": 1058.0,
+        "volume_analysis": {
+          "relative_volume": 0.7014042144230085,
+          "volume_breakout": false,
+          "price_volume_divergence": false,
+          "volume_above_average": false,
+          "high_volume_threshold": false
+        },
+        "support_resistance": {
+          "poc_support_resistance": 48315.947,
+          "value_area_support": 48135.041,
+          "value_area_resistance": 49160.175,
+          "price_in_value_area": false
+        },
+        "metadata": {
+          "lookback_periods_used": 50,
+          "volume_bins_used": 20,
+          "volume_trend_periods_used": 10,
+          "data_points": 150,
+          "has_volume_data": true,
+          "module_info": {
+            "name": "VolumeProfileModule",
+            "version": "1.0.0",
+            "signal_type": "volume_indicator"
+          }
+        }
+      },
+      "SentimentAnalysis": {
+        "composite_sentiment_score": 0.497,
+        "individual_scores": {
+          "brazil_regulatory_score": 0.5,
+          "india_regulatory_score": 0.1,
+          "trump_sentiment_score": 0.9,
+          "market_fear_greed_index": 0.44,
+          "btc_exchange_netflow": 0.4
+        },
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "sentiment_strength": "MODERATE",
+        "dominant_factors": [
+          {
+            "factor": "Trump Sentiment Score",
+            "score": 0.9,
+            "impact": "BULLISH",
+            "strength": 0.9
+          },
+          {
+            "factor": "Brazil Regulatory Score",
+            "score": 0.5,
+            "impact": "BULLISH",
+            "strength": 0.5
+          },
+          {
+            "factor": "Market Fear Greed Index",
+            "score": 0.44,
+            "impact": "BULLISH",
+            "strength": 0.44
+          }
+        ],
+        "sentiment_analysis": {
+          "bullish_factors": [
+            {
+              "factor": "Brazil Regulatory Score",
+              "score": 0.5,
+              "strength": "MODERATE"
+            },
+            {
+              "factor": "Trump Sentiment Score",
+              "score": 0.9,
+              "strength": "STRONG"
+            },
+            {
+              "factor": "Market Fear Greed Index",
+              "score": 0.44,
+              "strength": "MODERATE"
+            },
+            {
+              "factor": "Btc Exchange Netflow",
+              "score": 0.4,
+              "strength": "MODERATE"
+            }
+          ],
+          "bearish_factors": [],
+          "neutral_factors": [
+            {
+              "factor": "India Regulatory Score",
+              "score": 0.1
+            }
+          ]
+        },
+        "raw_data": {
+          "brazil_regulatory_score": 0.5,
+          "india_regulatory_score": 0.1,
+          "trump_sentiment_score": 0.9,
+          "market_fear_greed_index": 72.0,
+          "btc_exchange_netflow": -2000.0
+        },
+        "sentiment_interpretation": {
+          "overall_sentiment": "BULLISH",
+          "sentiment_magnitude": 0.497,
+          "market_conditions": "GREEDY",
+          "risk_factors": [],
+          "opportunity_factors": [
+            "Positive political sentiment"
+          ]
+        },
+        "metadata": {
+          "data_sources_used": 5,
+          "sentiment_weights_used": {
+            "trump_sentiment_score": 0.2,
+            "market_fear_greed_index": 0.3,
+            "brazil_regulatory_score": 0.15,
+            "india_regulatory_score": 0.1,
+            "btc_exchange_netflow": 0.25
+          },
+          "data_freshness": "2025-09-15T14:56:56.708050",
+          "module_info": {
+            "name": "SentimentAnalysisModule",
+            "version": "1.0.0",
+            "signal_type": "fundamental_sentiment"
+          }
+        }
+      }
+    },
+    "price_return": 4.910221248662583
+  }
+}
