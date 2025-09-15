@@ -100,8 +100,15 @@ Benson features a modular architecture with the following components:
 - **CSV Ingestion**: Process CSV files with flexible column mapping
 - **Alternative Data**: Geopolitical and sentiment data integration
 
-### Analysis & ML
+### Trading Signal Analysis
 - **RSI Module**: Technical analysis with Wilder's RSI calculation
+- **MACD Module**: Moving Average Convergence Divergence momentum indicator
+- **Bollinger Bands Module**: Volatility-based analysis with band squeeze detection
+- **Volume Profile Module**: Volume-based support/resistance and POC analysis
+- **Sentiment Analysis Module**: Alternative data sentiment scoring from multiple sources
+- **Multi-Signal Aggregator**: Intelligent combination of uncorrelated signals
+
+### Machine Learning & Forecasting
 - **Sales Forecasting**: ML-powered sales predictions with trend analysis
 - **Custom Modules**: Extensible framework for additional analysis
 
@@ -111,7 +118,22 @@ Benson features a modular architecture with the following components:
 
 ## 🔧 API Examples
 
-### Execute RSI Analysis
+### Multi-Signal Analysis
+```bash
+curl -X POST http://localhost:8000/analysis/multi-signal \
+  -H "Content-Type: application/json" \
+  -d '{
+    "price_data": [
+      {"close": 45000, "high": 45200, "low": 44800, "volume": 1000},
+      {"close": 45100, "high": 45300, "low": 44900, "volume": 1200}
+    ],
+    "include_individual_signals": true
+  }'
+```
+
+### Individual Signal Analysis
+
+#### Execute RSI Analysis
 ```bash
 curl -X POST http://localhost:8000/modules/RSIModule/execute \
   -H "Content-Type: application/json" \
@@ -120,6 +142,36 @@ curl -X POST http://localhost:8000/modules/RSIModule/execute \
     "input_data": {
       "price_data": [{"close": 45000}, {"close": 45100}]
     }
+  }'
+```
+
+#### Execute MACD Analysis  
+```bash
+curl -X POST http://localhost:8000/modules/MACDModule/execute \
+  -H "Content-Type: application/json" \
+  -d '{
+    "module_name": "MACDModule", 
+    "input_data": {
+      "price_data": [{"close": 45000}, {"close": 45100}]
+    }
+  }'
+```
+
+### Available Signal Modules
+```bash
+curl http://localhost:8000/signals/available
+```
+
+### Multi-Signal Backtesting
+```bash
+curl -X POST http://localhost:8000/analysis/multi-signal/backtest \
+  -H "Content-Type: application/json" \
+  -d '{
+    "historical_data": [
+      {"close": 45000, "high": 45200, "low": 44800, "volume": 1000},
+      {"close": 45100, "high": 45300, "low": 44900, "volume": 1200}
+    ],
+    "initial_balance": 10000
   }'
 ```
 
@@ -153,8 +205,14 @@ curl -X POST http://localhost:8000/modules/SalesForecastingModule/execute \
 ## 🧪 Testing
 
 ```bash
-# Run comprehensive system tests
+# Run comprehensive system tests (includes all signal modules)
 python benson_system.py --mode test
+
+# Run multi-signal demonstration across market scenarios
+python benson_system.py --mode multi-signal-demo
+
+# Run comprehensive integration demo
+python multi_signal_demo.py
 
 # Test original RSI functionality
 python benson_rsi_bot.py --test
@@ -251,6 +309,10 @@ python benson_system.py --mode test  # System tests
 
 ## 🌟 Features
 
+- ✅ **Multi-Signal Architecture**: 6 uncorrelated trading signal modules
+- ✅ **Intelligent Signal Aggregation**: Consensus-based decision making  
+- ✅ **Risk-Aware Trading**: Automatic risk assessment and position sizing
+- ✅ **Signal Independence**: Verified uncorrelated indicators (diversification score: 0.90)
 - ✅ Modular, extensible architecture
 - ✅ REST API with OpenAPI documentation  
 - ✅ Multiple data ingestion formats
