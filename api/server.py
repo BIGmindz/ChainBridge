@@ -26,6 +26,19 @@ class ModuleExecutionRequest(BaseModel):
     input_data: Dict[str, Any] = Field(..., description="Input data for the module")
 
 
+class MultiSignalAnalysisRequest(BaseModel):
+    price_data: List[Dict[str, Any]] = Field(..., description="Historical price data for analysis")
+    signal_modules: Optional[List[str]] = Field(None, description="List of signal modules to use (default: all)")
+    signal_weights: Optional[Dict[str, float]] = Field(None, description="Custom weights for each signal")
+    include_individual_signals: bool = Field(True, description="Include individual signal results")
+    
+    
+class MultiSignalBacktestRequest(BaseModel):
+    historical_data: List[Dict[str, Any]] = Field(..., description="Historical price data for backtesting")
+    initial_balance: float = Field(10000, description="Starting balance for backtesting")
+    signal_modules: Optional[List[str]] = Field(None, description="List of signal modules to use")
+
+
 class PipelineExecutionRequest(BaseModel):
     pipeline_name: str = Field(..., description="Name of the pipeline to execute")
     input_data: Dict[str, Any] = Field(..., description="Input data for the pipeline")
@@ -299,6 +312,199 @@ async def process_data(data: Dict[str, Any]):
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@app.post("/analysis/multi-signal", response_model=Dict[str, Any])
+async def multi_signal_analysis(request: MultiSignalAnalysisRequest):
+    """
+    Perform multi-signal analysis using all available signal modules.
+    """
+    try:
+        start_time = datetime.now(timezone.utc)
+        
+        # Define default signal modules
+        default_signal_modules = [
+            "RSIModule", "MACDModule", "BollingerBandsModule", 
+            "VolumeProfileModule", "SentimentAnalysisModule"
+        ]
+        
+        signal_modules = request.signal_modules or default_signal_modules
+        
+        # Execute individual signal analyses
+        individual_signals = {}
+        
+        for module_name in signal_modules:
+            try:
+                if module_name == "SentimentAnalysisModule":
+                    # Sentiment analysis doesn't need price data
+                    result = module_manager.execute_module(module_name, {})
+                else:
+                    # Other modules need price data
+                    result = module_manager.execute_module(module_name, {"price_data": request.price_data})
+                    
+                individual_signals[module_name.replace("Module", "")] = result
+                
+            except Exception as e:
+                print(f"Warning: Failed to execute {module_name}: {e}")
+                continue
+                
+        if not individual_signals:
+            raise HTTPException(
+                status_code=400, 
+                detail="No signal modules executed successfully"
+            )
+            
+        # Execute multi-signal aggregation
+        aggregation_input = {
+            "signals": individual_signals,
+            "price_data": request.price_data[-1] if request.price_data else {}
+        }
+        
+        if request.signal_weights:
+            aggregation_input["signal_weights"] = request.signal_weights
+            
+        aggregated_result = module_manager.execute_module(
+            "MultiSignalAggregatorModule", 
+            aggregation_input
+        )
+        
+        execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
+        
+        # Track metrics
+        metrics_collector.track_business_impact("multi_signal_analysis", 1.0)
+        
+        response = {
+            "aggregated_result": aggregated_result,
+            "metadata": {
+                "execution_time_seconds": execution_time,
+                "timestamp": start_time.isoformat(),
+                "signals_analyzed": len(individual_signals),
+                "modules_used": list(individual_signals.keys())
+            }
+        }
+        
+        if request.include_individual_signals:
+            response["individual_signals"] = individual_signals
+            
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        metrics_collector.track_error("multi_signal_analysis", "system", str(e))
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/analysis/multi-signal/backtest", response_model=Dict[str, Any])
+async def multi_signal_backtest(request: MultiSignalBacktestRequest):
+    """
+    Perform backtesting using multi-signal strategy.
+    """
+    try:
+        start_time = datetime.now(timezone.utc)
+        
+        # Define default signal modules
+        default_signal_modules = [
+            "RSIModule", "MACDModule", "BollingerBandsModule", 
+            "VolumeProfileModule", "SentimentAnalysisModule"
+        ]
+        
+        signal_modules = request.signal_modules or default_signal_modules
+        
+        # Generate signal history for each period
+        signal_history = {module.replace("Module", ""): [] for module in signal_modules}
+        
+        # Process each time period
+        min_periods = 60  # Minimum periods needed for all indicators
+        
+        for i in range(min_periods, len(request.historical_data)):
+            window_data = request.historical_data[:i+1]
+            
+            for module_name in signal_modules:
+                try:
+                    if module_name == "SentimentAnalysisModule":
+                        # Use mock sentiment data for backtesting
+                        result = module_manager.execute_module(module_name, {})
+                    else:
+                        result = module_manager.execute_module(module_name, {"price_data": window_data})
+                        
+                    signal_history[module_name.replace("Module", "")].append(result)
+                    
+                except Exception as e:
+                    # Use neutral signal if module fails
+                    signal_history[module_name.replace("Module", "")].append({
+                        "signal": "HOLD",
+                        "confidence": 0.0,
+                        "error": str(e)
+                    })
+                    
+        # Execute backtesting using multi-signal aggregator
+        aggregator = module_manager.get_module("MultiSignalAggregatorModule")
+        
+        backtest_result = aggregator.backtest_multi_signal_strategy(
+            request.historical_data[min_periods:],
+            signal_history,
+            request.initial_balance
+        )
+        
+        execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
+        
+        # Track metrics
+        metrics_collector.track_business_impact("multi_signal_backtest", 1.0)
+        
+        return {
+            "backtest_result": backtest_result,
+            "metadata": {
+                "execution_time_seconds": execution_time,
+                "timestamp": start_time.isoformat(),
+                "periods_analyzed": len(request.historical_data) - min_periods,
+                "modules_used": signal_modules,
+                "initial_balance": request.initial_balance
+            }
+        }
+        
+    except Exception as e:
+        metrics_collector.track_error("multi_signal_backtest", "system", str(e))
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/signals/available", response_model=List[Dict[str, Any]])
+async def get_available_signals():
+    """
+    Get information about all available signal modules.
+    """
+    try:
+        signal_modules = [
+            "RSIModule", "MACDModule", "BollingerBandsModule", 
+            "VolumeProfileModule", "SentimentAnalysisModule"
+        ]
+        
+        available_signals = []
+        
+        for module_name in signal_modules:
+            try:
+                info = module_manager.get_module_info(module_name)
+                if info:
+                    available_signals.append({
+                        "module_name": module_name,
+                        "display_name": module_name.replace("Module", ""),
+                        "version": info.get("version", "1.0.0"),
+                        "signal_type": info.get("schema", {}).get("metadata", {}).get("signal_type", "unknown"),
+                        "schema": info.get("schema", {}),
+                        "available": True
+                    })
+            except Exception as e:
+                available_signals.append({
+                    "module_name": module_name,
+                    "display_name": module_name.replace("Module", ""),
+                    "available": False,
+                    "error": str(e)
+                })
+                
+        return available_signals
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Load default modules on startup
 @app.on_event("startup")
 async def startup_event():
@@ -309,8 +515,16 @@ async def startup_event():
         module_manager.load_module("modules.rsi_module")
         module_manager.load_module("modules.sales_forecasting")
         
+        # Register new signal modules
+        module_manager.load_module("modules.macd_module")
+        module_manager.load_module("modules.bollinger_bands_module")
+        module_manager.load_module("modules.volume_profile_module")
+        module_manager.load_module("modules.sentiment_analysis_module")
+        module_manager.load_module("modules.multi_signal_aggregator_module")
+        
         print("Benson API server started successfully")
         print(f"Loaded {len(module_manager.list_modules())} modules")
+        print(f"Available modules: {', '.join(module_manager.list_modules())}")
         
     except Exception as e:
         print(f"Warning: Failed to load some modules during startup: {e}")
