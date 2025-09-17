@@ -306,34 +306,201 @@ class LogisticsSignalModule:
     def _get_diesel_price_signal(self) -> Dict:
         """
         Diesel prices → mining costs → BTC supply dynamics
+        Uses real EIA data on diesel prices
         """
         try:
-            # For testing: use simulated data
-            # In production: use EIA API
-            diesel_change = np.random.uniform(-0.1, 0.1)  # Weekly % change
+            diesel_change = None
+            data_quality = "fallback"
+            source = None
+            diesel_price_current = None
+            diesel_price_previous = None
             
-            if diesel_change > 0.05:  # Diesel up 5%+
+            # Try to fetch real diesel price data from EIA API
+            try:
+                # API endpoints for EIA diesel price data
+                # EIA API v2 requires API key and structured parameters
+                api_key = self.config.get('eia_api_key', 'DEMO_KEY')  # Use DEMO_KEY as fallback
+                
+                # API parameters for Weekly U.S. No 2 Diesel Retail Prices
+                base_url = 'https://api.eia.gov/v2/petroleum/pri/gnd/data/'
+                params = {
+                    'api_key': api_key,
+                    'frequency': 'weekly',
+                    'data[0]': 'value',  # Price in dollars per gallon
+                    'facets[product][]': 'EPD2D',  # Diesel code
+                    'facets[series][]': 'EMD_EPD2D_PTE_NUS_DPG',  # National average retail price
+                    'sort[0][column]': 'period',  # Sort by date
+                    'sort[0][direction]': 'desc',  # Most recent first
+                    'offset': 0,
+                    'length': 10  # Get last 10 weeks
+                }
+                
+                print("Fetching diesel prices from EIA API...")
+                response = requests.get(base_url, params=params, timeout=15)
+                
+                if response.status_code == 200:
+                    try:
+                        data = response.json()
+                        source = "EIA Weekly Diesel Prices"
+                        data_quality = "production"
+                        
+                        if 'response' in data and 'data' in data['response']:
+                            # Extract the weekly price data
+                            price_data = data['response']['data']
+                            
+                            if len(price_data) >= 2:  # Need at least current and previous week
+                                # Most recent price is first in the list (sorted desc)
+                                diesel_price_current = float(price_data[0]['value'])
+                                diesel_price_previous = float(price_data[1]['value'])
+                                
+                                # Calculate weekly percentage change
+                                diesel_change = (diesel_price_current - diesel_price_previous) / diesel_price_previous
+                                print(f"EIA diesel prices: Current ${diesel_price_current:.2f}/gal, Previous ${diesel_price_previous:.2f}/gal, Change: {diesel_change*100:+.2f}%")
+                    except (KeyError, ValueError, IndexError) as e:
+                        print(f"Error parsing EIA data: {e}")
+                else:
+                    print(f"EIA API returned status code {response.status_code}")
+                    
+                    # For demo key errors, show informative message
+                    if response.status_code == 403:
+                        print("EIA API access denied - you may need a valid API key: https://www.eia.gov/opendata/register.php")
+            
+            except Exception as e:
+                print(f"Error fetching EIA diesel prices: {e}")
+            
+            # If API fails, try alternative source: DOE/EIA website scraping
+            if diesel_change is None:
+                try:
+                    # Alternative source: EIA website HTML page
+                    url = "https://www.eia.gov/petroleum/gasdiesel/"
+                    
+                    headers = {
+                        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                        "Accept": "text/html,application/xhtml+xml,application/xml",
+                    }
+                    
+                    print("Trying to scrape EIA website for diesel prices...")
+                    response = requests.get(url, headers=headers, timeout=10)
+                    
+                    if response.status_code == 200:
+                        html_content = response.text.lower()
+                        source = "EIA Website Scrape"
+                        data_quality = "semi-production"
+                        
+                        # Extract diesel prices with regex
+                        import re
+                        
+                        # Look for patterns like "$X.XXX" near "diesel"
+                        diesel_pattern = re.search(r'diesel.{1,50}(\$\d+\.\d+)', html_content)
+                        last_week_pattern = re.search(r'diesel.{1,50}last week.{1,20}(\$\d+\.\d+)', html_content)
+                        
+                        if diesel_pattern:
+                            current_price_str = diesel_pattern.group(1).replace('$', '')
+                            diesel_price_current = float(current_price_str)
+                            
+                            if last_week_pattern:
+                                prev_price_str = last_week_pattern.group(1).replace('$', '')
+                                diesel_price_previous = float(prev_price_str)
+                                
+                                # Calculate change
+                                diesel_change = (diesel_price_current - diesel_price_previous) / diesel_price_previous
+                                print(f"Scraped diesel prices: Current ${diesel_price_current:.2f}/gal, Previous ${diesel_price_previous:.2f}/gal, Change: {diesel_change*100:+.2f}%")
+                
+                except Exception as e:
+                    print(f"Error scraping EIA website: {e}")
+            
+            # If both sources fail, use seasonally-informed approximation
+            if diesel_change is None:
+                # Seasonal diesel price patterns
+                month = datetime.now().month
+                
+                # Diesel prices have seasonal patterns:
+                # - Higher in winter (heating oil demand)
+                # - Lower in spring
+                # - Rising in summer (driving season)
+                # - Variable in fall (harvest demand vs. winter prep)
+                seasonal_factors = {
+                    1: 0.01,   # January: Slight increase (winter demand)
+                    2: -0.01,  # February: Slight decrease (winter ending)
+                    3: -0.02,  # March: Decrease (spring transition)
+                    4: -0.015, # April: Slight decrease
+                    5: 0.005,  # May: Beginning of driving season
+                    6: 0.015,  # June: Summer driving season increases
+                    7: 0.01,   # July: High summer demand
+                    8: 0.005,  # August: Late summer
+                    9: -0.005, # September: Post-summer decrease
+                    10: 0.0,   # October: Flat (opposing factors)
+                    11: 0.01,  # November: Winter prep increase
+                    12: 0.02   # December: Winter demand increases
+                }
+                
+                # Base change on seasonal pattern plus small random component
+                base_change = seasonal_factors.get(month, 0)
+                diesel_change = base_change + np.random.uniform(-0.03, 0.03)
+                source = "Seasonal Approximation"
+                data_quality = "fallback"
+                print(f"Using seasonal diesel price model for month {month}: {diesel_change*100:+.2f}% change")
+            
+            # Calculate signal strength and confidence based on the price change
+            # More nuanced thresholds based on real-world diesel price volatility
+            if diesel_change > 0.07:  # Major increase (>7%)
+                strength = 0.8
+                confidence = 0.85
+                interpretation = "Major diesel spike → mining costs surge → strong miner retention → BUY signal"
+            elif diesel_change > 0.04:  # Significant increase (4-7%)
                 strength = 0.6
-                confidence = 0.70
-                interpretation = "Diesel up → mining costly → miners HODL → BUY"
-            elif diesel_change < -0.05:  # Diesel down 5%+
-                strength = -0.4
+                confidence = 0.75
+                interpretation = "Diesel prices up → mining costs increase → miners HODL → BUY signal"
+            elif diesel_change > 0.02:  # Moderate increase (2-4%)
+                strength = 0.3
                 confidence = 0.65
-                interpretation = "Diesel down → mining cheaper → miners sell → SELL"
-            else:
+                interpretation = "Diesel trending up → slight mining cost pressure → mild BUY bias"
+            elif diesel_change < -0.07:  # Major decrease (>7%)
+                strength = -0.7
+                confidence = 0.85
+                interpretation = "Major diesel drop → mining profitability surge → selling pressure → SELL signal"
+            elif diesel_change < -0.04:  # Significant decrease (4-7%)
+                strength = -0.5
+                confidence = 0.75
+                interpretation = "Diesel prices down → mining costs decrease → selling pressure → SELL signal"
+            elif diesel_change < -0.02:  # Moderate decrease (2-4%)
+                strength = -0.3
+                confidence = 0.65
+                interpretation = "Diesel trending down → increasing miner margins → mild SELL bias"
+            else:  # Stable (-2% to +2%)
                 strength = 0.0
-                confidence = 0.4
-                interpretation = "Stable diesel → neutral mining economics"
+                confidence = 0.5
+                interpretation = "Stable diesel prices → neutral mining economics → HOLD"
+            
+            # Adjust confidence based on data quality
+            if data_quality == "production":
+                # Boost confidence for real production data
+                confidence = min(0.95, confidence * 1.1)
+            elif data_quality == "semi-production":
+                # Slight confidence boost for scraped but realistic data
+                confidence = min(0.9, confidence * 1.05)
+            else:  # fallback
+                # Reduce confidence for fallback data
+                confidence = max(0.3, confidence * 0.8)
+                
+            # Price information to display
+            price_info = ""
+            if diesel_price_current and diesel_price_previous:
+                price_info = f"${diesel_price_current:.2f}/gal (was ${diesel_price_previous:.2f}/gal)"
             
             return {
                 'strength': strength,
                 'confidence': confidence,
                 'interpretation': interpretation,
-                'metric': f"Diesel: {diesel_change*100:+.1f}% weekly"
+                'metric': f"Diesel: {diesel_change*100:+.1f}% weekly" + (f" - {price_info}" if price_info else ""),
+                'source': source or "Diesel price model",
+                'data_quality': data_quality,
+                'timestamp': datetime.now().isoformat()
             }
             
-        except:
-            return {'strength': 0, 'confidence': 0}
+        except Exception as e:
+            print(f"Diesel price signal error: {e}")
+            return {'strength': 0, 'confidence': 0.1, 'interpretation': "Error in diesel data"}
     
     def _get_supply_chain_signal(self) -> Dict:
         """
