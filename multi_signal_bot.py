@@ -50,6 +50,7 @@ from modules.bollinger_bands_module import BollingerBandsModule
 from modules.volume_profile_module import VolumeProfileModule
 from modules.sentiment_analysis_module import SentimentAnalysisModule
 from modules.logistics_signal_module import LogisticsSignalModule  # Ultra-low correlation predictor
+from modules.global_macro_module import GlobalMacroModule  # Global macro predictor
 from modules.multi_signal_aggregator_module import MultiSignalAggregatorModule
 
 
@@ -187,6 +188,7 @@ def run_multi_signal_bot(once: bool = False) -> None:
     volume = VolumeProfileModule()
     sentiment = SentimentAnalysisModule()
     logistics = LogisticsSignalModule()  # Updated to ultra-low correlation predictor
+    global_macro = GlobalMacroModule()  # Global macro predictor
     aggregator = MultiSignalAggregatorModule()
     
     manager.register_module("rsi", rsi)
@@ -195,6 +197,7 @@ def run_multi_signal_bot(once: bool = False) -> None:
     manager.register_module("volume", volume)
     manager.register_module("sentiment", sentiment)
     manager.register_module("logistics", logistics)
+    manager.register_module("global_macro", global_macro)
     manager.register_module("aggregator", aggregator)
     
     # Instead of MetricsCollector, we'll directly manage our metrics
@@ -224,7 +227,7 @@ def run_multi_signal_bot(once: bool = False) -> None:
     print(f"Exchange: {exchange_id}")
     print(f"Monitoring: {symbols}")
     print(f"Timeframe: {timeframe}")
-    print(f"Signal Modules: RSI, MACD, Bollinger Bands, Volume Profile, Sentiment Analysis, Logistics Signals")
+    print(f"Signal Modules: RSI, MACD, Bollinger Bands, Volume Profile, Sentiment Analysis, Logistics Signals, Global Macro")
     print(f"Cooldown: {cooldown_min} min")
     print("-" * 80)
 
@@ -337,6 +340,11 @@ def run_multi_signal_bot(once: bool = False) -> None:
                     # Logistics signal (ultra-low correlation, forward-looking indicator)
                     module_signals["LogisticsSignal"] = process_module(
                         logistics, "LogisticsSignal", {"price_data": price_data, "symbol": symbol}
+                    )
+                    
+                    # Global Macro signal (worldwide crypto adoption, regulations predictor)
+                    module_signals["GlobalMacro"] = process_module(
+                        global_macro, "GlobalMacro", {"price_data": price_data, "symbol": symbol}
                     )
                     
                     # Aggregate signals with error handling

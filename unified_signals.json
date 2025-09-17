@@ -1,0 +1,396 @@
+{
+  "symbol": "BTC/USD",
+  "timestamp": "2025-09-17T16:51:12.588466",
+  "signals": {
+    "RSI": {
+      "rsi_value": 62.45960178471149,
+      "signal": "HOLD",
+      "confidence": 0.0,
+      "current_price": 30241.82919107188,
+      "metadata": {
+        "period_used": 14,
+        "data_points": 100,
+        "thresholds": {
+          "buy": 30,
+          "sell": 70
+        },
+        "module_info": {
+          "name": "RSIModule",
+          "version": "1.0.0"
+        }
+      }
+    },
+    "MACD": {
+      "macd_line": 294.0266980172637,
+      "signal_line": -171.5944204833423,
+      "histogram": 465.62111850060603,
+      "signal": "HOLD",
+      "confidence": 0.0,
+      "signal_strength": "WEAK",
+      "current_price": 30241.82919107188,
+      "trend_analysis": {
+        "macd_above_signal": true,
+        "macd_above_zero": true,
+        "histogram_increasing": false,
+        "momentum_direction": "BULLISH"
+      },
+      "metadata": {
+        "fast_period_used": 12,
+        "slow_period_used": 26,
+        "signal_period_used": 9,
+        "data_points": 100,
+        "calculation_window": 35,
+        "module_info": {
+          "name": "MACDModule",
+          "version": "1.0.0",
+          "signal_type": "momentum_indicator"
+        }
+      }
+    },
+    "BollingerBands": {
+      "upper_band": 31183.30973947787,
+      "middle_band": 28020.372766122728,
+      "lower_band": 24857.435792767585,
+      "band_width": 0.22575980696296846,
+      "percent_b": 0.8511698847721113,
+      "signal": "SELL",
+      "confidence": 0.6046795390884454,
+      "volatility_state": "NORMAL",
+      "position_in_bands": "WITHIN_BANDS",
+      "current_price": 30241.82919107188,
+      "analysis": {
+        "price_vs_middle": "ABOVE",
+        "band_squeeze_detected": "False",
+        "price_trend": "UPWARD",
+        "band_width_percentile": 100,
+        "reversal_probability": 0.7023397695442226
+      },
+      "metadata": {
+        "period_used": 20,
+        "std_multiplier_used": 2.0,
+        "squeeze_threshold_used": 0.1,
+        "data_points": 100,
+        "calculation_window": 30,
+        "module_info": {
+          "name": "BollingerBandsModule",
+          "version": "1.0.0",
+          "signal_type": "volatility_indicator"
+        }
+      }
+    },
+    "VolumeProfile": {
+      "point_of_control": 27925.446225591397,
+      "value_area_high": 33925.87236494277,
+      "value_area_low": 26288.966369404658,
+      "volume_profile": [
+        {
+          "price_level": 27925.446225591397,
+          "volume": 6646024.052037983,
+          "percentage": 13.577530743078608
+        },
+        {
+          "price_level": 26288.966369404658,
+          "volume": 4519708.717023244,
+          "percentage": 9.233563341728445
+        },
+        {
+          "price_level": 27379.952940195817,
+          "volume": 3833758.0050324695,
+          "percentage": 7.8321966287332625
+        },
+        {
+          "price_level": 26834.459654800237,
+          "volume": 3709852.2924832604,
+          "percentage": 7.579062783864905
+        },
+        {
+          "price_level": 28470.939510986977,
+          "volume": 3560184.144735386,
+          "percentage": 7.273297432822691
+        },
+        {
+          "price_level": 30107.419367173716,
+          "volume": 3328908.041335392,
+          "percentage": 6.800810667883896
+        },
+        {
+          "price_level": 29561.926081778136,
+          "volume": 3097914.142589819,
+          "percentage": 6.328900434468497
+        },
+        {
+          "price_level": 33380.379079547194,
+          "volume": 2583427.382978529,
+          "percentage": 5.277826929342209
+        },
+        {
+          "price_level": 33925.87236494277,
+          "volume": 2547358.8728180905,
+          "percentage": 5.2041405716453495
+        },
+        {
+          "price_level": 30652.912652569295,
+          "volume": 2242409.477659739,
+          "percentage": 4.58114255727974
+        }
+      ],
+      "current_price_position": "AT_POC",
+      "volume_trend": "DECREASING",
+      "signal": "SELL",
+      "confidence": 0.4,
+      "current_price": 30241.82919107188,
+      "current_volume": 845490.7538071809,
+      "volume_analysis": {
+        "relative_volume": 0.8801101437264487,
+        "volume_breakout": false,
+        "price_volume_divergence": true,
+        "volume_above_average": false,
+        "high_volume_threshold": false
+      },
+      "support_resistance": {
+        "poc_support_resistance": 27925.446225591397,
+        "value_area_support": 26288.966369404658,
+        "value_area_resistance": 33925.87236494277,
+        "price_in_value_area": true
+      },
+      "metadata": {
+        "lookback_periods_used": 50,
+        "volume_bins_used": 20,
+        "volume_trend_periods_used": 10,
+        "data_points": 100,
+        "has_volume_data": true,
+        "module_info": {
+          "name": "VolumeProfileModule",
+          "version": "1.0.0",
+          "signal_type": "volume_indicator"
+        }
+      }
+    },
+    "Sentiment": {
+      "composite_sentiment_score": 0.497,
+      "individual_scores": {
+        "brazil_regulatory_score": 0.5,
+        "india_regulatory_score": 0.1,
+        "trump_sentiment_score": 0.9,
+        "market_fear_greed_index": 0.44,
+        "btc_exchange_netflow": 0.4
+      },
+      "signal": "BUY",
+      "confidence": 0.44730000000000003,
+      "sentiment_strength": "MODERATE",
+      "dominant_factors": [
+        {
+          "factor": "Trump Sentiment Score",
+          "score": 0.9,
+          "impact": "BULLISH",
+          "strength": 0.9
+        },
+        {
+          "factor": "Brazil Regulatory Score",
+          "score": 0.5,
+          "impact": "BULLISH",
+          "strength": 0.5
+        },
+        {
+          "factor": "Market Fear Greed Index",
+          "score": 0.44,
+          "impact": "BULLISH",
+          "strength": 0.44
+        }
+      ],
+      "sentiment_analysis": {
+        "bullish_factors": [
+          {
+            "factor": "Brazil Regulatory Score",
+            "score": 0.5,
+            "strength": "MODERATE"
+          },
+          {
+            "factor": "Trump Sentiment Score",
+            "score": 0.9,
+            "strength": "STRONG"
+          },
+          {
+            "factor": "Market Fear Greed Index",
+            "score": 0.44,
+            "strength": "MODERATE"
+          },
+          {
+            "factor": "Btc Exchange Netflow",
+            "score": 0.4,
+            "strength": "MODERATE"
+          }
+        ],
+        "bearish_factors": [],
+        "neutral_factors": [
+          {
+            "factor": "India Regulatory Score",
+            "score": 0.1
+          }
+        ]
+      },
+      "raw_data": {
+        "brazil_regulatory_score": 0.5,
+        "india_regulatory_score": 0.1,
+        "trump_sentiment_score": 0.9,
+        "market_fear_greed_index": 72.0,
+        "btc_exchange_netflow": -2000.0
+      },
+      "sentiment_interpretation": {
+        "overall_sentiment": "BULLISH",
+        "sentiment_magnitude": 0.497,
+        "market_conditions": "GREEDY",
+        "risk_factors": [],
+        "opportunity_factors": [
+          "Positive political sentiment"
+        ]
+      },
+      "metadata": {
+        "data_sources_used": 5,
+        "sentiment_weights_used": {
+          "trump_sentiment_score": 0.2,
+          "market_fear_greed_index": 0.3,
+          "brazil_regulatory_score": 0.15,
+          "india_regulatory_score": 0.1,
+          "btc_exchange_netflow": 0.25
+        },
+        "data_freshness": "2025-09-17T16:50:55.089545",
+        "module_info": {
+          "name": "SentimentAnalysisModule",
+          "version": "1.0.0",
+          "signal_type": "fundamental_sentiment"
+        }
+      }
+    },
+    "Logistics": {
+      "signal": "BUY",
+      "confidence": 0.6528953322454635,
+      "value": 0.3736059281206029,
+      "lead_time_days": 30,
+      "correlation": 0.05,
+      "timestamp": "2025-09-17T16:51:12.588184",
+      "module": "LogisticsSignal",
+      "components": {
+        "port": {
+          "strength": 0.5339237991631438,
+          "confidence": 0.8086859967363903,
+          "interpretation": "Elevated congestion \u2192 mild inflation pressure \u2192 Moderate BUY signal",
+          "metric": "Congestion: 1.19x normal",
+          "source": "Marine Exchange of Southern California (approximated)",
+          "data_quality": "semi-production",
+          "timestamp": "2025-09-17T16:51:10.400252"
+        },
+        "diesel": {
+          "strength": 0.0,
+          "confidence": 0.55,
+          "interpretation": "Stable diesel prices \u2192 neutral mining economics \u2192 HOLD",
+          "metric": "Diesel: -0.7% weekly - $3.74/gal (was $3.77/gal)",
+          "source": "EIA Weekly Diesel Prices",
+          "data_quality": "production",
+          "timestamp": "2025-09-17T16:51:11.580262"
+        },
+        "supply_chain": {
+          "strength": 0.5,
+          "confidence": 0.6000000000000001,
+          "interpretation": "Supply chain pressure \u2192 inflation hedge \u2192 BUY signal",
+          "metric": "GSCPI: +0.53 std dev \u2192",
+          "value": 0.5312737090394799,
+          "trend": -0.03797403184211312,
+          "source": "GSCPI Seasonal Approximation",
+          "data_quality": "fallback",
+          "timestamp": "2025-09-17T16:51:12.584912"
+        }
+      }
+    },
+    "GlobalMacro": {
+      "signal": "BUY",
+      "confidence": 0.7525,
+      "strength": 0.54325,
+      "reasoning": "Global adoption/inflation driving crypto demand",
+      "correlation": 0.02,
+      "lead_time_days": 45,
+      "timestamp": "2025-09-17T16:51:12.588409",
+      "module": "global_macro_predictor",
+      "components": {
+        "adoption": {
+          "data": {
+            "strength": 0.9,
+            "confidence": 0.85,
+            "interpretation": "Massive adoption growth \u2192 Strong BUY",
+            "data": {
+              "LATAM": 0.63,
+              "INDIA": 0.45,
+              "SEA": 0.38,
+              "AFRICA": 0.55
+            },
+            "metric": "Global adoption: 50% YoY"
+          },
+          "weight": 0.25
+        },
+        "inflation": {
+          "data": {
+            "strength": 0.95,
+            "confidence": 0.9,
+            "interpretation": "Multiple inflation crises \u2192 Rush to crypto",
+            "crisis_countries": [
+              142.0,
+              350.0
+            ],
+            "highest": "350% (crisis)"
+          },
+          "weight": 0.3
+        },
+        "regulatory": {
+          "data": {
+            "strength": 0.0,
+            "confidence": 0.5,
+            "interpretation": "Mixed regulatory signals",
+            "score": 0.15999999999999998,
+            "key_events": [
+              "india_tax",
+              "brazil_vasp",
+              "japan_etf",
+              "fatf_venezuela",
+              "us_clarity"
+            ]
+          },
+          "weight": 0.2
+        },
+        "remittance": {
+          "data": {
+            "strength": 0.6,
+            "confidence": 0.7,
+            "interpretation": "Rising remittances \u2192 Stablecoin demand",
+            "avg_growth": "12.6% YoY",
+            "top_corridor": "USA\u2192MEX, UAE\u2192IND"
+          },
+          "weight": 0.15
+        },
+        "cbdc": {
+          "data": {
+            "strength": 0.5,
+            "confidence": 0.65,
+            "interpretation": "CBDC acceleration \u2192 Crypto infrastructure",
+            "pilots": 35,
+            "key_projects": [
+              "Brazil_Drex",
+              "India_eRupee",
+              "Japan_pilot"
+            ]
+          },
+          "weight": 0.1
+        }
+      },
+      "key_insight": "\ud83c\udf0d Global adoption surge detected - accumulate | \ud83d\udcb8 Hyperinflation in multiple countries - BTC hedge active | \ud83d\udcb0 Remittance corridors hot - stablecoins bullish"
+    }
+  },
+  "summary": {
+    "buy_count": 3,
+    "sell_count": 2,
+    "hold_count": 2,
+    "total_signals": 7,
+    "consensus": "BUY",
+    "consensus_score": 0.7657457097555176,
+    "consensus_strength": 76.57457097555177
+  }
+}
