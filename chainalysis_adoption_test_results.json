@@ -1,0 +1,33 @@
+{
+  "signal": "BUY",
+  "confidence": 0.9,
+  "strength": 0.85,
+  "reasoning": "Strong adoption growth in CENTRAL_SOUTHERN_ASIA, EASTERN_EUROPE, SUB_SAHARAN_AFRICA. EASTERN EUROPE leads with 51.0% YoY growth.",
+  "correlation": 0.04,
+  "timestamp": "2025-09-17T17:19:15.404744",
+  "module": "chainalysis_adoption_tracker",
+  "data_source": "chainalysis",
+  "high_growth_regions": {
+    "CENTRAL_SOUTHERN_ASIA": 0.45999999999999996,
+    "EASTERN_EUROPE": 0.51,
+    "SUB_SAHARAN_AFRICA": 0.42999999999999994
+  },
+  "high_growth_countries": {
+    "IND": 0.7312441937665333,
+    "PAK": 0.4399480506585056,
+    "VNM": 0.6335371179705589,
+    "BRA": 0.529999539244832,
+    "ARG": 0.6367262611084588,
+    "COL": 0.4030617834643997,
+    "VEN": 0.4336846762766804,
+    "TUR": 0.48279808643739774,
+    "UKR": 0.6344865227369141,
+    "RUS": 0.44617890013852923,
+    "NGA": 0.6644366199023992,
+    "KEN": 0.4500599339603504,
+    "ZAF": 0.4462755527998672
+  },
+  "adoption_score": 0.4221526431928755,
+  "adoption_momentum": 0.3824234783689529,
+  "latest_update": "2025-09-15T17:19:15.404100"
+}
