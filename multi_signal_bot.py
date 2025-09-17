@@ -52,6 +52,8 @@ from modules.sentiment_analysis_module import SentimentAnalysisModule
 from modules.logistics_signal_module import LogisticsSignalModule  # Ultra-low correlation predictor
 from modules.global_macro_module import GlobalMacroModule  # Global macro predictor
 from modules.adoption_tracker_module import AdoptionTrackerModule  # Chainalysis adoption tracker
+from modules.region_specific_crypto_module import RegionSpecificCryptoModule  # Region-specific crypto mapper
+from modules.new_listings_radar_module import NewListingsRadar  # New listings monitoring
 from modules.multi_signal_aggregator_module import MultiSignalAggregatorModule
 
 
@@ -191,6 +193,8 @@ def run_multi_signal_bot(once: bool = False) -> None:
     logistics = LogisticsSignalModule()  # Updated to ultra-low correlation predictor
     global_macro = GlobalMacroModule()  # Global macro predictor
     adoption_tracker = AdoptionTrackerModule()  # Chainalysis adoption tracker
+    region_crypto = RegionSpecificCryptoModule()  # Region-specific crypto mapper
+    new_listings_radar = NewListingsRadar(cfg)  # New listings radar monitoring
     aggregator = MultiSignalAggregatorModule()
     
     manager.register_module("rsi", rsi)
@@ -201,6 +205,8 @@ def run_multi_signal_bot(once: bool = False) -> None:
     manager.register_module("logistics", logistics)
     manager.register_module("global_macro", global_macro)
     manager.register_module("adoption_tracker", adoption_tracker)
+    manager.register_module("region_crypto", region_crypto)
+    manager.register_module("new_listings_radar", new_listings_radar)
     manager.register_module("aggregator", aggregator)
     
     # Instead of MetricsCollector, we'll directly manage our metrics
@@ -230,7 +236,7 @@ def run_multi_signal_bot(once: bool = False) -> None:
     print(f"Exchange: {exchange_id}")
     print(f"Monitoring: {symbols}")
     print(f"Timeframe: {timeframe}")
-    print(f"Signal Modules: RSI, MACD, Bollinger Bands, Volume Profile, Sentiment Analysis, Logistics Signals, Global Macro")
+    print(f"Signal Modules: RSI, MACD, Bollinger Bands, Volume Profile, Sentiment Analysis, Logistics Signals, Global Macro, Region-Specific Crypto, New Listings Radar")
     print(f"Cooldown: {cooldown_min} min")
     print("-" * 80)
 
@@ -354,6 +360,56 @@ def run_multi_signal_bot(once: bool = False) -> None:
                     module_signals["AdoptionTracker"] = process_module(
                         adoption_tracker, "AdoptionTracker", {"symbol": symbol}
                     )
+                    
+                    # Region-specific crypto mapping (matches macro/adoption signals to specific cryptos)
+                    # Generate sample macro signals for testing
+                    macro_test_signals = {
+                        "inflation_ARG": 142 if "ARG" in symbol else 3.2,
+                        "stablecoin_growth_LATAM": 0.63 if "USD" in symbol else 0.2,
+                        "adoption_rank_IND": 1 if "BTC" in symbol or "ETH" in symbol else 5,
+                        "sbi_ripple_news": True if "XRP" in symbol else False,
+                        "port_congestion": 1.4 if "VET" in symbol or "XDC" in symbol else 0.9,
+                        "el_salvador_btc_news": True if "BTC" in symbol else False
+                    }
+                    
+                    module_signals["RegionCryptoMapper"] = process_module(
+                        region_crypto, "RegionCryptoMapper", {
+                            "symbol": symbol,
+                            "macro_signals": macro_test_signals
+                        }
+                    )
+                    
+                    # New listings radar (monitors exchanges for new coin listings)
+                    try:
+                        # Get the listing signal from the New Listings Radar
+                        listing_signal = new_listings_radar.get_signal()
+                        
+                        # If the signal is for the current symbol, use it; otherwise use a neutral signal
+                        if listing_signal.get("coin", "").upper() in symbol:
+                            module_signals["NewListingsRadar"] = {
+                                "signal": listing_signal.get("action", "HOLD"),
+                                "confidence": listing_signal.get("confidence", 0.0),
+                                "value": 0,
+                                "metadata": {
+                                    "exchange": listing_signal.get("exchange", ""),
+                                    "position_size": listing_signal.get("position_size", 0.0),
+                                    "expected_return": listing_signal.get("expected_return", 0.0),
+                                    "risk_level": listing_signal.get("risk_level", "MEDIUM")
+                                }
+                            }
+                        else:
+                            module_signals["NewListingsRadar"] = {
+                                "signal": "HOLD", 
+                                "confidence": 0.0,
+                                "value": 0
+                            }
+                    except Exception as e:
+                        print(f"Error processing New Listings Radar: {e}")
+                        module_signals["NewListingsRadar"] = {
+                            "signal": "HOLD",
+                            "confidence": 0.0,
+                            "value": 0
+                        }
                     
                     # Aggregate signals with error handling
                     try:
