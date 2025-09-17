@@ -49,7 +49,7 @@ from modules.macd_module import MACDModule
 from modules.bollinger_bands_module import BollingerBandsModule
 from modules.volume_profile_module import VolumeProfileModule
 from modules.sentiment_analysis_module import SentimentAnalysisModule
-from modules.logistics_signals_module import LogisticsSignalsModule
+from modules.logistics_signal_module import LogisticsSignalModule  # Ultra-low correlation predictor
 from modules.multi_signal_aggregator_module import MultiSignalAggregatorModule
 
 
@@ -186,7 +186,7 @@ def run_multi_signal_bot(once: bool = False) -> None:
     bollinger = BollingerBandsModule()
     volume = VolumeProfileModule()
     sentiment = SentimentAnalysisModule()
-    logistics = LogisticsSignalsModule()
+    logistics = LogisticsSignalModule()  # Updated to ultra-low correlation predictor
     aggregator = MultiSignalAggregatorModule()
     
     manager.register_module("rsi", rsi)
@@ -332,6 +332,11 @@ def run_multi_signal_bot(once: bool = False) -> None:
                     # Sentiment Analysis signal
                     module_signals["SentimentAnalysis"] = process_module(
                         sentiment, "SentimentAnalysis", {"symbol": symbol, "timeframe": timeframe}
+                    )
+                    
+                    # Logistics signal (ultra-low correlation, forward-looking indicator)
+                    module_signals["LogisticsSignal"] = process_module(
+                        logistics, "LogisticsSignal", {"price_data": price_data, "symbol": symbol}
                     )
                     
                     # Aggregate signals with error handling
