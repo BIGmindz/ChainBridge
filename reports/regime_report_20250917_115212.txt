@@ -1,0 +1,33 @@
+=== REGIME PERFORMANCE REPORT ===
+Generated: 2025-09-17 11:52:12
+
+-- Performance Metrics by Regime --
+
+Regime          Total Return    Sharpe Ratio    Max Drawdown    Win Rate       
+---------------------------------------------------------------------------
+Sideways        0.92%           0.79            0.82%           2.51%          
+Bullish         2.12%           0.61            2.02%           8.04%          
+Bearish         -1.71%          -0.58           3.32%           2.01%          
+Choppy          6.13%           0.80            4.80%           8.04%          
+Bullish Volatile -2.73%          -0.26           11.16%          9.55%          
+Overall         -30.18%         -1.15           32.50%          5.91%          
+
+-- Regime Distribution --
+
+Regime          Periods         Percentage     
+---------------------------------------------
+Sideways        199             20.00          %
+Bullish         199             20.00          %
+Bearish         199             20.00          %
+Choppy          199             20.00          %
+Bullish Volatile 199             20.00          %
+
+-- Trade Analysis --
+
+Regime          Buy Signals     Sell Signals    Hold Signals   
+------------------------------------------------------------
+Sideways        6               2               192            
+Bullish         6               22              172            
+Bearish         4               8               188            
+Choppy          13              18              169            
+Bullish Volatile 20              23              157            
