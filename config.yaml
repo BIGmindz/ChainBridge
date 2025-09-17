@@ -1,22 +1,22 @@
-exchange: coinbase
-
-# Trading symbols to monitor
-symbols:
-  - BTC/USD
-  - ETH/USD
-
-# Market data settings
-timeframe: 5m
-poll_seconds: 60
-
-# RSI signal parameters
-rsi:
-  period: 14
-  buy_threshold: 30
-  sell_threshold: 70
-
-# Cooldown between alerts (minutes)
+budget_management:
+  compound_profits: true
+  max_positions: 5
+  max_risk_per_trade: 0.02
+  position_size_method: kelly
+  reduce_on_drawdown: true
 cooldown_minutes: 10
-
-# CSV log file for signals
 csv_log: benson_signals.csv
+exchange: kraken
+initial_capital: 10000
+poll_seconds: 60
+rsi:
+  buy_threshold: 30
+  period: 14
+  sell_threshold: 70
+symbols:
+- PRO/USD
+- BDXN/USD
+- KIN/USD
+- SOGNI/USD
+- ZORA/USD
+timeframe: 5m

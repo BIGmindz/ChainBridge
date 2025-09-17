@@ -1,0 +1,24 @@
+{
+  "current_capital": 10000.0,
+  "available_capital": 10000.0,
+  "positions": [],
+  "trade_history": [],
+  "performance": {
+    "current_capital": 10000.0,
+    "available_capital": 10000.0,
+    "initial_capital": 10000.0,
+    "total_pnl": 0.0,
+    "total_pnl_pct": 0.0,
+    "open_positions": 0,
+    "open_pnl": 0,
+    "total_trades": 0,
+    "winning_trades": 0,
+    "losing_trades": 0,
+    "win_rate": 0,
+    "largest_win": 0,
+    "largest_loss": 0,
+    "current_drawdown": 0,
+    "max_drawdown": 0
+  },
+  "timestamp": "2025-09-17T14:34:04.919816"
+}
