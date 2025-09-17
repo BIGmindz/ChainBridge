@@ -17,10 +17,15 @@ import pandas as pd
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Tuple, Optional, Union
 
-# scikit-learn imports for clustering
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
+# scikit-learn imports for clustering - wrapped in try-except for optional dependency
+try:
+    from sklearn.cluster import KMeans
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.decomposition import PCA
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+    print("scikit-learn not available. Market condition classifier will use fallback methods.")
 
 
 class MarketConditionClassifier:

@@ -1,0 +1,36 @@
+{
+  "timestamp": "2025-09-17T18:18:31.582979",
+  "duration_minutes": 3.1597164666666666,
+  "initial_capital": 1000.0,
+  "final_capital": 1000.0,
+  "return_pct": 0.0,
+  "trades": 0,
+  "wins": 0,
+  "losses": 0,
+  "win_rate": 0,
+  "signal_weights": {
+    "RSI": 0.0666666666666667,
+    "MACD": 0.0666666666666667,
+    "Bollinger": 0.0666666666666667,
+    "Volume": 0.0666666666666667,
+    "Sentiment": 0.0666666666666667,
+    "Port_Congestion": 0.0666666666666667,
+    "Diesel": 0.0666666666666667,
+    "Supply_Chain": 0.0666666666666667,
+    "Container": 0.0666666666666667,
+    "Inflation": 0.0666666666666667,
+    "Regulatory": 0.0666666666666667,
+    "Remittance": 0.0666666666666667,
+    "CBDC": 0.0666666666666667,
+    "FATF": 0.0666666666666667,
+    "Chainalysis_Global": 0.0666666666666667
+  },
+  "best_signal": [
+    "RSI",
+    0.0666666666666667
+  ],
+  "worst_signal": [
+    "RSI",
+    0.0666666666666667
+  ]
+}

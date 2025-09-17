@@ -1,15 +1,15 @@
 {
   "Bull Market": {
     "final_signal": "HOLD",
-    "confidence": 0.21915281599229258,
-    "consensus": 0.4,
+    "confidence": 0.14381832642474068,
+    "consensus": 0.5,
     "risk": "HIGH",
     "individual_signals": {
       "RSI": {
-        "rsi_value": 99.96484479768776,
+        "rsi_value": 99.9644979274222,
         "signal": "SELL",
-        "confidence": 0.9988281599229254,
-        "current_price": 52822.23,
+        "confidence": 0.99881659758074,
+        "current_price": 52815.48,
         "metadata": {
           "period_used": 14,
           "data_points": 120,
@@ -24,13 +24,13 @@
         }
       },
       "MACD": {
-        "macd_line": 228.2289123041628,
-        "signal_line": 230.9362864626736,
-        "histogram": -2.707374158510788,
+        "macd_line": 202.85221215237107,
+        "signal_line": 209.61013914837605,
+        "histogram": -6.757926996004983,
         "signal": "HOLD",
         "confidence": 0.0,
         "signal_strength": "WEAK",
-        "current_price": 52822.23,
+        "current_price": 52815.48,
         "trend_analysis": {
           "macd_above_signal": false,
           "macd_above_zero": true,
@@ -51,22 +51,22 @@
         }
       },
       "BollingerBands": {
-        "upper_band": 52890.326794293265,
-        "middle_band": 52521.634,
-        "lower_band": 52152.94120570673,
-        "band_width": 0.01403965437531007,
-        "percent_b": 0.9076510371950798,
-        "signal": "SELL",
-        "confidence": 0.8,
+        "upper_band": 52832.076268640674,
+        "middle_band": 52550.5265,
+        "lower_band": 52268.976731359326,
+        "band_width": 0.010715392875870589,
+        "percent_b": 0.9705269361065398,
+        "signal": "HOLD",
+        "confidence": 0.0,
         "volatility_state": "NORMAL",
         "position_in_bands": "WITHIN_BANDS",
-        "current_price": 52822.23,
+        "current_price": 52815.48,
         "analysis": {
           "price_vs_middle": "ABOVE",
           "band_squeeze_detected": "False",
           "price_trend": "NEUTRAL",
-          "band_width_percentile": 14.03965437531007,
-          "reversal_probability": 0.8153020743901596
+          "band_width_percentile": 10.715392875870588,
+          "reversal_probability": 0.9410538722130797
         },
         "metadata": {
           "period_used": 20,
@@ -82,78 +82,78 @@
         }
       },
       "VolumeProfile": {
-        "point_of_control": 52607.13125,
-        "value_area_high": 52781.33825,
-        "value_area_low": 51126.37175,
+        "point_of_control": 52601.0125,
+        "value_area_high": 52774.7465,
+        "value_area_low": 51124.273499999996,
         "volume_profile": [
           {
-            "price_level": 52607.13125,
-            "volume": 6464.0,
-            "percentage": 8.366987677332505
+            "price_level": 52601.0125,
+            "volume": 7363.0,
+            "percentage": 9.653861282286613
           },
           {
-            "price_level": 52520.02775,
-            "volume": 5100.0,
-            "percentage": 6.601429015222118
+            "price_level": 52427.2785,
+            "volume": 6192.0,
+            "percentage": 8.118526288186704
           },
           {
-            "price_level": 52781.33825,
-            "volume": 4754.0,
-            "percentage": 6.153567360463912
+            "price_level": 52514.1455,
+            "volume": 4689.0,
+            "percentage": 6.147895633932084
           },
           {
-            "price_level": 51736.09625,
-            "volume": 4510.0,
-            "percentage": 5.837734286010148
+            "price_level": 52253.544499999996,
+            "volume": 4514.0,
+            "percentage": 5.918447620296316
           },
           {
-            "price_level": 52258.71725,
-            "volume": 4486.0,
-            "percentage": 5.8066687377032205
+            "price_level": 52166.6775,
+            "volume": 4490.0,
+            "percentage": 5.886980464140553
           },
           {
-            "price_level": 51126.37175,
-            "volume": 4460.0,
-            "percentage": 5.773014393704049
+            "price_level": 52774.7465,
+            "volume": 4390.0,
+            "percentage": 5.755867313491543
           },
           {
-            "price_level": 52345.82075,
-            "volume": 4274.0,
-            "percentage": 5.53225639432536
+            "price_level": 52340.4115,
+            "volume": 4386.0,
+            "percentage": 5.750622787465582
           },
           {
-            "price_level": 52084.51025,
-            "volume": 4017.0,
-            "percentage": 5.199596147872009
+            "price_level": 51124.273499999996,
+            "volume": 3849.0,
+            "percentage": 5.046545168480399
           },
           {
-            "price_level": 51648.99275,
-            "volume": 3688.0,
-            "percentage": 4.773739256497877
+            "price_level": 51992.9435,
+            "volume": 3823.0,
+            "percentage": 5.012455749311656
           },
           {
-            "price_level": 51910.30325,
-            "volume": 3683.0,
-            "percentage": 4.767267267267267
+            "price_level": 52079.8105,
+            "volume": 3490.0,
+            "percentage": 4.575848957650452
           }
         ],
         "current_price_position": "AT_POC",
         "volume_trend": "STABLE",
         "signal": "HOLD",
         "confidence": 0.0,
-        "current_price": 52822.23,
-        "current_volume": 1336.0,
+        "current_price": 52815.48,
+        "current_volume": 1340.0,
         "volume_analysis": {
-          "relative_volume": 0.8753757887434065,
+          "relative_volume": 0.8609221466364323,
           "volume_breakout": false,
           "price_volume_divergence": false,
           "volume_above_average": false,
           "high_volume_threshold": false
         },
         "support_resistance": {
-          "poc_support_resistance": 52607.13125,
-          "value_area_support": 51126.37175,
-          "value_area_resistance": 52781.33825,
+          "poc_support_resistance": 52601.0125,
+          "value_area_support": 51124.273499999996,
+          "value_area_resistance": 52774.7465,
           "price_in_value_area": false
         },
         "metadata": {
@@ -257,28 +257,61 @@
             "india_regulatory_score": 0.1,
             "btc_exchange_netflow": 0.25
           },
-          "data_freshness": "2025-09-15T14:56:56.700816",
+          "data_freshness": "2025-09-17T17:24:50.707481",
           "module_info": {
             "name": "SentimentAnalysisModule",
             "version": "1.0.0",
             "signal_type": "fundamental_sentiment"
           }
         }
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "strength": 0.85,
+        "reasoning": "Strong adoption growth in CENTRAL_SOUTHERN_ASIA, EASTERN_EUROPE, SUB_SAHARAN_AFRICA. EASTERN EUROPE leads with 51.0% YoY growth.",
+        "correlation": 0.04,
+        "timestamp": "2025-09-17T17:24:50.707812",
+        "module": "chainalysis_adoption_tracker",
+        "data_source": "chainalysis",
+        "high_growth_regions": {
+          "CENTRAL_SOUTHERN_ASIA": 0.45999999999999996,
+          "EASTERN_EUROPE": 0.51,
+          "SUB_SAHARAN_AFRICA": 0.42999999999999994
+        },
+        "high_growth_countries": {
+          "IND": 0.7312441937665333,
+          "PAK": 0.4399480506585056,
+          "VNM": 0.6335371179705589,
+          "BRA": 0.529999539244832,
+          "ARG": 0.6367262611084588,
+          "COL": 0.4030617834643997,
+          "VEN": 0.4336846762766804,
+          "TUR": 0.48279808643739774,
+          "UKR": 0.6344865227369141,
+          "RUS": 0.44617890013852923,
+          "NGA": 0.6644366199023992,
+          "KEN": 0.4500599339603504,
+          "ZAF": 0.4462755527998672
+        },
+        "adoption_score": 0.4221526431928755,
+        "adoption_momentum": 0.3824234783689529,
+        "latest_update": "2025-09-15T17:19:15.404100"
       }
     },
-    "price_return": 5.63279813908546
+    "price_return": 5.625446351700436
   },
   "Bear Market": {
     "final_signal": "HOLD",
-    "confidence": 0.09320122825620576,
-    "consensus": 0.4,
+    "confidence": 0.20333639897972605,
+    "consensus": 0.3333333333333333,
     "risk": "HIGH",
     "individual_signals": {
       "RSI": {
-        "rsi_value": 99.85863152313827,
+        "rsi_value": 99.87409494431154,
         "signal": "SELL",
-        "confidence": 0.9952877174379424,
-        "current_price": 48334.1,
+        "confidence": 0.9958031648103846,
+        "current_price": 48489.05,
         "metadata": {
           "period_used": 14,
           "data_points": 100,
@@ -293,13 +326,13 @@
         }
       },
       "MACD": {
-        "macd_line": 372.5528773033511,
-        "signal_line": 366.79897481446454,
-        "histogram": 5.753902488886581,
+        "macd_line": 398.96821896037,
+        "signal_line": 393.4988666169323,
+        "histogram": 5.46935234343772,
         "signal": "HOLD",
         "confidence": 0.0,
         "signal_strength": "WEAK",
-        "current_price": 48334.1,
+        "current_price": 48489.05,
         "trend_analysis": {
           "macd_above_signal": true,
           "macd_above_zero": true,
@@ -320,22 +353,22 @@
         }
       },
       "BollingerBands": {
-        "upper_band": 48462.27871948804,
-        "middle_band": 47823.837,
-        "lower_band": 47185.39528051196,
-        "band_width": 0.02669972798243006,
-        "percent_b": 0.899615959001846,
-        "signal": "BUY",
-        "confidence": 0.6,
-        "volatility_state": "SQUEEZE",
+        "upper_band": 48691.81397092972,
+        "middle_band": 47952.437,
+        "lower_band": 47213.06002907028,
+        "band_width": 0.03083793096604118,
+        "percent_b": 0.8628818729133856,
+        "signal": "SELL",
+        "confidence": 0.6515274916535425,
+        "volatility_state": "NORMAL",
         "position_in_bands": "WITHIN_BANDS",
-        "current_price": 48334.1,
+        "current_price": 48489.05,
         "analysis": {
           "price_vs_middle": "ABOVE",
-          "band_squeeze_detected": "True",
+          "band_squeeze_detected": "False",
           "price_trend": "UPWARD",
-          "band_width_percentile": 26.699727982430062,
-          "reversal_probability": 0.799231918003692
+          "band_width_percentile": 30.83793096604118,
+          "reversal_probability": 0.7257637458267712
         },
         "metadata": {
           "period_used": 20,
@@ -351,78 +384,78 @@
         }
       },
       "VolumeProfile": {
-        "point_of_control": 45980.4995,
-        "value_area_high": 48275.6805,
-        "value_area_low": 45980.4995,
+        "point_of_control": 46140.1975,
+        "value_area_high": 48434.1625,
+        "value_area_low": 46140.1975,
         "volume_profile": [
           {
-            "price_level": 45980.4995,
-            "volume": 9784.0,
-            "percentage": 12.884195001185178
+            "price_level": 46140.1975,
+            "volume": 11672.0,
+            "percentage": 15.015694951885965
           },
           {
-            "price_level": 46101.2985,
-            "volume": 7612.0,
-            "percentage": 10.023966920382417
+            "price_level": 46260.9325,
+            "volume": 8873.0,
+            "percentage": 11.414861318375959
           },
           {
-            "price_level": 47913.2835,
-            "volume": 4564.0,
-            "percentage": 6.010166188206168
+            "price_level": 46381.6675,
+            "volume": 5087.0,
+            "percentage": 6.544280347861885
           },
           {
-            "price_level": 46342.8965,
-            "volume": 4429.0,
-            "percentage": 5.8323895809739525
+            "price_level": 48192.6925,
+            "volume": 5022.0,
+            "percentage": 6.460659702567797
           },
           {
-            "price_level": 47430.0875,
-            "volume": 4388.0,
-            "percentage": 5.7783981669256494
+            "price_level": 46502.402500000004,
+            "volume": 4821.0,
+            "percentage": 6.202078937889158
           },
           {
-            "price_level": 48275.6805,
-            "volume": 4274.0,
-            "percentage": 5.628275698596223
+            "price_level": 48434.1625,
+            "volume": 4514.0,
+            "percentage": 5.807132197807852
           },
           {
-            "price_level": 46222.097499999996,
-            "volume": 4171.0,
-            "percentage": 5.49263873159683
+            "price_level": 46985.3425,
+            "volume": 3628.0,
+            "percentage": 4.667318478876139
           },
           {
-            "price_level": 46705.2935,
-            "volume": 3754.0,
-            "percentage": 4.943506544812873
+            "price_level": 47468.2825,
+            "volume": 3444.0,
+            "percentage": 4.4306077291205685
           },
           {
-            "price_level": 47550.8865,
-            "volume": 3494.0,
-            "percentage": 4.601121967921199
+            "price_level": 47347.5475,
+            "volume": 3318.0,
+            "percentage": 4.268512324396645
           },
           {
-            "price_level": 46826.0925,
-            "volume": 3186.0,
-            "percentage": 4.195527930680292
+            "price_level": 47951.222499999996,
+            "volume": 3132.0,
+            "percentage": 4.029228631708949
           }
         ],
         "current_price_position": "AT_POC",
         "volume_trend": "STABLE",
         "signal": "HOLD",
         "confidence": 0.0,
-        "current_price": 48334.1,
-        "current_volume": 1164.0,
+        "current_price": 48489.05,
+        "current_volume": 1452.0,
         "volume_analysis": {
-          "relative_volume": 0.7700161706335948,
+          "relative_volume": 0.9262471487299766,
           "volume_breakout": false,
           "price_volume_divergence": false,
           "volume_above_average": false,
           "high_volume_threshold": false
         },
         "support_resistance": {
-          "poc_support_resistance": 45980.4995,
-          "value_area_support": 45980.4995,
-          "value_area_resistance": 48275.6805,
+          "poc_support_resistance": 46140.1975,
+          "value_area_support": 46140.1975,
+          "value_area_resistance": 48434.1625,
           "price_in_value_area": false
         },
         "metadata": {
@@ -526,28 +559,61 @@
             "india_regulatory_score": 0.1,
             "btc_exchange_netflow": 0.25
           },
-          "data_freshness": "2025-09-15T14:56:56.704393",
+          "data_freshness": "2025-09-17T17:24:50.709166",
           "module_info": {
             "name": "SentimentAnalysisModule",
             "version": "1.0.0",
             "signal_type": "fundamental_sentiment"
           }
         }
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "strength": 0.85,
+        "reasoning": "Strong adoption growth in CENTRAL_SOUTHERN_ASIA, EASTERN_EUROPE, SUB_SAHARAN_AFRICA. EASTERN EUROPE leads with 51.0% YoY growth.",
+        "correlation": 0.04,
+        "timestamp": "2025-09-17T17:24:50.709255",
+        "module": "chainalysis_adoption_tracker",
+        "data_source": "chainalysis",
+        "high_growth_regions": {
+          "CENTRAL_SOUTHERN_ASIA": 0.45999999999999996,
+          "EASTERN_EUROPE": 0.51,
+          "SUB_SAHARAN_AFRICA": 0.42999999999999994
+        },
+        "high_growth_countries": {
+          "IND": 0.7312441937665333,
+          "PAK": 0.4399480506585056,
+          "VNM": 0.6335371179705589,
+          "BRA": 0.529999539244832,
+          "ARG": 0.6367262611084588,
+          "COL": 0.4030617834643997,
+          "VEN": 0.4336846762766804,
+          "TUR": 0.48279808643739774,
+          "UKR": 0.6344865227369141,
+          "RUS": 0.44617890013852923,
+          "NGA": 0.6644366199023992,
+          "KEN": 0.4500599339603504,
+          "ZAF": 0.4462755527998672
+        },
+        "adoption_score": 0.4221526431928755,
+        "adoption_momentum": 0.3824234783689529,
+        "latest_update": "2025-09-15T17:19:15.404100"
       }
     },
-    "price_return": 7.389351470440553
+    "price_return": 7.7440587397720195
   },
   "Sideways Market": {
     "final_signal": "HOLD",
-    "confidence": 0.21926334145256343,
-    "consensus": 0.4,
+    "confidence": 0.2185969666284805,
+    "consensus": 0.3333333333333333,
     "risk": "HIGH",
     "individual_signals": {
       "RSI": {
-        "rsi_value": 99.99800243576902,
+        "rsi_value": 99.99808998854415,
         "signal": "SELL",
-        "confidence": 0.9999334145256341,
-        "current_price": 49310.71,
+        "confidence": 0.9999363329514718,
+        "current_price": 49280.82,
         "metadata": {
           "period_used": 14,
           "data_points": 150,
@@ -562,13 +628,13 @@
         }
       },
       "MACD": {
-        "macd_line": 203.900680979139,
-        "signal_line": 191.08922347020118,
-        "histogram": 12.81145750893782,
+        "macd_line": 194.56568833602796,
+        "signal_line": 181.3675878411681,
+        "histogram": 13.198100494859858,
         "signal": "HOLD",
         "confidence": 0.0,
         "signal_strength": "WEAK",
-        "current_price": 49310.71,
+        "current_price": 49280.82,
         "trend_analysis": {
           "macd_above_signal": true,
           "macd_above_zero": true,
@@ -589,22 +655,22 @@
         }
       },
       "BollingerBands": {
-        "upper_band": 49391.284323924134,
-        "middle_band": 48987.8805,
-        "lower_band": 48584.476676075865,
-        "band_width": 0.016469535722172527,
-        "percent_b": 0.9001319284230586,
+        "upper_band": 49351.97770719831,
+        "middle_band": 48965.9095,
+        "lower_band": 48579.84129280169,
+        "band_width": 0.015768856787937744,
+        "percent_b": 0.9078430885118692,
         "signal": "SELL",
         "confidence": 0.8,
         "volatility_state": "NORMAL",
         "position_in_bands": "WITHIN_BANDS",
-        "current_price": 49310.71,
+        "current_price": 49280.82,
         "analysis": {
           "price_vs_middle": "ABOVE",
           "band_squeeze_detected": "False",
           "price_trend": "NEUTRAL",
-          "band_width_percentile": 16.469535722172527,
-          "reversal_probability": 0.8002638568461171
+          "band_width_percentile": 15.768856787937745,
+          "reversal_probability": 0.8156861770237385
         },
         "metadata": {
           "period_used": 20,
@@ -620,78 +686,78 @@
         }
       },
       "VolumeProfile": {
-        "point_of_control": 48315.947,
-        "value_area_high": 49160.175,
-        "value_area_low": 48135.041,
+        "point_of_control": 48295.255000000005,
+        "value_area_high": 49140.564999999995,
+        "value_area_low": 48182.547000000006,
         "volume_profile": [
           {
-            "price_level": 48315.947,
-            "volume": 7454.0,
-            "percentage": 9.939726904203114
+            "price_level": 48295.255000000005,
+            "volume": 8959.0,
+            "percentage": 11.684839315525876
           },
           {
-            "price_level": 48135.041,
-            "volume": 6895.0,
-            "percentage": 9.194314060166418
+            "price_level": 48182.547000000006,
+            "volume": 8279.0,
+            "percentage": 10.79794449081803
           },
           {
-            "price_level": 48255.645,
-            "volume": 6620.0,
-            "percentage": 8.827608278216344
+            "price_level": 48238.901000000005,
+            "volume": 6988.0,
+            "percentage": 9.11414858096828
           },
           {
-            "price_level": 48376.248999999996,
-            "volume": 5688.0,
-            "percentage": 7.584809046298272
+            "price_level": 48407.963,
+            "volume": 4796.0,
+            "percentage": 6.255217028380635
           },
           {
-            "price_level": 48195.343,
-            "volume": 5479.0,
-            "percentage": 7.306112652016215
+            "price_level": 48351.609000000004,
+            "volume": 4348.0,
+            "percentage": 5.670909849749583
           },
           {
-            "price_level": 48496.853,
-            "volume": 4574.0,
-            "percentage": 6.099317260507788
+            "price_level": 48577.025,
+            "volume": 3750.0,
+            "percentage": 4.890964106844741
           },
           {
-            "price_level": 48436.551,
-            "volume": 3908.0,
-            "percentage": 5.211222530403243
+            "price_level": 48689.733,
+            "volume": 3574.0,
+            "percentage": 4.661414858096828
           },
           {
-            "price_level": 48858.665,
-            "volume": 3282.0,
-            "percentage": 4.3764668231278
+            "price_level": 49027.856999999996,
+            "volume": 3400.0,
+            "percentage": 4.434474123539232
           },
           {
-            "price_level": 48918.967,
-            "volume": 3168.0,
-            "percentage": 4.22445060806486
+            "price_level": 48520.671,
+            "volume": 3306.0,
+            "percentage": 4.311873956594324
           },
           {
-            "price_level": 49160.175,
-            "volume": 3132.0,
-            "percentage": 4.176445487518668
+            "price_level": 48464.317,
+            "volume": 3080.0,
+            "percentage": 4.017111853088481
           }
         ],
         "current_price_position": "AT_POC",
         "volume_trend": "STABLE",
         "signal": "HOLD",
         "confidence": 0.0,
-        "current_price": 49310.71,
-        "current_volume": 1058.0,
+        "current_price": 49280.82,
+        "current_volume": 1162.0,
         "volume_analysis": {
-          "relative_volume": 0.7014042144230085,
+          "relative_volume": 0.7457830079773945,
           "volume_breakout": false,
           "price_volume_divergence": false,
           "volume_above_average": false,
           "high_volume_threshold": false
         },
         "support_resistance": {
-          "poc_support_resistance": 48315.947,
-          "value_area_support": 48135.041,
-          "value_area_resistance": 49160.175,
+          "poc_support_resistance": 48295.255000000005,
+          "value_area_support": 48182.547000000006,
+          "value_area_resistance": 49140.564999999995,
           "price_in_value_area": false
         },
         "metadata": {
@@ -795,15 +861,48 @@
             "india_regulatory_score": 0.1,
             "btc_exchange_netflow": 0.25
           },
-          "data_freshness": "2025-09-15T14:56:56.708050",
+          "data_freshness": "2025-09-17T17:24:50.710659",
           "module_info": {
             "name": "SentimentAnalysisModule",
             "version": "1.0.0",
             "signal_type": "fundamental_sentiment"
           }
         }
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "strength": 0.85,
+        "reasoning": "Strong adoption growth in CENTRAL_SOUTHERN_ASIA, EASTERN_EUROPE, SUB_SAHARAN_AFRICA. EASTERN EUROPE leads with 51.0% YoY growth.",
+        "correlation": 0.04,
+        "timestamp": "2025-09-17T17:24:50.710756",
+        "module": "chainalysis_adoption_tracker",
+        "data_source": "chainalysis",
+        "high_growth_regions": {
+          "CENTRAL_SOUTHERN_ASIA": 0.45999999999999996,
+          "EASTERN_EUROPE": 0.51,
+          "SUB_SAHARAN_AFRICA": 0.42999999999999994
+        },
+        "high_growth_countries": {
+          "IND": 0.7312441937665333,
+          "PAK": 0.4399480506585056,
+          "VNM": 0.6335371179705589,
+          "BRA": 0.529999539244832,
+          "ARG": 0.6367262611084588,
+          "COL": 0.4030617834643997,
+          "VEN": 0.4336846762766804,
+          "TUR": 0.48279808643739774,
+          "UKR": 0.6344865227369141,
+          "RUS": 0.44617890013852923,
+          "NGA": 0.6644366199023992,
+          "KEN": 0.4500599339603504,
+          "ZAF": 0.4462755527998672
+        },
+        "adoption_score": 0.4221526431928755,
+        "adoption_momentum": 0.3824234783689529,
+        "latest_update": "2025-09-15T17:19:15.404100"
       }
     },
-    "price_return": 4.910221248662583
+    "price_return": 4.849886098919365
   }
 }

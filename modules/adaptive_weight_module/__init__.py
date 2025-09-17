@@ -1,10 +1,8 @@
 """
 Adaptive Signal Weight Module
 
-This package contains the adaptive weight model that uses TensorFlow
-to optimize signal weights based on market conditions and past performance.
+This package contains the adaptive weight model components.
+The TensorFlow-dependent imports are now conditional for data collection mode.
 """
 
-from modules.adaptive_weight_module.adaptive_weight_model import AdaptiveWeightModule
-
-__all__ = ['AdaptiveWeightModule']
+__all__ = ['SignalDataCollector']

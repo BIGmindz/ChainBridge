@@ -12,9 +12,16 @@ import sys
 import time
 import json
 import logging
-import schedule
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
+
+# Try to import schedule library - wrapped in try-except for optional dependency
+try:
+    import schedule
+    SCHEDULE_AVAILABLE = True
+except ImportError:
+    SCHEDULE_AVAILABLE = False
+    print("schedule library not available. Automated retraining scheduling will be disabled.")
 
 # Set up logging
 logging.basicConfig(
@@ -185,7 +192,7 @@ class AdaptiveWeightScheduler:
             "current_weights": current_weights
         }
     
-    def _load_weight_history(self) -> List[Dict[str, Any]]:
+    def _load_weight_history(self) -> list[dict[str, any]]:
         """Load historical weight data"""
         history = []
         
