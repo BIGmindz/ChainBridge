@@ -1,10 +1,11 @@
 # BensonBot – Multi-Signal Decision Bot with Modular Architecture
 
-BensonBot is a sophisticated multi-signal cryptocurrency decision bot built with a modular architecture to support both Light and Enterprise versions. The system provides flexible data ingestion, ML-powered analysis, and automated decision-making capabilities.
+BensonBot is a sophisticated multi-signal cryptocurrency decision bot built with a modular architecture to support both Light and Enterprise versions. The system provides flexible data ingestion, ML-powered analysis, and automated decision-making capabilities with market regime detection to optimize trading strategies for bull, bear, and sideways markets.
 
 ## 🚀 Quick Start
 
 ### API Server (Recommended)
+
 ```bash
 # Install dependencies
 pip install -r requirements.txt
@@ -17,6 +18,7 @@ open http://localhost:8000/docs
 ```
 
 ### Docker Deployment
+
 ```bash
 # Start the complete system
 docker-compose up benson-api
@@ -26,6 +28,7 @@ curl http://localhost:8000/health
 ```
 
 ### Legacy RSI Bot Compatibility
+
 ```bash
 # Run the original RSI bot functionality
 python benson_system.py --mode rsi-compat --once
@@ -41,11 +44,13 @@ BensonBot prioritizes security by using environment variables for sensitive data
 ### Setting Up API Credentials
 
 1. **Copy the environment template:**
+
    ```bash
    cp .env.example .env
    ```
 
 2. **Edit `.env` with your credentials:**
+
    ```bash
    # Replace placeholder values with your actual API credentials
    API_KEY="your_actual_api_key_here"
@@ -97,10 +102,12 @@ Benson features a modular architecture with the following components:
 ## 📊 Available Modules
 
 ### Data Ingestion
+
 - **CSV Ingestion**: Process CSV files with flexible column mapping
 - **Alternative Data**: Geopolitical and sentiment data integration
 
 ### Trading Signal Analysis
+
 - **RSI Module**: Technical analysis with Wilder's RSI calculation
 - **MACD Module**: Moving Average Convergence Divergence momentum indicator
 - **Bollinger Bands Module**: Volatility-based analysis with band squeeze detection
@@ -109,16 +116,26 @@ Benson features a modular architecture with the following components:
 - **Multi-Signal Aggregator**: Intelligent combination of uncorrelated signals
 
 ### Machine Learning & Forecasting
+
 - **Sales Forecasting**: ML-powered sales predictions with trend analysis
+- **Market Regime Detection**: Automatic identification of bull, bear, and sideways markets
+- **Adaptive Signal Optimization**: Regime-specific signal weighting and position sizing
 - **Custom Modules**: Extensible framework for additional analysis
 
 ### Business Intelligence
+
 - **Metrics Collection**: Automated tracking of usage and performance
 - **ROI Calculation**: Business impact measurement and reporting
+
+## 📘 Documentation
+
+- [Regime-Specific Backtesting](./docs/REGIME_SPECIFIC_BACKTESTING.md): Learn how to evaluate trading strategy performance across different market regimes
+- [Market Regime Detection](./docs/MARKET_REGIME_DETECTION.md): Understand how the system identifies bull, bear, and sideways markets
 
 ## 🔧 API Examples
 
 ### Multi-Signal Analysis
+
 ```bash
 curl -X POST http://localhost:8000/analysis/multi-signal \
   -H "Content-Type: application/json" \
@@ -134,6 +151,7 @@ curl -X POST http://localhost:8000/analysis/multi-signal \
 ### Individual Signal Analysis
 
 #### Execute RSI Analysis
+
 ```bash
 curl -X POST http://localhost:8000/modules/RSIModule/execute \
   -H "Content-Type: application/json" \
@@ -145,7 +163,8 @@ curl -X POST http://localhost:8000/modules/RSIModule/execute \
   }'
 ```
 
-#### Execute MACD Analysis  
+#### Execute MACD Analysis
+
 ```bash
 curl -X POST http://localhost:8000/modules/MACDModule/execute \
   -H "Content-Type: application/json" \
@@ -158,11 +177,13 @@ curl -X POST http://localhost:8000/modules/MACDModule/execute \
 ```
 
 ### Available Signal Modules
+
 ```bash
 curl http://localhost:8000/signals/available
 ```
 
 ### Multi-Signal Backtesting
+
 ```bash
 curl -X POST http://localhost:8000/analysis/multi-signal/backtest \
   -H "Content-Type: application/json" \
@@ -176,6 +197,7 @@ curl -X POST http://localhost:8000/analysis/multi-signal/backtest \
 ```
 
 ### Process CSV Data
+
 ```bash
 curl -X POST http://localhost:8000/modules/CSVIngestionModule/execute \
   -H "Content-Type: application/json" \
@@ -188,6 +210,7 @@ curl -X POST http://localhost:8000/modules/CSVIngestionModule/execute \
 ```
 
 ### Sales Forecasting
+
 ```bash
 curl -X POST http://localhost:8000/modules/SalesForecastingModule/execute \
   -H "Content-Type: application/json" \
@@ -221,11 +244,12 @@ python benson_rsi_bot.py --test
 ## 📈 Business Impact Features
 
 - **Automation Savings**: Tracks time saved through automated processes
-- **Usage Analytics**: Module execution patterns and adoption metrics  
+- **Usage Analytics**: Module execution patterns and adoption metrics
 - **ROI Reporting**: Cost-benefit analysis of system usage
 - **Performance Monitoring**: Error rates, execution times, and reliability metrics
 
 View metrics:
+
 ```bash
 curl http://localhost:8000/metrics
 ```
@@ -244,6 +268,7 @@ class CustomAnalyzer(Module):
 ```
 
 Register and use:
+
 ```bash
 curl -X POST http://localhost:8000/modules/register \
   -d '{"module_name": "CustomAnalyzer", "module_path": "path.to.module"}'
@@ -252,12 +277,15 @@ curl -X POST http://localhost:8000/modules/register \
 ## 📋 Configuration
 
 ### Environment Variables
+
 - `PORT`: API server port (default: 8000)
-- `HOST`: API server host (default: 0.0.0.0) 
+- `HOST`: API server host (default: 0.0.0.0)
 - `BENSON_CONFIG`: Configuration file path
 
 ### Module Configuration
+
 Configure modules with custom parameters:
+
 ```python
 {
   "rsi": {
@@ -271,18 +299,19 @@ Configure modules with custom parameters:
 ## 🐳 Docker Support
 
 Multiple deployment options:
+
 ```bash
 # API server mode
 docker-compose up benson-api
 
-# Legacy RSI bot mode  
+# Legacy RSI bot mode
 docker-compose --profile legacy up benson-legacy
 
 # One-time RSI analysis
 docker-compose --profile rsi-only up benson-rsi
 ```
 
-## 📚 Documentation
+## 📚 Additional Documentation
 
 - [Modular Architecture Guide](MODULAR_ARCHITECTURE.md)
 - [API Documentation](http://localhost:8000/docs) (when running)
@@ -291,7 +320,8 @@ docker-compose --profile rsi-only up benson-rsi
 ## 🛠️ Development
 
 ### Project Structure
-```
+
+```plaintext
 ├── core/                   # Core system components
 ├── modules/               # Pluggable analysis modules
 ├── api/                   # REST API server
@@ -302,6 +332,7 @@ docker-compose --profile rsi-only up benson-rsi
 ```
 
 ### Running Tests
+
 ```bash
 make test                  # Run all tests
 python benson_system.py --mode test  # System tests
@@ -310,11 +341,13 @@ python benson_system.py --mode test  # System tests
 ## 🌟 Features
 
 - ✅ **Multi-Signal Architecture**: 6 uncorrelated trading signal modules
-- ✅ **Intelligent Signal Aggregation**: Consensus-based decision making  
+- ✅ **Intelligent Signal Aggregation**: Consensus-based decision making
 - ✅ **Risk-Aware Trading**: Automatic risk assessment and position sizing
+- ✅ **Market Regime Detection**: Automatic optimization for bull, bear, and sideways markets ([learn more](docs/MARKET_REGIME_DETECTION.md))
 - ✅ **Signal Independence**: Verified uncorrelated indicators (diversification score: 0.90)
+- ✅ **Enhanced Machine Learning**: Faster adaptation to changing market conditions
 - ✅ Modular, extensible architecture
-- ✅ REST API with OpenAPI documentation  
+- ✅ REST API with OpenAPI documentation
 - ✅ Multiple data ingestion formats
 - ✅ Advanced RSI analysis with Wilder's smoothing
 - ✅ ML-powered sales forecasting
