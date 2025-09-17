@@ -57,6 +57,7 @@ python modules/adaptive_weight_module/test_adaptive_weights.py
 ### Market Regime Detection
 
 The model uses the following features to detect market regimes:
+
 - Short-term and long-term volatility
 - Price trend indicators
 - Volume changes
@@ -66,6 +67,7 @@ The model uses the following features to detect market regimes:
 ### Weight Optimization
 
 The TensorFlow neural network takes three inputs:
+
 1. Signal data from all 15 signals
 2. Market regime one-hot encoding
 3. Market features (volatility, trend, etc.)
@@ -75,6 +77,7 @@ It outputs optimized weights for each signal, which are then applied to the deci
 ### Retraining Process
 
 The model automatically retrains every 24 hours, using:
+
 - The last 7 days of trading data
 - Performance metrics by regime
 - Signal performance correlation with market conditions

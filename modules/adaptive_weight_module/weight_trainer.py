@@ -13,9 +13,14 @@ import pandas as pd
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Tuple, Optional, Union
 
-# TensorFlow imports
-import tensorflow as tf
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
+# TensorFlow imports - wrapped in try-except for optional dependency
+try:
+    import tensorflow as tf
+    from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
+    TENSORFLOW_AVAILABLE = True
+except ImportError:
+    TENSORFLOW_AVAILABLE = False
+    print("TensorFlow not available. Adaptive weight trainer will be disabled.")
 
 # Import related modules
 from modules.adaptive_weight_module.adaptive_weight_model import AdaptiveWeightModule

@@ -1,9 +1,9 @@
 {
-  "timestamp": "2025-09-17T13:38:52.170998",
+  "timestamp": "2025-09-17T17:06:19.092724",
   "signals": {
     "rsi": 0.0,
     "macd": 0.0,
-    "bollinger": -0.8,
+    "bollinger": 0.0,
     "sentiment": 0.8
   },
   "performance": {
@@ -26,14 +26,14 @@
       "symbol": "BTC/USD",
       "price": 42500,
       "size": 0.15,
-      "timestamp": "2025-09-17 13:38:52.170794"
+      "timestamp": "2025-09-17 17:06:19.092432"
     },
     {
       "side": "SELL",
       "symbol": "ETH/USD",
       "price": 2850,
       "size": 1.25,
-      "timestamp": "2025-09-17 13:38:52.170820"
+      "timestamp": "2025-09-17 17:06:19.092461"
     }
   ],
   "alerts": []

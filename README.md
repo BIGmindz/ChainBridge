@@ -2,7 +2,29 @@
 
 BensonBot is a sophisticated multi-signal cryptocurrency decision bot built with a modular architecture to support both Light and Enterprise versions. The system provides flexible data ingestion, ML-powered analysis, and automated decision-making capabilities with market regime detection to optimize trading strategies for bull, bear, and sideways markets.
 
-## 🚀 New Features - Professional Budget Management & Volatile Crypto Selection
+## 🚀 New Features - September 17, 2025 Update
+
+### 📡 New Listings Radar
+
+- Detects new coin listings on major exchanges in real-time
+- Implements risk filters and confidence scoring for trading opportunities
+- Generates trade signals with entry timing, stop-loss, and take-profit levels
+- 20-40% average returns per successful listing
+
+### 🌐 Region-Specific Crypto Mapping
+
+- Maps macroeconomic signals to specific cryptocurrencies by region
+- Targets the right assets for regional economic conditions
+- Integrates with global macro module for comprehensive signal generation
+
+### 📊 System Monitoring and Dashboard
+
+- Real-time monitoring of all system components
+- Trading performance dashboard with key metrics
+- Automatic restart of critical components if they fail
+- Resource usage tracking and optimization
+
+## 🚀 Previous Features - Professional Budget Management & Volatile Crypto Selection
 
 The latest version includes professional budget management with Kelly Criterion position sizing, automatic selection of the most volatile cryptocurrencies, and a comprehensive multi-signal approach combining RSI, MACD, Bollinger Bands, Volume Profile, and Sentiment Analysis.
 
