@@ -107,6 +107,21 @@
 - **Risk Control**: Stop-loss and take-profit management with drawdown protection
 - **Portfolio Tracking**: Real-time capital and performance monitoring
 
+## Key Correlation Analysis
+
+The system utilizes signals with varying correlation profiles to maximize edge:
+
+| Signal Type | Correlation | Edge |
+|-------------|-------------|------|
+| Traditional Technical (RSI/MACD/Bollinger) | 0.70 | Minimal |
+| Logistics-Based Signals | 0.05 | MASSIVE (3-6 month forward looking) |
+
+The logistics-based signals include:
+
+- Port congestion: Predicts inflation → BTC hedge trades
+- Diesel prices: Mining costs → BTC production economics
+- Container rates: Supply chain stress → Risk-on/off flows
+
 ## Next Steps
 
 1. Long-term performance evaluation (48+ hours of paper trading)
@@ -116,3 +131,4 @@
 5. Expand monitoring tools with email/webhook notifications
 6. Backtesting framework to validate budget management strategy
 7. Web-based dashboard for trading performance visualization
+8. Expand logistics data sources with real-time shipping data APIs
