@@ -1,0 +1,40 @@
+{
+  "timestamp": "2025-09-17T13:38:52.170998",
+  "signals": {
+    "rsi": 0.0,
+    "macd": 0.0,
+    "bollinger": -0.8,
+    "sentiment": 0.8
+  },
+  "performance": {
+    "total_pnl": 1250.75,
+    "win_rate": 0.68,
+    "active_positions": 7,
+    "realized_pnl": 950.25,
+    "unrealized_pnl": 300.5,
+    "wins": 17,
+    "losses": 8
+  },
+  "market_data": {
+    "regime": "bull",
+    "volatility": 0.025,
+    "trend_strength": 0.75
+  },
+  "recent_trades": [
+    {
+      "side": "BUY",
+      "symbol": "BTC/USD",
+      "price": 42500,
+      "size": 0.15,
+      "timestamp": "2025-09-17 13:38:52.170794"
+    },
+    {
+      "side": "SELL",
+      "symbol": "ETH/USD",
+      "price": 2850,
+      "size": 1.25,
+      "timestamp": "2025-09-17 13:38:52.170820"
+    }
+  ],
+  "alerts": []
+}

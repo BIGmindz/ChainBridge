@@ -2,9 +2,40 @@
 
 BensonBot is a sophisticated multi-signal cryptocurrency decision bot built with a modular architecture to support both Light and Enterprise versions. The system provides flexible data ingestion, ML-powered analysis, and automated decision-making capabilities with market regime detection to optimize trading strategies for bull, bear, and sideways markets.
 
-## 🚀 Quick Start
+## 🚀 New Features - Dynamic Crypto Selection & Multi-Signal Trading
 
-### API Server (Recommended)
+The latest version includes automatic selection of the most volatile cryptocurrencies and a comprehensive multi-signal approach combining RSI, MACD, Bollinger Bands, Volume Profile, and Sentiment Analysis.
+
+### One-Step Trading System
+
+```bash
+# Start the complete automated trading system
+./start_trading.sh
+
+# Run in test mode to verify functionality
+./start_trading.sh --test
+
+# Run performance analysis on your trading history
+./start_trading.sh --analyze
+```
+
+### Individual Components
+
+```bash
+# Find the most volatile cryptocurrencies to trade
+python dynamic_crypto_selector.py
+
+# Run the multi-signal trading bot
+python multi_signal_bot.py
+
+# Analyze trading performance with visualizations
+python analyze_trading_performance.py
+
+# Full automated system (selection + trading)
+python automated_trader.py
+```
+
+### Legacy API and Bot Compatibility
 
 ```bash
 # Install dependencies
@@ -13,28 +44,8 @@ pip install -r requirements.txt
 # Start the API server
 python benson_system.py --mode api-server
 
-# Access the API documentation
-open http://localhost:8000/docs
-```
-
-### Docker Deployment
-
-```bash
-# Start the complete system
-docker-compose up benson-api
-
-# Access the API
-curl http://localhost:8000/health
-```
-
-### Legacy RSI Bot Compatibility
-
-```bash
 # Run the original RSI bot functionality
 python benson_system.py --mode rsi-compat --once
-
-# Or use the original bot directly
-python benson_rsi_bot.py --once
 ```
 
 ## 🔐 Security Configuration
@@ -89,13 +100,23 @@ api:
 - ❌ **DON'T**: Share API keys in chat, logs, or screenshots
 - ❌ **DON'T**: Use production API keys in development environments
 
-## 🏗️ Architecture Overview
+## 🏗️ Enhanced Architecture & Features
+
+### New Trading Components
+
+- **Dynamic Crypto Selector**: Automatically finds the most volatile cryptocurrencies with sufficient volume
+- **Multi-Signal Integration**: Combines 5 different trading signals for better decision-making
+- **Adaptive Risk Management**: Trading parameters optimized based on each crypto's volatility profile
+- **Performance Analysis**: Detailed metrics and visualizations for strategy evaluation
+- **Regime Detection**: Optimizes strategies for bull, bear, and sideways markets
+
+### Core Architecture
 
 Benson features a modular architecture with the following components:
 
 - **Core System**: Module management, data processing, and pipeline orchestration
 - **API Layer**: RESTful endpoints for system interaction and integration
-- **Pluggable Modules**: CSV ingestion, RSI analysis, sales forecasting, and more
+- **Pluggable Modules**: CSV ingestion, RSI, MACD, Bollinger Bands, Volume Profile, and Sentiment Analysis
 - **Business Impact Tracking**: ROI metrics, usage analytics, and adoption tracking
 - **Cloud-Native Design**: Containerized deployment with scalability support
 
