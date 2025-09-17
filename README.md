@@ -2,9 +2,23 @@
 
 BensonBot is a sophisticated multi-signal cryptocurrency decision bot built with a modular architecture to support both Light and Enterprise versions. The system provides flexible data ingestion, ML-powered analysis, and automated decision-making capabilities with market regime detection to optimize trading strategies for bull, bear, and sideways markets.
 
-## 🚀 New Features - Dynamic Crypto Selection & Multi-Signal Trading
+## 🚀 New Features - Professional Budget Management & Volatile Crypto Selection
 
-The latest version includes automatic selection of the most volatile cryptocurrencies and a comprehensive multi-signal approach combining RSI, MACD, Bollinger Bands, Volume Profile, and Sentiment Analysis.
+The latest version includes professional budget management with Kelly Criterion position sizing, automatic selection of the most volatile cryptocurrencies, and a comprehensive multi-signal approach combining RSI, MACD, Bollinger Bands, Volume Profile, and Sentiment Analysis.
+
+### 💰 Professional Budget Management
+
+- Kelly Criterion position sizing for mathematically optimal growth
+- Risk management with stop-loss and take-profit
+- Portfolio tracking with performance dashboard
+- Dynamic risk adjustment based on drawdown
+- Capital preservation with maximum position limits
+
+### 📊 Volatile Cryptocurrency Selection
+
+- Automatic identification of highest-volatility trading pairs
+- Volatility calculation using price standard deviation
+- Configuration updates with selected pairs
 
 ### One-Step Trading System
 
@@ -17,22 +31,35 @@ The latest version includes automatic selection of the most volatile cryptocurre
 
 # Run performance analysis on your trading history
 ./start_trading.sh --analyze
+
+# Set up enhanced trading with volatile cryptos and budget management
+python3 run_enhanced_bot_setup.py
+
+# Monitor performance in real-time
+python3 monitor_performance.py
 ```
 
 ### Individual Components
 
 ```bash
 # Find the most volatile cryptocurrencies to trade
-python dynamic_crypto_selector.py
+python3 dynamic_crypto_selector.py
+python3 src/crypto_selector.py  # Alternative implementation
 
-# Run the multi-signal trading bot
-python multi_signal_bot.py
+# Run the multi-signal trading bot with budget management
+python3 multi_signal_bot.py
+
+# Test the budget manager independently
+python3 budget_manager.py
 
 # Analyze trading performance with visualizations
-python analyze_trading_performance.py
+python3 analyze_trading_performance.py
 
 # Full automated system (selection + trading)
-python automated_trader.py
+python3 automated_trader.py
+
+# Monitor portfolio in real-time
+python3 monitor_performance.py
 ```
 
 ### Legacy API and Bot Compatibility
