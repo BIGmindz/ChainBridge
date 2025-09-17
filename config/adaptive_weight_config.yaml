@@ -1,0 +1,79 @@
+# Adaptive Weight Model Configuration
+
+# Basic configuration
+data_dir: "data"
+model_dir: "models"
+logs_dir: "logs"
+results_dir: "test_results"
+
+# Model settings
+use_adaptive_weights: true
+n_signals: 15
+n_regimes: 4
+lookback_days: 7
+retrain_frequency_hours: 24
+
+# Training configuration
+batch_size: 32
+epochs: 100
+validation_split: 0.2
+early_stopping_patience: 10
+min_samples_required: 50
+
+# Market regime detection
+volatility_threshold: 0.02
+trend_threshold: 0.005
+regime_features:
+  - "volatility_1d"
+  - "volatility_7d" 
+  - "volatility_30d"
+  - "trend_1d"
+  - "trend_7d"
+  - "trend_30d"
+  - "volume_change_1d"
+  - "volume_change_7d"
+  - "rsi_value"
+  - "bb_width"
+
+# Signal layer configuration
+signal_layers:
+  LAYER_1_TECHNICAL:
+    - "RSI"
+    - "MACD"
+    - "Bollinger"
+    - "Volume"
+    - "Sentiment"
+  LAYER_2_LOGISTICS:
+    - "Port_Congestion"
+    - "Diesel"
+    - "Supply_Chain" 
+    - "Container"
+  LAYER_3_GLOBAL_MACRO:
+    - "Inflation"
+    - "Regulatory"
+    - "Remittance"
+    - "CBDC"
+    - "FATF"
+  LAYER_4_ADOPTION:
+    - "Chainalysis_Global"
+
+# Weight constraints
+min_weight: 0.01
+max_weight: 0.5
+
+# Hyperparameters
+learning_rate: 0.001
+dropout_rate: 0.2
+l1_reg: 0.0001
+l2_reg: 0.0001
+
+# Visualization settings
+visualization:
+  output_dir: "reports/adaptive_weight_viz"
+  regime_colors:
+    BULL: "green"
+    BEAR: "red"
+    SIDEWAYS: "gray"
+    VOLATILE: "orange"
+    LOW_VOLATILITY: "blue"
+    UNKNOWN: "black"
