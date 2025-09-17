@@ -125,6 +125,7 @@ def run_comprehensive_demo():
         ("modules.bollinger_bands_module", "Bollinger Bands Module", {"period": 20, "std_multiplier": 2.0}),
         ("modules.volume_profile_module", "Volume Profile Module", {"lookback_periods": 50}),
         ("modules.sentiment_analysis_module", "Sentiment Analysis Module", {}),
+        ("modules.adoption_tracker_module", "Chainalysis Adoption Tracker Module", {}),
         ("modules.multi_signal_aggregator_module", "Multi-Signal Aggregator Module", {})
     ]
     
@@ -208,6 +209,14 @@ def run_comprehensive_demo():
             print_signal_summary(sa_result, "SentimentAnalysis")
         except Exception as e:
             print(f"  SentimentAnalysis │ ERR │ 0.00 │          │ Error: {e}")
+        
+        # Chainalysis Adoption Tracker
+        try:
+            adoption_result = module_manager.execute_module("AdoptionTrackerModule", {})
+            individual_signals["AdoptionTracker"] = adoption_result
+            print_signal_summary(adoption_result, "AdoptionTracker")
+        except Exception as e:
+            print(f"  AdoptionTracker   │ ERR │ 0.00 │          │ Error: {e}")
         
         # Multi-Signal Aggregation
         print(f"\n4. MULTI-SIGNAL AGGREGATION - {scenario_name.upper()}")
