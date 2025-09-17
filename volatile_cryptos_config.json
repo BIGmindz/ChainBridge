@@ -1,0 +1,42 @@
+{
+  "selected_cryptos": [
+    "WIF/USD",
+    "DOGE/USD",
+    "NEAR/USD",
+    "SOL/USD",
+    "PEPE/USD"
+  ],
+  "volatility_scores": {
+    "WIF/USD": {
+      "volatility": 0.049827111835416875,
+      "volume_usd": 37662.01798579597,
+      "score": 0.22800463431638443,
+      "last_price": 0.9189
+    },
+    "DOGE/USD": {
+      "volatility": 0.030973685316576613,
+      "volume_usd": 1343297.4523094082,
+      "score": 0.18981208702593383,
+      "last_price": 0.2649805
+    },
+    "NEAR/USD": {
+      "volatility": 0.03796144704880565,
+      "volume_usd": 24034.17752109273,
+      "score": 0.1663033041033352,
+      "last_price": 2.706
+    },
+    "SOL/USD": {
+      "volatility": 0.024659487133555247,
+      "volume_usd": 2237647.868915666,
+      "score": 0.1565826126007785,
+      "last_price": 235.45
+    },
+    "PEPE/USD": {
+      "volatility": 0.02921880627565991,
+      "volume_usd": 118828.6022755264,
+      "score": 0.1482832400230566,
+      "last_price": 1.0903e-05
+    }
+  },
+  "timestamp": "2025-09-17T14:18:00.755569"
+}
