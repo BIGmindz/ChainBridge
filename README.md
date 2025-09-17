@@ -20,6 +20,14 @@ The latest version includes professional budget management with Kelly Criterion 
 - Volatility calculation using price standard deviation
 - Configuration updates with selected pairs
 
+### 🚢 Logistics-Based Signal Module
+
+- Forward-looking signals (3-6 months) based on supply chain metrics
+- Extremely low correlation (0.05) with traditional signals
+- Port congestion analysis for inflation hedge predictions
+- Diesel price monitoring for mining cost economics
+- Container rate tracking for supply chain stress indicators
+
 ### One-Step Trading System
 
 ```bash

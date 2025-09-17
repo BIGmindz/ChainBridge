@@ -49,6 +49,7 @@ from modules.macd_module import MACDModule
 from modules.bollinger_bands_module import BollingerBandsModule
 from modules.volume_profile_module import VolumeProfileModule
 from modules.sentiment_analysis_module import SentimentAnalysisModule
+from modules.logistics_signals_module import LogisticsSignalsModule
 from modules.multi_signal_aggregator_module import MultiSignalAggregatorModule
 
 
@@ -185,6 +186,7 @@ def run_multi_signal_bot(once: bool = False) -> None:
     bollinger = BollingerBandsModule()
     volume = VolumeProfileModule()
     sentiment = SentimentAnalysisModule()
+    logistics = LogisticsSignalsModule()
     aggregator = MultiSignalAggregatorModule()
     
     manager.register_module("rsi", rsi)
@@ -192,6 +194,7 @@ def run_multi_signal_bot(once: bool = False) -> None:
     manager.register_module("bollinger", bollinger)
     manager.register_module("volume", volume)
     manager.register_module("sentiment", sentiment)
+    manager.register_module("logistics", logistics)
     manager.register_module("aggregator", aggregator)
     
     # Instead of MetricsCollector, we'll directly manage our metrics
@@ -221,7 +224,7 @@ def run_multi_signal_bot(once: bool = False) -> None:
     print(f"Exchange: {exchange_id}")
     print(f"Monitoring: {symbols}")
     print(f"Timeframe: {timeframe}")
-    print(f"Signal Modules: RSI, MACD, Bollinger Bands, Volume Profile, Sentiment Analysis")
+    print(f"Signal Modules: RSI, MACD, Bollinger Bands, Volume Profile, Sentiment Analysis, Logistics Signals")
     print(f"Cooldown: {cooldown_min} min")
     print("-" * 80)
 
