@@ -1,0 +1,21 @@
+{
+  "timestamp": "2025-09-17T17:02:53.328481",
+  "total_signals": 14,
+  "by_category": {
+    "technical": 5,
+    "logistics": 4,
+    "macro": 5
+  },
+  "intra_category_correlations": {
+    "technical": 0.6165011898104713,
+    "logistics": 0.2973574957326753,
+    "macro": 0.18841029333106213
+  },
+  "cross_category_correlations": {
+    "technical_logistics": 0.09376113676181572,
+    "technical_macro": 0.09568189629385968,
+    "logistics_macro": 0.0861597784982038
+  },
+  "overall_correlation": 0.1738870936083326,
+  "effectiveness_rating": "EXCELLENT"
+}
