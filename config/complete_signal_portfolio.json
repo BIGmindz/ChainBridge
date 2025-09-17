@@ -1,0 +1,81 @@
+{
+  "signals": [
+    {
+      "name": "RSI",
+      "correlation": 0.7,
+      "weight": 0.05
+    },
+    {
+      "name": "MACD",
+      "correlation": 0.65,
+      "weight": 0.05
+    },
+    {
+      "name": "Bollinger",
+      "correlation": 0.6,
+      "weight": 0.05
+    },
+    {
+      "name": "Volume",
+      "correlation": 0.5,
+      "weight": 0.05
+    },
+    {
+      "name": "Sentiment",
+      "correlation": 0.4,
+      "weight": 0.05
+    },
+    {
+      "name": "Port_Congestion",
+      "correlation": 0.05,
+      "weight": 0.1
+    },
+    {
+      "name": "Diesel_Prices",
+      "correlation": 0.08,
+      "weight": 0.08
+    },
+    {
+      "name": "Supply_Chain",
+      "correlation": 0.03,
+      "weight": 0.1
+    },
+    {
+      "name": "Container_Rates",
+      "correlation": 0.07,
+      "weight": 0.07
+    },
+    {
+      "name": "Adoption_Growth",
+      "correlation": 0.02,
+      "weight": 0.1
+    },
+    {
+      "name": "Inflation_Crisis",
+      "correlation": 0.03,
+      "weight": 0.12
+    },
+    {
+      "name": "Regulatory_Flow",
+      "correlation": 0.04,
+      "weight": 0.08
+    },
+    {
+      "name": "Remittance_Demand",
+      "correlation": 0.02,
+      "weight": 0.08
+    },
+    {
+      "name": "CBDC_Progress",
+      "correlation": 0.05,
+      "weight": 0.07
+    }
+  ],
+  "total_count": 14,
+  "avg_correlation": 0.16733333333333333,
+  "categories": {
+    "technical": 5,
+    "logistics": 4,
+    "macro": 5
+  }
+}

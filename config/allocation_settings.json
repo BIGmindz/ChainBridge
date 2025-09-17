@@ -1,0 +1,18 @@
+{
+  "first_listing_amount": 1000.0,
+  "max_allocation_per_listing": 1000.0,
+  "min_allocation_per_listing": 100.0,
+  "max_risk_per_trade": 0.025,
+  "confidence_tiers": {
+    "0.95": 1.0,
+    "0.90": 0.8,
+    "0.85": 0.6,
+    "0.80": 0.4,
+    "0.75": 0.2
+  },
+  "risk_level_multipliers": {
+    "LOW": 1.0,
+    "MEDIUM": 0.8,
+    "HIGH": 0.5
+  }
+}

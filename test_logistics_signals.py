@@ -14,7 +14,7 @@ def test_logistics():
     logistics = LogisticsSignalModule()
     
     # Generate signal
-    result = logistics.process({"price_data": [], "symbol": "BTC/USD"})
+    result = logistics.process({})
     
     print(f"\n📊 LOGISTICS SIGNAL RESULT:")
     print(f"Signal: {result['signal']}")

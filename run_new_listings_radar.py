@@ -17,7 +17,8 @@ from datetime import datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Import the New Listings Radar module
-from modules.new_listings_radar_module import NewListingsRadar, run_new_listings_radar
+from modules.new_listings_radar_module import NewListingsRadar
+from modules.new_listings_radar import ListingsMonitor
 
 async def main():
     """Main execution function"""
@@ -67,7 +68,9 @@ async def main():
     
     # If no arguments provided, run full radar
     if not (args.scan or args.backtest):
-        await run_new_listings_radar()
+        # Use the new ListingsMonitor class
+        monitor = ListingsMonitor()
+        monitor.scan_exchanges()
 
 if __name__ == "__main__":
     asyncio.run(main())

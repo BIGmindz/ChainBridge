@@ -20,24 +20,41 @@ import pandas as pd
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Tuple, Optional, Union
 
-# TensorFlow and related imports
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras.models import Sequential, Model
-from tensorflow.keras.layers import Dense, Dropout, BatchNormalization, Input
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.regularizers import l1_l2
+# Try to import joblib - used for model persistence
+try:
+    import joblib
+    JOBLIB_AVAILABLE = True
+except ImportError:
+    JOBLIB_AVAILABLE = False
+    print("joblib not available. Model saving and loading will be disabled.")
 
-# scikit-learn for preprocessing and evaluation
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+# TensorFlow and related imports - wrapped in try-except for optional dependency
+try:
+    import tensorflow as tf
+    from tensorflow import keras
+    from tensorflow.keras import layers
+    from tensorflow.keras.models import Sequential, Model
+    from tensorflow.keras.layers import Dense, Dropout, BatchNormalization, Input
+    from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
+    from tensorflow.keras.optimizers import Adam
+    from tensorflow.keras.regularizers import l1_l2
+    TENSORFLOW_AVAILABLE = True
+except ImportError:
+    TENSORFLOW_AVAILABLE = False
+    print("TensorFlow not available. Adaptive weight model will be disabled.")
 
-# For market regime detection
-from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
+# scikit-learn for preprocessing and evaluation - wrapped in try-except for optional dependency
+try:
+    from sklearn.preprocessing import StandardScaler, MinMaxScaler
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+    # For market regime detection
+    from sklearn.cluster import KMeans
+    from sklearn.decomposition import PCA
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+    print("scikit-learn not available. Adaptive weight model will be disabled.")
 
 # Import the base Module class
 from core.module_manager import Module
@@ -500,8 +517,7 @@ class AdaptiveWeightModule(Module):
             self.weight_model.save(os.path.join(self.model_dir, 'weight_model.h5'))
         
         # Save the regime model
-        if self.regime_model is not None:
-            import joblib
+        if self.regime_model is not None and JOBLIB_AVAILABLE:
             joblib.dump(self.regime_model, os.path.join(self.model_dir, 'regime_model.joblib'))
         
         # Save scalers
@@ -547,9 +563,8 @@ class AdaptiveWeightModule(Module):
                 self.weight_model = None
         
         # Load regime model if exists
-        if os.path.exists(regime_model_path):
+        if os.path.exists(regime_model_path) and JOBLIB_AVAILABLE:
             try:
-                import joblib
                 self.regime_model = joblib.load(regime_model_path)
                 print(f"Loaded regime model from {regime_model_path}")
             except Exception as e:
@@ -557,9 +572,8 @@ class AdaptiveWeightModule(Module):
                 self._build_regime_model()
         
         # Load scalers if they exist
-        if os.path.exists(scalers_path):
+        if os.path.exists(scalers_path) and JOBLIB_AVAILABLE:
             try:
-                import joblib
                 self.scalers = joblib.load(scalers_path)
                 print(f"Loaded data scalers from {scalers_path}")
             except Exception as e:
