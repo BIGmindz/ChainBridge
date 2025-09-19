@@ -13,6 +13,7 @@ import time
 import argparse
 import yaml
 import re
+import json
 from typing import Dict, Any, List
 from datetime import datetime, timezone
 
@@ -69,7 +70,7 @@ from modules.region_specific_crypto_module import RegionSpecificCryptoModule  # 
 from modules.new_listings_radar_module import NewListingsRadar  # New listings monitoring  # noqa: E402
 from modules.multi_signal_aggregator_module import MultiSignalAggregatorModule  # noqa: E402
 
-
+ 
 def load_config(path: str) -> Dict[str, Any]:
     """Load configuration from YAML file with environment variable substitution."""
     if not os.path.exists(path):
@@ -179,7 +180,6 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
         try:
             if markets_file:
                 # Load markets from a local JSON file
-                import json
                 with open(markets_file, "r") as f:
                     markets = json.load(f)
             else:
@@ -230,7 +230,18 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
         print("⚠️ Removing KIN/USD from symbols due to unreliable price feed")
     symbols = filtered
 
-    validate_symbols(exchange, symbols)
+    # Validate symbols and gracefully handle symbols unsupported by the exchange
+    try:
+        validate_symbols(exchange, symbols)
+    except Exception as e:
+        # Filter to symbols supported by the exchange and warn
+        supported = [s for s in symbols if s in getattr(exchange, "symbols", [])]
+        removed = [s for s in symbols if s not in getattr(exchange, "symbols", [])]
+        if removed:
+            print(f"⚠️ Removing unsupported symbols for {exchange_id}: {removed}")
+        symbols = supported
+        if not symbols:
+            raise RuntimeError(f"No valid symbols remain for {exchange_id} after filtering: {removed}")
     
     # Setup exchange adapter
     exchange_adapter = ExchangeAdapter(exchange, cfg)
@@ -301,7 +312,8 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
     print(f"Exchange: {exchange_id}")
     print(f"Monitoring: {symbols}")
     print(f"Timeframe: {timeframe}")
-    print("Signal Modules: RSI, MACD, Bollinger Bands, Volume Profile, Sentiment Analysis, Logistics Signals, Global Macro, Region-Specific Crypto, New Listings Radar")
+    print("Signal Modules: RSI, MACD, Bollinger Bands, Volume Profile, Sentiment Analysis,")
+    print("  Logistics Signals, Global Macro, Region-Specific Crypto, New Listings Radar")
     print(f"Cooldown: {cooldown_min} min")
     print("-" * 80)
 
