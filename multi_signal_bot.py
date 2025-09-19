@@ -27,21 +27,35 @@ from budget_manager import BudgetManager
 
 # Define our own safe fetch methods since they might not be available
 def safe_fetch_ticker(exchange, symbol):
-    """Safely fetch ticker data with error handling."""
+    """Safely fetch ticker data with error handling. NEVER returns mock data."""
     try:
-        return exchange.fetch_ticker(symbol)
+        ticker = exchange.fetch_ticker(symbol)
+        if not ticker or not isinstance(ticker, dict):
+            raise ValueError(f"Invalid ticker data format for {symbol}")
+        price = ticker.get("last") or ticker.get("close") or ticker.get("bid") or ticker.get("ask")
+        if price is None or price <= 0:
+            raise ValueError(f"No valid price in ticker data for {symbol}")
+        return {"last": float(price)}
     except Exception as e:
-        print(f"Error fetching ticker: {e}")
-        return {"last": 0.0}  # Return dummy data
+        error_msg = f"🚨 CRITICAL: Failed to fetch live ticker data for {symbol}: {str(e)}"
+        print(error_msg)
+        print("🚨 LIVE TRADING REQUIRES REAL MARKET DATA - Check your connection and API!")
+        raise RuntimeError(f"Live ticker fetch failed for {symbol}: {str(e)}")
         
 def safe_fetch_ohlcv(exchange, symbol, timeframe, limit=100):
-    """Safely fetch OHLCV data with error handling."""
+    """Safely fetch OHLCV data with error handling. NEVER returns mock data."""
     try:
-        return exchange.fetch_ohlcv(symbol, timeframe, limit=limit)
+        ohlcv_data = exchange.fetch_ohlcv(symbol, timeframe, limit=limit)
+        if not ohlcv_data or len(ohlcv_data) == 0:
+            raise ValueError(f"No OHLCV data received from exchange for {symbol}")
+        return ohlcv_data
     except Exception as e:
-        print(f"Error fetching OHLCV: {e}")
-        return None  # Return None to trigger mock data generation
+        error_msg = f"🚨 CRITICAL: Failed to fetch live OHLCV data for {symbol}: {str(e)}"
+        print(error_msg)
+        print("🚨 LIVE TRADING REQUIRES REAL MARKET DATA - Check your connection and API!")
+        raise RuntimeError(f"Live data fetch failed for {symbol}: {str(e)}")
 from src.exchange_adapter import ExchangeAdapter
+from src.market_utils import check_markets_have_minima
 
 # Import signal modules
 from modules.rsi_module import RSIModule
@@ -81,78 +95,51 @@ def utc_now_str() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S %Z")
 
 
-def prepare_price_data(ohlcv_data):
-    """Convert OHLCV data to the format expected by signal modules."""
-    
-    # For testing purposes in restricted environments, generate mock data if real data is unavailable
+def prepare_price_data(ohlcv_data, symbol: str = ""):
+    """Convert OHLCV data to the format expected by signal modules.
+
+    Args:
+        ohlcv_data: Raw OHLCV data from exchange (MUST be real data)
+        symbol: Trading symbol for logging
+
+    Raises:
+        RuntimeError: If no real OHLCV data is available
+    """
+
+    # CRITICAL: Never use mock data in live trading
     if not ohlcv_data or isinstance(ohlcv_data, float):
-        # Generate mock data
-        print("Generating mock price data for testing")
-        import random
-        import time
-        from datetime import datetime, timedelta
-        
-        now = datetime.now()
-        price_data = []
-        base_price = 30000
-        
-        for i in range(100):
-            # Random price movement
-            price_change = (random.random() - 0.5) * 100
-            base_price += price_change
-            
-            # Create a mock candle
-            timestamp = int((now - timedelta(minutes=100-i)).timestamp() * 1000)
-            price_data.append({
-                'timestamp': timestamp,
-                'open': base_price - random.random() * 10,
-                'high': base_price + random.random() * 20,
-                'low': base_price - random.random() * 20,
-                'close': base_price,
-                'volume': random.random() * 100
-            })
-        
-        return price_data
-    
-    # Process real data
+        error_msg = f"🚨 CRITICAL ERROR: No live OHLCV data available for {symbol}!"
+        print(error_msg)
+        print("🚨 This bot requires LIVE market data. Check your internet connection and exchange API.")
+        raise RuntimeError(f"Live trading requires real market data for {symbol}")
+
+    # Parse real OHLCV data
     try:
         price_data = []
         for candle in ohlcv_data:
-            # Handle different formats of candle data
-            if isinstance(candle, list) and len(candle) >= 6:
-                # Standard format [timestamp, open, high, low, close, volume]
+            if len(candle) >= 6:  # [timestamp, open, high, low, close, volume]
                 price_data.append({
-                    'timestamp': candle[0],
-                    'open': candle[1],
-                    'high': candle[2],
-                    'low': candle[3],
-                    'close': candle[4],
-                    'volume': candle[5]
+                    "timestamp": candle[0],
+                    "open": float(candle[1]),
+                    "high": float(candle[2]),
+                    "low": float(candle[3]),
+                    "close": float(candle[4]),
+                    "volume": float(candle[5]) if len(candle) > 5 else 0.0
                 })
-            elif isinstance(candle, dict):
-                # Dictionary format
-                price_data.append({
-                    'timestamp': candle.get('timestamp', 0),
-                    'open': candle.get('open', 0),
-                    'high': candle.get('high', 0),
-                    'low': candle.get('low', 0),
-                    'close': candle.get('close', 0),
-                    'volume': candle.get('volume', 0)
-                })
-        
-        # If we couldn't parse any data, generate mock data
+
         if not price_data:
-            raise ValueError("Could not parse OHLCV data")
-            
+            raise ValueError("No valid price data parsed")
+
+        print(f"✅ Successfully parsed {len(price_data)} live candles for {symbol}")
         return price_data
-        
+
     except Exception as e:
-        print(f"Error preparing price data: {e}. Generating mock data instead.")
-        # Call the function recursively with None to generate mock data
-        return prepare_price_data(None)
+        error_msg = f"🚨 ERROR parsing live price data for {symbol}: {str(e)}"
+        print(error_msg)
+        raise RuntimeError(f"Failed to parse live market data for {symbol}: {str(e)}")
 
 
-def run_multi_signal_bot(once: bool = False) -> None:
+def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, markets_file: str = None) -> None:
     """Main bot execution logic."""
     print("\n🚀 Multi-Signal Paper Trading Bot Starting...")
     
@@ -162,15 +149,87 @@ def run_multi_signal_bot(once: bool = False) -> None:
 
     exchange_id = str(cfg.get("exchange", "kraken")).lower()
     
-    # Get API configuration
+    # Get API configuration from config file
     api_config = cfg.get("api", {})
+    
+    # Override with environment variables if available (for live trading)
+    env_api_key = os.getenv("API_KEY", "").strip()
+    env_api_secret = os.getenv("API_SECRET", "").strip()
+    
+    if env_api_key and env_api_secret:
+        api_config = {
+            "key": env_api_key,
+            "secret": env_api_secret
+        }
+        print("🔑 Using API credentials from environment variables")
+    elif api_config.get("key") and api_config.get("secret"):
+        print("🔑 Using API credentials from config file")
+    else:
+        print("⚠️  No API credentials found - running in read-only mode")
     
     # Setup exchange and validate symbols
     exchange = setup_exchange(exchange_id, api_config)
+
+    # If requested, run a dry preflight to check market minima and exit
+    if dry_preflight:
+        try:
+            if markets_file:
+                # Load markets from a local JSON file
+                import json
+                with open(markets_file, "r") as f:
+                    markets = json.load(f)
+            else:
+                markets = exchange.load_markets()
+
+            # Produce a diagnostic report showing detected minima per symbol
+            from src.market_utils import get_minima_report
+
+            report = get_minima_report(markets, symbols if symbols else [])
+            print("\nDry Preflight - Minima Diagnostic Report:\n")
+            for s, info in report.items():
+                if info.get('found_as') is None:
+                    print(f"{s}: NOT FOUND in markets dump")
+                else:
+                    cm = info.get('cost_min')
+                    am = info.get('amount_min')
+                    print(f"{s}: found_as={info.get('found_as')}, cost_min={cm}, amount_min={am}")
+
+            # Determine missing symbols as before
+            missing = check_markets_have_minima(markets, symbols if symbols else [])
+            if missing:
+                print(f"\n🚨 PREFLIGHT FAILED: missing minima/limits for symbols: {missing}")
+                sys.exit(1)
+            print("\n✅ PREFLIGHT PASSED: minima/limits present for monitored symbols")
+            sys.exit(0)
+        except Exception as e:
+            print(f"🚨 PREFLIGHT FAILED: {e}")
+            sys.exit(2)
+
+    # If running live, perform a preflight check to ensure markets report minima
+    is_live_mode = os.getenv("PAPER", "true").lower() == "false"
+    if is_live_mode:
+        try:
+            markets = exchange.load_markets()
+            missing = check_markets_have_minima(markets, symbols if symbols else [])
+            if missing:
+                print(f"🚨 LIVE PRECHECK FAILED: missing minima/limits for symbols: {missing}")
+                print("🚨 Aborting live mode. Set PAPER=true to continue in paper mode or fix market metadata.")
+                return
+            print("✅ Live preflight checks passed: required minima/limits present for monitored symbols")
+        except Exception as e:
+            print(f"🚨 LIVE PRECHECK FAILED: {e}")
+            print("🚨 Aborting live mode. Set PAPER=true to continue in paper mode or fix markets.")
+            return
     symbols: List[str] = list(cfg.get("symbols", []))
     if not symbols:
         symbols = ["SOL/USD", "DOGE/USD", "SHIB/USD", "AVAX/USD", "ATOM/USD"]
     
+    # Remove problematic symbols that have unreliable price feeds
+    filtered = [s for s in symbols if s.upper() != 'KIN/USD']
+    if len(filtered) != len(symbols):
+        print("⚠️ Removing KIN/USD from symbols due to unreliable price feed")
+    symbols = filtered
+
     validate_symbols(exchange, symbols)
     
     # Setup exchange adapter
@@ -217,7 +276,13 @@ def run_multi_signal_bot(once: bool = False) -> None:
     
     # Initialize budget manager with $10,000 starting capital
     initial_capital = float(cfg.get("initial_capital", 10000.0))
-    budget_manager = BudgetManager(initial_capital=initial_capital)
+    
+    # RADICAL FIX: Detect live mode and fetch real balance
+    is_live_mode = os.getenv("PAPER", "true").lower() == "false"
+    if is_live_mode:
+        budget_manager = BudgetManager(initial_capital=initial_capital, exchange=exchange, live_mode=True)
+    else:
+        budget_manager = BudgetManager(initial_capital=initial_capital)
     
     # State tracking
     last_signals = {s: {"aggregated": "HOLD", "modules": {}} for s in symbols}
@@ -265,30 +330,64 @@ def run_multi_signal_bot(once: bool = False) -> None:
                     print(f"Processing {symbol}...")
                     
                     try:
-                        # Fetch latest ticker (may fail in restricted environment)
+                        # CRITICAL: Always fetch real ticker data
                         ticker = safe_fetch_ticker(exchange, symbol)
-                        print(f"Ticker data type: {type(ticker)}")
-                        
                         if isinstance(ticker, dict) and "last" in ticker:
                             last_price = ticker["last"]
+                            print(f"📊 LIVE PRICE for {symbol}: ${last_price:,.2f}")
                         else:
-                            # Mock data for testing
-                            last_price = 30000.0 if "BTC" in symbol else 2000.0 if "ETH" in symbol else 100.0
-                            print(f"Using mock price for {symbol}: ${last_price}")
+                            raise ValueError(f"Invalid ticker data format for {symbol}")
                     except Exception as e:
-                        # Use mock price if ticker fetch fails
-                        print(f"Error fetching ticker for {symbol}: {e}")
-                        last_price = 30000.0 if "BTC" in symbol else 2000.0 if "ETH" in symbol else 100.0
-                        print(f"Using mock price for {symbol}: ${last_price}")
-                    
-                    # Generate mock OHLCV data instead of fetching
-                    # This ensures we have proper data structure for testing
-                    print(f"Generating mock OHLCV data for {symbol}")
-                    ohlcv_data = None  # Will trigger mock data generation
-                    
+                        # CRITICAL: Never use mock data - fail if we can't get real data
+                        error_msg = f"🚨 CRITICAL: Cannot fetch live price for {symbol}: {str(e)}"
+                        print(error_msg)
+                        print("🚨 LIVE TRADING REQUIRES REAL MARKET DATA - Check your connection!")
+                        raise RuntimeError(f"Live trading failed: No real price data for {symbol}")
+
+                    # CRITICAL: Always fetch real OHLCV data - never use mock data
+                    try:
+                        ohlcv_data = safe_fetch_ohlcv(exchange, symbol, timeframe, limit=200)
+                        if not ohlcv_data or len(ohlcv_data) == 0:
+                            raise ValueError(f"No OHLCV data received for {symbol}")
+                        print(f"📊 LIVE OHLCV data fetched for {symbol}: {len(ohlcv_data)} candles")
+                    except Exception as e:
+                        error_msg = f"🚨 CRITICAL: Cannot fetch live OHLCV data for {symbol}: {str(e)}"
+                        print(error_msg)
+                        print("🚨 LIVE TRADING REQUIRES REAL MARKET DATA - Check your connection!")
+                        raise RuntimeError(f"Live trading failed: No real OHLCV data for {symbol}")
+
                     # Format data for signal modules
-                    price_data = prepare_price_data(ohlcv_data)
-                    print(f"Generated {len(price_data)} candles of mock data")
+                    price_data = prepare_price_data(ohlcv_data, symbol)
+
+                    # --- NEW: Update existing open positions with current price and auto-close if needed ---
+                    # Use a copy of keys to avoid mutation during iteration
+                    open_positions_ids = list(budget_manager.positions.keys())
+                    for pos_id in open_positions_ids:
+                        pos = budget_manager.positions.get(pos_id)
+                        if pos and pos.get('symbol') == symbol:
+                            update_result = budget_manager.update_position(pos_id, last_price)
+                            if isinstance(update_result, dict) and update_result.get('status') is None and update_result.get('success'):
+                                # A position was closed; record trade in trades log
+                                trade = update_result.get('trade')
+                                if trade:
+                                    trades.append({
+                                        'timestamp': now_utc,
+                                        'symbol': trade['symbol'],
+                                        'action': 'SELL' if trade['side'] == 'BUY' else 'BUY',
+                                        'price': float(last_price),
+                                        'size': trade['size'],
+                                        'quantity': trade['quantity'],
+                                        'pnl': trade['pnl'],
+                                        'reason': trade.get('reason', 'TAKE_PROFIT')
+                                    })
+                                    # Also notify exchange adapter (paper)
+                                    try:
+                                        exchange_adapter.place_order(symbol, 'sell' if trade['side'] == 'BUY' else 'buy', trade['quantity'], last_price)
+                                    except Exception:
+                                        pass
+                                # Update last_alert to avoid re-triggering immediately
+                                last_alert_ts[symbol] = now_ts
+                    # --- END auto-close logic ---
                     
                     # Process signals with each module
                     module_signals = {}
@@ -473,7 +572,8 @@ def run_multi_signal_bot(once: bool = False) -> None:
                         position_calc = budget_manager.calculate_position_size(
                             symbol=symbol,
                             signal_confidence=agg_result["confidence"],
-                            volatility=volatility
+                            volatility=volatility,
+                            price=last_price
                         )
                         
                         # Check if we can open a position
@@ -600,13 +700,15 @@ def main():
     parser = argparse.ArgumentParser(description="Multi-Signal Paper Trading Bot")
     parser.add_argument("--once", action="store_true", help="Run a single cycle and exit")
     parser.add_argument("--test", action="store_true", help="Run unit tests and exit")
+    parser.add_argument("--dry-preflight", action="store_true", help="Run market minima preflight and exit")
+    parser.add_argument("--markets-file", type=str, default=None, help="Optional local markets JSON file to use for preflight")
     args = parser.parse_args()
 
     if args.test:
         print("Testing functionality not implemented yet.")
         return
 
-    run_multi_signal_bot(once=args.once)
+    run_multi_signal_bot(once=args.once, dry_preflight=args.dry_preflight, markets_file=args.markets_file)
 
 
 if __name__ == "__main__":

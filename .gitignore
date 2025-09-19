@@ -27,3 +27,13 @@ dist/
 
 # Backups
 *.save
+
+# Kraken Paper Trading specific files
+logs/
+kraken_paper_trading.log
+enhanced_multi_signal_bot.log
+kraken_paper_trade_journal_*.json
+
+# Trading data files (exclude sensitive data)
+trading_state_*.json
+*.csv.bak
