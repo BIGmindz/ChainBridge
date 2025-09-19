@@ -11,13 +11,11 @@ to provide accelerated learning and optimization of signal weights.
 """
 
 import os
-import sys
 import numpy as np
-import pandas as pd
 
 # TensorFlow imports - wrapped in try-except for optional dependency
 try:
-    import tensorflow as tf
+    import tensorflow as tf  # noqa: F401
     from tensorflow.keras.models import Sequential
     from tensorflow.keras.layers import Dense, LSTM, Dropout
     from tensorflow.keras.optimizers import Adam
@@ -28,16 +26,14 @@ except ImportError:
 from datetime import datetime, timedelta
 import json
 import time
-import threading
 import matplotlib.pyplot as plt
-import seaborn as sns
-from typing import Dict, List, Any
+from typing import Dict
 import warnings
 warnings.filterwarnings('ignore')
 
 # Import from the existing bot architecture
-from MultiSignalBot import MultiSignalBot
-from budget_manager import BudgetManager
+from MultiSignalBot import MultiSignalBot  # noqa: E402
+from budget_manager import BudgetManager  # noqa: E402
 
 
 class RapidFireMLTrainer:

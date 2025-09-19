@@ -3,10 +3,9 @@ LIVE DASHBOARD
 Real-time monitoring and visualization for the trading system
 """
 
-import pandas as pd
 import json
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict
 import os
 
 class LiveDashboard:

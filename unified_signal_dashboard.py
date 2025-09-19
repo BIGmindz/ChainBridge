@@ -8,12 +8,9 @@ Combines technical, logistics, and global macro signals
 import os
 import sys
 import json
-import time
 from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-from typing import Dict, Any, List
 
 # Add the current directory to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -160,7 +157,7 @@ def generate_signals(symbol='BTC/USD'):
     try:
         with open('unified_signals.json', 'w') as f:
             json.dump(result, f, indent=2, default=str)
-        print(f"Unified signals saved to unified_signals.json")
+        print("Unified signals saved to unified_signals.json")
     except Exception as e:
         print(f"Error saving signals: {e}")
     

@@ -22,7 +22,7 @@ except ImportError:
     print("Make sure the module exists at 'modules/new_listings_radar_module.py'")
     sys.exit(1)
 
-async def test_new_listings_radar():
+async def demo_new_listings_radar():
     """Test the New Listings Radar module"""
     print("🧪 Testing New Listings Radar module...")
     
@@ -149,7 +149,7 @@ async def test_new_listings_radar():
 def main():
     """Main execution function"""
     try:
-        asyncio.run(test_new_listings_radar())
+        asyncio.run(demo_new_listings_radar())
     except KeyboardInterrupt:
         print("\n⚠️ Test interrupted by user")
     except Exception as e:

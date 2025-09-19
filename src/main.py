@@ -66,8 +66,8 @@ def run_bot(once: bool = False) -> None:
     
     validate_symbols(exchange, symbols)
     
-    # Setup exchange adapter
-    exchange_adapter = ExchangeAdapter(exchange, cfg)
+    # Setup exchange adapter (may be unused in some flows)
+    _exchange_adapter = ExchangeAdapter(exchange, cfg)
 
     # Configuration parameters
     timeframe = str(cfg.get("timeframe", "5m"))

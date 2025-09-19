@@ -5,8 +5,6 @@ One command to add institutional-grade signals
 
 import os
 import json
-import sys
-from pathlib import Path
 
 def integrate_logistics():
     """
@@ -59,19 +57,19 @@ def integrate_logistics():
     total_weight = sum(s['weight'] for s in config['signals'])
     avg_correlation = sum(s['weight'] * s['correlation'] for s in config['signals']) / total_weight
     
-    print(f"\n📊 SIGNAL PORTFOLIO ANALYSIS:")
-    print(f"="*50)
+    print("\n📊 SIGNAL PORTFOLIO ANALYSIS:")
+    print("="*50)
     print(f"Total Signals: {len(config['signals'])}")
-    print(f"Technical Signals: 5")
-    print(f"Logistics Signals: 4")
+    print("Technical Signals: 5")
+    print("Logistics Signals: 4")
     print(f"Average Correlation: {avg_correlation:.3f} (ULTRA LOW!)")
     
-    print(f"\n💰 COMPETITIVE ADVANTAGE:")
-    print(f"="*50)
-    print(f"3Commas: 2-3 signals, 0.70 correlation")
-    print(f"Cryptohopper: 3-4 signals, 0.65 correlation")
+    print("\n💰 COMPETITIVE ADVANTAGE:")
+    print("="*50)
+    print("3Commas: 2-3 signals, 0.70 correlation")
+    print("Cryptohopper: 3-4 signals, 0.65 correlation")
     print(f"YOUR BOT: {len(config['signals'])} signals, {avg_correlation:.3f} correlation")
-    print(f"Forward Looking: 30-45 days (vs 0 for others)")
+    print("Forward Looking: 30-45 days (vs 0 for others)")
     
     # Save configuration
     os.makedirs('config', exist_ok=True)
@@ -83,11 +81,11 @@ def integrate_logistics():
     # Create test script
     create_test_script()
     
-    print(f"\n🚀 NEXT STEPS:")
-    print(f"1. Run: python test_logistics_signals.py")
-    print(f"2. Start bot with logistics: python multi_signal_bot.py")
-    print(f"3. Monitor the 30-day predictions")
-    print(f"4. Document the alpha generation")
+    print("\n🚀 NEXT STEPS:")
+    print("1. Run: python test_logistics_signals.py")
+    print("2. Start bot with logistics: python multi_signal_bot.py")
+    print("3. Monitor the 30-day predictions")
+    print("4. Document the alpha generation")
     
     return config
 
