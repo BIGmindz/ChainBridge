@@ -111,7 +111,7 @@ def verify_credentials():
         has_api_secret = 'API_SECRET="' in content and 'your_api_secret_here' not in content
 
         return has_api_key and has_api_secret
-    except:
+    except Exception:
         return False
 
 

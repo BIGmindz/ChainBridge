@@ -8,7 +8,6 @@ import os
 import sys
 import asyncio
 import argparse
-from datetime import datetime
 
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -55,7 +54,7 @@ async def run_with_data_file(file_path, output_path):
         # Check for required columns
         required_cols = ['price']
         if not all(col in df.columns for col in required_cols):
-            print(f"Error: CSV must contain at least a 'price' column")
+            print("Error: CSV must contain at least a 'price' column")
             return
             
         # Extract data

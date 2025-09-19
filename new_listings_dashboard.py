@@ -13,16 +13,15 @@ import argparse
 import asyncio
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 import seaborn as sns
-from datetime import datetime, timedelta
+from datetime import datetime
 import numpy as np
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Import the New Listings Radar module
-from modules.new_listings_radar_module import NewListingsRadar, run_new_listings_radar
+from modules.new_listings_radar_module import NewListingsRadar
 
 # Configure prettier plots
 sns.set_theme(style="whitegrid")
@@ -252,8 +251,8 @@ class NewListingsDashboard:
         print("=" * 80)
         
         for exchange, exchange_listings in self.listings_by_exchange.items():
-            avg_return = sum(l["expected_return"] for l in exchange_listings) / len(exchange_listings)
-            avg_confidence = sum(l["confidence"] for l in exchange_listings) / len(exchange_listings)
+            avg_return = sum(item["expected_return"] for item in exchange_listings) / len(exchange_listings)
+            avg_confidence = sum(item["confidence"] for item in exchange_listings) / len(exchange_listings)
             
             print(f"\n{exchange}:")
             print(f"  Listings: {len(exchange_listings)}")

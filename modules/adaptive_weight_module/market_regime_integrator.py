@@ -8,10 +8,9 @@ providing a bridge between the market condition classifier and the adaptive weig
 
 import os
 import json
-import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
-from typing import Dict, Any, List, Tuple, Optional, Union
+from datetime import datetime
+from typing import Dict, Any
 
 # Import related modules
 from modules.adaptive_weight_module.market_condition_classifier import MarketConditionClassifier
@@ -94,8 +93,8 @@ class MarketRegimeIntegrator:
             regime_results: Results from regime detection
         """
         current_regime = regime_results.get("regime")
-        current_time = datetime.now()
-        
+        _current_time = datetime.now()
+
         # Get regime history
         regime_history = self.market_classifier.get_regime_history()
         

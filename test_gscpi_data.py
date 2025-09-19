@@ -6,7 +6,6 @@ Test script for the New York Fed Global Supply Chain Pressure Index integration
 
 import os
 import pandas as pd
-from datetime import datetime
 import matplotlib.pyplot as plt
 
 def test_gscpi_data():

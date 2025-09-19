@@ -14,7 +14,7 @@ import argparse
 import subprocess
 import psutil
 from datetime import datetime
-from typing import Dict, List, Any, Optional
+from typing import List
 
 # Configure logging
 logging.basicConfig(

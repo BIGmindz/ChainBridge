@@ -35,7 +35,6 @@ OUTPUT:
 import argparse
 import json
 import logging
-import os
 import sys
 from dataclasses import dataclass
 from datetime import datetime
@@ -189,7 +188,9 @@ class KrakenLiquidator:
             except Exception as e:
                 self.logger.warning(f"Failed to get {usdt_symbol} price: {e}")
 
-        self.logger.warning(f"Could not estimate USD value for {asset} (underlying: {underlying_asset})")
+        self.logger.warning(
+            f"Could not estimate USD value for {asset} (underlying: {underlying_asset})"
+        )
         return 0.0
 
     def should_skip_asset(self, asset: str, amount: float) -> bool:
@@ -207,7 +208,11 @@ class KrakenLiquidator:
         return False
 
     def best_pair_for_liquidation(self, asset: str) -> Optional[str]:
-        """Find best trading pair for liquidating asset to target quote, handling futures."""
+        """Find best trading pair for liquidating asset to target quote,
+        handling futures.
+
+        Returns the best symbol string or None if not found.
+        """
         target = self.config.target_quote
 
         # Handle futures contracts by stripping suffixes
@@ -263,7 +268,9 @@ class KrakenLiquidator:
 
         return 0.0  # Conservative estimate
 
-    def place_market_order_safe(self, symbol: str, side: str, amount: float) -> Optional[Dict]:
+    def place_market_order_safe(
+        self, symbol: str, side: str, amount: float
+    ) -> Optional[Dict]:
         """Place market order with slippage protection."""
         if self.config.dry_run:
             self.logger.info(f"[DRY RUN] Would {side} {amount} {symbol}")
@@ -279,23 +286,31 @@ class KrakenLiquidator:
         slippage = self.estimate_slippage(symbol, side, amount)
         if slippage > self.config.max_slippage_pct and not self.config.force_mode:
             self.logger.error(
-                f"Slippage too high for {symbol}: {slippage:.2f}% > {self.config.max_slippage_pct:.2f}%. "
-                "Use --force to override or increase --max-slippage-pct"
+                f"Slippage too high for {symbol}: {slippage:.2f}% > "
+                f"{self.config.max_slippage_pct:.2f}%. Use --force to override"
             )
             return None
-
         # Get market info for precision
-        market = self.markets[symbol]
-        amount = self.exchange.amount_to_precision(symbol, amount)
+        try:
+            _market = self.markets[symbol]
+        except KeyError:
+            self.logger.error(f"Market metadata not found for {symbol}")
+            return None
 
         try:
+            # Ensure correct amount precision if exchange supports helper
+            if hasattr(self.exchange, 'amount_to_precision'):
+                amount = self.exchange.amount_to_precision(symbol, amount)
+
             order = self.exchange.create_order(
                 symbol=symbol,
                 type='market',
                 side=side,
                 amount=amount
             )
-            self.logger.info(f"Placed {side} order: {amount} {symbol} (slippage: {slippage:.2f}%)")
+            self.logger.info(
+                f"Placed {side} order: {amount} {symbol} (slippage: {slippage:.2f}%)"
+            )
             return order
         except Exception as e:
             self.logger.error(f"Failed to place {side} order for {symbol}: {e}")
@@ -317,7 +332,9 @@ class KrakenLiquidator:
             for order in open_orders:
                 try:
                     self.exchange.cancel_order(order['id'], order['symbol'])
-                    self.logger.info(f"Cancelled order {order['id']} for {order['symbol']}")
+                    self.logger.info(
+                        f"Cancelled order {order['id']} for {order['symbol']}"
+                    )
                 except Exception as e:
                     self.logger.error(f"Failed to cancel order {order['id']}: {e}")
 
@@ -358,8 +375,9 @@ class KrakenLiquidator:
         """Liquidate a futures contract - requires futures API."""
         self.logger.warning(
             f"{asset} is a futures contract. Futures liquidation requires "
-            "futures API access which is not available in this spot-only script. "
-            f"Consider manually closing {amount} {asset} through Kraken Futures interface."
+            "futures API access which is not available in this spot-only "
+            f"script. Consider manually closing {amount} {asset}"
+            " through Kraken Futures interface."
         )
         return False
 
@@ -452,7 +470,10 @@ class KrakenLiquidator:
             self.logger.info(f"  {self.config.target_quote}: {target_balance}")
             self.logger.info(f"  USD: {usd_balance}")
 
-            total_usd_value = self.usd_value(self.config.target_quote, target_balance) + usd_balance
+            total_usd_value = (
+                self.usd_value(self.config.target_quote, target_balance)
+                + usd_balance
+            )
             self.logger.info(f"  Total USD value: ${total_usd_value:.2f}")
 
         except Exception as e:

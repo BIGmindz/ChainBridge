@@ -23,7 +23,7 @@ except ImportError:
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Import the backtester
-from src.backtesting.regime_backtester import RegimeBacktester
+from src.backtesting.regime_backtester import RegimeBacktester  # noqa: E402
 
 async def run_btc_backtest():
     """Run backtesting on the BTC sample data"""
@@ -56,7 +56,7 @@ async def run_btc_backtest():
         
         # Use the data we have as a base
         base_price = price_data[0]
-        price_range = max(price_data) - min(price_data)
+        _price_range = max(price_data) - min(price_data)
         avg_volume = sum(volume_data) / len(volume_data)
         
         # Generate 180 days of data (6 months) with clear market regimes
