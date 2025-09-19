@@ -5,8 +5,6 @@ Shows how your diverse signal portfolio reduces risk
 Lower correlations = higher diversification = better returns
 """
 
-import os
-import sys
 import json
 import numpy as np
 import matplotlib.pyplot as plt
@@ -172,7 +170,7 @@ def generate_correlation_matrix():
     
     # Save the plot
     plt.savefig('signal_correlation_matrix.png', dpi=300, bbox_inches='tight')
-    print(f"Correlation matrix visualization saved as signal_correlation_matrix.png")
+    print("Correlation matrix visualization saved as signal_correlation_matrix.png")
     
     # Calculate portfolio-level statistics
     calculate_portfolio_metrics(all_signals, correlation_matrix)
@@ -294,7 +292,7 @@ def calculate_portfolio_metrics(signals, correlation_matrix):
         effectiveness = "POOR"
     
     print(f"Signal Diversification Rating: {effectiveness}")
-    print(f"(Hedge funds target < 0.3, typical retail traders > 0.7)")
+    print("(Hedge funds target < 0.3, typical retail traders > 0.7)")
     
     # Save metrics to file
     metrics = {
@@ -321,7 +319,7 @@ def calculate_portfolio_metrics(signals, correlation_matrix):
     
     with open('signal_diversification_metrics.json', 'w') as f:
         json.dump(metrics, f, indent=2)
-    print(f"Diversification metrics saved to signal_diversification_metrics.json")
+    print("Diversification metrics saved to signal_diversification_metrics.json")
 
 if __name__ == "__main__":
     generate_correlation_matrix()

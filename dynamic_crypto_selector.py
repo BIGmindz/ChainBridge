@@ -8,7 +8,7 @@ This ensures you always have 'trade bait' with movement
 import ccxt
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import datetime
 import json
 import os
 
@@ -189,7 +189,7 @@ if __name__ == "__main__":
     with open('volatile_cryptos_config.json', 'w') as f:
         json.dump(config, f, indent=2, default=str)
     
-    print(f"📁 Configuration saved to volatile_cryptos_config.json")
+    print("📁 Configuration saved to volatile_cryptos_config.json")
     
     # Update main config file
     selector.update_config_file()

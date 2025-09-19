@@ -5,11 +5,11 @@ Comprehensive backtesting engine for evaluating trading strategies
 
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Callable
-from datetime import datetime, timedelta
+from typing import Dict, Callable
+from datetime import datetime
 import json
 import os
-from pathlib import Path
+# pathlib.Path not used in this module
 
 class BacktestEngine:
     """
@@ -94,47 +94,46 @@ class BacktestEngine:
     def _process_positions(self, current_bar: pd.Series):
         """Process existing positions - check stops and targets"""
         positions_to_close = []
-        
         for symbol, position in self.positions.items():
             # Check if we need to close this position
             close_position = False
             close_reason = None
             pnl = 0
-            
+
             current_price = current_bar['close']
-            
+
             if position['side'] == 'BUY':
                 # For long positions
                 pnl = (current_price / position['entry_price'] - 1) * position['size']
-                
+
                 # Check stop loss
                 if current_price <= position['stop_price']:
                     close_position = True
                     close_reason = "stop_loss"
-                
+
                 # Check take profit
                 elif current_price >= position['target_price']:
                     close_position = True
                     close_reason = "take_profit"
-                    
+
             elif position['side'] == 'SELL':
                 # For short positions
                 pnl = (1 - current_price / position['entry_price']) * position['size']
-                
+
                 # Check stop loss
                 if current_price >= position['stop_price']:
                     close_position = True
                     close_reason = "stop_loss"
-                
+
                 # Check take profit
                 elif current_price <= position['target_price']:
                     close_position = True
                     close_reason = "take_profit"
-            
+
             # Close position if needed
             if close_position:
                 positions_to_close.append((symbol, pnl, close_reason))
-        
+
         # Close positions (in separate loop to avoid modifying while iterating)
         for symbol, pnl, reason in positions_to_close:
             self._close_position(symbol, current_bar['close'], pnl, reason)
@@ -212,12 +211,11 @@ class BacktestEngine:
         """Close an existing position"""
         if symbol not in self.positions:
             return
-            
-        position = self.positions[symbol]
-        
+        _position = self.positions[symbol]
+
         # Update account balance
         self.current_capital += pnl
-        
+
         # Find the corresponding open trade and update it
         for trade in reversed(self.trades):
             if trade['symbol'] == symbol and trade['status'] == 'open':
@@ -227,7 +225,7 @@ class BacktestEngine:
                 trade['status'] = 'closed'
                 trade['close_reason'] = reason
                 break
-                
+
         # Remove from active positions
         del self.positions[symbol]
         

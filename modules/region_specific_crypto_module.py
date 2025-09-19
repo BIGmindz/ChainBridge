@@ -4,11 +4,8 @@ Maps your macro/adoption signals to EXACT cryptocurrencies
 This is SURGICAL PRECISION trading - not spray and pray
 """
 
-import numpy as np
-import pandas as pd
-from datetime import datetime, timedelta
-import json
-from typing import Dict, List, Tuple
+from datetime import datetime
+from typing import Dict, List
 import ccxt
 
 class RegionSpecificCryptoModule:

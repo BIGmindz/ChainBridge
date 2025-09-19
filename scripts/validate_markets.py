@@ -62,8 +62,7 @@ if __name__ == "__main__":
 
 Usage: python scripts/validate_markets.py path/to/markets.json config.yaml
 """
-import sys, json, yaml
-from src.market_utils import check_markets_have_minima
+import yaml  # noqa: E402
 
 
 def main():

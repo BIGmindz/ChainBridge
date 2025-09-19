@@ -11,7 +11,6 @@ import sys
 import json
 import numpy as np
 import matplotlib.pyplot as plt
-from datetime import datetime, timedelta
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -103,7 +102,7 @@ def test_adoption_tracker():
         colors = ['#5cb85c' if above else '#6c757d' for above in above_threshold]
         
         # Create the bar chart
-        bars = plt.barh(regions, growth_rates, color=colors)
+        _bars = plt.barh(regions, growth_rates, color=colors)
         
         # Add threshold line
         plt.axvline(x=tracker.buy_threshold * 100, color='red', linestyle='--', 

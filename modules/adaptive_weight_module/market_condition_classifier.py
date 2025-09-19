@@ -14,8 +14,8 @@ import os
 import json
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
-from typing import Dict, Any, List, Tuple, Optional, Union
+from datetime import datetime
+from typing import Dict, Any, List, Tuple
 
 # scikit-learn imports for clustering - wrapped in try-except for optional dependency
 try:
@@ -202,8 +202,8 @@ class MarketConditionClassifier:
         # Bollinger Band width
         ma20 = np.mean(prices[-20:])
         std20 = np.std(prices[-20:])
-        bb_width = (ma20 + 2*std20 - (ma20 - 2*std20)) / ma20
-        features["bb_width"] = bb_width
+        _bb_width = (ma20 + 2*std20 - (ma20 - 2*std20)) / ma20
+        features["bb_width"] = _bb_width
         
         # Volume features (if available)
         if volumes is not None and len(volumes) > 7:
@@ -228,7 +228,7 @@ class MarketConditionClassifier:
         # Extract key indicators
         volatility = features.get("volatility_30d", 0.0)
         trend = features.get("trend_30d", 0.0)
-        bb_width = features.get("bb_width", 0.0)
+        _bb_width = features.get("bb_width", 0.0)
         rsi = features.get("rsi_value", 50.0)
         
         # Rule-based classification

@@ -44,7 +44,7 @@ def setup_exchange(exchange_id: str, api_config: Dict[str, Any] = None) -> ccxt.
             config["secret"] = api_secret
             print(f"[CONFIG] Using API credentials for {exchange_id}")
         else:
-            print(f"[CONFIG] No API credentials provided - running in read-only mode")
+            print("[CONFIG] No API credentials provided - running in read-only mode")
     
     exchange = exchange_cls(config)
     

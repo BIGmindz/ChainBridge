@@ -13,11 +13,9 @@ It generates visualizations and metrics to help understand:
 import os
 import json
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
 import argparse
-from typing import Dict, List, Any
 
 class TradingPerformanceAnalyzer:
     """
@@ -102,7 +100,7 @@ class TradingPerformanceAnalyzer:
                 date_delta = performance['end_date'] - performance['start_date']
                 performance['trading_days'] = date_delta.days
                 performance['trades_per_day'] = performance['total_trades'] / max(1, date_delta.days)
-            except:
+            except Exception:
                 performance['trading_days'] = 0
                 performance['trades_per_day'] = 0
             
@@ -274,9 +272,9 @@ def main():
     
     # Load data
     analyzer.load_data()
-    
+
     # Generate report
-    report = analyzer.generate_performance_report(
+    _report = analyzer.generate_performance_report(
         output_file=os.path.join(args.output, "trading_performance_report.json")
     )
     

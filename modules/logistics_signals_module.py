@@ -5,7 +5,6 @@ Unique forward-looking signals based on supply chain and logistics metrics
 
 import numpy as np
 import pandas as pd
-import json
 import os
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional

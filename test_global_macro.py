@@ -69,7 +69,7 @@ def main():
         json.dump(json_result, f, indent=2)
     
     print("\n" + "-" * 60)
-    print(f"Results saved to global_macro_test_result.json")
+    print("Results saved to global_macro_test_result.json")
     print("=" * 60)
 
 if __name__ == "__main__":

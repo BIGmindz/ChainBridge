@@ -6,11 +6,10 @@ Predicts crypto movements 30-45 days in advance
 
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime
 import requests
-import json
 import os
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 
 class LogisticsSignalModule:
     """
@@ -524,9 +523,9 @@ class LogisticsSignalModule:
                             days_old = (today - latest_date_dt).days
                             
                             if days_old > 30:
-                                print(f"Cached data is more than 30 days old. Attempting to fetch updates...")
+                                print("Cached data is more than 30 days old. Attempting to fetch updates...")
                             else:
-                                print(f"Using cached GSCPI data...")
+                                print("Using cached GSCPI data...")
                                 # Skip fetching if cache is fresh enough
                 
                 except Exception as e:

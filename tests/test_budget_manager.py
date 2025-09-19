@@ -1,12 +1,3 @@
-from decimal import Decimal
-import sys
-import types
-
-# Stub heavy external libraries so unit tests can run in isolation
-sys.modules.setdefault('pandas', types.SimpleNamespace())
-sys.modules.setdefault('numpy', types.SimpleNamespace())
-sys.modules.setdefault('ccxt', types.SimpleNamespace())
-
 from budget_manager import BudgetManager
 
 
@@ -55,6 +46,6 @@ def test_update_and_close_position():
 
     # update with a price at or above take_profit -> should close
     tp = pos['take_profit']
-    update = bm.update_position(pid, tp)
+    bm.update_position(pid, tp)
     # update_position closes and returns the close result
     assert pid not in bm.positions

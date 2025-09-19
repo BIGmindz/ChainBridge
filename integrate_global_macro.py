@@ -52,7 +52,7 @@ def integrate_global_macro():
     total_signals = len(all_signals)
     avg_correlation = sum(s['correlation'] * s['weight'] for s in all_signals) / sum(s['weight'] for s in all_signals)
     
-    print(f"\n📊 YOUR COMPLETE SIGNAL PORTFOLIO:")
+    print("\n📊 YOUR COMPLETE SIGNAL PORTFOLIO:")
     print(f"{'='*60}")
     print(f"Technical Signals: {len(signal_portfolio['technical_signals'])}")
     print(f"Logistics Signals: {len(signal_portfolio['logistics_signals'])}")
@@ -60,18 +60,18 @@ def integrate_global_macro():
     print(f"TOTAL SIGNALS: {total_signals}")
     print(f"Average Correlation: {avg_correlation:.3f} (ULTRA LOW!)")
     
-    print(f"\n💰 YOUR COMPETITIVE ADVANTAGE:")
+    print("\n💰 YOUR COMPETITIVE ADVANTAGE:")
     print(f"{'='*60}")
-    print(f"Hedge Funds: 10-15 signals, pay $1M+/year")
-    print(f"3Commas: 2-3 signals, 0.70 correlation")
+    print("Hedge Funds: 10-15 signals, pay $1M+/year")
+    print("3Commas: 2-3 signals, 0.70 correlation")
     print(f"YOU: {total_signals} signals, {avg_correlation:.3f} correlation, FREE")
     
-    print(f"\n🌍 GLOBAL MACRO INSIGHTS YOU'LL GET:")
-    print(f"• India #1 adoption → Demand surge signals")
-    print(f"• Argentina 142% inflation → Stablecoin flows")
-    print(f"• Brazil VASP law → Institutional entry")
-    print(f"• El Salvador BTC → Adoption catalyst")
-    print(f"• FATF gray lists → Risk-off events")
+    print("\n🌍 GLOBAL MACRO INSIGHTS YOU'LL GET:")
+    print("• India #1 adoption → Demand surge signals")
+    print("• Argentina 142% inflation → Stablecoin flows")
+    print("• Brazil VASP law → Institutional entry")
+    print("• El Salvador BTC → Adoption catalyst")
+    print("• FATF gray lists → Risk-off events")
     
     # Save configuration
     config = {
@@ -89,8 +89,8 @@ def integrate_global_macro():
     with open('config/complete_signal_portfolio.json', 'w') as f:
         json.dump(config, f, indent=2)
     
-    print(f"\n✅ Configuration saved: config/complete_signal_portfolio.json")
-    print(f"\n🚀 YOU NOW HAVE INSTITUTIONAL-GRADE INTELLIGENCE!")
+    print("\n✅ Configuration saved: config/complete_signal_portfolio.json")
+    print("\n🚀 YOU NOW HAVE INSTITUTIONAL-GRADE INTELLIGENCE!")
     
     return config
 

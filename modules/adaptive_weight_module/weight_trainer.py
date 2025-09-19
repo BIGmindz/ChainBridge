@@ -9,13 +9,12 @@ that dynamically optimizes signal weights based on market conditions.
 import os
 import json
 import numpy as np
-import pandas as pd
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Tuple, Optional, Union
+from typing import Dict, Any, Tuple
 
 # TensorFlow imports - wrapped in try-except for optional dependency
 try:
-    import tensorflow as tf
+    import tensorflow as tf  # noqa: F401
     from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
     TENSORFLOW_AVAILABLE = True
 except ImportError:

@@ -8,10 +8,8 @@ import asyncio
 import sys
 import os
 import random
-import numpy as np
 import json
 from datetime import datetime, timedelta
-from typing import Dict, List
 
 # Conditionally import matplotlib
 has_matplotlib = False
@@ -25,7 +23,7 @@ except ImportError:
 sys.path.append('src')
 
 # Import your trading engine
-from src.core.unified_trading_engine import MultiSignalTradingEngine
+from src.core.unified_trading_engine import MultiSignalTradingEngine  # noqa: E402
 
 # Simulation config
 SIMULATION_CYCLES = 30  # Number of trading cycles to simulate
@@ -226,7 +224,7 @@ class SimulationResults:
             with open('data/minute_paper_results.json', 'w') as f:
                 json.dump(results, f, indent=2)
                 
-            print(f"\n💾 Saved detailed report to 'data/minute_paper_results.json'")
+            print("\n💾 Saved detailed report to 'data/minute_paper_results.json'")
             
             return results
             
@@ -321,7 +319,7 @@ async def run_minute_paper():
             # Make decision
             decision = engine.make_ml_decision(signals)
             
-            print(f"\n🤖 DECISION:")
+            print("\n🤖 DECISION:")
             print(f"  Action: {decision['action']}")
             print(f"  Confidence: {decision['confidence']*100:.1f}%")
             print(f"  Position Size: {decision['position_size']*100:.1f}% of capital")
