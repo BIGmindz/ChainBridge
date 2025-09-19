@@ -22,18 +22,17 @@ import asyncio
 import json
 import logging
 import time
-import websockets
-from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Optional, Any, Tuple, Callable
+from datetime import datetime, timezone
+from typing import Dict, List, Optional, Any, Callable
 from dataclasses import dataclass, field
 from collections import deque
 import numpy as np
 
 # Core component imports
 try:
-    from .exchange_adapter import ExchangeAdapter
+    from .exchange_adapter import ExchangeAdapter  # noqa: F401
 except ImportError:
-    from src.exchange_adapter import ExchangeAdapter
+    pass
 
 try:
     from budget_manager import BudgetManager

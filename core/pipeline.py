@@ -5,9 +5,9 @@ This module provides the pipeline framework for chaining modules together
 to create complex data processing and ML workflows.
 """
 
-from typing import Dict, Any, List, Optional, Callable
+from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
-from .module_manager import ModuleManager, Module
+from .module_manager import ModuleManager
 from .data_processor import DataProcessor
 import json
 

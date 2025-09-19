@@ -5,7 +5,7 @@ Machine Learning pattern recognition for market regimes and trading signals
 
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple
 from datetime import datetime
 
 class PatternEngine:

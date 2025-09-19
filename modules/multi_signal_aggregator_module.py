@@ -6,8 +6,7 @@ Volume Profile, Sentiment Analysis) using weighted aggregation and correlation a
 final trading decisions.
 """
 
-from typing import Dict, Any, List, Tuple, Optional
-import math
+from typing import Dict, Any, List
 import numpy as np
 from core.module_manager import Module
 

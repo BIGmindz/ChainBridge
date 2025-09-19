@@ -7,7 +7,6 @@ a momentum-based signal that is uncorrelated to RSI.
 
 from typing import Dict, Any, List, Tuple
 import pandas as pd
-import numpy as np
 import math
 from core.module_manager import Module
 

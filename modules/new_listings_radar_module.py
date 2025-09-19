@@ -6,15 +6,11 @@ Your MONEY PRINTER: First-mover advantage on every listing
 THIS IS WHERE 10X HAPPENS
 """
 
-import requests
-import json
 import asyncio
 import aiohttp
-from datetime import datetime, timedelta
+from datetime import datetime
 import numpy as np
-import pandas as pd
-from typing import Dict, List, Tuple, Any, Optional
-import time
+from typing import Dict, List, Any
 from bs4 import BeautifulSoup
 import ccxt
 
@@ -91,7 +87,7 @@ class NewListingsRadar:
         self.trading_opportunities = []
         self.active_positions = {}
         
-        print(f"""
+        print("""
         ╔════════════════════════════════════════════════════════════╗
         ║   NEW LISTINGS RADAR ACTIVATED                            ║
         ║   Monitoring: 5 Major Exchanges                           ║
@@ -229,7 +225,7 @@ class NewListingsRadar:
                         'holder_count': int(result.get('holder_count', 0)),
                         'is_safe': self._determine_safety(result)
                     }
-        except:
+        except Exception:
             return {'is_safe': False}
     
     def _determine_safety(self, security_data: Dict) -> bool:
@@ -388,7 +384,7 @@ class NewListingsRadar:
         """
         Main execution loop for new listings
         """
-        print(f"""
+        print("""
         ╔════════════════════════════════════════════════════════════╗
         ║   EXECUTING NEW LISTINGS STRATEGY                         ║
         ╚════════════════════════════════════════════════════════════╝
@@ -450,7 +446,7 @@ class NewListingsRadar:
             listings_per_month = len(simulated_returns) * (30 / historical_days)
             monthly_return = avg_return * listings_per_month
             
-            print(f"\n💰 PROJECTED MONTHLY:")
+            print("\n💰 PROJECTED MONTHLY:")
             print(f"   Listings: {listings_per_month:.0f}")
             print(f"   Return: {monthly_return*100:.0f}%")
             print(f"   On $10k: ${10000 * monthly_return:.0f} profit")
@@ -538,12 +534,12 @@ async def run_new_listings_radar():
     radar = NewListingsRadar()
     
     # Execute strategy
-    signals = await radar.execute_listing_strategy()
+    _signals = await radar.execute_listing_strategy()
     
     # Run backtest
     radar.backtest_listing_strategy()
     
-    print(f"""
+    print("""
     
     ✅ NEW LISTINGS RADAR OPERATIONAL
     

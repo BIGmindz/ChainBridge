@@ -13,7 +13,7 @@ from yaml import safe_load
 repo_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(repo_root))
 
-from src.market_utils import get_minima_report, check_markets_have_minima
+from src.market_utils import get_minima_report, check_markets_have_minima  # noqa: E402
 
 
 def load_config(path="config.yaml"):

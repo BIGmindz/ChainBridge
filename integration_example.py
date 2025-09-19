@@ -25,7 +25,7 @@ import logging
 import sys
 import os
 from datetime import datetime, timezone
-from typing import Dict, List, Any
+from typing import Dict, Any
 
 # Add paths for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
@@ -48,7 +48,7 @@ except ImportError:
 
 # Import new Kraken paper trading components
 try:
-    from src.kraken_paper_live_bot import KrakenPaperLiveBot, create_kraken_paper_bot
+    from src.kraken_paper_live_bot import create_kraken_paper_bot
     from src.ml_trading_integration import MLTradingIntegration
 except ImportError as e:
     print(f"Kraken components not available: {e}")
@@ -219,7 +219,7 @@ class EnhancedMultiSignalBot:
             results['active_positions'] = dashboard['positions']['active_count']
             
             # Step 5: Log cycle summary
-            print(f"📈 Cycle Summary:")
+            print("📈 Cycle Summary:")
             print(f"   Symbols Processed: {results['symbols_processed']}")
             print(f"   Signals Generated: {results['signals_generated']}")
             print(f"   Trades Executed: {results['trades_executed']}")
@@ -289,7 +289,7 @@ class EnhancedMultiSignalBot:
                 print(f"\n--- Trading Cycle {cycle_count} ---")
                 
                 # Run trading cycle
-                cycle_results = await self.run_enhanced_trading_cycle()
+                _cycle_results = await self.run_enhanced_trading_cycle()
                 
                 # Check if we should stop
                 elapsed_minutes = (datetime.now(timezone.utc) - start_time).total_seconds() / 60
@@ -338,7 +338,7 @@ class EnhancedMultiSignalBot:
         
         # Generate ML performance report
         ml_report = self.ml_integration.get_signal_performance_report()
-        print(f"\n🧠 ML Performance:")
+        print("\n🧠 ML Performance:")
         print(f"Active Modules: {ml_report['summary']['active_modules']}")
         print(f"Avg Success Rate: {ml_report['summary']['avg_success_rate']:.2f}")
         
@@ -356,30 +356,30 @@ async def demo_integration():
     
     try:
         # Create enhanced bot
-        enhanced_bot = EnhancedMultiSignalBot()
-        
+        _enhanced_bot = EnhancedMultiSignalBot()
+
         # Initialize exchange connections
-        await enhanced_bot.initialize_exchange()
-        
+        await _enhanced_bot.initialize_exchange()
+
         # Run a few trading cycles
         print("\n🔄 Running demo trading cycles...")
-        
+
         for i in range(3):
             print(f"\n--- Demo Cycle {i+1} ---")
-            results = await enhanced_bot.run_enhanced_trading_cycle()
-            
+            results = await _enhanced_bot.run_enhanced_trading_cycle()
+
             # Show results
             print(f"Portfolio: ${results['portfolio_value']:,.2f}")
             print(f"Return: {results['total_return_pct']:+.2f}%")
-            
+
             # Wait between cycles
             await asyncio.sleep(2)
-        
+
         # Shutdown and generate reports
-        await enhanced_bot._shutdown_trading()
-        
+        await _enhanced_bot._shutdown_trading()
+
         print("\n✅ Integration demo completed successfully!")
-        
+
     except Exception as e:
         print(f"❌ Demo error: {e}")
         raise

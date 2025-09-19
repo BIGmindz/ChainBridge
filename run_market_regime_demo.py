@@ -3,9 +3,8 @@ TRADING DASHBOARD
 Simple visual dashboard for your multi-signal bot
 """
 
-import pandas as pd
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, List
 
 class TradingDashboard:
@@ -54,14 +53,14 @@ class TradingDashboard:
             print(f"  {indicator} {name}: {value:.2f}")
         
         # Show performance
-        print(f"\n📈 PERFORMANCE:")
+        print("\n📈 PERFORMANCE:")
         print(f"  Total P&L: ${self.performance['total_pnl']:+,.2f}")
         print(f"  Win Rate: {self.performance['win_rate']*100:.1f}%")
         print(f"  Active Positions: {self.performance['active_positions']}")
         
         # Recent trades
         if self.trades:
-            print(f"\n💰 RECENT TRADES:")
+            print("\n💰 RECENT TRADES:")
             for trade in self.trades[-5:]:
                 print(f"  {trade.get('timestamp', 'N/A')}: {trade.get('side', 'N/A')} - P&L: ${trade.get('pnl', 0):+.2f}")
         
