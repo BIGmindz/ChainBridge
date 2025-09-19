@@ -284,8 +284,8 @@ class KrakenLiquidator:
             )
             return None
 
-        # Get market info for precision
-        market = self.markets[symbol]
+    # Get market info for precision
+    _market = self.markets[symbol]
         amount = self.exchange.amount_to_precision(symbol, amount)
 
         try:
