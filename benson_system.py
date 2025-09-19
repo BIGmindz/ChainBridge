@@ -7,11 +7,9 @@ functionality with the new modular system.
 """
 
 import argparse
-import asyncio
 import os
 import sys
 import math
-from typing import Dict, Any
 
 # Add the current directory to Python path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -19,7 +17,6 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from core.module_manager import ModuleManager
 from core.pipeline import Pipeline
 from tracking.metrics_collector import MetricsCollector
-from api import server
 
 
 def create_default_rsi_pipeline(module_manager: ModuleManager) -> Pipeline:
@@ -126,7 +123,7 @@ def run_multi_signal_demo():
         print(f"  Sentiment: {sa_result['signal']} (Confidence: {sa_result['confidence']:.2f}, Score: {sa_result['composite_sentiment_score']:.2f})")
         
         # Multi-Signal Aggregation
-        print(f"\nExecuting multi-signal aggregation...")
+        print("\nExecuting multi-signal aggregation...")
         aggregation_input = {
             "signals": individual_signals,
             "price_data": sample_price_data[-1]  # Current price data
@@ -134,38 +131,38 @@ def run_multi_signal_demo():
         
         final_result = module_manager.execute_module("MultiSignalAggregatorModule", aggregation_input)
         
-        print(f"\n" + "="*60)
-        print(f"MULTI-SIGNAL ANALYSIS RESULTS")
-        print(f"="*60)
+        print("\n" + "="*60)
+        print("MULTI-SIGNAL ANALYSIS RESULTS")
+        print("="*60)
         print(f"Final Decision: {final_result['final_signal']}")
         print(f"Confidence: {final_result['final_confidence']:.2f}")
         print(f"Signal Strength: {final_result['signal_strength']}")
         print(f"Consensus Score: {final_result['consensus_score']:.2f}")
         print(f"Risk Level: {final_result['risk_assessment']['overall_risk']}")
         
-        print(f"\nSignal Breakdown:")
+        print("\nSignal Breakdown:")
         consensus = final_result['signal_consensus']
         print(f"  Buy Signals: {consensus['buy_signals']}")
         print(f"  Sell Signals: {consensus['sell_signals']}")
         print(f"  Hold Signals: {consensus['hold_signals']}")
         print(f"  Total Signals: {consensus['total_signals']}")
         
-        print(f"\nDecision Factors:")
+        print("\nDecision Factors:")
         for factor in final_result['decision_factors']:
             print(f"  • {factor}")
             
         if 'correlation_analysis' in final_result and final_result['correlation_analysis']:
-            print(f"\nSignal Independence:")
+            print("\nSignal Independence:")
             corr = final_result['correlation_analysis']
             print(f"  Diversification Score: {corr['diversification_score']:.2f}")
             print(f"  Independence Verified: {corr['independence_verified']}")
             
-        print(f"\nTrading Recommendation:")
+        print("\nTrading Recommendation:")
         rec = final_result['trading_recommendation']
         print(f"  Action: {rec['action']}")
         print(f"  Position Size: {rec['position_size_suggestion']}")
         
-        print(f"\n" + "="*60)
+        print("\n" + "="*60)
         print("✓ Multi-Signal Analysis Demo completed successfully!")
         
     except Exception as e:
@@ -206,7 +203,7 @@ def run_rsi_bot_compatibility(once: bool = False):
         input_data = {"price_data": sample_price_data}
         result = module_manager.execute_module("RSIModule", input_data)
         
-        print(f"RSI Analysis Result:")
+        print("RSI Analysis Result:")
         print(f"  RSI Value: {result['rsi_value']:.2f}")
         print(f"  Signal: {result['signal']}")
         print(f"  Confidence: {result['confidence']:.2f}")
@@ -343,7 +340,7 @@ def run_system_tests():
         metrics = metrics_collector.get_all_metrics()
         print(f"✓ Metrics collection working - {len(metrics)} metric categories tracked")
         
-        print(f"\n✓ All modular architecture tests passed!")
+        print("\n✓ All modular architecture tests passed!")
         print(f"✓ Total modules loaded: {len(module_manager.list_modules())}")
         print(f"✓ Available modules: {', '.join(module_manager.list_modules())}")
         

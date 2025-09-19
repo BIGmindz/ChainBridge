@@ -5,9 +5,7 @@ This module implements Volume Profile analysis and signal generation, providing
 a volume-based signal that is uncorrelated to price-based indicators like RSI, MACD, and Bollinger Bands.
 """
 
-from typing import Dict, Any, List, Tuple, Optional
-import pandas as pd
-import numpy as np
+from typing import Dict, Any, List, Tuple
 import math
 from core.module_manager import Module
 
@@ -112,12 +110,12 @@ class VolumeProfileModule(Module):
             if isinstance(candle, dict):
                 high = float(candle.get('high', candle.get('close', 0)))
                 low = float(candle.get('low', candle.get('close', 0)))
-                close = float(candle.get('close', 0))
+                _close = float(candle.get('close', 0))
                 volume = float(candle.get('volume', 1))
             else:  # Assume OHLCV format
                 high = float(candle[2])
                 low = float(candle[3])
-                close = float(candle[4])
+                _close = float(candle[4])
                 volume = float(candle[5]) if len(candle) > 5 else 1
                 
             total_volume += volume

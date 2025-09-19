@@ -1,6 +1,4 @@
 import unittest
-import json
-from datetime import datetime
 from modules.region_specific_crypto_module import RegionSpecificCryptoModule
 
 class TestRegionSpecificCryptoModule(unittest.TestCase):

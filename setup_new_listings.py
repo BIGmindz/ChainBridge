@@ -6,7 +6,6 @@ This script verifies and installs all necessary dependencies for the
 New Listings Radar module.
 """
 
-import os
 import sys
 import subprocess
 import pkg_resources

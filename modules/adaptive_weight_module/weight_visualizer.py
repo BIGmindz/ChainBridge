@@ -8,13 +8,11 @@ and performance analysis across different market conditions.
 """
 
 import os
-import json
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Tuple, Optional, Union
+from typing import Dict, Any, List
 
 
 class AdaptiveWeightVisualizer:
@@ -357,13 +355,13 @@ class AdaptiveWeightVisualizer:
         current_weights = all_data.get("current_weights", {})
         
         # Create individual visualizations
-        regime_plot = self.plot_regime_history(regime_data)
-        transition_plot = self.plot_regime_transitions(transition_matrix)
-        perf_win_rate_plot = self.plot_performance_by_regime(performance_data, "win_rate")
-        perf_pnl_plot = self.plot_performance_by_regime(performance_data, "pnl")
-        weight_plot = self.plot_weight_optimization(weight_history)
-        importance_plot = self.plot_signal_importance(current_weights)
-        
+        _regime_plot = self.plot_regime_history(regime_data)
+        _transition_plot = self.plot_regime_transitions(transition_matrix)
+        _perf_win_rate_plot = self.plot_performance_by_regime(performance_data, "win_rate")
+        _perf_pnl_plot = self.plot_performance_by_regime(performance_data, "pnl")
+        _weight_plot = self.plot_weight_optimization(weight_history)
+        _importance_plot = self.plot_signal_importance(current_weights)
+
         # Create an HTML dashboard
         html_content = f"""
         <!DOCTYPE html>
@@ -417,10 +415,10 @@ class AdaptiveWeightVisualizer:
         </body>
         </html>
         """
-        
+
         # Save the HTML dashboard
         dashboard_path = os.path.join(self.output_dir, "dashboard.html")
         with open(dashboard_path, "w") as f:
             f.write(html_content)
-        
+
         return dashboard_path

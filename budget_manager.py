@@ -5,12 +5,8 @@ Track every dollar, compound profits, manage risk
 """
 
 import json
-import pandas as pd
-import numpy as np
 from datetime import datetime
-from typing import Dict, List, Optional
-import ccxt
-import os
+from typing import Dict, Optional
 
 class BudgetManager:
     """
@@ -499,7 +495,7 @@ if __name__ == "__main__":
     
     # Open a position
     position_calc = budget.calculate_position_size('BTC/USD', signal_confidence=0.75, volatility=0.03)
-    print(f"\n📊 Position Size Calculation:")
+    print("\n📊 Position Size Calculation:")
     print(f"  Allocated: ${position_calc['size']:,.2f}")
     print(f"  Percentage: {position_calc['size_pct']*100:.1f}%")
     

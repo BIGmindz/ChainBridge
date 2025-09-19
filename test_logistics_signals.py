@@ -4,7 +4,6 @@ See the power of uncorrelated, forward-looking signals
 """
 
 from modules.logistics_signal_module import LogisticsSignalModule
-import json
 
 def test_logistics():
     print("\n🧪 TESTING LOGISTICS SIGNALS")
@@ -16,7 +15,7 @@ def test_logistics():
     # Generate signal
     result = logistics.process({})
     
-    print(f"\n📊 LOGISTICS SIGNAL RESULT:")
+    print("\n📊 LOGISTICS SIGNAL RESULT:")
     print(f"Signal: {result['signal']}")
     print(f"Confidence: {result['confidence']*100:.1f}%")
     print(f"Value: {result['value']:.2f}")
@@ -24,20 +23,20 @@ def test_logistics():
     print(f"Forward Looking: {result['lead_time_days']} days")
     
     if 'components' in result:
-        print(f"\n📈 COMPONENT SIGNALS:")
+        print("\n📈 COMPONENT SIGNALS:")
         for name, component in result['components'].items():
             if 'interpretation' in component:
                 print(f"  {name}: {component['interpretation']}")
                 print(f"    {component.get('metric', '')}")
     
-    print(f"\n💡 WHAT THIS MEANS:")
-    print(f"While everyone else reacts to price (lagging),")
-    print(f"you're predicting price 30 days ahead (leading)!")
+    print("\n💡 WHAT THIS MEANS:")
+    print("While everyone else reacts to price (lagging),")
+    print("you're predicting price 30 days ahead (leading)!")
     
-    print(f"\n💰 PROFIT POTENTIAL:")
-    print(f"If logistics shows BUY today,")
-    print(f"and BTC rises in 30 days as predicted,")
-    print(f"you captured the ENTIRE move while others wait for RSI!")
+    print("\n💰 PROFIT POTENTIAL:")
+    print("If logistics shows BUY today,")
+    print("and BTC rises in 30 days as predicted,")
+    print("you captured the ENTIRE move while others wait for RSI!")
 
 if __name__ == "__main__":
     test_logistics()

@@ -8,7 +8,6 @@ as an example of ML pipeline integration.
 from typing import Dict, Any, List
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
 from core.module_manager import Module
 
 
@@ -79,7 +78,7 @@ class SalesForecastingModule(Module):
         y = np.array(data)
         
         # Simple linear regression
-        n = len(data)
+        _n = len(data)
         x_mean = np.mean(x)
         y_mean = np.mean(y)
         
@@ -235,7 +234,7 @@ class SalesForecastingModule(Module):
                     for i in range(1, forecast_periods + 1):
                         next_date = last_date + (date_diff * i)
                         forecast_dates.append(next_date.isoformat())
-                except:
+                except Exception:
                     # If date parsing fails, generate sequential dates
                     forecast_dates = [f"forecast_period_{i}" for i in range(1, forecast_periods + 1)]
             else:

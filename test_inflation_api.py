@@ -5,8 +5,6 @@ This script demonstrates fetching inflation data for Argentina, Venezuela, and B
 and generating a crypto hedge signal when any country exceeds 20% annual inflation.
 """
 
-import os
-import sys
 from modules.global_macro_module import GlobalMacroModule
 
 def test_inflation_api():

@@ -5,7 +5,7 @@ This module collects and tracks usage metrics, adoption rates, ROI,
 and other business impact indicators for the Benson system.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 from datetime import datetime, timezone, timedelta
 from collections import defaultdict, Counter
 import json

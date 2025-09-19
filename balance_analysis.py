@@ -64,7 +64,7 @@ def main():
                 if usd_value >= 1.0:  # Only include meaningful amounts
                     assets_to_check.append((asset, amount, usd_value))
 
-    print(f'\n=== SUMMARY ===')
+    print('\n=== SUMMARY ===')
     print(f'Total USD value: ${total_value:.2f}')
     print(f'Assets with >$1 value: {len(assets_to_check)}')
     for asset, amount, value in assets_to_check:

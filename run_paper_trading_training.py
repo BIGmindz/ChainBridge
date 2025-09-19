@@ -14,7 +14,6 @@ import datetime
 import json
 import os
 import pandas as pd
-from pathlib import Path
 
 # Import bot components
 from MultiSignalBot import MultiSignalBot
@@ -68,8 +67,8 @@ def run_paper_trading_simulation(args, session_dir):
     print(f"Results will be saved to {session_dir}")
     
     # Initialize components
-    bot = MultiSignalBot(config_path=args.config, paper_mode=True)
-    signal_collector = SignalDataCollector()
+    _bot = MultiSignalBot(config_path=args.config, paper_mode=True)
+    _signal_collector = SignalDataCollector()
     
     # Prepare data collection
     start_time = time.time()
@@ -90,13 +89,13 @@ def run_paper_trading_simulation(args, session_dir):
             
             # Run one cycle of the trading bot
             print(f"[{timestamp}] Running trading cycle...")
-            bot_result = bot.run_once(timestamp=timestamp)
+            _bot_result = _bot.run_once(timestamp=timestamp)
             
             # Collect signal data
             print("Collecting signal data...")
             # Get signal data from bot's last signals
-            raw_signals = bot.last_signals
-            signal_data = signal_collector.collect_signals(raw_signals)
+            raw_signals = _bot.last_signals
+            signal_data = _signal_collector.collect_signals(raw_signals)
             signal_data_snapshots.append({
                 "timestamp": timestamp,
                 "data": signal_data
@@ -104,7 +103,7 @@ def run_paper_trading_simulation(args, session_dir):
             
             # Collect market data without using the classifier
             print("Collecting market data...")
-            market_data = bot.get_latest_market_data()
+            market_data = _bot.get_latest_market_data()
             
             # Simple market condition assessment without ML clustering
             simple_condition = "UNKNOWN"
@@ -130,7 +129,7 @@ def run_paper_trading_simulation(args, session_dir):
             # Record performance metrics
             print("Recording performance metrics...")
             # Use get_portfolio_status instead of get_performance_metrics
-            performance = bot.budget_manager.get_portfolio_status()
+            performance = _bot.budget_manager.get_portfolio_status()
             performance_snapshots.append({
                 "timestamp": timestamp,
                 "metrics": performance

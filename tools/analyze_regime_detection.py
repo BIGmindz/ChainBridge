@@ -8,9 +8,7 @@ and provides insights on how to improve it.
 
 import json
 import os
-import numpy as np
-from datetime import datetime
-from typing import Dict, List
+from typing import Dict
 import sys
 
 # Conditionally import matplotlib
@@ -122,7 +120,7 @@ def analyze_regime_confidence(stats: Dict) -> None:
     regime = market_regime.get('regime', 'unknown')
     confidence = market_regime.get('confidence', 0)
     
-    print(f"\n=== REGIME DETECTION CONFIDENCE ===")
+    print("\n=== REGIME DETECTION CONFIDENCE ===")
     print(f"Current regime: {regime}")
     print(f"Confidence: {confidence:.2f}")
     
@@ -175,7 +173,7 @@ def provide_improvement_recommendations(stats: Dict) -> None:
     for regime, data in regime_performance.items():
         trades = data.get('trades', 0)
         win_rate = data.get('win_rate', 0)
-        pnl = data.get('pnl', 0)
+        _pnl = data.get('pnl', 0)
         
         if trades > 50 and win_rate < 15:
             print(f"ISSUE: Poor performance in {regime} regime")

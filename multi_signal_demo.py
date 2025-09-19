@@ -237,13 +237,13 @@ def run_comprehensive_demo():
                 print(f"Consensus Score: {final_result['consensus_score']:.2f}")
                 print(f"Risk Level: {final_result['risk_assessment']['overall_risk']}")
                 
-                print(f"\nSignal Breakdown:")
+                print("\nSignal Breakdown:")
                 consensus = final_result['signal_consensus']
                 print(f"  Buy Signals: {consensus['buy_signals']}")
                 print(f"  Sell Signals: {consensus['sell_signals']}")
                 print(f"  Hold Signals: {consensus['hold_signals']}")
                 
-                print(f"\nKey Decision Factors:")
+                print("\nKey Decision Factors:")
                 for i, factor in enumerate(final_result['decision_factors'][:3], 1):
                     print(f"  {i}. {factor}")
                 
@@ -277,7 +277,7 @@ def run_comprehensive_demo():
                   f"{result['consensus']:5.2f} │ {result['risk']:6} │ {result['price_return']:6.1f}%")
     
     # System metrics
-    print(f"\n6. SYSTEM PERFORMANCE METRICS")
+    print("\n6. SYSTEM PERFORMANCE METRICS")
     print("-" * 40)
     
     all_metrics = metrics_collector.get_all_metrics()
@@ -286,7 +286,7 @@ def run_comprehensive_demo():
     print(f"Total Analysis Runs: {len(scenario_results)}")
     
     # Signal correlation analysis
-    print(f"\n7. SIGNAL INDEPENDENCE VERIFICATION")
+    print("\n7. SIGNAL INDEPENDENCE VERIFICATION")
     print("-" * 50)
     
     # Analyze signal correlation across scenarios
@@ -318,12 +318,12 @@ def run_comprehensive_demo():
     print("DEMONSTRATION COMPLETED SUCCESSFULLY!")
     print("="*80)
     
-    print(f"\n✓ Multi-signal system demonstrates:")
+    print("\n✓ Multi-signal system demonstrates:")
     print(f"  • Integration of {len(loaded_modules)} uncorrelated signal modules")
     print(f"  • Adaptive decision making across {len(scenario_results)} market scenarios")
-    print(f"  • Risk-aware confidence scoring and consensus analysis")
-    print(f"  • Independence verification between different signal types")
-    print(f"  • Comprehensive performance tracking and metrics collection")
+    print("  • Risk-aware confidence scoring and consensus analysis")
+    print("  • Independence verification between different signal types")
+    print("  • Comprehensive performance tracking and metrics collection")
     
     return scenario_results
 
@@ -336,7 +336,7 @@ if __name__ == "__main__":
         with open("multi_signal_demo_results.json", "w") as f:
             json.dump(results, f, indent=2, default=str)
             
-        print(f"\n✓ Results saved to multi_signal_demo_results.json")
+        print("\n✓ Results saved to multi_signal_demo_results.json")
         
     except Exception as e:
         print(f"\n✗ Demo failed: {e}")
