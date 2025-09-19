@@ -7,6 +7,7 @@ THIS IS WHERE 10X HAPPENS
 """
 
 import asyncio
+import os
 import aiohttp
 from datetime import datetime
 import numpy as np
@@ -70,6 +71,9 @@ class NewListingsRadar:
             'contract_verified': True,
             'honeypot_check': True
         }
+        # Allow disabling external radars via env var for safer runs
+        # Set DISABLE_COINBASE_RADAR=1 to skip Coinbase calls (useful when trading on Kraken)
+        self.disable_coinbase = os.environ.get('DISABLE_COINBASE_RADAR', '0') == '1'
         
         # Trading parameters
         self.trading_params = {
@@ -140,6 +144,16 @@ class NewListingsRadar:
         """
         new_listings = []
         
+        # Skip scanning Coinbase when explicitly disabled or when trading exchange is not Coinbase
+        if self.disable_coinbase:
+            return []
+
+        # If a config was provided and the configured exchange is not coinbase,
+        # avoid querying Coinbase's public API to reduce cross-exchange chatter.
+        configured_exchange = (self.config or {}).get('exchange', '').lower()
+        if configured_exchange and configured_exchange != 'coinbase':
+            return []
+
         try:
             async with aiohttp.ClientSession() as session:
                 # Check Coinbase API
