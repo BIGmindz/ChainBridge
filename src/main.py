@@ -53,7 +53,7 @@ def run_bot(once: bool = False) -> None:
     config_path = os.getenv("BENSON_CONFIG", "config.yaml")
     cfg = load_config(config_path)
 
-    exchange_id = str(cfg.get("exchange", "coinbase")).lower()
+    exchange_id = str(cfg.get("exchange", "kraken")).lower()
     
     # Get API configuration
     api_config = cfg.get("api", {})
@@ -62,7 +62,7 @@ def run_bot(once: bool = False) -> None:
     exchange = setup_exchange(exchange_id, api_config)
     symbols: List[str] = list(cfg.get("symbols", []))
     if not symbols:
-        symbols = ["BTC/USD", "ETH/USD"]  # sensible Coinbase defaults
+        symbols = ["PRO/USD", "BDXN/USD", "KIN/USD", "SOGNI/USD", "ZORA/USD"]  # Kraken volatile crypto defaults
     
     validate_symbols(exchange, symbols)
     
