@@ -315,7 +315,7 @@ class MultiSignalTradingEngine:
                     loaded = json.load(f)
                     default_config.update(loaded)
                     print(f"✅ Loaded existing config from {path}")
-        except:
+        except Exception:
             print("📝 Using default config")
         
         return default_config
