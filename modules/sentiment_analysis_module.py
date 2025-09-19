@@ -8,7 +8,7 @@ This provides fundamental analysis signals uncorrelated to technical indicators.
 
 from typing import Dict, Any, List, Tuple
 import math
-from datetime import datetime, timedelta
+from datetime import datetime
 from core.module_manager import Module
 import sys
 import os

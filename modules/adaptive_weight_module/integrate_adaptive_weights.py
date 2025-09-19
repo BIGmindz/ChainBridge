@@ -7,11 +7,10 @@ enabling automatic weight optimization based on market conditions and recent per
 """
 
 import os
-import sys
 import json
 import logging
 from datetime import datetime
-from typing import Dict, Any, List, Optional, Union
+from typing import Dict, Any
 
 # Set up logging
 logging.basicConfig(
@@ -26,9 +25,9 @@ logging.basicConfig(
 logger = logging.getLogger("adaptive_weight_integration")
 
 # Import required modules
-from modules.adaptive_weight_module.adaptive_weight_model import AdaptiveWeightModule
-from modules.adaptive_weight_module.market_regime_integrator import MarketRegimeIntegrator
-from modules.adaptive_weight_module.signal_data_collector import SignalDataCollector
+from modules.adaptive_weight_module.adaptive_weight_model import AdaptiveWeightModule  # noqa: E402
+from modules.adaptive_weight_module.market_regime_integrator import MarketRegimeIntegrator  # noqa: E402
+from modules.adaptive_weight_module.signal_data_collector import SignalDataCollector  # noqa: E402
 
 
 class AdaptiveWeightIntegrator:

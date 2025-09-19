@@ -9,9 +9,8 @@ for immediate trading liquidity instead of USD (which has withdrawal delays).
 import os
 import sys
 import json
-import time
 import argparse
-from typing import Dict, Any, List
+from typing import Dict
 from datetime import datetime, timezone
 
 # Add current directory to path
@@ -98,7 +97,7 @@ class PositionLiquidator:
 
                 if buy_order:
                     print(f"✅ Converted to {usdg_amount:.2f} USDG")
-                    print(f"💰 Liquidation complete! Funds available immediately for trading.")
+                    print("💰 Liquidation complete! Funds available immediately for trading.")
 
                     # Log the transaction
                     self.liquidation_log.append({

@@ -11,7 +11,6 @@ import asyncio
 import json
 import numpy as np
 from datetime import datetime, timedelta
-from typing import Dict, List
 
 # Conditionally import matplotlib
 has_matplotlib = False
@@ -23,7 +22,7 @@ except ImportError:
 
 # Add the project root to path to import the trading engine
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from src.core.unified_trading_engine import MultiSignalTradingEngine, MarketRegime
+from src.core.unified_trading_engine import MultiSignalTradingEngine  # noqa: E402
 
 class MarketRegimeSimulation:
     """

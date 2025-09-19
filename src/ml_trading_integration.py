@@ -37,9 +37,9 @@ except ImportError:
     from kraken_paper_live_bot import KrakenPaperLiveBot
 
 try:
-    from .exchange_adapter import ExchangeAdapter
+    from .exchange_adapter import ExchangeAdapter  # noqa: F401
 except ImportError:
-    from exchange_adapter import ExchangeAdapter
+    pass
 
 
 class MLTradingIntegration:

@@ -7,8 +7,6 @@ with real-time learning and pattern recognition for the Multiple-signal-decision
 """
 
 import os
-import sys
-import time
 import argparse
 from datetime import datetime
 

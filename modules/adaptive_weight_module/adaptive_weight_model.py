@@ -14,11 +14,9 @@ Key features:
 
 import os
 import json
-import time
 import numpy as np
-import pandas as pd
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Tuple, Optional, Union
+from typing import Dict, Any, List, Tuple
 
 # Try to import joblib - used for model persistence
 try:
@@ -31,11 +29,11 @@ except ImportError:
 # TensorFlow and related imports - wrapped in try-except for optional dependency
 try:
     import tensorflow as tf
-    from tensorflow import keras
-    from tensorflow.keras import layers
-    from tensorflow.keras.models import Sequential, Model
-    from tensorflow.keras.layers import Dense, Dropout, BatchNormalization, Input
-    from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
+    from tensorflow import keras  # noqa: F401
+    from tensorflow.keras import layers  # noqa: F401
+    from tensorflow.keras.models import Sequential, Model  # noqa: F401
+    from tensorflow.keras.layers import Dense, Dropout, BatchNormalization, Input  # noqa: F401
+    from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard  # noqa: F401
     from tensorflow.keras.optimizers import Adam
     from tensorflow.keras.regularizers import l1_l2
     TENSORFLOW_AVAILABLE = True
@@ -45,9 +43,9 @@ except ImportError:
 
 # scikit-learn for preprocessing and evaluation - wrapped in try-except for optional dependency
 try:
-    from sklearn.preprocessing import StandardScaler, MinMaxScaler
-    from sklearn.model_selection import train_test_split
-    from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+    from sklearn.preprocessing import StandardScaler, MinMaxScaler  # noqa: F401
+    from sklearn.model_selection import train_test_split  # noqa: F401
+    from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score  # noqa: F401
     # For market regime detection
     from sklearn.cluster import KMeans
     from sklearn.decomposition import PCA
@@ -379,10 +377,10 @@ class AdaptiveWeightModule(Module):
         # Extract features and targets
         signal_features = []
         market_features = []
-        regimes = []
+        _regimes = []
         performance_targets = []
         weight_targets = []
-        
+
         for sample in raw_data:
             # Extract signal features
             if 'signal_data' in sample:
@@ -403,8 +401,8 @@ class AdaptiveWeightModule(Module):
         X_signal = np.array(signal_features)
         X_market = np.array(market_features)
         y_weights = np.array(weight_targets)
-        y_performance = np.array(performance_targets)
-        
+        _y_performance = np.array(performance_targets)
+
         # Normalize features
         self.scalers['signal'] = StandardScaler().fit(X_signal)
         self.scalers['market'] = StandardScaler().fit(X_market)

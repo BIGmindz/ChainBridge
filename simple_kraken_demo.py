@@ -12,11 +12,8 @@ Author: BIGmindz
 Version: 1.0.0
 """
 
-import sys
-import os
 import json
 from datetime import datetime, timezone
-from typing import Dict, List, Any
 
 # Simple mock classes for demo
 class MockBudgetManager:
@@ -112,7 +109,7 @@ class SimplePaperTradingBot:
             'largest_loss': 0.0
         }
         
-        print(f"🤖 SimplePaperTradingBot initialized")
+        print("🤖 SimplePaperTradingBot initialized")
         print(f"   Capital: ${self.budget_manager.initial_capital:,.2f}")
         print(f"   Symbols: {config.get('symbols', [])}")
     
@@ -325,16 +322,16 @@ def demo_simple_paper_trading():
     
     # Set initial prices
     prices = {'BTC/USD': 45000.0, 'ETH/USD': 3200.0, 'ADA/USD': 0.45}
-    print(f"\n📊 Initial Prices:")
+    print("\n📊 Initial Prices:")
     for symbol, price in prices.items():
         bot.update_price(symbol, price)
         print(f"   {symbol}: ${price:,.4f}")
     
     # Demo trading sequence
-    print(f"\n🎯 Opening positions...")
+    print("\n🎯 Opening positions...")
     
     # Open BTC position
-    btc_result = bot.open_position(
+    _btc_result = bot.open_position(
         symbol='BTC/USD',
         side='BUY',
         signal_confidence=0.8,
@@ -342,7 +339,7 @@ def demo_simple_paper_trading():
     )
     
     # Open ETH position
-    eth_result = bot.open_position(
+    _eth_result = bot.open_position(
         symbol='ETH/USD',
         side='BUY', 
         signal_confidence=0.65,
@@ -350,7 +347,7 @@ def demo_simple_paper_trading():
     )
     
     # Try to open ADA position with low confidence
-    ada_result = bot.open_position(
+    _ada_result = bot.open_position(
         symbol='ADA/USD',
         side='SELL',
         signal_confidence=0.7,
@@ -358,13 +355,13 @@ def demo_simple_paper_trading():
     )
     
     # Show initial portfolio
-    print(f"\n📈 Initial Portfolio:")
+    print("\n📈 Initial Portfolio:")
     summary = bot.get_portfolio_summary()
     print(f"   Portfolio Value: ${summary['portfolio_value']:,.2f}")
     print(f"   Active Positions: {summary['active_positions']}")
     
     # Simulate price movements
-    print(f"\n📈 Simulating price movements...")
+    print("\n📈 Simulating price movements...")
     
     # BTC up 5%
     new_btc = prices['BTC/USD'] * 1.05
@@ -382,24 +379,24 @@ def demo_simple_paper_trading():
     print(f"   ADA: ${prices['ADA/USD']:,.4f} → ${new_ada:.4f} (+8%)")
     
     # Show updated portfolio
-    print(f"\n📊 Updated Portfolio:")
+    print("\n📊 Updated Portfolio:")
     summary = bot.get_portfolio_summary()
     print(f"   Portfolio Value: ${summary['portfolio_value']:,.2f}")
     print(f"   Total Return: ${summary['total_return']:+,.2f} ({summary['total_return_pct']:+.2f}%)")
     
     # Show position details
-    print(f"\n💼 Position Details:")
+    print("\n💼 Position Details:")
     for pos in bot.positions.values():
         print(f"   {pos.symbol} {pos.side}: ${pos.pnl:+,.2f} ({pos.pnl_pct*100:+.2f}%)")
     
     # Close positions
-    print(f"\n🔄 Closing all positions...")
+    print("\n🔄 Closing all positions...")
     position_ids = list(bot.positions.keys())
     for pos_id in position_ids:
         bot.close_position(pos_id, "DEMO_END")
     
     # Final summary
-    print(f"\n📋 FINAL SUMMARY")
+    print("\n📋 FINAL SUMMARY")
     print("-" * 30)
     summary = bot.get_portfolio_summary()
     print(f"Initial Capital: ${summary['initial_capital']:,.2f}")
@@ -427,19 +424,19 @@ def main():
         print("="*60)
         
         # Run demo
-        bot = demo_simple_paper_trading()
+        _bot = demo_simple_paper_trading()
         
-        print(f"\n✅ Demo completed successfully!")
-        print(f"\nKey features demonstrated:")
-        print(f"  ✅ Position opening with confidence-based sizing")
-        print(f"  ✅ Real-time P&L calculation")
-        print(f"  ✅ Stop loss and take profit setting")
-        print(f"  ✅ Performance tracking")
-        print(f"  ✅ Trade journal export")
-        print(f"  ✅ Portfolio summary reporting")
+        print("\n✅ Demo completed successfully!")
+        print("\nKey features demonstrated:")
+        print("  ✅ Position opening with confidence-based sizing")
+        print("  ✅ Real-time P&L calculation")
+        print("  ✅ Stop loss and take profit setting")
+        print("  ✅ Performance tracking")
+        print("  ✅ Trade journal export")
+        print("  ✅ Portfolio summary reporting")
         
-        print(f"\n🎯 This simplified version demonstrates the core concepts")
-        print(f"   that are fully implemented in the complete Kraken module!")
+        print("\n🎯 This simplified version demonstrates the core concepts")
+        print("   that are fully implemented in the complete Kraken module!")
         
     except Exception as e:
         print(f"❌ Demo failed: {e}")

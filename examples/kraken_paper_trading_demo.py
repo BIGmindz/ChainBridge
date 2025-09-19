@@ -25,13 +25,11 @@ import logging
 import os
 import sys
 from datetime import datetime, timezone
-from pathlib import Path
 
 # Add src to Python path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from kraken_paper_live_bot import KrakenPaperLiveBot, create_kraken_paper_bot
-from ml_trading_integration import MLTradingIntegration, create_ml_trading_system
+from kraken_paper_live_bot import create_kraken_paper_bot
 
 
 async def demo_basic_paper_trading():
@@ -205,7 +203,7 @@ async def demo_ml_integration():
         # For demo purposes, create a mock ML integration
         ml_integration = MockMLIntegration(bot, config['ml_integration'])
         
-        print(f"✅ ML Trading System initialized")
+        print("✅ ML Trading System initialized")
         print(f"💰 Capital: ${bot.budget_manager.initial_capital:,.2f}")
         print(f"🤖 ML Confidence Threshold: {config['ml_integration']['confidence_threshold']}")
         
@@ -288,7 +286,7 @@ async def demo_ml_integration():
         
         # Show ML performance
         ml_report = ml_integration.get_signal_performance_report()
-        print(f"\n🧠 ML Signal Performance:")
+        print("\n🧠 ML Signal Performance:")
         print(f"Active Modules: {ml_report['summary']['active_modules']}")
         print(f"Avg Success Rate: {ml_report['summary']['avg_success_rate']:.2f}")
         
@@ -357,7 +355,7 @@ class MockMLIntegration:
                     'decision': {
                         'action': 'HOLD',
                         'confidence': confidence,
-                        'reason': f'Below threshold or HOLD signal'
+                        'reason': 'Below threshold or HOLD signal'
                     }
                 }
         
@@ -394,7 +392,7 @@ async def demo_risk_management():
     
     bot = create_kraken_paper_bot(config_dict=config)
     
-    print(f"✅ Risk Management Demo initialized")
+    print("✅ Risk Management Demo initialized")
     print(f"💰 Capital: ${bot.budget_manager.initial_capital:,.2f}")
     print(f"⚠️  Max Drawdown Limit: {config['risk_management']['max_drawdown_limit']*100}%")
     print(f"📏 Max Position Size: {config['risk_management']['max_position_size']*100}%")
@@ -514,13 +512,13 @@ async def main():
     
     try:
         if args.demo in ['basic', 'all']:
-            bot1 = await demo_basic_paper_trading()
+            _bot1 = await demo_basic_paper_trading()
             
         if args.demo in ['ml', 'all']:
-            bot2 = await demo_ml_integration()
+            _bot2 = await demo_ml_integration()
             
         if args.demo in ['risk', 'all']:
-            bot3 = await demo_risk_management()
+            _bot3 = await demo_risk_management()
         
         print("\n" + "="*60)
         print("✅ ALL DEMOS COMPLETED SUCCESSFULLY!")

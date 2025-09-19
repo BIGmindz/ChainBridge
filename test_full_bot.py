@@ -13,7 +13,6 @@ This script tests all components of the system together:
 
 import os
 import sys
-import json
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
@@ -116,7 +115,7 @@ def generate_test_data(days=120, with_regime_change=True):
     print(f"✅ Generated {days} days of test data")
     return df
 
-def test_pattern_engine(data):
+def run_pattern_engine(data):
     """Test the Pattern Engine functionality"""
     print("\n🧠 Testing Pattern Engine...")
     
@@ -145,7 +144,7 @@ def test_pattern_engine(data):
     
     return engine
 
-def test_dashboard(signals):
+def run_dashboard(signals):
     """Test the Live Dashboard functionality"""
     print("\n📊 Testing Live Dashboard...")
     
@@ -217,7 +216,7 @@ def test_dashboard(signals):
     
     return dashboard
 
-def test_backtest_engine(data):
+def run_backtest_engine(data):
     """Test the Backtest Engine functionality"""
     print("\n🔄 Testing Backtest Engine...")
     
@@ -262,7 +261,7 @@ def test_backtest_engine(data):
     
     return backtest, results
 
-def test_regime_backtester(data):
+def run_regime_backtester(data):
     """Test the regime-specific backtester"""
     print("\n🔄 Testing Regime Backtester...")
     
@@ -335,12 +334,12 @@ def test_regime_backtester(data):
     max_drawdown = overall_metrics.get('max_drawdown', 0)
     win_rate = overall_metrics.get('win_rate', 0)
     
-    print(f"  OVERALL PERFORMANCE SUMMARY:")
+    print("  OVERALL PERFORMANCE SUMMARY:")
     print(f"    Return: {total_return:.2%}, Sharpe: {sharpe_ratio:.2f}, Max DD: {max_drawdown:.2%}, Win Rate: {win_rate:.2%}")
     
     return regime_backtest, results
 
-def test_signal_modules(data):
+def run_signal_modules(data):
     """Test all signal modules"""
     print("\n📡 Testing Signal Modules...")
     
@@ -427,32 +426,32 @@ def main():
     
     try:
         # Test pattern engine
-        engine = test_pattern_engine(data)
-        
+        engine = run_pattern_engine(data)
+
         # Test signal modules
-        signals, aggregated = test_signal_modules(data)
-        
+        signals, aggregated = run_signal_modules(data)
+
         # Test dashboard
-        dashboard = test_dashboard(signals)
-        
+        _dashboard = run_dashboard(signals)
+
         # Test backtest engine
-        backtest, bt_results = test_backtest_engine(data)
-        
+        backtest, bt_results = run_backtest_engine(data)
+
         # Test regime backtester
-        regime_backtest, rb_results = test_regime_backtester(data)
-        
+        regime_backtest, rb_results = run_regime_backtester(data)
+
         print("\n" + "="*80)
         print("✅ ALL TESTS COMPLETED SUCCESSFULLY")
         print("="*80)
-        
+
         print("\n📊 System Performance Summary:")
         print(f"  Pattern Engine Regime: {engine.current_regime}")
         print(f"  Aggregated Signal: {aggregated}")
         print(f"  Backtest Return: {bt_results['total_return']:.2%}")
-        print(f"  Regime Detection: Successfully tested across bull, bear, and sideways regimes")
-        
+        print("  Regime Detection: Successfully tested across bull, bear, and sideways regimes")
+
         return 0
-        
+
     except Exception as e:
         print(f"\n❌ Error during testing: {e}")
         import traceback

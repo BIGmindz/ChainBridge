@@ -7,7 +7,7 @@ Demonstrates the power of global macro data in predicting crypto price movements
 import os
 import sys
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd

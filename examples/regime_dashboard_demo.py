@@ -6,7 +6,6 @@ Example script demonstrating the regime performance dashboard.
 import os
 import sys
 import numpy as np
-from datetime import datetime
 
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

@@ -16,21 +16,18 @@ Version: 1.0.0
 import sys
 import os
 import unittest
-import asyncio
 import json
 from datetime import datetime, timezone
-from unittest.mock import Mock, patch
 
 # Add src to Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 try:
     from src.kraken_paper_live_bot import (
-        KrakenPaperLiveBot, 
-        TradingPosition, 
-        PriceData, 
+        TradingPosition,
+        PriceData,
         PerformanceMetrics,
-        create_kraken_paper_bot
+        create_kraken_paper_bot,
     )
 except ImportError as e:
     print(f"Import error: {e}")

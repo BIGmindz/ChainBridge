@@ -9,12 +9,9 @@ Provides insight into country-specific and regional adoption trends
 
 import os
 import json
-import time
-import requests
 import numpy as np
-import pandas as pd
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, Tuple
 from core.module_manager import Module
 
 class AdoptionTrackerModule(Module):
