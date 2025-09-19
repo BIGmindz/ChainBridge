@@ -5,7 +5,7 @@ Comprehensive backtesting engine for evaluating trading strategies
 
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Tuple, Optional, Callable
+from typing import Dict, List, Callable
 from datetime import datetime, timedelta
 import json
 import os
