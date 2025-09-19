@@ -8,8 +8,6 @@ This version doesn't require TensorFlow.
 """
 
 import os
-import sys
-import time
 import argparse
 from datetime import datetime
 

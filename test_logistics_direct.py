@@ -4,7 +4,6 @@
 Test the logistics signal module by running it directly
 """
 
-import sys
 import os
 import traceback
 

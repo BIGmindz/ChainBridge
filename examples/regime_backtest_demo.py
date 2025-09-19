@@ -184,7 +184,7 @@ def main():
 if __name__ == "__main__":
     # Check if matplotlib is available
     try:
-        import matplotlib.pyplot as plt
+        import matplotlib.pyplot as plt  # noqa: F401
         has_matplotlib = True
     except ImportError:
         has_matplotlib = False

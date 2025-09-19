@@ -10,18 +10,17 @@ and aggregates them to make more informed trading decisions.
 import os
 import sys
 import time
-import json
 import argparse
 import yaml
 import re
 from typing import Dict, Any, List
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 
 # Add the current directory to Python path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Import core components
-from core.module_manager import ModuleManager, Module
+from core.module_manager import ModuleManager
 from src.data_provider import setup_exchange, validate_symbols
 from budget_manager import BudgetManager
 
@@ -54,21 +53,21 @@ def safe_fetch_ohlcv(exchange, symbol, timeframe, limit=100):
         print(error_msg)
         print("🚨 LIVE TRADING REQUIRES REAL MARKET DATA - Check your connection and API!")
         raise RuntimeError(f"Live data fetch failed for {symbol}: {str(e)}")
-from src.exchange_adapter import ExchangeAdapter
-from src.market_utils import check_markets_have_minima
+from src.exchange_adapter import ExchangeAdapter  # noqa: E402
+from src.market_utils import check_markets_have_minima  # noqa: E402
 
 # Import signal modules
-from modules.rsi_module import RSIModule
-from modules.macd_module import MACDModule
-from modules.bollinger_bands_module import BollingerBandsModule
-from modules.volume_profile_module import VolumeProfileModule
-from modules.sentiment_analysis_module import SentimentAnalysisModule
-from modules.logistics_signal_module import LogisticsSignalModule  # Ultra-low correlation predictor
-from modules.global_macro_module import GlobalMacroModule  # Global macro predictor
-from modules.adoption_tracker_module import AdoptionTrackerModule  # Chainalysis adoption tracker
-from modules.region_specific_crypto_module import RegionSpecificCryptoModule  # Region-specific crypto mapper
-from modules.new_listings_radar_module import NewListingsRadar  # New listings monitoring
-from modules.multi_signal_aggregator_module import MultiSignalAggregatorModule
+from modules.rsi_module import RSIModule  # noqa: E402
+from modules.macd_module import MACDModule  # noqa: E402
+from modules.bollinger_bands_module import BollingerBandsModule  # noqa: E402
+from modules.volume_profile_module import VolumeProfileModule  # noqa: E402
+from modules.sentiment_analysis_module import SentimentAnalysisModule  # noqa: E402
+from modules.logistics_signal_module import LogisticsSignalModule  # Ultra-low correlation predictor  # noqa: E402
+from modules.global_macro_module import GlobalMacroModule  # Global macro predictor  # noqa: E402
+from modules.adoption_tracker_module import AdoptionTrackerModule  # Chainalysis adoption tracker  # noqa: E402
+from modules.region_specific_crypto_module import RegionSpecificCryptoModule  # Region-specific crypto mapper  # noqa: E402
+from modules.new_listings_radar_module import NewListingsRadar  # New listings monitoring  # noqa: E402
+from modules.multi_signal_aggregator_module import MultiSignalAggregatorModule  # noqa: E402
 
 
 def load_config(path: str) -> Dict[str, Any]:
@@ -147,6 +146,11 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
     config_path = os.getenv("BENSON_CONFIG", "config.yaml")
     cfg = load_config(config_path)
 
+    # Determine monitored symbols early so preflight and live checks can use them
+    symbols: List[str] = list(cfg.get("symbols", []))
+    if not symbols:
+        symbols = ["SOL/USD", "DOGE/USD", "SHIB/USD", "AVAX/USD", "ATOM/USD"]
+
     exchange_id = str(cfg.get("exchange", "kraken")).lower()
     
     # Get API configuration from config file
@@ -220,10 +224,6 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
             print(f"🚨 LIVE PRECHECK FAILED: {e}")
             print("🚨 Aborting live mode. Set PAPER=true to continue in paper mode or fix markets.")
             return
-    symbols: List[str] = list(cfg.get("symbols", []))
-    if not symbols:
-        symbols = ["SOL/USD", "DOGE/USD", "SHIB/USD", "AVAX/USD", "ATOM/USD"]
-    
     # Remove problematic symbols that have unreliable price feeds
     filtered = [s for s in symbols if s.upper() != 'KIN/USD']
     if len(filtered) != len(symbols):
@@ -269,7 +269,7 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
     manager.register_module("aggregator", aggregator)
     
     # Instead of MetricsCollector, we'll directly manage our metrics
-    metrics_data = {
+    _metrics_data = {
         "system_start_time": datetime.now(timezone.utc).isoformat(),
         "trades_tracked": 0
     }
@@ -295,13 +295,13 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
         try:
             with open(log_path, "r") as f:
                 trades = json.load(f)
-        except:
+        except Exception:
             trades = []
 
     print(f"Exchange: {exchange_id}")
     print(f"Monitoring: {symbols}")
     print(f"Timeframe: {timeframe}")
-    print(f"Signal Modules: RSI, MACD, Bollinger Bands, Volume Profile, Sentiment Analysis, Logistics Signals, Global Macro, Region-Specific Crypto, New Listings Radar")
+    print("Signal Modules: RSI, MACD, Bollinger Bands, Volume Profile, Sentiment Analysis, Logistics Signals, Global Macro, Region-Specific Crypto, New Listings Radar")
     print(f"Cooldown: {cooldown_min} min")
     print("-" * 80)
 

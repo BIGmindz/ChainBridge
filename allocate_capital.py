@@ -12,7 +12,6 @@ import json
 import datetime
 import logging
 import argparse
-from pathlib import Path
 
 # Configure logging
 logging.basicConfig(
@@ -129,7 +128,7 @@ def calculate_allocation(listing):
     # Get listing properties
     confidence = listing.get("confidence", 0)
     risk_level = listing.get("risk_level", "MEDIUM")
-    expected_return = listing.get("expected_return", 0)
+    _expected_return = listing.get("expected_return", 0)
     
     # Determine the base allocation based on confidence
     base_allocation = 0

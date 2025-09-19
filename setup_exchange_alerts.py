@@ -13,7 +13,6 @@ import time
 import datetime
 import logging
 import argparse
-from pathlib import Path
 
 # Configure logging
 logging.basicConfig(

@@ -5,7 +5,7 @@ FastAPI-based REST API for Benson modular architecture.
 Provides endpoints for module interaction, pipeline execution, and system management.
 """
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Dict, Any, List, Optional
@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 import os
 
 # Import core components
-from core.module_manager import ModuleManager, Module
+from core.module_manager import ModuleManager
 from core.data_processor import DataProcessor
 from core.pipeline import Pipeline
 from tracking.metrics_collector import MetricsCollector

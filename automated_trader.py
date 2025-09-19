@@ -10,7 +10,6 @@ to create a fully automated trading system that:
 """
 
 import os
-import sys
 import time
 import argparse
 import logging
@@ -73,7 +72,7 @@ def run_automated_trader(refresh_hours=12, run_once=False):
                     params = selector.get_trading_parameters(symbol)
                     trading_params[symbol] = params
                     
-                logger.info(f"Trading parameters optimized for each crypto")
+                logger.info("Trading parameters optimized for each crypto")
                 
                 # Save parameters to file for reference
                 import json

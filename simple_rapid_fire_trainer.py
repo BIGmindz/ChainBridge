@@ -8,14 +8,12 @@ optimization and collects valuable training data.
 """
 
 import os
-import sys
 import json
 import time
 import numpy as np
-import pandas as pd
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
-from typing import Dict, List, Any
+from typing import Dict, List
 
 # Import from the existing bot architecture
 from MultiSignalBot import MultiSignalBot

@@ -5,9 +5,7 @@ Standalone module for monitoring exchanges for new coin listings
 Detects new listings across major exchanges and generates signals
 """
 
-import os
 import sys
-import asyncio
 import json
 import time
 import logging

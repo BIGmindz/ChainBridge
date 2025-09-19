@@ -9,11 +9,22 @@ with the Multiple-signal-decision-bot system and displays key statistics.
 import os
 import sys
 import json
-from datetime import datetime, timedelta
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
-import numpy as np
+import importlib
+
+# Optional visualization dependencies
+plt = None
+sns = None
+pd = None
+np = None
+
+if importlib.util.find_spec('matplotlib'):
+    import matplotlib.pyplot as plt
+if importlib.util.find_spec('seaborn'):
+    import seaborn as sns
+if importlib.util.find_spec('pandas'):
+    import pandas as pd
+if importlib.util.find_spec('numpy'):
+    pass
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -56,7 +67,7 @@ def check_module_integration():
         radar = NewListingsRadar()
         if hasattr(radar, "backtest_listing_strategy"):
             integration_status["backtest_available"] = True
-    except:
+    except Exception:
         pass
     
     # Check if run script is available
@@ -69,9 +80,9 @@ def check_module_integration():
     
     # Check if dependencies are installed
     try:
-        import bs4
-        integration_status["dependencies_installed"] = True
-    except ImportError:
+        if importlib.util.find_spec('bs4'):
+            integration_status["dependencies_installed"] = True
+    except Exception:
         pass
     
     return integration_status

@@ -4,11 +4,8 @@ This script will integrate the region-specific crypto trading module
 into your Multiple-signal-decision-bot repository
 """
 
-import os
 import json
-import shutil
 from pathlib import Path
-from datetime import datetime
 
 def integrate_region_module():
     """
@@ -26,10 +23,10 @@ def integrate_region_module():
     # 1. Create the modules directory if it doesn't exist
     modules_dir = Path("modules")
     modules_dir.mkdir(exist_ok=True)
-    print(f"✅ Created/verified modules directory")
+    print("✅ Created/verified modules directory")
     
     # 2. Save the region module (you already have the code)
-    print(f"✅ Region-specific crypto module saved to modules/region_specific_crypto_module.py")
+    print("✅ Region-specific crypto module saved to modules/region_specific_crypto_module.py")
     
     # 3. Update the main configuration
     config_updates = {
@@ -79,7 +76,7 @@ def integrate_region_module():
     with open("config/region_module_config.json", "w") as f:
         json.dump(config_updates, f, indent=2)
     
-    print(f"✅ Configuration saved to config/region_module_config.json")
+    print("✅ Configuration saved to config/region_module_config.json")
     
     # 4. Create the integration wrapper
     integration_code = '''"""
@@ -243,7 +240,7 @@ if __name__ == "__main__":
     with open("integrated_trading_system.py", "w") as f:
         f.write(integration_code)
     
-    print(f"✅ Created integrated_trading_system.py")
+    print("✅ Created integrated_trading_system.py")
     
     # 5. Create a quick test script
     test_script = '''"""
@@ -319,9 +316,9 @@ if __name__ == "__main__":
     with open("test_region_module.py", "w") as f:
         f.write(test_script)
     
-    print(f"✅ Created test_region_module.py")
+    print("✅ Created test_region_module.py")
     
-    print(f"""
+    print("""
     
     ════════════════════════════════════════════════════════════
     ✅ INTEGRATION COMPLETE!

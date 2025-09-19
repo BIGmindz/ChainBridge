@@ -6,13 +6,11 @@ YOUR UNFAIR ADVANTAGE: See where money flows BEFORE it moves
 """
 
 import numpy as np
-import pandas as pd
 import requests
 import json
 import time
-import os
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, Any, List
 
 class GlobalMacroModule:
@@ -75,7 +73,7 @@ class GlobalMacroModule:
                     # Hyperinflation scenario - give very high weight to inflation signal
                     inflation_weight = 0.45
                     # Reduce other weights proportionally
-                    total_reduced = inflation_weight - 0.32  # Original weight was 0.32
+                    _total_reduced = inflation_weight - 0.32  # Original weight was 0.32
                     factor = (1.0 - inflation_weight) / (1.0 - 0.32)
                     adoption_weight *= factor
                     regulatory_weight *= factor
@@ -85,7 +83,7 @@ class GlobalMacroModule:
                     # High inflation scenario - increase inflation weight moderately
                     inflation_weight = 0.38
                     # Adjust other weights proportionally
-                    total_reduced = inflation_weight - 0.32
+                    _total_reduced = inflation_weight - 0.32
                     factor = (1.0 - inflation_weight) / (1.0 - 0.32)
                     adoption_weight *= factor
                     regulatory_weight *= factor
@@ -264,7 +262,7 @@ class GlobalMacroModule:
                 'hotspots': [k for k, v in country_adoption.items() if v['growth'] > 0.6 and k in self.key_countries]
             }
             
-        except:
+        except Exception:
             return {'strength': 0, 'confidence': 0}
     
     def fetch_world_bank_inflation(self, country_codes: List[str] = None) -> Dict[str, float]:
@@ -455,7 +453,7 @@ class GlobalMacroModule:
                 'inflation_score': inflation_score
             }
             
-        except:
+        except Exception:
             return {'strength': 0, 'confidence': 0}
     
     def _get_regulatory_signal(self) -> Dict:
@@ -497,7 +495,7 @@ class GlobalMacroModule:
                 'key_events': list(recent_events.keys())
             }
             
-        except:
+        except Exception:
             return {'strength': 0, 'confidence': 0}
     
     def _get_remittance_signal(self) -> Dict:
@@ -538,7 +536,7 @@ class GlobalMacroModule:
                 'top_corridor': 'USA→MEX, UAE→IND'
             }
             
-        except:
+        except Exception:
             return {'strength': 0, 'confidence': 0}
     
     def _get_cbdc_signal(self) -> Dict:
@@ -573,7 +571,7 @@ class GlobalMacroModule:
                 'key_projects': cbdc_status['recent_launches']
             }
             
-        except:
+        except Exception:
             return {'strength': 0, 'confidence': 0}
     
     def _generate_insight(self, signals: Dict) -> str:
