@@ -1,22 +1,22 @@
 budget_management:
   compound_profits: true
   max_positions: 5
-  max_risk_per_trade: 0.02
+  max_risk_per_trade: 0.15  # Increased to 15% to ensure minimum volume requirements are met
   position_size_method: kelly
   reduce_on_drawdown: true
-cooldown_minutes: 10
+cooldown_minutes: 5  # Reduced from 10 to 5 minutes for more frequent trading
 csv_log: benson_signals.csv
 exchange: kraken
-initial_capital: 10000
-poll_seconds: 60
+initial_capital: 107.41
+poll_seconds: 30  # Increased frequency from 60 to 30 seconds
 rsi:
-  buy_threshold: 30
+  buy_threshold: 35  # Slightly more aggressive (was 30)
   period: 14
-  sell_threshold: 70
+  sell_threshold: 65  # Slightly more aggressive (was 70)
 symbols:
 - PRO/USD
-- BDXN/USD
+- WLFI/USD  # Replaced ADA/USD with WLFI/USD
 - KIN/USD
-- SOGNI/USD
+- CRO/USD   # Replaced SOGNI/USD with CRO/USD
 - ZORA/USD
 timeframe: 5m
