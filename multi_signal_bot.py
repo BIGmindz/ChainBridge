@@ -55,6 +55,7 @@ def safe_fetch_ohlcv(exchange, symbol, timeframe, limit=100):
         print("🚨 LIVE TRADING REQUIRES REAL MARKET DATA - Check your connection and API!")
         raise RuntimeError(f"Live data fetch failed for {symbol}: {str(e)}")
 from src.exchange_adapter import ExchangeAdapter
+from src.market_utils import check_markets_have_minima
 
 # Import signal modules
 from modules.rsi_module import RSIModule
@@ -138,7 +139,7 @@ def prepare_price_data(ohlcv_data, symbol: str = ""):
         raise RuntimeError(f"Failed to parse live market data for {symbol}: {str(e)}")
 
 
-def run_multi_signal_bot(once: bool = False) -> None:
+def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, markets_file: str = None) -> None:
     """Main bot execution logic."""
     print("\n🚀 Multi-Signal Paper Trading Bot Starting...")
     
@@ -168,6 +169,57 @@ def run_multi_signal_bot(once: bool = False) -> None:
     
     # Setup exchange and validate symbols
     exchange = setup_exchange(exchange_id, api_config)
+
+    # If requested, run a dry preflight to check market minima and exit
+    if dry_preflight:
+        try:
+            if markets_file:
+                # Load markets from a local JSON file
+                import json
+                with open(markets_file, "r") as f:
+                    markets = json.load(f)
+            else:
+                markets = exchange.load_markets()
+
+            # Produce a diagnostic report showing detected minima per symbol
+            from src.market_utils import get_minima_report
+
+            report = get_minima_report(markets, symbols if symbols else [])
+            print("\nDry Preflight - Minima Diagnostic Report:\n")
+            for s, info in report.items():
+                if info.get('found_as') is None:
+                    print(f"{s}: NOT FOUND in markets dump")
+                else:
+                    cm = info.get('cost_min')
+                    am = info.get('amount_min')
+                    print(f"{s}: found_as={info.get('found_as')}, cost_min={cm}, amount_min={am}")
+
+            # Determine missing symbols as before
+            missing = check_markets_have_minima(markets, symbols if symbols else [])
+            if missing:
+                print(f"\n🚨 PREFLIGHT FAILED: missing minima/limits for symbols: {missing}")
+                sys.exit(1)
+            print("\n✅ PREFLIGHT PASSED: minima/limits present for monitored symbols")
+            sys.exit(0)
+        except Exception as e:
+            print(f"🚨 PREFLIGHT FAILED: {e}")
+            sys.exit(2)
+
+    # If running live, perform a preflight check to ensure markets report minima
+    is_live_mode = os.getenv("PAPER", "true").lower() == "false"
+    if is_live_mode:
+        try:
+            markets = exchange.load_markets()
+            missing = check_markets_have_minima(markets, symbols if symbols else [])
+            if missing:
+                print(f"🚨 LIVE PRECHECK FAILED: missing minima/limits for symbols: {missing}")
+                print("🚨 Aborting live mode. Set PAPER=true to continue in paper mode or fix market metadata.")
+                return
+            print("✅ Live preflight checks passed: required minima/limits present for monitored symbols")
+        except Exception as e:
+            print(f"🚨 LIVE PRECHECK FAILED: {e}")
+            print("🚨 Aborting live mode. Set PAPER=true to continue in paper mode or fix markets.")
+            return
     symbols: List[str] = list(cfg.get("symbols", []))
     if not symbols:
         symbols = ["SOL/USD", "DOGE/USD", "SHIB/USD", "AVAX/USD", "ATOM/USD"]
@@ -648,13 +700,15 @@ def main():
     parser = argparse.ArgumentParser(description="Multi-Signal Paper Trading Bot")
     parser.add_argument("--once", action="store_true", help="Run a single cycle and exit")
     parser.add_argument("--test", action="store_true", help="Run unit tests and exit")
+    parser.add_argument("--dry-preflight", action="store_true", help="Run market minima preflight and exit")
+    parser.add_argument("--markets-file", type=str, default=None, help="Optional local markets JSON file to use for preflight")
     args = parser.parse_args()
 
     if args.test:
         print("Testing functionality not implemented yet.")
         return
 
-    run_multi_signal_bot(once=args.once)
+    run_multi_signal_bot(once=args.once, dry_preflight=args.dry_preflight, markets_file=args.markets_file)
 
 
 if __name__ == "__main__":
