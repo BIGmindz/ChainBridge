@@ -32,9 +32,9 @@ class MultiSignalAggregatorModule(Module):
             'VolumeProfile': 0.15,
             'SentimentAnalysis': 0.20
         }
-        self.consensus_threshold = config.get('consensus_threshold', 0.6) if config else 0.6
+        self.consensus_threshold = config.get('consensus_threshold', 0.4) if config else 0.4  # Reduced from 0.6 to 0.4 for more trades
         self.confidence_multiplier = config.get('confidence_multiplier', 1.2) if config else 1.2
-        self.min_signals_required = config.get('min_signals_required', 2) if config else 2
+        self.min_signals_required = config.get('min_signals_required', 1) if config else 1  # Reduced from 2 to 1
         
     def get_schema(self) -> Dict[str, Any]:
         return {
@@ -308,11 +308,29 @@ class MultiSignalAggregatorModule(Module):
         price_data = data.get('price_data')
         
         try:
-            # Validate and filter signals
+            # Validate and filter signals - more robust validation
             valid_signals = {}
             for module, signal_data in signals.items():
-                if isinstance(signal_data, dict) and 'signal' in signal_data and 'confidence' in signal_data:
-                    valid_signals[module] = signal_data
+                if isinstance(signal_data, dict):
+                    # Handle different possible formats
+                    signal = signal_data.get('signal') or signal_data.get('action') or 'HOLD'
+                    confidence = signal_data.get('confidence', 0.5)
+                    
+                    # Ensure signal is valid
+                    if signal not in ['BUY', 'SELL', 'HOLD']:
+                        signal = 'HOLD'
+                    
+                    # Ensure confidence is numeric
+                    try:
+                        confidence = float(confidence)
+                        confidence = max(0.0, min(1.0, confidence))  # Clamp to 0-1
+                    except (ValueError, TypeError):
+                        confidence = 0.5
+                    
+                    valid_signals[module] = {
+                        'signal': signal,
+                        'confidence': confidence
+                    }
                     
             if len(valid_signals) < self.min_signals_required:
                 return {
@@ -350,13 +368,13 @@ class MultiSignalAggregatorModule(Module):
             # Determine final signal and confidence
             final_confidence = abs(weighted_score)
             
-            if weighted_score > 0.1 and consensus['overall_consensus'] >= consensus_threshold:
+            if weighted_score > 0.05 and consensus['overall_consensus'] >= consensus_threshold:  # Reduced from 0.1 to 0.05
                 final_signal = 'BUY'
-                if consensus['buy_consensus'] > 0.6:
+                if consensus['buy_consensus'] > 0.5:  # Reduced from 0.6 to 0.5
                     final_confidence *= self.confidence_multiplier
-            elif weighted_score < -0.1 and consensus['overall_consensus'] >= consensus_threshold:
+            elif weighted_score < -0.05 and consensus['overall_consensus'] >= consensus_threshold:  # Reduced from -0.1 to -0.05
                 final_signal = 'SELL'  
-                if consensus['sell_consensus'] > 0.6:
+                if consensus['sell_consensus'] > 0.5:  # Reduced from 0.6 to 0.5
                     final_confidence *= self.confidence_multiplier
             else:
                 final_signal = 'HOLD'
@@ -389,8 +407,8 @@ class MultiSignalAggregatorModule(Module):
             decision_factors = self.generate_decision_factors(valid_signals, consensus, final_signal)
             
             result = {
-                'final_signal': final_signal,
-                'final_confidence': final_confidence,
+                'signal': final_signal,  # Changed from 'final_signal' to 'signal'
+                'confidence': final_confidence,  # Changed from 'final_confidence' to 'confidence'
                 'consensus_score': consensus['overall_consensus'],
                 'weighted_score': weighted_score,
                 'signal_strength': signal_strength,

@@ -1,0 +1,38 @@
+{
+  "SOL/USD": {
+    "limits": {
+      "cost": {"min": 1.0},
+      "amount": {"min": 0.01}
+    }
+  },
+  "DOGE/USD": {
+    "limits": {
+      "cost": {"min": 0.5},
+      "amount": {"min": 1.0}
+    }
+  },
+  "SHIB/USD": {
+    "limits": {
+      "cost": {"min": 0.1},
+      "amount": {"min": 1000}
+    }
+  },
+  "AVAX/USD": {
+    "limits": {
+      "cost": {"min": 2.0},
+      "amount": {"min": 0.02}
+    }
+  },
+  "ATOM/USD": {
+    "limits": {
+      "cost": {"min": 1.5},
+      "amount": {"min": 0.05}
+    }
+  }
+  ,
+  "PRO/USD": { "limits": {"cost": {"min": 1.0}, "amount": {"min": 0.01}}},
+  "WLFI/USD": {"limits": {"cost": {"min": 0.5}, "amount": {"min": 1.0}}},
+  "KIN/USD": {"limits": {"cost": {"min": 0.1}, "amount": {"min": 10}}},
+  "CRO/USD": {"limits": {"cost": {"min": 0.5}, "amount": {"min": 0.5}}},
+  "ZORA/USD": {"limits": {"cost": {"min": 0.2}, "amount": {"min": 5}}}
+}
