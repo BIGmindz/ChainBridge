@@ -1,0 +1,595 @@
+[
+  {
+    "timestamp": "2025-09-19 12:28:01 UTC",
+    "symbol": "PRO/USD",
+    "action": "BUY",
+    "price": 0.8209,
+    "size": 5.0,
+    "confidence": 0.2352802453278145,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 37.29390010761384
+      },
+      "MACD": {
+        "signal": "SELL",
+        "confidence": 0.07832675228060994,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "BUY",
+        "confidence": 0.39700966698983486,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6376042090585121,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      },
+      "RegionCryptoMapper": {
+        "signal": "HOLD",
+        "confidence": 0,
+        "value": 0
+      },
+      "NewListingsRadar": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      }
+    },
+    "id": "PRO/USD_1758284903.190054",
+    "stop_loss": 0.796273,
+    "take_profit": 0.870154
+  },
+  {
+    "timestamp": "2025-09-19 12:28:01 UTC",
+    "symbol": "KIN/USD",
+    "action": "BUY",
+    "price": 1.326e-06,
+    "size": 25.0,
+    "confidence": 0.17812666666666668,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 46.66143305395135
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "HOLD",
+        "confidence": 0.5874761811719048,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      },
+      "RegionCryptoMapper": {
+        "signal": "HOLD",
+        "confidence": 0,
+        "value": 0
+      },
+      "NewListingsRadar": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      }
+    },
+    "id": "KIN/USD_1758284943.753826",
+    "stop_loss": 1.2862200000000002e-06,
+    "take_profit": 1.40556e-06
+  },
+  {
+    "timestamp": "2025-09-19 12:32:12 UTC",
+    "symbol": "PRO/USD",
+    "action": "BUY",
+    "price": 0.8216,
+    "size": 5.0,
+    "confidence": 0.23582492254346787,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 39.57764250216257
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "BUY",
+        "confidence": 0.3018246127173393,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.678599656592132,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      },
+      "RegionCryptoMapper": {
+        "signal": "HOLD",
+        "confidence": 0,
+        "value": 0
+      },
+      "NewListingsRadar": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      }
+    },
+    "id": "PRO/USD_1758285154.116882",
+    "stop_loss": 0.796952,
+    "take_profit": 0.870896
+  },
+  {
+    "timestamp": "2025-09-19 12:32:12 UTC",
+    "symbol": "WLFI/USD",
+    "action": "BUY",
+    "price": 0.2296,
+    "size": 5.0,
+    "confidence": 0.2581266666666667,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 53.88369761413781
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "BUY",
+        "confidence": 0.4,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "HOLD",
+        "confidence": 0.5803968175606943,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      },
+      "RegionCryptoMapper": {
+        "signal": "HOLD",
+        "confidence": 0,
+        "value": 0
+      },
+      "NewListingsRadar": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      }
+    },
+    "id": "WLFI/USD_1758285174.227278",
+    "stop_loss": 0.222712,
+    "take_profit": 0.243376
+  },
+  {
+    "timestamp": "2025-09-19 12:32:12 UTC",
+    "symbol": "KIN/USD",
+    "action": "BUY",
+    "price": 1.326e-06,
+    "size": 25.0,
+    "confidence": 0.17812666666666668,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 46.66143305395135
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "HOLD",
+        "confidence": 0.5843620383013161,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      },
+      "RegionCryptoMapper": {
+        "signal": "HOLD",
+        "confidence": 0,
+        "value": 0
+      },
+      "NewListingsRadar": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      }
+    },
+    "id": "KIN/USD_1758285194.846093",
+    "stop_loss": 1.2862200000000002e-06,
+    "take_profit": 1.40556e-06
+  },
+  {
+    "timestamp": "2025-09-19 12:32:12 UTC",
+    "symbol": "CRO/USD",
+    "action": "BUY",
+    "price": 0.23218,
+    "size": 5.0,
+    "confidence": 0.1836096718681382,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 40.68877011421384
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "BUY",
+        "confidence": 0.04074835934069099,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.5923577125661086,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      },
+      "RegionCryptoMapper": {
+        "signal": "HOLD",
+        "confidence": 0,
+        "value": 0
+      },
+      "NewListingsRadar": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      }
+    },
+    "id": "CRO/USD_1758285214.982273",
+    "stop_loss": 0.2252146,
+    "take_profit": 0.2461108
+  },
+  {
+    "timestamp": "2025-09-19 12:34:25 UTC",
+    "symbol": "PRO/USD",
+    "action": "SELL",
+    "price": 0.870896,
+    "size": 5.0,
+    "quantity": 6.085686465433301,
+    "confidence": null,
+    "signals": {},
+    "id": "PRO/USD_1758285154.116882_CLOSE",
+    "closed_from_id": "PRO/USD_1758285154.116882",
+    "realized_pnl": 0.3
+  },
+  {
+    "timestamp": "2025-09-19 12:34:25 UTC",
+    "symbol": "KIN/USD",
+    "action": "SELL",
+    "price": 1.40556e-06,
+    "size": 25.0,
+    "quantity": 18853695.32428356,
+    "confidence": null,
+    "signals": {},
+    "id": "KIN/USD_1758285194.846093_CLOSE",
+    "closed_from_id": "KIN/USD_1758285194.846093",
+    "realized_pnl": 1.5
+  },
+  {
+    "timestamp": "2025-09-19 12:37:11 UTC",
+    "symbol": "PRO/USD",
+    "action": "BUY",
+    "price": 0.8272,
+    "size": 5.0,
+    "confidence": 0.17812666666666668,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 45.39001337064758
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "HOLD",
+        "confidence": 0.6295144490010763,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      },
+      "RegionCryptoMapper": {
+        "signal": "HOLD",
+        "confidence": 0,
+        "value": 0
+      },
+      "NewListingsRadar": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      }
+    },
+    "id": "PRO/USD_1758285452.482631",
+    "stop_loss": 0.8023840000000001,
+    "take_profit": 0.8768320000000001
+  },
+  {
+    "timestamp": "2025-09-19 12:37:11 UTC",
+    "symbol": "WLFI/USD",
+    "action": "BUY",
+    "price": 0.2302,
+    "size": 5.0,
+    "confidence": 0.25546,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 55.883643463193714
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "BUY",
+        "confidence": 0.4,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.659694489906239,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      },
+      "RegionCryptoMapper": {
+        "signal": "HOLD",
+        "confidence": 0,
+        "value": 0
+      },
+      "NewListingsRadar": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      }
+    },
+    "id": "WLFI/USD_1758285472.883471",
+    "stop_loss": 0.223294,
+    "take_profit": 0.24401199999999998
+  },
+  {
+    "timestamp": "2025-09-19 12:37:11 UTC",
+    "symbol": "CRO/USD",
+    "action": "BUY",
+    "price": 0.2324,
+    "size": 5.0,
+    "confidence": 0.17546,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 44.51810114429631
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6526311787491953,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      },
+      "RegionCryptoMapper": {
+        "signal": "HOLD",
+        "confidence": 0,
+        "value": 0
+      },
+      "NewListingsRadar": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      }
+    },
+    "id": "CRO/USD_1758285492.738246",
+    "stop_loss": 0.225428,
+    "take_profit": 0.246344
+  }
+]

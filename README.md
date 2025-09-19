@@ -159,6 +159,18 @@ api:
 - ❌ **DON'T**: Share API keys in chat, logs, or screenshots
 - ❌ **DON'T**: Use production API keys in development environments
 
+## ✅ Preflight Checks & Market Validation
+
+Before running the bot in live mode (`PAPER=false`), the system performs a preflight check to ensure your configured symbols have exchange-reported minima and valid price data. This prevents creating orders below exchange minimums or acting on symbols with invalid prices (for example, symbols returning a last price of 0.0).
+
+Maintainers can validate a local markets dump (an export of `exchange.markets`) using the helper script:
+
+```bash
+.venv/bin/python3 scripts/validate_markets.py /path/to/markets.json
+```
+
+This script reads `config.yaml` to find configured symbols and prints any symbols for which minima could not be detected. Use it during diagnostics or when you update exchange market metadata.
+
 ## 🏗️ Enhanced Architecture & Features
 
 ### New Trading Components
