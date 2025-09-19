@@ -19,7 +19,7 @@ from datetime import datetime, timezone, timedelta
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Import core components
-from core.module_manager import ModuleManager, Module
+from core.module_manager import ModuleManager
 from src.data_provider import setup_exchange, validate_symbols
 from src.exchange_adapter import ExchangeAdapter
 from budget_manager import BudgetManager
@@ -97,7 +97,7 @@ class MultiSignalBot:
         
         print(f"🚀 MultiSignalBot initialized with {len(self.symbols)} symbols")
         print(f"Exchange: {self.exchange_id}")
-        print(f"Signal Modules: RSI, MACD, Bollinger Bands, Volume Profile, Sentiment Analysis, Logistics Signals, Global Macro")
+        print("Signal Modules: RSI, MACD, Bollinger Bands, Volume Profile, Sentiment Analysis, Logistics Signals, Global Macro")
     
     def _load_config(self, path: str) -> Dict[str, Any]:
         """Load configuration from YAML file with environment variable substitution."""

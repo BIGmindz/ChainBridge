@@ -7,20 +7,32 @@ preflight run to validate the minima-checking logic.
 import json
 import sys
 from pathlib import Path
-from yaml import safe_load
+try:
+    from yaml import safe_load  # type: ignore
+except Exception:
+    safe_load = None
 
 # Ensure repo root is on sys.path so we can import `src.*` modules when running
 repo_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(repo_root))
 
-from src.market_utils import get_minima_report, check_markets_have_minima
+from src.market_utils import get_minima_report, check_markets_have_minima  # noqa: E402
 
 
 def load_config(path="config.yaml"):
     p = Path(path)
     if not p.exists():
         raise FileNotFoundError(path)
-    return safe_load(p.read_text())
+    text = p.read_text()
+    if safe_load:
+        return safe_load(text)
+    # Fallback: try JSON
+    try:
+        import json
+
+        return json.loads(text)
+    except Exception:
+        raise
 
 
 def run_preflight(markets_path: Path = None, config_path: Path = None, json_output: Path = None):

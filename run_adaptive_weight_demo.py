@@ -10,7 +10,6 @@ import os
 import sys
 import json
 import argparse
-import pandas as pd
 from datetime import datetime, timedelta
 from typing import Dict, Any
 
@@ -70,7 +69,7 @@ def run_demo(data: Dict[str, Any], output_dir: str, scenario: str = "bull_market
     
     # Initialize components
     regime_classifier = MarketConditionClassifier()
-    regime_integrator = MarketRegimeIntegrator()
+    _regime_integrator = MarketRegimeIntegrator()
     weight_model = AdaptiveWeightModule()
     visualizer = AdaptiveWeightVisualizer({"output_dir": output_dir})
     
@@ -214,4 +213,9 @@ def main():
     
 
 if __name__ == "__main__":
-    main()
+    try:
+        _demo_bot = AdaptiveWeightDemo()
+        _demo_bot.run()
+    except NameError:
+        # AdaptiveWeightDemo is optional in this environment; run CLI main instead
+        main()

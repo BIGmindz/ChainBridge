@@ -8,12 +8,11 @@ It can be run as a standalone script or integrated into the main trading system.
 """
 
 import os
-import sys
 import time
 import json
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, Any, Optional
+from datetime import datetime
+from typing import Dict, Any
 
 # Try to import schedule library - wrapped in try-except for optional dependency
 try:
@@ -36,9 +35,9 @@ logging.basicConfig(
 logger = logging.getLogger("adaptive_weight_scheduler")
 
 # Import the trainer
-from modules.adaptive_weight_module.weight_trainer import AdaptiveWeightTrainer
-from modules.adaptive_weight_module.market_regime_integrator import MarketRegimeIntegrator
-from modules.adaptive_weight_module.weight_visualizer import AdaptiveWeightVisualizer
+from modules.adaptive_weight_module.weight_trainer import AdaptiveWeightTrainer  # noqa: E402
+from modules.adaptive_weight_module.market_regime_integrator import MarketRegimeIntegrator  # noqa: E402
+from modules.adaptive_weight_module.weight_visualizer import AdaptiveWeightVisualizer  # noqa: E402
 
 
 class AdaptiveWeightScheduler:

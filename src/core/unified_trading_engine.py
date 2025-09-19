@@ -4,10 +4,9 @@ This builds on what you already have!
 """
 
 import json
-import asyncio
 import numpy as np
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Tuple
 import os
 from enum import Enum
 from collections import deque
@@ -315,7 +314,7 @@ class MultiSignalTradingEngine:
                     loaded = json.load(f)
                     default_config.update(loaded)
                     print(f"✅ Loaded existing config from {path}")
-        except:
+        except Exception:
             print("📝 Using default config")
         
         return default_config

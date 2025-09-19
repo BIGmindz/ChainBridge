@@ -5,10 +5,9 @@ This module handles data normalization, validation, and transformation
 for the Benson multi-signal decision system.
 """
 
-from typing import Dict, Any, List, Optional, Union
+from typing import Dict, Any, List, Union
 import pandas as pd
 from datetime import datetime, timezone
-import json
 
 
 class DataProcessor:
@@ -25,7 +24,7 @@ class DataProcessor:
                 # Try parsing various string formats
                 try:
                     dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
-                except:
+                except Exception:
                     # Try pandas parser for flexible parsing
                     dt = pd.to_datetime(timestamp)
             elif isinstance(timestamp, (int, float)):

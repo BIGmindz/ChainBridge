@@ -6,7 +6,6 @@ Complete setup for your enhanced multi-signal bot
 
 import json
 import os
-import sys
 from src.crypto_selector import VolatileCryptoSelector
 from src.budget_manager import BudgetManager
 
@@ -70,7 +69,7 @@ def setup_enhanced_trading():
     update_main_config(top_cryptos, initial_capital)
     
     print("\n✅ SETUP COMPLETE!")
-    print(f"\n📋 SUMMARY:")
+    print("\n📋 SUMMARY:")
     print(f"  Trading Pairs: {', '.join(top_cryptos)}")
     print(f"  Initial Capital: ${initial_capital:,}")
     print(f"  Risk Per Trade: {config['position_sizing']['base_risk']*100}%")
@@ -111,7 +110,7 @@ def update_main_config(crypto_symbols, initial_capital):
             with open(config_path, "w") as f:
                 yaml.dump(config, f, default_flow_style=False)
                 
-            print(f"✅ Updated main config.yaml with new settings")
+            print("✅ Updated main config.yaml with new settings")
         else:
             print(f"⚠️ Couldn't find {config_path} to update")
     except Exception as e:

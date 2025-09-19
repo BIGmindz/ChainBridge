@@ -13,7 +13,7 @@ sys.path.append('src')
 # Import your engine
 from src.core.unified_trading_engine import MultiSignalTradingEngine
 
-async def test_your_bot():
+async def demo_your_bot():
     """Test your existing bot setup"""
     
     print("\n🔍 Checking your existing setup...")
@@ -67,7 +67,7 @@ async def test_your_bot():
             decision['position_size'] = 0.1
             print("\n🔄 Overriding first cycle to demonstrate ML learning!")
         
-        print(f"\n🤖 DECISION:")
+        print("\n🤖 DECISION:")
         print(f"  Action: {decision['action']}")
         print(f"  Confidence: {decision['confidence']*100:.1f}%")
         print(f"  Position Size: {decision['position_size']*100:.1f}% of capital")
@@ -124,4 +124,4 @@ if __name__ == "__main__":
     ╚════════════════════════════════════════════════════════╝
     """)
     
-    asyncio.run(test_your_bot())
+    asyncio.run(demo_your_bot())
