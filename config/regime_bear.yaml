@@ -1,0 +1,27 @@
+budget_management:
+  compound_profits: true
+  max_positions: 3  # Conservative position taking in bear markets
+  max_risk_per_trade: 0.08  # Lower risk tolerance
+  position_size_method: fixed
+  reduce_on_drawdown: true  # Reduce positions on drawdown
+cooldown_minutes: 30  # Slower trading
+csv_log: benson_signals_bear.csv
+exchange: kraken
+initial_capital: 107.41
+poll_seconds: 60  # Less frequent checks
+rsi:
+  buy_threshold: 25  # Very oversold for entry
+  period: 14
+  sell_threshold: 55  # Quick exits
+symbols:
+- BTC/USD
+- ETH/USD
+- USDT/USD  # Safer assets
+- USDC/USD
+timeframe: 5m
+regime: bear
+strategy:
+  trend_following: false
+  momentum_weight: 0.2
+  mean_reversion_weight: 0.8
+  short_bias: true

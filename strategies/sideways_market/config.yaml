@@ -1,0 +1,34 @@
+strategy_name: sideways_market
+description: 'Conservative mean-reversion strategy optimized for ranging/sideways market conditions'
+
+exchange:
+  name: kraken
+  symbols:
+    - CTC/USD      # New listing with potential
+    - XION/USD     # New listing with potential
+    - APT/USD      # High volatility altcoin
+    - SOL/USD      # Major altcoin for diversification
+
+signals:
+  machine_learning:
+    enabled: true
+    min_training_samples: 30
+    model_type: lightgbm
+    features:
+      - rsi_value
+      - ob_imbalance
+      - vol_imbalance
+      - price_change_pct
+
+risk_management:
+  max_positions: 6
+  max_risk_per_trade: 0.10
+  stop_loss_pct: 0.04
+  take_profit_pct: 0.12
+  trailing_stop: true
+
+trading_parameters:
+  rsi_buy_threshold: 30
+  rsi_sell_threshold: 65
+  position_size_multiplier: 1.0
+  cooldown_minutes: 3
