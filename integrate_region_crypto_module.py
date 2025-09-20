@@ -7,77 +7,72 @@ into your Multiple-signal-decision-bot repository
 import json
 from pathlib import Path
 
+
 def integrate_region_module():
     """
     Complete integration of the region-specific crypto module
     """
-    
-    print("""
+
+    print(
+        """
     ╔════════════════════════════════════════════════════════════════╗
     ║   INTEGRATING REGION-SPECIFIC CRYPTO MODULE                   ║
     ║   Repository: Multiple-signal-decision-bot                    ║
     ║   Time: September 17, 2025 22:33 UTC                         ║
     ╚════════════════════════════════════════════════════════════════╝
-    """)
-    
+    """
+    )
+
     # 1. Create the modules directory if it doesn't exist
     modules_dir = Path("modules")
     modules_dir.mkdir(exist_ok=True)
     print("✅ Created/verified modules directory")
-    
+
     # 2. Save the region module (you already have the code)
-    print("✅ Region-specific crypto module saved to modules/region_specific_crypto_module.py")
-    
+    print(
+        "✅ Region-specific crypto module saved to modules/region_specific_crypto_module.py"
+    )
+
     # 3. Update the main configuration
     config_updates = {
         "modules": {
-            "technical_signals": {
-                "enabled": True,
-                "count": 5,
-                "weight": 0.20
-            },
-            "logistics_signals": {
-                "enabled": True,
-                "count": 4,
-                "weight": 0.15
-            },
-            "global_macro_signals": {
-                "enabled": True,
-                "count": 5,
-                "weight": 0.25
-            },
-            "chainalysis_adoption": {
-                "enabled": True,
-                "count": 1,
-                "weight": 0.15
-            },
+            "technical_signals": {"enabled": True, "count": 5, "weight": 0.20},
+            "logistics_signals": {"enabled": True, "count": 4, "weight": 0.15},
+            "global_macro_signals": {"enabled": True, "count": 5, "weight": 0.25},
+            "chainalysis_adoption": {"enabled": True, "count": 1, "weight": 0.15},
             "region_specific_crypto": {
                 "enabled": True,
                 "weight": 0.25,
                 "cryptos": [
-                    "TRX/USD", "SOL/USD", "XRP/USD",
-                    "POL/USD", "BTC/USD", "ETH/USD",
-                    "LINK/USD", "VET/USD", "XDC/USD"
-                ]
-            }
+                    "TRX/USD",
+                    "SOL/USD",
+                    "XRP/USD",
+                    "POL/USD",
+                    "BTC/USD",
+                    "ETH/USD",
+                    "LINK/USD",
+                    "VET/USD",
+                    "XDC/USD",
+                ],
+            },
         },
         "trading_parameters": {
             "use_region_specific": True,
             "max_positions": 5,
             "position_size_method": "kelly_criterion",
-            "rebalance_frequency": "daily"
-        }
+            "rebalance_frequency": "daily",
+        },
     }
-    
+
     # Save configuration
     config_dir = Path("config")
     config_dir.mkdir(exist_ok=True)
-    
+
     with open("config/region_module_config.json", "w") as f:
         json.dump(config_updates, f, indent=2)
-    
+
     print("✅ Configuration saved to config/region_module_config.json")
-    
+
     # 4. Create the integration wrapper
     integration_code = '''"""
 MAIN INTEGRATION WRAPPER FOR ALL MODULES
@@ -235,13 +230,13 @@ def main():
 
 if __name__ == "__main__":
     main()'''
-    
+
     # Save the integration wrapper
     with open("integrated_trading_system.py", "w") as f:
         f.write(integration_code)
-    
+
     print("✅ Created integrated_trading_system.py")
-    
+
     # 5. Create a quick test script
     test_script = '''"""
 QUICK TEST SCRIPT FOR REGION MODULE
@@ -312,13 +307,14 @@ def test_region_module():
 
 if __name__ == "__main__":
     test_region_module()'''
-    
+
     with open("test_region_module.py", "w") as f:
         f.write(test_script)
-    
+
     print("✅ Created test_region_module.py")
-    
-    print("""
+
+    print(
+        """
     
     ════════════════════════════════════════════════════════════
     ✅ INTEGRATION COMPLETE!
@@ -334,9 +330,11 @@ if __name__ == "__main__":
     1. Run test: python test_region_module.py
     2. Run full system: python integrated_trading_system.py
     3. Start live trading with region-specific selection!
-    """)
-    
+    """
+    )
+
     return True
+
 
 if __name__ == "__main__":
     integrate_region_module()

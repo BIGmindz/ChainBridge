@@ -4,9 +4,11 @@ Tests Module
 Contains unit tests for the signal engine and other components.
 """
 
-import pandas as pd
 import math
-from .signal_engine import wilder_rsi, calculate_rsi_from_ohlcv
+
+import pandas as pd
+
+from .signal_engine import calculate_rsi_from_ohlcv, wilder_rsi
 
 
 def test_rsi_flatline():
@@ -34,14 +36,18 @@ def test_rsi_no_losses_near_max():
     """Test RSI calculation for continuous uptrend (near 100)."""
     s = pd.Series(range(1, 60), dtype=float)
     rsi = wilder_rsi(s, 14)
-    assert rsi >= 95 or math.isclose(rsi, 100.0, rel_tol=0.01), f"Expected RSI near 100, got {rsi}"
+    assert rsi >= 95 or math.isclose(
+        rsi, 100.0, rel_tol=0.01
+    ), f"Expected RSI near 100, got {rsi}"
 
 
 def test_insufficient_ohlcv_returns_nan():
     """Test that insufficient OHLCV data returns NaN."""
     short_ohlcv = [[0, 0, 0, 0, 100.0, 0.0] for _ in range(10)]
     rsi_val = calculate_rsi_from_ohlcv(short_ohlcv, period=14)
-    assert isinstance(rsi_val, float) and math.isnan(rsi_val), f"Expected NaN, got {rsi_val}"
+    assert isinstance(rsi_val, float) and math.isnan(
+        rsi_val
+    ), f"Expected NaN, got {rsi_val}"
 
 
 def run_tests():

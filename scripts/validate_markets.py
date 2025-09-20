@@ -8,6 +8,7 @@ markets JSON (saved via `exchange.markets` or similar). It calls
 Usage:
   python3 scripts/validate_markets.py /path/to/markets.json
 """
+
 import json
 import sys
 from pathlib import Path
@@ -88,5 +89,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     raise SystemExit(main())

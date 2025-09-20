@@ -1,6 +1,5 @@
 from typing import Dict, List
 
-
 ALIAS_MAP = {
     "BTC": ["XBT"],
     "XBT": ["BTC"],
@@ -38,7 +37,9 @@ def _symbol_variants(symbol: str) -> List[str]:
     return list(variants)
 
 
-def check_markets_have_minima(markets: Dict[str, dict], symbols: List[str]) -> List[str]:
+def check_markets_have_minima(
+    markets: Dict[str, dict], symbols: List[str]
+) -> List[str]:
     """Return a list of symbols missing minima (cost.min or amount.min).
 
     This helper normalizes different shapes in exchange market metadata.
@@ -55,18 +56,18 @@ def check_markets_have_minima(markets: Dict[str, dict], symbols: List[str]) -> L
         if not m:
             missing.append(s)
             continue
-        limits = m.get('limits', {}) or {}
-        cost_limit = limits.get('cost')
-        amount_limit = limits.get('amount')
+        limits = m.get("limits", {}) or {}
+        cost_limit = limits.get("cost")
+        amount_limit = limits.get("amount")
         has_cost = False
         has_amount = False
         if isinstance(cost_limit, dict):
-            has_cost = bool(cost_limit.get('min'))
+            has_cost = bool(cost_limit.get("min"))
         elif isinstance(cost_limit, (int, float)):
             has_cost = cost_limit > 0
 
         if isinstance(amount_limit, dict):
-            has_amount = bool(amount_limit.get('min'))
+            has_amount = bool(amount_limit.get("min"))
         elif isinstance(amount_limit, (int, float)):
             has_amount = amount_limit > 0
 
@@ -100,15 +101,15 @@ def get_minima_report(markets: Dict[str, dict], symbols: List[str]) -> Dict[str,
             report[s] = {"found_as": None}
             continue
 
-        limits = m.get('limits', {}) or {}
-        cost_limit = limits.get('cost')
-        amount_limit = limits.get('amount')
+        limits = m.get("limits", {}) or {}
+        cost_limit = limits.get("cost")
+        amount_limit = limits.get("amount")
 
         def _extract_min(v):
             if v is None:
                 return None
             if isinstance(v, dict):
-                return v.get('min')
+                return v.get("min")
             if isinstance(v, (int, float)):
                 return v
             return None
