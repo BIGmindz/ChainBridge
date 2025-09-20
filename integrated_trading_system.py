@@ -3,14 +3,16 @@ MAIN INTEGRATION WRAPPER FOR ALL MODULES
 Combines all 15+ signals with region-specific crypto selection
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from modules.region_specific_crypto_module import RegionSpecificCryptoModule
-import numpy as np
 from datetime import datetime
+
+import numpy as np
+
+from modules.region_specific_crypto_module import RegionSpecificCryptoModule
 
 
 class IntegratedTradingSystem:
@@ -23,7 +25,8 @@ class IntegratedTradingSystem:
         self.signals = []
         self.current_positions = {}
 
-        print("""
+        print(
+            """
         ╔════════════════════════════════════════════════════════════════╗
         ║   INTEGRATED TRADING SYSTEM INITIALIZED                       ║
         ║   Total Signals: 15+                                          ║
@@ -31,7 +34,8 @@ class IntegratedTradingSystem:
         ║   Machine Learning: Enabled                                   ║
         ║   Status: READY TO TRADE                                      ║
         ╚════════════════════════════════════════════════════════════════╝
-        """)
+        """
+        )
 
     def collect_all_signals(self):
         """
@@ -140,7 +144,8 @@ def main():
     print("\n" + "=" * 60)
     system.backtest_performance()
 
-    print("""
+    print(
+        """
     \n✅ INTEGRATION SUCCESSFUL!
     
     Your Multiple-signal-decision-bot now has:
@@ -150,7 +155,8 @@ def main():
     • Surgical precision trading
     
     Ready to generate alpha!
-    """)
+    """
+    )
 
 
 if __name__ == "__main__":
