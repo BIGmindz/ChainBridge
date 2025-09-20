@@ -1,12 +1,12 @@
 {
   "symbol": "BTC/USD",
-  "timestamp": "2025-09-17T16:51:12.588466",
+  "timestamp": "2025-09-19T23:14:54.303072",
   "signals": {
     "RSI": {
-      "rsi_value": 62.45960178471149,
+      "rsi_value": 53.61782709798089,
       "signal": "HOLD",
       "confidence": 0.0,
-      "current_price": 30241.82919107188,
+      "current_price": 39323.94670357421,
       "metadata": {
         "period_used": 14,
         "data_points": 100,
@@ -21,13 +21,13 @@
       }
     },
     "MACD": {
-      "macd_line": 294.0266980172637,
-      "signal_line": -171.5944204833423,
-      "histogram": 465.62111850060603,
+      "macd_line": 1131.5768385137126,
+      "signal_line": 851.9836237761117,
+      "histogram": 279.5932147376009,
       "signal": "HOLD",
       "confidence": 0.0,
       "signal_strength": "WEAK",
-      "current_price": 30241.82919107188,
+      "current_price": 39323.94670357421,
       "trend_analysis": {
         "macd_above_signal": true,
         "macd_above_zero": true,
@@ -48,22 +48,22 @@
       }
     },
     "BollingerBands": {
-      "upper_band": 31183.30973947787,
-      "middle_band": 28020.372766122728,
-      "lower_band": 24857.435792767585,
-      "band_width": 0.22575980696296846,
-      "percent_b": 0.8511698847721113,
-      "signal": "SELL",
-      "confidence": 0.6046795390884454,
+      "upper_band": 42717.17190874657,
+      "middle_band": 38344.352852399235,
+      "lower_band": 33971.5337960519,
+      "band_width": 0.22808151558482864,
+      "percent_b": 0.6120094198447401,
+      "signal": "HOLD",
+      "confidence": 0.0,
       "volatility_state": "NORMAL",
       "position_in_bands": "WITHIN_BANDS",
-      "current_price": 30241.82919107188,
+      "current_price": 39323.94670357421,
       "analysis": {
         "price_vs_middle": "ABOVE",
         "band_squeeze_detected": "False",
-        "price_trend": "UPWARD",
+        "price_trend": "DOWNWARD",
         "band_width_percentile": 100,
-        "reversal_probability": 0.7023397695442226
+        "reversal_probability": 0.22401883968948022
       },
       "metadata": {
         "period_used": 20,
@@ -79,79 +79,79 @@
       }
     },
     "VolumeProfile": {
-      "point_of_control": 27925.446225591397,
-      "value_area_high": 33925.87236494277,
-      "value_area_low": 26288.966369404658,
+      "point_of_control": 36535.33131578733,
+      "value_area_high": 38535.83494517403,
+      "value_area_low": 35335.0291381553,
       "volume_profile": [
         {
-          "price_level": 27925.446225591397,
-          "volume": 6646024.052037983,
-          "percentage": 13.577530743078608
+          "price_level": 36535.33131578733,
+          "volume": 6268407.073066819,
+          "percentage": 12.418794124638117
         },
         {
-          "price_level": 26288.966369404658,
-          "volume": 4519708.717023244,
-          "percentage": 9.233563341728445
+          "price_level": 37335.532767542005,
+          "volume": 5507665.420480177,
+          "percentage": 10.91163387556892
         },
         {
-          "price_level": 27379.952940195817,
-          "volume": 3833758.0050324695,
-          "percentage": 7.8321966287332625
+          "price_level": 36935.432041664666,
+          "volume": 4831175.715668736,
+          "percentage": 9.571391247168561
         },
         {
-          "price_level": 26834.459654800237,
-          "volume": 3709852.2924832604,
-          "percentage": 7.579062783864905
+          "price_level": 37735.633493419344,
+          "volume": 4169737.9589000386,
+          "percentage": 8.260969120490357
         },
         {
-          "price_level": 28470.939510986977,
-          "volume": 3560184.144735386,
-          "percentage": 7.273297432822691
+          "price_level": 38135.73421929669,
+          "volume": 4141332.668142024,
+          "percentage": 8.204693346779049
         },
         {
-          "price_level": 30107.419367173716,
-          "volume": 3328908.041335392,
-          "percentage": 6.800810667883896
+          "price_level": 38535.83494517403,
+          "volume": 3859637.0625968757,
+          "percentage": 7.646605831034971
         },
         {
-          "price_level": 29561.926081778136,
-          "volume": 3097914.142589819,
-          "percentage": 6.328900434468497
+          "price_level": 36135.23058990998,
+          "volume": 3349031.13675962,
+          "percentage": 6.635007541728159
         },
         {
-          "price_level": 33380.379079547194,
-          "volume": 2583427.382978529,
-          "percentage": 5.277826929342209
+          "price_level": 35735.12986403264,
+          "volume": 2681466.8209601534,
+          "percentage": 5.312447646329977
         },
         {
-          "price_level": 33925.87236494277,
-          "volume": 2547358.8728180905,
-          "percentage": 5.2041405716453495
+          "price_level": 35335.0291381553,
+          "volume": 2443683.6922240322,
+          "percentage": 4.841358310927025
         },
         {
-          "price_level": 30652.912652569295,
-          "volume": 2242409.477659739,
-          "percentage": 4.58114255727974
+          "price_level": 38935.93567105137,
+          "volume": 2304718.1052628406,
+          "percentage": 4.566043546782935
         }
       ],
       "current_price_position": "AT_POC",
-      "volume_trend": "DECREASING",
-      "signal": "SELL",
-      "confidence": 0.4,
-      "current_price": 30241.82919107188,
-      "current_volume": 845490.7538071809,
+      "volume_trend": "STABLE",
+      "signal": "HOLD",
+      "confidence": 0.0,
+      "current_price": 39323.94670357421,
+      "current_volume": 516789.6993702192,
       "volume_analysis": {
-        "relative_volume": 0.8801101437264487,
+        "relative_volume": 0.5103043857209979,
         "volume_breakout": false,
-        "price_volume_divergence": true,
+        "price_volume_divergence": false,
         "volume_above_average": false,
         "high_volume_threshold": false
       },
       "support_resistance": {
-        "poc_support_resistance": 27925.446225591397,
-        "value_area_support": 26288.966369404658,
-        "value_area_resistance": 33925.87236494277,
-        "price_in_value_area": true
+        "poc_support_resistance": 36535.33131578733,
+        "value_area_support": 35335.0291381553,
+        "value_area_resistance": 38535.83494517403,
+        "price_in_value_area": false
       },
       "metadata": {
         "lookback_periods_used": 50,
@@ -254,7 +254,7 @@
           "india_regulatory_score": 0.1,
           "btc_exchange_netflow": 0.25
         },
-        "data_freshness": "2025-09-17T16:50:55.089545",
+        "data_freshness": "2025-09-19T23:14:35.911623",
         "module_info": {
           "name": "SentimentAnalysisModule",
           "version": "1.0.0",
@@ -264,21 +264,21 @@
     },
     "Logistics": {
       "signal": "BUY",
-      "confidence": 0.6528953322454635,
-      "value": 0.3736059281206029,
+      "confidence": 0.650098618920545,
+      "value": 0.36198653122133345,
       "lead_time_days": 30,
       "correlation": 0.05,
-      "timestamp": "2025-09-17T16:51:12.588184",
+      "timestamp": "2025-09-19T23:14:54.301287",
       "module": "LogisticsSignal",
       "components": {
         "port": {
-          "strength": 0.5339237991631438,
-          "confidence": 0.8086859967363903,
+          "strength": 0.5072884341639203,
+          "confidence": 0.8002958567616348,
           "interpretation": "Elevated congestion \u2192 mild inflation pressure \u2192 Moderate BUY signal",
-          "metric": "Congestion: 1.19x normal",
+          "metric": "Congestion: 1.18x normal",
           "source": "Marine Exchange of Southern California (approximated)",
           "data_quality": "semi-production",
-          "timestamp": "2025-09-17T16:51:10.400252"
+          "timestamp": "2025-09-19T23:14:51.329930"
         },
         "diesel": {
           "strength": 0.0,
@@ -287,45 +287,71 @@
           "metric": "Diesel: -0.7% weekly - $3.74/gal (was $3.77/gal)",
           "source": "EIA Weekly Diesel Prices",
           "data_quality": "production",
-          "timestamp": "2025-09-17T16:51:11.580262"
+          "timestamp": "2025-09-19T23:14:52.644782"
         },
         "supply_chain": {
           "strength": 0.5,
           "confidence": 0.6000000000000001,
           "interpretation": "Supply chain pressure \u2192 inflation hedge \u2192 BUY signal",
-          "metric": "GSCPI: +0.53 std dev \u2192",
-          "value": 0.5312737090394799,
-          "trend": -0.03797403184211312,
+          "metric": "GSCPI: +0.81 std dev \u2198\ufe0f",
+          "value": 0.8129950413409754,
+          "trend": -0.16110456153773278,
           "source": "GSCPI Seasonal Approximation",
           "data_quality": "fallback",
-          "timestamp": "2025-09-17T16:51:12.584912"
+          "timestamp": "2025-09-19T23:14:54.295676"
         }
       }
     },
     "GlobalMacro": {
       "signal": "BUY",
-      "confidence": 0.7525,
-      "strength": 0.54325,
-      "reasoning": "Global adoption/inflation driving crypto demand",
+      "confidence": 0.85,
+      "strength": 0.6159926470588235,
+      "reasoning": "Multiple hyperinflation crises in ARG, VEN, TUR, NGA \u2192 Strong crypto hedge demand",
       "correlation": 0.02,
       "lead_time_days": 45,
-      "timestamp": "2025-09-17T16:51:12.588409",
+      "timestamp": "2025-09-19T23:14:54.302932",
       "module": "global_macro_predictor",
       "components": {
         "adoption": {
           "data": {
-            "strength": 0.9,
+            "strength": 0.8,
             "confidence": 0.85,
             "interpretation": "Massive adoption growth \u2192 Strong BUY",
             "data": {
-              "LATAM": 0.63,
-              "INDIA": 0.45,
-              "SEA": 0.38,
-              "AFRICA": 0.55
+              "regional": {
+                "LATAM": 0.63,
+                "INDIA": 0.45,
+                "SEA": 0.38,
+                "AFRICA": 0.55,
+                "EUROPE": 0.25,
+                "MENA": 0.42
+              },
+              "countries": {
+                "IND": 0.45,
+                "USA": 0.22,
+                "BRA": 0.58,
+                "ARG": 0.75,
+                "VEN": 0.48,
+                "SLV": 0.39,
+                "JPN": 0.28,
+                "NGA": 0.68,
+                "KOR": 0.52,
+                "VNM": 0.72,
+                "UKR": 0.65,
+                "TUR": 0.62,
+                "ZAF": 0.58
+              }
             },
-            "metric": "Global adoption: 50% YoY"
+            "metric": "Global adoption: 44% weighted",
+            "hotspots": [
+              "ARG",
+              "NGA",
+              "VNM",
+              "UKR",
+              "TUR"
+            ]
           },
-          "weight": 0.25
+          "weight": 0.22647058823529417
         },
         "inflation": {
           "data": {
@@ -334,11 +360,32 @@
             "interpretation": "Multiple inflation crises \u2192 Rush to crypto",
             "crisis_countries": [
               142.0,
-              350.0
+              350.0,
+              53.8594087593315,
+              28.9
             ],
-            "highest": "350% (crisis)"
+            "crisis_list": [
+              "ARG",
+              "VEN",
+              "TUR",
+              "NGA"
+            ],
+            "highest": "350% (crisis)",
+            "hedge_signal": "STRONG_BUY",
+            "inflation_data": {
+              "ARG": 142.0,
+              "VEN": 350.0,
+              "BRA": 4.59356282283204,
+              "TUR": 53.8594087593315,
+              "UKR": 12.8490222828559,
+              "USA": 3.2,
+              "EUR": 2.8,
+              "IND": 5.4,
+              "NGA": 28.9
+            },
+            "inflation_score": 1.6
           },
-          "weight": 0.3
+          "weight": 0.45
         },
         "regulatory": {
           "data": {
@@ -354,7 +401,7 @@
               "us_clarity"
             ]
           },
-          "weight": 0.2
+          "weight": 0.12132352941176472
         },
         "remittance": {
           "data": {
@@ -364,7 +411,7 @@
             "avg_growth": "12.6% YoY",
             "top_corridor": "USA\u2192MEX, UAE\u2192IND"
           },
-          "weight": 0.15
+          "weight": 0.12132352941176472
         },
         "cbdc": {
           "data": {
@@ -378,19 +425,31 @@
               "Japan_pilot"
             ]
           },
-          "weight": 0.1
+          "weight": 0.08088235294117649
         }
       },
-      "key_insight": "\ud83c\udf0d Global adoption surge detected - accumulate | \ud83d\udcb8 Hyperinflation in multiple countries - BTC hedge active | \ud83d\udcb0 Remittance corridors hot - stablecoins bullish"
+      "key_insight": "\ud83c\udf0d Global adoption surge detected - accumulate | \ud83d\udcb8 Hyperinflation in multiple countries - BTC hedge active | \ud83d\udcb0 Remittance corridors hot - stablecoins bullish",
+      "inflation_hedge": {
+        "signal": "STRONG_BUY",
+        "countries": [
+          "ARG",
+          "VEN",
+          "TUR",
+          "NGA"
+        ],
+        "highest_rate": "350% (crisis)",
+        "correlation_btc": 0.75
+      },
+      "has_high_inflation": true
     }
   },
   "summary": {
     "buy_count": 3,
-    "sell_count": 2,
-    "hold_count": 2,
+    "sell_count": 0,
+    "hold_count": 4,
     "total_signals": 7,
     "consensus": "BUY",
-    "consensus_score": 0.7657457097555176,
-    "consensus_strength": 76.57457097555177
+    "consensus_score": 0.9565113070183411,
+    "consensus_strength": 95.6511307018341
   }
 }
