@@ -29,9 +29,7 @@ RESULTS_DIR = "data/paper_trading_results"
 
 def parse_args():
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser(
-        description="Run paper trading simulation for ML model training"
-    )
+    parser = argparse.ArgumentParser(description="Run paper trading simulation for ML model training")
     parser.add_argument(
         "--duration",
         type=int,
@@ -156,9 +154,7 @@ def run_paper_trading_simulation(args, session_dir):
             print("Recording performance metrics...")
             # Use get_portfolio_status instead of get_performance_metrics
             performance = _bot.budget_manager.get_portfolio_status()
-            performance_snapshots.append(
-                {"timestamp": timestamp, "metrics": performance}
-            )
+            performance_snapshots.append({"timestamp": timestamp, "metrics": performance})
 
             # Save interim data
             if len(signal_data_snapshots) % 10 == 0:
@@ -177,10 +173,7 @@ def run_paper_trading_simulation(args, session_dir):
             remaining = int(end_time - time.time())
             mins = remaining // 60
             secs = remaining % 60
-            print(
-                f"Waiting {wait_time:.1f}s before next collection. "
-                f"Remaining time: {mins}m {secs}s"
-            )
+            print(f"Waiting {wait_time:.1f}s before next collection. " f"Remaining time: {mins}m {secs}s")
 
             if wait_time > 0:
                 time.sleep(wait_time)
@@ -203,21 +196,15 @@ def run_paper_trading_simulation(args, session_dir):
 def save_collected_data(session_dir, signal_data, market_condition, performance):
     """Save collected data to files."""
     # Save signal data
-    with open(
-        os.path.join(session_dir, "signal_data", "signal_snapshots.json"), "w"
-    ) as f:
+    with open(os.path.join(session_dir, "signal_data", "signal_snapshots.json"), "w") as f:
         json.dump(signal_data, f, indent=2)
 
     # Save market condition data
-    with open(
-        os.path.join(session_dir, "market_data", "market_conditions.json"), "w"
-    ) as f:
+    with open(os.path.join(session_dir, "market_data", "market_conditions.json"), "w") as f:
         json.dump(market_condition, f, indent=2)
 
     # Save performance data
-    with open(
-        os.path.join(session_dir, "performance", "performance_metrics.json"), "w"
-    ) as f:
+    with open(os.path.join(session_dir, "performance", "performance_metrics.json"), "w") as f:
         json.dump(performance, f, indent=2)
 
 
@@ -226,19 +213,13 @@ def prepare_data_for_later_training(session_dir):
     print("\nPreparing data for later model training...")
 
     # Load collected data
-    with open(
-        os.path.join(session_dir, "signal_data", "signal_snapshots.json"), "r"
-    ) as f:
+    with open(os.path.join(session_dir, "signal_data", "signal_snapshots.json"), "r") as f:
         signal_data = json.load(f)
 
-    with open(
-        os.path.join(session_dir, "market_data", "market_conditions.json"), "r"
-    ) as f:
+    with open(os.path.join(session_dir, "market_data", "market_conditions.json"), "r") as f:
         market_condition = json.load(f)
 
-    with open(
-        os.path.join(session_dir, "performance", "performance_metrics.json"), "r"
-    ) as f:
+    with open(os.path.join(session_dir, "performance", "performance_metrics.json"), "r") as f:
         performance = json.load(f)
 
     # Generate a summary of the data
@@ -247,19 +228,9 @@ def prepare_data_for_later_training(session_dir):
         "signal_data_count": len(signal_data),
         "market_conditions_count": len(market_condition),
         "performance_metrics_count": len(performance),
-        "symbols_covered": list(
-            set(
-                snapshot.get("data", {}).get("symbol", "unknown")
-                for snapshot in signal_data
-                if "data" in snapshot
-            )
-        ),
+        "symbols_covered": list(set(snapshot.get("data", {}).get("symbol", "unknown") for snapshot in signal_data if "data" in snapshot)),
         "market_regimes_detected": list(
-            set(
-                snapshot.get("condition", "unknown")
-                for snapshot in market_condition
-                if "condition" in snapshot
-            )
+            set(snapshot.get("condition", "unknown") for snapshot in market_condition if "condition" in snapshot)
         ),
     }
 
@@ -267,9 +238,7 @@ def prepare_data_for_later_training(session_dir):
     with open(os.path.join(session_dir, "data_collection_summary.json"), "w") as f:
         json.dump(summary, f, indent=2)
 
-    print(
-        f"Data prepared for later training. Summary saved to {session_dir}/data_collection_summary.json"
-    )
+    print(f"Data prepared for later training. Summary saved to {session_dir}/data_collection_summary.json")
     return summary
 
 
@@ -278,14 +247,10 @@ def generate_basic_visualizations(session_dir):
     print("\nGenerating basic visualizations...")
 
     # Load data for visualization
-    with open(
-        os.path.join(session_dir, "market_data", "market_conditions.json"), "r"
-    ) as f:
+    with open(os.path.join(session_dir, "market_data", "market_conditions.json"), "r") as f:
         market_condition = json.load(f)
 
-    with open(
-        os.path.join(session_dir, "performance", "performance_metrics.json"), "r"
-    ) as f:
+    with open(os.path.join(session_dir, "performance", "performance_metrics.json"), "r") as f:
         performance = json.load(f)
 
     # Create visualizations directory
@@ -295,11 +260,7 @@ def generate_basic_visualizations(session_dir):
     # Simple market regime count visualization using pandas
     try:
         # Extract market regimes
-        regimes = [
-            entry.get("condition", "unknown")
-            for entry in market_condition
-            if "condition" in entry
-        ]
+        regimes = [entry.get("condition", "unknown") for entry in market_condition if "condition" in entry]
 
         # Count regimes
         regime_counts = pd.Series(regimes).value_counts()
@@ -317,17 +278,9 @@ def generate_basic_visualizations(session_dir):
             {
                 "collection_time": datetime.datetime.now().isoformat(),
                 "market_regimes_detected": list(
-                    set(
-                        snapshot.get("condition", "unknown")
-                        for snapshot in market_condition
-                        if "condition" in snapshot
-                    )
+                    set(snapshot.get("condition", "unknown") for snapshot in market_condition if "condition" in snapshot)
                 ),
-                "market_regime_counts": (
-                    {regime: regimes.count(regime) for regime in set(regimes)}
-                    if "regimes" in locals()
-                    else {}
-                ),
+                "market_regime_counts": ({regime: regimes.count(regime) for regime in set(regimes)} if "regimes" in locals() else {}),
                 "data_points_collected": len(market_condition),
             },
             f,
@@ -343,9 +296,7 @@ def main():
     session_dir = setup_directories()
 
     # Run paper trading simulation
-    signal_data, market_condition, performance = run_paper_trading_simulation(
-        args, session_dir
-    )
+    signal_data, market_condition, performance = run_paper_trading_simulation(args, session_dir)
 
     # Prepare data for later training
     summary = prepare_data_for_later_training(session_dir)
@@ -356,14 +307,10 @@ def main():
 
     print("\nPaper trading and data collection completed successfully!")
     print(f"Collected {summary.get('signal_data_count', 0)} signal data points")
-    print(
-        f"Detected market regimes: {', '.join(summary.get('market_regimes_detected', ['unknown']))}"
-    )
+    print(f"Detected market regimes: {', '.join(summary.get('market_regimes_detected', ['unknown']))}")
     print(f"All data saved to: {session_dir}")
     print("\nTo train the adaptive weight model with this data, run:")
-    print(
-        f"python modules/adaptive_weight_module/weight_trainer.py --data-dir {session_dir}"
-    )
+    print(f"python modules/adaptive_weight_module/weight_trainer.py --data-dir {session_dir}")
 
 
 if __name__ == "__main__":

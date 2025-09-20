@@ -21,9 +21,7 @@ try:
     SCHEDULE_AVAILABLE = True
 except ImportError:
     SCHEDULE_AVAILABLE = False
-    print(
-        "schedule library not available. Automated retraining scheduling will be disabled."
-    )
+    print("schedule library not available. Automated retraining scheduling will be disabled.")
 
 # Set up logging
 logging.basicConfig(
@@ -37,17 +35,17 @@ logging.basicConfig(
 
 logger = logging.getLogger("adaptive_weight_scheduler")
 
-from modules.adaptive_weight_module.market_regime_integrator import (
+from modules.adaptive_weight_module.market_regime_integrator import (  # noqa: E402
     MarketRegimeIntegrator,
-)  # noqa: E402
+)
 
 # Import the trainer
-from modules.adaptive_weight_module.weight_trainer import (
+from modules.adaptive_weight_module.weight_trainer import (  # noqa: E402
     AdaptiveWeightTrainer,
-)  # noqa: E402
-from modules.adaptive_weight_module.weight_visualizer import (
+)
+from modules.adaptive_weight_module.weight_visualizer import (  # noqa: E402
     AdaptiveWeightVisualizer,
-)  # noqa: E402
+)
 
 
 class AdaptiveWeightScheduler:
@@ -65,9 +63,7 @@ class AdaptiveWeightScheduler:
         self.retrain_frequency = self.config.get("retrain_frequency", "daily")
 
         # Configure paths
-        self.logs_dir = os.path.join(
-            self.config.get("logs_dir", "logs"), "adaptive_weight_scheduler"
-        )
+        self.logs_dir = os.path.join(self.config.get("logs_dir", "logs"), "adaptive_weight_scheduler")
         os.makedirs(self.logs_dir, exist_ok=True)
 
         # Last training time tracking
@@ -108,16 +104,12 @@ class AdaptiveWeightScheduler:
     def _setup_schedule(self) -> None:
         """Set up the training schedule"""
         if self.retrain_frequency == "daily":
-            schedule.every().day.at(f"{self.retrain_hour:02d}:00").do(
-                self.retrain_model
-            )
+            schedule.every().day.at(f"{self.retrain_hour:02d}:00").do(self.retrain_model)
         elif self.retrain_frequency == "hourly":
             schedule.every().hour.do(self.retrain_model)
         else:
             # Default to daily
-            schedule.every().day.at(f"{self.retrain_hour:02d}:00").do(
-                self.retrain_model
-            )
+            schedule.every().day.at(f"{self.retrain_hour:02d}:00").do(self.retrain_model)
 
         logger.info(f"Scheduled retraining with frequency: {self.retrain_frequency}")
 
@@ -135,14 +127,10 @@ class AdaptiveWeightScheduler:
             start_time = datetime.now()
 
             # Train the model
-            training_results = self.trainer.train_model(
-                lookback_days=self.lookback_days
-            )
+            training_results = self.trainer.train_model(lookback_days=self.lookback_days)
 
             if training_results.get("status") != "success":
-                logger.error(
-                    f"Training failed: {training_results.get('message', 'Unknown error')}"
-                )
+                logger.error(f"Training failed: {training_results.get('message', 'Unknown error')}")
                 return training_results
 
             # Update last trained timestamp
@@ -171,9 +159,7 @@ class AdaptiveWeightScheduler:
             }
 
             # Log success
-            logger.info(
-                f"Model retraining completed successfully in {duration:.2f} seconds"
-            )
+            logger.info(f"Model retraining completed successfully in {duration:.2f} seconds")
 
             return results
 
@@ -188,16 +174,10 @@ class AdaptiveWeightScheduler:
     def _gather_visualization_data(self) -> Dict[str, Any]:
         """Gather data for visualizations"""
         # Get regime data
-        regime_data = {
-            "regime_history": self.regime_integrator.market_classifier.get_regime_history(
-                days=30
-            )
-        }
+        regime_data = {"regime_history": self.regime_integrator.market_classifier.get_regime_history(days=30)}
 
         # Get transition matrix
-        transition_matrix = (
-            self.regime_integrator.get_regime_transition_matrix().to_dict()
-        )
+        transition_matrix = self.regime_integrator.get_regime_transition_matrix().to_dict()
 
         # Get performance data
         performance_data = self.regime_integrator.get_regime_performance()
@@ -221,16 +201,12 @@ class AdaptiveWeightScheduler:
         history = []
 
         # Look for weight history files
-        history_dir = os.path.join(
-            self.config.get("data_dir", "data"), "adaptive_weight_data"
-        )
+        history_dir = os.path.join(self.config.get("data_dir", "data"), "adaptive_weight_data")
         if not os.path.exists(history_dir):
             return history
 
         # Find and load history files
-        history_files = sorted(
-            [f for f in os.listdir(history_dir) if f.endswith("_weights.json")]
-        )
+        history_files = sorted([f for f in os.listdir(history_dir) if f.endswith("_weights.json")])
         for filename in history_files[-30:]:  # Get the 30 most recent files
             try:
                 with open(os.path.join(history_dir, filename), "r") as f:
@@ -255,9 +231,7 @@ class AdaptiveWeightScheduler:
             time_since_last = datetime.now() - last_train_time
 
             if time_since_last.total_seconds() > 24 * 3600:
-                logger.info(
-                    f"Last training was {time_since_last.total_seconds() / 3600:.1f} hours ago, training now"
-                )
+                logger.info(f"Last training was {time_since_last.total_seconds() / 3600:.1f} hours ago, training now")
                 self.retrain_model()
 
         # Run the scheduler loop

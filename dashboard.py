@@ -194,11 +194,7 @@ def create_dashboard():
     col2.metric("Total Trades", len(trade_df))
 
     # Simple Win Rate (can be improved with trade pairing)
-    wins = (
-        trade_df[trade_df["pnl"] > df["pnl"].shift(1)].shape[0]
-        if "pnl" in trade_df.columns and "pnl" in df.columns
-        else 0
-    )
+    wins = trade_df[trade_df["pnl"] > df["pnl"].shift(1)].shape[0] if "pnl" in trade_df.columns and "pnl" in df.columns else 0
 
     win_rate = (wins / len(trade_df)) * 100 if not trade_df.empty else 0
     col3.metric("Win Rate", f"{win_rate:.1f}%")

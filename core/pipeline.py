@@ -39,9 +39,7 @@ class Pipeline:
         self.steps: List[PipelineStep] = []
         self.execution_history: List[Dict[str, Any]] = []
 
-    def add_step(
-        self, step_name: str, module_name: str, config: Dict[str, Any] = None
-    ) -> "Pipeline":
+    def add_step(self, step_name: str, module_name: str, config: Dict[str, Any] = None) -> "Pipeline":
         """Add a step to the pipeline. Returns self for chaining."""
         step = PipelineStep(step_name, module_name, config)
         self.steps.append(step)
@@ -64,9 +62,7 @@ class Pipeline:
 
     def execute(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """Execute the complete pipeline."""
-        execution_id = (
-            f"{self.name}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
-        )
+        execution_id = f"{self.name}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
 
         execution_record = {
             "execution_id": execution_id,
@@ -87,9 +83,7 @@ class Pipeline:
 
                 # Execute the module for this step
                 try:
-                    module_output = self.module_manager.execute_module(
-                        step.module_name, current_data
-                    )
+                    module_output = self.module_manager.execute_module(step.module_name, current_data)
 
                     step_record = {
                         "step_name": step.name,
@@ -134,9 +128,7 @@ class Pipeline:
             self.execution_history.append(execution_record)
 
         if execution_record["status"] == "failed":
-            raise RuntimeError(
-                f"Pipeline execution failed: {execution_record['error']}"
-            )
+            raise RuntimeError(f"Pipeline execution failed: {execution_record['error']}")
 
         return execution_record["final_output"]
 
@@ -152,9 +144,7 @@ class Pipeline:
             module = self.module_manager.get_module(step.module_name)
             if not module:
                 validation_result["valid"] = False
-                validation_result["issues"].append(
-                    f"Module '{step.module_name}' not found for step '{step.name}'"
-                )
+                validation_result["issues"].append(f"Module '{step.module_name}' not found for step '{step.name}'")
 
         return validation_result
 
@@ -195,9 +185,7 @@ class Pipeline:
         pipeline = cls(data["name"], module_manager)
 
         for step_data in data["steps"]:
-            pipeline.add_step(
-                step_data["name"], step_data["module_name"], step_data.get("config", {})
-            )
+            pipeline.add_step(step_data["name"], step_data["module_name"], step_data.get("config", {}))
 
         return pipeline
 
@@ -210,26 +198,15 @@ class Pipeline:
         if not self.execution_history:
             return {"message": "No executions recorded"}
 
-        successful_executions = [
-            ex for ex in self.execution_history if ex["status"] == "completed"
-        ]
-        failed_executions = [
-            ex for ex in self.execution_history if ex["status"] == "failed"
-        ]
+        successful_executions = [ex for ex in self.execution_history if ex["status"] == "completed"]
+        failed_executions = [ex for ex in self.execution_history if ex["status"] == "failed"]
 
         metrics = {
             "total_executions": len(self.execution_history),
             "successful_executions": len(successful_executions),
             "failed_executions": len(failed_executions),
-            "success_rate": (
-                len(successful_executions) / len(self.execution_history)
-                if self.execution_history
-                else 0
-            ),
-            "avg_steps_per_execution": sum(
-                len(ex["steps_executed"]) for ex in self.execution_history
-            )
-            / len(self.execution_history),
+            "success_rate": (len(successful_executions) / len(self.execution_history) if self.execution_history else 0),
+            "avg_steps_per_execution": sum(len(ex["steps_executed"]) for ex in self.execution_history) / len(self.execution_history),
         }
 
         return metrics

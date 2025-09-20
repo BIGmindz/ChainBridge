@@ -149,18 +149,10 @@ class PerformanceMetrics:
                 self.largest_loss = abs(pnl)
 
         # Calculate derived metrics
-        self.win_rate = (
-            self.winning_trades / self.total_trades if self.total_trades > 0 else 0
-        )
-        self.profit_factor = (
-            self.gross_profit / self.gross_loss if self.gross_loss > 0 else float("inf")
-        )
-        self.avg_win = (
-            self.gross_profit / self.winning_trades if self.winning_trades > 0 else 0
-        )
-        self.avg_loss = (
-            self.gross_loss / self.losing_trades if self.losing_trades > 0 else 0
-        )
+        self.win_rate = self.winning_trades / self.total_trades if self.total_trades > 0 else 0
+        self.profit_factor = self.gross_profit / self.gross_loss if self.gross_loss > 0 else float("inf")
+        self.avg_win = self.gross_profit / self.winning_trades if self.winning_trades > 0 else 0
+        self.avg_loss = self.gross_loss / self.losing_trades if self.losing_trades > 0 else 0
 
 
 class KrakenAPIWrapper:
@@ -204,22 +196,14 @@ class KrakenAPIWrapper:
                 "bid": ticker["bid"],
                 "ask": ticker["ask"],
                 "volume": ticker["quoteVolume"],
-                "timestamp": datetime.fromtimestamp(
-                    ticker["timestamp"] / 1000, tz=timezone.utc
-                ),
-                "spread": (
-                    ticker["ask"] - ticker["bid"]
-                    if ticker["ask"] and ticker["bid"]
-                    else 0
-                ),
+                "timestamp": datetime.fromtimestamp(ticker["timestamp"] / 1000, tz=timezone.utc),
+                "spread": (ticker["ask"] - ticker["bid"] if ticker["ask"] and ticker["bid"] else 0),
             }
         except Exception as e:
             self.logger.error(f"Error fetching ticker for {symbol}: {e}")
             raise
 
-    async def fetch_ohlcv(
-        self, symbol: str, timeframe: str = "1m", limit: int = 100
-    ) -> List[List]:
+    async def fetch_ohlcv(self, symbol: str, timeframe: str = "1m", limit: int = 100) -> List[List]:
         """Fetch OHLCV data with error handling"""
         await self._rate_limit_check()
 
@@ -299,9 +283,7 @@ class KrakenPaperLiveBot:
         self.logger = self._setup_logging()
 
         # Core components
-        self.budget_manager = BudgetManager(
-            initial_capital=config.get("initial_capital", 10000.0)
-        )
+        self.budget_manager = BudgetManager(initial_capital=config.get("initial_capital", 10000.0))
 
         # Trading state
         self.positions: Dict[str, TradingPosition] = {}
@@ -311,21 +293,15 @@ class KrakenPaperLiveBot:
 
         # Risk management
         self.risk_config = config.get("risk_management", {})
-        self.max_position_size = self.risk_config.get(
-            "max_position_size", 0.1
-        )  # 10% of capital
+        self.max_position_size = self.risk_config.get("max_position_size", 0.1)  # 10% of capital
         self.correlation_threshold = self.risk_config.get("correlation_threshold", 0.7)
-        self.max_drawdown_limit = self.risk_config.get(
-            "max_drawdown_limit", 0.15
-        )  # 15%
+        self.max_drawdown_limit = self.risk_config.get("max_drawdown_limit", 0.15)  # 15%
 
         # Performance tracking
         self.trade_journal = []
         self.daily_pnl_history = []
 
-        self.logger.info(
-            f"KrakenPaperLiveBot initialized with ${self.budget_manager.initial_capital:,.2f}"
-        )
+        self.logger.info(f"KrakenPaperLiveBot initialized with ${self.budget_manager.initial_capital:,.2f}")
 
     def _setup_logging(self) -> logging.Logger:
         """Setup comprehensive logging system"""
@@ -333,9 +309,7 @@ class KrakenPaperLiveBot:
         logger.setLevel(logging.INFO)
 
         # Create formatters
-        detailed_formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s"
-        )
+        detailed_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s")
 
         # File handler for detailed logs
         file_handler = logging.FileHandler("kraken_paper_trading.log")
@@ -445,9 +419,7 @@ class KrakenPaperLiveBot:
             Position size in base currency
         """
         # Get base position size from budget manager
-        base_calc = self.budget_manager.calculate_position_size(
-            symbol, signal_confidence, volatility
-        )
+        base_calc = self.budget_manager.calculate_position_size(symbol, signal_confidence, volatility)
 
         # Apply correlation adjustment
         adjusted_size = base_calc["size"] * correlation_adj
@@ -499,9 +471,7 @@ class KrakenPaperLiveBot:
         correlation_adj = self._calculate_correlation_adjustment(symbol)
 
         # Calculate position size
-        position_size = self.calculate_position_size(
-            symbol, signal_confidence, volatility, correlation_adj
-        )
+        position_size = self.calculate_position_size(symbol, signal_confidence, volatility, correlation_adj)
 
         if position_size <= 0:
             return {
@@ -581,9 +551,7 @@ class KrakenPaperLiveBot:
             "trade_log": trade_log,
         }
 
-    def close_position(
-        self, position_id: str, reason: str = "MANUAL"
-    ) -> Dict[str, Any]:
+    def close_position(self, position_id: str, reason: str = "MANUAL") -> Dict[str, Any]:
         """
         Close a trading position and update performance metrics
 
@@ -604,14 +572,10 @@ class KrakenPaperLiveBot:
         position.update_price(current_price)
 
         # Calculate trade duration
-        duration = (
-            datetime.now(timezone.utc) - position.entry_time
-        ).total_seconds() / 60  # minutes
+        duration = (datetime.now(timezone.utc) - position.entry_time).total_seconds() / 60  # minutes
 
         # Close position in budget manager
-        budget_result = self.budget_manager.close_position(
-            position_id, current_price, reason
-        )
+        budget_result = self.budget_manager.close_position(position_id, current_price, reason)
 
         # Update performance metrics
         self.performance.update_from_trade(position.pnl, duration)
@@ -677,9 +641,7 @@ class KrakenPaperLiveBot:
         correlation_penalty = 0.0
 
         for existing_symbol in existing_symbols:
-            if (symbol in crypto_majors and existing_symbol in crypto_majors) or (
-                symbol in crypto_alts and existing_symbol in crypto_alts
-            ):
+            if (symbol in crypto_majors and existing_symbol in crypto_majors) or (symbol in crypto_alts and existing_symbol in crypto_alts):
                 correlation_penalty += 0.2
 
         return max(0.3, 1.0 - correlation_penalty)
@@ -707,11 +669,7 @@ class KrakenPaperLiveBot:
                 "portfolio_value": portfolio_value,
                 "available_capital": self.budget_manager.available_capital,
                 "total_return": (portfolio_value - self.budget_manager.initial_capital),
-                "total_return_pct": (
-                    (portfolio_value - self.budget_manager.initial_capital)
-                    / self.budget_manager.initial_capital
-                    * 100
-                ),
+                "total_return_pct": ((portfolio_value - self.budget_manager.initial_capital) / self.budget_manager.initial_capital * 100),
             },
             "positions": {
                 "active_count": len(self.positions),
@@ -724,10 +682,7 @@ class KrakenPaperLiveBot:
                         "current_price": pos.current_price,
                         "pnl": pos.pnl,
                         "pnl_pct": pos.pnl_pct * 100,
-                        "duration_hours": (
-                            datetime.now(timezone.utc) - pos.entry_time
-                        ).total_seconds()
-                        / 3600,
+                        "duration_hours": (datetime.now(timezone.utc) - pos.entry_time).total_seconds() / 3600,
                     }
                     for pos in self.positions.values()
                 ],
@@ -749,13 +704,10 @@ class KrakenPaperLiveBot:
             },
             "risk_metrics": {
                 "max_drawdown_limit": self.max_drawdown_limit * 100,
-                "current_risk_exposure": sum(
-                    abs(pos.pnl) for pos in self.positions.values()
-                ),
+                "current_risk_exposure": sum(abs(pos.pnl) for pos in self.positions.values()),
                 "diversification_score": self._calculate_diversification_score(),
                 "correlation_adjusted_exposure": sum(
-                    abs(pos.pnl) * self._calculate_correlation_adjustment(pos.symbol)
-                    for pos in self.positions.values()
+                    abs(pos.pnl) * self._calculate_correlation_adjustment(pos.symbol) for pos in self.positions.values()
                 ),
             },
         }
@@ -778,9 +730,7 @@ class KrakenPaperLiveBot:
 
         return list(daily_pnl.values())
 
-    def _calculate_sharpe_ratio(
-        self, returns: List[float], risk_free_rate: float = 0.02
-    ) -> float:
+    def _calculate_sharpe_ratio(self, returns: List[float], risk_free_rate: float = 0.02) -> float:
         """Calculate Sharpe ratio from returns"""
         if len(returns) < 2:
             return 0.0
@@ -868,8 +818,7 @@ class KrakenPaperLiveBot:
                 {
                     "date": today,
                     "pnl": current_pnl,
-                    "portfolio_value": self.budget_manager.current_capital
-                    + current_pnl,
+                    "portfolio_value": self.budget_manager.current_capital + current_pnl,
                 }
             )
 
@@ -878,9 +827,7 @@ class KrakenPaperLiveBot:
         # Check maximum drawdown limit
         current_drawdown = self.budget_manager.current_drawdown
         if current_drawdown > self.max_drawdown_limit:
-            self.logger.warning(
-                f"Maximum drawdown limit exceeded: {current_drawdown:.2%} > {self.max_drawdown_limit:.2%}"
-            )
+            self.logger.warning(f"Maximum drawdown limit exceeded: {current_drawdown:.2%} > {self.max_drawdown_limit:.2%}")
             # Close all positions to limit further losses
             self._emergency_close_all_positions()
 
@@ -919,8 +866,7 @@ class KrakenPaperLiveBot:
                 "bot_version": "1.0.0",
                 "export_timestamp": datetime.now(timezone.utc).isoformat(),
                 "initial_capital": self.budget_manager.initial_capital,
-                "final_portfolio_value": self.budget_manager.current_capital
-                + sum(pos.pnl for pos in self.positions.values()),
+                "final_portfolio_value": self.budget_manager.current_capital + sum(pos.pnl for pos in self.positions.values()),
             },
             "performance_summary": self.get_performance_dashboard(),
             "trade_history": self.trade_journal,
@@ -953,9 +899,7 @@ class KrakenPaperLiveBot:
 
 
 # Utility function for easy bot creation
-def create_kraken_paper_bot(
-    config_path: str = None, config_dict: Dict[str, Any] = None
-) -> KrakenPaperLiveBot:
+def create_kraken_paper_bot(config_path: str = None, config_dict: Dict[str, Any] = None) -> KrakenPaperLiveBot:
     """
     Factory function to create KrakenPaperLiveBot instance
 

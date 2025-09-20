@@ -35,9 +35,7 @@ def run_command(command, background=False):
     logging.info(f"Running command: {command}")
 
     if background:
-        process = subprocess.Popen(
-            command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
+        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         return process
     else:
         try:
@@ -78,9 +76,7 @@ def execute_step_2():
     logging.info("STEP 2: Setting alerts for all exchanges")
 
     # Start the exchange alert system in the background
-    process = run_command(
-        "python setup_exchange_alerts.py > exchange_alerts.log 2>&1 &", background=True
-    )
+    process = run_command("python setup_exchange_alerts.py > exchange_alerts.log 2>&1 &", background=True)
 
     logging.info("Exchange alerts started in background")
     return process
@@ -125,9 +121,7 @@ def execute_step_4():
         f.write("3. Allocated $1000 for first listing\n")
         f.write("4. Verified documentation\n")
 
-    logging.info(
-        f"Execution record saved to immediate_actions_executed_{timestamp}.txt"
-    )
+    logging.info(f"Execution record saved to immediate_actions_executed_{timestamp}.txt")
     return True
 
 
@@ -145,21 +139,15 @@ def start_trading_system():
     time.sleep(2)
 
     # Start Multi-Signal Bot in the background
-    run_command(
-        "python multi_signal_bot.py > multi_signal_bot.log 2>&1 &", background=True
-    )
+    run_command("python multi_signal_bot.py > multi_signal_bot.log 2>&1 &", background=True)
 
     logging.info("Trading system started")
 
 
 def main():
     """Main execution function"""
-    parser = argparse.ArgumentParser(
-        description="Execute Immediate Actions for the Trading System"
-    )
-    parser.add_argument(
-        "--start-trading", action="store_true", help="Also start the trading system"
-    )
+    parser = argparse.ArgumentParser(description="Execute Immediate Actions for the Trading System")
+    parser.add_argument("--start-trading", action="store_true", help="Also start the trading system")
 
     args = parser.parse_args()
 
@@ -195,9 +183,7 @@ def main():
 
     print("\nNext steps:")
     if not args.start_trading:
-        print(
-            "  • Start trading: python run_new_listings_radar.py --scan & python multi_signal_bot.py"
-        )
+        print("  • Start trading: python run_new_listings_radar.py --scan & python multi_signal_bot.py")
     print("  • Monitor system: python monitor_live_system.py --dashboard")
     print("  • Check alerts: python setup_exchange_alerts.py --status")
     print("  • Check allocation: python allocate_capital.py --status")

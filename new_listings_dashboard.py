@@ -118,9 +118,7 @@ class NewListingsDashboard:
         fig, axes = plt.subplots(2, 1, figsize=(14, 12))
 
         # Plot 1: Expected return by exchange
-        sns.barplot(
-            x="coin", y="expected_return", hue="exchange", data=listings_df, ax=axes[0]
-        )
+        sns.barplot(x="coin", y="expected_return", hue="exchange", data=listings_df, ax=axes[0])
         axes[0].set_title("Expected Return by Coin and Exchange")
         axes[0].set_ylabel("Expected Return")
         axes[0].set_xlabel("Coin")
@@ -227,11 +225,7 @@ class NewListingsDashboard:
         # Find the most recent listings
         recent_listings = sorted(
             listings,
-            key=lambda x: (
-                datetime.fromisoformat(x["timestamp"])
-                if isinstance(x["timestamp"], str)
-                else x["timestamp"]
-            ),
+            key=lambda x: (datetime.fromisoformat(x["timestamp"]) if isinstance(x["timestamp"], str) else x["timestamp"]),
             reverse=True,
         )[:5]
 
@@ -259,12 +253,8 @@ class NewListingsDashboard:
         print("=" * 80)
 
         for exchange, exchange_listings in self.listings_by_exchange.items():
-            avg_return = sum(
-                item["expected_return"] for item in exchange_listings
-            ) / len(exchange_listings)
-            avg_confidence = sum(
-                item["confidence"] for item in exchange_listings
-            ) / len(exchange_listings)
+            avg_return = sum(item["expected_return"] for item in exchange_listings) / len(exchange_listings)
+            avg_confidence = sum(item["confidence"] for item in exchange_listings) / len(exchange_listings)
 
             print(f"\n{exchange}:")
             print(f"  Listings: {len(exchange_listings)}")
@@ -285,16 +275,12 @@ class NewListingsDashboard:
         print("=" * 80)
 
         print(f"Listings per Month: {results.get('listings_per_month', 0):.1f}")
-        print(
-            f"Average Return per Listing: {results.get('avg_return_per_listing', 0) * 100:.1f}%"
-        )
+        print(f"Average Return per Listing: {results.get('avg_return_per_listing', 0) * 100:.1f}%")
         print(f"Win Rate: {results.get('win_rate', 0) * 100:.1f}%")
         print(f"Best Trade: {results.get('best_trade', 0) * 100:.1f}%")
         print(f"Worst Trade: {results.get('worst_trade', 0) * 100:.1f}%")
         print(f"Monthly Return: {results.get('monthly_return', 0) * 100:.1f}%")
-        print(
-            f"Monthly Return on $10,000: ${10000 * results.get('monthly_return', 0):.2f}"
-        )
+        print(f"Monthly Return on $10,000: ${10000 * results.get('monthly_return', 0):.2f}")
 
         # Compare to projections
         print("\n")
@@ -305,9 +291,7 @@ class NewListingsDashboard:
         for scenario, data in self.profit_projections.items():
             print(f"\n{scenario.replace('_', ' ').title()}:")
             print(f"  Projected Monthly Return: {data['monthly_return'] * 100:.1f}%")
-            print(
-                f"  Backtest Monthly Return: {results.get('monthly_return', 0) * 100:.1f}%"
-            )
+            print(f"  Backtest Monthly Return: {results.get('monthly_return', 0) * 100:.1f}%")
             diff = results.get("monthly_return", 0) - data["monthly_return"]
             print(f"  Difference: {diff * 100:+.1f}%")
 
@@ -315,13 +299,9 @@ class NewListingsDashboard:
 async def main():
     """Main execution function"""
     parser = argparse.ArgumentParser(description="New Listings Radar Dashboard")
-    parser.add_argument(
-        "--update", action="store_true", help="Update listing opportunities"
-    )
+    parser.add_argument("--update", action="store_true", help="Update listing opportunities")
     parser.add_argument("--backtest", action="store_true", help="Run backtest")
-    parser.add_argument(
-        "--days", type=int, default=30, help="Number of days for backtest"
-    )
+    parser.add_argument("--days", type=int, default=30, help="Number of days for backtest")
     parser.add_argument("--plot", action="store_true", help="Generate plots")
     parser.add_argument("--summary", action="store_true", help="Print summary")
 

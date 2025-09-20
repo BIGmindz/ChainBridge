@@ -69,9 +69,7 @@ def main():
         component_status.append([name, status])
 
     print("\n📡 SYSTEM COMPONENTS:")
-    print(
-        tabulate(component_status, headers=["Component", "Status"], tablefmt="simple")
-    )
+    print(tabulate(component_status, headers=["Component", "Status"], tablefmt="simple"))
 
     # Read performance data
     trading_metrics = read_json_file("trading_metrics.json")

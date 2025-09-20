@@ -91,9 +91,7 @@ class MACDModule(Module):
         Returns:
             Tuple of (signal, confidence, strength)
         """
-        if any(
-            math.isnan(x) for x in [macd_current, signal_current, histogram_current]
-        ):
+        if any(math.isnan(x) for x in [macd_current, signal_current, histogram_current]):
             return "HOLD", 0.0, "WEAK"
 
         signal = "HOLD"
@@ -104,16 +102,12 @@ class MACDModule(Module):
         if macd_current > signal_current and macd_prev <= signal_prev:
             # Bullish crossover: MACD crosses above signal line
             signal = "BUY"
-            confidence = min(
-                1.0, abs(macd_current - signal_current) / max(abs(macd_current), 0.01)
-            )
+            confidence = min(1.0, abs(macd_current - signal_current) / max(abs(macd_current), 0.01))
 
         elif macd_current < signal_current and macd_prev >= signal_prev:
             # Bearish crossover: MACD crosses below signal line
             signal = "SELL"
-            confidence = min(
-                1.0, abs(signal_current - macd_current) / max(abs(signal_current), 0.01)
-            )
+            confidence = min(1.0, abs(signal_current - macd_current) / max(abs(signal_current), 0.01))
 
         # Zero Line Crossover (additional confirmation)
         elif macd_current > 0 and macd_prev <= 0:
@@ -131,9 +125,7 @@ class MACDModule(Module):
         # Histogram Analysis (momentum strength)
         if abs(histogram_current) > abs(histogram_prev):
             if confidence > 0:
-                confidence = min(
-                    1.0, confidence * 1.2
-                )  # Increase confidence for strengthening momentum
+                confidence = min(1.0, confidence * 1.2)  # Increase confidence for strengthening momentum
 
         # Determine signal strength based on multiple factors
         histogram_strength = abs(histogram_current)
@@ -173,9 +165,7 @@ class MACDModule(Module):
                     elif "price" in record:
                         closes.append(float(record["price"]))
                     else:
-                        raise ValueError(
-                            "No 'close' or 'price' field found in price data"
-                        )
+                        raise ValueError("No 'close' or 'price' field found in price data")
             elif isinstance(price_data[0], (list, tuple)):
                 # Data is in OHLCV format - use close price (index 4)
                 closes = [float(row[4]) for row in price_data if len(row) >= 5]
@@ -206,9 +196,7 @@ class MACDModule(Module):
 
             # Calculate MACD
             close_series = pd.Series(closes, dtype=float)
-            macd_line, signal_line, histogram = self.calculate_macd(
-                close_series, fast_period, slow_period, signal_period
-            )
+            macd_line, signal_line, histogram = self.calculate_macd(close_series, fast_period, slow_period, signal_period)
 
             # Get current and previous values for signal generation
             macd_current = float(macd_line.iloc[-1])
@@ -246,14 +234,8 @@ class MACDModule(Module):
                 "trend_analysis": {
                     "macd_above_signal": macd_current > signal_current,
                     "macd_above_zero": macd_current > 0,
-                    "histogram_increasing": (
-                        histogram_current > histogram_prev
-                        if len(histogram) >= 2
-                        else False
-                    ),
-                    "momentum_direction": (
-                        "BULLISH" if macd_current > signal_current else "BEARISH"
-                    ),
+                    "histogram_increasing": (histogram_current > histogram_prev if len(histogram) >= 2 else False),
+                    "momentum_direction": ("BULLISH" if macd_current > signal_current else "BEARISH"),
                 },
                 "metadata": {
                     "fast_period_used": fast_period,
@@ -274,9 +256,7 @@ class MACDModule(Module):
         except Exception as e:
             raise RuntimeError(f"Failed to process MACD calculation: {str(e)}")
 
-    def backtest_strategy(
-        self, historical_data: List[Dict[str, Any]], initial_balance: float = 10000
-    ) -> Dict[str, Any]:
+    def backtest_strategy(self, historical_data: List[Dict[str, Any]], initial_balance: float = 10000) -> Dict[str, Any]:
         """Simple backtesting functionality for MACD strategy."""
         if not historical_data:
             raise ValueError("Historical data is required for backtesting")
@@ -286,9 +266,7 @@ class MACDModule(Module):
         trades = []
         signals_history = []
 
-        for i in range(
-            max(34, self.slow_period + self.signal_period), len(historical_data)
-        ):
+        for i in range(max(34, self.slow_period + self.signal_period), len(historical_data)):
             # Use sufficient lookback window for MACD calculation
             window_data = historical_data[: i + 1]
             result = self.process({"price_data": window_data})
@@ -345,19 +323,14 @@ class MACDModule(Module):
                     position = 0
 
         # Calculate final portfolio value
-        final_price = (
-            historical_data[-1]["close"]
-            if "close" in historical_data[-1]
-            else historical_data[-1]["price"]
-        )
+        final_price = historical_data[-1]["close"] if "close" in historical_data[-1] else historical_data[-1]["price"]
         final_value = balance + (position * final_price)
 
         return {
             "initial_balance": initial_balance,
             "final_value": final_value,
             "total_return": final_value - initial_balance,
-            "return_percentage": ((final_value - initial_balance) / initial_balance)
-            * 100,
+            "return_percentage": ((final_value - initial_balance) / initial_balance) * 100,
             "total_trades": len(trades),
             "total_signals": len(signals_history),
             "signal_accuracy": self._calculate_signal_accuracy(signals_history),
@@ -386,8 +359,4 @@ class MACDModule(Module):
                 elif current_signal["signal"] == "SELL" and price_change < 0:
                     correct_signals += 1
 
-        return (
-            correct_signals / total_actionable_signals
-            if total_actionable_signals > 0
-            else 0.0
-        )
+        return correct_signals / total_actionable_signals if total_actionable_signals > 0 else 0.0

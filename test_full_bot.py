@@ -175,9 +175,7 @@ def run_dashboard(signals):
     dashboard.update_signals(numeric_signals)
 
     # Add market data
-    dashboard.update_market_data(
-        {"regime": "bull", "volatility": 0.025, "trend_strength": 0.75}
-    )
+    dashboard.update_market_data({"regime": "bull", "volatility": 0.025, "trend_strength": 0.75})
 
     # Add performance data
     dashboard.update_performance(
@@ -319,11 +317,7 @@ def run_regime_backtester(data):
                 if i >= 10:
                     upper = np.max(price_window[i - 10 : i])
                     lower = np.min(price_window[i - 10 : i])
-                    signals[i] = (
-                        -0.5
-                        if price_window[i] > 0.9 * upper
-                        else 0.5 if price_window[i] < 1.1 * lower else 0
-                    )
+                    signals[i] = -0.5 if price_window[i] > 0.9 * upper else 0.5 if price_window[i] < 1.1 * lower else 0
 
         return signals
 
@@ -343,9 +337,7 @@ def run_regime_backtester(data):
     for regime, metrics in results.items():
         # Skip non-regime entries
         if regime in ["bull", "bear", "sideways"]:
-            print(
-                f"  {regime.upper()}: Return: {metrics.get('return', 0):.2%}, Trades: {metrics.get('n_trades', 0)}"
-            )
+            print(f"  {regime.upper()}: Return: {metrics.get('return', 0):.2%}, Trades: {metrics.get('n_trades', 0)}")
 
     # Calculate overall return and metrics if available
     overall_metrics = results.get("Overall", {}).get("metrics", {})
@@ -355,9 +347,7 @@ def run_regime_backtester(data):
     win_rate = overall_metrics.get("win_rate", 0)
 
     print("  OVERALL PERFORMANCE SUMMARY:")
-    print(
-        f"    Return: {total_return:.2%}, Sharpe: {sharpe_ratio:.2f}, Max DD: {max_drawdown:.2%}, Win Rate: {win_rate:.2%}"
-    )
+    print(f"    Return: {total_return:.2%}, Sharpe: {sharpe_ratio:.2f}, Max DD: {max_drawdown:.2%}, Win Rate: {win_rate:.2%}")
 
     return regime_backtest, results
 
@@ -386,24 +376,16 @@ def run_signal_modules(data):
 
     # Process data through modules
     rsi_result = rsi.process({"price_data": price_data})
-    print(
-        f"✅ RSI Module: {rsi_result['signal']} (Confidence: {rsi_result.get('confidence', 0):.2f})"
-    )
+    print(f"✅ RSI Module: {rsi_result['signal']} (Confidence: {rsi_result.get('confidence', 0):.2f})")
 
     macd_result = macd.process({"price_data": price_data})
-    print(
-        f"✅ MACD Module: {macd_result['signal']} (Confidence: {macd_result.get('confidence', 0):.2f})"
-    )
+    print(f"✅ MACD Module: {macd_result['signal']} (Confidence: {macd_result.get('confidence', 0):.2f})")
 
     bb_result = bollinger.process({"price_data": price_data})
-    print(
-        f"✅ Bollinger Bands Module: {bb_result['signal']} (Confidence: {bb_result.get('confidence', 0):.2f})"
-    )
+    print(f"✅ Bollinger Bands Module: {bb_result['signal']} (Confidence: {bb_result.get('confidence', 0):.2f})")
 
     sentiment_result = sentiment.process({"price_data": price_data})
-    print(
-        f"✅ Sentiment Analysis Module: {sentiment_result['signal']} (Confidence: {sentiment_result.get('confidence', 0):.2f})"
-    )
+    print(f"✅ Sentiment Analysis Module: {sentiment_result['signal']} (Confidence: {sentiment_result.get('confidence', 0):.2f})")
 
     # Map string signals to numeric values for aggregation
     def signal_to_value(signal, confidence):
@@ -442,9 +424,7 @@ def run_signal_modules(data):
 
     # Aggregate signals
     aggregated_result = aggregator.process(signals_input)
-    print(
-        f"✅ Aggregated Signal: {aggregated_result['final_signal']} (Confidence: {aggregated_result.get('final_confidence', 0):.2f})"
-    )
+    print(f"✅ Aggregated Signal: {aggregated_result['final_signal']} (Confidence: {aggregated_result.get('final_confidence', 0):.2f})")
 
     # Prepare signals dict for return
     signals_dict = {
@@ -490,9 +470,7 @@ def main():
         print(f"  Pattern Engine Regime: {engine.current_regime}")
         print(f"  Aggregated Signal: {aggregated}")
         print(f"  Backtest Return: {bt_results['total_return']:.2%}")
-        print(
-            "  Regime Detection: Successfully tested across bull, bear, and sideways regimes"
-        )
+        print("  Regime Detection: Successfully tested across bull, bear, and sideways regimes")
 
         return 0
 

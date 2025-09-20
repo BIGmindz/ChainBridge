@@ -66,9 +66,7 @@ def main():
     # Save result to file for reference
     with open("global_macro_test_result.json", "w") as f:
         # Convert datetime objects to strings for JSON serialization
-        json_result = {
-            k: (str(v) if isinstance(v, datetime) else v) for k, v in result.items()
-        }
+        json_result = {k: (str(v) if isinstance(v, datetime) else v) for k, v in result.items()}
         json.dump(json_result, f, indent=2)
 
     print("\n" + "-" * 60)

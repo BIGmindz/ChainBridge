@@ -149,9 +149,7 @@ class SimplePaperTradingBot:
         current_price = self.price_data[symbol].price
 
         # Calculate position size
-        pos_calc = self.budget_manager.calculate_position_size(
-            symbol, signal_confidence, volatility
-        )
+        pos_calc = self.budget_manager.calculate_position_size(symbol, signal_confidence, volatility)
 
         if pos_calc["size"] <= 0:
             return {"success": False, "error": "Invalid position size"}
@@ -199,9 +197,7 @@ class SimplePaperTradingBot:
         self.trade_journal.append(trade_log)
 
         print(f"✅ Position opened: {side} {symbol} @ ${current_price:.2f}")
-        print(
-            f"   Size: ${pos_calc['size']:.2f} ({quantity:.6f} {symbol.split('/')[0]})"
-        )
+        print(f"   Size: ${pos_calc['size']:.2f} ({quantity:.6f} {symbol.split('/')[0]})")
         print(f"   Stop Loss: ${stop_loss:.2f}")
         print(f"   Take Profit: ${take_profit:.2f}")
 
@@ -250,9 +246,7 @@ class SimplePaperTradingBot:
 
         print(f"🔄 Position closed: {position.symbol} {position.side}")
         print(f"   Entry: ${position.entry_price:.2f} → Exit: ${current_price:.2f}")
-        print(
-            f"   P&L: ${position.pnl:+.2f} ({position.pnl_pct * 100:+.2f}%) - {reason}"
-        )
+        print(f"   P&L: ${position.pnl:+.2f} ({position.pnl_pct * 100:+.2f}%) - {reason}")
 
         # Remove from active positions
         del self.positions[position_id]
@@ -270,10 +264,7 @@ class SimplePaperTradingBot:
 
         win_rate = 0
         if self.performance_stats["total_trades"] > 0:
-            win_rate = (
-                self.performance_stats["winning_trades"]
-                / self.performance_stats["total_trades"]
-            ) * 100
+            win_rate = (self.performance_stats["winning_trades"] / self.performance_stats["total_trades"]) * 100
 
         return {
             "initial_capital": self.budget_manager.initial_capital,
@@ -398,16 +389,12 @@ def demo_simple_paper_trading():
     print("\n📊 Updated Portfolio:")
     summary = bot.get_portfolio_summary()
     print(f"   Portfolio Value: ${summary['portfolio_value']:,.2f}")
-    print(
-        f"   Total Return: ${summary['total_return']:+,.2f} ({summary['total_return_pct']:+.2f}%)"
-    )
+    print(f"   Total Return: ${summary['total_return']:+,.2f} ({summary['total_return_pct']:+.2f}%)")
 
     # Show position details
     print("\n💼 Position Details:")
     for pos in bot.positions.values():
-        print(
-            f"   {pos.symbol} {pos.side}: ${pos.pnl:+,.2f} ({pos.pnl_pct * 100:+.2f}%)"
-        )
+        print(f"   {pos.symbol} {pos.side}: ${pos.pnl:+,.2f} ({pos.pnl_pct * 100:+.2f}%)")
 
     # Close positions
     print("\n🔄 Closing all positions...")
@@ -421,9 +408,7 @@ def demo_simple_paper_trading():
     summary = bot.get_portfolio_summary()
     print(f"Initial Capital: ${summary['initial_capital']:,.2f}")
     print(f"Final Portfolio: ${summary['portfolio_value']:,.2f}")
-    print(
-        f"Total Return: ${summary['total_return']:+,.2f} ({summary['total_return_pct']:+.2f}%)"
-    )
+    print(f"Total Return: ${summary['total_return']:+,.2f} ({summary['total_return_pct']:+.2f}%)")
     print(f"Total Trades: {summary['total_trades']}")
     print(f"Win Rate: {summary['win_rate']:.1f}%")
     print(f"Largest Win: ${summary['largest_win']:,.2f}")
