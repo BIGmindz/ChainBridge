@@ -5417,5 +5417,578 @@
     "id": "DOGE/USD_1758380124.410483",
     "stop_loss": 0.258602,
     "take_profit": 0.282596
+  },
+  {
+    "timestamp": "2025-09-20 16:37:32 UTC",
+    "symbol": "BTC/USD",
+    "action": "BUY",
+    "price": 116100.0,
+    "size": 5.805000000000001,
+    "confidence": 0.42335200000000006,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 56.155697354334954
+      },
+      "MACD": {
+        "signal": "BUY",
+        "confidence": 0.7,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "BUY",
+        "confidence": 0.4,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "SELL",
+        "confidence": 0.4,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6051849714769307,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      },
+      "RegionCryptoMapper": {
+        "signal": "HOLD",
+        "confidence": 0,
+        "value": 0
+      },
+      "NewListingsRadar": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      }
+    },
+    "id": "BTC/USD_1758386272.481689",
+    "stop_loss": 112617.0,
+    "take_profit": 123066.0
+  },
+  {
+    "timestamp": "2025-09-20 16:37:32 UTC",
+    "symbol": "ETH/USD",
+    "action": "BUY",
+    "price": 4501.98,
+    "size": 9.00396,
+    "confidence": 0.17812666666666668,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 60.31301688422828
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "HOLD",
+        "confidence": 0.5760271951482107,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      },
+      "RegionCryptoMapper": {
+        "signal": "HOLD",
+        "confidence": 0,
+        "value": 0
+      },
+      "NewListingsRadar": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      }
+    },
+    "id": "ETH/USD_1758386292.315454",
+    "stop_loss": 4366.9205999999995,
+    "take_profit": 4772.0988
+  },
+  {
+    "timestamp": "2025-09-20 16:37:32 UTC",
+    "symbol": "AVAX/USD",
+    "action": "BUY",
+    "price": 33.73,
+    "size": 3.3729999999999998,
+    "confidence": 0.17546,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.25129684412634
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.5459670930394198,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      },
+      "RegionCryptoMapper": {
+        "signal": "HOLD",
+        "confidence": 0,
+        "value": 0
+      },
+      "NewListingsRadar": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      }
+    },
+    "id": "AVAX/USD_1758386331.263988",
+    "stop_loss": 32.7181,
+    "take_profit": 35.7538
+  },
+  {
+    "timestamp": "2025-09-20 16:37:32 UTC",
+    "symbol": "DOGE/USD",
+    "action": "BUY",
+    "price": 0.2685,
+    "size": 3.4905000000000004,
+    "confidence": 0.13968222222222226,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.57800804903188
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "BUY",
+        "confidence": 0.6,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "SELL",
+        "confidence": 1.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6057737226352905,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      },
+      "RegionCryptoMapper": {
+        "signal": "HOLD",
+        "confidence": 0,
+        "value": 0
+      },
+      "NewListingsRadar": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      }
+    },
+    "id": "DOGE/USD_1758386351.367985",
+    "stop_loss": 0.26044500000000004,
+    "take_profit": 0.28461000000000003
+  },
+  {
+    "timestamp": "2025-09-20 16:48:20 UTC",
+    "symbol": "ETH/USD",
+    "action": "BUY",
+    "price": 4506.31,
+    "size": 9.012620000000002,
+    "confidence": 0.26319197871151967,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 64.49309736084025
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "BUY",
+        "confidence": 0.6115465247434644,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.5906401766138659,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      },
+      "RegionCryptoMapper": {
+        "signal": "HOLD",
+        "confidence": 0,
+        "value": 0
+      },
+      "NewListingsRadar": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      }
+    },
+    "id": "ETH/USD_1758386939.296803",
+    "stop_loss": 4371.1207,
+    "take_profit": 4776.6886
+  },
+  {
+    "timestamp": "2025-09-20 16:48:20 UTC",
+    "symbol": "AVAX/USD",
+    "action": "BUY",
+    "price": 33.64,
+    "size": 3.3640000000000003,
+    "confidence": 0.17812666666666668,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 52.576337220612025
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "HOLD",
+        "confidence": 0.6236509848191698,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      },
+      "RegionCryptoMapper": {
+        "signal": "HOLD",
+        "confidence": 0,
+        "value": 0
+      },
+      "NewListingsRadar": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      }
+    },
+    "id": "AVAX/USD_1758386978.409365",
+    "stop_loss": 32.6308,
+    "take_profit": 35.6584
+  },
+  {
+    "timestamp": "2025-09-20 16:48:20 UTC",
+    "symbol": "DOGE/USD",
+    "action": "BUY",
+    "price": 0.2681774,
+    "size": 3.2136409999999973,
+    "confidence": 0.18146,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 55.921750742513474
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "SELL",
+        "confidence": 0.4,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "BUY",
+        "confidence": 0.6,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6178706085582107,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      },
+      "RegionCryptoMapper": {
+        "signal": "HOLD",
+        "confidence": 0,
+        "value": 0
+      },
+      "NewListingsRadar": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      }
+    },
+    "id": "DOGE/USD_1758386998.354608",
+    "stop_loss": 0.260132078,
+    "take_profit": 0.284268044
+  },
+  {
+    "timestamp": "2025-09-20 16:50:38 UTC",
+    "symbol": "BTC/USD",
+    "action": "BUY",
+    "price": 116081.7,
+    "size": 0.16068204999999994,
+    "confidence": 0.25546,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 53.566249306545025
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "BUY",
+        "confidence": 0.4,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6474341779611047,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      },
+      "RegionCryptoMapper": {
+        "signal": "HOLD",
+        "confidence": 0,
+        "value": 0
+      },
+      "NewListingsRadar": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      }
+    },
+    "id": "BTC/USD_1758387057.618767",
+    "stop_loss": 112599.249,
+    "take_profit": 123046.602
+  },
+  {
+    "timestamp": "2025-09-20 16:50:38 UTC",
+    "symbol": "SOL/USD",
+    "action": "BUY",
+    "price": 240.08,
+    "size": 0.00803410249999999,
+    "confidence": 0.17546,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 53.45156726945844
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6558254518729569,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      },
+      "RegionCryptoMapper": {
+        "signal": "HOLD",
+        "confidence": 0,
+        "value": 0
+      },
+      "NewListingsRadar": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0,
+        "metadata": {
+          "exchange": "",
+          "position_size": 0.0,
+          "expected_return": 0.0,
+          "risk_level": "MEDIUM"
+        }
+      }
+    },
+    "id": "SOL/USD_1758387096.10002",
+    "stop_loss": 232.8776,
+    "take_profit": 254.4848
   }
 ]
