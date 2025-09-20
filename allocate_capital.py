@@ -135,9 +135,7 @@ def calculate_allocation(listing):
     base_allocation = 0
 
     # Find the appropriate confidence tier
-    confidence_tiers = sorted(
-        [float(tier) for tier in ALLOCATION_SETTINGS["confidence_tiers"]], reverse=True
-    )
+    confidence_tiers = sorted([float(tier) for tier in ALLOCATION_SETTINGS["confidence_tiers"]], reverse=True)
 
     for tier in confidence_tiers:
         if confidence >= tier:
@@ -166,10 +164,7 @@ def calculate_allocation(listing):
 
 def allocate_capital(listing):
     """Allocate capital for a listing"""
-    if (
-        ALLOCATION_STATE["available_capital"]
-        < ALLOCATION_SETTINGS["min_allocation_per_listing"]
-    ):
+    if ALLOCATION_STATE["available_capital"] < ALLOCATION_SETTINGS["min_allocation_per_listing"]:
         logging.warning("Insufficient capital for allocation")
         return None
 
@@ -201,9 +196,7 @@ def allocate_capital(listing):
     # Save the updated state
     save_allocation_state()
 
-    logging.info(
-        f"Allocated ${amount:.2f} for {listing.get('coin', 'Unknown')} on {listing.get('exchange', 'Unknown')}"
-    )
+    logging.info(f"Allocated ${amount:.2f} for {listing.get('coin', 'Unknown')} on {listing.get('exchange', 'Unknown')}")
 
     return allocation
 
@@ -229,9 +222,7 @@ def get_active_listings():
 def print_allocation_status():
     """Print the current allocation status"""
     print("\n" + "=" * 70)
-    print(
-        f"💰 CAPITAL ALLOCATION STATUS - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-    )
+    print(f"💰 CAPITAL ALLOCATION STATUS - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 70)
 
     print(f"\nTotal Capital: ${ALLOCATION_STATE['total_capital']:.2f}")
@@ -243,14 +234,10 @@ def print_allocation_status():
         print("-" * 70)
 
         for allocation in ALLOCATION_STATE["allocations"]:
-            print(
-                f"[{allocation.get('id', 0)}] {allocation.get('coin', 'Unknown')} on {allocation.get('exchange', 'Unknown')}"
-            )
+            print(f"[{allocation.get('id', 0)}] {allocation.get('coin', 'Unknown')} on {allocation.get('exchange', 'Unknown')}")
             print(f"  Amount: ${allocation.get('amount', 0):.2f}")
             print(f"  Confidence: {allocation.get('confidence', 0) * 100:.1f}%")
-            print(
-                f"  Expected Return: {allocation.get('expected_return', 0) * 100:.1f}%"
-            )
+            print(f"  Expected Return: {allocation.get('expected_return', 0) * 100:.1f}%")
             print(f"  Risk Level: {allocation.get('risk_level', 'MEDIUM')}")
             print(f"  Status: {allocation.get('status', 'unknown').upper()}")
             print()
@@ -302,13 +289,9 @@ def allocate_first_listing():
 def main():
     """Main execution function"""
     parser = argparse.ArgumentParser(description="Capital Allocation for New Listings")
-    parser.add_argument(
-        "--allocate", action="store_true", help="Allocate capital for the first listing"
-    )
+    parser.add_argument("--allocate", action="store_true", help="Allocate capital for the first listing")
     parser.add_argument("--status", action="store_true", help="Show allocation status")
-    parser.add_argument(
-        "--settings", action="store_true", help="Configure allocation settings"
-    )
+    parser.add_argument("--settings", action="store_true", help="Configure allocation settings")
 
     args = parser.parse_args()
 
@@ -322,27 +305,19 @@ def main():
         print("-" * 70)
 
         try:
-            first_amount = input(
-                f"First listing amount [{ALLOCATION_SETTINGS['first_listing_amount']}]: "
-            )
+            first_amount = input(f"First listing amount [{ALLOCATION_SETTINGS['first_listing_amount']}]: ")
             if first_amount:
                 ALLOCATION_SETTINGS["first_listing_amount"] = float(first_amount)
 
-            max_amount = input(
-                f"Maximum allocation per listing [{ALLOCATION_SETTINGS['max_allocation_per_listing']}]: "
-            )
+            max_amount = input(f"Maximum allocation per listing [{ALLOCATION_SETTINGS['max_allocation_per_listing']}]: ")
             if max_amount:
                 ALLOCATION_SETTINGS["max_allocation_per_listing"] = float(max_amount)
 
-            min_amount = input(
-                f"Minimum allocation per listing [{ALLOCATION_SETTINGS['min_allocation_per_listing']}]: "
-            )
+            min_amount = input(f"Minimum allocation per listing [{ALLOCATION_SETTINGS['min_allocation_per_listing']}]: ")
             if min_amount:
                 ALLOCATION_SETTINGS["min_allocation_per_listing"] = float(min_amount)
 
-            max_risk = input(
-                f"Maximum risk per trade [{ALLOCATION_SETTINGS['max_risk_per_trade']}]: "
-            )
+            max_risk = input(f"Maximum risk per trade [{ALLOCATION_SETTINGS['max_risk_per_trade']}]: ")
             if max_risk:
                 ALLOCATION_SETTINGS["max_risk_per_trade"] = float(max_risk)
         except ValueError:

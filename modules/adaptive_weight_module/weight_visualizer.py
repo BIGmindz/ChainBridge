@@ -42,9 +42,7 @@ class AdaptiveWeightVisualizer:
         # Set seaborn style
         sns.set_style("whitegrid")
 
-    def plot_regime_history(
-        self, regime_data: Dict[str, Any], title: str = "Market Regime History"
-    ) -> str:
+    def plot_regime_history(self, regime_data: Dict[str, Any], title: str = "Market Regime History") -> str:
         """
         Create a visualization of market regime history
 
@@ -75,9 +73,7 @@ class AdaptiveWeightVisualizer:
         df = pd.DataFrame({"date": dates, "regime": regimes, "confidence": confidences})
 
         # Create plot
-        fig, (ax1, ax2) = plt.subplots(
-            2, 1, figsize=(12, 8), gridspec_kw={"height_ratios": [3, 1]}
-        )
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), gridspec_kw={"height_ratios": [3, 1]})
 
         # Plot regimes
         for regime, color in self.regime_colors.items():
@@ -268,9 +264,7 @@ class AdaptiveWeightVisualizer:
             return ""
 
         # Create plot
-        fig, (ax1, ax2) = plt.subplots(
-            2, 1, figsize=(12, 10), gridspec_kw={"height_ratios": [1, 3]}
-        )
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10), gridspec_kw={"height_ratios": [1, 3]})
 
         # Plot regimes on top subplot
         for i, regime in enumerate(regimes):
@@ -278,10 +272,7 @@ class AdaptiveWeightVisualizer:
             ax1.axvspan(dates[i], dates[i] + timedelta(hours=1), alpha=0.3, color=color)
 
         # Add regime legend
-        regime_patches = [
-            plt.Rectangle((0, 0), 1, 1, color=color, alpha=0.3)
-            for color in self.regime_colors.values()
-        ]
+        regime_patches = [plt.Rectangle((0, 0), 1, 1, color=color, alpha=0.3) for color in self.regime_colors.values()]
         ax1.legend(regime_patches, self.regime_colors.keys(), loc="upper right")
         ax1.set_title("Market Regimes")
         ax1.set_yticks([])
@@ -327,9 +318,7 @@ class AdaptiveWeightVisualizer:
             return ""
 
         # Sort signals by weight
-        sorted_signals = sorted(
-            signal_weights.items(), key=lambda x: x[1], reverse=True
-        )
+        sorted_signals = sorted(signal_weights.items(), key=lambda x: x[1], reverse=True)
         signals = [s[0] for s in sorted_signals]
         weights = [s[1] for s in sorted_signals]
 
@@ -395,9 +384,7 @@ class AdaptiveWeightVisualizer:
         # Create individual visualizations
         _regime_plot = self.plot_regime_history(regime_data)
         _transition_plot = self.plot_regime_transitions(transition_matrix)
-        _perf_win_rate_plot = self.plot_performance_by_regime(
-            performance_data, "win_rate"
-        )
+        _perf_win_rate_plot = self.plot_performance_by_regime(performance_data, "win_rate")
         _perf_pnl_plot = self.plot_performance_by_regime(performance_data, "pnl")
         _weight_plot = self.plot_weight_optimization(weight_history)
         _importance_plot = self.plot_signal_importance(current_weights)
@@ -420,33 +407,33 @@ class AdaptiveWeightVisualizer:
         <body>
             <h1>Adaptive Weight Model Dashboard</h1>
             <p>Generated on {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
-            
+
             <div class="dashboard-grid">
                 <div class="viz-container full-width">
                     <h2>Market Regime History</h2>
                     <img src="regime_history.png" alt="Market Regime History">
                 </div>
-                
+
                 <div class="viz-container">
                     <h2>Regime Transitions</h2>
                     <img src="regime_transitions.png" alt="Regime Transitions">
                 </div>
-                
+
                 <div class="viz-container">
                     <h2>Signal Importance</h2>
                     <img src="signal_importance.png" alt="Signal Importance">
                 </div>
-                
+
                 <div class="viz-container">
                     <h2>Win Rate by Regime</h2>
                     <img src="performance_win_rate.png" alt="Win Rate by Regime">
                 </div>
-                
+
                 <div class="viz-container">
                     <h2>PnL by Regime</h2>
                     <img src="performance_pnl.png" alt="PnL by Regime">
                 </div>
-                
+
                 <div class="viz-container full-width">
                     <h2>Weight Optimization Over Time</h2>
                     <img src="weight_optimization.png" alt="Weight Optimization">

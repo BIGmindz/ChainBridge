@@ -35,9 +35,7 @@ try:
     from core.module_manager import ModuleManager
     from MultiSignalBot import MultiSignalBot
 except ImportError:
-    print(
-        "Note: Existing bot components not available. Using mock classes for demonstration."
-    )
+    print("Note: Existing bot components not available. Using mock classes for demonstration.")
 
     class MultiSignalBot:
         def __init__(self, *args, **kwargs):
@@ -96,9 +94,7 @@ class EnhancedMultiSignalBot:
 
         # Initialize enhanced Kraken paper trading
         self.kraken_bot = create_kraken_paper_bot(config_dict=self.enhanced_config)
-        print(
-            f"✅ Kraken Paper Trading Bot initialized with ${self.kraken_bot.budget_manager.initial_capital:,.2f}"
-        )
+        print(f"✅ Kraken Paper Trading Bot initialized with ${self.kraken_bot.budget_manager.initial_capital:,.2f}")
 
         # Initialize ML integration
         self.module_manager = ModuleManager()
@@ -234,9 +230,7 @@ class EnhancedMultiSignalBot:
                 try:
                     if "decision" in result and result["decision"]["action"] != "HOLD":
                         decision = result["decision"]
-                        print(
-                            f"📊 {symbol}: {decision['action']} signal (confidence: {decision['confidence']:.2f})"
-                        )
+                        print(f"📊 {symbol}: {decision['action']} signal (confidence: {decision['confidence']:.2f})")
 
                         results["signals_generated"] += 1
 
@@ -336,13 +330,9 @@ class EnhancedMultiSignalBot:
                 _cycle_results = await self.run_enhanced_trading_cycle()
 
                 # Check if we should stop
-                elapsed_minutes = (
-                    datetime.now(timezone.utc) - start_time
-                ).total_seconds() / 60
+                elapsed_minutes = (datetime.now(timezone.utc) - start_time).total_seconds() / 60
                 if elapsed_minutes >= duration_minutes:
-                    print(
-                        f"\n⏹️  Stopping after {elapsed_minutes:.1f} minutes ({cycle_count} cycles)"
-                    )
+                    print(f"\n⏹️  Stopping after {elapsed_minutes:.1f} minutes ({cycle_count} cycles)")
                     break
 
                 # Wait before next cycle
@@ -373,9 +363,7 @@ class EnhancedMultiSignalBot:
 
         print(f"Initial Capital: ${account['initial_capital']:,.2f}")
         print(f"Final Portfolio: ${account['portfolio_value']:,.2f}")
-        print(
-            f"Total Return: ${account['total_return']:+,.2f} ({account['total_return_pct']:+.2f}%)"
-        )
+        print(f"Total Return: ${account['total_return']:+,.2f} ({account['total_return_pct']:+.2f}%)")
         print(f"Active Positions: {dashboard['positions']['active_count']}")
 
         if performance["total_trades"] > 0:

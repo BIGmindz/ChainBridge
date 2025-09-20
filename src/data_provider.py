@@ -25,9 +25,7 @@ def safe_fetch_ticker(exchange, symbol: str) -> float:
     return float(price)
 
 
-def setup_exchange(
-    exchange_id: str, api_config: Dict[str, Any] = None
-) -> ccxt.Exchange:
+def setup_exchange(exchange_id: str, api_config: Dict[str, Any] = None) -> ccxt.Exchange:
     """Set up and configure exchange connection with optional API credentials."""
     if not hasattr(ccxt, exchange_id):
         raise ValueError(f"Unknown exchange id '{exchange_id}' — check your config")

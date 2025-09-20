@@ -26,9 +26,7 @@ def run_global_macro_demo():
     print("\n" + "=" * 60)
     print("🌍 GLOBAL MACRO SIGNAL MODULE DEMO")
     print("=" * 60)
-    print(
-        "Demonstrating how global macro signals can predict crypto moves 30-90 days in advance\n"
-    )
+    print("Demonstrating how global macro signals can predict crypto moves 30-90 days in advance\n")
 
     # Initialize module
     macro_module = GlobalMacroModule()
@@ -109,14 +107,8 @@ def run_global_macro_demo():
         plt.figtext(0.5, 0.01, f"Key Insight: {insight}", ha="center", fontsize=12)
 
         # Add signal direction
-        signal_color = (
-            "green"
-            if result["signal"] == "BUY"
-            else ("red" if result["signal"] == "SELL" else "gray")
-        )
-        signal_text = (
-            f"{result['signal']} Signal - {result['confidence'] * 100:.1f}% Confidence"
-        )
+        signal_color = "green" if result["signal"] == "BUY" else ("red" if result["signal"] == "SELL" else "gray")
+        signal_text = f"{result['signal']} Signal - {result['confidence'] * 100:.1f}% Confidence"
         plt.figtext(
             0.5,
             0.95,

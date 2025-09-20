@@ -125,10 +125,7 @@ class GlobalMacroModule:
 
             # Check if we have a high inflation hedge signal
             inflation_hedge_signal = inflation_signal.get("hedge_signal", "NEUTRAL")
-            has_high_inflation = (
-                inflation_signal.get("crisis_list", [])
-                and len(inflation_signal.get("crisis_list", [])) > 0
-            )
+            has_high_inflation = inflation_signal.get("crisis_list", []) and len(inflation_signal.get("crisis_list", [])) > 0
 
             # Dynamically adjust weights based on inflation crisis detection
             adoption_weight = 0.28
@@ -196,10 +193,7 @@ class GlobalMacroModule:
             high_inflation_countries = inflation_signal.get("crisis_list", [])
 
             # Override logic for extreme inflation cases
-            if (
-                inflation_hedge_signal == "STRONG_BUY"
-                and len(high_inflation_countries) > 1
-            ):
+            if inflation_hedge_signal == "STRONG_BUY" and len(high_inflation_countries) > 1:
                 signal = "BUY"
                 reasoning = f"Multiple hyperinflation crises in {', '.join(high_inflation_countries)} → Strong crypto hedge demand"
                 inflation_hedge_override = True
@@ -223,11 +217,7 @@ class GlobalMacroModule:
                     "signal": inflation_hedge_signal,
                     "countries": high_inflation_countries,
                     "highest_rate": inflation_signal.get("highest", "N/A"),
-                    "correlation_btc": (
-                        0.75
-                        if inflation_hedge_signal in ["BUY", "STRONG_BUY"]
-                        else 0.30
-                    ),
+                    "correlation_btc": (0.75 if inflation_hedge_signal in ["BUY", "STRONG_BUY"] else 0.30),
                 }
 
             return {
@@ -312,20 +302,10 @@ class GlobalMacroModule:
                 if country in self.key_countries:
                     country_info = self.key_countries[country]
                     weight = country_info.get("weight", 0.1)
-                    trend_factor = (
-                        1.2 if country_info.get("trend") == "increasing" else 1.0
-                    )
-                    trend_factor = (
-                        1.5
-                        if country_info.get("trend") == "rapid_increase"
-                        else trend_factor
-                    )
+                    trend_factor = 1.2 if country_info.get("trend") == "increasing" else 1.0
+                    trend_factor = 1.5 if country_info.get("trend") == "rapid_increase" else trend_factor
 
-                    country_score = (
-                        (metrics["growth"] * 0.5)
-                        + (metrics["penetration"] * 0.3)
-                        + (metrics["institutional"] * 0.2)
-                    )
+                    country_score = (metrics["growth"] * 0.5) + (metrics["penetration"] * 0.3) + (metrics["institutional"] * 0.2)
                     weighted_score += country_score * weight * trend_factor
                     total_weight += weight
 
@@ -333,9 +313,7 @@ class GlobalMacroModule:
             regional_avg = np.mean(list(regional_adoption.values()))
 
             # Combined adoption metric
-            adoption_metric = (
-                weighted_score / total_weight if total_weight > 0 else 0
-            ) * 0.7 + regional_avg * 0.3
+            adoption_metric = (weighted_score / total_weight if total_weight > 0 else 0) * 0.7 + regional_avg * 0.3
 
             # Determine signal strength and confidence
             if adoption_metric > 0.5:  # Very strong growth
@@ -365,26 +343,16 @@ class GlobalMacroModule:
                 "interpretation": interpretation,
                 "data": {
                     "regional": regional_adoption,
-                    "countries": {
-                        k: v["growth"]
-                        for k, v in country_adoption.items()
-                        if k in self.key_countries
-                    },
+                    "countries": {k: v["growth"] for k, v in country_adoption.items() if k in self.key_countries},
                 },
                 "metric": f"Global adoption: {adoption_metric * 100:.0f}% weighted",
-                "hotspots": [
-                    k
-                    for k, v in country_adoption.items()
-                    if v["growth"] > 0.6 and k in self.key_countries
-                ],
+                "hotspots": [k for k, v in country_adoption.items() if v["growth"] > 0.6 and k in self.key_countries],
             }
 
         except Exception:
             return {"strength": 0, "confidence": 0}
 
-    def fetch_world_bank_inflation(
-        self, country_codes: List[str] = None
-    ) -> Dict[str, float]:
+    def fetch_world_bank_inflation(self, country_codes: List[str] = None) -> Dict[str, float]:
         """
         Fetch inflation data from World Bank API for specified countries
 
@@ -444,9 +412,7 @@ class GlobalMacroModule:
                             inflation_rates[country] = float(inflation_rate)
                         else:
                             # Use fallback data if value is missing
-                            inflation_rates[country] = self._get_fallback_inflation(
-                                country
-                            )
+                            inflation_rates[country] = self._get_fallback_inflation(country)
                     else:
                         # Use fallback data if API result is empty
                         inflation_rates[country] = self._get_fallback_inflation(country)
@@ -494,9 +460,7 @@ class GlobalMacroModule:
             "IND": 5.4,  # India moderate
         }
 
-        return fallback_data.get(
-            country_code, 5.0
-        )  # Default to 5% if country not in fallback data
+        return fallback_data.get(country_code, 5.0)  # Default to 5% if country not in fallback data
 
     def _get_inflation_signal(self) -> Dict:
         """
@@ -545,9 +509,7 @@ class GlobalMacroModule:
                 confidence = 0.80
                 interpretation = "Hyperinflation detected → Crypto refuge"
                 hedge_signal = "BUY"
-            elif (
-                high_inflation_countries
-            ):  # Any country above 20% triggers a hedge signal
+            elif high_inflation_countries:  # Any country above 20% triggers a hedge signal
                 strength = 0.6
                 confidence = 0.75
                 interpretation = f"High inflation in {', '.join(high_inflation_countries)} → Crypto hedge"
@@ -708,9 +670,7 @@ class GlobalMacroModule:
 
         # Check inflation
         if signals["inflation"]["data"].get("strength", 0) > 0.8:
-            insights.append(
-                "💸 Hyperinflation in multiple countries - BTC hedge active"
-            )
+            insights.append("💸 Hyperinflation in multiple countries - BTC hedge active")
 
         # Check regulatory
         if signals["regulatory"]["data"].get("strength", 0) > 0.5:
@@ -722,9 +682,7 @@ class GlobalMacroModule:
         if signals["remittance"]["data"].get("strength", 0) > 0.5:
             insights.append("💰 Remittance corridors hot - stablecoins bullish")
 
-        return (
-            " | ".join(insights) if insights else "Monitoring global macro conditions"
-        )
+        return " | ".join(insights) if insights else "Monitoring global macro conditions"
 
     def _default_signal(self) -> Dict:
         """Default when data unavailable"""
@@ -770,9 +728,7 @@ if __name__ == "__main__":
                 print("\nCORRELATION WITH BTC PERFORMANCE:")
                 for country, rate in inflation_data.items():
                     if rate > 20:
-                        corr = 0.75 + (
-                            rate / 500
-                        )  # Simple model: higher inflation = higher correlation
+                        corr = 0.75 + (rate / 500)  # Simple model: higher inflation = higher correlation
                         print(f"  {country} ({rate:.1f}%): {min(corr, 0.95):.2f}")
             else:
                 print("\n✓ No high inflation detected")
@@ -793,9 +749,9 @@ if __name__ == "__main__":
         Confidence: {result["confidence"] * 100:.0f}%
         Strength: {result["strength"]:.2f}
         Reasoning: {result["reasoning"]}
-        
+
         Key Insight: {result.get("key_insight", "Processing...")}
-        
+
         Components:
         -----------"""
         )
@@ -807,13 +763,8 @@ if __name__ == "__main__":
             if name == "inflation" and "hedge_signal" in component["data"]:
                 print(f"  INFLATION HEDGE SIGNAL: {component['data']['hedge_signal']}")
 
-                if (
-                    "crisis_list" in component["data"]
-                    and component["data"]["crisis_list"]
-                ):
-                    print(
-                        f"  HIGH INFLATION COUNTRIES: {', '.join(component['data']['crisis_list'])}"
-                    )
+                if "crisis_list" in component["data"] and component["data"]["crisis_list"]:
+                    print(f"  HIGH INFLATION COUNTRIES: {', '.join(component['data']['crisis_list'])}")
 
                 if "inflation_data" in component["data"]:
                     print("\n  INFLATION RATES:")

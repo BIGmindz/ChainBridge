@@ -31,9 +31,7 @@ try:
     )
 except ImportError as e:
     print(f"Import error: {e}")
-    print(
-        "Note: This test requires the full implementation. Running basic validation..."
-    )
+    print("Note: This test requires the full implementation. Running basic validation...")
 
 
 class TestKrakenPaperTrading(unittest.TestCase):
@@ -152,9 +150,7 @@ class TestKrakenPaperTrading(unittest.TestCase):
             self.assertAlmostEqual(metrics.win_rate, 2 / 3, places=2)
             self.assertEqual(metrics.total_pnl, 125.0)  # 100 - 50 + 75
 
-            print(
-                f"   ✓ Metrics: {metrics.total_trades} trades, {metrics.win_rate:.1%} win rate"
-            )
+            print(f"   ✓ Metrics: {metrics.total_trades} trades, {metrics.win_rate:.1%} win rate")
 
         except Exception as e:
             print(f"   ❌ PerformanceMetrics test failed: {e}")
@@ -179,9 +175,7 @@ class TestKrakenPaperTrading(unittest.TestCase):
 
         self.assertEqual(max_position_value, 1000.0)  # 10% of 10,000
 
-        print(
-            f"   ✓ Max position size: ${max_position_value:,.2f} ({max_position_size:.1%})"
-        )
+        print(f"   ✓ Max position size: ${max_position_value:,.2f} ({max_position_size:.1%})")
         print(f"   ✓ Max drawdown limit: {max_drawdown_limit:.1%}")
 
     def test_bot_creation(self):
@@ -197,12 +191,8 @@ class TestKrakenPaperTrading(unittest.TestCase):
 
             # Check if budget manager was initialized
             if hasattr(bot, "budget_manager"):
-                self.assertEqual(
-                    bot.budget_manager.initial_capital, self.config["initial_capital"]
-                )
-                print(
-                    f"   ✓ Bot created with ${bot.budget_manager.initial_capital:,.2f} capital"
-                )
+                self.assertEqual(bot.budget_manager.initial_capital, self.config["initial_capital"])
+                print(f"   ✓ Bot created with ${bot.budget_manager.initial_capital:,.2f} capital")
             else:
                 print("   ⚠️  Budget manager not found (may be import issue)")
 

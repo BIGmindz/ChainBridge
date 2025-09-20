@@ -45,9 +45,7 @@ def main():
                 try:
                     ticker = exchange.fetch_ticker(usd_symbol)
                     usd_value = amount * ticker["last"]
-                    print(
-                        f"{asset}: {amount} @ ${ticker['last']:.4f} = ${usd_value:.2f}"
-                    )
+                    print(f"{asset}: {amount} @ ${ticker['last']:.4f} = ${usd_value:.2f}")
                 except Exception as e:
                     print(f"{asset}: {amount} - Error getting {usd_symbol}: {e}")
             else:
@@ -59,9 +57,7 @@ def main():
                         usdt_value = amount * ticker["last"]
                         # Convert USDT to USD (assume 1:1 for simplicity)
                         usd_value = usdt_value * 0.999
-                        print(
-                            f"{asset}: {amount} @ ${ticker['last']:.4f} USDT = ${usd_value:.2f}"
-                        )
+                        print(f"{asset}: {amount} @ ${ticker['last']:.4f} USDT = ${usd_value:.2f}")
                     except Exception as e:
                         print(f"{asset}: {amount} - Error getting {usdt_symbol}: {e}")
                 else:

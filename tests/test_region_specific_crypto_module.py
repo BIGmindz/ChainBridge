@@ -28,21 +28,15 @@ class TestRegionSpecificCryptoModule(unittest.TestCase):
     def test_region_analysis(self):
         """Test the region analysis functionality"""
         # Test Brazil analysis
-        brazil_confidence = self.region_module._analyze_region(
-            "BRAZIL", self.test_signals
-        )
+        brazil_confidence = self.region_module._analyze_region("BRAZIL", self.test_signals)
         self.assertGreater(brazil_confidence, 0.5)
 
         # Test India analysis
-        india_confidence = self.region_module._analyze_region(
-            "INDIA", self.test_signals
-        )
+        india_confidence = self.region_module._analyze_region("INDIA", self.test_signals)
         self.assertGreater(india_confidence, 0.3)
 
         # Test logistics analysis
-        logistics_confidence = self.region_module._analyze_region(
-            "LOGISTICS", self.test_signals
-        )
+        logistics_confidence = self.region_module._analyze_region("LOGISTICS", self.test_signals)
         self.assertGreater(logistics_confidence, 0.3)
 
     def test_crypto_selection(self):

@@ -42,9 +42,7 @@ def integrate_adoption_tracker():
     result = adoption_tracker.process()
 
     # Display the results
-    print(
-        f"\n📊 SIGNAL: {result['signal']} (Confidence: {result['confidence'] * 100:.1f}%)"
-    )
+    print(f"\n📊 SIGNAL: {result['signal']} (Confidence: {result['confidence'] * 100:.1f}%)")
     print(f"📝 REASONING: {result['reasoning']}")
 
     # Identify high-growth regions
@@ -84,25 +82,18 @@ def integrate_adoption_tracker():
     category_weights = {}
 
     for category, signals in signal_portfolio.items():
-        category_correlations[category] = sum(s["correlation"] for s in signals) / len(
-            signals
-        )
+        category_correlations[category] = sum(s["correlation"] for s in signals) / len(signals)
         category_weights[category] = sum(s["weight"] for s in signals)
 
     # Print the portfolio metrics
     print("\nSignal Portfolio Analysis:")
     print("  -------------------------")
     for category, correlation in category_correlations.items():
-        print(
-            f"  • {category.replace('_', ' ')}: {correlation:.2f} correlation, {category_weights[category] * 100:.0f}% weight"
-        )
+        print(f"  • {category.replace('_', ' ')}: {correlation:.2f} correlation, {category_weights[category] * 100:.0f}% weight")
 
     # Calculate the weighted average correlation
     total_weight = sum(category_weights.values())
-    weighted_correlation = sum(
-        corr * category_weights[cat] / total_weight
-        for cat, corr in category_correlations.items()
-    )
+    weighted_correlation = sum(corr * category_weights[cat] / total_weight for cat, corr in category_correlations.items())
 
     # Calculate diversification score (lower correlation = higher diversification)
     diversification_score = max(0, 1 - weighted_correlation)
@@ -146,9 +137,7 @@ def integrate_adoption_tracker():
         json.dump(portfolio_data, f, indent=2)
 
     print(f"\n✅ Signal portfolio configuration saved to {config_file}")
-    print(
-        "\nIntegration complete! The Chainalysis Adoption Tracker is now part of your multi-signal decision system."
-    )
+    print("\nIntegration complete! The Chainalysis Adoption Tracker is now part of your multi-signal decision system.")
 
 
 if __name__ == "__main__":

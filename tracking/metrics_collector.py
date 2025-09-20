@@ -83,17 +83,11 @@ class MetricsCollector:
                 if "system" in stored_metrics:
                     self.metrics["system"].update(stored_metrics["system"])
                 if "modules" in stored_metrics:
-                    for module_name, module_metrics in stored_metrics[
-                        "modules"
-                    ].items():
+                    for module_name, module_metrics in stored_metrics["modules"].items():
                         self.metrics["modules"][module_name].update(module_metrics)
                 if "pipelines" in stored_metrics:
-                    for pipeline_name, pipeline_metrics in stored_metrics[
-                        "pipelines"
-                    ].items():
-                        self.metrics["pipelines"][pipeline_name].update(
-                            pipeline_metrics
-                        )
+                    for pipeline_name, pipeline_metrics in stored_metrics["pipelines"].items():
+                        self.metrics["pipelines"][pipeline_name].update(pipeline_metrics)
 
             except Exception as e:
                 print(f"Warning: Could not load metrics file: {e}")
@@ -107,13 +101,9 @@ class MetricsCollector:
             # Handle special cases
             if "adoption" in metrics_copy:
                 if "unique_modules_used" in metrics_copy["adoption"]:
-                    metrics_copy["adoption"]["unique_modules_used"] = list(
-                        self.metrics["adoption"]["unique_modules_used"]
-                    )
+                    metrics_copy["adoption"]["unique_modules_used"] = list(self.metrics["adoption"]["unique_modules_used"])
                 if "unique_pipelines_used" in metrics_copy["adoption"]:
-                    metrics_copy["adoption"]["unique_pipelines_used"] = list(
-                        self.metrics["adoption"]["unique_pipelines_used"]
-                    )
+                    metrics_copy["adoption"]["unique_pipelines_used"] = list(self.metrics["adoption"]["unique_pipelines_used"])
 
             with open(self.metrics_file, "w") as f:
                 json.dump(metrics_copy, f, indent=2, default=str)
@@ -121,18 +111,14 @@ class MetricsCollector:
         except Exception as e:
             print(f"Warning: Could not save metrics: {e}")
 
-    def track_module_execution(
-        self, module_name: str, execution_time: float, input_size: int, output_size: int
-    ):
+    def track_module_execution(self, module_name: str, execution_time: float, input_size: int, output_size: int):
         """Track a module execution."""
         now = datetime.now(timezone.utc).isoformat()
 
         module_metrics = self.metrics["modules"][module_name]
         module_metrics["executions"] += 1
         module_metrics["total_execution_time"] += execution_time
-        module_metrics["avg_execution_time"] = (
-            module_metrics["total_execution_time"] / module_metrics["executions"]
-        )
+        module_metrics["avg_execution_time"] = module_metrics["total_execution_time"] / module_metrics["executions"]
         module_metrics["input_data_volume"] += input_size
         module_metrics["output_data_volume"] += output_size
         module_metrics["last_used"] = now
@@ -153,9 +139,7 @@ class MetricsCollector:
 
         self._save_metrics()
 
-    def track_pipeline_execution(
-        self, pipeline_name: str, execution_time: float, steps_count: int, success: bool
-    ):
+    def track_pipeline_execution(self, pipeline_name: str, execution_time: float, steps_count: int, success: bool):
         """Track a pipeline execution."""
         now = datetime.now(timezone.utc).isoformat()
 
@@ -168,9 +152,7 @@ class MetricsCollector:
         else:
             pipeline_metrics["failed_executions"] += 1
 
-        pipeline_metrics["avg_execution_time"] = (
-            pipeline_metrics["total_execution_time"] / pipeline_metrics["executions"]
-        )
+        pipeline_metrics["avg_execution_time"] = pipeline_metrics["total_execution_time"] / pipeline_metrics["executions"]
 
         # Update average steps per execution
         current_avg_steps = pipeline_metrics["avg_steps_per_execution"] or 0
@@ -243,24 +225,18 @@ class MetricsCollector:
 
         self.metrics["errors"]["recent_errors"].append(error_record)
         if len(self.metrics["errors"]["recent_errors"]) > 100:
-            self.metrics["errors"]["recent_errors"] = self.metrics["errors"][
-                "recent_errors"
-            ][-100:]
+            self.metrics["errors"]["recent_errors"] = self.metrics["errors"]["recent_errors"][-100:]
 
         self._save_metrics()
 
-    def track_business_impact(
-        self, impact_type: str, value: float, metadata: Dict[str, Any] = None
-    ):
+    def track_business_impact(self, impact_type: str, value: float, metadata: Dict[str, Any] = None):
         """Track business impact metrics."""
         if impact_type == "signal_generated":
             self.metrics["business_impact"]["total_signals_generated"] += 1
         elif impact_type == "forecast_generated":
             self.metrics["business_impact"]["total_forecasts_generated"] += 1
         elif impact_type == "data_processed":
-            self.metrics["business_impact"]["data_processed_mb"] += value / (
-                1024 * 1024
-            )
+            self.metrics["business_impact"]["data_processed_mb"] += value / (1024 * 1024)
         elif impact_type == "cost_savings":
             self.metrics["business_impact"]["cost_savings_estimated"] += value
 
@@ -276,9 +252,7 @@ class MetricsCollector:
         }
 
         base_module_name = module_name.lower().replace("module", "").strip()
-        multiplier = time_savings_multiplier.get(
-            base_module_name, 5.0
-        )  # Default 5 minutes
+        multiplier = time_savings_multiplier.get(base_module_name, 5.0)  # Default 5 minutes
 
         # Convert to hours
         hours_saved = multiplier / 60.0
@@ -335,9 +309,7 @@ class MetricsCollector:
         # Calculate error rates
         total_requests = self.metrics["system"]["total_requests"]
         if total_requests > 0:
-            errors["overall_error_rate"] = (
-                self.metrics["system"]["total_errors"] / total_requests
-            )
+            errors["overall_error_rate"] = self.metrics["system"]["total_errors"] / total_requests
         else:
             errors["overall_error_rate"] = 0.0
 
@@ -369,9 +341,7 @@ class MetricsCollector:
         uptime_hours = self.metrics["system"]["uptime_seconds"] / 3600
         operational_cost = uptime_hours * 0.10  # $0.10/hour assumption
 
-        roi_percentage = (
-            (cost_savings - operational_cost) / max(operational_cost, 1)
-        ) * 100
+        roi_percentage = ((cost_savings - operational_cost) / max(operational_cost, 1)) * 100
 
         return {
             "automation_hours_saved": automation_hours,

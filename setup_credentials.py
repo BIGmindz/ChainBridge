@@ -69,9 +69,9 @@ def setup_api_credentials():
         return False
 
     # Update the API credentials in the .env file
-    updated_content = env_content.replace(
-        'API_KEY="your_api_key_here"', f'API_KEY="{api_key}"'
-    ).replace('API_SECRET="your_api_secret_here"', f'API_SECRET="{api_secret}"')
+    updated_content = env_content.replace('API_KEY="your_api_key_here"', f'API_KEY="{api_key}"').replace(
+        'API_SECRET="your_api_secret_here"', f'API_SECRET="{api_secret}"'
+    )
 
     # Write back to .env file
     try:
@@ -104,9 +104,7 @@ def verify_credentials():
             content = f.read()
 
         has_api_key = 'API_KEY="' in content and "your_api_key_here" not in content
-        has_api_secret = (
-            'API_SECRET="' in content and "your_api_secret_here" not in content
-        )
+        has_api_secret = 'API_SECRET="' in content and "your_api_secret_here" not in content
 
         return has_api_key and has_api_secret
     except Exception:

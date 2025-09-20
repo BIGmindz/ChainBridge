@@ -33,17 +33,13 @@ class ExchangeAdapter:
         # Validate live trading setup
         if not self.paper_trade:
             if not self.api_key or not self.api_secret:
-                raise ValueError(
-                    "Live trading requires API_KEY and API_SECRET environment variables"
-                )
+                raise ValueError("Live trading requires API_KEY and API_SECRET environment variables")
             print("⚠️  LIVE TRADING MODE ENABLED - Real orders will be placed!")
             print("⚠️  Make sure you have sufficient funds and understand the risks!")
         else:
             print("📝 PAPER TRADING MODE - No real orders will be placed")
 
-    def place_order(
-        self, symbol: str, side: str, amount: float, price: float
-    ) -> Dict[str, Any]:
+    def place_order(self, symbol: str, side: str, amount: float, price: float) -> Dict[str, Any]:
         """
         Place an order (supports both paper and live trading).
 
@@ -79,9 +75,7 @@ class ExchangeAdapter:
                     self.exchange.secret = self.api_secret
 
                 # Place live order
-                order = self.exchange.create_order(
-                    symbol=symbol, type="limit", side=side, amount=amount, price=price
-                )
+                order = self.exchange.create_order(symbol=symbol, type="limit", side=side, amount=amount, price=price)
 
                 print(f"[LIVE ORDER] {side.upper()} {amount} {symbol} @ ${price:,.2f}")
                 print(f"[LIVE ORDER] Order ID: {order.get('id', 'N/A')}")

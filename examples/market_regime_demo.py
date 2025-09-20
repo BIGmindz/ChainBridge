@@ -120,9 +120,7 @@ class MarketRegimeSimulation:
         self.prices = prices[: self.hourly_intervals + 1]
         self.volumes = volumes[: self.hourly_intervals]
 
-        print(
-            f"Generated {len(self.prices) - 1} hourly price points across {len(regimes)} market regimes"
-        )
+        print(f"Generated {len(self.prices) - 1} hourly price points across {len(regimes)} market regimes")
 
     async def run_simulation(self):
         """Run the market regime simulation"""
@@ -140,9 +138,7 @@ class MarketRegimeSimulation:
             current_volume = self.volumes[hour]
 
             # Collect signals with price data for regime detection
-            signals = await self.engine.collect_all_signals(
-                current_price, current_volume
-            )
+            signals = await self.engine.collect_all_signals(current_price, current_volume)
 
             # Make trading decision
             decision = self.engine.make_ml_decision(signals)
@@ -211,11 +207,7 @@ class MarketRegimeSimulation:
         print("\n🔮 Market Regime Performance:")
         for regime, perf in stats.get("regime_performance", {}).items():
             if perf["trades"] > 0:
-                print(
-                    f"{regime.upper()}: {perf['trades']} trades, "
-                    f"Win rate: {perf['win_rate']:.2f}%, "
-                    f"PnL: {perf['pnl']:.2f}"
-                )
+                print(f"{regime.upper()}: {perf['trades']} trades, " f"Win rate: {perf['win_rate']:.2f}%, " f"PnL: {perf['pnl']:.2f}")
 
         return stats
 
@@ -226,9 +218,7 @@ class MarketRegimeSimulation:
             return
 
         # Create figure with subplots
-        fig, (ax1, ax2, ax3) = plt.subplots(
-            3, 1, figsize=(14, 14), gridspec_kw={"height_ratios": [2, 1, 1]}
-        )
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(14, 14), gridspec_kw={"height_ratios": [2, 1, 1]})
 
         # Plot 1: Price and Regimes
         hours = range(len(self.prices))
@@ -286,10 +276,7 @@ class MarketRegimeSimulation:
             try:
                 from matplotlib.patches import Patch
 
-                legend_elements = [
-                    Patch(facecolor=color, alpha=0.2, label=regime)
-                    for regime, color in regime_colors.items()
-                ]
+                legend_elements = [Patch(facecolor=color, alpha=0.2, label=regime) for regime, color in regime_colors.items()]
             except ImportError:
                 legend_elements = []
         ax1.legend(handles=legend_elements, loc="upper left")
@@ -378,9 +365,7 @@ class MarketRegimeSimulation:
         plt.savefig("signal_regime_performance.png")
         plt.close()
 
-        print(
-            "✅ Signal performance visualization saved to 'signal_regime_performance.png'"
-        )
+        print("✅ Signal performance visualization saved to 'signal_regime_performance.png'")
 
 
 async def main():

@@ -65,13 +65,9 @@ class LiveDashboard:
                 self.performance["losses"] = self.performance.get("losses", 0) + 1
 
             # Calculate win rate
-            total_trades = self.performance.get("wins", 0) + self.performance.get(
-                "losses", 0
-            )
+            total_trades = self.performance.get("wins", 0) + self.performance.get("losses", 0)
             if total_trades > 0:
-                self.performance["win_rate"] = (
-                    self.performance.get("wins", 0) / total_trades
-                )
+                self.performance["win_rate"] = self.performance.get("wins", 0) / total_trades
         else:
             # This is an open trade
             self.performance["active_positions"] += 1
@@ -93,15 +89,11 @@ class LiveDashboard:
     def display(self):
         """Display the dashboard in the console"""
         print("\n" + "=" * 80)
-        print(
-            f"📊 LIVE TRADING DASHBOARD | {self.last_update.strftime('%Y-%m-%d %H:%M:%S')}"
-        )
+        print(f"📊 LIVE TRADING DASHBOARD | {self.last_update.strftime('%Y-%m-%d %H:%M:%S')}")
         print("=" * 80)
 
         # Market regime info
-        print(
-            f"\n🌎 MARKET REGIME: {self._get_regime_emoji()} {self.market_data.get('regime', 'unknown').upper()}"
-        )
+        print(f"\n🌎 MARKET REGIME: {self._get_regime_emoji()} {self.market_data.get('regime', 'unknown').upper()}")
         print(f"  Volatility: {self.market_data.get('volatility', 0):.2%}")
         print(f"  Trend Strength: {self.market_data.get('trend_strength', 0):.2f}")
 
@@ -134,9 +126,7 @@ class LiveDashboard:
         if self.alerts:
             print("\n⚠️ ALERTS:")
             for alert in self.alerts[-3:]:
-                print(
-                    f"  {alert.get('severity', '❗')} {alert.get('message', 'Unknown alert')}"
-                )
+                print(f"  {alert.get('severity', '❗')} {alert.get('message', 'Unknown alert')}")
 
         print("=" * 80)
 
@@ -193,20 +183,20 @@ class LiveDashboard:
         📊 TRADING STATUS REPORT
         ========================
         Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
-        
+
         MARKET CONDITIONS
         ----------------
         Regime: {self._get_regime_emoji()} {self.market_data.get("regime", "unknown").upper()}
         Volatility: {self.market_data.get("volatility", 0):.2%}
         Trend Strength: {self.market_data.get("trend_strength", 0):.2f}
-        
+
         PERFORMANCE METRICS
         -----------------
         Total P&L: ${self.performance.get("total_pnl", 0):+,.2f}
         Realized P&L: ${self.performance.get("realized_pnl", 0):+,.2f}
         Win Rate: {self.performance.get("win_rate", 0) * 100:.1f}%
         Total Trades: {self.performance.get("wins", 0) + self.performance.get("losses", 0)}
-        
+
         ACTIVE POSITIONS
         --------------
         Count: {self.performance.get("active_positions", 0)}

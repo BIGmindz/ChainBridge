@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+
 try:
     import pandas as pd  # type: ignore
+
     _HAS_PANDAS = True
 except Exception:  # pragma: no cover - optional dependency in test environments
     # Minimal pandas shim so tests can call pd.Series([...]) when pandas
@@ -23,20 +25,22 @@ except Exception:  # pragma: no cover - optional dependency in test environments
 
     pd = _PdShim()
     _HAS_PANDAS = False
-import time
 import math
 import os
 import signal
+import time
 from datetime import datetime, timezone
+
 try:
     import yaml  # type: ignore
+
     _HAS_YAML = True
 except Exception:  # pragma: no cover - optional dependency in test environments
     yaml = None
     _HAS_YAML = False
 
 import json
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
 """
 Benson RSI Bot (Coinbase-friendly)
@@ -51,6 +55,7 @@ Benson RSI Bot (Coinbase-friendly)
 # --------------------
 # Helpers
 # --------------------
+
 
 def load_config(path: str) -> Dict[str, Any]:
     if not os.path.exists(path):
@@ -146,18 +151,18 @@ def safe_fetch_ticker(exchange, symbol: str) -> float:
         raise RuntimeError(f"No price in ticker for {symbol}")
     return float(price)
 
+
 # --------------------
 # Main bot
 # --------------------
+
 
 def run_bot(once: bool = False) -> None:
     print("[DBG] entered run_bot()")
     try:
         import ccxt  # type: ignore
     except Exception as exc:  # pragma: no cover - environment dependent
-        raise ImportError(
-            "The 'ccxt' package is required to run the live bot. Install with: pip install ccxt"
-        ) from exc
+        raise ImportError("The 'ccxt' package is required to run the live bot. Install with: pip install ccxt") from exc
 
     config_path = os.getenv("BENSON_CONFIG", "config/config.yaml")
     cfg = load_config(config_path)
@@ -204,9 +209,11 @@ def run_bot(once: bool = False) -> None:
     print("-" * 60)
 
     stop = {"flag": False}
+
     def handle_sigint(sig, frame):
         stop["flag"] = True
         print("\nStopping gracefully...")
+
     signal.signal(signal.SIGINT, handle_sigint)
 
     attempt = 0
@@ -231,13 +238,10 @@ def run_bot(once: bool = False) -> None:
 
                 now = time.time()
                 cooldown_ok = (now - last_alert_ts[symbol]) >= cooldown_sec
-                changed = (signal_out != last_signal[symbol])
+                changed = signal_out != last_signal[symbol]
 
                 # Status line
-                print(
-                    f"[{utc_now_str()}] {symbol:>10}: ${price:,.2f} | RSI {rsi_val:5.2f} | {signal_out}"
-                    f"{' (new)' if changed else ''}"
-                )
+                print(f"[{utc_now_str()}] {symbol:>10}: ${price:,.2f} | RSI {rsi_val:5.2f} | {signal_out}" f"{' (new)' if changed else ''}")
 
                 # Alert only on new actionable signals and respecting cooldown
                 if signal_out in ("BUY", "SELL") and changed and cooldown_ok:
@@ -246,9 +250,7 @@ def run_bot(once: bool = False) -> None:
 
                 # Persist log line
                 with open(log_path, "a") as f:
-                    f.write(
-                        f"{utc_now_str()},{exchange_id},{symbol},{price},{rsi_val:.4f},{signal_out},{timeframe}\n"
-                    )
+                    f.write(f"{utc_now_str()},{exchange_id},{symbol},{price},{rsi_val:.4f},{signal_out},{timeframe}\n")
 
                 last_signal[symbol] = signal_out
 
@@ -265,9 +267,11 @@ def run_bot(once: bool = False) -> None:
 
     print("Exit complete. Logs saved to:", log_path)
 
+
 # --------------------
 # CLI entrypoint
 # --------------------
+
 
 def main():
     print("[DBG] entered main()")
@@ -282,9 +286,11 @@ def main():
 
     run_bot(once=args.once)
 
+
 # --------------------
 # Tests
 # --------------------
+
 
 def test_rsi_flatline():
     s = pd.Series([100] * 20, dtype=float)
