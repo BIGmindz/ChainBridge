@@ -40,15 +40,9 @@ class MultiSignalAggregatorModule(Module):
                 "SentimentAnalysis": 0.20,
             }
         )
-        self.consensus_threshold = (
-            config.get("consensus_threshold", 0.4) if config else 0.4
-        )  # Reduced from 0.6 to 0.4 for more trades
-        self.confidence_multiplier = (
-            config.get("confidence_multiplier", 1.2) if config else 1.2
-        )
-        self.min_signals_required = (
-            config.get("min_signals_required", 1) if config else 1
-        )  # Reduced from 2 to 1
+        self.consensus_threshold = config.get("consensus_threshold", 0.4) if config else 0.4  # Reduced from 0.6 to 0.4 for more trades
+        self.confidence_multiplier = config.get("confidence_multiplier", 1.2) if config else 1.2
+        self.min_signals_required = config.get("min_signals_required", 1) if config else 1  # Reduced from 2 to 1
 
     def get_schema(self) -> Dict[str, Any]:
         return {
@@ -100,9 +94,7 @@ class MultiSignalAggregatorModule(Module):
         else:  # HOLD
             return 0.0
 
-    def calculate_signal_consensus(
-        self, signal_scores: Dict[str, Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    def calculate_signal_consensus(self, signal_scores: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
         """
         Calculate consensus among signals.
 
@@ -150,17 +142,11 @@ class MultiSignalAggregatorModule(Module):
             "buy_consensus": buy_consensus,
             "sell_consensus": sell_consensus,
             "overall_consensus": max_consensus,
-            "avg_buy_confidence": (
-                (buy_confidence_sum / buy_count) if buy_count > 0 else 0
-            ),
-            "avg_sell_confidence": (
-                (sell_confidence_sum / sell_count) if sell_count > 0 else 0
-            ),
+            "avg_buy_confidence": ((buy_confidence_sum / buy_count) if buy_count > 0 else 0),
+            "avg_sell_confidence": ((sell_confidence_sum / sell_count) if sell_count > 0 else 0),
         }
 
-    def calculate_weighted_score(
-        self, signal_scores: Dict[str, Dict[str, Any]], weights: Dict[str, float]
-    ) -> float:
+    def calculate_weighted_score(self, signal_scores: Dict[str, Dict[str, Any]], weights: Dict[str, float]) -> float:
         """
         Calculate weighted aggregate score from individual signals.
 
@@ -172,9 +158,7 @@ class MultiSignalAggregatorModule(Module):
 
         for module, signal_data in signal_scores.items():
             if module in weights:
-                score = self.normalize_signal_to_score(
-                    signal_data["signal"], signal_data["confidence"]
-                )
+                score = self.normalize_signal_to_score(signal_data["signal"], signal_data["confidence"])
                 weight = weights[module]
 
                 weighted_sum += score * weight
@@ -182,9 +166,7 @@ class MultiSignalAggregatorModule(Module):
 
         return weighted_sum / total_weight if total_weight > 0 else 0.0
 
-    def analyze_signal_correlation(
-        self, signal_scores: Dict[str, Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    def analyze_signal_correlation(self, signal_scores: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
         """
         Analyze correlation between signals to verify they are uncorrelated.
 
@@ -196,9 +178,7 @@ class MultiSignalAggregatorModule(Module):
         modules = list(signal_scores.keys())
 
         for module, signal_data in signal_scores.items():
-            scores[module] = self.normalize_signal_to_score(
-                signal_data["signal"], signal_data["confidence"]
-            )
+            scores[module] = self.normalize_signal_to_score(signal_data["signal"], signal_data["confidence"])
 
         # Calculate pairwise correlations
         correlation_matrix = {}
@@ -229,9 +209,7 @@ class MultiSignalAggregatorModule(Module):
 
         # Calculate diversification score (lower correlation = better diversification)
         avg_correlation = sum(correlations) / len(correlations) if correlations else 0
-        diversification_score = max(
-            0, 1 - avg_correlation
-        )  # Higher score = better diversification
+        diversification_score = max(0, 1 - avg_correlation)  # Higher score = better diversification
 
         # Check if signals are sufficiently independent
         independence_verified = avg_correlation < 0.5  # Threshold for independence
@@ -257,15 +235,10 @@ class MultiSignalAggregatorModule(Module):
             Risk assessment dictionary
         """
         # Check for conflicting signals
-        conflicting_signals = (
-            consensus["buy_signals"] > 0 and consensus["sell_signals"] > 0
-        )
+        conflicting_signals = consensus["buy_signals"] > 0 and consensus["sell_signals"] > 0
 
         # Calculate signal divergence (how much signals disagree)
-        signal_scores_list = [
-            self.normalize_signal_to_score(data["signal"], data["confidence"])
-            for data in signal_scores.values()
-        ]
+        signal_scores_list = [self.normalize_signal_to_score(data["signal"], data["confidence"]) for data in signal_scores.values()]
 
         if len(signal_scores_list) > 1:
             signal_std = np.std(signal_scores_list)
@@ -285,11 +258,7 @@ class MultiSignalAggregatorModule(Module):
             "overall_risk": overall_risk,
             "conflicting_signals": conflicting_signals,
             "signal_divergence": signal_divergence,
-            "confidence_level": (
-                "HIGH"
-                if final_confidence > 0.7
-                else "MEDIUM" if final_confidence > 0.4 else "LOW"
-            ),
+            "confidence_level": ("HIGH" if final_confidence > 0.7 else "MEDIUM" if final_confidence > 0.4 else "LOW"),
         }
 
     def generate_decision_factors(
@@ -316,9 +285,7 @@ class MultiSignalAggregatorModule(Module):
         strong_signals = []
         for module, data in signal_scores.items():
             if data["confidence"] > 0.6 and data["signal"] != "HOLD":
-                strong_signals.append(
-                    f"{module}: {data['signal']} ({data['confidence']:.2f} confidence)"
-                )
+                strong_signals.append(f"{module}: {data['signal']} ({data['confidence']:.2f} confidence)")
 
         if strong_signals:
             factors.append(f"Strong individual signals: {'; '.join(strong_signals)}")
@@ -327,15 +294,11 @@ class MultiSignalAggregatorModule(Module):
         signal_types = set()
         for module, data in signal_scores.items():
             if "metadata" in data and "module_info" in data["metadata"]:
-                signal_type = data["metadata"]["module_info"].get(
-                    "signal_type", "unknown"
-                )
+                signal_type = data["metadata"]["module_info"].get("signal_type", "unknown")
                 signal_types.add(signal_type)
 
         if len(signal_types) > 2:
-            factors.append(
-                f"Diverse signal types: {len(signal_types)} different analytical approaches"
-            )
+            factors.append(f"Diverse signal types: {len(signal_types)} different analytical approaches")
 
         # Final decision reasoning
         if final_signal == "BUY":
@@ -365,9 +328,7 @@ class MultiSignalAggregatorModule(Module):
             for module, signal_data in signals.items():
                 if isinstance(signal_data, dict):
                     # Handle different possible formats
-                    signal = (
-                        signal_data.get("signal") or signal_data.get("action") or "HOLD"
-                    )
+                    signal = signal_data.get("signal") or signal_data.get("action") or "HOLD"
                     confidence = signal_data.get("confidence", 0.5)
 
                     # Ensure signal is valid
@@ -414,24 +375,16 @@ class MultiSignalAggregatorModule(Module):
             consensus = self.calculate_signal_consensus(valid_signals)
 
             # Calculate weighted score
-            weighted_score = self.calculate_weighted_score(
-                valid_signals, signal_weights
-            )
+            weighted_score = self.calculate_weighted_score(valid_signals, signal_weights)
 
             # Determine final signal and confidence
             final_confidence = abs(weighted_score)
 
-            if (
-                weighted_score > 0.05
-                and consensus["overall_consensus"] >= consensus_threshold
-            ):  # Reduced from 0.1 to 0.05
+            if weighted_score > 0.05 and consensus["overall_consensus"] >= consensus_threshold:  # Reduced from 0.1 to 0.05
                 final_signal = "BUY"
                 if consensus["buy_consensus"] > 0.5:  # Reduced from 0.6 to 0.5
                     final_confidence *= self.confidence_multiplier
-            elif (
-                weighted_score < -0.05
-                and consensus["overall_consensus"] >= consensus_threshold
-            ):  # Reduced from -0.1 to -0.05
+            elif weighted_score < -0.05 and consensus["overall_consensus"] >= consensus_threshold:  # Reduced from -0.1 to -0.05
                 final_signal = "SELL"
                 if consensus["sell_consensus"] > 0.5:  # Reduced from 0.6 to 0.5
                     final_confidence *= self.confidence_multiplier
@@ -456,20 +409,14 @@ class MultiSignalAggregatorModule(Module):
                 correlation_analysis = self.analyze_signal_correlation(valid_signals)
 
                 # Adjust confidence based on diversification
-                diversification_bonus = (
-                    correlation_analysis.get("diversification_score", 0) * 0.1
-                )
+                diversification_bonus = correlation_analysis.get("diversification_score", 0) * 0.1
                 final_confidence = min(1.0, final_confidence + diversification_bonus)
 
             # Risk assessment
-            risk_assessment = self.assess_risk(
-                valid_signals, consensus, final_confidence
-            )
+            risk_assessment = self.assess_risk(valid_signals, consensus, final_confidence)
 
             # Generate decision factors
-            decision_factors = self.generate_decision_factors(
-                valid_signals, consensus, final_signal
-            )
+            decision_factors = self.generate_decision_factors(valid_signals, consensus, final_signal)
 
             result = {
                 "signal": final_signal,  # Changed from 'final_signal' to 'signal'
@@ -492,9 +439,7 @@ class MultiSignalAggregatorModule(Module):
                     "action": final_signal,
                     "strength": signal_strength,
                     "risk_level": risk_assessment["overall_risk"],
-                    "position_size_suggestion": self._suggest_position_size(
-                        final_confidence, risk_assessment["overall_risk"]
-                    ),
+                    "position_size_suggestion": self._suggest_position_size(final_confidence, risk_assessment["overall_risk"]),
                 },
                 "metadata": {
                     "signals_processed": len(valid_signals),
@@ -549,9 +494,7 @@ class MultiSignalAggregatorModule(Module):
             Backtesting results
         """
         if not historical_data or not signal_history:
-            raise ValueError(
-                "Historical data and signal history are required for backtesting"
-            )
+            raise ValueError("Historical data and signal history are required for backtesting")
 
         balance = initial_balance
         position = 0
@@ -575,9 +518,7 @@ class MultiSignalAggregatorModule(Module):
                 continue
 
             # Process aggregated signal
-            result = self.process(
-                {"signals": current_signals, "price_data": historical_data[i]}
-            )
+            result = self.process({"signals": current_signals, "price_data": historical_data[i]})
 
             signal = result["final_signal"]
             price = historical_data[i].get("close", historical_data[i].get("price", 0))
@@ -623,27 +564,18 @@ class MultiSignalAggregatorModule(Module):
                     position = 0
 
         # Calculate final portfolio value
-        final_price = (
-            historical_data[-1]["close"]
-            if "close" in historical_data[-1]
-            else historical_data[-1]["price"]
-        )
+        final_price = historical_data[-1]["close"] if "close" in historical_data[-1] else historical_data[-1]["price"]
         final_value = balance + (position * final_price)
 
         return {
             "initial_balance": initial_balance,
             "final_value": final_value,
             "total_return": final_value - initial_balance,
-            "return_percentage": ((final_value - initial_balance) / initial_balance)
-            * 100,
+            "return_percentage": ((final_value - initial_balance) / initial_balance) * 100,
             "total_trades": len(trades),
             "total_signals": len(signals_history),
-            "high_confidence_trades": len(
-                [t for t in trades if t.get("confidence", 0) > 0.7]
-            ),
-            "high_consensus_trades": len(
-                [t for t in trades if t.get("consensus_score", 0) > 0.6]
-            ),
+            "high_confidence_trades": len([t for t in trades if t.get("confidence", 0) > 0.7]),
+            "high_consensus_trades": len([t for t in trades if t.get("consensus_score", 0) > 0.6]),
             "signal_accuracy": self._calculate_signal_accuracy(
                 signals_history,
                 [p["close"] if "close" in p else p["price"] for p in historical_data],
@@ -652,9 +584,7 @@ class MultiSignalAggregatorModule(Module):
             "signals_history": signals_history[-10:],  # Last 10 signals for inspection
         }
 
-    def _calculate_signal_accuracy(
-        self, signals_history: List[Dict], prices: List[float]
-    ) -> float:
+    def _calculate_signal_accuracy(self, signals_history: List[Dict], prices: List[float]) -> float:
         """Calculate the accuracy of aggregated signals."""
         if len(signals_history) < 2:
             return 0.0
@@ -677,8 +607,4 @@ class MultiSignalAggregatorModule(Module):
                 elif signal_data["final_signal"] == "SELL" and price_change < 0:
                     correct_signals += 1
 
-        return (
-            correct_signals / total_actionable_signals
-            if total_actionable_signals > 0
-            else 0.0
-        )
+        return correct_signals / total_actionable_signals if total_actionable_signals > 0 else 0.0

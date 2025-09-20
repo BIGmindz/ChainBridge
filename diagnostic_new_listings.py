@@ -44,9 +44,7 @@ async def diagnose_listing_strategy():
             results = await radar.execute_listing_strategy()
 
             if results:
-                print(
-                    f"✅ Strategy executed successfully with {len(results)} result(s)"
-                )
+                print(f"✅ Strategy executed successfully with {len(results)} result(s)")
 
                 # Print the results
                 print("\n📊 Results:")

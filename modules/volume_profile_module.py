@@ -20,12 +20,8 @@ class VolumeProfileModule(Module):
         super().__init__(config)
         self.lookback_periods = config.get("lookback_periods", 50) if config else 50
         self.volume_bins = config.get("volume_bins", 20) if config else 20
-        self.poc_threshold = (
-            config.get("poc_threshold", 0.3) if config else 0.3
-        )  # Point of Control threshold
-        self.volume_trend_periods = (
-            config.get("volume_trend_periods", 10) if config else 10
-        )
+        self.poc_threshold = config.get("poc_threshold", 0.3) if config else 0.3  # Point of Control threshold
+        self.volume_trend_periods = config.get("volume_trend_periods", 10) if config else 10
 
     def get_schema(self) -> Dict[str, Any]:
         return {
@@ -172,9 +168,7 @@ class VolumeProfileModule(Module):
             value_area_low = point_of_control
 
         # Convert back to tuples for return
-        volume_profile_tuples = [
-            (price, vol, perc) for price, vol, perc in volume_profile
-        ]
+        volume_profile_tuples = [(price, vol, perc) for price, vol, perc in volume_profile]
 
         return volume_profile_tuples, point_of_control, value_area_high, value_area_low
 
@@ -213,9 +207,7 @@ class VolumeProfileModule(Module):
         else:
             return "STABLE"
 
-    def calculate_relative_volume(
-        self, current_volume: float, historical_volumes: List[float]
-    ) -> float:
+    def calculate_relative_volume(self, current_volume: float, historical_volumes: List[float]) -> float:
         """Calculate relative volume (current vs average)."""
         if not historical_volumes:
             return 1.0
@@ -239,9 +231,7 @@ class VolumeProfileModule(Module):
         avg_volume = sum(historical_volumes) / len(historical_volumes)
         return current_volume > (avg_volume * multiplier)
 
-    def detect_price_volume_divergence(
-        self, prices: List[float], volumes: List[float], periods: int = 5
-    ) -> bool:
+    def detect_price_volume_divergence(self, prices: List[float], volumes: List[float], periods: int = 5) -> bool:
         """Detect divergence between price and volume trends."""
         if len(prices) < periods or len(volumes) < periods:
             return False
@@ -321,13 +311,9 @@ class VolumeProfileModule(Module):
         if price_volume_divergence:
             # Adjust signal confidence based on divergence
             if signal == "BUY":
-                confidence = max(
-                    0.6, confidence
-                )  # Increase buy confidence on bullish divergence
+                confidence = max(0.6, confidence)  # Increase buy confidence on bullish divergence
             elif signal == "SELL":
-                confidence = max(
-                    0.6, confidence
-                )  # Increase sell confidence on bearish divergence
+                confidence = max(0.6, confidence)  # Increase sell confidence on bearish divergence
             else:
                 # No existing signal, but divergence suggests potential reversal
                 if current_price < point_of_control:
@@ -356,9 +342,7 @@ class VolumeProfileModule(Module):
         lookback_periods = data.get("lookback_periods", self.lookback_periods)
         volume_bins = data.get("volume_bins", self.volume_bins)
         poc_threshold = data.get("poc_threshold", self.poc_threshold)
-        volume_trend_periods = data.get(
-            "volume_trend_periods", self.volume_trend_periods
-        )
+        volume_trend_periods = data.get("volume_trend_periods", self.volume_trend_periods)
 
         try:
             # Validate data format and extract OHLCV
@@ -408,21 +392,15 @@ class VolumeProfileModule(Module):
                 }
 
             # Calculate Volume Profile
-            volume_profile, poc, value_area_high, value_area_low = (
-                self.calculate_volume_profile(price_data, lookback_periods, volume_bins)
-            )
+            volume_profile, poc, value_area_high, value_area_low = self.calculate_volume_profile(price_data, lookback_periods, volume_bins)
 
             # Get current price and volume
             if isinstance(price_data[-1], dict):
-                current_price = float(
-                    price_data[-1].get("close", price_data[-1].get("price", 0))
-                )
+                current_price = float(price_data[-1].get("close", price_data[-1].get("price", 0)))
                 current_volume = float(price_data[-1].get("volume", 1))
             else:
                 current_price = float(price_data[-1][4])  # Close price
-                current_volume = (
-                    float(price_data[-1][5]) if len(price_data[-1]) > 5 else 1
-                )
+                current_volume = float(price_data[-1][5]) if len(price_data[-1]) > 5 else 1
 
             # Extract historical data for analysis
             historical_prices = []
@@ -430,29 +408,17 @@ class VolumeProfileModule(Module):
 
             for record in price_data:
                 if isinstance(record, dict):
-                    historical_prices.append(
-                        float(record.get("close", record.get("price", 0)))
-                    )
+                    historical_prices.append(float(record.get("close", record.get("price", 0))))
                     historical_volumes.append(float(record.get("volume", 1)))
                 else:
                     historical_prices.append(float(record[4]))
-                    historical_volumes.append(
-                        float(record[5]) if len(record) > 5 else 1
-                    )
+                    historical_volumes.append(float(record[5]) if len(record) > 5 else 1)
 
             # Analyze volume characteristics
-            volume_trend = self.analyze_volume_trend(
-                historical_volumes, volume_trend_periods
-            )
-            relative_volume = self.calculate_relative_volume(
-                current_volume, historical_volumes[:-1]
-            )
-            volume_breakout = self.detect_volume_breakout(
-                current_volume, historical_volumes[:-1]
-            )
-            price_volume_divergence = self.detect_price_volume_divergence(
-                historical_prices, historical_volumes, volume_trend_periods
-            )
+            volume_trend = self.analyze_volume_trend(historical_volumes, volume_trend_periods)
+            relative_volume = self.calculate_relative_volume(current_volume, historical_volumes[:-1])
+            volume_breakout = self.detect_volume_breakout(current_volume, historical_volumes[:-1])
+            price_volume_divergence = self.detect_price_volume_divergence(historical_prices, historical_volumes, volume_trend_periods)
 
             # Determine price position relative to POC
             if abs(current_price - poc) / poc < poc_threshold:
@@ -479,8 +445,7 @@ class VolumeProfileModule(Module):
                 "value_area_high": value_area_high,
                 "value_area_low": value_area_low,
                 "volume_profile": [
-                    {"price_level": price, "volume": vol, "percentage": perc}
-                    for price, vol, perc in volume_profile[:10]  # Top 10 levels
+                    {"price_level": price, "volume": vol, "percentage": perc} for price, vol, perc in volume_profile[:10]  # Top 10 levels
                 ],
                 "current_price_position": price_position,
                 "volume_trend": volume_trend,
@@ -499,9 +464,7 @@ class VolumeProfileModule(Module):
                     "poc_support_resistance": poc,
                     "value_area_support": value_area_low,
                     "value_area_resistance": value_area_high,
-                    "price_in_value_area": value_area_low
-                    <= current_price
-                    <= value_area_high,
+                    "price_in_value_area": value_area_low <= current_price <= value_area_high,
                 },
                 "metadata": {
                     "lookback_periods_used": lookback_periods,
@@ -520,13 +483,9 @@ class VolumeProfileModule(Module):
             return result
 
         except Exception as e:
-            raise RuntimeError(
-                f"Failed to process Volume Profile calculation: {str(e)}"
-            )
+            raise RuntimeError(f"Failed to process Volume Profile calculation: {str(e)}")
 
-    def backtest_strategy(
-        self, historical_data: List[Dict[str, Any]], initial_balance: float = 10000
-    ) -> Dict[str, Any]:
+    def backtest_strategy(self, historical_data: List[Dict[str, Any]], initial_balance: float = 10000) -> Dict[str, Any]:
         """Simple backtesting functionality for Volume Profile strategy."""
         if not historical_data:
             raise ValueError("Historical data is required for backtesting")
@@ -572,9 +531,7 @@ class VolumeProfileModule(Module):
                             "type": "BUY",
                             "price": price,
                             "volume": result["current_volume"],
-                            "relative_volume": result["volume_analysis"][
-                                "relative_volume"
-                            ],
+                            "relative_volume": result["volume_analysis"]["relative_volume"],
                             "confidence": confidence,
                             "position": position,
                         }
@@ -587,9 +544,7 @@ class VolumeProfileModule(Module):
                             "type": "SELL",
                             "price": price,
                             "volume": result["current_volume"],
-                            "relative_volume": result["volume_analysis"][
-                                "relative_volume"
-                            ],
+                            "relative_volume": result["volume_analysis"]["relative_volume"],
                             "confidence": confidence,
                             "pnl": pnl,
                         }
@@ -597,27 +552,18 @@ class VolumeProfileModule(Module):
                     position = 0
 
         # Calculate final portfolio value
-        final_price = (
-            historical_data[-1]["close"]
-            if "close" in historical_data[-1]
-            else historical_data[-1]["price"]
-        )
+        final_price = historical_data[-1]["close"] if "close" in historical_data[-1] else historical_data[-1]["price"]
         final_value = balance + (position * final_price)
 
         return {
             "initial_balance": initial_balance,
             "final_value": final_value,
             "total_return": final_value - initial_balance,
-            "return_percentage": ((final_value - initial_balance) / initial_balance)
-            * 100,
+            "return_percentage": ((final_value - initial_balance) / initial_balance) * 100,
             "total_trades": len(trades),
             "total_signals": len(signals_history),
-            "volume_breakout_trades": len(
-                [t for t in trades if t.get("relative_volume", 1) > 1.5]
-            ),
-            "high_confidence_trades": len(
-                [t for t in trades if t.get("confidence", 0) > 0.7]
-            ),
+            "volume_breakout_trades": len([t for t in trades if t.get("relative_volume", 1) > 1.5]),
+            "high_confidence_trades": len([t for t in trades if t.get("confidence", 0) > 0.7]),
             "signal_accuracy": self._calculate_signal_accuracy(signals_history),
             "trades": trades,
             "signals_history": signals_history[-10:],  # Last 10 signals for inspection
@@ -644,8 +590,4 @@ class VolumeProfileModule(Module):
                 elif current_signal["signal"] == "SELL" and price_change < 0:
                     correct_signals += 1
 
-        return (
-            correct_signals / total_actionable_signals
-            if total_actionable_signals > 0
-            else 0.0
-        )
+        return correct_signals / total_actionable_signals if total_actionable_signals > 0 else 0.0

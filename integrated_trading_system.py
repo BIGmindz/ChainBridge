@@ -89,9 +89,7 @@ class IntegratedTradingSystem:
             print(f"\n{rec['symbol']}:")
             print(f"  Action: {rec['action']}")
             print(f"  Confidence: {rec['confidence'] * 100:.1f}%")
-            print(
-                f"  Position Size: {rec['position_size_pct'] * 100:.1f}% of portfolio"
-            )
+            print(f"  Position Size: {rec['position_size_pct'] * 100:.1f}% of portfolio")
             print(f"  Regions: {', '.join(rec['regions'])}")
             print(f"  Hold Period: {rec['expected_holding_period']}")
 
@@ -147,13 +145,13 @@ def main():
     print(
         """
     \n✅ INTEGRATION SUCCESSFUL!
-    
+
     Your Multiple-signal-decision-bot now has:
     • 15+ uncorrelated signals
     • Region-specific crypto selection
     • Machine learning optimization
     • Surgical precision trading
-    
+
     Ready to generate alpha!
     """
     )

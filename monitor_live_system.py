@@ -97,15 +97,9 @@ def update_status():
         if os.path.exists("budget_state.json"):
             with open("budget_state.json", "r") as f:
                 budget_data = json.load(f)
-                TRADING_METRICS["available_capital"] = budget_data.get(
-                    "available_capital", TRADING_METRICS["available_capital"]
-                )
-                TRADING_METRICS["allocated_capital"] = budget_data.get(
-                    "allocated_capital", TRADING_METRICS["allocated_capital"]
-                )
-                TRADING_METRICS["open_positions"] = len(
-                    budget_data.get("positions", [])
-                )
+                TRADING_METRICS["available_capital"] = budget_data.get("available_capital", TRADING_METRICS["available_capital"])
+                TRADING_METRICS["allocated_capital"] = budget_data.get("allocated_capital", TRADING_METRICS["allocated_capital"])
+                TRADING_METRICS["open_positions"] = len(budget_data.get("positions", []))
                 TRADING_METRICS["last_update"] = datetime.datetime.now().isoformat()
     except Exception as e:
         logging.error(f"Error updating trading metrics: {e}")
@@ -148,9 +142,7 @@ def print_dashboard():
     os.system("clear" if os.name == "posix" else "cls")
 
     print("\n" + "=" * 70)
-    print(
-        f"🚀 MULTIPLE-SIGNAL-DECISION-BOT MONITOR - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-    )
+    print(f"🚀 MULTIPLE-SIGNAL-DECISION-BOT MONITOR - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 70)
 
     # Components Status
@@ -203,15 +195,9 @@ def monitor_loop(interval=60, dashboard=False):
 
 def main():
     """Main execution function"""
-    parser = argparse.ArgumentParser(
-        description="Live System Monitor for Multiple-signal-decision-bot"
-    )
-    parser.add_argument(
-        "--interval", type=int, default=60, help="Update interval in seconds"
-    )
-    parser.add_argument(
-        "--dashboard", action="store_true", help="Display live dashboard"
-    )
+    parser = argparse.ArgumentParser(description="Live System Monitor for Multiple-signal-decision-bot")
+    parser.add_argument("--interval", type=int, default=60, help="Update interval in seconds")
+    parser.add_argument("--dashboard", action="store_true", help="Display live dashboard")
     parser.add_argument(
         "--restart-failed",
         action="store_true",
@@ -225,9 +211,7 @@ def main():
 
     try:
         # Create a thread for the monitor loop
-        monitor_thread = threading.Thread(
-            target=monitor_loop, args=(args.interval, args.dashboard), daemon=True
-        )
+        monitor_thread = threading.Thread(target=monitor_loop, args=(args.interval, args.dashboard), daemon=True)
         monitor_thread.start()
 
         # Keep the main thread alive
@@ -238,14 +222,10 @@ def main():
                     if config["status"] == "Stopped":
                         if component == "new_listings_radar":
                             logging.info("Attempting to restart New Listings Radar...")
-                            os.system(
-                                "python3 run_new_listings_radar.py --scan > new_listings_radar.log 2>&1 &"
-                            )
+                            os.system("python3 run_new_listings_radar.py --scan > new_listings_radar.log 2>&1 &")
                         elif component == "multi_signal_bot":
                             logging.info("Attempting to restart Multi Signal Bot...")
-                            os.system(
-                                "python3 multi_signal_bot.py > multi_signal_bot.log 2>&1 &"
-                            )
+                            os.system("python3 multi_signal_bot.py > multi_signal_bot.log 2>&1 &")
 
             time.sleep(args.interval)
     except KeyboardInterrupt:

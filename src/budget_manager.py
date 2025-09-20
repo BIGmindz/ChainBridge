@@ -19,9 +19,7 @@ except ImportError:
     # If that fails, try to load it dynamically
     try:
         parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        spec = importlib.util.spec_from_file_location(
-            "budget_manager", os.path.join(parent_dir, "budget_manager.py")
-        )
+        spec = importlib.util.spec_from_file_location("budget_manager", os.path.join(parent_dir, "budget_manager.py"))
         budget_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(budget_module)
         BudgetManager = budget_module.BudgetManager
@@ -39,9 +37,7 @@ except ImportError:
                     "max_positions": 5,
                     "position_size_method": "kelly",
                 }
-                print(
-                    f"💰 Simple Budget Manager initialized with ${initial_capital:,.2f}"
-                )
+                print(f"💰 Simple Budget Manager initialized with ${initial_capital:,.2f}")
 
 
 # Make it clear what's being exported

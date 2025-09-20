@@ -37,9 +37,7 @@ def _symbol_variants(symbol: str) -> List[str]:
     return list(variants)
 
 
-def check_markets_have_minima(
-    markets: Dict[str, dict], symbols: List[str]
-) -> List[str]:
+def check_markets_have_minima(markets: Dict[str, dict], symbols: List[str]) -> List[str]:
     """Return a list of symbols missing minima (cost.min or amount.min).
 
     This helper normalizes different shapes in exchange market metadata.

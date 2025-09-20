@@ -88,9 +88,7 @@ async def run_btc_backtest():
             new_price = enhanced_prices[-1] * (1 + daily_return)
 
             enhanced_prices.append(new_price)
-            enhanced_volumes.append(
-                avg_volume * np.random.uniform(0.6, 0.9)
-            )  # Lower volume
+            enhanced_volumes.append(avg_volume * np.random.uniform(0.6, 0.9))  # Lower volume
             new_date = (start_date + pd.Timedelta(days=i)).strftime("%Y-%m-%d")
             enhanced_dates.append(new_date)
 
@@ -101,9 +99,7 @@ async def run_btc_backtest():
             new_price = enhanced_prices[-1] * (1 + daily_return)
 
             enhanced_prices.append(new_price)
-            enhanced_volumes.append(
-                avg_volume * np.random.uniform(1.1, 1.6)
-            )  # Higher volume
+            enhanced_volumes.append(avg_volume * np.random.uniform(1.1, 1.6))  # Higher volume
             new_date = (start_date + pd.Timedelta(days=i)).strftime("%Y-%m-%d")
             enhanced_dates.append(new_date)
 
@@ -116,15 +112,11 @@ async def run_btc_backtest():
             new_price = enhanced_prices[-1] * (1 + daily_return)
 
             enhanced_prices.append(new_price)
-            enhanced_volumes.append(
-                avg_volume * np.random.uniform(0.6, 0.9)
-            )  # Lower volume
+            enhanced_volumes.append(avg_volume * np.random.uniform(0.6, 0.9))  # Lower volume
             new_date = (start_date + pd.Timedelta(days=i)).strftime("%Y-%m-%d")
             enhanced_dates.append(new_date)
 
-        print(
-            f"Enhanced dataset created with {len(enhanced_prices)} days of price data"
-        )
+        print(f"Enhanced dataset created with {len(enhanced_prices)} days of price data")
 
         # Visualize the enhanced dataset
         try:

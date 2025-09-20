@@ -74,9 +74,7 @@ class BollingerBandsModule(Module):
 
         return upper_band, middle_band, lower_band, band_width
 
-    def calculate_percent_b(
-        self, price: float, upper_band: float, middle_band: float, lower_band: float
-    ) -> float:
+    def calculate_percent_b(self, price: float, upper_band: float, middle_band: float, lower_band: float) -> float:
         """
         Calculate %B (Percent B) - position within the bands.
 
@@ -94,9 +92,7 @@ class BollingerBandsModule(Module):
 
         return (price - lower_band) / (upper_band - lower_band)
 
-    def detect_squeeze(
-        self, band_width_current: float, band_width_history: pd.Series, threshold: float
-    ) -> bool:
+    def detect_squeeze(self, band_width_current: float, band_width_history: pd.Series, threshold: float) -> bool:
         """
         Detect Bollinger Band squeeze (low volatility period).
 
@@ -128,9 +124,7 @@ class BollingerBandsModule(Module):
         Returns:
             Tuple of (signal, confidence, volatility_state, position_in_bands)
         """
-        if any(
-            math.isnan(x) for x in [current_price, upper_band, middle_band, lower_band]
-        ):
+        if any(math.isnan(x) for x in [current_price, upper_band, middle_band, lower_band]):
             return "HOLD", 0.0, "NORMAL", "WITHIN_BANDS"
 
         signal = "HOLD"
@@ -158,9 +152,7 @@ class BollingerBandsModule(Module):
         if percent_b <= 0.05:  # Price near or below lower band
             if previous_percent_b < percent_b:  # Price bouncing back up
                 signal = "BUY"
-                confidence = min(
-                    1.0, (0.05 - percent_b) * 20
-                )  # Higher confidence for deeper penetration
+                confidence = min(1.0, (0.05 - percent_b) * 20)  # Higher confidence for deeper penetration
 
         elif percent_b >= 0.95:  # Price near or above upper band
             if previous_percent_b > percent_b:  # Price falling back down
@@ -255,9 +247,7 @@ class BollingerBandsModule(Module):
                     elif "price" in record:
                         closes.append(float(record["price"]))
                     else:
-                        raise ValueError(
-                            "No 'close' or 'price' field found in price data"
-                        )
+                        raise ValueError("No 'close' or 'price' field found in price data")
             elif isinstance(price_data[0], (list, tuple)):
                 # Data is in OHLCV format - use close price (index 4)
                 closes = [float(row[4]) for row in price_data if len(row) >= 5]
@@ -290,9 +280,7 @@ class BollingerBandsModule(Module):
 
             # Calculate Bollinger Bands
             close_series = pd.Series(closes, dtype=float)
-            upper_band, middle_band, lower_band, band_width = (
-                self.calculate_bollinger_bands(close_series, period, std_multiplier)
-            )
+            upper_band, middle_band, lower_band, band_width = self.calculate_bollinger_bands(close_series, period, std_multiplier)
 
             # Get current values
             current_price = closes[-1]
@@ -302,9 +290,7 @@ class BollingerBandsModule(Module):
             width_current = float(band_width.iloc[-1])
 
             # Calculate %B
-            percent_b_current = self.calculate_percent_b(
-                current_price, upper_current, middle_current, lower_current
-            )
+            percent_b_current = self.calculate_percent_b(current_price, upper_current, middle_current, lower_current)
 
             # Get previous %B for trend analysis
             if len(closes) >= 2:
@@ -313,35 +299,29 @@ class BollingerBandsModule(Module):
                     upper_prev = float(upper_band.iloc[-2])
                     middle_prev = float(middle_band.iloc[-2])
                     lower_prev = float(lower_band.iloc[-2])
-                    percent_b_prev = self.calculate_percent_b(
-                        prev_price, upper_prev, middle_prev, lower_prev
-                    )
+                    percent_b_prev = self.calculate_percent_b(prev_price, upper_prev, middle_prev, lower_prev)
                 else:
                     percent_b_prev = percent_b_current
             else:
                 percent_b_prev = percent_b_current
 
             # Detect squeeze
-            is_squeeze = self.detect_squeeze(
-                width_current, band_width, squeeze_threshold
-            )
+            is_squeeze = self.detect_squeeze(width_current, band_width, squeeze_threshold)
 
             # Calculate price trend
             price_trend = self.calculate_price_trend(closes)
 
             # Generate signal
-            signal, confidence, volatility_state, position_in_bands = (
-                self.generate_signal(
-                    current_price,
-                    upper_current,
-                    middle_current,
-                    lower_current,
-                    percent_b_current,
-                    percent_b_prev,
-                    width_current,
-                    is_squeeze,
-                    price_trend,
-                )
+            signal, confidence, volatility_state, position_in_bands = self.generate_signal(
+                current_price,
+                upper_current,
+                middle_current,
+                lower_current,
+                percent_b_current,
+                percent_b_prev,
+                width_current,
+                is_squeeze,
+                price_trend,
             )
 
             result = {
@@ -356,16 +336,11 @@ class BollingerBandsModule(Module):
                 "position_in_bands": position_in_bands,
                 "current_price": current_price,
                 "analysis": {
-                    "price_vs_middle": (
-                        "ABOVE" if current_price > middle_current else "BELOW"
-                    ),
+                    "price_vs_middle": ("ABOVE" if current_price > middle_current else "BELOW"),
                     "band_squeeze_detected": is_squeeze,
                     "price_trend": price_trend,
-                    "band_width_percentile": min(
-                        100, width_current * 1000
-                    ),  # Rough percentile estimate
-                    "reversal_probability": abs(0.5 - percent_b_current)
-                    * 2,  # Distance from middle
+                    "band_width_percentile": min(100, width_current * 1000),  # Rough percentile estimate
+                    "reversal_probability": abs(0.5 - percent_b_current) * 2,  # Distance from middle
                 },
                 "metadata": {
                     "period_used": period,
@@ -384,13 +359,9 @@ class BollingerBandsModule(Module):
             return result
 
         except Exception as e:
-            raise RuntimeError(
-                f"Failed to process Bollinger Bands calculation: {str(e)}"
-            )
+            raise RuntimeError(f"Failed to process Bollinger Bands calculation: {str(e)}")
 
-    def backtest_strategy(
-        self, historical_data: List[Dict[str, Any]], initial_balance: float = 10000
-    ) -> Dict[str, Any]:
+    def backtest_strategy(self, historical_data: List[Dict[str, Any]], initial_balance: float = 10000) -> Dict[str, Any]:
         """Simple backtesting functionality for Bollinger Bands strategy."""
         if not historical_data:
             raise ValueError("Historical data is required for backtesting")
@@ -458,27 +429,18 @@ class BollingerBandsModule(Module):
                     position = 0
 
         # Calculate final portfolio value
-        final_price = (
-            historical_data[-1]["close"]
-            if "close" in historical_data[-1]
-            else historical_data[-1]["price"]
-        )
+        final_price = historical_data[-1]["close"] if "close" in historical_data[-1] else historical_data[-1]["price"]
         final_value = balance + (position * final_price)
 
         return {
             "initial_balance": initial_balance,
             "final_value": final_value,
             "total_return": final_value - initial_balance,
-            "return_percentage": ((final_value - initial_balance) / initial_balance)
-            * 100,
+            "return_percentage": ((final_value - initial_balance) / initial_balance) * 100,
             "total_trades": len(trades),
             "total_signals": len(signals_history),
-            "volatility_trades": len(
-                [t for t in trades if t.get("volatility_state") == "EXPANSION"]
-            ),
-            "squeeze_trades": len(
-                [t for t in trades if t.get("volatility_state") == "SQUEEZE"]
-            ),
+            "volatility_trades": len([t for t in trades if t.get("volatility_state") == "EXPANSION"]),
+            "squeeze_trades": len([t for t in trades if t.get("volatility_state") == "SQUEEZE"]),
             "signal_accuracy": self._calculate_signal_accuracy(signals_history),
             "trades": trades,
             "signals_history": signals_history[-10:],  # Last 10 signals for inspection
@@ -505,8 +467,4 @@ class BollingerBandsModule(Module):
                 elif current_signal["signal"] == "SELL" and price_change < 0:
                     correct_signals += 1
 
-        return (
-            correct_signals / total_actionable_signals
-            if total_actionable_signals > 0
-            else 0.0
-        )
+        return correct_signals / total_actionable_signals if total_actionable_signals > 0 else 0.0

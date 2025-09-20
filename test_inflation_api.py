@@ -40,9 +40,7 @@ def test_inflation_api():
             print(f"⚠️ HIGH INFLATION DETECTED in {', '.join(high_inflation_countries)}")
 
             # Calculate average inflation for high-inflation countries
-            avg_crisis_inflation = sum(
-                inflation_data[c] for c in high_inflation_countries
-            ) / len(high_inflation_countries)
+            avg_crisis_inflation = sum(inflation_data[c] for c in high_inflation_countries) / len(high_inflation_countries)
 
             if avg_crisis_inflation > 100:
                 hedge_signal = "STRONG_BUY"

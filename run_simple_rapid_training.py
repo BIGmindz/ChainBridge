@@ -17,9 +17,7 @@ from simple_rapid_fire_trainer import SimpleRapidFireTrainer
 
 def parse_args():
     """Parse command line arguments"""
-    parser = argparse.ArgumentParser(
-        description="Run Simple Rapid Fire Training (No TensorFlow)"
-    )
+    parser = argparse.ArgumentParser(description="Run Simple Rapid Fire Training (No TensorFlow)")
     parser.add_argument(
         "--duration",
         type=int,
@@ -85,9 +83,7 @@ def main():
 
     try:
         # Create the SimpleRapidFireTrainer
-        trainer = SimpleRapidFireTrainer(
-            config_path=args.config, initial_capital=args.capital
-        )
+        trainer = SimpleRapidFireTrainer(config_path=args.config, initial_capital=args.capital)
 
         # Run the training session
         trainer.run_training(duration_minutes=args.duration, cycle_seconds=args.cycle)

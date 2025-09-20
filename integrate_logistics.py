@@ -57,9 +57,7 @@ def integrate_logistics():
 
     # Calculate portfolio metrics
     total_weight = sum(s["weight"] for s in config["signals"])
-    avg_correlation = (
-        sum(s["weight"] * s["correlation"] for s in config["signals"]) / total_weight
-    )
+    avg_correlation = sum(s["weight"] * s["correlation"] for s in config["signals"]) / total_weight
 
     print("\n📊 SIGNAL PORTFOLIO ANALYSIS:")
     print("=" * 50)
@@ -72,9 +70,7 @@ def integrate_logistics():
     print("=" * 50)
     print("3Commas: 2-3 signals, 0.70 correlation")
     print("Cryptohopper: 3-4 signals, 0.65 correlation")
-    print(
-        f"YOUR BOT: {len(config['signals'])} signals, {avg_correlation:.3f} correlation"
-    )
+    print(f"YOUR BOT: {len(config['signals'])} signals, {avg_correlation:.3f} correlation")
     print("Forward Looking: 30-45 days (vs 0 for others)")
 
     # Save configuration
@@ -110,31 +106,31 @@ import json
 def test_logistics():
     print("\\n🧪 TESTING LOGISTICS SIGNALS")
     print("="*60)
-    
+
     # Initialize module
     logistics = LogisticsSignalModule()
-    
+
     # Generate signal
     result = logistics.process({})
-    
+
     print(f"\\n📊 LOGISTICS SIGNAL RESULT:")
     print(f"Signal: {result['signal']}")
     print(f"Confidence: {result['confidence']*100:.1f}%")
     print(f"Strength: {result['strength']:.2f}")
     print(f"Correlation to Technical: {result['correlation']:.2f} (ULTRA LOW!)")
     print(f"Forward Looking: {result['lead_time_days']} days")
-    
+
     if 'components' in result:
         print(f"\\n📈 COMPONENT SIGNALS:")
         for name, component in result['components'].items():
             if 'interpretation' in component:
                 print(f"  {name}: {component['interpretation']}")
                 print(f"    {component.get('metric', '')}")
-    
+
     print(f"\\n💡 WHAT THIS MEANS:")
     print(f"While everyone else reacts to price (lagging),")
     print(f"you're predicting price 30 days ahead (leading)!")
-    
+
     print(f"\\n💰 PROFIT POTENTIAL:")
     print(f"If logistics shows BUY today,")
     print(f"and BTC rises in 30 days as predicted,")

@@ -24,9 +24,7 @@ class SignalDataCollector:
         self.config = config or {}
 
         # Set up data paths
-        self.data_dir = self.config.get(
-            "data_dir", os.path.join("data", "adaptive_weight_data")
-        )
+        self.data_dir = self.config.get("data_dir", os.path.join("data", "adaptive_weight_data"))
         os.makedirs(self.data_dir, exist_ok=True)
 
         # Signal configuration
@@ -50,16 +48,12 @@ class SignalDataCollector:
 
         # Data collection settings
         self.lookback_days = self.config.get("lookback_days", 7)
-        self.performance_metrics = self.config.get(
-            "performance_metrics", ["return", "sharpe", "max_drawdown"]
-        )
+        self.performance_metrics = self.config.get("performance_metrics", ["return", "sharpe", "max_drawdown"])
 
         # Signal mapping to standardize signal formats
         self.signal_mapping = self._create_signal_mapping()
 
-    def collect_signals(
-        self, signal_data: Dict[str, Any], timestamp: str = None
-    ) -> Dict[str, Any]:
+    def collect_signals(self, signal_data: Dict[str, Any], timestamp: str = None) -> Dict[str, Any]:
         """
         Collect and standardize signals from all layers
 
@@ -97,9 +91,7 @@ class SignalDataCollector:
 
         return standardized_signals
 
-    def collect_market_data(
-        self, market_data: Dict[str, Any], timestamp: str = None
-    ) -> Dict[str, Any]:
+    def collect_market_data(self, market_data: Dict[str, Any], timestamp: str = None) -> Dict[str, Any]:
         """
         Collect and standardize market data
 
@@ -237,9 +229,7 @@ class SignalDataCollector:
         print(f"Loaded {len(training_data)} training records from the last {days} days")
         return training_data
 
-    def update_performance(
-        self, timestamp: str, performance_data: Dict[str, float]
-    ) -> bool:
+    def update_performance(self, timestamp: str, performance_data: Dict[str, float]) -> bool:
         """
         Update a stored data record with actual performance data
 
@@ -278,9 +268,7 @@ class SignalDataCollector:
             print(f"Error updating performance data: {str(e)}")
             return False
 
-    def _standardize_signal(
-        self, signal_name: str, raw_signal: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _standardize_signal(self, signal_name: str, raw_signal: Dict[str, Any]) -> Dict[str, Any]:
         """
         Standardize signal format
 
@@ -307,11 +295,7 @@ class SignalDataCollector:
         }
 
         # Convert signal to direction (-1 = SELL, 0 = HOLD, 1 = BUY)
-        signal_str = (
-            std_signal["signal"].upper()
-            if isinstance(std_signal["signal"], str)
-            else "HOLD"
-        )
+        signal_str = std_signal["signal"].upper() if isinstance(std_signal["signal"], str) else "HOLD"
         if signal_str == "BUY":
             std_signal["direction"] = 1
         elif signal_str == "SELL":
@@ -321,9 +305,7 @@ class SignalDataCollector:
 
         return std_signal
 
-    def _calculate_volatility(
-        self, price_history: List[Dict[str, Any]], days: int
-    ) -> float:
+    def _calculate_volatility(self, price_history: List[Dict[str, Any]], days: int) -> float:
         """Calculate price volatility over specified days"""
         if not price_history or len(price_history) < days:
             return 0.0
@@ -348,9 +330,7 @@ class SignalDataCollector:
         recent_prices = [p.get("close", 0) for p in price_history[-days:]]
 
         # Calculate simple trend (ending price / starting price - 1)
-        trend = (
-            (recent_prices[-1] / recent_prices[0] - 1) if recent_prices[0] > 0 else 0.0
-        )
+        trend = (recent_prices[-1] / recent_prices[0] - 1) if recent_prices[0] > 0 else 0.0
 
         return float(trend)
 
@@ -363,11 +343,7 @@ class SignalDataCollector:
         recent_volumes = volume_history[-days:]
 
         # Calculate volume change
-        volume_change = (
-            (recent_volumes[-1] / recent_volumes[0] - 1)
-            if recent_volumes[0] > 0
-            else 0.0
-        )
+        volume_change = (recent_volumes[-1] / recent_volumes[0] - 1) if recent_volumes[0] > 0 else 0.0
 
         return float(volume_change)
 

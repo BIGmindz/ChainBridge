@@ -221,9 +221,7 @@ def visualize_signals(signals_data):
     returns = [signal.get("expected_return", 0) * 100 for signal in signals_data]
 
     # Create DataFrame
-    df = pd.DataFrame(
-        {"Coin": coins, "Confidence": confidence, "Expected Return": returns}
-    )
+    df = pd.DataFrame({"Coin": coins, "Confidence": confidence, "Expected Return": returns})
 
     # Create grouped bar chart
     df.plot(x="Coin", kind="bar", ax=ax)
