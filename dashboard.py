@@ -1,9 +1,9 @@
-import os
-
+import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-import streamlit as st
 from plotly.subplots import make_subplots
+import os
+
 
 # --- Professional Color Palette ---
 # Inspired by financial terminals
@@ -130,8 +130,13 @@ def create_candlestick_chart(df, symbol):
 
     # Volume Bar Chart
     # Use df_symbol aggregated volume per resample interval
-    vol_series = df_symbol.set_index("timestamp")["trade_amount"].resample("5T").sum()
-    volume_colors = [COLORS["green"] if row.close >= row.open else COLORS["red"] for _, row in resampled.iterrows()]
+    vol_series = (
+        df_symbol.set_index("timestamp")["trade_amount"].resample("5T").sum()
+    )
+    volume_colors = [
+        COLORS["green"] if row.close >= row.open else COLORS["red"]
+        for _, row in resampled.iterrows()
+    ]
 
     fig.add_trace(
         go.Bar(x=resampled.index, y=vol_series, marker_color=volume_colors, name="Volume"),
@@ -164,7 +169,9 @@ def create_dashboard():
     df = load_and_prepare_data()
 
     if df is None:
-        st.error("No trading data found in the 'data/' directory. Please run the trading bot first.")
+        st.error(
+            "No trading data found in the 'data/' directory. Please run the trading bot first."
+        )
         return
 
     # --- Sidebar Filters ---
@@ -190,11 +197,17 @@ def create_dashboard():
         f"{pnl:,.2f} ({pnl_pct:.2f}%)",
     )
 
-    trade_df = df[df["action"].str.contains("SIM_", na=False)] if "action" in df.columns else df
+    trade_df = (
+        df[df["action"].str.contains("SIM_", na=False)] if "action" in df.columns else df
+    )
     col2.metric("Total Trades", len(trade_df))
 
     # Simple Win Rate (can be improved with trade pairing)
-    wins = trade_df[trade_df["pnl"] > df["pnl"].shift(1)].shape[0] if "pnl" in trade_df.columns and "pnl" in df.columns else 0
+    wins = (
+        trade_df[trade_df["pnl"] > df["pnl"].shift(1)].shape[0]
+        if "pnl" in trade_df.columns and "pnl" in df.columns
+        else 0
+    )
 
     win_rate = (wins / len(trade_df)) * 100 if not trade_df.empty else 0
     col3.metric("Win Rate", f"{win_rate:.1f}%")
@@ -211,9 +224,15 @@ def create_dashboard():
 
     with col1:
         # Donut chart for holdings
-        holdings = {col.replace("holding_", "").upper(): latest_row[col] for col in df.columns if "holding_" in col}
+        holdings = {
+            col.replace("holding_", "").upper(): latest_row[col]
+            for col in df.columns
+            if "holding_" in col
+        }
 
-        holdings_df = pd.DataFrame(list(holdings.items()), columns=["Asset", "Amount"]).set_index("Asset")
+        holdings_df = pd.DataFrame(list(holdings.items()), columns=["Asset", "Amount"]).set_index(
+            "Asset"
+        )
 
         st.write("**Current Holdings**")
         st.dataframe(holdings_df)
