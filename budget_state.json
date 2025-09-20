@@ -7,14 +7,14 @@
       "symbol": "PRO/USD",
       "side": "SELL",
       "entry_price": 0.865,
-      "current_price": 0.8691,
+      "current_price": 0.874,
       "size": 8.65,
       "quantity": 10.0,
       "stop_loss": 0.89095,
       "take_profit": 0.8131,
       "opened_at": "2025-09-20T08:25:48.843677",
-      "pnl": -0.040999999999999925,
-      "pnl_pct": -0.004739884393063575,
+      "pnl": -0.09000000000000008,
+      "pnl_pct": -0.010404624277456656,
       "status": "OPEN"
     },
     {
@@ -22,14 +22,14 @@
       "symbol": "CRO/USD",
       "side": "SELL",
       "entry_price": 0.23279,
-      "current_price": 0.23176,
+      "current_price": 0.23214,
       "size": 8.14765,
       "quantity": 35.0,
       "stop_loss": 0.2397737,
       "take_profit": 0.2188226,
       "opened_at": "2025-09-20T08:26:27.468158",
-      "pnl": 0.03605000000000011,
-      "pnl_pct": 0.004424588685080988,
+      "pnl": 0.022749999999999437,
+      "pnl_pct": 0.0027922161604879243,
       "status": "OPEN"
     },
     {
@@ -37,14 +37,14 @@
       "symbol": "ZORA/USD",
       "side": "BUY",
       "entry_price": 0.064601,
-      "current_price": 0.065215,
+      "current_price": 0.065272,
       "size": 5.038878,
       "quantity": 78.0,
       "stop_loss": 0.06266297000000001,
       "take_profit": 0.06847706,
       "opened_at": "2025-09-20T08:26:47.173168",
-      "pnl": 0.047891999999999185,
-      "pnl_pct": 0.009504496834414166,
+      "pnl": 0.0523379999999993,
+      "pnl_pct": 0.01038683611708783,
       "status": "OPEN"
     },
     {
@@ -52,14 +52,14 @@
       "symbol": "PRO/USD",
       "side": "SELL",
       "entry_price": 0.865,
-      "current_price": 0.8691,
+      "current_price": 0.874,
       "size": 8.65,
       "quantity": 10.0,
       "stop_loss": 0.89095,
       "take_profit": 0.8131,
       "opened_at": "2025-09-20T08:27:36.244729",
-      "pnl": -0.040999999999999925,
-      "pnl_pct": -0.004739884393063575,
+      "pnl": -0.09000000000000008,
+      "pnl_pct": -0.010404624277456656,
       "status": "OPEN"
     },
     {
@@ -67,14 +67,14 @@
       "symbol": "PRO/USD",
       "side": "SELL",
       "entry_price": 0.865,
-      "current_price": 0.8691,
+      "current_price": 0.874,
       "size": 8.65,
       "quantity": 10.0,
       "stop_loss": 0.89095,
       "take_profit": 0.8131,
       "opened_at": "2025-09-20T08:29:25.106804",
-      "pnl": -0.040999999999999925,
-      "pnl_pct": -0.004739884393063575,
+      "pnl": -0.09000000000000008,
+      "pnl_pct": -0.010404624277456656,
       "status": "OPEN"
     }
   ],
@@ -86,7 +86,7 @@
     "total_pnl": 0.0,
     "total_pnl_pct": 0.0,
     "open_positions": 5,
-    "open_pnl": -0.03905800000000048,
+    "open_pnl": -0.1949120000000015,
     "total_trades": 5,
     "winning_trades": 0,
     "losing_trades": 0,
@@ -96,5 +96,5 @@
     "current_drawdown": 0,
     "max_drawdown": 0
   },
-  "timestamp": "2025-09-20T08:48:16.002099"
+  "timestamp": "2025-09-20T08:55:24.940265"
 }
