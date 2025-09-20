@@ -1,0 +1,12 @@
+[tool.black]
+line-length = 140
+target-version = ["py311"]
+
+[tool.isort]
+profile = "black"
+line_length = 140
+skip = [".venv", ".venv*"]
+
+[tool.ruff]
+line-length = 140
+exclude = [".venv", ".venv*", "__pycache__"]

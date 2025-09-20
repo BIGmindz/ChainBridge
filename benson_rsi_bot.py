@@ -1,16 +1,42 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+try:
+    import pandas as pd  # type: ignore
+    _HAS_PANDAS = True
+except Exception:  # pragma: no cover - optional dependency in test environments
+    # Minimal pandas shim so tests can call pd.Series([...]) when pandas
+    # isn't installed in the environment. The shim produces a plain list-like
+    # object which the fallback wilder_rsi implementation accepts.
+    class _SeriesFallback(list):
+        def __init__(self, data, *args, **kwargs):
+            super().__init__(data)
+
+        def astype(self, *_args, **_kwargs):
+            return self
+
+        def tolist(self):
+            return list(self)
+
+    class _PdShim:
+        Series = _SeriesFallback
+
+    pd = _PdShim()
+    _HAS_PANDAS = False
+import time
 import math
 import os
 import signal
-import time
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+try:
+    import yaml  # type: ignore
+    _HAS_YAML = True
+except Exception:  # pragma: no cover - optional dependency in test environments
+    yaml = None
+    _HAS_YAML = False
 
-import ccxt  # type: ignore
-import pandas as pd  # type: ignore
-import yaml  # type: ignore
+import json
+from typing import Dict, Any, List
 
 """
 Benson RSI Bot (Coinbase-friendly)
@@ -26,7 +52,6 @@ Benson RSI Bot (Coinbase-friendly)
 # Helpers
 # --------------------
 
-
 def load_config(path: str) -> Dict[str, Any]:
     if not os.path.exists(path):
         raise FileNotFoundError(f"Config not found at {path}")
@@ -34,29 +59,63 @@ def load_config(path: str) -> Dict[str, Any]:
         content = f.read()
     # Substitute environment variables in the config content
     content = os.path.expandvars(content)
-    return yaml.safe_load(content) or {}
+    if _HAS_YAML:
+        return yaml.safe_load(content) or {}
+    # Fallback: try JSON as a strict subset of YAML for tests
+    try:
+        return json.loads(content)
+    except Exception:
+        return {}
 
 
 def utc_now_str() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S %Z")
 
 
-def wilder_rsi(close: pd.Series, period: int = 14) -> float:
-    """Wilder's RSI using EMA smoothing."""
-    if len(close) < max(2, period + 1):
+def wilder_rsi(close, period: int = 14) -> float:
+    """Wilder's RSI. Accepts a pandas Series when available, or any sequence of floats.
+
+    Falls back to a pure-Python implementation when pandas is not installed so
+    unit tests can run in minimal environments.
+    """
+    # Normalize input to a list of floats
+    if _HAS_PANDAS and isinstance(close, pd.Series):
+        vals = close.astype(float).tolist()
+    else:
+        try:
+            vals = [float(x) for x in list(close)]
+        except Exception:
+            return float("nan")
+
+    if len(vals) < max(2, period + 1):
         return float("nan")
-    delta = close.diff()
-    gain = delta.clip(lower=0)
-    loss = -delta.clip(upper=0)
-    avg_gain = gain.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
-    avg_loss = loss.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
-    last_gain = float(avg_gain.iloc[-1])
-    last_loss = float(avg_loss.iloc[-1])
-    if last_loss == 0 and last_gain == 0:
+
+    # Compute price deltas
+    deltas = [vals[i] - vals[i - 1] for i in range(1, len(vals))]
+    gains = [d if d > 0 else 0.0 for d in deltas]
+    losses = [(-d) if d < 0 else 0.0 for d in deltas]
+
+    if len(gains) < period:
+        return float("nan")
+
+    # Initial average gains/losses (simple average of first 'period' values)
+    avg_gain = sum(gains[:period]) / period
+    avg_loss = sum(losses[:period]) / period
+
+    # Wilder smoothing for remaining values
+    for i in range(period, len(gains)):
+        gain = gains[i]
+        loss = losses[i]
+        avg_gain = (avg_gain * (period - 1) + gain) / period
+        avg_loss = (avg_loss * (period - 1) + loss) / period
+
+    # Defensive cases
+    if avg_loss == 0 and avg_gain == 0:
         return 50.0
-    if last_loss == 0:
+    if avg_loss == 0:
         return 100.0
-    rs = last_gain / last_loss
+
+    rs = avg_gain / avg_loss
     return float(100 - (100 / (1 + rs)))
 
 
@@ -87,14 +146,19 @@ def safe_fetch_ticker(exchange, symbol: str) -> float:
         raise RuntimeError(f"No price in ticker for {symbol}")
     return float(price)
 
-
 # --------------------
 # Main bot
 # --------------------
 
-
 def run_bot(once: bool = False) -> None:
     print("[DBG] entered run_bot()")
+    try:
+        import ccxt  # type: ignore
+    except Exception as exc:  # pragma: no cover - environment dependent
+        raise ImportError(
+            "The 'ccxt' package is required to run the live bot. Install with: pip install ccxt"
+        ) from exc
+
     config_path = os.getenv("BENSON_CONFIG", "config/config.yaml")
     cfg = load_config(config_path)
 
@@ -140,11 +204,9 @@ def run_bot(once: bool = False) -> None:
     print("-" * 60)
 
     stop = {"flag": False}
-
     def handle_sigint(sig, frame):
         stop["flag"] = True
         print("\nStopping gracefully...")
-
     signal.signal(signal.SIGINT, handle_sigint)
 
     attempt = 0
@@ -169,7 +231,7 @@ def run_bot(once: bool = False) -> None:
 
                 now = time.time()
                 cooldown_ok = (now - last_alert_ts[symbol]) >= cooldown_sec
-                changed = signal_out != last_signal[symbol]
+                changed = (signal_out != last_signal[symbol])
 
                 # Status line
                 print(
@@ -179,9 +241,7 @@ def run_bot(once: bool = False) -> None:
 
                 # Alert only on new actionable signals and respecting cooldown
                 if signal_out in ("BUY", "SELL") and changed and cooldown_ok:
-                    print(
-                        f"SIGNAL: {signal_out} {symbol} @ ${price:,.2f} (RSI {rsi_val:0.2f})"
-                    )
+                    print(f"SIGNAL: {signal_out} {symbol} @ ${price:,.2f} (RSI {rsi_val:0.2f})")
                     last_alert_ts[symbol] = now
 
                 # Persist log line
@@ -205,18 +265,14 @@ def run_bot(once: bool = False) -> None:
 
     print("Exit complete. Logs saved to:", log_path)
 
-
 # --------------------
 # CLI entrypoint
 # --------------------
 
-
 def main():
     print("[DBG] entered main()")
     parser = argparse.ArgumentParser(description="Benson RSI Bot")
-    parser.add_argument(
-        "--once", action="store_true", help="Run a single cycle and exit"
-    )
+    parser.add_argument("--once", action="store_true", help="Run a single cycle and exit")
     parser.add_argument("--test", action="store_true", help="Run unit tests and exit")
     args = parser.parse_args()
 
@@ -226,11 +282,9 @@ def main():
 
     run_bot(once=args.once)
 
-
 # --------------------
 # Tests
 # --------------------
-
 
 def test_rsi_flatline():
     s = pd.Series([100] * 20, dtype=float)
@@ -253,17 +307,13 @@ def test_rsi_downtrend():
 def test_rsi_no_losses_near_max():
     s = pd.Series(range(1, 60), dtype=float)
     rsi = wilder_rsi(s, 14)
-    assert rsi >= 95 or math.isclose(
-        rsi, 100.0, rel_tol=0.01
-    ), f"Expected RSI near 100, got {rsi}"
+    assert rsi >= 95 or math.isclose(rsi, 100.0, rel_tol=0.01), f"Expected RSI near 100, got {rsi}"
 
 
 def test_insufficient_ohlcv_returns_nan():
     short_ohlcv = [[0, 0, 0, 0, 100.0, 0.0] for _ in range(10)]
     rsi_val = calculate_rsi_from_ohlcv(short_ohlcv, period=14)
-    assert isinstance(rsi_val, float) and math.isnan(
-        rsi_val
-    ), f"Expected NaN, got {rsi_val}"
+    assert isinstance(rsi_val, float) and math.isnan(rsi_val), f"Expected NaN, got {rsi_val}"
 
 
 def run_tests():
