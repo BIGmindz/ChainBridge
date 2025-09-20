@@ -91,36 +91,22 @@ class AdoptionTrackerModule(Module):
             regional_growth = self.calculate_regional_growth(adoption_data)
 
             # Identify high growth regions (>40% YoY)
-            high_growth_regions = {
-                region: growth
-                for region, growth in regional_growth.items()
-                if growth > self.buy_threshold
-            }
+            high_growth_regions = {region: growth for region, growth in regional_growth.items() if growth > self.buy_threshold}
 
             # Calculate country-specific growth rates
             country_growth = self.calculate_country_growth(adoption_data)
 
             # Identify high growth countries (>40% YoY)
-            high_growth_countries = {
-                country: growth
-                for country, growth in country_growth.items()
-                if growth > self.buy_threshold
-            }
+            high_growth_countries = {country: growth for country, growth in country_growth.items() if growth > self.buy_threshold}
 
             # Calculate composite adoption score
-            adoption_score, adoption_momentum = self.calculate_composite_score(
-                regional_growth, country_growth
-            )
+            adoption_score, adoption_momentum = self.calculate_composite_score(regional_growth, country_growth)
 
             # Generate signal based on adoption growth
-            signal, confidence, strength = self.generate_signal(
-                adoption_score, high_growth_regions, high_growth_countries
-            )
+            signal, confidence, strength = self.generate_signal(adoption_score, high_growth_regions, high_growth_countries)
 
             # Generate reasoning and insights
-            reasoning = self.generate_reasoning(
-                signal, high_growth_regions, high_growth_countries, adoption_momentum
-            )
+            reasoning = self.generate_reasoning(signal, high_growth_regions, high_growth_countries, adoption_momentum)
 
             return {
                 "signal": signal,
@@ -158,9 +144,7 @@ class AdoptionTrackerModule(Module):
                     # Check if cache is still valid (less than refresh_interval_days old)
                     if cached_data.get("timestamp"):
                         cache_time = datetime.fromisoformat(cached_data["timestamp"])
-                        if datetime.now() - cache_time < timedelta(
-                            days=self.refresh_interval_days
-                        ):
+                        if datetime.now() - cache_time < timedelta(days=self.refresh_interval_days):
                             return cached_data
         except (json.JSONDecodeError, OSError) as e:
             print(f"Cache read error: {str(e)}")
@@ -329,25 +313,19 @@ class AdoptionTrackerModule(Module):
         # Compile final data structure
         result = {
             "timestamp": datetime.now().isoformat(),
-            "last_updated": (
-                datetime.now() - timedelta(days=np.random.randint(1, 5))
-            ).isoformat(),
+            "last_updated": (datetime.now() - timedelta(days=np.random.randint(1, 5))).isoformat(),
             "title": "Chainalysis Global Crypto Adoption Index",
             "base_year": "2023",
             "current_year": "2024",
             "base_year_data": base_year_data,
             "current_year_data": current_year_data,
-            "global_growth": np.mean(
-                [data["yoy_change"] for data in current_year_data.values()]
-            ),
+            "global_growth": np.mean([data["yoy_change"] for data in current_year_data.values()]),
             "data_source": "simulated",
         }
 
         return result
 
-    def calculate_regional_growth(
-        self, adoption_data: Dict[str, Any]
-    ) -> Dict[str, float]:
+    def calculate_regional_growth(self, adoption_data: Dict[str, Any]) -> Dict[str, float]:
         """
         Calculate YoY growth rates for each region
 
@@ -365,9 +343,7 @@ class AdoptionTrackerModule(Module):
 
         return regional_growth
 
-    def calculate_country_growth(
-        self, adoption_data: Dict[str, Any]
-    ) -> Dict[str, float]:
+    def calculate_country_growth(self, adoption_data: Dict[str, Any]) -> Dict[str, float]:
         """
         Calculate YoY growth rates for individual countries
 
@@ -386,9 +362,7 @@ class AdoptionTrackerModule(Module):
 
         return country_growth
 
-    def calculate_composite_score(
-        self, regional_growth: Dict[str, float], country_growth: Dict[str, float]
-    ) -> Tuple[float, float]:
+    def calculate_composite_score(self, regional_growth: Dict[str, float], country_growth: Dict[str, float]) -> Tuple[float, float]:
         """
         Calculate composite adoption score and momentum
 
@@ -420,9 +394,7 @@ class AdoptionTrackerModule(Module):
                 high_growth_score += country_growth[country]
                 high_growth_count += 1
 
-        high_growth_score = (
-            high_growth_score / high_growth_count if high_growth_count > 0 else 0
-        )
+        high_growth_score = high_growth_score / high_growth_count if high_growth_count > 0 else 0
 
         # Composite score (70% regional, 30% high growth countries)
         composite_score = (regional_score * 0.7) + (high_growth_score * 0.3)
@@ -513,9 +485,7 @@ class AdoptionTrackerModule(Module):
         """
         if signal == "BUY" and high_growth_regions:
             region_list = ", ".join(high_growth_regions.keys())
-            top_regions = sorted(
-                high_growth_regions.items(), key=lambda x: x[1], reverse=True
-            )[:2]
+            top_regions = sorted(high_growth_regions.items(), key=lambda x: x[1], reverse=True)[:2]
 
             top_region, top_growth = top_regions[0]
             formatted_growth = f"{top_growth * 100:.1f}%"
@@ -527,7 +497,9 @@ class AdoptionTrackerModule(Module):
             reasoning = f"High adoption growth in key countries: {country_list}. Expect increasing demand."
 
         elif signal == "BUY":
-            reasoning = f"Overall positive adoption momentum ({adoption_momentum * 100:.1f}% growth) suggests increasing crypto usage globally."
+            reasoning = (
+                f"Overall positive adoption momentum ({adoption_momentum * 100:.1f}% growth) suggests increasing crypto usage globally."
+            )
 
         elif signal == "HOLD" and adoption_momentum > 0:
             reasoning = f"Moderate adoption growth ({adoption_momentum * 100:.1f}% YoY) - maintaining current exposure recommended."

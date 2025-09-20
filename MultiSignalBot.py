@@ -73,9 +73,7 @@ class MultiSignalBot:
         self.timeframe = str(self.cfg.get("timeframe", "5m"))
         self.poll_seconds = int(self.cfg.get("poll_seconds", 60))
         self.cooldown_min = int(self.cfg.get("cooldown_minutes", 10))
-        self.log_path = str(
-            self.cfg.get("multi_signal_log", "multi_signal_trades.json")
-        )
+        self.log_path = str(self.cfg.get("multi_signal_log", "multi_signal_trades.json"))
         self.metrics_file = str(self.cfg.get("metrics_file", "trading_metrics.json"))
 
         # Setup exchange adapter
@@ -89,9 +87,7 @@ class MultiSignalBot:
         self._init_modules()
 
         # State tracking
-        self.last_signals = {
-            s: {"aggregated": "HOLD", "modules": {}} for s in self.symbols
-        }
+        self.last_signals = {s: {"aggregated": "HOLD", "modules": {}} for s in self.symbols}
         self.last_alert_ts = {s: 0.0 for s in self.symbols}
         self.trades = self._load_trades()
 
@@ -103,9 +99,7 @@ class MultiSignalBot:
 
         print(f"🚀 MultiSignalBot initialized with {len(self.symbols)} symbols")
         print(f"Exchange: {self.exchange_id}")
-        print(
-            "Signal Modules: RSI, MACD, Bollinger Bands, Volume Profile, Sentiment Analysis, Logistics Signals, Global Macro"
-        )
+        print("Signal Modules: RSI, MACD, Bollinger Bands, Volume Profile, Sentiment Analysis, Logistics Signals, Global Macro")
 
     def _load_config(self, path: str) -> Dict[str, Any]:
         """Load configuration from YAML file with environment variable substitution."""
@@ -244,9 +238,7 @@ class MultiSignalBot:
 
             # Check for required fields
             if "signal" not in result:
-                print(
-                    f"Warning: {name} module didn't return a 'signal' field, using {default_signal}"
-                )
+                print(f"Warning: {name} module didn't return a 'signal' field, using {default_signal}")
                 result["signal"] = default_signal
 
             return {
@@ -284,18 +276,12 @@ class MultiSignalBot:
 
                     # Get current price data
                     try:
-                        ticker_data = self.exchange_adapter.exchange.fetch_ticker(
-                            symbol
-                        )
+                        ticker_data = self.exchange_adapter.exchange.fetch_ticker(symbol)
                         last_price = ticker_data["last"]
                         print(f"Last price for {symbol}: ${last_price:,.2f}")
                     except Exception as e:
                         print(f"Error fetching price for {symbol}: {e}")
-                        last_price = (
-                            30000.0
-                            if "BTC" in symbol
-                            else 2000.0 if "ETH" in symbol else 100.0
-                        )
+                        last_price = 30000.0 if "BTC" in symbol else 2000.0 if "ETH" in symbol else 100.0
                         print(f"Using mock price for {symbol}: ${last_price}")
 
                     # Generate mock OHLCV data instead of fetching
@@ -314,24 +300,16 @@ class MultiSignalBot:
                     print(f"Running signal modules for {symbol}...")
 
                     # RSI signal
-                    module_signals["RSI"] = self._process_module(
-                        self.rsi, "RSI", {"price_data": price_data}
-                    )
+                    module_signals["RSI"] = self._process_module(self.rsi, "RSI", {"price_data": price_data})
 
                     # MACD signal
-                    module_signals["MACD"] = self._process_module(
-                        self.macd, "MACD", {"price_data": price_data}
-                    )
+                    module_signals["MACD"] = self._process_module(self.macd, "MACD", {"price_data": price_data})
 
                     # Bollinger Bands signal
-                    module_signals["BollingerBands"] = self._process_module(
-                        self.bollinger, "BollingerBands", {"price_data": price_data}
-                    )
+                    module_signals["BollingerBands"] = self._process_module(self.bollinger, "BollingerBands", {"price_data": price_data})
 
                     # Volume Profile signal
-                    module_signals["VolumeProfile"] = self._process_module(
-                        self.volume, "VolumeProfile", {"price_data": price_data}
-                    )
+                    module_signals["VolumeProfile"] = self._process_module(self.volume, "VolumeProfile", {"price_data": price_data})
 
                     # Sentiment Analysis signal
                     module_signals["SentimentAnalysis"] = self._process_module(
@@ -355,28 +333,19 @@ class MultiSignalBot:
                     )
 
                     # Chainalysis Adoption Tracker signal
-                    module_signals["AdoptionTracker"] = self._process_module(
-                        self.adoption_tracker, "AdoptionTracker", {"symbol": symbol}
-                    )
+                    module_signals["AdoptionTracker"] = self._process_module(self.adoption_tracker, "AdoptionTracker", {"symbol": symbol})
 
                     # Aggregate signals with error handling
                     try:
                         agg_input = {
                             "signals": module_signals,
-                            "price_data": (
-                                price_data[-1] if price_data else {"close": last_price}
-                            ),
+                            "price_data": (price_data[-1] if price_data else {"close": last_price}),
                         }
                         print("Aggregating signals...")
                         agg_result = self.aggregator.process(agg_input)
 
-                        if (
-                            not isinstance(agg_result, dict)
-                            or "signal" not in agg_result
-                        ):
-                            print(
-                                "Aggregator didn't return a proper result, using default HOLD"
-                            )
+                        if not isinstance(agg_result, dict) or "signal" not in agg_result:
+                            print("Aggregator didn't return a proper result, using default HOLD")
                             agg_result = {"signal": "HOLD", "confidence": 0.5}
                     except Exception as e:
                         print(f"Error in signal aggregation: {e}")
@@ -384,9 +353,7 @@ class MultiSignalBot:
 
                     # Update last signals
                     self.last_signals[symbol]["modules"] = module_signals
-                    self.last_signals[symbol]["aggregated"] = agg_result.get(
-                        "signal", "HOLD"
-                    )
+                    self.last_signals[symbol]["aggregated"] = agg_result.get("signal", "HOLD")
 
                     # Format signal outputs for display
                     signal_str = ""
@@ -403,9 +370,7 @@ class MultiSignalBot:
                         signal_info = ""
 
                     # Display current status
-                    print(
-                        f"[{now_utc}]    {symbol}: ${last_price:,.2f} | {signal_str} {signal_info}"
-                    )
+                    print(f"[{now_utc}]    {symbol}: ${last_price:,.2f} | {signal_str} {signal_info}")
 
                     # Display individual signal indicators
                     indicators = []
@@ -429,18 +394,13 @@ class MultiSignalBot:
 
                     # Check if we should execute a trade (not during cooldown period)
                     cooldown_sec = self.cooldown_min * 60
-                    if (
-                        now_ts - self.last_alert_ts[symbol] >= cooldown_sec
-                        and agg_result["signal"] != "HOLD"
-                    ):
+                    if now_ts - self.last_alert_ts[symbol] >= cooldown_sec and agg_result["signal"] != "HOLD":
                         # Calculate optimal position size using BudgetManager
                         # Extract volatility from any of our modules if available, or use a default
                         volatility = 0.02  # Default volatility
                         if "BollingerBands" in module_signals:
                             if "band_width" in module_signals["BollingerBands"]:
-                                volatility = module_signals["BollingerBands"][
-                                    "band_width"
-                                ]
+                                volatility = module_signals["BollingerBands"]["band_width"]
 
                         # Get position size recommendation from budget manager
                         position_calc = self.budget_manager.calculate_position_size(
@@ -471,12 +431,8 @@ class MultiSignalBot:
                                         "confidence": agg_result["confidence"],
                                         "signals": module_signals,
                                         "id": budget_result["position"]["id"],
-                                        "stop_loss": budget_result["position"][
-                                            "stop_loss"
-                                        ],
-                                        "take_profit": budget_result["position"][
-                                            "take_profit"
-                                        ],
+                                        "stop_loss": budget_result["position"]["stop_loss"],
+                                        "take_profit": budget_result["position"]["take_profit"],
                                     }
                                     self.trades.append(trade_record)
 
@@ -488,9 +444,7 @@ class MultiSignalBot:
                                         last_price,
                                     )
                                 else:
-                                    print(
-                                        f"⚠️ Could not open BUY position: {budget_result.get('error', 'Unknown error')}"
-                                    )
+                                    print(f"⚠️ Could not open BUY position: {budget_result.get('error', 'Unknown error')}")
 
                             elif agg_result["signal"] == "SELL":
                                 # Execute paper sell with budget manager
@@ -512,12 +466,8 @@ class MultiSignalBot:
                                         "confidence": agg_result["confidence"],
                                         "signals": module_signals,
                                         "id": budget_result["position"]["id"],
-                                        "stop_loss": budget_result["position"][
-                                            "stop_loss"
-                                        ],
-                                        "take_profit": budget_result["position"][
-                                            "take_profit"
-                                        ],
+                                        "stop_loss": budget_result["position"]["stop_loss"],
+                                        "take_profit": budget_result["position"]["take_profit"],
                                     }
                                     self.trades.append(trade_record)
 
@@ -529,13 +479,9 @@ class MultiSignalBot:
                                         last_price,
                                     )
                                 else:
-                                    print(
-                                        f"⚠️ Could not open SELL position: {budget_result.get('error', 'Unknown error')}"
-                                    )
+                                    print(f"⚠️ Could not open SELL position: {budget_result.get('error', 'Unknown error')}")
                         else:
-                            print(
-                                f"⚠️ Cannot open position: {position_calc.get('reason', 'Unknown reason')}"
-                            )
+                            print(f"⚠️ Cannot open position: {position_calc.get('reason', 'Unknown reason')}")
 
                         # Update last alert timestamp
                         self.last_alert_ts[symbol] = now_ts
@@ -583,21 +529,9 @@ class MultiSignalBot:
                 print(f"Error fetching market data for {symbol}: {e}")
                 # Use mock data
                 market_data[symbol] = {
-                    "last": (
-                        30000.0
-                        if "BTC" in symbol
-                        else 2000.0 if "ETH" in symbol else 100.0
-                    ),
-                    "bid": (
-                        29950.0
-                        if "BTC" in symbol
-                        else 1990.0 if "ETH" in symbol else 99.5
-                    ),
-                    "ask": (
-                        30050.0
-                        if "BTC" in symbol
-                        else 2010.0 if "ETH" in symbol else 100.5
-                    ),
+                    "last": (30000.0 if "BTC" in symbol else 2000.0 if "ETH" in symbol else 100.0),
+                    "bid": (29950.0 if "BTC" in symbol else 1990.0 if "ETH" in symbol else 99.5),
+                    "ask": (30050.0 if "BTC" in symbol else 2010.0 if "ETH" in symbol else 100.5),
                     "volume": 1000.0,
                     "timestamp": time.time() * 1000,
                 }
@@ -638,12 +572,8 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Multi-Signal Bot")
-    parser.add_argument(
-        "--config", type=str, default="config.yaml", help="Path to config file"
-    )
-    parser.add_argument(
-        "--paper", action="store_true", help="Run in paper trading mode"
-    )
+    parser.add_argument("--config", type=str, default="config.yaml", help="Path to config file")
+    parser.add_argument("--paper", action="store_true", help="Run in paper trading mode")
     args = parser.parse_args()
 
     print("Initializing MultiSignalBot...")

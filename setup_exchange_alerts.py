@@ -130,8 +130,7 @@ def check_exchange_listings():
                 if (
                     confidence >= config["min_confidence"]
                     and expected_return >= config["min_expected_return"]
-                    and risk_level_to_numeric(risk_level)
-                    <= risk_level_to_numeric(config["max_risk_level"])
+                    and risk_level_to_numeric(risk_level) <= risk_level_to_numeric(config["max_risk_level"])
                 ):
                     filtered_listings.append(listing)
 
@@ -209,9 +208,7 @@ def save_alerts(alerts):
 def print_alert_status():
     """Print the current alert status"""
     print("\n" + "=" * 70)
-    print(
-        f"🔔 EXCHANGE ALERT SYSTEM - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-    )
+    print(f"🔔 EXCHANGE ALERT SYSTEM - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 70)
 
     print("\n📊 EXCHANGE ALERT CONFIGURATIONS:")
@@ -269,15 +266,9 @@ def alert_loop(interval=300):
 
 def main():
     """Main execution function"""
-    parser = argparse.ArgumentParser(
-        description="Exchange Alert System for New Listings Radar"
-    )
-    parser.add_argument(
-        "--interval", type=int, default=300, help="Alert check interval in seconds"
-    )
-    parser.add_argument(
-        "--configure", action="store_true", help="Configure alert settings"
-    )
+    parser = argparse.ArgumentParser(description="Exchange Alert System for New Listings Radar")
+    parser.add_argument("--interval", type=int, default=300, help="Alert check interval in seconds")
+    parser.add_argument("--configure", action="store_true", help="Configure alert settings")
     parser.add_argument("--status", action="store_true", help="Show alert status")
 
     args = parser.parse_args()
@@ -293,28 +284,18 @@ def main():
         for exchange in EXCHANGE_ALERTS:
             print(f"\nConfiguring {exchange}:")
 
-            EXCHANGE_ALERTS[exchange]["enabled"] = (
-                input(f"Enable alerts for {exchange}? (y/n) [y]: ").lower() != "n"
-            )
+            EXCHANGE_ALERTS[exchange]["enabled"] = input(f"Enable alerts for {exchange}? (y/n) [y]: ").lower() != "n"
 
             try:
-                min_conf = input(
-                    f"Minimum confidence (0-100) [{EXCHANGE_ALERTS[exchange]['min_confidence'] * 100:.0f}]: "
-                )
+                min_conf = input(f"Minimum confidence (0-100) [{EXCHANGE_ALERTS[exchange]['min_confidence'] * 100:.0f}]: ")
                 if min_conf:
                     EXCHANGE_ALERTS[exchange]["min_confidence"] = float(min_conf) / 100
 
-                min_ret = input(
-                    f"Minimum expected return (0-100) [{EXCHANGE_ALERTS[exchange]['min_expected_return'] * 100:.0f}]: "
-                )
+                min_ret = input(f"Minimum expected return (0-100) [{EXCHANGE_ALERTS[exchange]['min_expected_return'] * 100:.0f}]: ")
                 if min_ret:
-                    EXCHANGE_ALERTS[exchange]["min_expected_return"] = (
-                        float(min_ret) / 100
-                    )
+                    EXCHANGE_ALERTS[exchange]["min_expected_return"] = float(min_ret) / 100
 
-                risk = input(
-                    f"Maximum risk level (LOW/MEDIUM/HIGH) [{EXCHANGE_ALERTS[exchange]['max_risk_level']}]: "
-                ).upper()
+                risk = input(f"Maximum risk level (LOW/MEDIUM/HIGH) [{EXCHANGE_ALERTS[exchange]['max_risk_level']}]: ").upper()
                 if risk in ["LOW", "MEDIUM", "HIGH"]:
                     EXCHANGE_ALERTS[exchange]["max_risk_level"] = risk
             except ValueError:

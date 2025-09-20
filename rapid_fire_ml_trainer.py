@@ -48,9 +48,7 @@ class RapidFireMLTrainer:
     Tracks wins/losses with emphasis on learning from mistakes
     """
 
-    def __init__(
-        self, config_path: str = "config/config.yaml", initial_capital: float = 1000.0
-    ):
+    def __init__(self, config_path: str = "config/config.yaml", initial_capital: float = 1000.0):
         """
         Initialize the RapidFireMLTrainer system
 
@@ -113,18 +111,14 @@ class RapidFireMLTrainer:
         ]
 
         # Signal weights (will be dynamically adjusted)
-        self.signal_weights = {
-            signal: 1.0 / len(self.signals) for signal in self.signals
-        }
+        self.signal_weights = {signal: 1.0 / len(self.signals) for signal in self.signals}
 
         # Learning rate for weight adjustments
         self.learning_rate = 0.01
 
         # Training session directory
         self.session_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.session_dir = os.path.join(
-            "data", "rapid_fire_sessions", f"session_{self.session_timestamp}"
-        )
+        self.session_dir = os.path.join("data", "rapid_fire_sessions", f"session_{self.session_timestamp}")
         os.makedirs(self.session_dir, exist_ok=True)
         os.makedirs(os.path.join(self.session_dir, "models"), exist_ok=True)
         os.makedirs(os.path.join(self.session_dir, "visualizations"), exist_ok=True)
@@ -182,9 +176,7 @@ class RapidFireMLTrainer:
         """
         model = Sequential(
             [
-                LSTM(
-                    64, return_sequences=True, input_shape=(10, 15)
-                ),  # 10 time steps, 15 features
+                LSTM(64, return_sequences=True, input_shape=(10, 15)),  # 10 time steps, 15 features
                 Dropout(0.2),
                 LSTM(32),
                 Dropout(0.2),
@@ -309,9 +301,7 @@ class RapidFireMLTrainer:
         else:
             return "HOLD"
 
-    def record_decision(
-        self, signals: np.ndarray, action: str, price: float, timestamp: datetime
-    ) -> None:
+    def record_decision(self, signals: np.ndarray, action: str, price: float, timestamp: datetime) -> None:
         """
         Record a trading decision for later learning
 
@@ -359,9 +349,7 @@ class RapidFireMLTrainer:
         elif action == "SELL":
             reward = -price_change_pct  # Positive if price went down
         else:  # HOLD
-            reward = (
-                0.1 if abs(price_change_pct) < 0.5 else -0.1
-            )  # Small positive reward for HOLD in stable price
+            reward = 0.1 if abs(price_change_pct) < 0.5 else -0.1  # Small positive reward for HOLD in stable price
 
         # Record win/loss
         if reward > 0:
@@ -418,9 +406,7 @@ class RapidFireMLTrainer:
                             label[0] = 1  # Should have BOUGHT
                         else:  # HOLD
                             # Determine if we should have bought or sold
-                            price_change = (
-                                current_price - decision["price"]
-                            ) / decision["price"]
+                            price_change = (current_price - decision["price"]) / decision["price"]
                             if price_change > 0.01:
                                 label[0] = 1  # Should have BOUGHT
                             elif price_change < -0.01:
@@ -442,9 +428,7 @@ class RapidFireMLTrainer:
             # Update pattern memory
             self.pattern_memory.extend(training_data)
             if len(self.pattern_memory) > 1000:
-                self.pattern_memory = self.pattern_memory[
-                    -1000:
-                ]  # Keep only the most recent 1000
+                self.pattern_memory = self.pattern_memory[-1000:]  # Keep only the most recent 1000
 
     def update_signal_weights(self) -> None:
         """
@@ -487,9 +471,7 @@ class RapidFireMLTrainer:
         patterns_learned = len(self.pattern_memory)
 
         # Calculate confidence score (based on model accuracy)
-        confidence = min(
-            100, patterns_learned / 10
-        )  # Simple metric: 10 patterns = 1% confidence
+        confidence = min(100, patterns_learned / 10)  # Simple metric: 10 patterns = 1% confidence
 
         # Update dashboard data
         self.dashboard_data["timestamp"].append(timestamp)
@@ -548,10 +530,10 @@ class RapidFireMLTrainer:
         ║ Win Rate: {win_rate:.1f}% ({self.wins}/{self.total_trades})
         ║ Patterns Learned: {patterns_learned}
         ║ Model Confidence: {confidence:.1f}%
-        ║ 
+        ║
         ║ SIGNAL WEIGHTS:
         ║ {self._format_signal_weights()}
-        ║ 
+        ║
         ║ BEST SIGNAL: {self.dashboard_data["best_signal"][0] if self.dashboard_data["best_signal"] else "N/A"} ({self.dashboard_data["best_signal"][1]:.4f} if self.dashboard_data['best_signal'] else 'N/A')
         ║ WORST SIGNAL: {self.dashboard_data["worst_signal"][0] if self.dashboard_data["worst_signal"] else "N/A"} ({self.dashboard_data["worst_signal"][1]:.4f} if self.dashboard_data['worst_signal'] else 'N/A')
         ╚══════════════════════════════════════════════════════════════
@@ -561,9 +543,7 @@ class RapidFireMLTrainer:
     def _format_signal_weights(self) -> str:
         """Format signal weights for display"""
         result = ""
-        for i, (signal, weight) in enumerate(
-            sorted(self.signal_weights.items(), key=lambda x: x[1], reverse=True)
-        ):
+        for i, (signal, weight) in enumerate(sorted(self.signal_weights.items(), key=lambda x: x[1], reverse=True)):
             result += f"║ {signal}: {weight:.4f}"
             if i < len(self.signal_weights) - 1:
                 result += "\n"
@@ -734,9 +714,7 @@ class RapidFireMLTrainer:
                 minutes = int(remaining_time // 60)
                 seconds = int(remaining_time % 60)
 
-                print(
-                    f"[{datetime.now().strftime('%H:%M:%S')}] {symbol}: ${price:.2f} | {action} | Remaining: {minutes}m {seconds}s"
-                )
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] {symbol}: ${price:.2f} | {action} | Remaining: {minutes}m {seconds}s")
 
                 # Wait for next cycle
                 cycle_duration = time.time() - cycle_start

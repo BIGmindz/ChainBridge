@@ -70,15 +70,11 @@ class PatternEngine:
 
         # Check for double bottom
         if self._check_pattern(data, "double_bottom"):
-            patterns.append(
-                {"name": "double_bottom", "confidence": 0.8, "signal": "buy"}
-            )
+            patterns.append({"name": "double_bottom", "confidence": 0.8, "signal": "buy"})
 
         # Check for head and shoulders
         if self._check_pattern(data, "head_shoulders"):
-            patterns.append(
-                {"name": "head_shoulders", "confidence": 0.75, "signal": "sell"}
-            )
+            patterns.append({"name": "head_shoulders", "confidence": 0.75, "signal": "sell"})
 
         # Additional patterns would be checked here
 
@@ -140,9 +136,7 @@ class PatternEngine:
 
         return optimized
 
-    def predict_price_movement(
-        self, data: pd.DataFrame, lookforward: int = 10
-    ) -> Tuple[float, float]:
+    def predict_price_movement(self, data: pd.DataFrame, lookforward: int = 10) -> Tuple[float, float]:
         """
         Predict price movement direction and confidence
         Returns (direction, confidence) where direction is in range [-1, 1]

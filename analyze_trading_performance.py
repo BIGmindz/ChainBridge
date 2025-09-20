@@ -55,9 +55,7 @@ class TradingPerformanceAnalyzer:
                 self.trades_df = pd.DataFrame(trades)
 
                 # Convert timestamp to datetime
-                self.trades_df["timestamp"] = pd.to_datetime(
-                    self.trades_df["timestamp"]
-                )
+                self.trades_df["timestamp"] = pd.to_datetime(self.trades_df["timestamp"])
 
                 print(f"✅ Loaded {len(self.trades_df)} trades from {self.trades_file}")
             except Exception as e:
@@ -123,9 +121,7 @@ class TradingPerformanceAnalyzer:
             try:
                 date_delta = performance["end_date"] - performance["start_date"]
                 performance["trading_days"] = date_delta.days
-                performance["trades_per_day"] = performance["total_trades"] / max(
-                    1, date_delta.days
-                )
+                performance["trades_per_day"] = performance["total_trades"] / max(1, date_delta.days)
             except Exception:
                 performance["trading_days"] = 0
                 performance["trades_per_day"] = 0
@@ -161,12 +157,8 @@ class TradingPerformanceAnalyzer:
                 for module, data in signals.items():
                     if module in signal_counts:
                         signal = data.get("signal", "HOLD")
-                        signal_counts[module][signal] = (
-                            signal_counts[module].get(signal, 0) + 1
-                        )
-                        signal_counts[module]["total"] = (
-                            signal_counts[module].get("total", 0) + 1
-                        )
+                        signal_counts[module][signal] = signal_counts[module].get(signal, 0) + 1
+                        signal_counts[module]["total"] = signal_counts[module].get("total", 0) + 1
 
         # Calculate signal agreement rate with final decision
         for module in signal_counts:
@@ -177,16 +169,12 @@ class TradingPerformanceAnalyzer:
                         if row["signals"][module].get("signal") == row["action"]:
                             agreement_count += 1
 
-                signal_counts[module]["agreement_rate"] = (
-                    agreement_count / signal_counts[module]["total"]
-                )
+                signal_counts[module]["agreement_rate"] = agreement_count / signal_counts[module]["total"]
 
         self.signal_performance = signal_counts
         return signal_counts
 
-    def generate_performance_report(
-        self, output_file="trading_performance_report.json"
-    ):
+    def generate_performance_report(self, output_file="trading_performance_report.json"):
         """Generate and save a comprehensive performance report"""
 
         # Load data if not already loaded
@@ -303,26 +291,20 @@ def main():
         default="trading_metrics.json",
         help="Path to metrics JSON file",
     )
-    parser.add_argument(
-        "--output", type=str, default="reports", help="Output directory for reports"
-    )
+    parser.add_argument("--output", type=str, default="reports", help="Output directory for reports")
     args = parser.parse_args()
 
     # Create output directory if it doesn't exist
     os.makedirs(args.output, exist_ok=True)
 
     # Create analyzer
-    analyzer = TradingPerformanceAnalyzer(
-        trades_file=args.trades, metrics_file=args.metrics
-    )
+    analyzer = TradingPerformanceAnalyzer(trades_file=args.trades, metrics_file=args.metrics)
 
     # Load data
     analyzer.load_data()
 
     # Generate report
-    _report = analyzer.generate_performance_report(
-        output_file=os.path.join(args.output, "trading_performance_report.json")
-    )
+    _report = analyzer.generate_performance_report(output_file=os.path.join(args.output, "trading_performance_report.json"))
 
     # Create visualizations
     analyzer.visualize_performance(output_dir=args.output)

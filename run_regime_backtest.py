@@ -67,11 +67,7 @@ async def run_with_data_file(file_path, output_path):
 
         dates = None
         date_col = next(
-            (
-                col
-                for col in df.columns
-                if "date" in col.lower() or "time" in col.lower()
-            ),
+            (col for col in df.columns if "date" in col.lower() or "time" in col.lower()),
             None,
         )
         if date_col:

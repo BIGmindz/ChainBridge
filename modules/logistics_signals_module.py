@@ -76,19 +76,13 @@ class LogisticsSignalsModule:
 
             # Try to load real data if available
             if os.path.exists(f"{self.data_path}/port_congestion.csv"):
-                data["port_congestion"] = pd.read_csv(
-                    f"{self.data_path}/port_congestion.csv", parse_dates=["date"]
-                )
+                data["port_congestion"] = pd.read_csv(f"{self.data_path}/port_congestion.csv", parse_dates=["date"])
 
             if os.path.exists(f"{self.data_path}/diesel_prices.csv"):
-                data["diesel_prices"] = pd.read_csv(
-                    f"{self.data_path}/diesel_prices.csv", parse_dates=["date"]
-                )
+                data["diesel_prices"] = pd.read_csv(f"{self.data_path}/diesel_prices.csv", parse_dates=["date"])
 
             if os.path.exists(f"{self.data_path}/container_rates.csv"):
-                data["container_rates"] = pd.read_csv(
-                    f"{self.data_path}/container_rates.csv", parse_dates=["date"]
-                )
+                data["container_rates"] = pd.read_csv(f"{self.data_path}/container_rates.csv", parse_dates=["date"])
 
             # If any data is missing, generate all to ensure consistency
             if len(data) < 3:
@@ -115,34 +109,24 @@ class LogisticsSignalsModule:
         # Generate port congestion data
         # Shows a cyclical pattern with increasing trend (supply chain issues)
         port_values = np.sin(np.linspace(0, 12 * np.pi, len(date_range))) * 0.3 + 0.5
-        port_values = port_values + np.linspace(
-            0, 0.2, len(date_range)
-        )  # Increasing trend
-        port_values = np.clip(
-            port_values + np.random.normal(0, 0.05, len(date_range)), 0, 1
-        )
+        port_values = port_values + np.linspace(0, 0.2, len(date_range))  # Increasing trend
+        port_values = np.clip(port_values + np.random.normal(0, 0.05, len(date_range)), 0, 1)
 
-        data["port_congestion"] = pd.DataFrame(
-            {"date": date_range, "value": port_values, "region": "global"}
-        )
+        data["port_congestion"] = pd.DataFrame({"date": date_range, "value": port_values, "region": "global"})
 
         # Generate diesel prices data
         # Shows volatility with a recent increase (inflation, energy crisis)
         base_diesel = np.random.normal(0.5, 0.1, len(date_range))
         trend = np.linspace(0, 0.3, len(date_range))
         diesel_values = base_diesel + trend
-        diesel_values = (
-            diesel_values + np.sin(np.linspace(0, 8 * np.pi, len(date_range))) * 0.1
-        )
+        diesel_values = diesel_values + np.sin(np.linspace(0, 8 * np.pi, len(date_range))) * 0.1
 
         # Add a price shock in the last 20% of the data (energy crisis)
         shock_idx = int(len(date_range) * 0.8)
         diesel_values[shock_idx:] += 0.2
         diesel_values = np.clip(diesel_values, 0, 1)
 
-        data["diesel_prices"] = pd.DataFrame(
-            {"date": date_range, "value": diesel_values, "region": "global"}
-        )
+        data["diesel_prices"] = pd.DataFrame({"date": date_range, "value": diesel_values, "region": "global"})
 
         # Generate container rates data
         # Shows dramatic increases during supply chain crisis, then normalization
@@ -155,17 +139,11 @@ class LogisticsSignalsModule:
 
         # Create the spike pattern
         container_values = base_rates.copy()
-        container_values[spike_start:spike_peak] += np.linspace(
-            0, 0.6, spike_peak - spike_start
-        )
-        container_values[spike_peak:spike_end] -= np.linspace(
-            0, 0.5, spike_end - spike_peak
-        )
+        container_values[spike_start:spike_peak] += np.linspace(0, 0.6, spike_peak - spike_start)
+        container_values[spike_peak:spike_end] -= np.linspace(0, 0.5, spike_end - spike_peak)
         container_values = np.clip(container_values, 0, 1)
 
-        data["container_rates"] = pd.DataFrame(
-            {"date": date_range, "value": container_values, "region": "global"}
-        )
+        data["container_rates"] = pd.DataFrame({"date": date_range, "value": container_values, "region": "global"})
 
         return data
 
@@ -194,10 +172,7 @@ class LogisticsSignalsModule:
                 reason = "Low port congestion indicates economic slowdown"
             else:
                 signal = "HOLD"
-                mid_point = (
-                    self.thresholds[metric]["bullish"]
-                    + self.thresholds[metric]["bearish"]
-                ) / 2
+                mid_point = (self.thresholds[metric]["bullish"] + self.thresholds[metric]["bearish"]) / 2
                 confidence = 1.0 - min(abs(value - mid_point) * 3, 1.0)
                 reason = "Port congestion in neutral range"
 
@@ -212,10 +187,7 @@ class LogisticsSignalsModule:
                 reason = "High diesel prices hurt mining economics"
             else:
                 signal = "HOLD"
-                mid_point = (
-                    self.thresholds[metric]["bullish"]
-                    + self.thresholds[metric]["bearish"]
-                ) / 2
+                mid_point = (self.thresholds[metric]["bullish"] + self.thresholds[metric]["bearish"]) / 2
                 confidence = 1.0 - min(abs(value - mid_point) * 3, 1.0)
                 reason = "Diesel prices in neutral range"
 
@@ -230,10 +202,7 @@ class LogisticsSignalsModule:
                 reason = "High container rates signal supply chain stress"
             else:
                 signal = "HOLD"
-                mid_point = (
-                    self.thresholds[metric]["bullish"]
-                    + self.thresholds[metric]["bearish"]
-                ) / 2
+                mid_point = (self.thresholds[metric]["bullish"] + self.thresholds[metric]["bearish"]) / 2
                 confidence = 1.0 - min(abs(value - mid_point) * 3, 1.0)
                 reason = "Container rates in neutral range"
         else:
@@ -267,16 +236,8 @@ class LogisticsSignalsModule:
         buy_signals = [s for s in signals.values() if s["signal"] == "BUY"]
         sell_signals = [s for s in signals.values() if s["signal"] == "SELL"]
 
-        buy_strength = (
-            sum(s["confidence"] for s in buy_signals) / len(signals)
-            if buy_signals
-            else 0
-        )
-        sell_strength = (
-            sum(s["confidence"] for s in sell_signals) / len(signals)
-            if sell_signals
-            else 0
-        )
+        buy_strength = sum(s["confidence"] for s in buy_signals) / len(signals) if buy_signals else 0
+        sell_strength = sum(s["confidence"] for s in sell_signals) / len(signals) if sell_signals else 0
 
         # Determine final signal
         if buy_strength > sell_strength and buy_strength > 0.2:
@@ -306,9 +267,7 @@ class LogisticsSignalsModule:
                 "signal": signals.get("container_rates", {}).get("signal", "HOLD"),
                 "reason": signals.get("container_rates", {}).get("reason", "No data"),
             },
-            "correlation_with_traditional": self.correlation_map["logistics_signals"][
-                "correlation"
-            ],
+            "correlation_with_traditional": self.correlation_map["logistics_signals"]["correlation"],
             "forward_looking_months": "3-6",
         }
 
@@ -316,8 +275,7 @@ class LogisticsSignalsModule:
         return {
             "signal": final_signal,
             "confidence": confidence,
-            "value": confidence
-            * (1 if final_signal == "BUY" else -1 if final_signal == "SELL" else 0),
+            "value": confidence * (1 if final_signal == "BUY" else -1 if final_signal == "SELL" else 0),
             "details": details,
             "summary": f"Logistics signals: {final_signal} with {confidence:.2f} confidence",
             "module": self.name,
@@ -356,8 +314,6 @@ if __name__ == "__main__":
     print("\nSignal breakdown:")
     for metric, details in result["details"].items():
         if isinstance(details, dict) and "value" in details:
-            print(
-                f"  {metric}: {details['signal']} ({details['value']:.2f}) - {details['reason']}"
-            )
+            print(f"  {metric}: {details['signal']} ({details['value']:.2f}) - {details['reason']}")
 
     print(f"\n🔮 FORWARD LOOKING: {result['details']['forward_looking_months']} months")

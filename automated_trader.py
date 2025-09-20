@@ -49,9 +49,7 @@ def run_automated_trader(refresh_hours=12, run_once=False):
 
         # Check if it's time to refresh the crypto selection
         if (current_time - last_selection_time) > timedelta(hours=refresh_hours):
-            logger.info(
-                f"Time to refresh crypto selection (every {refresh_hours} hours)"
-            )
+            logger.info(f"Time to refresh crypto selection (every {refresh_hours} hours)")
 
             try:
                 # Run the crypto selector
@@ -108,9 +106,7 @@ def run_automated_trader(refresh_hours=12, run_once=False):
 def main():
     """CLI entrypoint with command-line arguments"""
     parser = argparse.ArgumentParser(description="Automated Multi-Signal Trader")
-    parser.add_argument(
-        "--once", action="store_true", help="Run a single cycle and exit"
-    )
+    parser.add_argument("--once", action="store_true", help="Run a single cycle and exit")
     parser.add_argument(
         "--refresh",
         type=int,

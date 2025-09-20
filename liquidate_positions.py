@@ -26,9 +26,7 @@ from src.exchange_adapter import ExchangeAdapter
 class PositionLiquidator:
     """Handles safe liquidation of crypto positions to USDG."""
 
-    def __init__(
-        self, exchange_adapter: ExchangeAdapter, budget_manager: BudgetManager
-    ):
+    def __init__(self, exchange_adapter: ExchangeAdapter, budget_manager: BudgetManager):
         self.exchange_adapter = exchange_adapter
         self.budget_manager = budget_manager
         self.liquidation_log = []
@@ -39,9 +37,7 @@ class PositionLiquidator:
         # For now, return empty dict - you'll need to populate this
         return {}
 
-    def calculate_liquidation_amount(
-        self, symbol: str, target_value_usd: float
-    ) -> float:
+    def calculate_liquidation_amount(self, symbol: str, target_value_usd: float) -> float:
         """Calculate how much crypto to sell to reach target USD value."""
         try:
             # Get current price
@@ -51,9 +47,7 @@ class PositionLiquidator:
             # Calculate amount needed to sell
             amount_to_sell = target_value_usd / current_price
 
-            print(
-                f"💰 To liquidate ${target_value_usd}: Sell {amount_to_sell:.6f} {symbol} @ ${current_price:,.2f}"
-            )
+            print(f"💰 To liquidate ${target_value_usd}: Sell {amount_to_sell:.6f} {symbol} @ ${current_price:,.2f}")
             return amount_to_sell
 
         except Exception as e:
@@ -74,9 +68,7 @@ class PositionLiquidator:
             sell_price = ticker["last"] * 0.995  # 0.5% below market for limit order
 
             # Place sell order
-            sell_order = self.exchange_adapter.place_order(
-                symbol=usd_symbol, side="sell", amount=amount, price=sell_price
-            )
+            sell_order = self.exchange_adapter.place_order(symbol=usd_symbol, side="sell", amount=amount, price=sell_price)
 
             if sell_order:
                 usd_received = amount * sell_price
@@ -86,23 +78,17 @@ class PositionLiquidator:
                 print(f"🔄 Step 2: Converting ${usd_received:.2f} USD to USDG...")
 
                 # Calculate USDG amount (USDG/USD rate)
-                usdg_ticker = safe_fetch_ticker(
-                    self.exchange_adapter.exchange, "USDG/USD"
-                )
+                usdg_ticker = safe_fetch_ticker(self.exchange_adapter.exchange, "USDG/USD")
                 usdg_price = usdg_ticker["last"]
                 usdg_amount = usd_received / usdg_price
 
                 # Buy USDG with USD
                 buy_price = usdg_price * 1.005  # 0.5% above market for limit order
-                buy_order = self.exchange_adapter.place_order(
-                    symbol="USDG/USD", side="buy", amount=usdg_amount, price=buy_price
-                )
+                buy_order = self.exchange_adapter.place_order(symbol="USDG/USD", side="buy", amount=usdg_amount, price=buy_price)
 
                 if buy_order:
                     print(f"✅ Converted to {usdg_amount:.2f} USDG")
-                    print(
-                        "💰 Liquidation complete! Funds available immediately for trading."
-                    )
+                    print("💰 Liquidation complete! Funds available immediately for trading.")
 
                     # Log the transaction
                     self.liquidation_log.append(
@@ -142,12 +128,8 @@ class PositionLiquidator:
 def main():
     """Main liquidation function."""
     parser = argparse.ArgumentParser(description="Liquidate crypto positions to USDG")
-    parser.add_argument(
-        "--symbol", required=True, help="Symbol to liquidate (e.g., PRO/USD)"
-    )
-    parser.add_argument(
-        "--value", type=float, required=True, help="USD value to liquidate"
-    )
+    parser.add_argument("--symbol", required=True, help="Symbol to liquidate (e.g., PRO/USD)")
+    parser.add_argument("--value", type=float, required=True, help="USD value to liquidate")
     parser.add_argument("--config", default="config.yaml", help="Config file path")
 
     args = parser.parse_args()
@@ -166,17 +148,13 @@ def main():
 
         # Initialize components
         exchange_adapter = ExchangeAdapter(exchange, config)
-        budget_manager = BudgetManager(
-            initial_capital=config.get("initial_capital", 10000)
-        )
+        budget_manager = BudgetManager(initial_capital=config.get("initial_capital", 10000))
 
         # Create liquidator
         liquidator = PositionLiquidator(exchange_adapter, budget_manager)
 
         # Calculate and execute liquidation
-        amount_to_sell = liquidator.calculate_liquidation_amount(
-            args.symbol, args.value
-        )
+        amount_to_sell = liquidator.calculate_liquidation_amount(args.symbol, args.value)
 
         if amount_to_sell > 0:
             success = liquidator.liquidate_to_usdg(args.symbol, amount_to_sell)

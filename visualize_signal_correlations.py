@@ -99,9 +99,7 @@ def generate_correlation_matrix():
 
     # Create a DataFrame for visualization
     signal_names = [signal["name"] for signal in all_signals]
-    correlation_df = pd.DataFrame(
-        correlation_matrix, columns=signal_names, index=signal_names
-    )
+    correlation_df = pd.DataFrame(correlation_matrix, columns=signal_names, index=signal_names)
 
     # Plot correlation matrix
     plt.figure(figsize=(12, 10))
@@ -295,9 +293,7 @@ def calculate_portfolio_metrics(signals, correlation_matrix):
 
     # Calculate intra-category average correlations
     tech_indices = [i for i, s in enumerate(signals) if s["category"] == "Technical"]
-    logistics_indices = [
-        i for i, s in enumerate(signals) if s["category"] == "Logistics"
-    ]
+    logistics_indices = [i for i, s in enumerate(signals) if s["category"] == "Logistics"]
     macro_indices = [i for i, s in enumerate(signals) if s["category"] == "Macro"]
 
     # Technical internal correlation

@@ -82,9 +82,7 @@ def main():
 
     try:
         # Create the RapidFireMLTrainer
-        trainer = RapidFireMLTrainer(
-            config_path=args.config, initial_capital=args.capital
-        )
+        trainer = RapidFireMLTrainer(config_path=args.config, initial_capital=args.capital)
 
         # Run the training session
         trainer.run_training(duration_minutes=args.duration, cycle_seconds=args.cycle)

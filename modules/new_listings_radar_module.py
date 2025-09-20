@@ -161,9 +161,7 @@ class NewListingsRadar:
         try:
             async with aiohttp.ClientSession() as session:
                 # Check Coinbase API
-                async with session.get(
-                    self.cex_sources["COINBASE"]["feed"]
-                ) as response:
+                async with session.get(self.cex_sources["COINBASE"]["feed"]) as response:
                     data = await response.json()
 
                     # Get recently added products
@@ -268,10 +266,7 @@ class NewListingsRadar:
         Apply ML-powered risk filters
         """
         # Liquidity check
-        if (
-            float(pair_data.get("liquidity", {}).get("usd", 0))
-            < self.risk_filters["min_liquidity"]
-        ):
+        if float(pair_data.get("liquidity", {}).get("usd", 0)) < self.risk_filters["min_liquidity"]:
             return False
 
         # Volume check
@@ -428,9 +423,7 @@ class NewListingsRadar:
             print(f"   Position Size: {signal['position_size'] * 100:.1f}%")
             print(f"   Entry: {signal['entry_strategy']['type']}")
             print(f"   Stop Loss: {signal['exit_strategy']['stop_loss'] * 100:.0f}%")
-            print(
-                f"   Take Profit: {signal['exit_strategy']['take_profit_1']['target'] * 100:.0f}%"
-            )
+            print(f"   Take Profit: {signal['exit_strategy']['take_profit_1']['target'] * 100:.0f}%")
             print(f"   Risk Level: {signal['risk_level']}")
 
         return signals
@@ -460,9 +453,7 @@ class NewListingsRadar:
         if simulated_returns:
             total_return = np.sum(simulated_returns)
             avg_return = np.mean(simulated_returns)
-            win_rate = len([r for r in simulated_returns if r > 0]) / len(
-                simulated_returns
-            )
+            win_rate = len([r for r in simulated_returns if r > 0]) / len(simulated_returns)
 
             print(f"Total Listings Caught: {len(simulated_returns)}")
             print(f"Total Return: {total_return * 100:.1f}%")
@@ -569,15 +560,15 @@ async def run_new_listings_radar():
 
     print(
         """
-    
+
     ✅ NEW LISTINGS RADAR OPERATIONAL
-    
+
     Your bot now:
     • Monitors 5 major exchanges
     • Catches listings within minutes
     • Applies ML risk filters
     • Executes with proper position sizing
-    
+
     Expected monthly return: 50-100% from listings alone!
     """
     )

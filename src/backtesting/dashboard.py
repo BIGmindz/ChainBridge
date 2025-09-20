@@ -21,9 +21,7 @@ try:
     MATPLOTLIB_AVAILABLE = True
 except ImportError:
     MATPLOTLIB_AVAILABLE = False
-    print(
-        "Warning: Matplotlib is not available. Visualization features will be disabled."
-    )
+    print("Warning: Matplotlib is not available. Visualization features will be disabled.")
 
 try:
     import pandas as pd  # noqa: F401
@@ -73,9 +71,7 @@ class RegimePerformanceDashboard:
 
         # Check if visualization is available
         if not MATPLOTLIB_AVAILABLE:
-            print(
-                "Warning: Matplotlib is not available. Only text reports will be generated."
-            )
+            print("Warning: Matplotlib is not available. Only text reports will be generated.")
 
     def generate_dashboard(self, title: str = "Regime Performance Dashboard") -> None:
         """
@@ -139,9 +135,7 @@ class RegimePerformanceDashboard:
             overall_returns = self.results["Overall"]["returns"]
             if len(overall_returns) > 0:
                 cumulative_overall = np.cumprod(1 + overall_returns) - 1
-                ax.plot(
-                    cumulative_overall, label="Overall", linewidth=2.5, color="black"
-                )
+                ax.plot(cumulative_overall, label="Overall", linewidth=2.5, color="black")
 
         ax.set_title("Cumulative Returns by Regime", fontsize=12)
         ax.set_ylabel("Cumulative Return (%)")
@@ -355,9 +349,7 @@ class RegimePerformanceDashboard:
                 volatilities.append(volatility)
 
                 # Max drawdown is already in the metrics
-                max_drawdown = (
-                    self.results[regime].get("metrics", {}).get("max_drawdown", 0)
-                )
+                max_drawdown = self.results[regime].get("metrics", {}).get("max_drawdown", 0)
                 max_drawdowns.append(max_drawdown)
             else:
                 volatilities.append(0)
@@ -406,11 +398,7 @@ class RegimePerformanceDashboard:
             f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
 
             f.write("-- Performance Metrics by Regime --\n")
-            f.write(
-                "\n{:<15} {:<15} {:<15} {:<15} {:<15}\n".format(
-                    "Regime", "Total Return", "Sharpe Ratio", "Max Drawdown", "Win Rate"
-                )
-            )
+            f.write("\n{:<15} {:<15} {:<15} {:<15} {:<15}\n".format("Regime", "Total Return", "Sharpe Ratio", "Max Drawdown", "Win Rate"))
             f.write("-" * 75 + "\n")
 
             for regime, data in self.results.items():
@@ -427,42 +415,24 @@ class RegimePerformanceDashboard:
                     )
 
             f.write("\n-- Regime Distribution --\n")
-            total_periods = sum(
-                len(data.get("returns", []))
-                for regime, data in self.results.items()
-                if regime != "Overall"
-            )
+            total_periods = sum(len(data.get("returns", [])) for regime, data in self.results.items() if regime != "Overall")
 
             if total_periods > 0:
-                f.write(
-                    "\n{:<15} {:<15} {:<15}\n".format("Regime", "Periods", "Percentage")
-                )
+                f.write("\n{:<15} {:<15} {:<15}\n".format("Regime", "Periods", "Percentage"))
                 f.write("-" * 45 + "\n")
 
                 for regime, data in self.results.items():
                     if regime != "Overall" and "returns" in data:
                         periods = len(data["returns"])
                         percentage = periods / total_periods * 100
-                        f.write(
-                            "{:<15} {:<15} {:<15.2f}%\n".format(
-                                regime, periods, percentage
-                            )
-                        )
+                        f.write("{:<15} {:<15} {:<15.2f}%\n".format(regime, periods, percentage))
 
             # Save trade analysis if signals data is available
-            has_signals = all(
-                "signals" in self.results[regime]
-                for regime in self.results
-                if regime != "Overall"
-            )
+            has_signals = all("signals" in self.results[regime] for regime in self.results if regime != "Overall")
 
             if has_signals:
                 f.write("\n-- Trade Analysis --\n")
-                f.write(
-                    "\n{:<15} {:<15} {:<15} {:<15}\n".format(
-                        "Regime", "Buy Signals", "Sell Signals", "Hold Signals"
-                    )
-                )
+                f.write("\n{:<15} {:<15} {:<15} {:<15}\n".format("Regime", "Buy Signals", "Sell Signals", "Hold Signals"))
                 f.write("-" * 60 + "\n")
 
                 for regime, data in self.results.items():
@@ -472,11 +442,7 @@ class RegimePerformanceDashboard:
                         sell_count = np.sum(signals == -1)
                         hold_count = np.sum(signals == 0)
 
-                        f.write(
-                            "{:<15} {:<15} {:<15} {:<15}\n".format(
-                                regime, buy_count, sell_count, hold_count
-                            )
-                        )
+                        f.write("{:<15} {:<15} {:<15} {:<15}\n".format(regime, buy_count, sell_count, hold_count))
 
         # Also save results as JSON for further analysis
         json_path = os.path.join(self.output_dir, f"regime_results_{timestamp}.json")

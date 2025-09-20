@@ -115,9 +115,7 @@ def main():
             vol = 0.8  # Lower volatility
 
         # Random walk with drift
-        price_data[i] = price_data[i - 1] * (
-            1 + drift / 100 + vol / 100 * np.random.randn()
-        )
+        price_data[i] = price_data[i - 1] * (1 + drift / 100 + vol / 100 * np.random.randn())
 
     # Create regime labels
     regime_labels = ["Sideways", "Bullish", "Bearish"]
@@ -141,9 +139,7 @@ def main():
     }
 
     # Run the backtest
-    results = backtester.run_backtest(
-        simple_rsi_strategy, default_params, regime_specific_params
-    )
+    results = backtester.run_backtest(simple_rsi_strategy, default_params, regime_specific_params)
 
     # Print results
     print("\nBacktest Results:")
@@ -167,9 +163,7 @@ def main():
         "oversold": [20, 25, 30, 35],
     }
 
-    best_params = backtester.get_best_parameters_by_regime(
-        simple_rsi_strategy, param_grid, "sharpe_ratio"
-    )
+    best_params = backtester.get_best_parameters_by_regime(simple_rsi_strategy, param_grid, "sharpe_ratio")
 
     print("\nBest Parameters by Regime:")
     print("-" * 50)

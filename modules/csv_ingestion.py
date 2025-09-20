@@ -112,9 +112,7 @@ class CSVIngestionModule(Module):
             issues = []
 
             # Check for unnamed columns
-            unnamed_cols = [
-                col for col in sample_df.columns if col.startswith("Unnamed")
-            ]
+            unnamed_cols = [col for col in sample_df.columns if col.startswith("Unnamed")]
             if unnamed_cols:
                 issues.append(f"Unnamed columns detected: {unnamed_cols}")
 

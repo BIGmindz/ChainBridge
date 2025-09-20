@@ -65,9 +65,7 @@ class RSIModule(Module):
         rs = avg_gain.iloc[-1] / avg_loss.iloc[-1]
         return 100 - (100 / (1 + rs))
 
-    def generate_signal(
-        self, rsi_value: float, buy_threshold: float, sell_threshold: float
-    ) -> tuple:
+    def generate_signal(self, rsi_value: float, buy_threshold: float, sell_threshold: float) -> tuple:
         """Generate trading signal and confidence based on RSI value."""
         if math.isnan(rsi_value):
             return "HOLD", 0.0
@@ -105,9 +103,7 @@ class RSIModule(Module):
                     elif "price" in record:
                         closes.append(float(record["price"]))
                     else:
-                        raise ValueError(
-                            "No 'close' or 'price' field found in price data"
-                        )
+                        raise ValueError("No 'close' or 'price' field found in price data")
             elif isinstance(price_data[0], (list, tuple)):
                 # Data is in OHLCV format - use close price (index 4)
                 closes = [float(row[4]) for row in price_data if len(row) >= 5]
@@ -133,9 +129,7 @@ class RSIModule(Module):
             rsi_value = self.wilder_rsi(close_series, period)
 
             # Generate signal and confidence
-            signal, confidence = self.generate_signal(
-                rsi_value, buy_threshold, sell_threshold
-            )
+            signal, confidence = self.generate_signal(rsi_value, buy_threshold, sell_threshold)
 
             result = {
                 "rsi_value": rsi_value,
@@ -155,9 +149,7 @@ class RSIModule(Module):
         except Exception as e:
             raise RuntimeError(f"Failed to process RSI calculation: {str(e)}")
 
-    def backtest_strategy(
-        self, historical_data: List[Dict[str, Any]], initial_balance: float = 10000
-    ) -> Dict[str, Any]:
+    def backtest_strategy(self, historical_data: List[Dict[str, Any]], initial_balance: float = 10000) -> Dict[str, Any]:
         """Simple backtesting functionality for RSI strategy."""
         if not historical_data:
             raise ValueError("Historical data is required for backtesting")
@@ -203,19 +195,14 @@ class RSIModule(Module):
                 position = 0
 
         # Calculate final portfolio value
-        final_price = (
-            historical_data[-1]["close"]
-            if "close" in historical_data[-1]
-            else historical_data[-1]["price"]
-        )
+        final_price = historical_data[-1]["close"] if "close" in historical_data[-1] else historical_data[-1]["price"]
         final_value = balance + (position * final_price)
 
         return {
             "initial_balance": initial_balance,
             "final_value": final_value,
             "total_return": final_value - initial_balance,
-            "return_percentage": ((final_value - initial_balance) / initial_balance)
-            * 100,
+            "return_percentage": ((final_value - initial_balance) / initial_balance) * 100,
             "total_trades": len(trades),
             "trades": trades,
         }

@@ -18,9 +18,7 @@ from pathlib import Path
 
 def main():
     parser = argparse.ArgumentParser(description="Fetch exchange markets and save JSON")
-    parser.add_argument(
-        "--out", type=str, default=None, help="Output path for markets JSON"
-    )
+    parser.add_argument("--out", type=str, default=None, help="Output path for markets JSON")
     args = parser.parse_args()
 
     exchange_id = os.getenv("EXCHANGE", "kraken")

@@ -29,9 +29,7 @@ def integrate_region_module():
     print("✅ Created/verified modules directory")
 
     # 2. Save the region module (you already have the code)
-    print(
-        "✅ Region-specific crypto module saved to modules/region_specific_crypto_module.py"
-    )
+    print("✅ Region-specific crypto module saved to modules/region_specific_crypto_module.py")
 
     # 3. Update the main configuration
     config_updates = {
@@ -92,12 +90,12 @@ class IntegratedTradingSystem:
     """
     Master trading system combining all signals with region-specific crypto selection
     """
-    
+
     def __init__(self):
         self.region_mapper = RegionSpecificCryptoModule()
         self.signals = []
         self.current_positions = {}
-        
+
         print(f"""
         ╔════════════════════════════════════════════════════════════════╗
         ║   INTEGRATED TRADING SYSTEM INITIALIZED                       ║
@@ -107,50 +105,50 @@ class IntegratedTradingSystem:
         ║   Status: READY TO TRADE                                      ║
         ╚════════════════════════════════════════════════════════════════╝
         """)
-    
+
     def collect_all_signals(self):
         """
         Collect signals from all modules
         """
         # This would connect to your existing signal modules
         # For now, simulating with test data
-        
+
         macro_signals = {
             # Technical signals
             'rsi': np.random.uniform(-1, 1),
             'macd': np.random.uniform(-1, 1),
             'bollinger': np.random.uniform(-1, 1),
-            
+
             # Logistics signals
             'port_congestion': np.random.uniform(0.5, 2.0),
             'supply_chain_stress': np.random.uniform(-2, 3),
-            
+
             # Global macro signals
             'inflation_ARG': 142,  # Real Argentina inflation
             'stablecoin_growth_LATAM': 0.63,  # Real growth rate
             'adoption_rank_IND': 1,  # India #1
             'sbi_ripple_news': np.random.choice([True, False]),
             'el_salvador_btc_news': np.random.choice([True, False]),
-            
+
             # Additional signals
             'india_adoption_growth': 0.45,
             'fiu_registrations': 3,
             'japan_tokenization': True,
             'remittance_growth_CA': 0.15
         }
-        
+
         return macro_signals
-    
+
     def execute_trading_strategy(self):
         """
         Main trading logic combining all signals
         """
         # Collect all signals
         signals = self.collect_all_signals()
-        
+
         # Get region-specific recommendations
         recommendations = self.region_mapper.process_regional_signals(signals)
-        
+
         # Display recommendations
         print("\\n" + "="*60)
         print("📊 INTEGRATED TRADING SIGNALS")
@@ -158,7 +156,7 @@ class IntegratedTradingSystem:
         print(f"Timestamp: {datetime.now().isoformat()}")
         print(f"Active Regions: {', '.join(recommendations['active_regions'])}")
         print(f"Total Confidence: {recommendations['total_confidence']*100:.1f}%")
-        
+
         print("\\n🎯 CRYPTO RECOMMENDATIONS:")
         for rec in recommendations['recommendations']:
             print(f"\\n{rec['symbol']}:")
@@ -167,20 +165,20 @@ class IntegratedTradingSystem:
             print(f"  Position Size: {rec['position_size_pct']*100:.1f}% of portfolio")
             print(f"  Regions: {', '.join(rec['regions'])}")
             print(f"  Hold Period: {rec['expected_holding_period']}")
-        
+
         return recommendations
-    
+
     def backtest_performance(self):
         """
         Backtest the strategy performance
         """
         print("\\n📈 BACKTESTING REGION-SPECIFIC STRATEGY...")
-        
+
         # Simulate 30 days of trading
         results = []
         for day in range(30):
             recs = self.execute_trading_strategy()
-            
+
             # Simulate returns based on confidence
             daily_return = 0
             for rec in recs['recommendations']:
@@ -188,19 +186,19 @@ class IntegratedTradingSystem:
                     # Higher confidence = higher returns
                     position_return = np.random.normal(0.02, 0.01) * rec['confidence']
                     daily_return += position_return * rec['position_size_pct']
-            
+
             results.append(daily_return)
-        
+
         # Calculate performance metrics
         total_return = np.prod([1 + r for r in results]) - 1
         sharpe = np.mean(results) / np.std(results) * np.sqrt(365)
-        
+
         print(f"\\n📊 BACKTEST RESULTS (30 days):")
         print(f"  Total Return: {total_return*100:.1f}%")
         print(f"  Daily Average: {np.mean(results)*100:.2f}%")
         print(f"  Sharpe Ratio: {sharpe:.2f}")
         print(f"  Max Drawdown: {min(results)*100:.1f}%")
-        
+
         return results
 
 def main():
@@ -208,23 +206,23 @@ def main():
     Main execution function
     """
     system = IntegratedTradingSystem()
-    
+
     # Execute one trading cycle
     recommendations = system.execute_trading_strategy()
-    
+
     # Run backtest
     print("\\n" + "="*60)
     system.backtest_performance()
-    
+
     print(f"""
     \\n✅ INTEGRATION SUCCESSFUL!
-    
+
     Your Multiple-signal-decision-bot now has:
     • 15+ uncorrelated signals
     • Region-specific crypto selection
     • Machine learning optimization
     • Surgical precision trading
-    
+
     Ready to generate alpha!
     """)
 
@@ -247,10 +245,10 @@ from modules.region_specific_crypto_module import RegionSpecificCryptoModule
 
 def test_region_module():
     print("Testing Region-Specific Crypto Module...")
-    
+
     # Initialize
     mapper = RegionSpecificCryptoModule()
-    
+
     # Test signals showing different scenarios
     test_scenarios = [
         {
@@ -290,13 +288,13 @@ def test_region_module():
             }
         }
     ]
-    
+
     for scenario in test_scenarios:
         print(f"\\n📊 Testing: {scenario['name']}")
         print("-" * 40)
-        
+
         result = mapper.process_regional_signals(scenario['signals'])
-        
+
         if result['recommendations']:
             top_rec = result['recommendations'][0]
             print(f"Top Pick: {top_rec['symbol']}")
@@ -315,17 +313,17 @@ if __name__ == "__main__":
 
     print(
         """
-    
+
     ════════════════════════════════════════════════════════════
     ✅ INTEGRATION COMPLETE!
     ════════════════════════════════════════════════════════════
-    
+
     Files created:
     • modules/region_specific_crypto_module.py
     • config/region_module_config.json
     • integrated_trading_system.py
     • test_region_module.py
-    
+
     Next steps:
     1. Run test: python test_region_module.py
     2. Run full system: python integrated_trading_system.py

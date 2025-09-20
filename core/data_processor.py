@@ -68,15 +68,9 @@ class DataProcessor:
             for variation in variations:
                 if variation in data:
                     if standard_field == "timestamp":
-                        normalized[standard_field] = self.normalize_timestamp(
-                            data[variation]
-                        )
+                        normalized[standard_field] = self.normalize_timestamp(data[variation])
                     elif standard_field in ["price", "volume"]:
-                        normalized[standard_field] = (
-                            float(data[variation])
-                            if data[variation] is not None
-                            else None
-                        )
+                        normalized[standard_field] = float(data[variation]) if data[variation] is not None else None
                     else:
                         normalized[standard_field] = str(data[variation])
                     break
@@ -139,11 +133,7 @@ class DataProcessor:
         non_null_fields = 0
 
         for key, value in data.items():
-            if (
-                value is None
-                or value == ""
-                or (isinstance(value, str) and value.strip() == "")
-            ):
+            if value is None or value == "" or (isinstance(value, str) and value.strip() == ""):
                 null_fields.append(key)
             else:
                 non_null_fields += 1
@@ -152,9 +142,7 @@ class DataProcessor:
             quality_report["issues"].append(f"Null/empty fields: {null_fields}")
 
         # Calculate completeness score
-        quality_report["completeness_score"] = (
-            non_null_fields / total_fields if total_fields > 0 else 0.0
-        )
+        quality_report["completeness_score"] = non_null_fields / total_fields if total_fields > 0 else 0.0
 
         # Mark as invalid if completeness is too low
         if quality_report["completeness_score"] < 0.5:
@@ -163,9 +151,7 @@ class DataProcessor:
 
         return quality_report
 
-    def process_batch(
-        self, data_list: List[Dict[str, Any]], data_type: str = "generic"
-    ) -> Dict[str, Any]:
+    def process_batch(self, data_list: List[Dict[str, Any]], data_type: str = "generic") -> Dict[str, Any]:
         """Process a batch of data records."""
         results = {
             "processed": [],
@@ -210,6 +196,5 @@ class DataProcessor:
         return {
             "total_processed": self.processed_count,
             "total_errors": self.error_count,
-            "error_rate": self.error_count
-            / max(self.processed_count + self.error_count, 1),
+            "error_rate": self.error_count / max(self.processed_count + self.error_count, 1),
         }

@@ -55,9 +55,7 @@ def test_backtester():
 
     # Run the backtest
     print("Running backtest...")
-    results = backtester.run_backtest(
-        simple_strategy, default_params, regime_specific_params
-    )
+    results = backtester.run_backtest(simple_strategy, default_params, regime_specific_params)
     print("Backtest completed successfully")
 
     # Verify results
@@ -98,9 +96,7 @@ def test_backtester():
 
         params = best_params[regime_label]
         if "threshold" not in params:
-            print(
-                f"ERROR: Threshold parameter not found in best parameters for {regime_label} regime"
-            )
+            print(f"ERROR: Threshold parameter not found in best parameters for {regime_label} regime")
             return False
 
     print("All parameter optimization validations passed")
