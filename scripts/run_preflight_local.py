@@ -4,9 +4,11 @@
 This avoids calling live exchange APIs in CI and provides a deterministic
 preflight run to validate the minima-checking logic.
 """
+
 import json
 import sys
 from pathlib import Path
+
 try:
     from yaml import safe_load  # type: ignore
 except Exception:
@@ -16,7 +18,7 @@ except Exception:
 repo_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(repo_root))
 
-from src.market_utils import get_minima_report, check_markets_have_minima  # noqa: E402
+from src.market_utils import check_markets_have_minima, get_minima_report  # noqa: E402
 
 
 def load_config(path="config.yaml"):
@@ -35,7 +37,9 @@ def load_config(path="config.yaml"):
         raise
 
 
-def run_preflight(markets_path: Path = None, config_path: Path = None, json_output: Path = None):
+def run_preflight(
+    markets_path: Path = None, config_path: Path = None, json_output: Path = None
+):
     repo_root = Path(__file__).resolve().parent.parent
     if markets_path is None:
         markets_path = repo_root / "scripts" / "test_markets.json"
@@ -43,7 +47,13 @@ def run_preflight(markets_path: Path = None, config_path: Path = None, json_outp
         config_path = repo_root / "config.yaml"
 
     cfg = load_config(config_path)
-    symbols = cfg.get("symbols") or ["SOL/USD", "DOGE/USD", "SHIB/USD", "AVAX/USD", "ATOM/USD"]
+    symbols = cfg.get("symbols") or [
+        "SOL/USD",
+        "DOGE/USD",
+        "SHIB/USD",
+        "AVAX/USD",
+        "ATOM/USD",
+    ]
 
     markets = json.loads(Path(markets_path).read_text())
 
@@ -55,10 +65,12 @@ def run_preflight(markets_path: Path = None, config_path: Path = None, json_outp
 
     print("Local Preflight Minima Report:\n")
     for s, info in report.items():
-        if info.get('found_as') is None:
+        if info.get("found_as") is None:
             print(f"{s}: NOT FOUND")
         else:
-            print(f"{s}: found_as={info.get('found_as')}, cost_min={info.get('cost_min')}, amount_min={info.get('amount_min')}")
+            print(
+                f"{s}: found_as={info.get('found_as')}, cost_min={info.get('cost_min')}, amount_min={info.get('amount_min')}"
+            )
 
     missing = check_markets_have_minima(markets, symbols)
     if missing:
@@ -72,7 +84,9 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Run the local preflight minima check")
-    parser.add_argument("--json-output", type=str, default=None, help="Write JSON report to path")
+    parser.add_argument(
+        "--json-output", type=str, default=None, help="Write JSON report to path"
+    )
     args = parser.parse_args()
 
     run_preflight(json_output=args.json_output)

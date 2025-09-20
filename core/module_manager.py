@@ -5,10 +5,10 @@ This module provides the plug-and-play interface for loading and managing
 different modules in the Benson architecture.
 """
 
-from abc import ABC, abstractmethod
-from typing import Dict, Any, List, Optional
 import importlib
 import inspect
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional
 
 
 class Module(ABC):

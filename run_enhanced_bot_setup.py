@@ -6,95 +6,103 @@ Complete setup for your enhanced multi-signal bot
 
 import json
 import os
-from src.crypto_selector import VolatileCryptoSelector
+
 from src.budget_manager import BudgetManager
+from src.crypto_selector import VolatileCryptoSelector
+
 
 def setup_enhanced_trading():
     """
     Set up your bot with volatile cryptos and budget management
     """
-    print("""
+    print(
+        """
     ╔════════════════════════════════════════════════════════╗
     ║   ENHANCED MULTI-SIGNAL BOT SETUP                     ║
     ║   Adding: Volatile Cryptos + Budget Management        ║
     ╚════════════════════════════════════════════════════════╝
-    """)
-    
+    """
+    )
+
     # Step 1: Get top volatile cryptos
     print("\n📊 STEP 1: Finding Most Volatile Cryptos")
-    print("-"*50)
-    
+    print("-" * 50)
+
     selector = VolatileCryptoSelector()
     top_cryptos = selector.get_top_volatile_cryptos(top_n=5)
-    
+
     # Step 2: Initialize budget manager
     print("\n💰 STEP 2: Setting Up Budget Manager")
-    print("-"*50)
-    
+    print("-" * 50)
+
     initial_capital = 10000  # $10,000 paper trading capital
     budget = BudgetManager(initial_capital=initial_capital)
-    
+
     # Step 3: Create integrated configuration
     print("\n🔧 STEP 3: Creating Integrated Configuration")
-    print("-"*50)
-    
+    print("-" * 50)
+
     config = {
-        'trading_pairs': top_cryptos,
-        'budget': {
-            'initial_capital': initial_capital,
-            'risk_parameters': budget.risk_parameters
+        "trading_pairs": top_cryptos,
+        "budget": {
+            "initial_capital": initial_capital,
+            "risk_parameters": budget.risk_parameters,
         },
-        'signals': [
-            'RSI', 'MACD', 'Bollinger', 'Volume', 'Sentiment',
-            'Whale_Tracking', 'Exchange_Flows', 'Order_Flow', 'Fear_Greed'
+        "signals": [
+            "RSI",
+            "MACD",
+            "Bollinger",
+            "Volume",
+            "Sentiment",
+            "Whale_Tracking",
+            "Exchange_Flows",
+            "Order_Flow",
+            "Fear_Greed",
         ],
-        'position_sizing': {
-            'method': 'kelly',
-            'base_risk': 0.02,
-            'max_positions': 5
+        "position_sizing": {"method": "kelly", "base_risk": 0.02, "max_positions": 5},
+        "trading_rules": {
+            "min_confidence": 0.6,
+            "stop_loss": 0.03,
+            "take_profit": 0.06,
+            "compound_profits": True,
         },
-        'trading_rules': {
-            'min_confidence': 0.6,
-            'stop_loss': 0.03,
-            'take_profit': 0.06,
-            'compound_profits': True
-        }
     }
-    
+
     # Save configuration
-    with open('enhanced_bot_config.json', 'w') as f:
+    with open("enhanced_bot_config.json", "w") as f:
         json.dump(config, f, indent=2)
-    
+
     # Also update the main config.yaml file with new settings
     update_main_config(top_cryptos, initial_capital)
-    
+
     print("\n✅ SETUP COMPLETE!")
     print("\n📋 SUMMARY:")
     print(f"  Trading Pairs: {', '.join(top_cryptos)}")
     print(f"  Initial Capital: ${initial_capital:,}")
-    print(f"  Risk Per Trade: {config['position_sizing']['base_risk']*100}%")
+    print(f"  Risk Per Trade: {config['position_sizing']['base_risk'] * 100}%")
     print(f"  Max Positions: {config['position_sizing']['max_positions']}")
     print(f"  Total Signals: {len(config['signals'])}")
-    
+
     print("\n🚀 YOUR BOT IS NOW ENHANCED WITH:")
     print("  ✅ Top 5 most volatile cryptos for maximum opportunity")
     print("  ✅ Professional budget management system")
     print("  ✅ Real dollar tracking (paper money)")
     print("  ✅ Position sizing with Kelly Criterion")
     print("  ✅ Profit compounding for growth")
-    
+
     return config, budget
+
 
 def update_main_config(crypto_symbols, initial_capital):
     """Update the main config.yaml with new settings"""
     try:
         import yaml
-        
+
         config_path = "config.yaml"
         if os.path.exists(config_path):
             with open(config_path, "r") as f:
                 config = yaml.safe_load(f)
-            
+
             # Update with new settings
             config["symbols"] = crypto_symbols
             config["initial_capital"] = initial_capital
@@ -103,18 +111,19 @@ def update_main_config(crypto_symbols, initial_capital):
                 "max_positions": 5,
                 "position_size_method": "kelly",
                 "compound_profits": True,
-                "reduce_on_drawdown": True
+                "reduce_on_drawdown": True,
             }
-            
+
             # Save updated config
             with open(config_path, "w") as f:
                 yaml.dump(config, f, default_flow_style=False)
-                
+
             print("✅ Updated main config.yaml with new settings")
         else:
             print(f"⚠️ Couldn't find {config_path} to update")
     except Exception as e:
         print(f"⚠️ Error updating config.yaml: {e}")
+
 
 def create_monitor_script():
     """Create a simple performance monitoring script"""
@@ -187,20 +196,21 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\\n✅ Monitoring stopped")
     """
-    
+
     with open("monitor_performance.py", "w") as f:
         f.write(monitor_code)
-    
+
     # Make it executable
     os.chmod("monitor_performance.py", 0o755)
     print("✅ Created monitor_performance.py")
 
+
 if __name__ == "__main__":
     config, budget = setup_enhanced_trading()
-    
+
     # Create the monitoring script
     create_monitor_script()
-    
+
     print("\n💡 NEXT STEPS:")
     print("1. Restart your paper trading bot with new config:")
     print("   $ python multi_signal_bot.py")

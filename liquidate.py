@@ -47,6 +47,7 @@ import ccxt
 @dataclass
 class Config:
     """Configuration for the liquidation script."""
+
     target_quote: str = "USDT"
     min_usd_value: float = 10.0
     max_slippage_pct: float = 0.8
@@ -85,7 +86,7 @@ class KrakenLiquidator:
         console_handler = logging.StreamHandler()
         console_handler.setLevel(logging.INFO)
         console_formatter = logging.Formatter(
-            '%(asctime)s - %(levelname)s - %(message)s'
+            "%(asctime)s - %(levelname)s - %(message)s"
         )
         console_handler.setFormatter(console_formatter)
         logger.addHandler(console_handler)
@@ -94,7 +95,7 @@ class KrakenLiquidator:
         file_handler = logging.FileHandler(log_filename)
         file_handler.setLevel(logging.DEBUG)
         file_formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         )
         file_handler.setFormatter(file_formatter)
         logger.addHandler(file_handler)
@@ -111,11 +112,11 @@ class KrakenLiquidator:
                 "Create it with: {'apiKey': 'your_key', 'secret': 'your_secret'}"
             )
 
-        with open(config_path, 'r') as f:
+        with open(config_path, "r") as f:
             config = json.load(f)
 
-        api_key = config.get('apiKey')
-        secret = config.get('secret')
+        api_key = config.get("apiKey")
+        secret = config.get("secret")
 
         if not api_key or not secret:
             raise ValueError("API key or secret missing from config file")
@@ -126,14 +127,16 @@ class KrakenLiquidator:
         """Initialize Kraken exchange connection."""
         api_key, secret = self.load_api_keys()
 
-        self.exchange = ccxt.kraken({
-            'apiKey': api_key,
-            'secret': secret,
-            'enableRateLimit': True,
-            'options': {
-                'createMarketBuyOrderRequiresPrice': False,
+        self.exchange = ccxt.kraken(
+            {
+                "apiKey": api_key,
+                "secret": secret,
+                "enableRateLimit": True,
+                "options": {
+                    "createMarketBuyOrderRequiresPrice": False,
+                },
             }
-        })
+        )
 
         # Load markets once
         self.markets = self.exchange.load_markets()
@@ -147,7 +150,7 @@ class KrakenLiquidator:
         spot_balances = {}
         for asset, data in balance.items():
             if isinstance(data, dict):
-                free = data.get('free', 0)
+                free = data.get("free", 0)
                 if free > 0:
                     spot_balances[asset] = free
 
@@ -155,18 +158,18 @@ class KrakenLiquidator:
 
     def usd_value(self, asset: str, amount: float) -> float:
         """Estimate USD value of an asset amount, including futures."""
-        if asset in ['USD', 'USDT', 'USDC']:
+        if asset in ["USD", "USDT", "USDC"]:
             return amount
 
         # Handle futures contracts by stripping .F suffix
-        underlying_asset = asset.replace('.F', '').replace('.B', '')
+        underlying_asset = asset.replace(".F", "").replace(".B", "")
 
         # Try direct USD pair first
         usd_symbol = f"{underlying_asset}/USD"
         if usd_symbol in self.markets:
             try:
                 ticker = self.exchange.fetch_ticker(usd_symbol)
-                return amount * ticker['last']
+                return amount * ticker["last"]
             except Exception as e:
                 self.logger.warning(f"Failed to get {usd_symbol} price: {e}")
 
@@ -175,13 +178,13 @@ class KrakenLiquidator:
         if usdt_symbol in self.markets:
             try:
                 ticker = self.exchange.fetch_ticker(usdt_symbol)
-                usdt_value = amount * ticker['last']
+                usdt_value = amount * ticker["last"]
 
                 # Convert USDT to USD
                 usdt_usd_symbol = "USDT/USD"
                 if usdt_usd_symbol in self.markets:
                     usdt_usd_ticker = self.exchange.fetch_ticker(usdt_usd_symbol)
-                    return usdt_value * usdt_usd_ticker['last']
+                    return usdt_value * usdt_usd_ticker["last"]
                 else:
                     # Assume USDT ≈ USD for estimation
                     return usdt_value * 0.999
@@ -216,7 +219,7 @@ class KrakenLiquidator:
         target = self.config.target_quote
 
         # Handle futures contracts by stripping suffixes
-        underlying_asset = asset.replace('.F', '').replace('.B', '').replace('.S', '')
+        underlying_asset = asset.replace(".F", "").replace(".B", "").replace(".S", "")
 
         # Direct pair to target quote
         direct_symbol = f"{underlying_asset}/{target}"
@@ -242,8 +245,8 @@ class KrakenLiquidator:
         try:
             orderbook = self.exchange.fetch_order_book(symbol, limit=20)
 
-            if side == 'sell':
-                asks = orderbook['asks']
+            if side == "sell":
+                asks = orderbook["asks"]
                 remaining_amount = amount
                 total_value = 0.0
                 total_volume = 0.0
@@ -259,7 +262,7 @@ class KrakenLiquidator:
 
                 if total_volume > 0:
                     avg_price = total_value / total_volume
-                    mid_price = (asks[0][0] + orderbook['bids'][0][0]) / 2
+                    mid_price = (asks[0][0] + orderbook["bids"][0][0]) / 2
                     slippage = abs(avg_price - mid_price) / mid_price * 100
                     return slippage
 
@@ -275,11 +278,11 @@ class KrakenLiquidator:
         if self.config.dry_run:
             self.logger.info(f"[DRY RUN] Would {side} {amount} {symbol}")
             return {
-                'id': f'dry_run_{symbol}_{side}',
-                'symbol': symbol,
-                'side': side,
-                'amount': amount,
-                'status': 'simulated'
+                "id": f"dry_run_{symbol}_{side}",
+                "symbol": symbol,
+                "side": side,
+                "amount": amount,
+                "status": "simulated",
             }
 
         # Check slippage
@@ -299,14 +302,11 @@ class KrakenLiquidator:
 
         try:
             # Ensure correct amount precision if exchange supports helper
-            if hasattr(self.exchange, 'amount_to_precision'):
+            if hasattr(self.exchange, "amount_to_precision"):
                 amount = self.exchange.amount_to_precision(symbol, amount)
 
             order = self.exchange.create_order(
-                symbol=symbol,
-                type='market',
-                side=side,
-                amount=amount
+                symbol=symbol, type="market", side=side, amount=amount
             )
             self.logger.info(
                 f"Placed {side} order: {amount} {symbol} (slippage: {slippage:.2f}%)"
@@ -331,7 +331,7 @@ class KrakenLiquidator:
             self.logger.info(f"Cancelling {len(open_orders)} open orders...")
             for order in open_orders:
                 try:
-                    self.exchange.cancel_order(order['id'], order['symbol'])
+                    self.exchange.cancel_order(order["id"], order["symbol"])
                     self.logger.info(
                         f"Cancelled order {order['id']} for {order['symbol']}"
                     )
@@ -344,7 +344,7 @@ class KrakenLiquidator:
     def liquidate_asset(self, asset: str, amount: float) -> bool:
         """Liquidate a single asset to target quote, handling futures properly."""
         # Handle different asset types
-        if asset.endswith('.F') or asset.endswith('.B'):
+        if asset.endswith(".F") or asset.endswith(".B"):
             return self.liquidate_futures_contract(asset, amount)
         else:
             return self.liquidate_spot_asset(asset, amount)
@@ -360,7 +360,7 @@ class KrakenLiquidator:
 
         # Check minimum order size
         market = self.markets[symbol]
-        min_amount = market.get('limits', {}).get('amount', {}).get('min', 0)
+        min_amount = market.get("limits", {}).get("amount", {}).get("min", 0)
         if amount < min_amount:
             self.logger.warning(
                 f"Amount {amount} below minimum {min_amount} for {symbol}"
@@ -368,7 +368,7 @@ class KrakenLiquidator:
             return False
 
         # Place the order
-        order = self.place_market_order_safe(symbol, 'sell', amount)
+        order = self.place_market_order_safe(symbol, "sell", amount)
         return order is not None
 
     def liquidate_futures_contract(self, asset: str, amount: float) -> bool:
@@ -443,9 +443,9 @@ class KrakenLiquidator:
 
     def print_final_report(self, success_count: int, failed_assets: List[str]):
         """Print final liquidation report."""
-        self.logger.info("\n" + "="*60)
+        self.logger.info("\n" + "=" * 60)
         self.logger.info("LIQUIDATION REPORT")
-        self.logger.info("="*60)
+        self.logger.info("=" * 60)
 
         if self.config.dry_run:
             self.logger.info("DRY RUN - No real trades executed")
@@ -464,22 +464,21 @@ class KrakenLiquidator:
         try:
             final_balances = self.get_spot_balances()
             target_balance = final_balances.get(self.config.target_quote, 0)
-            usd_balance = final_balances.get('USD', 0)
+            usd_balance = final_balances.get("USD", 0)
 
             self.logger.info("\nFinal balances:")
             self.logger.info(f"  {self.config.target_quote}: {target_balance}")
             self.logger.info(f"  USD: {usd_balance}")
 
             total_usd_value = (
-                self.usd_value(self.config.target_quote, target_balance)
-                + usd_balance
+                self.usd_value(self.config.target_quote, target_balance) + usd_balance
             )
             self.logger.info(f"  Total USD value: ${total_usd_value:.2f}")
 
         except Exception as e:
             self.logger.error(f"Failed to get final balances: {e}")
 
-        self.logger.info("="*60)
+        self.logger.info("=" * 60)
 
 
 def main():
@@ -489,49 +488,47 @@ def main():
     )
 
     parser.add_argument(
-        '--target-quote',
-        choices=['USDT', 'USD'],
-        default='USDT',
-        help='Target quote currency (default: USDT)'
+        "--target-quote",
+        choices=["USDT", "USD"],
+        default="USDT",
+        help="Target quote currency (default: USDT)",
     )
 
     parser.add_argument(
-        '--min-usd',
+        "--min-usd",
         type=float,
         default=10.0,
-        help='Skip positions below this USD value (default: 10.0)'
+        help="Skip positions below this USD value (default: 10.0)",
     )
 
     parser.add_argument(
-        '--max-slippage-pct',
+        "--max-slippage-pct",
         type=float,
         default=0.8,
-        help='Max allowed slippage percentage (default: 0.8)'
+        help="Max allowed slippage percentage (default: 0.8)",
     )
 
     parser.add_argument(
-        '--cancel-open',
-        action='store_true',
-        help='Cancel all open spot orders before liquidation'
+        "--cancel-open",
+        action="store_true",
+        help="Cancel all open spot orders before liquidation",
     )
 
     parser.add_argument(
-        '--force',
-        action='store_true',
-        help='Ignore slippage limits and proceed anyway'
+        "--force", action="store_true", help="Ignore slippage limits and proceed anyway"
     )
 
     parser.add_argument(
-        '--live',
-        action='store_true',
-        help='Execute real trades (default: dry-run only)'
+        "--live",
+        action="store_true",
+        help="Execute real trades (default: dry-run only)",
     )
 
     parser.add_argument(
-        '--dry-run',
-        action='store_true',
+        "--dry-run",
+        action="store_true",
         default=True,
-        help='Show what would happen without executing (default: True)'
+        help="Show what would happen without executing (default: True)",
     )
 
     args = parser.parse_args()
@@ -547,7 +544,7 @@ def main():
         cancel_open_orders=args.cancel_open,
         force_mode=args.force,
         live_mode=args.live,
-        dry_run=args.dry_run
+        dry_run=args.dry_run,
     )
 
     liquidator = KrakenLiquidator(config)

@@ -7,10 +7,10 @@ Usage:
 
 Set `--cycles 0` to run indefinitely (Ctrl-C to stop).
 """
-import argparse
-import shutil
-import re
 
+import argparse
+import re
+import shutil
 
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
 
@@ -20,6 +20,8 @@ def visible_len(s: str) -> int:
     if not s:
         return 0
     return len(ANSI_RE.sub("", str(s)))
+
+
 import json
 import os
 import sys
@@ -33,8 +35,11 @@ except Exception:
 
 # ANSI color helpers
 CSI = "\x1b["
+
+
 def color(code):
     return CSI + str(code) + "m"
+
 
 RESET = color(0)
 BOLD = color(1)
@@ -45,9 +50,9 @@ RED = color(31)
 BLUE = color(34)
 CYAN = color(36)
 WHITE = color(37)
-BG_GREEN = color('42')
-BG_RED = color('41')
-BG_YELLOW = color('43')
+BG_GREEN = color("42")
+BG_RED = color("41")
+BG_YELLOW = color("43")
 
 
 def read_json_safe(path):
@@ -58,14 +63,22 @@ def read_json_safe(path):
         return None
 
 
-def render(budget, trades, big=False, delta_up=0.5, delta_down=0.5, show_arrows=False, gradient=False):
+def render(
+    budget,
+    trades,
+    big=False,
+    delta_up=0.5,
+    delta_down=0.5,
+    show_arrows=False,
+    gradient=False,
+):
     now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
     os.system("clear")
     header = f"🏦  HEDGE DASH • {now}"
     if big and pyfiglet:
-        fig = pyfiglet.Figlet(font='slant')
+        fig = pyfiglet.Figlet(font="slant")
         try:
-            print(CYAN + fig.renderText('HEDGE DASH') + RESET)
+            print(CYAN + fig.renderText("HEDGE DASH") + RESET)
         except Exception:
             print(BOLD + header + RESET)
         print(DIM + now + RESET)
@@ -124,7 +137,7 @@ def render(budget, trades, big=False, delta_up=0.5, delta_down=0.5, show_arrows=
         mn = min(data)
         mx = max(data)
         if mx == mn:
-            return chars[len(chars)//2] * min(width, len(data))
+            return chars[len(chars) // 2] * min(width, len(data))
         out = []
         for v in data[-width:]:
             # guard division
@@ -136,12 +149,12 @@ def render(budget, trades, big=False, delta_up=0.5, delta_down=0.5, show_arrows=
 
     # Define column widths and headers
     cols = [
-        (13, 'Symbol'),
-        (13, 'Entry'),
-        (13, 'Current'),
-        (11, 'Qty'),
-        (13, 'P&L'),
-        (8, 'Spark'),
+        (13, "Symbol"),
+        (13, "Entry"),
+        (13, "Current"),
+        (11, "Qty"),
+        (13, "P&L"),
+        (8, "Spark"),
     ]
     total_inner = sum(w for w, _ in cols) + (len(cols) - 1) * 1 + 2
     # build top border accordingly
@@ -162,8 +175,8 @@ def render(budget, trades, big=False, delta_up=0.5, delta_down=0.5, show_arrows=
 
         # Prepare plain cell content and pad to width BEFORE adding color
         sym_plain = f"{sym}".ljust(cols[0][0])
-        entry_plain = f"${entry:0{cols[1][0]-1}.6f}".rjust(cols[1][0])
-        cur_plain = f"${cur:0{cols[2][0]-1}.6f}".rjust(cols[2][0])
+        entry_plain = f"${entry:0{cols[1][0] - 1}.6f}".rjust(cols[1][0])
+        cur_plain = f"${cur:0{cols[2][0] - 1}.6f}".rjust(cols[2][0])
         qty_plain = f"{q:0{cols[3][0]}.2f}".rjust(cols[3][0])
         pnl_plain = f"{pnl:0{cols[4][0]}.2f}".rjust(cols[4][0])
         spark = sparkline(recent_prices.get(sym, []), width=cols[5][0])
@@ -228,7 +241,14 @@ def render(budget, trades, big=False, delta_up=0.5, delta_down=0.5, show_arrows=
         spark_s = CYAN + spark + RESET
 
         # compose row
-        cells = [f" {sym_s} ", f" {entry_s} ", f" {cur_s} ", f" {qty_s} ", f" {pnl_s} ", f" {spark_s} "]
+        cells = [
+            f" {sym_s} ",
+            f" {entry_s} ",
+            f" {cur_s} ",
+            f" {qty_s} ",
+            f" {pnl_s} ",
+            f" {spark_s} ",
+        ]
         print("│" + "│".join(cells) + "│")
 
     print("└" + "─" * total_inner + "┘")
@@ -256,14 +276,39 @@ def render(budget, trades, big=False, delta_up=0.5, delta_down=0.5, show_arrows=
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--interval", type=float, default=2.0, help="Seconds between updates")
-    p.add_argument("--cycles", type=int, default=0, help="Number of cycles to run (0 = infinite)")
-    p.add_argument("--gui", action="store_true", help="Use alternate-screen GUI mode (clears screen, hides cursor)")
-    p.add_argument("--big", action="store_true", help="Emphasize header and numbers (bigger, bolder output)")
-    p.add_argument("--delta-up", type=float, default=0.5, help="Percent threshold for 'up' status")
-    p.add_argument("--delta-down", type=float, default=0.5, help="Percent threshold for 'down' status")
-    p.add_argument("--show-arrows", action="store_true", help="Show ▲/▼ next to Current")
-    p.add_argument("--gradient", action="store_true", help="Apply simple gradient background to Current cell based on delta")
+    p.add_argument(
+        "--interval", type=float, default=2.0, help="Seconds between updates"
+    )
+    p.add_argument(
+        "--cycles", type=int, default=0, help="Number of cycles to run (0 = infinite)"
+    )
+    p.add_argument(
+        "--gui",
+        action="store_true",
+        help="Use alternate-screen GUI mode (clears screen, hides cursor)",
+    )
+    p.add_argument(
+        "--big",
+        action="store_true",
+        help="Emphasize header and numbers (bigger, bolder output)",
+    )
+    p.add_argument(
+        "--delta-up", type=float, default=0.5, help="Percent threshold for 'up' status"
+    )
+    p.add_argument(
+        "--delta-down",
+        type=float,
+        default=0.5,
+        help="Percent threshold for 'down' status",
+    )
+    p.add_argument(
+        "--show-arrows", action="store_true", help="Show ▲/▼ next to Current"
+    )
+    p.add_argument(
+        "--gradient",
+        action="store_true",
+        help="Apply simple gradient background to Current cell based on delta",
+    )
     args = p.parse_args()
 
     cycles = 0

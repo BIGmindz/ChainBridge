@@ -14,11 +14,13 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from tools.analyze_regime_detection import main
 
 if __name__ == "__main__":
-    print("""
+    print(
+        """
     ╔════════════════════════════════════════════════════════╗
     ║   MARKET REGIME ANALYSIS                              ║
     ║   Evaluating Regime Detection Performance             ║
     ╚════════════════════════════════════════════════════════╝
-    """)
-    
+    """
+    )
+
     main()

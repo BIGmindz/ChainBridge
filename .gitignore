@@ -37,3 +37,11 @@ kraken_paper_trade_journal_*.json
 # Trading data files (exclude sensitive data)
 trading_state_*.json
 *.csv.bak
+
+# Ignore virtualenvs
+.venv
+.venv*/
+.venv312/
+venv/
+.pytest_cache/
+__pycache__/

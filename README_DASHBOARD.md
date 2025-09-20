@@ -1,4 +1,6 @@
-Dashboard
+# Dashboard
+
+This is a document with a top-level heading
 ---------
 
 This project includes a Streamlit dashboard to visualize bot performance.
@@ -11,5 +13,6 @@ source .venv/bin/activate
 ```
 
 Notes:
+
 - Dashboard reads CSV files from the `data/` directory.
 - A sample file `data/sample_trades.csv` is included for demo purposes.
