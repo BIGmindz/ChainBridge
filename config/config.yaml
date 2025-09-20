@@ -7,6 +7,13 @@ api:
   key: ${API_KEY}
   secret: ${API_SECRET}
 
+symbols:
+- PRO/USD
+- WLFI/USD
+- KIN/USD
+- CRO/USD
+- ZORA/USD
+
 market:
   base: ETH
   quote: USD
@@ -18,24 +25,15 @@ trading:
   slippage_bps: 5   # 5 bps = 0.05%
 
 risk:
-  stop_loss_pct: 0.03
-  take_profit_pct: 0.06
+  max_risk_per_trade: 0.15
+  cooldown_minutes: 5
+  initial_capital: 107.41
 
-signals:
-  rsi:
-    period: 14
-    buy_threshold: 30
-    sell_threshold: 70
-  ma:
-    fast: 20
-    slow: 50
+rsi:
+  period: 14
+  buy_threshold: 35
+  sell_threshold: 65
 
-engine:
-  poll_seconds: 15
-  timeframes:
-    - 5m
-    - 15m
-
-logging:
-  level: INFO
-  file: logs/bot.log
+timeframe: 5m
+poll_seconds: 30
+csv_log: benson_signals.csv
