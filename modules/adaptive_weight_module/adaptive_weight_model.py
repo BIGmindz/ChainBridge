@@ -33,13 +33,13 @@ try:
     import tensorflow as tf
     from tensorflow import keras  # noqa: F401
     from tensorflow.keras import layers  # noqa: F401
+    from tensorflow.keras.callbacks import EarlyStopping  # noqa: F401
     from tensorflow.keras.callbacks import (
-        EarlyStopping,  # noqa: F401
         ModelCheckpoint,
         TensorBoard,
     )
+    from tensorflow.keras.layers import BatchNormalization  # noqa: F401
     from tensorflow.keras.layers import (
-        BatchNormalization,  # noqa: F401
         Dense,
         Dropout,
         Input,
@@ -58,8 +58,8 @@ try:
     # For market regime detection
     from sklearn.cluster import KMeans
     from sklearn.decomposition import PCA
+    from sklearn.metrics import mean_absolute_error  # noqa: F401
     from sklearn.metrics import (
-        mean_absolute_error,  # noqa: F401
         mean_squared_error,
         r2_score,
     )
@@ -126,9 +126,7 @@ class AdaptiveWeightModule(Module):
         self.l2_reg = self.config.get("l2_reg", 0.0001)
 
         # Market regime detection
-        self.n_regimes = self.config.get(
-            "n_regimes", 4
-        )  # Number of market regimes to detect
+        self.n_regimes = self.config.get("n_regimes", 4)  # Number of market regimes to detect
         self.regime_features = self.config.get(
             "regime_features",
             [
@@ -146,15 +144,11 @@ class AdaptiveWeightModule(Module):
         )
 
         # Model directory for saving/loading
-        self.model_dir = os.path.join(
-            self.config.get("model_dir", "models"), "adaptive_weight_module"
-        )
+        self.model_dir = os.path.join(self.config.get("model_dir", "models"), "adaptive_weight_module")
         os.makedirs(self.model_dir, exist_ok=True)
 
         # Data storage for training
-        self.data_store = os.path.join(
-            self.config.get("data_dir", "data"), "adaptive_weight_data"
-        )
+        self.data_store = os.path.join(self.config.get("data_dir", "data"), "adaptive_weight_data")
         os.makedirs(self.data_store, exist_ok=True)
 
         # Initialize models
@@ -196,14 +190,10 @@ class AdaptiveWeightModule(Module):
             current_regime = self._identify_market_regime(regime_features)
 
             # Prepare input for weight model
-            model_inputs = self._prepare_model_inputs(
-                signal_data, regime_features, current_regime
-            )
+            model_inputs = self._prepare_model_inputs(signal_data, regime_features, current_regime)
 
             # Generate optimized weights
-            optimized_weights = self._generate_optimal_weights(
-                model_inputs, current_regime
-            )
+            optimized_weights = self._generate_optimal_weights(model_inputs, current_regime)
 
             # Organize the results
             result = {
@@ -216,9 +206,7 @@ class AdaptiveWeightModule(Module):
             }
 
             # Store this result for future training
-            self._store_result_for_training(
-                signal_data, market_data, optimized_weights, current_regime, timestamp
-            )
+            self._store_result_for_training(signal_data, market_data, optimized_weights, current_regime, timestamp)
 
             return result
 
@@ -288,16 +276,12 @@ class AdaptiveWeightModule(Module):
         market_input = Input(shape=(len(self.regime_features),), name="market_input")
 
         # Process signal inputs
-        x_signal = Dense(
-            32, activation="relu", kernel_regularizer=l1_l2(self.l1_reg, self.l2_reg)
-        )(signal_input)
+        x_signal = Dense(32, activation="relu", kernel_regularizer=l1_l2(self.l1_reg, self.l2_reg))(signal_input)
         x_signal = BatchNormalization()(x_signal)
         x_signal = Dropout(self.dropout_rate)(x_signal)
 
         # Process market inputs
-        x_market = Dense(
-            16, activation="relu", kernel_regularizer=l1_l2(self.l1_reg, self.l2_reg)
-        )(market_input)
+        x_market = Dense(16, activation="relu", kernel_regularizer=l1_l2(self.l1_reg, self.l2_reg))(market_input)
         x_market = BatchNormalization()(x_market)
         x_market = Dropout(self.dropout_rate)(x_market)
 
@@ -305,15 +289,11 @@ class AdaptiveWeightModule(Module):
         combined = tf.keras.layers.concatenate([x_signal, x_market, regime_input])
 
         # Hidden layers
-        x = Dense(
-            64, activation="relu", kernel_regularizer=l1_l2(self.l1_reg, self.l2_reg)
-        )(combined)
+        x = Dense(64, activation="relu", kernel_regularizer=l1_l2(self.l1_reg, self.l2_reg))(combined)
         x = BatchNormalization()(x)
         x = Dropout(self.dropout_rate)(x)
 
-        x = Dense(
-            32, activation="relu", kernel_regularizer=l1_l2(self.l1_reg, self.l2_reg)
-        )(x)
+        x = Dense(32, activation="relu", kernel_regularizer=l1_l2(self.l1_reg, self.l2_reg))(x)
         x = BatchNormalization()(x)
         x = Dropout(self.dropout_rate)(x)
 
@@ -322,9 +302,7 @@ class AdaptiveWeightModule(Module):
         outputs = Dense(self.n_signals, activation="sigmoid", name="weight_output")(x)
 
         # Create model
-        model = Model(
-            inputs=[signal_input, regime_input, market_input], outputs=outputs
-        )
+        model = Model(inputs=[signal_input, regime_input, market_input], outputs=outputs)
 
         # Compile model
         model.compile(
@@ -341,13 +319,9 @@ class AdaptiveWeightModule(Module):
 
         This uses unsupervised learning to identify market regimes
         """
-        self.regime_model = KMeans(
-            n_clusters=self.n_regimes, random_state=42, n_init=10
-        )
+        self.regime_model = KMeans(n_clusters=self.n_regimes, random_state=42, n_init=10)
 
-    def _check_and_retrain(
-        self, signal_data: Dict[str, Any], market_data: Dict[str, Any]
-    ) -> None:
+    def _check_and_retrain(self, signal_data: Dict[str, Any], market_data: Dict[str, Any]) -> None:
         """
         Check if models need retraining and retrain if necessary
 
@@ -362,24 +336,18 @@ class AdaptiveWeightModule(Module):
             self._build_models()
 
         # Check if it's time to retrain (24 hour intervals)
-        if self.last_trained is None or (current_time - self.last_trained) > timedelta(
-            hours=self.retrain_frequency_hours
-        ):
+        if self.last_trained is None or (current_time - self.last_trained) > timedelta(hours=self.retrain_frequency_hours):
             # Load historical data for training
             train_data = self._load_training_data()
 
             if len(train_data) >= self.min_samples_required:
-                print(
-                    f"Retraining adaptive weight models with {len(train_data)} samples..."
-                )
+                print(f"Retraining adaptive weight models with {len(train_data)} samples...")
                 self._train_models(train_data)
                 self.last_trained = current_time
                 self._save_models()
                 print("Model retraining complete.")
             else:
-                print(
-                    f"Not enough data for retraining. Have {len(train_data)} samples, need {self.min_samples_required}."
-                )
+                print(f"Not enough data for retraining. Have {len(train_data)} samples, need {self.min_samples_required}.")
 
     def _build_models(self) -> None:
         """Build all required models"""
@@ -418,9 +386,7 @@ class AdaptiveWeightModule(Module):
 
         return training_data
 
-    def _prepare_training_data(
-        self, raw_data: List[Dict[str, Any]]
-    ) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
+    def _prepare_training_data(self, raw_data: List[Dict[str, Any]]) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
         """
         Prepare training data for model training
 
@@ -525,9 +491,7 @@ class AdaptiveWeightModule(Module):
         X_val = {}
 
         for key in X:
-            X_train[key], X_val[key], y_train, y_val = train_test_split(
-                X[key], y["weight_output"], test_size=0.2, random_state=42
-            )
+            X_train[key], X_val[key], y_train, y_val = train_test_split(X[key], y["weight_output"], test_size=0.2, random_state=42)
 
         # Callbacks for training
         callbacks = [
@@ -570,9 +534,7 @@ class AdaptiveWeightModule(Module):
 
         # Save the regime model
         if self.regime_model is not None and JOBLIB_AVAILABLE:
-            joblib.dump(
-                self.regime_model, os.path.join(self.model_dir, "regime_model.joblib")
-            )
+            joblib.dump(self.regime_model, os.path.join(self.model_dir, "regime_model.joblib"))
 
         # Save scalers
         if self.scalers:
@@ -602,9 +564,7 @@ class AdaptiveWeightModule(Module):
             try:
                 with open(metadata_path, "r") as f:
                     metadata = json.load(f)
-                    self.last_trained = datetime.fromisoformat(
-                        metadata.get("last_trained", "")
-                    )
+                    self.last_trained = datetime.fromisoformat(metadata.get("last_trained", ""))
                     print(f"Found existing model last trained at: {self.last_trained}")
             except Exception as e:
                 print(f"Error loading metadata: {str(e)}")
@@ -720,9 +680,7 @@ class AdaptiveWeightModule(Module):
 
         return features
 
-    def _calculate_volatility(
-        self, price_history: List[Dict[str, Any]], days: int
-    ) -> float:
+    def _calculate_volatility(self, price_history: List[Dict[str, Any]], days: int) -> float:
         """Calculate price volatility over specified days"""
         if not price_history or len(price_history) < days:
             return 0.0
@@ -747,9 +705,7 @@ class AdaptiveWeightModule(Module):
         recent_prices = [p["close"] for p in price_history[-days:]]
 
         # Calculate simple trend (ending price / starting price - 1)
-        trend = (
-            (recent_prices[-1] / recent_prices[0] - 1) if recent_prices[0] > 0 else 0.0
-        )
+        trend = (recent_prices[-1] / recent_prices[0] - 1) if recent_prices[0] > 0 else 0.0
 
         return trend
 
@@ -764,11 +720,7 @@ class AdaptiveWeightModule(Module):
         recent_volumes = volume_history[-days:]
 
         # Calculate volume change
-        volume_change = (
-            (recent_volumes[-1] / recent_volumes[0] - 1)
-            if recent_volumes[0] > 0
-            else 0.0
-        )
+        volume_change = (recent_volumes[-1] / recent_volumes[0] - 1) if recent_volumes[0] > 0 else 0.0
 
         return volume_change
 
@@ -832,9 +784,7 @@ class AdaptiveWeightModule(Module):
 
         # Get distance to cluster center as a proxy for confidence
         cluster_id = self.regime_model.predict(features_reduced)[0]
-        distance = np.linalg.norm(
-            features_reduced - self.regime_model.cluster_centers_[cluster_id]
-        )
+        distance = np.linalg.norm(features_reduced - self.regime_model.cluster_centers_[cluster_id])
 
         # Convert distance to confidence (closer = higher confidence)
         max_distance = 5.0  # Tunable parameter
@@ -890,9 +840,7 @@ class AdaptiveWeightModule(Module):
 
         return model_inputs
 
-    def _generate_optimal_weights(
-        self, model_inputs: Dict[str, np.ndarray], current_regime: str
-    ) -> Dict[str, float]:
+    def _generate_optimal_weights(self, model_inputs: Dict[str, np.ndarray], current_regime: str) -> Dict[str, float]:
         """
         Generate optimal signal weights
 
