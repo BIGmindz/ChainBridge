@@ -1,18 +1,73 @@
-# Dashboard
+# BensonBot Enhanced Dashboard
 
-This is a document with a top-level heading
----------
+A powerful, real-time dashboard for monitoring and analyzing trading bot performance.
 
-This project includes a Streamlit dashboard to visualize bot performance.
+## Features
 
-Run locally:
+- Real-time Market Metrics
+  - Market Regime Indicator
+  - Dynamic RSI Period Display
+  - Trend Strength Measurement
+  - Volatility Analysis
+
+- Advanced Technical Analysis
+  - Interactive Candlestick Charts
+  - Volume Profile Analysis
+  - Multiple Technical Indicators
+  - Trading Signal Visualization
+
+- Performance Analytics
+  - Win Rate & Profit Factor
+  - Sharpe Ratio
+  - Maximum Drawdown
+  - Trade Statistics
+
+- User-Configurable Interface
+  - Adjustable Update Intervals
+  - Multiple Timeframe Selection
+  - Customizable Indicators
+  - Dark Theme Optimized
+
+## Quick Start
+
+1. Setup the environment:
 
 ```bash
-source .venv/bin/activate
+make venv
+make install
+```
+
+1. Run the dashboard:
+
+```bash
 ./run_dashboard.sh
 ```
 
-Notes:
+1. Access the dashboard at: `http://localhost:8050`
 
-- Dashboard reads CSV files from the `data/` directory.
-- A sample file `data/sample_trades.csv` is included for demo purposes.
+## Data Sources
+
+The dashboard automatically reads:
+
+- Trade data from CSV files in `data/` directory
+- Real-time market data from configured exchanges
+- Technical indicators and signals from the trading bot
+
+## Configuration
+
+- Update intervals can be adjusted in the dashboard UI
+- Default port (8050) can be modified in `run_dashboard.sh`
+- Indicator settings are configurable through the UI
+- Color schemes and layouts follow system dark/light mode
+
+## Requirements
+
+- Python 3.11+
+- Required packages:
+  - dash
+  - dash-bootstrap-components
+  - plotly
+  - pandas
+  - numpy
+
+All dependencies are automatically installed by the setup script.

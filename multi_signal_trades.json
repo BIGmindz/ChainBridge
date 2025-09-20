@@ -591,5 +591,535 @@
     "id": "CRO/USD_1758285492.738246",
     "stop_loss": 0.225428,
     "take_profit": 0.246344
+  },
+  {
+    "timestamp": "2025-09-19T20:42:13.934135",
+    "symbol": "SOL/USD",
+    "action": "BUY",
+    "price": 239.11,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.680821272286343,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "SOL/USD_1758328952.787996",
+    "stop_loss": 231.9367,
+    "take_profit": 253.4566
+  },
+  {
+    "timestamp": "2025-09-19T20:42:13.934135",
+    "symbol": "DOGE/USD",
+    "action": "BUY",
+    "price": 0.266528,
+    "size": 5.0,
+    "confidence": 0.17731714285714287,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "HOLD",
+        "confidence": 0.5736403202741379,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "DOGE/USD_1758328970.301792",
+    "stop_loss": 0.25853216,
+    "take_profit": 0.28251968
+  },
+  {
+    "timestamp": "2025-09-19T20:42:13.934135",
+    "symbol": "SHIB/USD",
+    "action": "BUY",
+    "price": 1.287e-05,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6366483149861205,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "SHIB/USD_1758328987.681438",
+    "stop_loss": 1.2483900000000001e-05,
+    "take_profit": 1.36422e-05
+  },
+  {
+    "timestamp": "2025-09-19T20:42:13.934135",
+    "symbol": "AVAX/USD",
+    "action": "BUY",
+    "price": 33.86,
+    "size": 5.0,
+    "confidence": 0.17731714285714287,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "HOLD",
+        "confidence": 0.5874800046934286,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "AVAX/USD_1758329005.267937",
+    "stop_loss": 32.8442,
+    "take_profit": 35.8916
+  },
+  {
+    "timestamp": "2025-09-19T20:42:13.934135",
+    "symbol": "ATOM/USD",
+    "action": "BUY",
+    "price": 4.4853,
+    "size": 5.0,
+    "confidence": 0.17731714285714287,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "HOLD",
+        "confidence": 0.523358750439153,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "ATOM/USD_1758329022.81971",
+    "stop_loss": 4.350740999999999,
+    "take_profit": 4.754417999999999
+  },
+  {
+    "timestamp": "2025-09-19T21:53:43.016620",
+    "symbol": "SOL/USD",
+    "action": "BUY",
+    "price": 239.04,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6146026785881976,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "SOL/USD_1758333240.894193",
+    "stop_loss": 231.8688,
+    "take_profit": 253.3824
+  },
+  {
+    "timestamp": "2025-09-19T21:53:43.016620",
+    "symbol": "DOGE/USD",
+    "action": "BUY",
+    "price": 0.2657214,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.5912112414905842,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "DOGE/USD_1758333257.202812",
+    "stop_loss": 0.257749758,
+    "take_profit": 0.281664684
+  },
+  {
+    "timestamp": "2025-09-19T21:53:43.016620",
+    "symbol": "SHIB/USD",
+    "action": "BUY",
+    "price": 1.288e-05,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.5353930108205999,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "SHIB/USD_1758333273.707159",
+    "stop_loss": 1.24936e-05,
+    "take_profit": 1.36528e-05
+  },
+  {
+    "timestamp": "2025-09-19T21:53:43.016620",
+    "symbol": "AVAX/USD",
+    "action": "BUY",
+    "price": 33.98,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6034079082179429,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "AVAX/USD_1758333290.131785",
+    "stop_loss": 32.9606,
+    "take_profit": 36.0188
+  },
+  {
+    "timestamp": "2025-09-19T21:53:43.016620",
+    "symbol": "ATOM/USD",
+    "action": "BUY",
+    "price": 4.4847,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.5554448917373328,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "ATOM/USD_1758333306.732404",
+    "stop_loss": 4.3501590000000006,
+    "take_profit": 4.753782
   }
 ]
