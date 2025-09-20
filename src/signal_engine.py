@@ -5,9 +5,10 @@ This module contains the logic for generating trading signals.
 Currently implements RSI (Relative Strength Index) calculations using Wilder's method.
 """
 
-import pandas as pd
 import math
 from typing import List
+
+import pandas as pd
 
 
 def wilder_rsi(close: pd.Series, period: int = 14) -> float:
@@ -17,8 +18,8 @@ def wilder_rsi(close: pd.Series, period: int = 14) -> float:
     delta = close.diff()
     gain = delta.clip(lower=0)
     loss = -delta.clip(upper=0)
-    avg_gain = gain.ewm(alpha=1/period, adjust=False, min_periods=period).mean()
-    avg_loss = loss.ewm(alpha=1/period, adjust=False, min_periods=period).mean()
+    avg_gain = gain.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
+    avg_loss = loss.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
     last_gain = float(avg_gain.iloc[-1])
     last_loss = float(avg_loss.iloc[-1])
     if last_loss == 0 and last_gain == 0:
@@ -44,7 +45,7 @@ def generate_signal(rsi_val: float, buy_threshold: float, sell_threshold: float)
     """Generate BUY/SELL/HOLD signal based on RSI value and thresholds."""
     if math.isnan(rsi_val):
         return "HOLD"
-    
+
     if rsi_val < buy_threshold:
         return "BUY"
     elif rsi_val > sell_threshold:

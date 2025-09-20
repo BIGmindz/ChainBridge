@@ -8,6 +8,7 @@ Usage:
   pip install rich
   python3 scripts/live_ticker_rich.py --interval 1 --cycles 0
 """
+
 import argparse
 import json
 import time
@@ -15,13 +16,13 @@ from datetime import datetime
 from pathlib import Path
 
 try:
-    from rich.live import Live
-    from rich.table import Table
-    from rich.panel import Panel
-    from rich.text import Text
-    from rich.console import Console
-    from rich.align import Align
     from rich import box
+    from rich.align import Align
+    from rich.console import Console
+    from rich.live import Live
+    from rich.panel import Panel
+    from rich.table import Table
+    from rich.text import Text
 except Exception:
     Live = None
     Table = None
@@ -57,7 +58,7 @@ def sparkline(data, width=12):
     mx = max(data)
     chars = SPARK_CHARS
     if mx == mn:
-        return chars[len(chars)//2] * min(width, len(data))
+        return chars[len(chars) // 2] * min(width, len(data))
     out = []
     for v in data[-width:]:
         idx = int((v - mn) / (mx - mn) * (len(chars) - 1))
@@ -66,7 +67,15 @@ def sparkline(data, width=12):
     return "".join(out).ljust(width)
 
 
-def build_table(budget, trades, big=False, delta_up=0.5, delta_down=0.5, show_arrows=False, gradient=False):
+def build_table(
+    budget,
+    trades,
+    big=False,
+    delta_up=0.5,
+    delta_down=0.5,
+    show_arrows=False,
+    gradient=False,
+):
     # Performance summary
     perf = (budget or {}).get("performance", {}) if budget else {}
     cap = perf.get("current_capital", (budget or {}).get("current_capital", 0.0))
@@ -76,7 +85,7 @@ def build_table(budget, trades, big=False, delta_up=0.5, delta_down=0.5, show_ar
 
     # Build recent prices map (seed from trades and current positions)
     recent_prices = {}
-    for t in (trades or []):
+    for t in trades or []:
         sym = t.get("symbol")
         price = t.get("price")
         if sym and price is not None:
@@ -92,7 +101,9 @@ def build_table(budget, trades, big=False, delta_up=0.5, delta_down=0.5, show_ar
     # Top header panel
     header_text = Text()
     header_text.append("HEDGE DASH", style="bold cyan")
-    header_text.append(f"  {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}", style="dim white")
+    header_text.append(
+        f"  {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}", style="dim white"
+    )
     header = Panel(Align.center(header_text), style="bold white on black")
 
     # Summary: left column (Capital/Open), right column (Available/Trades)
@@ -140,7 +151,7 @@ def build_table(budget, trades, big=False, delta_up=0.5, delta_down=0.5, show_ar
         else:
             stage = "●"
 
-    # P&L styling: big -> brighter/bolder, include sign
+        # P&L styling: big -> brighter/bolder, include sign
         if pnl > 0:
             pnl_style = "bold white on green" if big else "green"
             pnl_text = Text(f"+{pnl:0.2f}", style=pnl_style)
@@ -196,7 +207,9 @@ def build_table(budget, trades, big=False, delta_up=0.5, delta_down=0.5, show_ar
         act = t.get("action", "-")
         price = t.get("price", 0.0)
         act_style = "green" if (act or "").upper() == "BUY" else "red"
-        trades_panel.add_row(Text(f"{ts}  {sym:8}  {act:4}  @ ${price}", style=act_style))
+        trades_panel.add_row(
+            Text(f"{ts}  {sym:8}  {act:4}  @ ${price}", style=act_style)
+        )
 
     # Compose layout
     table.add_row(header)
@@ -211,10 +224,23 @@ def main():
     p.add_argument("--interval", type=float, default=1.0)
     p.add_argument("--cycles", type=int, default=0)
     p.add_argument("--big", action="store_true", help="Emphasize P&L and header")
-    p.add_argument("--delta-up", type=float, default=0.5, help="Percent threshold for 'up' status")
-    p.add_argument("--delta-down", type=float, default=0.5, help="Percent threshold for 'down' status")
-    p.add_argument("--show-arrows", action="store_true", help="Show ▲/▼ next to Current")
-    p.add_argument("--gradient", action="store_true", help="Apply gradient background to Current cell based on delta")
+    p.add_argument(
+        "--delta-up", type=float, default=0.5, help="Percent threshold for 'up' status"
+    )
+    p.add_argument(
+        "--delta-down",
+        type=float,
+        default=0.5,
+        help="Percent threshold for 'down' status",
+    )
+    p.add_argument(
+        "--show-arrows", action="store_true", help="Show ▲/▼ next to Current"
+    )
+    p.add_argument(
+        "--gradient",
+        action="store_true",
+        help="Apply gradient background to Current cell based on delta",
+    )
     args = p.parse_args()
 
     if Live is None or console is None:

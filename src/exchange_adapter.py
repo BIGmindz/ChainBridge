@@ -5,10 +5,10 @@ Manages all communication with the exchange for placing orders.
 Supports both paper trading and live trading modes.
 """
 
-from typing import Dict, Any, List
-import time
 import os
+import time
 from datetime import datetime, timezone
+from typing import Any, Dict, List
 
 
 class ExchangeAdapter:
@@ -33,13 +33,17 @@ class ExchangeAdapter:
         # Validate live trading setup
         if not self.paper_trade:
             if not self.api_key or not self.api_secret:
-                raise ValueError("Live trading requires API_KEY and API_SECRET environment variables")
+                raise ValueError(
+                    "Live trading requires API_KEY and API_SECRET environment variables"
+                )
             print("⚠️  LIVE TRADING MODE ENABLED - Real orders will be placed!")
             print("⚠️  Make sure you have sufficient funds and understand the risks!")
         else:
             print("📝 PAPER TRADING MODE - No real orders will be placed")
-    
-    def place_order(self, symbol: str, side: str, amount: float, price: float) -> Dict[str, Any]:
+
+    def place_order(
+        self, symbol: str, side: str, amount: float, price: float
+    ) -> Dict[str, Any]:
         """
         Place an order (supports both paper and live trading).
 
@@ -61,7 +65,7 @@ class ExchangeAdapter:
                 "price": price,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "status": "filled",
-                "type": "paper_trade"
+                "type": "paper_trade",
             }
             self.paper_trades.append(order)
             print(f"[PAPER TRADE] {side.upper()} {amount} {symbol} @ ${price:,.2f}")
@@ -70,17 +74,13 @@ class ExchangeAdapter:
             # Live trading implementation
             try:
                 # Set API credentials on exchange object
-                if hasattr(self.exchange, 'apiKey'):
+                if hasattr(self.exchange, "apiKey"):
                     self.exchange.apiKey = self.api_key
                     self.exchange.secret = self.api_secret
 
                 # Place live order
                 order = self.exchange.create_order(
-                    symbol=symbol,
-                    type='limit',
-                    side=side,
-                    amount=amount,
-                    price=price
+                    symbol=symbol, type="limit", side=side, amount=amount, price=price
                 )
 
                 print(f"[LIVE ORDER] {side.upper()} {amount} {symbol} @ ${price:,.2f}")
@@ -94,18 +94,18 @@ class ExchangeAdapter:
                     "price": price,
                     "timestamp": datetime.now(timezone.utc).isoformat(),
                     "status": order.get("status", "unknown"),
-                    "type": "live_trade"
+                    "type": "live_trade",
                 }
 
             except Exception as e:
                 error_msg = f"Failed to place live order: {str(e)}"
                 print(f"[ERROR] {error_msg}")
                 raise Exception(error_msg)
-    
+
     def get_paper_trades(self) -> List[Dict[str, Any]]:
         """Get all paper trades executed."""
         return self.paper_trades.copy()
-    
+
     def get_balance(self, currency: str) -> float:
         """Get balance for a currency (supports both paper and live trading)."""
         if self.paper_trade:
@@ -115,7 +115,7 @@ class ExchangeAdapter:
             # Live balance from exchange
             try:
                 # Set API credentials on exchange object
-                if hasattr(self.exchange, 'apiKey'):
+                if hasattr(self.exchange, "apiKey"):
                     self.exchange.apiKey = self.api_key
                     self.exchange.secret = self.api_secret
 

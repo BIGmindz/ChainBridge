@@ -3,42 +3,49 @@ Main Orchestrator for the Decision Bot
 
 This is the main entry point that coordinates all other modules:
 - Data Provider for market data
-- Signal Engine for trading signals 
+- Signal Engine for trading signals
 - Exchange Adapter for order management
 """
 
 import argparse
+import math
 import os
+import re
 import signal
 import time
-import math
-import re
 from datetime import datetime, timezone
-import yaml
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
-from .data_provider import setup_exchange, validate_symbols, safe_fetch_ohlcv, safe_fetch_ticker, backoff_sleep
-from .signal_engine import calculate_rsi_from_ohlcv, generate_signal
+import yaml
+
+from .data_provider import (
+    backoff_sleep,
+    safe_fetch_ohlcv,
+    safe_fetch_ticker,
+    setup_exchange,
+    validate_symbols,
+)
 from .exchange_adapter import ExchangeAdapter
+from .signal_engine import calculate_rsi_from_ohlcv, generate_signal
 
 
 def load_config(path: str) -> Dict[str, Any]:
     """Load configuration from YAML file with environment variable substitution."""
     if not os.path.exists(path):
         raise FileNotFoundError(f"Config not found at {path}")
-    
+
     with open(path, "r") as f:
         content = f.read()
-    
+
     # Substitute environment variables in the format ${VAR_NAME}
     def replace_env_vars(match):
         var_name = match.group(1)
         value = os.getenv(var_name, "")
         # Return empty string quoted to prevent YAML from converting to None
         return f'"{value}"' if value == "" else value
-    
-    content = re.sub(r'\$\{([^}]+)\}', replace_env_vars, content)
-    
+
+    content = re.sub(r"\$\{([^}]+)\}", replace_env_vars, content)
+
     return yaml.safe_load(content) or {}
 
 
@@ -54,18 +61,24 @@ def run_bot(once: bool = False) -> None:
     cfg = load_config(config_path)
 
     exchange_id = str(cfg.get("exchange", "kraken")).lower()
-    
+
     # Get API configuration
     api_config = cfg.get("api", {})
-    
+
     # Setup exchange and validate symbols
     exchange = setup_exchange(exchange_id, api_config)
     symbols: List[str] = list(cfg.get("symbols", []))
     if not symbols:
-        symbols = ["PRO/USD", "BDXN/USD", "KIN/USD", "SOGNI/USD", "ZORA/USD"]  # Kraken volatile crypto defaults
-    
+        symbols = [
+            "PRO/USD",
+            "BDXN/USD",
+            "KIN/USD",
+            "SOGNI/USD",
+            "ZORA/USD",
+        ]  # Kraken volatile crypto defaults
+
     validate_symbols(exchange, symbols)
-    
+
     # Setup exchange adapter (may be unused in some flows)
     _exchange_adapter = ExchangeAdapter(exchange, cfg)
 
@@ -98,9 +111,11 @@ def run_bot(once: bool = False) -> None:
 
     # Signal handling for graceful shutdown
     stop = {"flag": False}
+
     def handle_sigint(sig, frame):
         stop["flag"] = True
         print("\nStopping gracefully...")
+
     signal.signal(signal.SIGINT, handle_sigint)
 
     attempt = 0
@@ -111,19 +126,19 @@ def run_bot(once: bool = False) -> None:
                 # Fetch market data
                 ohlcv = safe_fetch_ohlcv(exchange, symbol, timeframe, limit=200)
                 rsi_val = calculate_rsi_from_ohlcv(ohlcv, rsi_period)
-                
+
                 if isinstance(rsi_val, float) and math.isnan(rsi_val):
                     print(f"[{utc_now_str()}] {symbol}: insufficient data for RSI yet.")
                     continue
 
                 price = safe_fetch_ticker(exchange, symbol)
-                
+
                 # Generate signal
                 signal_out = generate_signal(rsi_val, buy_th, sell_th)
 
                 now = time.time()
                 cooldown_ok = (now - last_alert_ts[symbol]) >= cooldown_sec
-                changed = (signal_out != last_signal[symbol])
+                changed = signal_out != last_signal[symbol]
 
                 # Status line
                 print(
@@ -133,7 +148,9 @@ def run_bot(once: bool = False) -> None:
 
                 # Alert only on new actionable signals and respecting cooldown
                 if signal_out in ("BUY", "SELL") and changed and cooldown_ok:
-                    print(f"SIGNAL: {signal_out} {symbol} @ ${price:,.2f} (RSI {rsi_val:0.2f})")
+                    print(
+                        f"SIGNAL: {signal_out} {symbol} @ ${price:,.2f} (RSI {rsi_val:0.2f})"
+                    )
                     last_alert_ts[symbol] = now
 
                 # Persist log line
@@ -162,12 +179,15 @@ def main():
     """CLI entrypoint."""
     print("[DBG] entered main()")
     parser = argparse.ArgumentParser(description="Benson RSI Bot")
-    parser.add_argument("--once", action="store_true", help="Run a single cycle and exit")
+    parser.add_argument(
+        "--once", action="store_true", help="Run a single cycle and exit"
+    )
     parser.add_argument("--test", action="store_true", help="Run unit tests and exit")
     args = parser.parse_args()
 
     if args.test:
         from . import tests
+
         tests.run_tests()
         return
 

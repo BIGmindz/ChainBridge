@@ -6,9 +6,9 @@ This script helps you securely enter your Kraken API credentials
 and updates the .env file without exposing them in logs.
 """
 
+import getpass
 import os
 import sys
-import getpass
 from pathlib import Path
 
 
@@ -51,18 +51,18 @@ def setup_api_credentials():
     if len(api_key) < 20:
         print("⚠️  WARNING: API Key seems short. Please verify it's correct.")
         confirm = input("Continue anyway? (y/N): ").lower().strip()
-        if confirm != 'y':
+        if confirm != "y":
             return False
 
     if len(api_secret) < 20:
         print("⚠️  WARNING: API Secret seems short. Please verify it's correct.")
         confirm = input("Continue anyway? (y/N): ").lower().strip()
-        if confirm != 'y':
+        if confirm != "y":
             return False
 
     # Read current .env file
     try:
-        with open(env_file, 'r') as f:
+        with open(env_file, "r") as f:
             env_content = f.read()
     except Exception as e:
         print(f"❌ Error reading .env file: {e}")
@@ -70,16 +70,12 @@ def setup_api_credentials():
 
     # Update the API credentials in the .env file
     updated_content = env_content.replace(
-        'API_KEY="your_api_key_here"',
-        f'API_KEY="{api_key}"'
-    ).replace(
-        'API_SECRET="your_api_secret_here"',
-        f'API_SECRET="{api_secret}"'
-    )
+        'API_KEY="your_api_key_here"', f'API_KEY="{api_key}"'
+    ).replace('API_SECRET="your_api_secret_here"', f'API_SECRET="{api_secret}"')
 
     # Write back to .env file
     try:
-        with open(env_file, 'w') as f:
+        with open(env_file, "w") as f:
             f.write(updated_content)
         print()
         print("✅ API credentials successfully updated!")
@@ -104,11 +100,13 @@ def verify_credentials():
         return False
 
     try:
-        with open(env_file, 'r') as f:
+        with open(env_file, "r") as f:
             content = f.read()
 
-        has_api_key = 'API_KEY="' in content and 'your_api_key_here' not in content
-        has_api_secret = 'API_SECRET="' in content and 'your_api_secret_here' not in content
+        has_api_key = 'API_KEY="' in content and "your_api_key_here" not in content
+        has_api_secret = (
+            'API_SECRET="' in content and "your_api_secret_here" not in content
+        )
 
         return has_api_key and has_api_secret
     except Exception:
@@ -128,7 +126,7 @@ def main():
     if verify_credentials():
         print("ℹ️  API credentials are already configured!")
         overwrite = input("Do you want to update them? (y/N): ").lower().strip()
-        if overwrite != 'y':
+        if overwrite != "y":
             print("✅ Keeping existing credentials.")
             return 0
 
