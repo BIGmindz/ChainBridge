@@ -1,0 +1,189 @@
+/* Robinhood-style modern UI with TradingView professional charting */
+
+/* Base Theme */
+:root {
+    --rh-green: #00C805;
+    --rh-red: #FF5000;
+    --rh-black: #1E2124;
+    --rh-dark-gray: #18191A;
+    --rh-text: #FFFFFF;
+    --rh-secondary-text: #8C8C8E;
+    --tv-grid: rgba(58, 58, 58, 0.15);
+}
+
+.app-container {
+    background-color: var(--rh-black);
+    min-height: 100vh;
+    font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu;
+}
+
+/* Navigation Bar */
+.nav-bar {
+    background-color: var(--rh-dark-gray);
+    padding: 15px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.live-clock {
+    color: var(--rh-secondary-text);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Main Content Layout */
+.main-content {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 20px;
+    padding: 20px;
+    max-width: 1800px;
+    margin: 0 auto;
+}
+
+/* Price Display */
+.current-price {
+    font-size: 32px;
+    font-weight: 500;
+    margin: 0;
+    color: var(--rh-text);
+}
+
+.price-change {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.price-change.positive {
+    color: var(--rh-green);
+}
+
+.price-change.negative {
+    color: var(--rh-red);
+}
+
+/* TradingView-style Chart */
+.chart-container {
+    background-color: var(--rh-dark-gray);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.main-chart {
+    height: 600px;
+    margin-top: 20px;
+}
+
+/* Sidebar Components */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--rh-text);
+    margin: 0 0 15px 0;
+}
+
+.stats-container, .signals-container, .indicators-container {
+    background-color: var(--rh-dark-gray);
+    border-radius: 8px;
+    padding: 20px;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.stat-item {
+    border-radius: 4px;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--rh-secondary-text);
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--rh-text);
+}
+
+/* Signal Cards */
+.signal-card {
+    background: linear-gradient(45deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.1));
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+.signal-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* TradingView-style Indicators */
+.indicator-chart {
+    height: 300px;
+}
+
+/* Animations */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+.price-alert {
+    animation: pulse 2s infinite;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--rh-dark-gray);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #666;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #888;
+}
+
+/* Chart Customization */
+.js-plotly-plot .plotly .modebar {
+    background: transparent !important;
+}
+
+.js-plotly-plot .plotly .modebar-btn path {
+    fill: var(--rh-secondary-text) !important;
+}
+
+/* TradingView-style Grid */
+.main-chart .plot-container .svg-container {
+    background-image: linear-gradient(var(--tv-grid) 1px, transparent 1px),
+                      linear-gradient(90deg, var(--tv-grid) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
