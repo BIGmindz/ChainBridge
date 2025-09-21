@@ -4,7 +4,7 @@ import pandas as pd
 import joblib
 import logging
 from lightgbm import LGBMClassifier
-from sklearn.preprocessing import StandardScaler
+from utils.feature_hygiene import robust_clip
 
 # --- Add project root to system path for local imports ---
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -102,9 +102,8 @@ def train_and_save_model(data: pd.DataFrame, regime_name: str, symbol_name: str,
     df.loc[df['price'].shift(-1) < df['price'], 'label'] = -1 # Sell
     y = df['label'].values
 
-    # Scale features and train model
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
+    # Scale features using robust clipping instead of StandardScaler
+    X_scaled = robust_clip(pd.DataFrame(X)).values
 
     model = LGBMClassifier(random_state=42, n_estimators=50)  # Smaller model for symbol-specific
     model.fit(X_scaled, y)
@@ -112,11 +111,9 @@ def train_and_save_model(data: pd.DataFrame, regime_name: str, symbol_name: str,
     accuracy = model.score(X_scaled, y)
     logging.info(f"'{model_name.upper()}' model trained on {len(df)} samples. Accuracy: {accuracy:.2%}")
 
-    # Save the trained model and scaler
+    # Save the trained model (no scaler needed with robust_clip)
     model_path = os.path.join(model_dir, f"model_{model_name}.pkl")
-    scaler_path = os.path.join(model_dir, f"scaler_{model_name}.pkl")
     joblib.dump(model, model_path)
-    joblib.dump(scaler, scaler_path)
     logging.info(f"✅ Saved '{model_name}' model to {model_path}")
 
 def main():

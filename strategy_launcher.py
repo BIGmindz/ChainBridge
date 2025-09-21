@@ -18,11 +18,24 @@ def discover_strategies(base_path='strategies'):
             config_path = os.path.join(strategy_path, 'config.yaml')
             model_path = os.path.join(strategy_path, 'model.pkl')
 
-            # A valid strategy must have both a config and a model file.
-            if os.path.exists(config_path) and os.path.exists(model_path):
+            # Check if it's an ensemble strategy (has config but may not have single model.pkl)
+            is_ensemble = False
+            if os.path.exists(config_path):
+                try:
+                    import yaml
+                    with open(config_path, 'r') as f:
+                        config = yaml.safe_load(f)
+                    if config and 'ensemble' in config:
+                        is_ensemble = True
+                except:
+                    pass
+
+            # A valid strategy must have a config file and either a model file or be an ensemble
+            if os.path.exists(config_path) and (os.path.exists(model_path) or is_ensemble):
                 strategies[strategy_name] = {
                     "config_path": config_path,
-                    "model_path": model_path
+                    "model_path": model_path if os.path.exists(model_path) else None,
+                    "is_ensemble": is_ensemble
                 }
     return strategies
 
@@ -30,7 +43,7 @@ def select_strategy(strategies: dict):
     """Prompts the user to select a strategy to run."""
     if not strategies:
         logging.error("FATAL: No valid strategies found in the 'strategies/' directory.")
-        logging.error("A valid strategy requires a 'config.yaml' and a 'model.pkl' file in its folder.")
+        logging.error("A valid strategy requires a 'config.yaml' file and either a 'model.pkl' file or ensemble configuration.")
         sys.exit(1)
 
     strategy_choices = list(strategies.keys())
