@@ -1,42 +1,42 @@
 {
   "selected_cryptos": [
     "NEAR/USD",
-    "DOGE/USD",
     "AVAX/USD",
-    "SOL/USD",
-    "APT/USD"
+    "APT/USD",
+    "SEI/USD",
+    "PEPE/USD"
   ],
   "volatility_scores": {
     "NEAR/USD": {
-      "volatility": 0.03422328653255401,
-      "volume_usd": 82000.17983834606,
-      "score": 0.1681670732888938,
-      "last_price": 3.09
-    },
-    "DOGE/USD": {
-      "volatility": 0.024606886610563247,
-      "volume_usd": 1217316.3591342343,
-      "score": 0.149742841659322,
-      "last_price": 0.2646924
+      "volatility": 0.036207085550921704,
+      "volume_usd": 59657.37996568397,
+      "score": 0.17291314496467106,
+      "last_price": 3.156
     },
     "AVAX/USD": {
-      "volatility": 0.02582421477305065,
-      "volume_usd": 404674.43530779897,
-      "score": 0.14479913135765862,
-      "last_price": 32.99
-    },
-    "SOL/USD": {
-      "volatility": 0.020923204935704487,
-      "volume_usd": 3154992.0649993964,
-      "score": 0.13597987558742633,
-      "last_price": 237.78
+      "volatility": 0.030851018758049558,
+      "volume_usd": 205259.01017464258,
+      "score": 0.1638900010298907,
+      "last_price": 33.16
     },
     "APT/USD": {
-      "volatility": 0.030255715260763125,
-      "volume_usd": 13561.13728821953,
-      "score": 0.12502654345849765,
-      "last_price": 4.6305
+      "volatility": 0.03334785016413845,
+      "volume_usd": 12847.363635726957,
+      "score": 0.13702124143380862,
+      "last_price": 4.6191
+    },
+    "SEI/USD": {
+      "volatility": 0.024777476206631743,
+      "volume_usd": 21831.123297444745,
+      "score": 0.10751184728770864,
+      "last_price": 0.31819
+    },
+    "PEPE/USD": {
+      "volatility": 0.022050070888520016,
+      "volume_usd": 48888.57020533987,
+      "score": 0.10339755004805681,
+      "last_price": 1.0726e-05
     }
   },
-  "timestamp": "2025-09-20T09:15:40.260791"
+  "timestamp": "2025-09-20T20:18:55.474391"
 }

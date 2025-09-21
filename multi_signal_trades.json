@@ -5990,5 +5990,1751 @@
     "id": "SOL/USD_1758387096.10002",
     "stop_loss": 232.8776,
     "take_profit": 254.4848
+  },
+  {
+    "timestamp": "2025-09-20T20:42:08.860302+00:00",
+    "symbol": "NEAR/USD",
+    "action": "BUY",
+    "price": 3.198,
+    "size": 5.0,
+    "confidence": 0.17731714285714287,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "HOLD",
+        "confidence": 0.5909589433027613,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "NEAR/USD_1758400946.670212",
+    "stop_loss": 3.10206,
+    "take_profit": 3.38988
+  },
+  {
+    "timestamp": "2025-09-20T20:42:08.860302+00:00",
+    "symbol": "DOGE/USD",
+    "action": "BUY",
+    "price": 0.2671029,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.5511088004815852,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "DOGE/USD_1758400963.413083",
+    "stop_loss": 0.259089813,
+    "take_profit": 0.283129074
+  },
+  {
+    "timestamp": "2025-09-20T20:42:08.860302+00:00",
+    "symbol": "AVAX/USD",
+    "action": "BUY",
+    "price": 33.27,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6043268609765436,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "AVAX/USD_1758400979.917187",
+    "stop_loss": 32.2719,
+    "take_profit": 35.266200000000005
+  },
+  {
+    "timestamp": "2025-09-20T20:42:08.860302+00:00",
+    "symbol": "SOL/USD",
+    "action": "BUY",
+    "price": 239.6,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.596213578184857,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "SOL/USD_1758400996.450449",
+    "stop_loss": 232.412,
+    "take_profit": 253.976
+  },
+  {
+    "timestamp": "2025-09-20T20:42:08.860302+00:00",
+    "symbol": "APT/USD",
+    "action": "BUY",
+    "price": 4.6289,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.5583613321701332,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "APT/USD_1758401012.841641",
+    "stop_loss": 4.4900329999999995,
+    "take_profit": 4.9066339999999995
+  },
+  {
+    "timestamp": "2025-09-20T23:23:53.572584+00:00",
+    "symbol": "NEAR/USD",
+    "action": "BUY",
+    "price": 3.15,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6623490498215118,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "NEAR/USD_1758410652.17701",
+    "stop_loss": 3.0555,
+    "take_profit": 3.339
+  },
+  {
+    "timestamp": "2025-09-20T23:23:53.572584+00:00",
+    "symbol": "DOGE/USD",
+    "action": "BUY",
+    "price": 0.2672649,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.549532243307625,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "DOGE/USD_1758410668.429245",
+    "stop_loss": 0.259246953,
+    "take_profit": 0.283300794
+  },
+  {
+    "timestamp": "2025-09-20 23:35:38 UTC",
+    "symbol": "SOL/USD",
+    "action": "BUY",
+    "price": 239.25,
+    "size": 3.180315,
+    "confidence": 0.14034447331635866,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 37.25328448116078
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "BUY",
+        "confidence": 0.20671122659876792,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "EnsembleML": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "HOLD",
+        "confidence": 0.5161703436221557,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      },
+      "RegionCryptoMapper": {
+        "signal": "HOLD",
+        "confidence": 0,
+        "value": 0
+      },
+      "NewListingsRadar": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      }
+    },
+    "id": "SOL/USD_1758411357.907209",
+    "stop_loss": 232.0725,
+    "take_profit": 253.605
+  },
+  {
+    "timestamp": "2025-09-20 23:35:38 UTC",
+    "symbol": "DOGE/USD",
+    "action": "BUY",
+    "price": 0.2671025,
+    "size": 0.15901575000000032,
+    "confidence": 0.24920606069405915,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 39.516227497890824
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "BUY",
+        "confidence": 0.6688242427762365,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "EnsembleML": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.5789951134267868,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      },
+      "RegionCryptoMapper": {
+        "signal": "HOLD",
+        "confidence": 0,
+        "value": 0
+      },
+      "NewListingsRadar": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      }
+    },
+    "id": "DOGE/USD_1758411377.762845",
+    "stop_loss": 0.25908942500000004,
+    "take_profit": 0.28312865000000004
+  },
+  {
+    "timestamp": "2025-09-20 23:35:38 UTC",
+    "symbol": "AVAX/USD",
+    "action": "BUY",
+    "price": 33.17,
+    "size": 0.007950787500000021,
+    "confidence": 0.24535166758408203,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 30.276288760954486
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "BUY",
+        "confidence": 0.11340667033632804,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "BUY",
+        "confidence": 0.72,
+        "value": 0
+      },
+      "EnsembleML": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6329656077978819,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      },
+      "RegionCryptoMapper": {
+        "signal": "HOLD",
+        "confidence": 0,
+        "value": 0
+      },
+      "NewListingsRadar": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      }
+    },
+    "id": "AVAX/USD_1758411397.379164",
+    "stop_loss": 32.1749,
+    "take_profit": 35.1602
+  },
+  {
+    "timestamp": "2025-09-20 23:35:38 UTC",
+    "symbol": "ATOM/USD",
+    "action": "BUY",
+    "price": 4.4475,
+    "size": 0.000397539375000001,
+    "confidence": 0.1755983926810954,
+    "signals": {
+      "RSI": {
+        "signal": "BUY",
+        "confidence": 0.03150468183549246,
+        "value": 29.054859544935226
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "BUY",
+        "confidence": 0.8,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "SELL",
+        "confidence": 0.6,
+        "value": 0
+      },
+      "EnsembleML": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.5965472466952817,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      },
+      "RegionCryptoMapper": {
+        "signal": "HOLD",
+        "confidence": 0,
+        "value": 0
+      },
+      "NewListingsRadar": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      }
+    },
+    "id": "ATOM/USD_1758411417.419091",
+    "stop_loss": 4.314075,
+    "take_profit": 4.71435
+  },
+  {
+    "timestamp": "2025-09-20 23:35:38 UTC",
+    "symbol": "CRO/USD",
+    "action": "BUY",
+    "price": 0.22933,
+    "size": 1.9876968750000094e-05,
+    "confidence": 0.3169903162515619,
+    "signals": {
+      "RSI": {
+        "signal": "BUY",
+        "confidence": 0.2757558836276971,
+        "value": 21.727323491169088
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "BUY",
+        "confidence": 0.6482053813785502,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "EnsembleML": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "HOLD",
+        "confidence": 0.5246406343620561,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      },
+      "RegionCryptoMapper": {
+        "signal": "HOLD",
+        "confidence": 0,
+        "value": 0
+      },
+      "NewListingsRadar": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      }
+    },
+    "id": "CRO/USD_1758411456.064953",
+    "stop_loss": 0.2224501,
+    "take_profit": 0.2430898
+  },
+  {
+    "timestamp": "2025-09-20T23:42:02.272365+00:00",
+    "symbol": "SOL/USD",
+    "action": "BUY",
+    "price": 239.37,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6305568602979063,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "SOL/USD_1758411739.424551",
+    "stop_loss": 232.18890000000002,
+    "take_profit": 253.7322
+  },
+  {
+    "timestamp": "2025-09-20T23:42:02.272365+00:00",
+    "symbol": "DOGE/USD",
+    "action": "BUY",
+    "price": 0.2671702,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6259896238779779,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "DOGE/USD_1758411756.057951",
+    "stop_loss": 0.25915509400000003,
+    "take_profit": 0.283200412
+  },
+  {
+    "timestamp": "2025-09-20T23:42:02.272365+00:00",
+    "symbol": "AVAX/USD",
+    "action": "BUY",
+    "price": 33.17,
+    "size": 5.0,
+    "confidence": 0.17731714285714287,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "HOLD",
+        "confidence": 0.5142977125623837,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "AVAX/USD_1758411772.501345",
+    "stop_loss": 32.1749,
+    "take_profit": 35.1602
+  },
+  {
+    "timestamp": "2025-09-20T23:42:02.272365+00:00",
+    "symbol": "ATOM/USD",
+    "action": "BUY",
+    "price": 4.4495,
+    "size": 5.0,
+    "confidence": 0.17731714285714287,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "HOLD",
+        "confidence": 0.5650773573243507,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "ATOM/USD_1758411789.275222",
+    "stop_loss": 4.316014999999999,
+    "take_profit": 4.716469999999999
+  },
+  {
+    "timestamp": "2025-09-20T23:42:02.272365+00:00",
+    "symbol": "PRO/USD",
+    "action": "BUY",
+    "price": 0.9075,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6213873758084053,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "PRO/USD_1758411805.958174",
+    "stop_loss": 0.8802749999999999,
+    "take_profit": 0.96195
+  },
+  {
+    "timestamp": "2025-09-21T00:09:12.072776+00:00",
+    "symbol": "SOL/USD",
+    "action": "BUY",
+    "price": 239.4,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6605564119183549,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "SOL/USD_1758413369.826957",
+    "stop_loss": 232.21800000000002,
+    "take_profit": 253.764
+  },
+  {
+    "timestamp": "2025-09-21T00:09:12.072776+00:00",
+    "symbol": "DOGE/USD",
+    "action": "BUY",
+    "price": 0.2676135,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6701020950785814,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "DOGE/USD_1758413387.752668",
+    "stop_loss": 0.259585095,
+    "take_profit": 0.28367031
+  },
+  {
+    "timestamp": "2025-09-21T00:09:12.072776+00:00",
+    "symbol": "AVAX/USD",
+    "action": "BUY",
+    "price": 33.17,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6521275284967842,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "AVAX/USD_1758413405.88156",
+    "stop_loss": 32.1749,
+    "take_profit": 35.1602
+  },
+  {
+    "timestamp": "2025-09-21T00:09:12.072776+00:00",
+    "symbol": "ATOM/USD",
+    "action": "BUY",
+    "price": 4.4529,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6481197174988799,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "ATOM/USD_1758413423.90998",
+    "stop_loss": 4.319312999999999,
+    "take_profit": 4.720073999999999
+  },
+  {
+    "timestamp": "2025-09-21T00:09:12.072776+00:00",
+    "symbol": "PRO/USD",
+    "action": "BUY",
+    "price": 0.9148,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6700535096083687,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "PRO/USD_1758413442.132857",
+    "stop_loss": 0.8873559999999999,
+    "take_profit": 0.9696879999999999
+  },
+  {
+    "timestamp": "2025-09-21T00:11:08.280785+00:00",
+    "symbol": "SOL/USD",
+    "action": "BUY",
+    "price": 239.38,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6109898751407029,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "SOL/USD_1758413485.404066",
+    "stop_loss": 232.1986,
+    "take_profit": 253.7428
+  },
+  {
+    "timestamp": "2025-09-21T00:11:08.280785+00:00",
+    "symbol": "DOGE/USD",
+    "action": "BUY",
+    "price": 0.2679294,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6253264056643958,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "DOGE/USD_1758413502.858433",
+    "stop_loss": 0.259891518,
+    "take_profit": 0.284005164
+  },
+  {
+    "timestamp": "2025-09-21T00:11:08.280785+00:00",
+    "symbol": "AVAX/USD",
+    "action": "BUY",
+    "price": 33.18,
+    "size": 5.0,
+    "confidence": 0.17731714285714287,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "HOLD",
+        "confidence": 0.5582439575404531,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "AVAX/USD_1758413520.569",
+    "stop_loss": 32.1846,
+    "take_profit": 35.1708
+  },
+  {
+    "timestamp": "2025-09-21T00:11:08.280785+00:00",
+    "symbol": "ATOM/USD",
+    "action": "BUY",
+    "price": 4.4541,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6676349953716795,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "ATOM/USD_1758413538.671369",
+    "stop_loss": 4.320477,
+    "take_profit": 4.7213460000000005
+  },
+  {
+    "timestamp": "2025-09-21T00:11:08.280785+00:00",
+    "symbol": "PRO/USD",
+    "action": "BUY",
+    "price": 0.9148,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.5364044171448583,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "PRO/USD_1758413556.088747",
+    "stop_loss": 0.8873559999999999,
+    "take_profit": 0.9696879999999999
+  },
+  {
+    "timestamp": "2025-09-21T00:14:00.416825+00:00",
+    "symbol": "SOL/USD",
+    "action": "BUY",
+    "price": 239.63,
+    "size": 5.0,
+    "confidence": 0.17731714285714287,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "HOLD",
+        "confidence": 0.5272297692142079,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "SOL/USD_1758413657.530972",
+    "stop_loss": 232.4411,
+    "take_profit": 254.0078
+  },
+  {
+    "timestamp": "2025-09-21T00:14:00.416825+00:00",
+    "symbol": "DOGE/USD",
+    "action": "BUY",
+    "price": 0.2678709,
+    "size": 5.0,
+    "confidence": 0.17731714285714287,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "HOLD",
+        "confidence": 0.555449362270684,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "DOGE/USD_1758413675.477336",
+    "stop_loss": 0.259834773,
+    "take_profit": 0.28394315400000003
+  },
+  {
+    "timestamp": "2025-09-21T00:14:00.416825+00:00",
+    "symbol": "AVAX/USD",
+    "action": "BUY",
+    "price": 33.17,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.6453618641234283,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "AVAX/USD_1758413692.803904",
+    "stop_loss": 32.1749,
+    "take_profit": 35.1602
+  },
+  {
+    "timestamp": "2025-09-21T00:14:00.416825+00:00",
+    "symbol": "ATOM/USD",
+    "action": "BUY",
+    "price": 4.4541,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.5916929749988835,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "ATOM/USD_1758413710.069771",
+    "stop_loss": 4.320477,
+    "take_profit": 4.7213460000000005
+  },
+  {
+    "timestamp": "2025-09-21T00:14:00.416825+00:00",
+    "symbol": "PRO/USD",
+    "action": "BUY",
+    "price": 0.9148,
+    "size": 5.0,
+    "confidence": 0.17303142857142859,
+    "signals": {
+      "RSI": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 59.63172193747387
+      },
+      "MACD": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "BollingerBands": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "VolumeProfile": {
+        "signal": "HOLD",
+        "confidence": 0.0,
+        "value": 0
+      },
+      "SentimentAnalysis": {
+        "signal": "BUY",
+        "confidence": 0.44730000000000003,
+        "value": 0
+      },
+      "LogisticsSignal": {
+        "signal": "BUY",
+        "confidence": 0.5428683133585949,
+        "value": 0
+      },
+      "GlobalMacro": {
+        "signal": "BUY",
+        "confidence": 0.85,
+        "value": 0
+      },
+      "AdoptionTracker": {
+        "signal": "BUY",
+        "confidence": 0.9,
+        "value": 0
+      }
+    },
+    "id": "PRO/USD_1758413727.475766",
+    "stop_loss": 0.8873559999999999,
+    "take_profit": 0.9696879999999999
   }
 ]
