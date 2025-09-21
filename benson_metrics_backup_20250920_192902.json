@@ -1,0 +1,64 @@
+{
+  "system": {
+    "startup_time": "2025-09-12T13:37:27.374586+00:00",
+    "total_requests": 13,
+    "total_errors": 0,
+    "uptime_seconds": 0
+  },
+  "modules": {
+    "test_module": {
+      "executions": 11,
+      "total_execution_time": 11.0,
+      "avg_execution_time": 1.0,
+      "errors": 0,
+      "first_used": "2025-09-12T13:37:27.374629+00:00",
+      "last_used": "2025-09-17T16:41:01.641895+00:00",
+      "input_data_volume": 1100,
+      "output_data_volume": 2200
+    },
+    "CSVIngestionModule": {
+      "executions": 1,
+      "total_execution_time": 0.004661,
+      "avg_execution_time": 0.004661,
+      "errors": 0,
+      "first_used": "2025-09-12T13:39:13.774908+00:00",
+      "last_used": "2025-09-12T13:39:13.774908+00:00",
+      "input_data_volume": 47,
+      "output_data_volume": 1639
+    },
+    "SalesForecastingModule": {
+      "executions": 1,
+      "total_execution_time": 0.003087,
+      "avg_execution_time": 0.003087,
+      "errors": 0,
+      "first_used": "2025-09-12T13:39:26.641803+00:00",
+      "last_used": "2025-09-12T13:39:26.641803+00:00",
+      "input_data_volume": 250,
+      "output_data_volume": 761
+    }
+  },
+  "pipelines": {},
+  "business_impact": {
+    "total_signals_generated": 0,
+    "total_forecasts_generated": 0,
+    "data_processed_mb": 0.0,
+    "cost_savings_estimated": 0.0,
+    "automation_hours_saved": 0.08333333333333333
+  },
+  "adoption": {
+    "unique_modules_used": [
+      "test_module"
+    ],
+    "unique_pipelines_used": [],
+    "daily_active_modules": {
+      "2025-09-17": "{'test_module'}"
+    },
+    "feature_usage": {}
+  },
+  "errors": {
+    "by_type": {},
+    "by_module": {},
+    "by_pipeline": {},
+    "recent_errors": []
+  }
+}

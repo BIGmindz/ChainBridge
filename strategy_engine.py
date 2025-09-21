@@ -65,9 +65,74 @@ def detect_market_regime():
 def get_strategy_for_regime_and_symbol(regime: str, symbol: str) -> dict:
     """
     Selects the appropriate model and configuration for the detected regime and symbol.
+    Now supports ensemble strategies that combine multiple models.
     """
     logging.info(f"Selecting strategy for '{regime.upper()}' regime and '{symbol}' symbol...")
 
+    # Check if ensemble_voting strategy exists and is configured
+    ensemble_config_path = "strategies/ensemble_voting/config.yaml"
+    if os.path.exists(ensemble_config_path):
+        try:
+            with open(ensemble_config_path, 'r') as f:
+                ensemble_config = yaml.safe_load(f)
+
+            if ensemble_config.get('ensemble'):
+                logging.info("🎯 Ensemble strategy detected! Loading multiple models for voting...")
+                return prepare_ensemble_strategy(ensemble_config, regime, symbol)
+        except Exception as e:
+            logging.warning(f"Failed to load ensemble config: {e}")
+
+    # Standard strategy selection (existing logic)
+    return get_standard_strategy(regime, symbol)
+
+def prepare_ensemble_strategy(ensemble_config: dict, regime: str, symbol: str) -> dict:
+    """
+    Prepares an ensemble strategy by loading multiple models for voting.
+    """
+    ensemble_info = ensemble_config['ensemble']
+    models_to_include = ensemble_info['models_to_include']
+    voting_mechanism = ensemble_info['voting_mechanism']
+
+    logging.info(f"📊 Ensemble Configuration:")
+    logging.info(f"   Models to include: {models_to_include}")
+    logging.info(f"   Voting mechanism: {voting_mechanism}")
+
+    # Collect model paths for each strategy in the ensemble
+    model_paths = []
+    scaler_paths = []
+
+    for strategy_name in models_to_include:
+        strategy_dir = f"strategies/{strategy_name}"
+
+        # Check if strategy has trained models
+        model_path = os.path.join(strategy_dir, "model.pkl")
+        scaler_path = os.path.join(strategy_dir, "scaler.pkl")
+
+        if os.path.exists(model_path):
+            model_paths.append(model_path)
+            scaler_paths.append(scaler_path)
+            logging.info(f"   ✅ Found model: {strategy_name}")
+        else:
+            logging.warning(f"   ⚠️  Model not found for: {strategy_name}")
+
+    if not model_paths:
+        logging.error("❌ No models found for ensemble! Falling back to standard strategy.")
+        return get_standard_strategy(regime, symbol)
+
+    # Return ensemble configuration
+    return {
+        "config_path": "strategies/ensemble_voting/config.yaml",
+        "model_paths": model_paths,  # List of model paths for ensemble
+        "scaler_paths": scaler_paths,  # List of scaler paths for ensemble
+        "voting_mechanism": voting_mechanism,
+        "is_ensemble": True,
+        "description": f"Ensemble voting strategy with {len(model_paths)} models ({voting_mechanism})."
+    }
+
+def get_standard_strategy(regime: str, symbol: str) -> dict:
+    """
+    Original strategy selection logic (extracted for clarity).
+    """
     # Standardize paths
     model_dir = "ml_models/"
 
@@ -82,6 +147,7 @@ def get_strategy_for_regime_and_symbol(regime: str, symbol: str) -> dict:
             "config_path": config_file,
             "model_path": symbol_model_path,
             "scaler_path": symbol_scaler_path,
+            "is_ensemble": False,
             "description": f"Symbol-specific {regime} strategy for {symbol}."
         }
 
@@ -95,6 +161,7 @@ def get_strategy_for_regime_and_symbol(regime: str, symbol: str) -> dict:
             "config_path": config_file,
             "model_path": general_model_path,
             "scaler_path": general_scaler_path,
+            "is_ensemble": False,
             "description": f"General {regime} strategy (fallback for {symbol})."
         }
 
@@ -103,6 +170,7 @@ def get_strategy_for_regime_and_symbol(regime: str, symbol: str) -> dict:
         "config_path": "config/regime_sideways.yaml",
         "model_path": os.path.join(model_dir, "model_sideways.pkl"),
         "scaler_path": os.path.join(model_dir, "scaler_sideways.pkl"),
+        "is_ensemble": False,
         "description": f"Conservative sideways strategy (fallback for {symbol})."
     }
 
@@ -130,10 +198,21 @@ def main():
     # Set environment variables to pass the selected strategy to the main bot
     env = os.environ.copy()
     env['BENSON_CONFIG'] = strategy['config_path']
-    env['BENSON_MODEL'] = strategy['model_path']
     env['BENSON_SYMBOL'] = args.symbol
-    if strategy.get('scaler_path'):
-        env['BENSON_SCALER'] = strategy['scaler_path']
+
+    if strategy.get('is_ensemble'):
+        # For ensemble strategies, pass multiple model paths
+        env['BENSON_ENSEMBLE_MODELS'] = ','.join(strategy['model_paths'])
+        env['BENSON_ENSEMBLE_SCALERS'] = ','.join(strategy['scaler_paths'])
+        env['BENSON_VOTING_MECHANISM'] = strategy['voting_mechanism']
+        env['BENSON_IS_ENSEMBLE'] = 'true'
+        logging.info("🎯 Ensemble strategy configured with multiple models")
+    else:
+        # For single model strategies (existing logic)
+        env['BENSON_MODEL'] = strategy['model_path']
+        if strategy.get('scaler_path'):
+            env['BENSON_SCALER'] = strategy['scaler_path']
+        env['BENSON_IS_ENSEMBLE'] = 'false'
 
     # Try different possible main bot scripts
     possible_scripts = [
