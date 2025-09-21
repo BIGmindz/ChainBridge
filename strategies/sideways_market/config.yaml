@@ -20,6 +20,11 @@ signals:
       - vol_imbalance
       - price_change_pct
 
+trading:
+  initial_capital: 10000
+  fees:
+    taker_bps: 25
+
 risk_management:
   max_positions: 6
   max_risk_per_trade: 0.10

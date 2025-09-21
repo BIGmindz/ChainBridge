@@ -89,6 +89,7 @@ from modules.region_specific_crypto_module import (  # Region-specific crypto ma
 from modules.rsi_module import RSIModule  # noqa: E402
 from modules.sentiment_analysis_module import SentimentAnalysisModule  # noqa: E402
 from modules.volume_profile_module import VolumeProfileModule  # noqa: E402
+from modules.machine_learning_module import EnsembleVotingModule  # noqa: E402
 from src.exchange_adapter import ExchangeAdapter  # noqa: E402
 from src.market_utils import check_markets_have_minima  # noqa: E402
 
@@ -289,6 +290,7 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
     region_crypto = RegionSpecificCryptoModule()  # Region-specific crypto mapper
     new_listings_radar = NewListingsRadar(cfg)  # New listings radar monitoring
     aggregator = MultiSignalAggregatorModule()
+    ensemble_ml = EnsembleVotingModule(cfg)  # ML ensemble voting module
 
     manager.register_module("rsi", rsi)
     manager.register_module("macd", macd)
@@ -475,11 +477,11 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
                     # Volume Profile signal
                     module_signals["VolumeProfile"] = process_module(volume, "VolumeProfile", {"price_data": price_data})
 
-                    # Sentiment Analysis signal
-                    module_signals["SentimentAnalysis"] = process_module(
-                        sentiment,
-                        "SentimentAnalysis",
-                        {"symbol": symbol, "timeframe": timeframe},
+                    # Ensemble ML signal (machine learning consensus)
+                    module_signals["EnsembleML"] = process_module(
+                        ensemble_ml,
+                        "EnsembleML",
+                        {"price_data": price_data, "symbol": symbol},
                     )
 
                     # Logistics signal (ultra-low correlation, forward-looking indicator)

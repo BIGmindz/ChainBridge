@@ -1,17 +1,17 @@
 {
-  "timestamp": "2025-09-20T01:19:24.238536",
+  "timestamp": "2025-09-20T19:43:33.999165",
   "components": {
     "new_listings_radar": {
       "process_pattern": "run_new_listings_radar.py",
       "log_file": "new_listings_radar.log",
       "status": "Stopped",
-      "last_check": "2025-09-20T01:19:24.220254"
+      "last_check": "2025-09-20T19:43:33.983139"
     },
     "multi_signal_bot": {
       "process_pattern": "multi_signal_bot.py",
       "log_file": "multi_signal_bot.log",
-      "status": "Stopped",
-      "last_check": "2025-09-20T01:19:24.238194"
+      "status": "Running",
+      "last_check": "2025-09-20T19:43:33.998806"
     }
   },
   "trading_metrics": {
@@ -49,10 +49,10 @@
       }
     ],
     "open_positions": 5,
-    "available_capital": 975.0,
+    "available_capital": 1.0461562500000057e-06,
     "allocated_capital": 0.0,
     "profits": 0.0,
-    "last_update": "2025-09-20T01:19:24.238466",
+    "last_update": "2025-09-20T19:43:33.999089",
     "symbol": "BTC/USD"
   }
 }
