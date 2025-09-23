@@ -8,45 +8,5 @@
       "log",
       "file"
     ]
-  },
-  "COINBASE": {
-    "enabled": true,
-    "min_confidence": 0.8,
-    "min_expected_return": 0.25,
-    "max_risk_level": "MEDIUM",
-    "notification_method": [
-      "log",
-      "file"
-    ]
-  },
-  "BINANCE": {
-    "enabled": true,
-    "min_confidence": 0.75,
-    "min_expected_return": 0.2,
-    "max_risk_level": "HIGH",
-    "notification_method": [
-      "log",
-      "file"
-    ]
-  },
-  "OKX": {
-    "enabled": true,
-    "min_confidence": 0.85,
-    "min_expected_return": 0.3,
-    "max_risk_level": "MEDIUM",
-    "notification_method": [
-      "log",
-      "file"
-    ]
-  },
-  "KUCOIN": {
-    "enabled": true,
-    "min_confidence": 0.85,
-    "min_expected_return": 0.25,
-    "max_risk_level": "MEDIUM",
-    "notification_method": [
-      "log",
-      "file"
-    ]
   }
 }
