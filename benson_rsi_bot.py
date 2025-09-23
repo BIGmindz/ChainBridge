@@ -167,7 +167,7 @@ def run_bot(once: bool = False) -> None:
     config_path = os.getenv("BENSON_CONFIG", "config/config.yaml")
     cfg = load_config(config_path)
 
-    exchange_id = str(cfg.get("exchange", "coinbase")).lower()
+    exchange_id = str(cfg.get("exchange", "kraken")).lower()
     if not hasattr(ccxt, exchange_id):
         raise ValueError(f"Unknown exchange id '{exchange_id}' — check your config")
 
@@ -178,7 +178,7 @@ def run_bot(once: bool = False) -> None:
     exchange.load_markets()
     symbols: List[str] = list(cfg.get("symbols", []))
     if not symbols:
-        symbols = ["BTC/USD", "ETH/USD"]  # sensible Coinbase defaults
+        symbols = ["XBT/USD", "ETH/USD"]  # sensible Kraken defaults
 
     invalid = [s for s in symbols if s not in exchange.symbols]
     if invalid:
