@@ -9,8 +9,7 @@
     "SOL/USD"
   ],
   "exchanges": [
-    "kraken",
-    "coinbase"
+    "kraken"
   ],
   "risk_settings": {
     "stop_loss_pct": 5,
