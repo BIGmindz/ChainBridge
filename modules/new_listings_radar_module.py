@@ -7,7 +7,6 @@ THIS IS WHERE 10X HAPPENS
 """
 
 import asyncio
-import os
 from datetime import datetime
 from typing import Any, Dict, List
 
@@ -38,12 +37,6 @@ class NewListingsRadar:
                 "weight": 0.30,
                 "avg_pump": 0.30,  # 30% average first day
             },
-            "COINBASE": {
-                "url": "https://www.coinbase.com/listings",
-                "feed": "https://api.coinbase.com/api/v3/brokerage/products",
-                "weight": 0.25,
-                "avg_pump": 0.40,  # 40% Coinbase effect
-            },
             "BINANCE": {
                 "url": "https://www.binance.com/en/support/announcement",
                 "api": "https://api.binance.com/api/v3/exchangeInfo",
@@ -73,10 +66,6 @@ class NewListingsRadar:
             "contract_verified": True,
             "honeypot_check": True,
         }
-        # Allow disabling external radars via env var for safer runs
-        # Set DISABLE_COINBASE_RADAR=1 to skip Coinbase calls (useful when trading on Kraken)
-        self.disable_coinbase = os.environ.get("DISABLE_COINBASE_RADAR", "0") == "1"
-
         # Trading parameters
         self.trading_params = {
             "position_size": 0.0075,  # 0.75% per new listing
@@ -138,49 +127,6 @@ class NewListingsRadar:
                                 new_listings.append(listing)
         except Exception as e:
             print(f"Error scanning Kraken: {e}")
-
-        return new_listings
-
-    async def scan_coinbase_listings(self) -> List[Dict]:
-        """
-        Monitor Coinbase - THE COINBASE EFFECT IS REAL
-        40% average pump on announcement
-        """
-        new_listings = []
-
-        # Skip scanning Coinbase when explicitly disabled or when trading exchange is not Coinbase
-        if self.disable_coinbase:
-            return []
-
-        # If a config was provided and the configured exchange is not coinbase,
-        # avoid querying Coinbase's public API to reduce cross-exchange chatter.
-        configured_exchange = (self.config or {}).get("exchange", "").lower()
-        if configured_exchange and configured_exchange != "coinbase":
-            return []
-
-        try:
-            async with aiohttp.ClientSession() as session:
-                # Check Coinbase API
-                async with session.get(self.cex_sources["COINBASE"]["feed"]) as response:
-                    data = await response.json()
-
-                    # Get recently added products
-                    products = data.get("products", [])
-
-                    for product in products[-10:]:  # Last 10
-                        # Check if recently added (within 24h)
-                        if self._is_recent_listing(product):
-                            listing = {
-                                "exchange": "COINBASE",
-                                "coin": product["id"].split("-")[0],
-                                "timestamp": datetime.now(),
-                                "confidence": 0.90,
-                                "expected_return": 0.40,
-                                "tradeable": False,  # Need Kraken listing
-                            }
-                            new_listings.append(listing)
-        except Exception as e:
-            print(f"Error scanning Coinbase: {e}")
 
         return new_listings
 
@@ -306,11 +252,10 @@ class NewListingsRadar:
 
         # Scan all sources
         kraken_listings = await self.scan_kraken_listings()
-        coinbase_listings = await self.scan_coinbase_listings()
         dex_pairs = await self.scan_dex_new_pairs()
 
         # Combine and prioritize
-        all_discoveries = kraken_listings + coinbase_listings + dex_pairs
+        all_discoveries = kraken_listings + dex_pairs
 
         # Sort by expected return and safety
         sorted_discoveries = sorted(
@@ -365,12 +310,6 @@ class NewListingsRadar:
                 "wait_minutes": 5,
                 "confirmation": "First 5-min candle close",
                 "max_slippage": 0.02,
-            }
-        elif discovery["exchange"] == "COINBASE":
-            return {
-                "type": "WAIT_FOR_KRAKEN",
-                "alert": "Set alert for Kraken listing",
-                "preparation": "Research project fundamentals",
             }
         else:  # DEX
             return {
