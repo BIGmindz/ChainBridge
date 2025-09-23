@@ -22,6 +22,27 @@ from core.pipeline import Pipeline
 from tracking.metrics_collector import MetricsCollector
 
 
+# Default module configuration
+DEFAULT_MODULE_IMPORTS = {
+    "modules.csv_ingestion": "CSVIngestionModule",
+    "modules.rsi_module": "RSIModule",
+    "modules.sales_forecasting": "SalesForecastingModule",
+    "modules.macd_module": "MACDModule",
+    "modules.bollinger_bands_module": "BollingerBandsModule",
+    "modules.volume_profile_module": "VolumeProfileModule",
+    "modules.sentiment_analysis_module": "SentimentAnalysisModule",
+    "modules.multi_signal_aggregator_module": "MultiSignalAggregatorModule",
+}
+
+DEFAULT_SIGNAL_MODULES = [
+    "RSIModule",
+    "MACDModule",
+    "BollingerBandsModule",
+    "VolumeProfileModule",
+    "SentimentAnalysisModule",
+]
+
+
 # Pydantic models for API
 class ModuleExecutionRequest(BaseModel):
     module_name: str = Field(..., description="Name of the module to execute")
@@ -70,6 +91,28 @@ module_manager = ModuleManager()
 pipelines: Dict[str, Pipeline] = {}
 metrics_collector = MetricsCollector()
 data_processor = DataProcessor()
+
+
+def ensure_default_modules_loaded() -> List[str]:
+    """Ensure that built-in modules are available for execution."""
+    newly_loaded: List[str] = []
+
+    for module_path, module_name in DEFAULT_MODULE_IMPORTS.items():
+        if module_manager.get_module(module_name):
+            continue
+
+        try:
+            loaded_name = module_manager.load_module(module_path)
+            newly_loaded.append(loaded_name)
+        except Exception as exc:  # pragma: no cover - logging safeguard
+            print(f"Warning: Failed to load module {module_path}: {exc}")
+
+    return newly_loaded
+
+
+# Pre-load default modules when the API module is imported so that
+# endpoints that execute modules immediately have them available.
+ensure_default_modules_loaded()
 
 # Create FastAPI app
 app = FastAPI(
@@ -309,15 +352,7 @@ async def multi_signal_analysis(request: MultiSignalAnalysisRequest):
         start_time = datetime.now(timezone.utc)
 
         # Define default signal modules
-        default_signal_modules = [
-            "RSIModule",
-            "MACDModule",
-            "BollingerBandsModule",
-            "VolumeProfileModule",
-            "SentimentAnalysisModule",
-        ]
-
-        signal_modules = request.signal_modules or default_signal_modules
+        signal_modules = request.signal_modules or DEFAULT_SIGNAL_MODULES
 
         # Execute individual signal analyses
         individual_signals = {}
@@ -387,15 +422,7 @@ async def multi_signal_backtest(request: MultiSignalBacktestRequest):
         start_time = datetime.now(timezone.utc)
 
         # Define default signal modules
-        default_signal_modules = [
-            "RSIModule",
-            "MACDModule",
-            "BollingerBandsModule",
-            "VolumeProfileModule",
-            "SentimentAnalysisModule",
-        ]
-
-        signal_modules = request.signal_modules or default_signal_modules
+        signal_modules = request.signal_modules or DEFAULT_SIGNAL_MODULES
 
         # Generate signal history for each period
         signal_history = {module.replace("Module", ""): [] for module in signal_modules}
@@ -456,13 +483,7 @@ async def get_available_signals():
     Get information about all available signal modules.
     """
     try:
-        signal_modules = [
-            "RSIModule",
-            "MACDModule",
-            "BollingerBandsModule",
-            "VolumeProfileModule",
-            "SentimentAnalysisModule",
-        ]
+        signal_modules = DEFAULT_SIGNAL_MODULES
 
         available_signals = []
 
@@ -501,20 +522,12 @@ async def get_available_signals():
 async def startup_event():
     """Initialize default modules and pipelines."""
     try:
-        # Register built-in modules
-        module_manager.load_module("modules.csv_ingestion")
-        module_manager.load_module("modules.rsi_module")
-        module_manager.load_module("modules.sales_forecasting")
-
-        # Register new signal modules
-        module_manager.load_module("modules.macd_module")
-        module_manager.load_module("modules.bollinger_bands_module")
-        module_manager.load_module("modules.volume_profile_module")
-        module_manager.load_module("modules.sentiment_analysis_module")
-        module_manager.load_module("modules.multi_signal_aggregator_module")
+        newly_loaded = ensure_default_modules_loaded()
 
         print("Benson API server started successfully")
         print(f"Loaded {len(module_manager.list_modules())} modules")
+        if newly_loaded:
+            print(f"Newly available modules: {', '.join(newly_loaded)}")
         print(f"Available modules: {', '.join(module_manager.list_modules())}")
 
     except Exception as e:
