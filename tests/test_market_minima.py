@@ -54,8 +54,8 @@ def test_kraken_like_markets():
     assert missing == []
 
 
-def test_coinbase_like_markets():
-    # Coinbase pro sometimes uses hyphenated symbols and numeric limits
+def test_hyphenated_markets():
+    # Some exchanges use hyphenated symbols and numeric limits
     markets = {
         "BTC-USD": {"limits": {"cost": 10.0}},
         "ETH-USD": {"limits": {"amount": 0.01}},
