@@ -85,7 +85,9 @@ class AdoptionTrackerModule(Module):
         """
         try:
             # Get Chainalysis adoption data
-            adoption_data = self.get_adoption_data()
+            adoption_data = data or self.get_adoption_data()
+            if not adoption_data.get("current_year_data"):
+                raise ValueError("Current year adoption data is missing")
 
             # Calculate regional growth rates
             regional_growth = self.calculate_regional_growth(adoption_data)
@@ -335,13 +337,11 @@ class AdoptionTrackerModule(Module):
         Returns:
             Dictionary mapping regions to growth rates
         """
-        regional_growth = {}
         current_year_data = adoption_data.get("current_year_data", {})
-
-        for region, data in current_year_data.items():
-            regional_growth[region] = data.get("yoy_change", 0)
-
-        return regional_growth
+        return {
+            region: data.get("yoy_change", 0.0)
+            for region, data in current_year_data.items()
+        }
 
     def calculate_country_growth(self, adoption_data: Dict[str, Any]) -> Dict[str, float]:
         """
@@ -353,12 +353,12 @@ class AdoptionTrackerModule(Module):
         Returns:
             Dictionary mapping countries to growth rates
         """
-        country_growth = {}
         current_year_data = adoption_data.get("current_year_data", {})
+        country_growth: Dict[str, float] = {}
 
-        for region, data in current_year_data.items():
-            for country, country_data in data.get("countries", {}).items():
-                country_growth[country] = country_data.get("yoy_change", 0)
+        for region_data in current_year_data.values():
+            for country, metrics in region_data.get("countries", {}).items():
+                country_growth[country] = metrics.get("yoy_change", 0.0)
 
         return country_growth
 
@@ -374,33 +374,31 @@ class AdoptionTrackerModule(Module):
             Tuple of (composite_score, momentum)
         """
         # Weighted regional score
-        regional_score = 0
-        total_weight = 0
-
-        for region, growth in regional_growth.items():
-            if region in self.regions:
-                weight = self.regions[region]["weight"]
-                regional_score += growth * weight
-                total_weight += weight
-
-        regional_score = regional_score / total_weight if total_weight > 0 else 0
+        valid_regions = [
+            (growth, self.regions[region]["weight"])
+            for region, growth in regional_growth.items()
+            if region in self.regions
+        ]
+        total_weight = sum(weight for _, weight in valid_regions)
+        regional_score = (
+            sum(growth * weight for growth, weight in valid_regions) / total_weight
+            if total_weight
+            else 0.0
+        )
 
         # Country-specific score (focusing on high growth potential countries)
-        high_growth_score = 0
-        high_growth_count = 0
-
-        for country in self.high_growth_countries:
-            if country in country_growth:
-                high_growth_score += country_growth[country]
-                high_growth_count += 1
-
-        high_growth_score = high_growth_score / high_growth_count if high_growth_count > 0 else 0
+        tracked_countries = [
+            country_growth[country]
+            for country in self.high_growth_countries
+            if country in country_growth
+        ]
+        high_growth_score = float(np.mean(tracked_countries)) if tracked_countries else 0.0
 
         # Composite score (70% regional, 30% high growth countries)
         composite_score = (regional_score * 0.7) + (high_growth_score * 0.3)
 
         # Calculate momentum (average growth across all countries)
-        momentum = np.mean(list(country_growth.values())) if country_growth else 0
+        momentum = float(np.mean(list(country_growth.values()))) if country_growth else 0.0
 
         return composite_score, momentum
 
@@ -571,7 +569,8 @@ class AdoptionTrackerModule(Module):
 # Test function
 if __name__ == "__main__":
     tracker = AdoptionTrackerModule()
-    result = tracker.process()
+    adoption_data = tracker.get_adoption_data()
+    result = tracker.process(adoption_data)
 
     print("\n" + "=" * 60)
     print("🌐 CHAINALYSIS ADOPTION TRACKER MODULE")
@@ -591,15 +590,15 @@ if __name__ == "__main__":
         print("  • None detected")
 
     print("\n🌍 TOP COUNTRY GROWTH RATES:")
-    country_data = {}
-    adoption_data = tracker.get_adoption_data()
-    for region, data in adoption_data.get("current_year_data", {}).items():
-        for country, country_data in data.get("countries", {}).items():
-            if "yoy_change" in country_data:
-                country_data[country] = country_data["yoy_change"]
+    country_growth = {
+        country: metrics["yoy_change"]
+        for region_data in adoption_data.get("current_year_data", {}).values()
+        for country, metrics in region_data.get("countries", {}).items()
+        if "yoy_change" in metrics
+    }
 
     # Display top 5 countries by growth
-    top_countries = sorted(country_data.items(), key=lambda x: x[1], reverse=True)[:5]
+    top_countries = sorted(country_growth.items(), key=lambda x: x[1], reverse=True)[:5]
     for country, growth in top_countries:
         print(f"  • {country}: {growth * 100:.1f}% growth")
 
