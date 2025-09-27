@@ -1,0 +1,11 @@
+.git
+.gitignore
+.env
+.env.*.backup
+local_repo_snapshot.bundle
+logs/
+*.log
+__pycache__/
+.venv/
+.venv/*
+*.pyc
