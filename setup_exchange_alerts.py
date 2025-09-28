@@ -78,7 +78,7 @@ class ExchangeAlertConfig:
                 raise ValueError("notification methods must be strings")
             method_normalized = method.lower()
             if method_normalized not in ALLOWED_NOTIFICATIONS:
-                error_message = f"Unsupported notification method '{method}'. " f"Allowed methods: {sorted(ALLOWED_NOTIFICATIONS)}"
+                error_message = f"Unsupported notification method '{method}'. Allowed methods: {sorted(ALLOWED_NOTIFICATIONS)}"
                 raise ValueError(error_message)
             notifications.append(method_normalized)
 
@@ -363,8 +363,7 @@ def prompt_for_config(exchange: str, existing: ExchangeAlertConfig) -> ExchangeA
     max_risk = existing.max_risk_level if risk not in RISK_LEVELS else risk
 
     methods = input(
-        f"Notification methods (comma separated: {', '.join(sorted(ALLOWED_NOTIFICATIONS))})"
-        f" [{', '.join(existing.notification_method)}]: "
+        f"Notification methods (comma separated: {', '.join(sorted(ALLOWED_NOTIFICATIONS))}) [{', '.join(existing.notification_method)}]: "
     ).strip()
     if methods:
         notification_method = [m.strip().lower() for m in methods.split(",") if m.strip()]

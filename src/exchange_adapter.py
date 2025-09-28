@@ -12,6 +12,7 @@ from typing import Any, Dict, List
 
 try:
     from dotenv import load_dotenv  # type: ignore
+
     load_dotenv()
 except ImportError:
     pass  # dotenv not available, use system env vars

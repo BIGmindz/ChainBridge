@@ -9,15 +9,15 @@ standardization but benefit from outlier handling.
 
 import numpy as np
 import pandas as pd
-from typing import Union, Optional, Tuple
+from typing import Union, Tuple
 import logging
 
 logger = logging.getLogger(__name__)
 
-def robust_clip(X: Union[np.ndarray, pd.DataFrame],
-                lower_percentile: float = 1.0,
-                upper_percentile: float = 99.0,
-                clip_method: str = 'percentile') -> Union[np.ndarray, pd.DataFrame]:
+
+def robust_clip(
+    X: Union[np.ndarray, pd.DataFrame], lower_percentile: float = 1.0, upper_percentile: float = 99.0, clip_method: str = "percentile"
+) -> Union[np.ndarray, pd.DataFrame]:
     """
     Robust feature clipping to handle outliers without standardization.
 
@@ -40,72 +40,62 @@ def robust_clip(X: Union[np.ndarray, pd.DataFrame],
     else:
         raise ValueError("Input must be numpy array or pandas DataFrame")
 
-def _robust_clip_dataframe(df: pd.DataFrame,
-                          lower_percentile: float,
-                          upper_percentile: float,
-                          clip_method: str) -> pd.DataFrame:
+
+def _robust_clip_dataframe(df: pd.DataFrame, lower_percentile: float, upper_percentile: float, clip_method: str) -> pd.DataFrame:
     """Robust clipping for pandas DataFrame."""
     df_clipped = df.copy()
 
     for col in df.columns:
-        if df[col].dtype in ['float64', 'float32', 'int64', 'int32']:
-            lower_bound, upper_bound = _get_clip_bounds(
-                df[col].values, lower_percentile, upper_percentile, clip_method
-            )
+        if df[col].dtype in ["float64", "float32", "int64", "int32"]:
+            lower_bound, upper_bound = _get_clip_bounds(df[col].values, lower_percentile, upper_percentile, clip_method)
 
             # Count outliers before clipping
             n_outliers_lower = (df[col] < lower_bound).sum()
             n_outliers_upper = (df[col] > upper_bound).sum()
 
             if n_outliers_lower > 0 or n_outliers_upper > 0:
-                logger.debug(f"Column {col}: clipping {n_outliers_lower + n_outliers_upper} outliers "
-                           f"({n_outliers_lower} lower, {n_outliers_upper} upper)")
+                logger.debug(
+                    f"Column {col}: clipping {n_outliers_lower + n_outliers_upper} outliers "
+                    f"({n_outliers_lower} lower, {n_outliers_upper} upper)"
+                )
 
             # Apply clipping
             df_clipped[col] = np.clip(df[col], lower_bound, upper_bound)
 
     return df_clipped
 
-def _robust_clip_array(arr: np.ndarray,
-                      lower_percentile: float,
-                      upper_percentile: float,
-                      clip_method: str) -> np.ndarray:
+
+def _robust_clip_array(arr: np.ndarray, lower_percentile: float, upper_percentile: float, clip_method: str) -> np.ndarray:
     """Robust clipping for numpy array."""
     arr_clipped = arr.copy()
 
     # Handle multi-dimensional arrays
     if arr.ndim == 1:
-        lower_bound, upper_bound = _get_clip_bounds(
-            arr, lower_percentile, upper_percentile, clip_method
-        )
+        lower_bound, upper_bound = _get_clip_bounds(arr, lower_percentile, upper_percentile, clip_method)
         arr_clipped = np.clip(arr, lower_bound, upper_bound)
     else:
         # Apply clipping to each column
         for col_idx in range(arr.shape[1]):
-            lower_bound, upper_bound = _get_clip_bounds(
-                arr[:, col_idx], lower_percentile, upper_percentile, clip_method
-            )
+            lower_bound, upper_bound = _get_clip_bounds(arr[:, col_idx], lower_percentile, upper_percentile, clip_method)
             arr_clipped[:, col_idx] = np.clip(arr[:, col_idx], lower_bound, upper_bound)
 
     return arr_clipped
 
-def _get_clip_bounds(values: np.ndarray,
-                    lower_percentile: float,
-                    upper_percentile: float,
-                    clip_method: str) -> Tuple[float, float]:
+
+def _get_clip_bounds(values: np.ndarray, lower_percentile: float, upper_percentile: float, clip_method: str) -> Tuple[float, float]:
     """Calculate clipping bounds using specified method."""
-    if clip_method == 'percentile':
+    if clip_method == "percentile":
         lower_bound = np.percentile(values, lower_percentile)
         upper_bound = np.percentile(values, upper_percentile)
 
-    elif clip_method == 'iqr':
+    elif clip_method == "iqr":
         # IQR method: Q1 - 1.5*IQR to Q3 + 1.5*IQR
         q1, q3 = np.percentile(values, [25, 75])
         iqr = q3 - q1
         lower_bound = q1 - 1.5 * iqr
         upper_bound = q3 + 1.5 * iqr
 
-    elif clip_method == 'mad':
+    elif clip_method == "mad":
         # MAD method: median ± 3*MAD
         median = np.median(values)
         mad = np.median(np.abs(values - median))
@@ -117,8 +107,8 @@ def _get_clip_bounds(values: np.ndarray,
 
     return lower_bound, upper_bound
 
-def winsorize_features(X: Union[np.ndarray, pd.DataFrame],
-                      limits: Tuple[float, float] = (0.05, 0.05)) -> Union[np.ndarray, pd.DataFrame]:
+
+def winsorize_features(X: Union[np.ndarray, pd.DataFrame], limits: Tuple[float, float] = (0.05, 0.05)) -> Union[np.ndarray, pd.DataFrame]:
     """
     Winsorize features by limiting extreme values to percentiles.
 
@@ -137,12 +127,10 @@ def winsorize_features(X: Union[np.ndarray, pd.DataFrame],
         if X.ndim == 1:
             return _winsorize_array(X, lower_limit, upper_limit)
         else:
-            return np.apply_along_axis(
-                lambda x: _winsorize_array(x, lower_limit, upper_limit),
-                axis=0, arr=X
-            )
+            return np.apply_along_axis(lambda x: _winsorize_array(x, lower_limit, upper_limit), axis=0, arr=X)
     else:
         raise ValueError("Input must be numpy array or pandas DataFrame")
+
 
 def _winsorize_series(series: pd.Series, lower_limit: float, upper_limit: float) -> pd.Series:
     """Winsorize a pandas Series."""
@@ -154,6 +142,7 @@ def _winsorize_series(series: pd.Series, lower_limit: float, upper_limit: float)
 
     return np.clip(series, lower_bound, upper_bound)
 
+
 def _winsorize_array(arr: np.ndarray, lower_limit: float, upper_limit: float) -> np.ndarray:
     """Winsorize a numpy array."""
     lower_percentile = lower_limit * 100
@@ -164,8 +153,8 @@ def _winsorize_array(arr: np.ndarray, lower_limit: float, upper_limit: float) ->
 
     return np.clip(arr, lower_bound, upper_bound)
 
-def remove_constant_features(X: Union[np.ndarray, pd.DataFrame],
-                           threshold: float = 1e-10) -> Union[np.ndarray, pd.DataFrame]:
+
+def remove_constant_features(X: Union[np.ndarray, pd.DataFrame], threshold: float = 1e-10) -> Union[np.ndarray, pd.DataFrame]:
     """
     Remove features with constant or near-constant values.
 
@@ -201,8 +190,8 @@ def remove_constant_features(X: Union[np.ndarray, pd.DataFrame],
     else:
         raise ValueError("Input must be numpy array or pandas DataFrame")
 
-def handle_missing_values(X: Union[np.ndarray, pd.DataFrame],
-                         strategy: str = 'median') -> Union[np.ndarray, pd.DataFrame]:
+
+def handle_missing_values(X: Union[np.ndarray, pd.DataFrame], strategy: str = "median") -> Union[np.ndarray, pd.DataFrame]:
     """
     Handle missing values in features.
 
@@ -220,19 +209,20 @@ def handle_missing_values(X: Union[np.ndarray, pd.DataFrame],
     else:
         raise ValueError("Input must be numpy array or pandas DataFrame")
 
+
 def _handle_missing_dataframe(df: pd.DataFrame, strategy: str) -> pd.DataFrame:
     """Handle missing values in DataFrame."""
     df_filled = df.copy()
 
     for col in df.columns:
         if df[col].isnull().any():
-            if strategy == 'median':
+            if strategy == "median":
                 fill_value = df[col].median()
-            elif strategy == 'mean':
+            elif strategy == "mean":
                 fill_value = df[col].mean()
-            elif strategy == 'mode':
+            elif strategy == "mode":
                 fill_value = df[col].mode().iloc[0] if not df[col].mode().empty else 0
-            elif strategy == 'constant':
+            elif strategy == "constant":
                 fill_value = 0
             else:
                 raise ValueError(f"Unknown strategy: {strategy}")
@@ -241,6 +231,7 @@ def _handle_missing_dataframe(df: pd.DataFrame, strategy: str) -> pd.DataFrame:
             logger.debug(f"Filled {df[col].isnull().sum()} missing values in {col} with {fill_value}")
 
     return df_filled
+
 
 def _handle_missing_array(arr: np.ndarray, strategy: str) -> np.ndarray:
     """Handle missing values in numpy array."""
@@ -255,11 +246,11 @@ def _handle_missing_array(arr: np.ndarray, strategy: str) -> np.ndarray:
         return arr_filled
 
     if arr.ndim == 1:
-        if strategy == 'median':
+        if strategy == "median":
             fill_value = np.nanmedian(arr)
-        elif strategy == 'mean':
+        elif strategy == "mean":
             fill_value = np.nanmean(arr)
-        elif strategy == 'constant':
+        elif strategy == "constant":
             fill_value = 0
         else:
             raise ValueError(f"Strategy {strategy} not supported for 1D arrays")
@@ -273,11 +264,11 @@ def _handle_missing_array(arr: np.ndarray, strategy: str) -> np.ndarray:
             col_mask = np.isnan(col_data)
 
             if np.any(col_mask):
-                if strategy == 'median':
+                if strategy == "median":
                     fill_value = np.nanmedian(col_data)
-                elif strategy == 'mean':
+                elif strategy == "mean":
                     fill_value = np.nanmean(col_data)
-                elif strategy == 'constant':
+                elif strategy == "constant":
                     fill_value = 0
                 else:
                     raise ValueError(f"Unknown strategy: {strategy}")

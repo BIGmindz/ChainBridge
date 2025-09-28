@@ -64,9 +64,7 @@ def add_bollinger_band_features(
     squeeze_threshold = bb_width.rolling(window=100, min_periods=period).quantile(0.10, interpolation="linear")
     squeeze_series = pd.Series(pd.NA, index=working_df.index, dtype="Int64")
     valid_mask = bb_width.notna() & squeeze_threshold.notna()
-    squeeze_series.loc[valid_mask] = (
-        bb_width.loc[valid_mask] < squeeze_threshold.loc[valid_mask]
-    ).astype("int64")
+    squeeze_series.loc[valid_mask] = (bb_width.loc[valid_mask] < squeeze_threshold.loc[valid_mask]).astype("int64")
     working_df["bb_squeeze"] = squeeze_series
 
     return working_df

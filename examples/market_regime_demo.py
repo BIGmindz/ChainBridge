@@ -207,7 +207,7 @@ class MarketRegimeSimulation:
         print("\n🔮 Market Regime Performance:")
         for regime, perf in stats.get("regime_performance", {}).items():
             if perf["trades"] > 0:
-                print(f"{regime.upper()}: {perf['trades']} trades, " f"Win rate: {perf['win_rate']:.2f}%, " f"PnL: {perf['pnl']:.2f}")
+                print(f"{regime.upper()}: {perf['trades']} trades, Win rate: {perf['win_rate']:.2f}%, PnL: {perf['pnl']:.2f}")
 
         return stats
 

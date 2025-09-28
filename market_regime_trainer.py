@@ -4,10 +4,8 @@ Market Regime Trainer - Trains ML models for regime detection
 """
 
 import os
-import sys
 import logging
 import pandas as pd
-import numpy as np
 from datetime import datetime
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
@@ -18,18 +16,16 @@ from sklearn.metrics import classification_report, confusion_matrix
 import joblib
 
 # Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s | %(levelname)s | %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
 logger = logging.getLogger(__name__)
+
 
 class MarketRegimeTrainer:
     """
     Trains and compares ML models for market regime detection
     """
 
-    def __init__(self, data_dir='data/regime_training', model_dir='ml_models'):
+    def __init__(self, data_dir="data/regime_training", model_dir="ml_models"):
         self.data_dir = data_dir
         self.model_dir = model_dir
         os.makedirs(model_dir, exist_ok=True)
@@ -37,12 +33,13 @@ class MarketRegimeTrainer:
     def load_training_data(self):
         """Load training data from file"""
         try:
-            data_path = os.path.join(self.data_dir, 'regime_training_data.csv')
+            data_path = os.path.join(self.data_dir, "regime_training_data.csv")
 
             # If the default file doesn't exist, look for the most recent timestamped file
             if not os.path.exists(data_path):
                 import glob
-                pattern = os.path.join(self.data_dir, 'regime_training_data_*.csv')
+
+                pattern = os.path.join(self.data_dir, "regime_training_data_*.csv")
                 matching_files = glob.glob(pattern)
 
                 if matching_files:
@@ -59,15 +56,25 @@ class MarketRegimeTrainer:
 
             # Prepare features and labels
             feature_cols = [
-                'rsi_14', 'macd', 'macd_signal', 'macd_hist',
-                'bb_upper', 'bb_middle', 'bb_lower', 'bb_width', 'bb_position',
-                'volume_ratio', 'price_change_1h', 'price_change_24h',
-                'volatility_24h', 'trend_strength'
+                "rsi_14",
+                "macd",
+                "macd_signal",
+                "macd_hist",
+                "bb_upper",
+                "bb_middle",
+                "bb_lower",
+                "bb_width",
+                "bb_position",
+                "volume_ratio",
+                "price_change_1h",
+                "price_change_24h",
+                "volatility_24h",
+                "trend_strength",
             ]
 
             # Encode labels
             label_encoder = LabelEncoder()
-            df['regime_encoded'] = label_encoder.fit_transform(df['regime'])
+            df["regime_encoded"] = label_encoder.fit_transform(df["regime"])
 
             logger.info(f"📊 Loaded {len(df)} training samples")
             logger.info(f"🏷️  Regimes: {label_encoder.classes_}")
@@ -90,36 +97,24 @@ class MarketRegimeTrainer:
         if df is not None:
             df = collector.calculate_technical_features(df)
             df = collector.label_market_regime(df)
-            collector.save_training_data(df, 'regime_training_data.csv')
+            collector.save_training_data(df, "regime_training_data.csv")
 
     def compare_models(self, X_train, X_test, y_train, y_test):
         """Compare different ML models"""
         logger.info("🔬 Comparing ML models...")
 
         models = {
-            'LightGBM': LGBMClassifier(
+            "LightGBM": LGBMClassifier(
                 n_estimators=100,
                 learning_rate=0.1,
                 max_depth=6,
                 num_leaves=31,
-                objective='multiclass',
+                objective="multiclass",
                 random_state=42,
-                verbose=-1  # Suppress output
+                verbose=-1,  # Suppress output
             ),
-            'RandomForest': RandomForestClassifier(
-                n_estimators=100,
-                max_depth=10,
-                random_state=42,
-                class_weight='balanced'
-            ),
-            'SVM': SVC(
-                kernel='rbf',
-                C=1.0,
-                gamma='scale',
-                probability=True,
-                random_state=42,
-                class_weight='balanced'
-            )
+            "RandomForest": RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42, class_weight="balanced"),
+            "SVM": SVC(kernel="rbf", C=1.0, gamma="scale", probability=True, random_state=42, class_weight="balanced"),
         }
 
         results = {}
@@ -140,13 +135,7 @@ class MarketRegimeTrainer:
                 y_pred = model.predict(X_test)
 
                 # Store results
-                results[name] = {
-                    'model': model,
-                    'cv_mean': cv_mean,
-                    'cv_std': cv_std,
-                    'predictions': y_pred,
-                    'test_data': (X_test, y_test)
-                }
+                results[name] = {"model": model, "cv_mean": cv_mean, "cv_std": cv_std, "predictions": y_pred, "test_data": (X_test, y_test)}
 
                 logger.info(f"✅ {name} trained - CV: {cv_mean:.3f} (+/- {cv_std:.3f})")
             except Exception as e:
@@ -155,7 +144,7 @@ class MarketRegimeTrainer:
 
         # Select best model
         if results:
-            best_model_name = max(results.keys(), key=lambda x: results[x]['cv_mean'])
+            best_model_name = max(results.keys(), key=lambda x: results[x]["cv_mean"])
             logger.info(f"🏆 Best model: {best_model_name} (CV: {results[best_model_name]['cv_mean']:.3f})")
 
             return results, best_model_name
@@ -167,15 +156,15 @@ class MarketRegimeTrainer:
         """Save trained model to file"""
         try:
             model_data = {
-                'model': model_results['model'],
-                'label_encoder': label_encoder,
-                'feature_cols': feature_cols,
-                'cv_score': model_results['cv_mean'],
-                'training_date': datetime.now().strftime("%Y%m%d_%H%M%S"),
-                'model_name': model_name
+                "model": model_results["model"],
+                "label_encoder": label_encoder,
+                "feature_cols": feature_cols,
+                "cv_score": model_results["cv_mean"],
+                "training_date": datetime.now().strftime("%Y%m%d_%H%M%S"),
+                "model_name": model_name,
             }
 
-            model_path = os.path.join(self.model_dir, 'regime_detection_model.pkl')
+            model_path = os.path.join(self.model_dir, "regime_detection_model.pkl")
             joblib.dump(model_data, model_path)
 
             logger.info(f"💾 Model saved: {model_path}")
@@ -188,8 +177,8 @@ class MarketRegimeTrainer:
     def evaluate_model(self, model_results, label_encoder):
         """Evaluate model performance"""
         try:
-            X_test, y_test = model_results['test_data']
-            y_pred = model_results['predictions']
+            X_test, y_test = model_results["test_data"]
+            y_pred = model_results["predictions"]
 
             # Classification report
             target_names = label_encoder.classes_
@@ -223,15 +212,13 @@ class MarketRegimeTrainer:
 
         # Prepare data
         X = df[feature_cols]
-        y = df['regime_encoded']
+        y = df["regime_encoded"]
 
         # Handle missing values
         X = X.fillna(X.mean())
 
         # Split data
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y
-        )
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
         logger.info(f"📊 Training set: {len(X_train)} samples")
         logger.info(f"🧪 Test set: {len(X_test)} samples")
@@ -252,6 +239,7 @@ class MarketRegimeTrainer:
         else:
             logger.error("Model training failed")
             return None
+
 
 if __name__ == "__main__":
     # Demo the trainer

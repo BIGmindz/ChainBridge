@@ -445,7 +445,8 @@ class VolumeProfileModule(Module):
                 "value_area_high": value_area_high,
                 "value_area_low": value_area_low,
                 "volume_profile": [
-                    {"price_level": price, "volume": vol, "percentage": perc} for price, vol, perc in volume_profile[:10]  # Top 10 levels
+                    {"price_level": price, "volume": vol, "percentage": perc}
+                    for price, vol, perc in volume_profile[:10]  # Top 10 levels
                 ],
                 "current_price_position": price_position,
                 "volume_trend": volume_trend,

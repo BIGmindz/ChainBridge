@@ -338,10 +338,7 @@ class AdoptionTrackerModule(Module):
             Dictionary mapping regions to growth rates
         """
         current_year_data = adoption_data.get("current_year_data", {})
-        return {
-            region: data.get("yoy_change", 0.0)
-            for region, data in current_year_data.items()
-        }
+        return {region: data.get("yoy_change", 0.0) for region, data in current_year_data.items()}
 
     def calculate_country_growth(self, adoption_data: Dict[str, Any]) -> Dict[str, float]:
         """
@@ -374,24 +371,12 @@ class AdoptionTrackerModule(Module):
             Tuple of (composite_score, momentum)
         """
         # Weighted regional score
-        valid_regions = [
-            (growth, self.regions[region]["weight"])
-            for region, growth in regional_growth.items()
-            if region in self.regions
-        ]
+        valid_regions = [(growth, self.regions[region]["weight"]) for region, growth in regional_growth.items() if region in self.regions]
         total_weight = sum(weight for _, weight in valid_regions)
-        regional_score = (
-            sum(growth * weight for growth, weight in valid_regions) / total_weight
-            if total_weight
-            else 0.0
-        )
+        regional_score = sum(growth * weight for growth, weight in valid_regions) / total_weight if total_weight else 0.0
 
         # Country-specific score (focusing on high growth potential countries)
-        tracked_countries = [
-            country_growth[country]
-            for country in self.high_growth_countries
-            if country in country_growth
-        ]
+        tracked_countries = [country_growth[country] for country in self.high_growth_countries if country in country_growth]
         high_growth_score = float(np.mean(tracked_countries)) if tracked_countries else 0.0
 
         # Composite score (70% regional, 30% high growth countries)

@@ -8,22 +8,17 @@ prediction thresholds for maximum P&L considering trading costs.
 
 import numpy as np
 import pandas as pd
-from ml_pipeline.ev_thresholding import (
-    EVThresholdOptimizer,
-    TradingCosts,
-    find_multiple_thresholds,
-    plot_threshold_curve
-)
-import matplotlib.pyplot as plt
+from ml_pipeline.ev_thresholding import EVThresholdOptimizer, TradingCosts, find_multiple_thresholds, plot_threshold_curve
+
 
 def create_synthetic_trading_data(n_samples=2000):
     """Create synthetic trading data with realistic patterns."""
     np.random.seed(42)
-    dates = pd.date_range('2020-01-01', periods=n_samples, freq='H')
+    dates = pd.date_range("2020-01-01", periods=n_samples, freq="H")
 
     # Generate market returns with some predictability
     market_trend = 0.0002  # Slight upward trend
-    volatility = 0.015     # 1.5% volatility
+    volatility = 0.015  # 1.5% volatility
 
     # Base market returns
     market_returns = np.random.normal(market_trend, volatility, n_samples)
@@ -31,7 +26,7 @@ def create_synthetic_trading_data(n_samples=2000):
     # Add some serial correlation (momentum)
     momentum_factor = 0.2
     for i in range(1, len(market_returns)):
-        market_returns[i] += momentum_factor * market_returns[i-1]
+        market_returns[i] += momentum_factor * market_returns[i - 1]
 
     # Create future returns target (24-hour ahead)
     future_returns = np.roll(market_returns, -24)
@@ -45,10 +40,11 @@ def create_synthetic_trading_data(n_samples=2000):
     predictions = skill_level * future_returns + (1 - skill_level) * noise
     predictions = 1 / (1 + np.exp(-predictions))  # Sigmoid to [0,1]
 
-    y_true = pd.Series(future_returns, index=dates, name='future_returns')
-    y_prob = pd.Series(predictions, index=dates, name='predictions')
+    y_true = pd.Series(future_returns, index=dates, name="future_returns")
+    y_prob = pd.Series(predictions, index=dates, name="predictions")
 
     return y_true, y_prob
+
 
 def demonstrate_ev_thresholding():
     """Demonstrate EV-based thresholding effectiveness."""
@@ -79,17 +75,12 @@ def demonstrate_ev_thresholding():
         optimizer = EVThresholdOptimizer(
             trading_costs=costs,
             position_size_pct=0.02,  # 2% per trade
-            min_trades=10
+            min_trades=10,
         )
 
-        optimal_result, curve_data = optimizer.optimize_threshold(
-            y_true, y_prob, return_curve=True
-        )
+        optimal_result, curve_data = optimizer.optimize_threshold(y_true, y_prob, return_curve=True)
 
-        results[scenario_name] = {
-            'result': optimal_result,
-            'curve': curve_data
-        }
+        results[scenario_name] = {"result": optimal_result, "curve": curve_data}
 
         print("   📈 Optimal Threshold Results:")
         print(".3f")
@@ -104,14 +95,12 @@ def demonstrate_ev_thresholding():
     print("⚖️  Comparison with Standard 0.5 Threshold:")
     standard_optimizer = EVThresholdOptimizer(
         trading_costs=cost_scenarios[1][1],  # Medium costs
-        min_trades=1
+        min_trades=1,
     )
 
-    standard_result, _ = standard_optimizer.optimize_threshold(
-        y_true, y_prob, thresholds=np.array([0.5])
-    )
+    standard_result, _ = standard_optimizer.optimize_threshold(y_true, y_prob, thresholds=np.array([0.5]))
 
-    optimal_result = results["Medium Costs"]['result']
+    optimal_result = results["Medium Costs"]["result"]
 
     print(".3f")
     print(".3f")
@@ -122,10 +111,11 @@ def demonstrate_ev_thresholding():
     # Demonstrate multiple thresholds
     print("🎯 Multiple Threshold Strategy:")
     multiple_results = find_multiple_thresholds(
-        y_true, y_prob,
+        y_true,
+        y_prob,
         n_thresholds=3,
         trading_costs=cost_scenarios[1][1],  # Medium costs
-        min_trades=10
+        min_trades=10,
     )
 
     risk_levels = ["Conservative", "Moderate", "Aggressive"]
@@ -136,9 +126,9 @@ def demonstrate_ev_thresholding():
 
     # Show cost sensitivity
     print("💸 Cost Sensitivity Analysis:")
-    base_ev = results["Low Costs"]['result'].expected_value
+    base_ev = results["Low Costs"]["result"].expected_value
     for scenario_name, data in results.items():
-        ev_change = data['result'].expected_value - base_ev
+        ev_change = data["result"].expected_value - base_ev
         print(".6f")
 
     print()
@@ -146,9 +136,9 @@ def demonstrate_ev_thresholding():
     # Create visualization
     try:
         fig = plot_threshold_curve(
-            results["Medium Costs"]['curve'],
-            results["Medium Costs"]['result'].threshold,
-            save_path='/Users/johnbozza/bensonbot/Multiple-signal-decision-bot/ev_thresholding_demo.png'
+            results["Medium Costs"]["curve"],
+            results["Medium Costs"]["result"].threshold,
+            save_path="/Users/johnbozza/bensonbot/Multiple-signal-decision-bot/ev_thresholding_demo.png",
         )
         print("📈 Threshold optimization curve saved as 'ev_thresholding_demo.png'")
     except Exception as e:
@@ -167,6 +157,7 @@ def demonstrate_ev_thresholding():
 
     return results
 
+
 def demonstrate_trading_costs_impact():
     """Show how trading costs affect optimal thresholds."""
     print("📉 Trading Costs Impact on Optimal Thresholds")
@@ -180,11 +171,7 @@ def demonstrate_trading_costs_impact():
     expected_values = []
 
     for cost_pct in cost_levels:
-        costs = TradingCosts(
-            commission_pct=cost_pct,
-            slippage_pct=cost_pct/2,
-            spread_pct=cost_pct/4
-        )
+        costs = TradingCosts(commission_pct=cost_pct, slippage_pct=cost_pct / 2, spread_pct=cost_pct / 4)
 
         optimizer = EVThresholdOptimizer(trading_costs=costs, min_trades=5)
         result, _ = optimizer.optimize_threshold(y_true, y_prob)
@@ -200,6 +187,7 @@ def demonstrate_trading_costs_impact():
     print()
     print("💡 As costs increase, optimal thresholds become more selective")
     print("   (higher values) to ensure only high-confidence trades are taken.")
+
 
 if __name__ == "__main__":
     # Run main demonstration

@@ -7,7 +7,6 @@ Integrates market regime detection with the main trading bot
 import os
 import sys
 import logging
-import pandas as pd
 from datetime import datetime
 import yaml
 
@@ -17,25 +16,23 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s | %(levelname)s | %(message)s',
-    handlers=[
-        logging.FileHandler('logs/ml_integration.log'),
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s | %(levelname)s | %(message)s",
+    handlers=[logging.FileHandler("logs/ml_integration.log"), logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
+
 
 class MLRegimeIntegration:
     """
     Integrates ML regime detection with Benson Bot trading decisions
     """
 
-    def __init__(self, config_path='config/config.yaml'):
+    def __init__(self, config_path="config/config.yaml"):
         self.config_path = config_path
         self.regime_configs = {
-            'bull': 'config/regime_bull.yaml',
-            'bear': 'config/regime_bear.yaml',
-            'sideways': 'config/regime_sideways.yaml'
+            "bull": "config/regime_bull.yaml",
+            "bear": "config/regime_bear.yaml",
+            "sideways": "config/regime_sideways.yaml",
         }
         self.current_regime = None
         self.last_regime_check = None
@@ -46,7 +43,7 @@ class MLRegimeIntegration:
     def _load_config(self, config_path):
         """Load YAML configuration"""
         try:
-            with open(config_path, 'r') as f:
+            with open(config_path, "r") as f:
                 return yaml.safe_load(f)
         except Exception as e:
             logger.error(f"Failed to load config {config_path}: {e}")
@@ -103,13 +100,13 @@ class MLRegimeIntegration:
             logger.info("Using fallback regime detection")
 
             # For now, default to sideways regime as safest option
-            regime = 'sideways'
+            regime = "sideways"
             self.current_regime = regime
             return regime
 
         except Exception as e:
             logger.error(f"Fallback regime detection failed: {e}")
-            return 'sideways'  # Ultimate fallback
+            return "sideways"  # Ultimate fallback
 
     def get_adaptive_config(self, detected_regime=None):
         """Get configuration adapted for current market regime"""
@@ -158,10 +155,11 @@ class MLRegimeIntegration:
     def get_regime_status(self):
         """Get current regime detection status"""
         return {
-            'current_regime': self.current_regime,
-            'last_check': self.last_regime_check.isoformat() if self.last_regime_check else None,
-            'should_recheck': self.should_recheck_regime()
+            "current_regime": self.current_regime,
+            "last_check": self.last_regime_check.isoformat() if self.last_regime_check else None,
+            "should_recheck": self.should_recheck_regime(),
         }
+
 
 def integrate_with_benson_bot():
     """Main integration function for Benson Bot"""
@@ -180,15 +178,12 @@ def integrate_with_benson_bot():
         status = integration.get_regime_status()
         logger.info(f"📈 Integration Status: {status}")
 
-        return {
-            'regime': regime,
-            'config': adaptive_config,
-            'status': status
-        }
+        return {"regime": regime, "config": adaptive_config, "status": status}
 
     except Exception as e:
         logger.error(f"Integration failed: {e}")
         return None
+
 
 def demo_integration():
     """Demo function to show integration working"""
@@ -206,7 +201,7 @@ def demo_integration():
     print(f"⚙️  Adaptive Configuration Loaded: {len(config)} settings")
 
     # Show regime-specific settings
-    if 'rsi' in config:
+    if "rsi" in config:
         print(f"📈 RSI Buy Threshold: {config['rsi'].get('buy_threshold', 'default')}")
         print(f"📉 RSI Sell Threshold: {config['rsi'].get('sell_threshold', 'default')}")
 
@@ -217,8 +212,9 @@ def demo_integration():
 
     print("\n✅ Integration Demo Complete")
 
+
 if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] == '--demo':
+    if len(sys.argv) > 1 and sys.argv[1] == "--demo":
         demo_integration()
     else:
         result = integrate_with_benson_bot()

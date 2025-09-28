@@ -19,12 +19,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
     import joblib
+
     JOBLIB_AVAILABLE = True
 except ImportError:
     JOBLIB_AVAILABLE = False
     logging.warning("joblib not available. ML functionality will be disabled.")
 
 from core.module_manager import Module
+
 
 class EnsembleVotingModule(Module):
     """
@@ -55,43 +57,21 @@ class EnsembleVotingModule(Module):
             "input": {
                 "type": "object",
                 "properties": {
-                    "price_data": {
-                        "type": "object",
-                        "description": "Current price and technical data"
-                    },
-                    "symbol": {
-                        "type": "string",
-                        "description": "Trading symbol"
-                    }
+                    "price_data": {"type": "object", "description": "Current price and technical data"},
+                    "symbol": {"type": "string", "description": "Trading symbol"},
                 },
-                "required": ["price_data", "symbol"]
+                "required": ["price_data", "symbol"],
             },
             "output": {
                 "type": "object",
                 "properties": {
-                    "signal": {
-                        "type": "string",
-                        "enum": ["BUY", "SELL", "HOLD"],
-                        "description": "Ensemble trading signal"
-                    },
-                    "confidence": {
-                        "type": "number",
-                        "description": "Confidence in the ensemble signal"
-                    },
-                    "ensemble_votes": {
-                        "type": "object",
-                        "description": "Breakdown of votes from individual models"
-                    },
-                    "individual_predictions": {
-                        "type": "array",
-                        "description": "Predictions from each individual model"
-                    },
-                    "model_count": {
-                        "type": "integer",
-                        "description": "Number of models in the ensemble"
-                    }
-                }
-            }
+                    "signal": {"type": "string", "enum": ["BUY", "SELL", "HOLD"], "description": "Ensemble trading signal"},
+                    "confidence": {"type": "number", "description": "Confidence in the ensemble signal"},
+                    "ensemble_votes": {"type": "object", "description": "Breakdown of votes from individual models"},
+                    "individual_predictions": {"type": "array", "description": "Predictions from each individual model"},
+                    "model_count": {"type": "integer", "description": "Number of models in the ensemble"},
+                },
+            },
         }
 
     def process(self, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -111,22 +91,22 @@ class EnsembleVotingModule(Module):
             return
 
         # Check if this is an ensemble strategy
-        is_ensemble = os.getenv('BENSON_IS_ENSEMBLE', 'false').lower() == 'true'
+        is_ensemble = os.getenv("BENSON_IS_ENSEMBLE", "false").lower() == "true"
 
         if is_ensemble:
             logging.info("🎯 Loading ensemble voting configuration...")
 
             # Get model paths from environment
-            ensemble_models = os.getenv('BENSON_ENSEMBLE_MODELS', '')
-            ensemble_scalers = os.getenv('BENSON_ENSEMBLE_SCALERS', '')
-            voting_mechanism = os.getenv('BENSON_VOTING_MECHANISM', 'majority_vote')
+            ensemble_models = os.getenv("BENSON_ENSEMBLE_MODELS", "")
+            ensemble_scalers = os.getenv("BENSON_ENSEMBLE_SCALERS", "")
+            voting_mechanism = os.getenv("BENSON_VOTING_MECHANISM", "majority_vote")
 
             if ensemble_models:
-                self.model_paths = ensemble_models.split(',')
+                self.model_paths = ensemble_models.split(",")
                 logging.info(f"📊 Found {len(self.model_paths)} models for ensemble")
 
             if ensemble_scalers:
-                self.scaler_paths = ensemble_scalers.split(',')
+                self.scaler_paths = ensemble_scalers.split(",")
 
             self.voting_mechanism = voting_mechanism
 
@@ -134,8 +114,8 @@ class EnsembleVotingModule(Module):
             self._load_models()
         else:
             # Single model mode - try to load from BENSON_MODEL
-            single_model_path = os.getenv('BENSON_MODEL')
-            single_scaler_path = os.getenv('BENSON_SCALER')
+            single_model_path = os.getenv("BENSON_MODEL")
+            single_scaler_path = os.getenv("BENSON_SCALER")
 
             if single_model_path and os.path.exists(single_model_path):
                 self.model_paths = [single_model_path]
@@ -153,7 +133,7 @@ class EnsembleVotingModule(Module):
                 if os.path.exists(model_path):
                     model = joblib.load(model_path)
                     self.models.append(model)
-                    logging.info(f"✅ Loaded model {i+1}: {os.path.basename(model_path)}")
+                    logging.info(f"✅ Loaded model {i + 1}: {os.path.basename(model_path)}")
 
                     # Load corresponding scaler if available
                     if i < len(self.scaler_paths) and self.scaler_paths[i]:
@@ -161,7 +141,7 @@ class EnsembleVotingModule(Module):
                         if os.path.exists(scaler_path):
                             scaler = joblib.load(scaler_path)
                             self.scalers.append(scaler)
-                            logging.info(f"✅ Loaded scaler {i+1}: {os.path.basename(scaler_path)}")
+                            logging.info(f"✅ Loaded scaler {i + 1}: {os.path.basename(scaler_path)}")
                         else:
                             self.scalers.append(None)
                             logging.warning(f"⚠️  Scaler not found: {scaler_path}")
@@ -197,7 +177,7 @@ class EnsembleVotingModule(Module):
                 "ensemble_votes": {},
                 "individual_predictions": [],
                 "model_count": len([m for m in self.models if m is not None]),
-                "error": "No models available"
+                "error": "No models available",
             }
 
         # Extract features for ML prediction
@@ -210,7 +190,7 @@ class EnsembleVotingModule(Module):
                 "ensemble_votes": {},
                 "individual_predictions": [],
                 "model_count": len([m for m in self.models if m is not None]),
-                "error": "Could not extract features"
+                "error": "Could not extract features",
             }
 
         # Get predictions from all models
@@ -230,13 +210,13 @@ class EnsembleVotingModule(Module):
                     try:
                         features_scaled = scaler.transform(features_df)
                     except ValueError as ve:
-                        logging.warning(f"Feature mismatch for model {i+1}, skipping: {ve}")
+                        logging.warning(f"Feature mismatch for model {i + 1}, skipping: {ve}")
                         continue
                 else:
                     features_scaled = features_df.values
 
                 # Make prediction
-                if hasattr(model, 'predict_proba'):
+                if hasattr(model, "predict_proba"):
                     # Classification with probabilities
                     probabilities = model.predict_proba(features_scaled)[0]
                     prediction_idx = np.argmax(probabilities)
@@ -253,10 +233,10 @@ class EnsembleVotingModule(Module):
                 predictions.append(signal)
                 confidences.append(confidence)
 
-                logging.debug(f"Model {i+1} prediction: {signal} (confidence: {confidence:.3f})")
+                logging.debug(f"Model {i + 1} prediction: {signal} (confidence: {confidence:.3f})")
 
             except Exception as e:
-                logging.warning(f"Model {i+1} prediction failed: {e}")
+                logging.warning(f"Model {i + 1} prediction failed: {e}")
                 continue
 
         if not predictions:
@@ -266,20 +246,18 @@ class EnsembleVotingModule(Module):
                 "ensemble_votes": {},
                 "individual_predictions": [],
                 "model_count": len([m for m in self.models if m is not None]),
-                "error": "All model predictions failed"
+                "error": "All model predictions failed",
             }
 
         # Perform ensemble voting
-        ensemble_signal, ensemble_confidence, vote_breakdown = self._perform_voting(
-            predictions, confidences
-        )
+        ensemble_signal, ensemble_confidence, vote_breakdown = self._perform_voting(predictions, confidences)
 
         return {
             "signal": ensemble_signal,
             "confidence": ensemble_confidence,
             "ensemble_votes": vote_breakdown,
             "individual_predictions": predictions,
-            "model_count": len([m for m in self.models if m is not None])
+            "model_count": len([m for m in self.models if m is not None]),
         }
 
     def _extract_features(self, price_data: Dict[str, Any], symbol: str) -> Optional[Dict[str, float]]:
@@ -289,42 +267,43 @@ class EnsembleVotingModule(Module):
             features = {}
 
             # Price-based features
-            if 'close' in price_data:
-                features['price'] = float(price_data['close'])
-            elif 'last' in price_data:
-                features['price'] = float(price_data['last'])
+            if "close" in price_data:
+                features["price"] = float(price_data["close"])
+            elif "last" in price_data:
+                features["price"] = float(price_data["last"])
             else:
                 return None
 
             # Technical indicators (if available)
-            if 'rsi_value' in price_data:
-                features['rsi_value'] = float(price_data['rsi_value'])
+            if "rsi_value" in price_data:
+                features["rsi_value"] = float(price_data["rsi_value"])
             else:
-                features['rsi_value'] = 50.0  # Neutral RSI
+                features["rsi_value"] = 50.0  # Neutral RSI
 
-            if 'ob_imbalance' in price_data:
-                features['ob_imbalance'] = float(price_data['ob_imbalance'])
+            if "ob_imbalance" in price_data:
+                features["ob_imbalance"] = float(price_data["ob_imbalance"])
             else:
-                features['ob_imbalance'] = 0.0
+                features["ob_imbalance"] = 0.0
 
-            if 'vol_imbalance' in price_data:
-                features['vol_imbalance'] = float(price_data['vol_imbalance'])
+            if "vol_imbalance" in price_data:
+                features["vol_imbalance"] = float(price_data["vol_imbalance"])
             else:
-                features['vol_imbalance'] = 0.0
+                features["vol_imbalance"] = 0.0
 
             # Calculate price change percentage
-            if 'previous_price' in price_data:
-                features['price_change_pct'] = ((features['price'] - float(price_data['previous_price'])) /
-                                              float(price_data['previous_price'])) * 100
+            if "previous_price" in price_data:
+                features["price_change_pct"] = (
+                    (features["price"] - float(price_data["previous_price"])) / float(price_data["previous_price"])
+                ) * 100
             else:
-                features['price_change_pct'] = 0.0
+                features["price_change_pct"] = 0.0
 
             # Optional features
-            if 'africa_factor' in price_data:
-                features['africa_factor'] = float(price_data['africa_factor'])
+            if "africa_factor" in price_data:
+                features["africa_factor"] = float(price_data["africa_factor"])
 
-            if 'sc_factor' in price_data:
-                features['sc_factor'] = float(price_data['sc_factor'])
+            if "sc_factor" in price_data:
+                features["sc_factor"] = float(price_data["sc_factor"])
 
             return features
 
@@ -414,7 +393,7 @@ class EnsembleVotingModule(Module):
         vote_breakdown = {
             "weighted_scores": signal_weights,
             "total_weight": sum(signal_weights.values()),
-            "ensemble_signal": ensemble_signal
+            "ensemble_signal": ensemble_signal,
         }
 
         return ensemble_signal, ensemble_confidence, vote_breakdown
@@ -428,5 +407,5 @@ class EnsembleVotingModule(Module):
             "total_models": len(self.models),
             "voting_mechanism": self.voting_mechanism,
             "is_ensemble": len(self.models) > 1,
-            "joblib_available": JOBLIB_AVAILABLE
+            "joblib_available": JOBLIB_AVAILABLE,
         }
