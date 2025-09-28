@@ -241,7 +241,7 @@ def run_bot(once: bool = False) -> None:
                 changed = signal_out != last_signal[symbol]
 
                 # Status line
-                print(f"[{utc_now_str()}] {symbol:>10}: ${price:,.2f} | RSI {rsi_val:5.2f} | {signal_out}" f"{' (new)' if changed else ''}")
+                print(f"[{utc_now_str()}] {symbol:>10}: ${price:,.2f} | RSI {rsi_val:5.2f} | {signal_out}{' (new)' if changed else ''}")
 
                 # Alert only on new actionable signals and respecting cooldown
                 if signal_out in ("BUY", "SELL") and changed and cooldown_ok:

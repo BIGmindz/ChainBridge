@@ -91,9 +91,8 @@ class AdaptiveWeightModule(Module):
         # Configure from provided config or use defaults
         self.config = config or {}
 
-        # Signal configuration
-        self.n_signals = self.config.get("n_signals", 15)  # Total number of signals
-        self.signal_layers = {
+        # Signal configuration (allow overrides from config)
+        default_signal_layers = {
             "LAYER_1_TECHNICAL": ["RSI", "MACD", "Bollinger", "Volume", "Sentiment"],
             "LAYER_2_LOGISTICS": [
                 "Port_Congestion",
@@ -110,6 +109,13 @@ class AdaptiveWeightModule(Module):
             ],
             "LAYER_4_ADOPTION": ["Chainalysis_Global"],
         }
+        config_signal_layers = self.config.get("signal_layers")
+        if isinstance(config_signal_layers, dict) and config_signal_layers:
+            self.signal_layers = {layer: list(signals) for layer, signals in config_signal_layers.items()}
+        else:
+            self.signal_layers = default_signal_layers
+        derived_signal_count = sum(len(signals) for signals in self.signal_layers.values())
+        self.n_signals = self.config.get("n_signals", derived_signal_count or 15)  # Total number of signals
 
         # Training configuration
         self.lookback_days = self.config.get("lookback_days", 7)
@@ -551,8 +557,58 @@ class AdaptiveWeightModule(Module):
         with open(os.path.join(self.model_dir, "metadata.json"), "w") as f:
             json.dump(metadata, f)
 
+    def _validate_model_path(self, path: str) -> bool:
+        """
+        Validate the model file path to prevent path traversal attacks
+        """
+        try:
+            # Get absolute paths for comparison
+            model_dir_abs = os.path.abspath(self.model_dir)
+            path_abs = os.path.abspath(path)
+            
+            # Check if the path is under model_dir
+            if not path_abs.startswith(model_dir_abs):
+                print(f"Security warning: Attempted to load model from outside model directory: {path}")
+                return False
+                
+            # Check file extension
+            if not path.endswith(('.h5', '.joblib', '.json')):
+                print(f"Security warning: Invalid file extension for {path}")
+                return False
+                
+            return True
+        except Exception as e:
+            print(f"Path validation error: {str(e)}")
+            return False
+
+    def _validate_model_structure(self, model: 'keras.Model') -> bool:
+        """
+        Validate loaded model structure and architecture
+        """
+        try:
+            # Check expected input shape
+            expected_input_shape = (None, self.n_signals)  # Batch size, n_signals
+            actual_input_shape = model.layers[0].input_shape
+            
+            if actual_input_shape[1] != expected_input_shape[1]:
+                print(f"Model input shape mismatch. Expected: {expected_input_shape}, Got: {actual_input_shape}")
+                return False
+            
+            # Check output layer shape
+            expected_output_shape = self.n_signals
+            actual_output_shape = model.layers[-1].output_shape[1]
+            
+            if actual_output_shape != expected_output_shape:
+                print(f"Model output shape mismatch. Expected: {expected_output_shape}, Got: {actual_output_shape}")
+                return False
+                
+            return True
+        except Exception as e:
+            print(f"Model validation error: {str(e)}")
+            return False
+    
     def _load_models(self) -> None:
-        """Load models and scalers if they exist"""
+        """Load models and scalers if they exist with security validations"""
         # Check if models exist
         weight_model_path = os.path.join(self.model_dir, "weight_model.h5")
         regime_model_path = os.path.join(self.model_dir, "regime_model.joblib")
@@ -560,20 +616,41 @@ class AdaptiveWeightModule(Module):
         metadata_path = os.path.join(self.model_dir, "metadata.json")
 
         # Load metadata if exists
-        if os.path.exists(metadata_path):
+        if os.path.exists(metadata_path) and self._validate_model_path(metadata_path):
             try:
                 with open(metadata_path, "r") as f:
                     metadata = json.load(f)
                     self.last_trained = datetime.fromisoformat(metadata.get("last_trained", ""))
+                    
+                    # Validate model version
+                    if metadata.get("version") != self.version:
+                        raise ValueError(f"Model version mismatch. Expected {self.version}, got {metadata.get('version')}")
+                        
                     print(f"Found existing model last trained at: {self.last_trained}")
             except Exception as e:
                 print(f"Error loading metadata: {str(e)}")
 
         # Load weight model if exists
-        if os.path.exists(weight_model_path):
+        if os.path.exists(weight_model_path) and self._validate_model_path(weight_model_path):
             try:
-                self.weight_model = keras.models.load_model(weight_model_path)
-                print(f"Loaded weight model from {weight_model_path}")
+                # Load model with custom objects disabled for security
+                self.weight_model = keras.models.load_model(
+                    weight_model_path,
+                    custom_objects=None,  # Prevent arbitrary code execution
+                    compile=False  # Load only architecture and weights
+                )
+                
+                # Validate model structure
+                if not self._validate_model_structure(self.weight_model):
+                    raise ValueError("Model structure validation failed")
+                    
+                # Recompile model with known optimizer and loss
+                self.weight_model.compile(
+                    optimizer=Adam(learning_rate=1e-3),
+                    loss='mse'
+                )
+                    
+                print(f"Loaded and validated weight model from {weight_model_path}")
             except Exception as e:
                 print(f"Error loading weight model: {str(e)}")
                 self.weight_model = None

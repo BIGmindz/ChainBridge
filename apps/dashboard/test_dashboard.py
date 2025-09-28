@@ -7,11 +7,11 @@ This script tests the dashboard functionality without requiring Streamlit.
 
 import os
 import sys
-import pandas as pd
 import re
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
 
 def test_dashboard_import():
     """Test that the dashboard can be imported successfully"""
@@ -22,7 +22,8 @@ def test_dashboard_import():
 
         # Test the core function import (without streamlit to avoid warnings)
         import sys
-        sys.path.insert(0, '/Users/johnbozza/bensonbot/Multiple-signal-decision-bot')
+
+        sys.path.insert(0, "/Users/johnbozza/bensonbot/Multiple-signal-decision-bot")
 
         # Import the parsing function directly
         from apps.dashboard.comparison_dashboard import load_backtest_reports
@@ -33,9 +34,10 @@ def test_dashboard_import():
         print(f"❌ Dashboard import failed: {e}")
         return False
 
+
 def create_mock_report():
     """Create a mock backtest report for testing"""
-    strategy_path = 'strategies/test_strategy'
+    strategy_path = "strategies/test_strategy"
     os.makedirs(strategy_path, exist_ok=True)
 
     # Create mock report
@@ -53,15 +55,15 @@ def create_mock_report():
 | **Max Drawdown** | `-8.32%` |
 """
 
-    with open(os.path.join(strategy_path, 'backtest_report.md'), 'w') as f:
+    with open(os.path.join(strategy_path, "backtest_report.md"), "w") as f:
         f.write(report_content)
 
     print("✅ Created mock backtest report")
     return strategy_path
 
+
 def test_regex_parsing():
     """Test the regex parsing directly"""
-    import re
 
     content = """# Backtest Report: TEST_STRATEGY
 
@@ -79,32 +81,28 @@ def test_regex_parsing():
 
     # Test the regex patterns
     patterns = {
-        'Total Return': r"Total Return\s*\|\s*`([\d\.\-]+\%)`",
-        'Final Portfolio Value': r"Final Portfolio Value\s*\|\s*`\$([\d,\.]+)`",
-        'Annualized Sharpe Ratio': r"Annualized Sharpe Ratio\s*\|\s*`([\d\.\-]+)`",
-        'Max Drawdown': r"Max Drawdown\s*\|\s*`([\d\.\-]+\%)`"
+        "Total Return": r"Total Return\s*\|\s*`([\d\.\-]+\%)`",
+        "Final Portfolio Value": r"Final Portfolio Value\s*\|\s*`\$([\d,\.]+)`",
+        "Annualized Sharpe Ratio": r"Annualized Sharpe Ratio\s*\|\s*`([\d\.\-]+)`",
+        "Max Drawdown": r"Max Drawdown\s*\|\s*`([\d\.\-]+\%)`",
     }
 
     for key, pattern in patterns.items():
         match = re.search(pattern, content)
         if match:
-            value = match.group(1).replace(',', '').replace('%', '').replace('$', '')
+            value = match.group(1).replace(",", "").replace("%", "").replace("$", "")
             print(f"✅ {key}: {value}")
         else:
             print(f"❌ {key}: No match")
 
     return True
 
+
 def test_dashboard_structure():
     """Test that the dashboard has the expected structure"""
-    dashboard_dir = 'apps/dashboard'
+    dashboard_dir = "apps/dashboard"
 
-    required_files = [
-        'comparison_dashboard.py',
-        '__init__.py',
-        'README.md',
-        'run_dashboard.sh'
-    ]
+    required_files = ["comparison_dashboard.py", "__init__.py", "README.md", "run_dashboard.sh"]
 
     missing_files = []
     for file in required_files:
@@ -117,6 +115,7 @@ def test_dashboard_structure():
     else:
         print("✅ All required files present")
         return True
+
 
 def main():
     """Run all dashboard tests"""
@@ -168,6 +167,7 @@ def main():
         print("⚠️  Some tests failed. Check the output above.")
 
     return passed == total
+
 
 if __name__ == "__main__":
     success = main()

@@ -11,18 +11,14 @@ Tests triple barrier labeling with synthetic data to ensure:
 import unittest
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
 import sys
 import os
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from ml_pipeline.triple_barrier_labeling import (
-    TripleBarrierLabeler,
-    create_synthetic_labels,
-    analyze_label_distribution
-)
+from ml_pipeline.triple_barrier_labeling import TripleBarrierLabeler, create_synthetic_labels, analyze_label_distribution
+
 
 class TestTripleBarrierLabeling(unittest.TestCase):
     """Test cases for triple barrier labeling system."""
@@ -30,7 +26,7 @@ class TestTripleBarrierLabeling(unittest.TestCase):
     def setUp(self):
         """Set up test data."""
         # Create synthetic price series with known patterns
-        dates = pd.date_range('2024-01-01', periods=100, freq='H')
+        dates = pd.date_range("2024-01-01", periods=100, freq="H")
         np.random.seed(42)
 
         # Create a trending upward series
@@ -125,11 +121,11 @@ class TestTripleBarrierLabeling(unittest.TestCase):
         self.assertGreater(len(labels_df), 0)
 
         # Check that all labels are valid (-1, 0, 1)
-        valid_labels = labels_df['label'].isin([-1, 0, 1]).all()
+        valid_labels = labels_df["label"].isin([-1, 0, 1]).all()
         self.assertTrue(valid_labels)
 
         # Check that sides are valid (-1, 1)
-        valid_sides = labels_df['side'].isin([-1, 1]).all()
+        valid_sides = labels_df["side"].isin([-1, 1]).all()
         self.assertTrue(valid_sides)
 
     def test_label_distribution_analysis(self):
@@ -142,17 +138,20 @@ class TestTripleBarrierLabeling(unittest.TestCase):
 
         # Check that we have all required keys
         required_keys = [
-            'total_samples', 'profit_taking', 'stop_loss', 'max_holding',
-            'profit_taking_pct', 'stop_loss_pct', 'max_holding_pct'
+            "total_samples",
+            "profit_taking",
+            "stop_loss",
+            "max_holding",
+            "profit_taking_pct",
+            "stop_loss_pct",
+            "max_holding_pct",
         ]
 
         for key in required_keys:
             self.assertIn(key, distribution)
 
         # Check that percentages sum to 100 (approximately)
-        pct_sum = (distribution['profit_taking_pct'] +
-                  distribution['stop_loss_pct'] +
-                  distribution['max_holding_pct'])
+        pct_sum = distribution["profit_taking_pct"] + distribution["stop_loss_pct"] + distribution["max_holding_pct"]
 
         self.assertAlmostEqual(pct_sum, 100.0, places=1)
 
@@ -177,8 +176,9 @@ class TestTripleBarrierLabeling(unittest.TestCase):
         self.assertEqual(len(labels_df), 3)
 
         # Check that labels are valid
-        valid_labels = labels_df['label'].isin([-1, 0, 1]).all()
+        valid_labels = labels_df["label"].isin([-1, 0, 1]).all()
         self.assertTrue(valid_labels)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

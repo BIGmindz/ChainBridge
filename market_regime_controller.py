@@ -4,26 +4,22 @@ Market Regime Controller - Real-time regime detection and adaptive strategy sele
 """
 
 import os
-import sys
 import logging
-import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import datetime
 import joblib
 
 # Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s | %(levelname)s | %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
 logger = logging.getLogger(__name__)
+
 
 class MarketRegimeController:
     """
     Real-time market regime detection using trained ML models
     """
 
-    def __init__(self, model_dir='ml_models'):
+    def __init__(self, model_dir="ml_models"):
         self.model_dir = model_dir
         self.model = None
         self.label_encoder = None
@@ -36,13 +32,13 @@ class MarketRegimeController:
     def _load_model(self):
         """Load the trained ML model"""
         try:
-            model_path = os.path.join(self.model_dir, 'regime_detection_model.pkl')
+            model_path = os.path.join(self.model_dir, "regime_detection_model.pkl")
 
             if os.path.exists(model_path):
                 model_data = joblib.load(model_path)
-                self.model = model_data['model']
-                self.label_encoder = model_data['label_encoder']
-                self.feature_cols = model_data['feature_cols']
+                self.model = model_data["model"]
+                self.label_encoder = model_data["label_encoder"]
+                self.feature_cols = model_data["feature_cols"]
                 logger.info("✅ ML model loaded successfully")
             else:
                 logger.warning("No trained model found, using fallback detection")
@@ -58,20 +54,20 @@ class MarketRegimeController:
             # For demo purposes, return mock features
             # In production, this would fetch real market data
             features = {
-                'rsi_14': np.random.uniform(20, 80),
-                'macd': np.random.uniform(-500, 500),
-                'macd_signal': np.random.uniform(-500, 500),
-                'macd_hist': np.random.uniform(-200, 200),
-                'bb_upper': np.random.uniform(40000, 60000),
-                'bb_middle': np.random.uniform(35000, 55000),
-                'bb_lower': np.random.uniform(30000, 50000),
-                'bb_width': np.random.uniform(0.02, 0.08),
-                'bb_position': np.random.uniform(-0.5, 0.5),
-                'volume_ratio': np.random.uniform(0.5, 2.0),
-                'price_change_1h': np.random.uniform(-0.05, 0.05),
-                'price_change_24h': np.random.uniform(-0.1, 0.1),
-                'volatility_24h': np.random.uniform(0.01, 0.08),
-                'trend_strength': np.random.uniform(0.1, 0.9)
+                "rsi_14": np.random.uniform(20, 80),
+                "macd": np.random.uniform(-500, 500),
+                "macd_signal": np.random.uniform(-500, 500),
+                "macd_hist": np.random.uniform(-200, 200),
+                "bb_upper": np.random.uniform(40000, 60000),
+                "bb_middle": np.random.uniform(35000, 55000),
+                "bb_lower": np.random.uniform(30000, 50000),
+                "bb_width": np.random.uniform(0.02, 0.08),
+                "bb_position": np.random.uniform(-0.5, 0.5),
+                "volume_ratio": np.random.uniform(0.5, 2.0),
+                "price_change_1h": np.random.uniform(-0.05, 0.05),
+                "price_change_24h": np.random.uniform(-0.1, 0.1),
+                "volatility_24h": np.random.uniform(0.01, 0.08),
+                "trend_strength": np.random.uniform(0.1, 0.9),
             }
 
             logger.info(f"📊 Generated current market features: RSI={features['rsi_14']:.1f}")
@@ -105,12 +101,7 @@ class MarketRegimeController:
             regime = self.label_encoder.inverse_transform([prediction_encoded])[0]
             confidence = prediction_proba[prediction_encoded]
 
-            self.last_prediction = {
-                'regime': regime,
-                'confidence': confidence,
-                'timestamp': datetime.now(),
-                'features': features
-            }
+            self.last_prediction = {"regime": regime, "confidence": confidence, "timestamp": datetime.now(), "features": features}
 
             logger.info(f"🎯 ML Regime Detection: {regime} (confidence: {confidence:.3f})")
             return regime
@@ -124,32 +115,33 @@ class MarketRegimeController:
         try:
             # Simple fallback based on RSI
             features = self.get_current_features()
-            if features and 'rsi_14' in features:
-                rsi = features['rsi_14']
+            if features and "rsi_14" in features:
+                rsi = features["rsi_14"]
                 if rsi < 30:
-                    regime = 'bull'  # Oversold, potential for upward movement
+                    regime = "bull"  # Oversold, potential for upward movement
                 elif rsi > 70:
-                    regime = 'bear'  # Overbought, potential for downward movement
+                    regime = "bear"  # Overbought, potential for downward movement
                 else:
-                    regime = 'sideways'  # Neutral zone
+                    regime = "sideways"  # Neutral zone
             else:
-                regime = 'sideways'  # Default fallback
+                regime = "sideways"  # Default fallback
 
             logger.info(f"🔄 Fallback regime detection: {regime}")
             return regime
 
-        except Exception as e:
+        except Exception:
             logger.error("Fallback detection failed")
-            return 'sideways'
+            return "sideways"
 
     def get_regime_status(self):
         """Get current regime detection status"""
         return {
-            'current_regime': self.last_prediction['regime'] if self.last_prediction else None,
-            'confidence': self.last_prediction['confidence'] if self.last_prediction else None,
-            'last_update': self.last_prediction['timestamp'] if self.last_prediction else None,
-            'model_loaded': self.model is not None
+            "current_regime": self.last_prediction["regime"] if self.last_prediction else None,
+            "confidence": self.last_prediction["confidence"] if self.last_prediction else None,
+            "last_update": self.last_prediction["timestamp"] if self.last_prediction else None,
+            "model_loaded": self.model is not None,
         }
+
 
 def detect_market_regime(features=None):
     """
@@ -157,6 +149,7 @@ def detect_market_regime(features=None):
     """
     controller = MarketRegimeController()
     return controller.detect_regime(features)
+
 
 if __name__ == "__main__":
     # Demo the regime controller

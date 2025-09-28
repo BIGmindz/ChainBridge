@@ -9,88 +9,79 @@ import os
 import sys
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
 
 def test_backtester_import():
     """Test that the backtester can be imported successfully"""
     try:
         from apps.backtester.backtester import run_backtest, generate_performance_report
+
         print("✅ Backtester import successful")
         return True
     except ImportError as e:
         print(f"❌ Backtester import failed: {e}")
         return False
 
+
 def create_mock_data():
     """Create mock historical data for testing"""
     # Create sample data
-    dates = pd.date_range(start='2024-01-01', end='2024-12-31', freq='D')
-    symbols = ['BTC/USD', 'ETH/USD']
+    dates = pd.date_range(start="2024-01-01", end="2024-12-31", freq="D")
+    symbols = ["BTC/USD", "ETH/USD"]
 
     data = []
     for symbol in symbols:
         for date in dates:
             # Generate realistic price data
-            base_price = 50000 if symbol == 'BTC/USD' else 3000
+            base_price = 50000 if symbol == "BTC/USD" else 3000
             price_variation = np.random.normal(0, 0.02)  # 2% daily volatility
             price = base_price * (1 + price_variation)
 
-            data.append({
-                'timestamp': date,
-                'symbol': symbol,
-                'price': max(price, 100),  # Ensure positive price
-                'rsi_value': np.random.uniform(30, 70),
-                'volume': np.random.uniform(1000000, 10000000)
-            })
+            data.append(
+                {
+                    "timestamp": date,
+                    "symbol": symbol,
+                    "price": max(price, 100),  # Ensure positive price
+                    "rsi_value": np.random.uniform(30, 70),
+                    "volume": np.random.uniform(1000000, 10000000),
+                }
+            )
 
     df = pd.DataFrame(data)
-    df.to_csv('data/consolidated_market_data.csv', index=False)
+    df.to_csv("data/consolidated_market_data.csv", index=False)
     print(f"✅ Created mock data with {len(df)} rows")
     return df
 
+
 def create_mock_strategy():
     """Create a mock strategy for testing"""
-    strategy_path = 'strategies/test_strategy'
+    strategy_path = "strategies/test_strategy"
     os.makedirs(strategy_path, exist_ok=True)
 
     # Create mock config
     config = {
-        'exchange': {
-            'symbols': ['BTC/USD']
-        },
-        'trading': {
-            'initial_capital': 10000,
-            'fees': {
-                'taker_bps': 25
-            }
-        },
-        'signals': {
-            'machine_learning': {
-                'features': ['rsi_value', 'price']
-            }
-        }
+        "exchange": {"symbols": ["BTC/USD"]},
+        "trading": {"initial_capital": 10000, "fees": {"taker_bps": 25}},
+        "signals": {"machine_learning": {"features": ["rsi_value", "price"]}},
     }
 
     import yaml
-    with open(os.path.join(strategy_path, 'config.yaml'), 'w') as f:
+
+    with open(os.path.join(strategy_path, "config.yaml"), "w") as f:
         yaml.dump(config, f)
 
     print("✅ Created mock strategy configuration")
     return config
 
+
 def test_backtester_structure():
     """Test that the backtester has the expected structure"""
-    backtester_dir = 'apps/backtester'
+    backtester_dir = "apps/backtester"
 
-    required_files = [
-        'backtester.py',
-        '__init__.py',
-        'README.md',
-        'run_backtester.sh'
-    ]
+    required_files = ["backtester.py", "__init__.py", "README.md", "run_backtester.sh"]
 
     missing_files = []
     for file in required_files:
@@ -103,6 +94,7 @@ def test_backtester_structure():
     else:
         print("✅ All required files present")
         return True
+
 
 def main():
     """Run all backtester tests"""
@@ -153,6 +145,7 @@ def main():
         print("⚠️  Some tests failed. Check the output above.")
 
     return passed == total
+
 
 if __name__ == "__main__":
     success = main()
