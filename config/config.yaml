@@ -8,11 +8,26 @@ api:
   secret: ${API_SECRET}
 
 symbols:
-- PRO/USD
-- WLFI/USD
-- KIN/USD
-- CRO/USD
-- ZORA/USD
+- BTC/USD
+- ETH/USD
+- SOL/USD
+- XRP/USD
+- ADA/USD
+- DOGE/USD
+- LTC/USD
+- DOT/USD
+- LINK/USD
+- AVAX/USD
+- ATOM/USD
+- ARB/USD
+- TRX/USD
+- XLM/USD
+- FIL/USD
+- NEAR/USD
+- AAVE/USD
+- ETC/USD
+- BCH/USD
+- UNI/USD
 
 market:
   base: ETH
