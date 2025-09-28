@@ -22,10 +22,10 @@ Features:
 import numpy as np
 import pandas as pd
 from typing import List, Tuple, Optional
-from sklearn.model_selection import KFold
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 class PurgedKFold:
     """
@@ -37,11 +37,7 @@ class PurgedKFold:
     3. Ensuring temporal ordering
     """
 
-    def __init__(self,
-                 n_splits: int = 5,
-                 purge_pct: float = 0.01,
-                 embargo_pct: float = 0.01,
-                 shuffle: bool = False):
+    def __init__(self, n_splits: int = 5, purge_pct: float = 0.01, embargo_pct: float = 0.01, shuffle: bool = False):
         """
         Initialize purged K-fold CV.
 
@@ -59,10 +55,9 @@ class PurgedKFold:
         if shuffle:
             logger.warning("Shuffle=True is not recommended for time series data")
 
-    def split(self,
-              X: pd.DataFrame,
-              y: Optional[pd.Series] = None,
-              groups: Optional[np.ndarray] = None) -> List[Tuple[np.ndarray, np.ndarray]]:
+    def split(
+        self, X: pd.DataFrame, y: Optional[pd.Series] = None, groups: Optional[np.ndarray] = None
+    ) -> List[Tuple[np.ndarray, np.ndarray]]:
         """
         Generate purged K-fold splits with proper time ordering and embargo.
 
@@ -102,19 +97,15 @@ class PurgedKFold:
                 train_idx = indices[:train_end]
 
             # Apply purging within this fold
-            purged_train_idx, purged_test_idx = self._apply_purging_embargo(
-                indices, train_idx, test_idx, n_samples
-            )
+            purged_train_idx, purged_test_idx = self._apply_purging_embargo(indices, train_idx, test_idx, n_samples)
 
             splits.append((purged_train_idx, purged_test_idx))
 
         return splits
 
-    def _apply_purging_embargo(self,
-                              indices: np.ndarray,
-                              train_idx: np.ndarray,
-                              test_idx: np.ndarray,
-                              n_samples: int) -> Tuple[np.ndarray, np.ndarray]:
+    def _apply_purging_embargo(
+        self, indices: np.ndarray, train_idx: np.ndarray, test_idx: np.ndarray, n_samples: int
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Apply purging and embargo to train/test indices.
 
@@ -154,9 +145,8 @@ class PurgedKFold:
 
         return purged_train_idx, embargoed_test_idx
 
-def detect_leakage(train_idx: np.ndarray,
-                   test_idx: np.ndarray,
-                   timestamps: pd.DatetimeIndex) -> dict:
+
+def detect_leakage(train_idx: np.ndarray, test_idx: np.ndarray, timestamps: pd.DatetimeIndex) -> dict:
     """
     Detect potential data leakage between train and test sets.
 
@@ -190,17 +180,17 @@ def detect_leakage(train_idx: np.ndarray,
         embargo_violation = False
 
     return {
-        'has_index_overlap': has_overlap,
-        'has_temporal_leakage': temporal_leakage,
-        'embargo_violation': embargo_violation,
-        'train_period': (train_start, train_end),
-        'test_period': (test_start, test_end),
-        'overlap_indices': overlap.tolist(),
-        'is_leakage_free': not (has_overlap or temporal_leakage or embargo_violation)
+        "has_index_overlap": has_overlap,
+        "has_temporal_leakage": temporal_leakage,
+        "embargo_violation": embargo_violation,
+        "train_period": (train_start, train_end),
+        "test_period": (test_start, test_end),
+        "overlap_indices": overlap.tolist(),
+        "is_leakage_free": not (has_overlap or temporal_leakage or embargo_violation),
     }
 
-def generate_leakage_report(cv_splits: List[Tuple[np.ndarray, np.ndarray]],
-                           timestamps: pd.DatetimeIndex) -> dict:
+
+def generate_leakage_report(cv_splits: List[Tuple[np.ndarray, np.ndarray]], timestamps: pd.DatetimeIndex) -> dict:
     """
     Generate comprehensive leakage report for all CV folds.
 
@@ -211,37 +201,31 @@ def generate_leakage_report(cv_splits: List[Tuple[np.ndarray, np.ndarray]],
     Returns:
         Dictionary with leakage analysis for all folds
     """
-    report = {
-        'total_folds': len(cv_splits),
-        'folds_with_leakage': 0,
-        'leakage_details': [],
-        'overall_status': 'PASS'
-    }
+    report = {"total_folds": len(cv_splits), "folds_with_leakage": 0, "leakage_details": [], "overall_status": "PASS"}
 
     for i, (train_idx, test_idx) in enumerate(cv_splits):
         fold_leakage = detect_leakage(train_idx, test_idx, timestamps)
 
-        if not fold_leakage['is_leakage_free']:
-            report['folds_with_leakage'] += 1
-            report['overall_status'] = 'FAIL'
+        if not fold_leakage["is_leakage_free"]:
+            report["folds_with_leakage"] += 1
+            report["overall_status"] = "FAIL"
 
         fold_report = {
-            'fold': i + 1,
-            'status': 'PASS' if fold_leakage['is_leakage_free'] else 'FAIL',
-            'train_samples': len(train_idx),
-            'test_samples': len(test_idx),
-            'leakage_info': fold_leakage
+            "fold": i + 1,
+            "status": "PASS" if fold_leakage["is_leakage_free"] else "FAIL",
+            "train_samples": len(train_idx),
+            "test_samples": len(test_idx),
+            "leakage_info": fold_leakage,
         }
 
-        report['leakage_details'].append(fold_report)
+        report["leakage_details"].append(fold_report)
 
     return report
 
-def walk_forward_split(X: pd.DataFrame,
-                      train_pct: float = 0.7,
-                      val_pct: float = 0.15,
-                      test_pct: float = 0.15,
-                      embargo_pct: float = 0.01) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+
+def walk_forward_split(
+    X: pd.DataFrame, train_pct: float = 0.7, val_pct: float = 0.15, test_pct: float = 0.15, embargo_pct: float = 0.01
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Create walk-forward train/validation/test split.
 

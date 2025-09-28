@@ -13,13 +13,11 @@ import subprocess
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s | %(levelname)s | %(message)s',
-    handlers=[
-        logging.FileHandler('logs/live_monitor.log'),
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s | %(levelname)s | %(message)s",
+    handlers=[logging.FileHandler("logs/live_monitor.log"), logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
+
 
 class LiveSystemMonitor:
     """
@@ -34,9 +32,9 @@ class LiveSystemMonitor:
         """Run a single monitoring cycle"""
         self.cycle_count += 1
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"🔍 LIVE MONITORING CYCLE #{self.cycle_count}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print(f"⏰ Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
         try:
@@ -75,13 +73,13 @@ class LiveSystemMonitor:
 
             if result:
                 # Extract additional info
-                status = result.get('status', {})
-                confidence = "High" if status.get('confidence', 0) > 0.8 else "Medium" if status.get('confidence', 0) > 0.6 else "Low"
+                status = result.get("status", {})
+                confidence = "High" if status.get("confidence", 0) > 0.8 else "Medium" if status.get("confidence", 0) > 0.6 else "Low"
 
                 return {
-                    'regime': result.get('regime'),
-                    'confidence': confidence,
-                    'config_status': 'Adaptive' if result.get('config') else 'Base'
+                    "regime": result.get("regime"),
+                    "confidence": confidence,
+                    "config_status": "Adaptive" if result.get("config") else "Base",
                 }
 
             return None
@@ -94,17 +92,17 @@ class LiveSystemMonitor:
         """Show current system status"""
         try:
             # Check if model exists
-            model_path = 'ml_models/regime_detection_model.pkl'
+            model_path = "ml_models/regime_detection_model.pkl"
             model_exists = os.path.exists(model_path)
             print(f"   🤖 ML Model: {'✅ Loaded' if model_exists else '❌ Missing'}")
 
             # Check training data
-            data_path = 'data/regime_training/regime_training_data.csv'
+            data_path = "data/regime_training/regime_training_data.csv"
             data_exists = os.path.exists(data_path)
             print(f"   📊 Training Data: {'✅ Available' if data_exists else '❌ Missing'}")
 
             # Check logs
-            log_files = [f for f in os.listdir('logs') if f.endswith('.log')]
+            log_files = [f for f in os.listdir("logs") if f.endswith(".log")]
             print(f"   📝 Log Files: {len(log_files)} active")
 
             # Memory usage (simplified)
@@ -119,20 +117,15 @@ class LiveSystemMonitor:
     def _show_recent_logs(self):
         """Show recent log entries"""
         try:
-            log_files = ['logs/ml_integration.log', 'logs/live_monitor.log']
+            log_files = ["logs/ml_integration.log", "logs/live_monitor.log"]
 
             for log_file in log_files:
                 if os.path.exists(log_file):
                     # Get last 3 lines
-                    result = subprocess.run(
-                        ['tail', '-3', log_file],
-                        capture_output=True,
-                        text=True,
-                        timeout=5
-                    )
+                    result = subprocess.run(["tail", "-3", log_file], capture_output=True, text=True, timeout=5)
 
                     if result.returncode == 0 and result.stdout.strip():
-                        lines = result.stdout.strip().split('\n')
+                        lines = result.stdout.strip().split("\n")
                         for line in lines[-2:]:  # Show last 2 lines
                             if line.strip():
                                 print(f"   📋 {line}")
@@ -144,14 +137,14 @@ class LiveSystemMonitor:
         """Show data capture statistics"""
         try:
             # Check training data size
-            data_path = 'data/regime_training/regime_training_data.csv'
+            data_path = "data/regime_training/regime_training_data.csv"
             if os.path.exists(data_path):
-                with open(data_path, 'r') as f:
+                with open(data_path, "r") as f:
                     lines = sum(1 for _ in f)
-                print(f"   📊 Training Samples: {lines-1:,}")  # Subtract header
+                print(f"   📊 Training Samples: {lines - 1:,}")  # Subtract header
 
             # Check model file size
-            model_path = 'ml_models/regime_detection_model.pkl'
+            model_path = "ml_models/regime_detection_model.pkl"
             if os.path.exists(model_path):
                 size = os.path.getsize(model_path)
                 print(f"   🤖 Model Size: {size:,} bytes")
@@ -186,6 +179,7 @@ class LiveSystemMonitor:
 
         print("✅ Live monitoring session ended")
 
+
 def main():
     """Main function"""
     monitor = LiveSystemMonitor()
@@ -201,6 +195,7 @@ def main():
         interval = 30
 
     monitor.start_live_monitoring(interval)
+
 
 if __name__ == "__main__":
     main()

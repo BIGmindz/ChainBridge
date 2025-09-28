@@ -27,8 +27,8 @@ class SignalDataCollector:
         self.data_dir = self.config.get("data_dir", os.path.join("data", "adaptive_weight_data"))
         os.makedirs(self.data_dir, exist_ok=True)
 
-        # Signal configuration
-        self.signal_layers = {
+        # Signal configuration (allow overrides from config)
+        default_signal_layers = {
             "LAYER_1_TECHNICAL": ["RSI", "MACD", "Bollinger", "Volume", "Sentiment"],
             "LAYER_2_LOGISTICS": [
                 "Port_Congestion",
@@ -45,6 +45,11 @@ class SignalDataCollector:
             ],
             "LAYER_4_ADOPTION": ["Chainalysis_Global"],
         }
+        config_signal_layers = self.config.get("signal_layers")
+        if isinstance(config_signal_layers, dict) and config_signal_layers:
+            self.signal_layers = {layer: list(signals) for layer, signals in config_signal_layers.items()}
+        else:
+            self.signal_layers = default_signal_layers
 
         # Data collection settings
         self.lookback_days = self.config.get("lookback_days", 7)

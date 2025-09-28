@@ -5,14 +5,10 @@ Advanced position sizing and risk management functions
 
 import numpy as np
 import pandas as pd
-from typing import Optional
 
 
 def vol_target_position_size(
-    price_series: pd.Series,
-    max_capital_at_risk: float,
-    target_ann_vol: float = 0.25,
-    ewm_span: int = 100
+    price_series: pd.Series, max_capital_at_risk: float, target_ann_vol: float = 0.25, ewm_span: int = 100
 ) -> float:
     """
     Calculates position size in USD based on volatility targeting.
@@ -41,7 +37,7 @@ def vol_target_position_size(
     volatility = bar_returns.ewm(span=ewm_span).std().iloc[-1] * ann_factor
 
     if volatility == 0:
-        return 0.0 # Avoid division by zero in flat markets
+        return 0.0  # Avoid division by zero in flat markets
 
     # Scale position size based on the ratio of target vol to current vol
     scale_factor = target_ann_vol / volatility
@@ -75,10 +71,7 @@ def calculate_realized_volatility(price_series: pd.Series, window: int = 100) ->
 
 
 def get_volatility_adjusted_position_size(
-    base_position_size: float,
-    current_volatility: float,
-    target_volatility: float = 0.25,
-    max_leverage: float = 1.0
+    base_position_size: float, current_volatility: float, target_volatility: float = 0.25, max_leverage: float = 1.0
 ) -> float:
     """
     Adjust position size based on current market volatility.
@@ -107,12 +100,7 @@ def get_volatility_adjusted_position_size(
     return base_position_size * scale_factor
 
 
-def calculate_kelly_position_size(
-    win_probability: float,
-    win_loss_ratio: float,
-    capital: float,
-    max_risk_pct: float = 0.02
-) -> float:
+def calculate_kelly_position_size(win_probability: float, win_loss_ratio: float, capital: float, max_risk_pct: float = 0.02) -> float:
     """
     Calculate position size using Kelly Criterion.
 
