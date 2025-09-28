@@ -7,12 +7,27 @@ api:
   key: ${API_KEY}
   secret: ${API_SECRET}
 
-symbols:
-- PRO/USD
-- WLFI/USD
-- KIN/USD
-- CRO/USD
-- ZORA/USD
+ symbols:
+ - BTC/USD     # Bitcoin - leading cryptocurrency
+ - ETH/USD     # Ethereum - smart contract platform
+ - SOL/USD     # Solana - high-performance blockchain
+ - XRP/USD     # XRP - payment protocol
+ - ADA/USD     # Cardano - proof-of-stake chain
+ - DOGE/USD    # Dogecoin - meme coin with high liquidity
+ - LTC/USD     # Litecoin - legacy payments network
+ - DOT/USD     # Polkadot - interoperability protocol
+ - LINK/USD    # Chainlink - decentralized oracle
+ - AVAX/USD    # Avalanche - scalable blockchain
+ - ATOM/USD    # Cosmos - interoperable chains
+ - ARB/USD     # Arbitrum - layer 2 scaling
+ - TRX/USD     # Tron - high throughput chain
+ - XLM/USD     # Stellar - cross-border payments
+ - FIL/USD     # Filecoin - decentralized storage
+ - NEAR/USD    # NEAR - sharded smart contracts
+ - AAVE/USD    # Aave - DeFi lending protocol
+ - ETC/USD     # Ethereum Classic - legacy chain
+ - BCH/USD     # Bitcoin Cash - payments fork
+ - UNI/USD     # Uniswap - decentralized exchange token
 
 market:
   base: ETH
@@ -62,3 +77,26 @@ preprocessing:
   handle_missing: 'median'
 
 logging_level: 'INFO'
+
+adaptive_weights:
+  enabled: true
+  data_dir: data
+  model_dir: models
+  logs_dir: logs
+  lookback_days: 7
+  retrain_frequency_hours: 24
+  signal_layers:
+    LAYER_1_TECHNICAL:
+      - RSI
+      - MACD
+      - BollingerBands
+      - VolumeProfile
+      - Sentiment
+    LAYER_2_LOGISTICS:
+      - LogisticsSignal
+    LAYER_3_GLOBAL_MACRO:
+      - GlobalMacro
+      - AdoptionTracker
+      - RegionCryptoMapper
+    LAYER_4_ADOPTION:
+      - NewListingsRadar
