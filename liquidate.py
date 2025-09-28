@@ -104,7 +104,7 @@ class KrakenLiquidator:
 
         if not config_path.exists():
             raise FileNotFoundError(
-                f"API config not found at {config_path}. " "Create it with: {'apiKey': 'your_key', 'secret': 'your_secret'}"
+                f"API config not found at {config_path}. Create it with: {{'apiKey': 'your_key', 'secret': 'your_secret'}}"
             )
 
         with open(config_path, "r") as f:
@@ -278,7 +278,7 @@ class KrakenLiquidator:
         slippage = self.estimate_slippage(symbol, side, amount)
         if slippage > self.config.max_slippage_pct and not self.config.force_mode:
             self.logger.error(
-                f"Slippage too high for {symbol}: {slippage:.2f}% > " f"{self.config.max_slippage_pct:.2f}%. Use --force to override"
+                f"Slippage too high for {symbol}: {slippage:.2f}% > {self.config.max_slippage_pct:.2f}%. Use --force to override"
             )
             return None
         # Get market info for precision

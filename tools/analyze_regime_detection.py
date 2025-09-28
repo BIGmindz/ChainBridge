@@ -126,7 +126,7 @@ def analyze_weight_optimization(stats: Dict) -> None:
     for signal, data in sorted_signals:
         pct_change = data.get("pct_change", 0)
         direction = "↑" if pct_change > 0 else "↓"
-        print(f"{signal}: {direction} {abs(pct_change):.2f}% " f"({data.get('initial', 0):.4f} → {data.get('current', 0):.4f})")
+        print(f"{signal}: {direction} {abs(pct_change):.2f}% ({data.get('initial', 0):.4f} → {data.get('current', 0):.4f})")
 
 
 def analyze_regime_confidence(stats: Dict) -> None:

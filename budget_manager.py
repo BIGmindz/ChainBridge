@@ -27,7 +27,7 @@ class BudgetManager:
             try:
                 balance = self.exchange.fetch_balance()
                 # Assume the balance returns a dict with a 'free' key containing USD balance
-                self.initial_capital = balance.get('free', {}).get('USD', initial_capital)
+                self.initial_capital = balance.get("free", {}).get("USD", initial_capital)
             except Exception as e:
                 print(f"❌ Failed to fetch live balance: {e}")
                 self.initial_capital = initial_capital
@@ -37,7 +37,7 @@ class BudgetManager:
 
         # Updated risk per trade to 4% and max positions to 10
         self.risk_per_trade = 4.0  # previously 2.0%
-        self.max_positions = 10    # previously 5
+        self.max_positions = 10  # previously 5
 
         # RADICAL FIX: Always fetch real balance in live mode
         if live_mode and exchange:

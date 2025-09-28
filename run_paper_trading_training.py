@@ -173,7 +173,7 @@ def run_paper_trading_simulation(args, session_dir):
             remaining = int(end_time - time.time())
             mins = remaining // 60
             secs = remaining % 60
-            print(f"Waiting {wait_time:.1f}s before next collection. " f"Remaining time: {mins}m {secs}s")
+            print(f"Waiting {wait_time:.1f}s before next collection. Remaining time: {mins}m {secs}s")
 
             if wait_time > 0:
                 time.sleep(wait_time)
