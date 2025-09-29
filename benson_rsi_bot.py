@@ -80,20 +80,37 @@ def utc_now_str() -> str:
 def wilder_rsi(close, period: int = 14) -> float:
     """Wilder's RSI. Accepts a pandas Series when available, or any sequence of floats.
 
-    Falls back to a pure-Python implementation when pandas is not installed so
-    unit tests can run in minimal environments.
-    """
-    # Normalize input to a list of floats
-    if _HAS_PANDAS and isinstance(close, pd.Series):
-        vals = close.astype(float).tolist()
-    else:
-        try:
-            vals = [float(x) for x in list(close)]
-        except Exception:
-            return float("nan")
+    Args:
+        close: Price series as pandas.Series or sequence of floats
+        period: RSI period (default 14)
 
+    Returns:
+        float: RSI value between 0 and 100
+
+    Raises:
+        ValueError: If input data is invalid or insufficient
+    """
+    import math
+    # Validate period
+    if period < 1:
+        raise ValueError("Period must be positive")
+
+    # Normalize input to a list of floats
+    try:
+        if '_HAS_PANDAS' in globals() and _HAS_PANDAS and isinstance(close, pd.Series):
+            vals = close.astype(float).tolist()
+        else:
+            vals = [float(x) for x in list(close)]
+    except (ValueError, TypeError):
+        raise ValueError("Input must be numeric values")
+
+    # Check for NaN values
+    if any(math.isnan(x) for x in vals):
+        raise ValueError("Input contains NaN values")
+
+    # Validate data length
     if len(vals) < max(2, period + 1):
-        return float("nan")
+        raise ValueError(f"Insufficient data for RSI calculation (need at least {period + 1} values)")
 
     # Compute price deltas
     deltas = [vals[i] - vals[i - 1] for i in range(1, len(vals))]
@@ -101,7 +118,7 @@ def wilder_rsi(close, period: int = 14) -> float:
     losses = [(-d) if d < 0 else 0.0 for d in deltas]
 
     if len(gains) < period:
-        return float("nan")
+        return float('nan')
 
     # Initial average gains/losses (simple average of first 'period' values)
     avg_gain = sum(gains[:period]) / period
@@ -122,8 +139,6 @@ def wilder_rsi(close, period: int = 14) -> float:
 
     rs = avg_gain / avg_loss
     return float(100 - (100 / (1 + rs)))
-
-
 def calculate_rsi_from_ohlcv(ohlcv: List[List[float]], period: int) -> float:
     """OHLCV rows: [ts, open, high, low, close, volume]."""
     if not ohlcv:
