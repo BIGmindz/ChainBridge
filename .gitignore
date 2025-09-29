@@ -25,3 +25,4 @@ budget_state*.json
 local_repo_snapshot.bundle
 Dockerfile.*.local
 docker-compose.override.yml
+.venv-lean/
