@@ -1,33 +1,32 @@
 exchange: kraken
 
 api:
-  # API credentials loaded from environment variables
-  # Set API_KEY and API_SECRET in your .env file for live trading
-  # Leave these blank - they will be populated from environment variables
   key: ${API_KEY}
   secret: ${API_SECRET}
 
- symbols:
- - BTC/USD     # Bitcoin - leading cryptocurrency
- - ETH/USD     # Ethereum - smart contract platform
- - SOL/USD     # Solana - high-performance blockchain
- - XRP/USD     # XRP - payment protocol
- - ADA/USD     # Cardano - proof-of-stake chain
- - DOGE/USD    # Dogecoin - meme coin with high liquidity
- - LTC/USD     # Litecoin - legacy payments network
- - DOT/USD     # Polkadot - interoperability protocol
- - LINK/USD    # Chainlink - decentralized oracle
- - AVAX/USD    # Avalanche - scalable blockchain
- - ATOM/USD    # Cosmos - interoperable chains
- - ARB/USD     # Arbitrum - layer 2 scaling
- - TRX/USD     # Tron - high throughput chain
- - XLM/USD     # Stellar - cross-border payments
- - FIL/USD     # Filecoin - decentralized storage
- - NEAR/USD    # NEAR - sharded smart contracts
- - AAVE/USD    # Aave - DeFi lending protocol
- - ETC/USD     # Ethereum Classic - legacy chain
- - BCH/USD     # Bitcoin Cash - payments fork
- - UNI/USD     # Uniswap - decentralized exchange token
+budget_management:
+  compound_profits: true
+  max_positions: 10
+  max_risk_per_trade: 0.15
+  position_size_method: kelly
+  reduce_on_drawdown: true
+
+symbols:
+  - SOL/USD
+  - DOGE/USD
+  - SHIB/USD
+  - AVAX/USD
+  - ATOM/USD
+  - PRO/USD
+  - WLFI/USD
+  - KIN/USD
+  - CRO/USD
+  - ZORA/USD
+
+initial_capital: 107.41
+cooldown_minutes: 1
+poll_seconds: 30
+csv_log: benson_signals.csv
 
 market:
   base: ETH
@@ -50,8 +49,6 @@ rsi:
   sell_threshold: 65
 
 timeframe: 5m
-poll_seconds: 30
-csv_log: benson_signals.csv
 
 # ML Model Configuration for Strategy Trainer v2
 model_params:
