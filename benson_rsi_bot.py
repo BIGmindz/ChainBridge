@@ -5,26 +5,26 @@ import argparse
 try:
     import pandas as pd  # type: ignore
 
-    _HAS_PANDAS = True
+    has_pandas = True
 except Exception:  # pragma: no cover - optional dependency in test environments
     # Minimal pandas shim so tests can call pd.Series([...]) when pandas
     # isn't installed in the environment. The shim produces a plain list-like
     # object which the fallback wilder_rsi implementation accepts.
-    class _SeriesFallback(list):
-        def __init__(self, data, *args, **kwargs):
+    class _SeriesFallback(list[float]):
+        def __init__(self, data: Any, *args: Any, **kwargs: Any) -> None:
             super().__init__(data)
 
-        def astype(self, *_args, **_kwargs):
+        def astype(self, *_args: Any, **_kwargs: Any) -> '_SeriesFallback':
             return self
 
-        def tolist(self):
+        def tolist(self) -> List[float]:
             return list(self)
 
     class _PdShim:
         Series = _SeriesFallback
 
     pd = _PdShim()
-    _HAS_PANDAS = False
+    has_pandas = False
 import math
 import os
 import signal
@@ -35,10 +35,10 @@ from pathlib import Path
 try:
     import yaml  # type: ignore
 
-    _HAS_YAML = True
+    has_yaml = True
 except Exception:  # pragma: no cover - optional dependency in test environments
-    yaml = None
-    _HAS_YAML = False
+    yaml = None  # type: ignore
+    has_yaml = False
 
 import json
 from typing import Any, Dict, List, Tuple, Optional
@@ -65,7 +65,7 @@ def load_config(path: str) -> Dict[str, Any]:
         content = f.read()
     # Substitute environment variables in the config content
     content = os.path.expandvars(content)
-    if _HAS_YAML:
+    if has_yaml and yaml is not None:
         return yaml.safe_load(content) or {}
     # Fallback: try JSON as a strict subset of YAML for tests
     try:
@@ -78,7 +78,7 @@ def utc_now_str() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S %Z")
 
 
-def wilder_rsi(close, period: int = 14) -> float:
+def wilder_rsi(close: Any, period: int = 14) -> float:
     """Wilder's RSI. Accepts a pandas Series when available, or any sequence of floats.
 
     Args:
@@ -98,7 +98,7 @@ def wilder_rsi(close, period: int = 14) -> float:
 
     # Normalize input to a list of floats
     try:
-        if '_HAS_PANDAS' in globals() and _HAS_PANDAS and isinstance(close, pd.Series):
+        if 'has_pandas' in globals() and has_pandas and isinstance(close, pd.Series):
             vals = close.astype(float).tolist()
         else:
             vals = [float(x) for x in list(close)]
