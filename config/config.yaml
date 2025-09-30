@@ -8,11 +8,23 @@ api:
   secret: ${API_SECRET}
 
 symbols:
+  - BTC/USD
+  - ETH/USD
   - SOL/USD
   - DOGE/USD
-  - SHIB/USD
+  - XRP/USD
+  - ADA/USD
   - AVAX/USD
   - ATOM/USD
+  - LINK/USD
+  - LTC/USD
+  - DOT/USD
+  - BCH/USD
+  - SHIB/USD
+  - UNI/USD
+  - XLM/USD
+  - ETC/USD
+  - POL/USD
 
 market:
   base: ETH
@@ -21,7 +33,7 @@ market:
 
 trading:
   position_size_usd: 50
-  max_open_trades: 1
+  max_open_trades: 20
   slippage_bps: 5   # 5 bps = 0.05%
 
 risk:
@@ -34,7 +46,27 @@ rsi:
   buy_threshold: 35
   sell_threshold: 65
 
+macd:
+  fast: 12
+  slow: 26
+  signal: 9
+  hist_threshold: 0.0  # require positive/negative histogram to act; increase for stricter
+
+bollinger:
+  period: 20
+  stddev: 2.0
+
+signals:
+  use_rsi: true
+  use_macd: true
+  use_bollinger: true
+
+decision:
+  mode: consensus     # consensus | any
+  consensus_min: 2    # require at least N BUY/SELL votes when mode=consensus
+
 timeframe: 5m
+cooldown_minutes: 5
 poll_seconds: 30
 csv_log: benson_signals.csv
 

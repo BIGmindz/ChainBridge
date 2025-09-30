@@ -30,6 +30,7 @@ import os
 import signal
 import time
 from datetime import datetime, timezone
+from pathlib import Path
 
 try:
     import yaml  # type: ignore
@@ -40,7 +41,7 @@ except Exception:  # pragma: no cover - optional dependency in test environments
     _HAS_YAML = False
 
 import json
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple, Optional
 
 """
 Benson RSI Bot (Coinbase-friendly)
@@ -150,6 +151,105 @@ def calculate_rsi_from_ohlcv(ohlcv: List[List[float]], period: int) -> float:
     return wilder_rsi(series, period=period)
 
 
+def _ema(series: List[float], period: int) -> Optional[float]:
+    """Compute the latest EMA value for a series with given period.
+
+    Returns None if insufficient data.
+    """
+    if period <= 0:
+        return None
+    if len(series) < period:
+        return None
+    k = 2.0 / (period + 1.0)
+    ema_val = sum(series[:period]) / period  # seed with SMA
+    for x in series[period:]:
+        ema_val = (x - ema_val) * k + ema_val
+    return float(ema_val)
+
+
+def calculate_macd_from_ohlcv(
+    ohlcv: List[List[float]], fast: int = 12, slow: int = 26, signal: int = 9
+) -> Tuple[float, float, float]:
+    """Return (macd_line, signal_line, histogram). NaNs (float('nan')) when insufficient data.
+
+    Uses EMA with standard smoothing. Requires at least slow+signal values for stability.
+    """
+    if not ohlcv:
+        return float("nan"), float("nan"), float("nan")
+    closes = [float(row[4]) for row in ohlcv if len(row) >= 5]
+    if len(closes) < max(slow + signal, slow + 5):
+        return float("nan"), float("nan"), float("nan")
+
+    # Compute full EMA series for MACD stability
+    def ema_series(vals: List[float], period: int) -> List[float]:
+        if len(vals) < period:
+            return []
+        k = 2.0 / (period + 1.0)
+        out: List[float] = []
+        ema_val = sum(vals[:period]) / period
+        out.extend([float("nan")] * (period - 1))
+        out.append(float(ema_val))
+        for x in vals[period:]:
+            ema_val = (x - ema_val) * k + ema_val
+            out.append(float(ema_val))
+        return out
+
+    fast_ema = ema_series(closes, fast)
+    slow_ema = ema_series(closes, slow)
+    if not fast_ema or not slow_ema:
+        return float("nan"), float("nan"), float("nan")
+    macd_line_series = []
+    for i in range(len(closes)):
+        fe = fast_ema[i] if i < len(fast_ema) else float("nan")
+        se = slow_ema[i] if i < len(slow_ema) else float("nan")
+        if math.isnan(fe) or math.isnan(se):
+            macd_line_series.append(float("nan"))
+        else:
+            macd_line_series.append(fe - se)
+
+    signal_series = []
+    # Build signal EMA over macd_line_series (ignore leading NaNs)
+    macd_clean = [x for x in macd_line_series if not math.isnan(x)]
+    if len(macd_clean) < signal:
+        return float("nan"), float("nan"), float("nan")
+    k = 2.0 / (signal + 1.0)
+    sig_val = sum(macd_clean[:signal]) / signal
+    # align signal_series lengths with macd_line_series by pre-padding NaNs
+    leading_nans = len(macd_line_series) - len(macd_clean)
+    signal_series.extend([float("nan")] * (leading_nans + signal - 1))
+    signal_series.append(float(sig_val))
+    for x in macd_clean[signal:]:
+        sig_val = (x - sig_val) * k + sig_val
+        signal_series.append(float(sig_val))
+
+    macd_line = macd_line_series[-1]
+    signal_line = signal_series[-1] if signal_series else float("nan")
+    hist = macd_line - signal_line if not (math.isnan(macd_line) or math.isnan(signal_line)) else float("nan")
+    return float(macd_line), float(signal_line), float(hist)
+
+
+def calculate_bollinger_from_ohlcv(
+    ohlcv: List[List[float]], period: int = 20, stddev: float = 2.0
+) -> Tuple[float, float, float]:
+    """Return (lower, middle, upper) Bollinger Band values for the latest close.
+
+    Returns NaNs when insufficient data.
+    """
+    if not ohlcv:
+        return float("nan"), float("nan"), float("nan")
+    closes = [float(row[4]) for row in ohlcv if len(row) >= 5]
+    if len(closes) < period:
+        return float("nan"), float("nan"), float("nan")
+    window = closes[-period:]
+    mean = sum(window) / period
+    # population stddev to match many TA libs' default behavior
+    var = sum((x - mean) ** 2 for x in window) / period
+    sd = math.sqrt(var)
+    lower = mean - stddev * sd
+    upper = mean + stddev * sd
+    return float(lower), float(mean), float(upper)
+
+
 def backoff_sleep(attempt: int, base: float = 2.0, max_wait: float = 60.0):
     wait = min(max_wait, base ** max(1, attempt))
     time.sleep(wait)
@@ -176,13 +276,40 @@ def run_bot(once: bool = False) -> None:
     print("[DBG] entered run_bot()")
     try:
         import ccxt  # type: ignore
-    except Exception as exc:  # pragma: no cover - environment dependent
+    except Exception as exc:
         raise ImportError("The 'ccxt' package is required to run the live bot. Install with: pip install ccxt") from exc
 
+    # Load .env (repo root or home) so EXCHANGE, PAPER, API_KEY, API_SECRET are available
+    try:
+        from dotenv import load_dotenv  # type: ignore
+        loaded_env = False
+        env_path = Path(".env")
+        if env_path.exists():
+            load_dotenv(dotenv_path=env_path)
+            print("[ENV] Loaded .env from repo root")
+            loaded_env = True
+        home_env = Path.home() / ".env"
+        if not loaded_env and home_env.exists():
+            load_dotenv(dotenv_path=home_env)
+            print("[ENV] Loaded .env from home directory")
+    except Exception:
+        pass
+
     config_path = os.getenv("BENSON_CONFIG", "config/config.yaml")
+    if not os.path.exists(config_path):
+        alt = "config.yaml"
+        if os.path.exists(alt):
+            config_path = alt
+    print(f"[CFG] Using config at: {config_path}")
     cfg = load_config(config_path)
 
-    exchange_id = str(cfg.get("exchange", "kraken")).lower()
+    # Prefer EXCHANGE env if provided
+    try:
+        import ccxt  # type: ignore
+    except Exception:
+        raise
+
+    exchange_id = str(os.getenv("EXCHANGE", cfg.get("exchange", "coinbase"))).lower()
     if not hasattr(ccxt, exchange_id):
         raise ValueError(f"Unknown exchange id '{exchange_id}' — check your config")
 
@@ -191,18 +318,39 @@ def run_bot(once: bool = False) -> None:
 
     # Load markets and validate symbols
     exchange.load_markets()
-    symbols: List[str] = list(cfg.get("symbols", []))
+    symbols = list(cfg.get("symbols", []))
     if not symbols:
-        symbols = ["XBT/USD", "ETH/USD"]  # sensible Kraken defaults
+        symbols = ["BTC/USD", "ETH/USD"]
 
     invalid = [s for s in symbols if s not in exchange.symbols]
     if invalid:
         raise ValueError(f"Invalid symbols for {exchange_id}: {invalid}")
 
     timeframe = str(cfg.get("timeframe", "5m"))
-    rsi_period = int(cfg.get("rsi", {}).get("period", 14))
-    buy_th = float(cfg.get("rsi", {}).get("buy_threshold", 30))
-    sell_th = float(cfg.get("rsi", {}).get("sell_threshold", 70))
+    # RSI config
+    rsi_cfg = dict(cfg.get("rsi", {}))
+    rsi_period = int(rsi_cfg.get("period", 14))
+    buy_th = float(rsi_cfg.get("buy_threshold", 30))
+    sell_th = float(rsi_cfg.get("sell_threshold", 70))
+    # MACD config
+    macd_cfg = dict(cfg.get("macd", {}))
+    macd_fast = int(macd_cfg.get("fast", 12))
+    macd_slow = int(macd_cfg.get("slow", 26))
+    macd_signal_p = int(macd_cfg.get("signal", 9))
+    macd_hist_th = float(macd_cfg.get("hist_threshold", 0.0))
+    # Bollinger config
+    bb_cfg = dict(cfg.get("bollinger", {}))
+    bb_period = int(bb_cfg.get("period", 20))
+    bb_std = float(bb_cfg.get("stddev", 2.0))
+    # Signal toggles and decision policy
+    sig_cfg = dict(cfg.get("signals", {}))
+    use_rsi = bool(sig_cfg.get("use_rsi", True))
+    use_macd = bool(sig_cfg.get("use_macd", True))
+    use_boll = bool(sig_cfg.get("use_bollinger", True))
+    dec_cfg = dict(cfg.get("decision", {}))
+    mode = str(dec_cfg.get("mode", "consensus"))  # consensus|any
+    consensus_min = int(dec_cfg.get("consensus_min", 2))
+
     cooldown_min = int(cfg.get("cooldown_minutes", 10))
     poll_seconds = int(cfg.get("poll_seconds", 60))
     log_path = str(cfg.get("csv_log", "benson_signals.csv"))
@@ -213,13 +361,17 @@ def run_bot(once: bool = False) -> None:
 
     if not os.path.exists(log_path):
         with open(log_path, "w") as f:
-            f.write("ts_utc,exchange,symbol,price,rsi,signal,timeframe\n")
+            f.write("ts_utc,exchange,symbol,price,rsi,macd_hist,bb_pos,signal,timeframe\n")
 
     print("Benson Bot Starting...")
     print(f"Exchange: {exchange_id}")
-    print(f"Monitoring: {symbols}")
+    print(f"Monitoring ({len(symbols)}): {symbols}")
     print(f"Timeframe: {timeframe}")
     print(f"RSI: period={rsi_period} | Buy<{buy_th} | Sell>{sell_th}")
+    if use_macd:
+        print(f"MACD: fast={macd_fast} slow={macd_slow} signal={macd_signal_p} | hist_th={macd_hist_th}")
+    if use_boll:
+        print(f"Bollinger: period={bb_period} std={bb_std}")
     print(f"Cooldown: {cooldown_min} min")
     print("-" * 60)
 
@@ -236,36 +388,106 @@ def run_bot(once: bool = False) -> None:
     while not stop["flag"]:
         try:
             for symbol in symbols:
-                ohlcv = safe_fetch_ohlcv(exchange, symbol, timeframe, limit=200)
-                rsi_val = calculate_rsi_from_ohlcv(ohlcv, rsi_period)
-                if isinstance(rsi_val, float) and math.isnan(rsi_val):
-                    print(f"[{utc_now_str()}] {symbol}: insufficient data for RSI yet.")
-                    continue
-
+                ohlcv = safe_fetch_ohlcv(exchange, symbol, timeframe, limit=300)
                 price = safe_fetch_ticker(exchange, symbol)
 
-                if rsi_val < buy_th:
-                    signal_out = "BUY"
-                elif rsi_val > sell_th:
-                    signal_out = "SELL"
-                else:
-                    signal_out = "HOLD"
+                # Compute indicators
+                rsi_val = calculate_rsi_from_ohlcv(ohlcv, rsi_period)
+                macd_line, macd_sig, macd_hist = calculate_macd_from_ohlcv(
+                    ohlcv, fast=macd_fast, slow=macd_slow, signal=macd_signal_p
+                )
+                bb_lower, bb_mid, bb_upper = calculate_bollinger_from_ohlcv(
+                    ohlcv, period=bb_period, stddev=bb_std
+                )
+
+                # Individual signals
+                ind_signals: Dict[str, str] = {}
+                if use_rsi:
+                    if isinstance(rsi_val, float) and not math.isnan(rsi_val):
+                        if rsi_val < buy_th:
+                            ind_signals["RSI"] = "BUY"
+                        elif rsi_val > sell_th:
+                            ind_signals["RSI"] = "SELL"
+                        else:
+                            ind_signals["RSI"] = "HOLD"
+                    else:
+                        ind_signals["RSI"] = "HOLD"
+
+                if use_macd:
+                    if not (math.isnan(macd_hist)):
+                        if macd_hist > macd_hist_th:
+                            ind_signals["MACD"] = "BUY"
+                        elif macd_hist < -macd_hist_th:
+                            ind_signals["MACD"] = "SELL"
+                        else:
+                            ind_signals["MACD"] = "HOLD"
+                    else:
+                        ind_signals["MACD"] = "HOLD"
+
+                if use_boll:
+                    if not (math.isnan(bb_lower) or math.isnan(bb_upper)):
+                        if price <= bb_lower:
+                            ind_signals["BOLL"] = "BUY"
+                        elif price >= bb_upper:
+                            ind_signals["BOLL"] = "SELL"
+                        else:
+                            ind_signals["BOLL"] = "HOLD"
+                    else:
+                        ind_signals["BOLL"] = "HOLD"
+
+                # Aggregate decision
+                buys = sum(1 for s in ind_signals.values() if s == "BUY")
+                sells = sum(1 for s in ind_signals.values() if s == "SELL")
+                total_enabled = len(ind_signals)
+                signal_out = "HOLD"
+                if mode == "any":
+                    if buys > 0 and buys >= sells:
+                        signal_out = "BUY"
+                    elif sells > 0 and sells > buys:
+                        signal_out = "SELL"
+                else:  # consensus
+                    if buys >= consensus_min and buys > sells:
+                        signal_out = "BUY"
+                    elif sells >= consensus_min and sells > buys:
+                        signal_out = "SELL"
 
                 now = time.time()
                 cooldown_ok = (now - last_alert_ts[symbol]) >= cooldown_sec
                 changed = signal_out != last_signal[symbol]
 
                 # Status line
-                print(f"[{utc_now_str()}] {symbol:>10}: ${price:,.2f} | RSI {rsi_val:5.2f} | {signal_out}{' (new)' if changed else ''}")
+                rsi_txt = f"RSI {rsi_val:5.2f}" if isinstance(rsi_val, float) and not math.isnan(rsi_val) else "RSI  n/a"
+                macd_txt = (
+                    f"MACD {macd_hist:5.2f}"
+                    if not (math.isnan(macd_hist))
+                    else "MACD  n/a"
+                )
+                bb_txt = (
+                    f"BB [{bb_lower:.2f},{bb_mid:.2f},{bb_upper:.2f}]"
+                    if not (math.isnan(bb_lower) or math.isnan(bb_mid) or math.isnan(bb_upper))
+                    else "BB n/a"
+                )
+                print(
+                    f"[{utc_now_str()}] {symbol:>10}: ${price:,.2f} | {rsi_txt} | {macd_txt} | {bb_txt} | {signal_out}"
+                    f"{' (new)' if changed else ''}"
+                )
 
                 # Alert only on new actionable signals and respecting cooldown
                 if signal_out in ("BUY", "SELL") and changed and cooldown_ok:
                     print(f"SIGNAL: {signal_out} {symbol} @ ${price:,.2f} (RSI {rsi_val:0.2f})")
                     last_alert_ts[symbol] = now
 
-                # Persist log line
+                # Persist log line (include MACD and Bollinger summaries)
                 with open(log_path, "a") as f:
-                    f.write(f"{utc_now_str()},{exchange_id},{symbol},{price},{rsi_val:.4f},{signal_out},{timeframe}\n")
+                    rsi_str = f"{rsi_val:.4f}" if isinstance(rsi_val, float) and not math.isnan(rsi_val) else ""
+                    macd_str = f"{macd_hist:.4f}" if not math.isnan(macd_hist) else ""
+                    bbpos = ""
+                    if not (math.isnan(bb_lower) or math.isnan(bb_upper)) and (bb_upper - bb_lower) > 0:
+                        bbpos_val = (price - bb_lower) / (bb_upper - bb_lower)
+                        bbpos = f"{bbpos_val:.4f}"
+                    f.write(
+                        f"{utc_now_str()},{exchange_id},{symbol},{price},{rsi_str},{macd_str},{bbpos},{signal_out},{timeframe}\n"
+                    )
 
                 last_signal[symbol] = signal_out
 
