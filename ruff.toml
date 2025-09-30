@@ -13,7 +13,11 @@ exclude = [
 
 [lint]
 select = ["E", "F"]
-ignore = []
+# Relax a few noisy rules across this mixed repo
+ignore = [
+  "E501", # line too long (many demos / logs)
+  "E402", # module import not at top (path hacks in scripts/tests)
+]
 
 [lint.per-file-ignores]
 "apps/**" = ["F401", "F841", "E402"]
@@ -26,3 +30,8 @@ ignore = []
 "multi_signal_bot.py" = ["E402"]
 "regime_model_utils.py" = ["F401"]
 "ml_pipeline/**" = ["F841"]
+"simple_monitor.py" = ["E722"]
+"strategy_launcher.py" = ["E722"]
+"strategy_trainer_v2.py" = ["F841"]
+"test_enhanced_regime_model.py" = ["F841"]
+"modules/adaptive_weight_module/adaptive_weight_model.py" = ["F401"]

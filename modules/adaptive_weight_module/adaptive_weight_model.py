@@ -566,17 +566,17 @@ class AdaptiveWeightModule(Module):
             # Get absolute paths for comparison
             model_dir_abs = os.path.abspath(self.model_dir)
             path_abs = os.path.abspath(path)
-            
+
             # Check if the path is under model_dir
             if not path_abs.startswith(model_dir_abs):
                 print(f"Security warning: Attempted to load model from outside model directory: {path}")
                 return False
-                
+
             # Check file extension
             if not path.endswith(('.h5', '.joblib', '.json')):
                 print(f"Security warning: Invalid file extension for {path}")
                 return False
-                
+
             return True
         except Exception as e:
             print(f"Path validation error: {str(e)}")
@@ -590,24 +590,24 @@ class AdaptiveWeightModule(Module):
             # Check expected input shape
             expected_input_shape = (None, self.n_signals)  # Batch size, n_signals
             actual_input_shape = model.layers[0].input_shape
-            
+
             if actual_input_shape[1] != expected_input_shape[1]:
                 print(f"Model input shape mismatch. Expected: {expected_input_shape}, Got: {actual_input_shape}")
                 return False
-            
+
             # Check output layer shape
             expected_output_shape = self.n_signals
             actual_output_shape = model.layers[-1].output_shape[1]
-            
+
             if actual_output_shape != expected_output_shape:
                 print(f"Model output shape mismatch. Expected: {expected_output_shape}, Got: {actual_output_shape}")
                 return False
-                
+
             return True
         except Exception as e:
             print(f"Model validation error: {str(e)}")
             return False
-    
+
     def _load_models(self) -> None:
         """Load models and scalers if they exist with security validations"""
         # Check if models exist
@@ -622,11 +622,11 @@ class AdaptiveWeightModule(Module):
                 with open(metadata_path, "r") as f:
                     metadata = json.load(f)
                     self.last_trained = datetime.fromisoformat(metadata.get("last_trained", ""))
-                    
+
                     # Validate model version
                     if metadata.get("version") != self.version:
                         raise ValueError(f"Model version mismatch. Expected {self.version}, got {metadata.get('version')}")
-                        
+
                     print(f"Found existing model last trained at: {self.last_trained}")
             except Exception as e:
                 print(f"Error loading metadata: {str(e)}")
@@ -640,17 +640,17 @@ class AdaptiveWeightModule(Module):
                     custom_objects=None,  # Prevent arbitrary code execution
                     compile=False  # Load only architecture and weights
                 )
-                
+
                 # Validate model structure
                 if not self._validate_model_structure(self.weight_model):
                     raise ValueError("Model structure validation failed")
-                    
+
                 # Recompile model with known optimizer and loss
                 self.weight_model.compile(
                     optimizer=Adam(learning_rate=1e-3),
                     loss='mse'
                 )
-                    
+
                 print(f"Loaded and validated weight model from {weight_model_path}")
             except Exception as e:
                 print(f"Error loading weight model: {str(e)}")

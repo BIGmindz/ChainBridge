@@ -19,7 +19,7 @@ The foundation of the modular architecture:
 Pluggable modules for specific functionality:
 
 - **CSVIngestionModule** (`modules/csv_ingestion.py`): CSV file ingestion and processing
-- **RSIModule** (`modules/rsi_module.py`): RSI calculation and trading signals  
+- **RSIModule** (`modules/rsi_module.py`): RSI calculation and trading signals
 - **SalesForecastingModule** (`modules/sales_forecasting.py`): ML-powered sales forecasting
 
 ### 3. API Layer (`api/`)
@@ -143,13 +143,13 @@ from typing import Dict, Any
 
 class CustomModule(Module):
     VERSION = "1.0.0"
-    
+
     def get_schema(self) -> Dict[str, Any]:
         return {
             'input': {'data': 'string'},
             'output': {'result': 'string'}
         }
-        
+
     def process(self, data: Dict[str, Any]) -> Dict[str, Any]:
         # Your custom processing logic here
         return {'result': 'processed'}

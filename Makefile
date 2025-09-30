@@ -3,12 +3,12 @@ COMPOSE?=docker compose
 
 .PHONY: help venv install run test lint fmt docker-build up down logs shell api-server rsi-compat system-test
 
-help: 
+help:
 	@echo "Benson Multi-Signal Decision Bot - Modular Architecture"
 	@echo ""
 	@echo "Available targets:"
 	@echo "  venv         - Create Python virtual environment"
-	@echo "  install      - Install dependencies" 
+	@echo "  install      - Install dependencies"
 	@echo "  run          - Run legacy RSI bot"
 	@echo "  api-server   - Start API server"
 	@echo "  rsi-compat   - Run RSI bot in compatibility mode"

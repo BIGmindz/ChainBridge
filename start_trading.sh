@@ -74,13 +74,13 @@ fi
 # If test mode, run tests
 if [ "$TEST_MODE" = true ]; then
   echo -e "${YELLOW}Running in test mode...${NC}"
-  
+
   echo -e "${BLUE}Testing dynamic crypto selector...${NC}"
   python3 dynamic_crypto_selector.py
-  
+
   echo -e "${BLUE}Testing multi-signal bot (single cycle)...${NC}"
   python3 multi_signal_bot.py --once
-  
+
   echo -e "${GREEN}Tests completed!${NC}"
   exit 0
 fi
