@@ -1,2 +1,20 @@
-pyyaml>=6.0
+# Minimal runtime requirements for lean quick-checks (no heavy native ML stacks)
+
+# Core
+numpy==2.0.2
+pandas==2.3.2
+PyYAML==6.0.2
 pytest>=7.4
+
+# Utilities
+requests==2.32.5
+python-dotenv==1.1.1
+rich==14.1.0
+schedule==1.2.2
+psutil==7.1.0
+
+# Crypto/external
+ccxt==4.5.5
+statsmodels==0.14.5
+scipy==1.13.1
+scikit-learn==1.6.1
