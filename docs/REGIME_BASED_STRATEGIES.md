@@ -54,20 +54,20 @@ Several methods can be used to identify market regimes:
 def detect_regime_statistical(prices, window=50):
     """
     Detect market regime using statistical measures.
-    
+
     Args:
         prices: Array of historical prices
         window: Lookback period for calculations
-        
+
     Returns:
         Identified regime and confidence level
     """
     returns = np.diff(prices) / prices[:-1]
-    
+
     # Calculate key metrics
     volatility = np.std(returns[-window:]) * np.sqrt(252)  # Annualized
     trend = np.mean(returns[-window:]) * 252  # Annualized
-    
+
     # Simple regime classification
     if abs(trend) < 0.05:  # Low trend
         if volatility < 0.10:
@@ -105,38 +105,38 @@ def detect_regime_statistical(prices, window=50):
 def detect_regime_technical(prices, volumes=None):
     """
     Detect market regime using technical indicators.
-    
+
     Args:
         prices: Array of historical prices
         volumes: Optional array of trading volumes
-        
+
     Returns:
         Identified regime and confidence level
     """
     # Calculate indicators
     sma50 = calculate_sma(prices, 50)
     sma200 = calculate_sma(prices, 200)
-    
+
     bollinger_width = calculate_bollinger_width(prices, 20)
     adx = calculate_adx(prices, 14)
-    
+
     # Logic for regime detection
     trend_strength = adx[-1]
     vol_level = bollinger_width[-1] / np.mean(bollinger_width[-50:])
-    
+
     price_above_ma = prices[-1] > sma50[-1] > sma200[-1]
     price_below_ma = prices[-1] < sma50[-1] < sma200[-1]
-    
+
     # Classify regime
     if trend_strength > 25:
         if price_above_ma:
             return "BULLISH", min(0.5 + trend_strength/100, 0.95)
         elif price_below_ma:
             return "BEARISH", min(0.5 + trend_strength/100, 0.95)
-    
+
     if vol_level > 1.5:
         return "VOLATILE", min(0.5 + (vol_level-1)/2, 0.9)
-    
+
     return "SIDEWAYS", 0.7
 ```
 
@@ -307,13 +307,13 @@ for regime, result in results.items():
     print(f"  Sharpe Ratio: {metrics['sharpe_ratio']:.2f}")
     print(f"  Max Drawdown: {metrics['max_drawdown']:.2%}")
     print(f"  Win Rate: {metrics['win_rate']:.2%}")
-    
+
     # Calculate additional metrics
     if 'returns' in result and len(result['returns']) > 0:
         returns = np.array(result['returns'])
         print(f"  Volatility: {np.std(returns) * np.sqrt(252):.2%}")
         print(f"  Sortino Ratio: {calculate_sortino(returns):.2f}")
-        
+
     if 'signals' in result:
         signals = np.array(result['signals'])
         buys = np.sum(signals == 1)
@@ -332,11 +332,11 @@ class MarketRegimeAwareTrader:
         self.current_regime = "UNKNOWN"
         self.regime_confidence = 0.0
         self.regime_history = []
-        
+
     def update_regime(self, prices, volumes=None):
         """Update current market regime based on recent data."""
         regime, confidence = detect_regime_technical(prices, volumes)
-        
+
         # Apply smoothing to avoid frequent regime changes
         if confidence > 0.8 or len(self.regime_history) == 0:
             # High confidence or initial detection
@@ -346,7 +346,7 @@ class MarketRegimeAwareTrader:
             # New regime with higher confidence
             self.current_regime = regime
             self.regime_confidence = confidence
-            
+
         # Store regime history
         self.regime_history.append((regime, confidence))
         if len(self.regime_history) > 20:
@@ -365,7 +365,7 @@ def get_strategy_parameters(self):
         "stop_loss": 5,
         "take_profit": 10
     }
-    
+
     # Apply regime-specific adjustments
     if self.current_regime == "BULLISH":
         base_params.update({
@@ -381,7 +381,7 @@ def get_strategy_parameters(self):
             "stop_loss": 5
         })
     # Add other regimes...
-    
+
     return base_params
 ```
 
@@ -392,10 +392,10 @@ def generate_trading_signals(self, prices, indicators):
     """Generate trading signals with regime-specific adjustments."""
     # Get appropriate parameters for current regime
     params = self.get_strategy_parameters()
-    
+
     # Calculate indicators with regime-specific parameters
     rsi = calculate_rsi(prices, params["rsi_period"])
-    
+
     # Generate signals with regime-specific thresholds
     signals = np.zeros_like(prices)
     for i in range(len(prices) - 1):
@@ -403,12 +403,12 @@ def generate_trading_signals(self, prices, indicators):
             signals[i] = 1  # Buy signal
         elif rsi[i] > params["overbought"]:
             signals[i] = -1  # Sell signal
-    
+
     # Adjust signals based on regime confidence
     if self.regime_confidence < 0.6:
         # Lower confidence - reduce signal strength
         signals = signals * self.regime_confidence
-        
+
     return signals
 ```
 
@@ -418,7 +418,7 @@ def generate_trading_signals(self, prices, indicators):
 def calculate_position_size(self, signal, price):
     """Calculate position size based on regime and signal strength."""
     base_size = 1.0  # Base position size (e.g., 1 unit or 1% of portfolio)
-    
+
     # Adjust for regime
     regime_multiplier = 1.0
     if self.current_regime == "VOLATILE":
@@ -427,13 +427,13 @@ def calculate_position_size(self, signal, price):
         regime_multiplier = 1.2  # Increase size for buys in bullish regime
     elif self.current_regime == "BEARISH" and signal < 0:
         regime_multiplier = 1.2  # Increase size for sells in bearish regime
-    
+
     # Adjust for signal strength
     signal_strength = min(abs(signal), 1.0)
-    
+
     # Final position size
     position_size = base_size * regime_multiplier * signal_strength
-    
+
     return position_size
 ```
 
@@ -483,21 +483,21 @@ from sklearn.cluster import KMeans
 def ml_regime_detection(market_features):
     """
     Detect market regimes using K-means clustering.
-    
+
     Args:
         market_features: Feature array with columns for volatility, trend, etc.
-    
+
     Returns:
         Array of regime labels
     """
     # Normalize features
     scaler = StandardScaler()
     normalized_features = scaler.fit_transform(market_features)
-    
+
     # Cluster into regimes
     kmeans = KMeans(n_clusters=4, random_state=42)
     regimes = kmeans.fit_predict(normalized_features)
-    
+
     return regimes
 ```
 
@@ -509,11 +509,11 @@ Implement hybrid strategies that combine elements from multiple approaches:
 def hybrid_strategy(prices, regime):
     """
     Hybrid strategy that adapts based on market regime.
-    
+
     Args:
         prices: Price data
         regime: Current market regime
-    
+
     Returns:
         Trading signal
     """
@@ -538,30 +538,30 @@ Analyze regimes across multiple timeframes for more robust detection:
 def multi_timeframe_regime(daily_prices, hourly_prices, weekly_prices):
     """
     Detect market regime using multiple timeframes.
-    
+
     Args:
         daily_prices: Daily price data
         hourly_prices: Hourly price data
         weekly_prices: Weekly price data
-    
+
     Returns:
         Regime classification and confidence
     """
     daily_regime, daily_conf = detect_regime(daily_prices)
     hourly_regime, hourly_conf = detect_regime(hourly_prices)
     weekly_regime, weekly_conf = detect_regime(weekly_prices)
-    
+
     # Weight by timeframe importance
     regimes = {
         daily_regime: daily_conf * 0.5,
         hourly_regime: hourly_conf * 0.3,
         weekly_regime: weekly_conf * 0.2
     }
-    
+
     # Find dominant regime
     dominant_regime = max(regimes, key=regimes.get)
     confidence = regimes[dominant_regime]
-    
+
     return dominant_regime, confidence
 ```
 
@@ -573,16 +573,16 @@ Adjust portfolio allocation based on current regime:
 def optimize_portfolio(assets, regime):
     """
     Optimize portfolio allocations based on current market regime.
-    
+
     Args:
         assets: List of available assets
         regime: Current market regime
-    
+
     Returns:
         Dictionary of asset allocations
     """
     allocations = {}
-    
+
     if regime == "BULLISH":
         # Higher equity allocation in bullish regimes
         allocations = {
@@ -615,7 +615,7 @@ def optimize_portfolio(assets, regime):
             "gold": 0.10,
             "cash": 0.10
         }
-    
+
     return allocations
 ```
 
