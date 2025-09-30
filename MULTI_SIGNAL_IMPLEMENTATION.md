@@ -155,7 +155,7 @@ curl -X POST http://localhost:8000/analysis/multi-signal \
   -H "Content-Type: application/json" \
   -d '{"price_data": [{"close": 45000, "volume": 1000}]}'
 
-# List available signals  
+# List available signals
 curl http://localhost:8000/signals/available
 ```
 

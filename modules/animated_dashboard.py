@@ -280,7 +280,7 @@ if __name__ == "__main__":
         50% { transform: scale(1.05); }
         100% { transform: scale(1); }
     }
-    
+
     .signal-card {
         background: linear-gradient(45deg, #1a1a1a, #2a2a2a);
         border-radius: 10px;
@@ -289,12 +289,12 @@ if __name__ == "__main__":
         box-shadow: 0 4px 6px rgba(0,255,0,0.1);
         transition: all 0.3s ease;
     }
-    
+
     .signal-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 6px 8px rgba(0,255,0,0.2);
     }
-    
+
     .alert-container {
         display: flex;
         flex-wrap: wrap;

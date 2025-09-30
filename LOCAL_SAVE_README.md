@@ -8,4 +8,3 @@ Usage:
 - To restore into another git repo or import elsewhere:
   git bundle verify local_repo_snapshot.bundle
   git clone local_repo_snapshot.bundle -b main <destination>
-

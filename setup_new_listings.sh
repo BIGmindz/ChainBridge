@@ -31,7 +31,7 @@ fi
 echo -e "\n${BOLD}Checking for virtual environment...${RESET}"
 if [[ -d ".venv" || -d "venv" ]]; then
     echo -e "${GREEN}✓ Virtual environment found.${RESET}"
-    
+
     # Activate the virtual environment
     if [[ -d ".venv" ]]; then
         echo -e "Activating .venv environment..."
