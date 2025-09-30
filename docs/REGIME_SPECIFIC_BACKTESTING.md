@@ -66,24 +66,24 @@ async def run_backtest():
         volume_data=[1000000, 1200000, 900000, ...],
         dates=['2024-01-01', '2024-01-02', ...]
     )
-    
+
     # Run full backtest across all regimes
     full_results = await backtester.run_full_backtest()
-    
+
     # Run separate backtests for each regime
     bull_results = await backtester.backtest_specific_regime('bull')
     bear_results = await backtester.backtest_specific_regime('bear')
     sideways_results = await backtester.backtest_specific_regime('sideways')
-    
+
     # Or run all regime-specific backtests at once
     regime_results = await backtester.compare_all_regimes()
-    
+
     # Generate visualizations
     backtester.visualize_regime_performance(full_results)
-    
+
     # Save results to file
     backtester.save_results(full_results, 'backtest_results.json')
-    
+
     # Generate performance report
     report = backtester.generate_regime_report(full_results)
     print(report)

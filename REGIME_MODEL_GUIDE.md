@@ -6,7 +6,7 @@ This guide explains how to use the enhanced LightGBM multiclass classification m
 
 The regime detection model is a comprehensive machine learning solution that classifies market conditions into three regimes:
 - **Bull Market**: Strong upward trending conditions
-- **Bear Market**: Strong downward trending conditions  
+- **Bear Market**: Strong downward trending conditions
 - **Sideways Market**: Consolidation or range-bound conditions
 
 ## Features
@@ -22,7 +22,7 @@ The model uses **18 financial and technical features**:
 ### Bollinger Bands
 - `bb_upper`: Upper Bollinger Band
 - `bb_middle`: Middle Bollinger Band (SMA)
-- `bb_lower`: Lower Bollinger Band  
+- `bb_lower`: Lower Bollinger Band
 - `bb_width`: Band width (upper - lower)
 - `bb_position`: Price position within bands (0-1)
 - `bb_squeeze`: Bollinger squeeze indicator (0 or 1)
@@ -169,12 +169,12 @@ class TradingStrategy:
     def __init__(self):
         self.regime_model = RegimeModelLoader()
         self.regime_model.load_model('enhanced')
-    
+
     def get_current_regime(self, market_features):
         """Get current market regime"""
         result = self.regime_model.predict_regime(market_features, 'enhanced')
         return result['regime'], result['confidence']
-    
+
     def adjust_strategy_for_regime(self, regime, confidence):
         """Adjust trading parameters based on regime"""
         if regime == 'bull' and confidence > 0.7:
@@ -209,20 +209,20 @@ class RegimeMonitor:
         self.loader.load_model('enhanced')
         self.current_regime = None
         self.last_update = None
-    
+
     def update_regime(self, market_data):
         """Update current market regime"""
         result = self.loader.predict_regime(market_data, 'enhanced')
-        
+
         # Only update if confidence is high enough
         if result['confidence'] > 0.6:
             if self.current_regime != result['regime']:
                 print(f"🔄 Regime change detected: {self.current_regime} → {result['regime']}")
                 self.current_regime = result['regime']
                 self.last_update = datetime.now()
-        
+
         return result
-    
+
     def get_regime_status(self):
         """Get current regime status"""
         return {
@@ -253,7 +253,7 @@ result = {
 ### Confidence Interpretation
 
 - **> 0.8**: Very high confidence - strong signal
-- **0.6 - 0.8**: Good confidence - reliable signal  
+- **0.6 - 0.8**: Good confidence - reliable signal
 - **0.4 - 0.6**: Moderate confidence - use with caution
 - **< 0.4**: Low confidence - consider market uncertainty
 
@@ -302,14 +302,14 @@ The model ranks features by importance. Typical rankings:
 def retrain_model_weekly():
     """Retrain model with recent data"""
     from enhanced_regime_model import EnhancedRegimeModel
-    
+
     # Get recent market data (implement your data collection)
     recent_data = collect_recent_market_data(days=30)
-    
+
     # Retrain model
     model = EnhancedRegimeModel()
     results = model.train_model(recent_data)
-    
+
     # Only save if performance is good
     if results['test_accuracy'] > 0.75:
         model.save_model()
@@ -326,27 +326,27 @@ def retrain_model_weekly():
 def ensemble_regime_prediction(features):
     """Use both models for ensemble prediction"""
     loader = RegimeModelLoader()
-    
+
     # Load both models
     loader.load_model('enhanced')
     loader.load_model('original')
-    
+
     # Get predictions from both
     enhanced_result = loader.predict_regime(features, 'enhanced')
     original_result = loader.predict_regime(features, 'original')
-    
+
     # Simple ensemble - average probabilities
     ensemble_probs = {}
     for regime in enhanced_result['probabilities'].keys():
         ensemble_probs[regime] = (
-            enhanced_result['probabilities'][regime] + 
+            enhanced_result['probabilities'][regime] +
             original_result['probabilities'][regime]
         ) / 2
-    
+
     # Get final prediction
     final_regime = max(ensemble_probs, key=ensemble_probs.get)
     final_confidence = ensemble_probs[final_regime]
-    
+
     return {
         'regime': final_regime,
         'confidence': final_confidence,
@@ -360,22 +360,22 @@ def ensemble_regime_prediction(features):
 ```python
 def engineer_additional_features(price_data, volume_data):
     """Add custom features to improve model performance"""
-    
+
     # Calculate additional technical indicators
     features = {}
-    
+
     # Custom RSI variants
     features['rsi_7'] = calculate_rsi(price_data, period=7)
     features['rsi_21'] = calculate_rsi(price_data, period=21)
-    
+
     # Volume-weighted features
     features['vwap'] = calculate_vwap(price_data, volume_data)
     features['volume_momentum'] = calculate_volume_momentum(volume_data)
-    
+
     # Volatility features
     features['realized_vol'] = calculate_realized_volatility(price_data)
     features['vol_ratio'] = features['realized_vol'] / features['volatility_24h']
-    
+
     return features
 ```
 

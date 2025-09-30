@@ -254,10 +254,10 @@ from src.kraken_paper_live_bot import KrakenPaperLiveBot
 class EnhancedMultiSignalBot:
     def __init__(self):
         # Existing initialization...
-        
+
         # Add Kraken paper trading
         self.kraken_bot = KrakenPaperLiveBot(self.config)
-        
+
     async def execute_trade_decision(self, symbol, decision):
         # Use Kraken bot for execution
         if decision['action'] in ['BUY', 'SELL']:
@@ -332,12 +332,12 @@ logging:
 async def performance_monitor():
     while True:
         dashboard = kraken_bot.get_performance_dashboard()
-        
+
         # Log key metrics
         logger.info(f"Portfolio: ${dashboard['account']['portfolio_value']:,.2f}")
         logger.info(f"Return: {dashboard['account']['total_return_pct']:+.2f}%")
         logger.info(f"Drawdown: {dashboard['performance']['max_drawdown']:-.2%}")
-        
+
         await asyncio.sleep(3600)  # Every hour
 ```
 
@@ -438,7 +438,7 @@ For issues or questions:
 
 ---
 
-**Version**: 1.0.0  
-**Author**: BIGmindz  
-**License**: MIT  
+**Version**: 1.0.0
+**Author**: BIGmindz
+**License**: MIT
 **Status**: Ready for Production Integration

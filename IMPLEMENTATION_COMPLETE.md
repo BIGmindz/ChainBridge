@@ -122,11 +122,11 @@ async def process_trading_signals(self, symbols: List[str]) -> Dict[str, Any]:
 async def _rate_limit_check(self):
     """Ensure we don't exceed rate limits"""
     now = time.time()
-    
+
     # Remove calls older than 1 minute
     while self.call_history and self.call_history[0] < now - 60:
         self.call_history.popleft()
-    
+
     # If we're at the limit, wait
     if len(self.call_history) >= self.max_calls_per_minute:
         sleep_time = 60 - (now - self.call_history[0])
@@ -150,14 +150,14 @@ def _calculate_sharpe_ratio(self, returns: List[float], risk_free_rate: float = 
     """Calculate Sharpe ratio from returns"""
     if len(returns) < 2:
         return 0.0
-    
+
     returns_array = np.array(returns)
     avg_return = np.mean(returns_array)
     return_std = np.std(returns_array)
-    
+
     if return_std == 0:
         return 0.0
-    
+
     # Annualize the Sharpe ratio
     daily_risk_free_rate = risk_free_rate / 365
     return (avg_return - daily_risk_free_rate) / return_std * np.sqrt(365)
@@ -169,7 +169,7 @@ def _calculate_sharpe_ratio(self, returns: List[float], risk_free_rate: float = 
 🧪 KRAKEN PAPER TRADING MODULE TEST SUITE
 ============================================================
 ✅ Configuration validation passed
-✅ Configuration file valid with 17 sections  
+✅ Configuration file valid with 17 sections
 ✅ JSON serialization works correctly
 ✅ Risk calculations validated
 ✅ Module structure implemented
@@ -260,7 +260,7 @@ test_kraken_paper_trading.py       # Test suite (13KB)
 ## ✨ Implementation Quality
 
 - **Well-documented**: Every function has clear docstrings
-- **Error handled**: Comprehensive error handling with informative messages  
+- **Error handled**: Comprehensive error handling with informative messages
 - **Modular**: Clean separation of concerns and reusable components
 - **Production-ready**: Proper logging, configuration, and monitoring
 - **ML-integrated**: Seamless connection with existing signal modules
@@ -269,12 +269,12 @@ test_kraken_paper_trading.py       # Test suite (13KB)
 
 The Kraken paper trading module has been successfully implemented with all requested components:
 
-✅ **Professional paper trading engine** with real-time capabilities  
-✅ **Advanced risk management** with correlation adjustments  
-✅ **ML integration layer** for signal processing  
-✅ **Performance tracking** with comprehensive analytics  
-✅ **Production-ready** architecture with proper error handling  
-✅ **Complete documentation** and integration examples  
-✅ **Working demonstrations** validating all functionality  
+✅ **Professional paper trading engine** with real-time capabilities
+✅ **Advanced risk management** with correlation adjustments
+✅ **ML integration layer** for signal processing
+✅ **Performance tracking** with comprehensive analytics
+✅ **Production-ready** architecture with proper error handling
+✅ **Complete documentation** and integration examples
+✅ **Working demonstrations** validating all functionality
 
 The module is now ready for integration with the existing multi-signal bot and can immediately enhance the paper trading capabilities to institutional-grade standards.

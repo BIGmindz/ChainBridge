@@ -60,4 +60,3 @@ Runtime Fixes & Validation
 - Validation: ran a single-cycle paper run which opened three paper
   positions, saved `budget_state.json` and `multi_signal_trades.json`, and
   reported the surfaced starting capital: `Starting Capital: $107.41`.
-

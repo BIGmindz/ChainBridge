@@ -47,16 +47,16 @@ def test_rsi_insufficient_data():
 def test_rsi_edge_cases():
     """Test RSI calculation with edge cases."""
     from benson_rsi_bot import wilder_rsi
-    
+
     # Test with NaN
     prices_with_nan = [100.0, math.nan, 102.0]
     raises(ValueError, wilder_rsi, prices_with_nan)
-    
+
     # Test with zero prices
     zero_prices = [0.0] * 20
     rsi = wilder_rsi(zero_prices)
     assert 40 <= rsi <= 60, "Zero prices should give neutral RSI"
-    
+
     # Test with very large price jumps
     volatile_prices = [100.0] * 10 + [1000000.0] * 10
     rsi = wilder_rsi(volatile_prices)

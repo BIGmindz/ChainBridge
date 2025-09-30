@@ -261,7 +261,7 @@ curl -X POST http://localhost:8000/modules/RSIModule/execute \
 curl -X POST http://localhost:8000/modules/MACDModule/execute \
   -H "Content-Type: application/json" \
   -d '{
-    "module_name": "MACDModule", 
+    "module_name": "MACDModule",
     "input_data": {
       "price_data": [{"close": 45000}, {"close": 45100}]
     }
@@ -332,6 +332,10 @@ python multi_signal_demo.py
 # Test original RSI functionality
 python benson_rsi_bot.py --test
 ```
+
+### Developer quick checks (lean path)
+
+See README-QUICK-CHECKS.md for a fast, TensorFlow-free validation path and pre-commit setup.
 
 ## 📈 Business Impact Features
 

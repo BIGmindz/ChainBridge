@@ -1,4 +1,4 @@
-# pack-refs with: peeled fully-peeled sorted 
+# pack-refs with: peeled fully-peeled sorted
 6382436406fce55fa2e4bf39ce14a5d1c1158cfc refs/heads/Conservative-and-Aggressive-Bot-Runs
 928687c08d567af321e4f06b9e1993d41b1b79e1 refs/heads/code-only-remote
 9ba910df5d379afe4ee97c55889b9a1be92513d5 refs/heads/copilot/ctofix-minima-auto-close
