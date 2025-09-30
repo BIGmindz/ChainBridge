@@ -71,3 +71,35 @@ up-legacy:
 
 up-rsi:
 	$(COMPOSE) --profile rsi-only up --build benson-rsi
+
+# Lean runtime environment (isolated from heavy native ML stacks)
+.PHONY: venv-lean install-lean run-lean run-integrator-lean quick-checks pre-commit-install pre-commit-run
+
+venv-lean:
+	@[ -d .venv-lean ] || python3 -m venv .venv-lean
+	@. .venv-lean/bin/activate && pip install -U pip
+
+install-lean: venv-lean
+	@. .venv-lean/bin/activate && pip install -r requirements-runtime.txt
+
+run-lean: install-lean
+	@chmod +x scripts/run_multi_signal_lean.sh 2>/dev/null || true
+	@./scripts/run_multi_signal_lean.sh || true
+
+# Run integrator smoke test in lean env
+run-integrator-lean: install-lean
+	@. .venv-lean/bin/activate && python scripts/integrator_smoke_test.py
+
+# Run a tiny lean suite: sanity import, RSI tests, and integrator smoke test
+quick-checks: install-lean
+	@. .venv-lean/bin/activate && \
+	  python -m pip install -q pytest && \
+	  python -c "import yaml, os; print('PyYAML import OK')" && \
+	  pytest -q tests/test_rsi_scenarios.py && \
+	  python scripts/integrator_smoke_test.py
+
+pre-commit-install:
+	@. .venv/bin/activate && python -m pip install -q pre-commit && pre-commit install
+
+pre-commit-run:
+	@. .venv/bin/activate && python -m pip install -q pre-commit && pre-commit run --all-files --show-diff-on-failure
