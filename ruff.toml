@@ -1,0 +1,28 @@
+line-length = 120
+target-version = "py311"
+exclude = [
+  ".venv",
+  ".venv-lean",
+  "build",
+  "dist",
+  "data",
+  "models",
+  ".pytest_cache",
+  "__pycache__",
+]
+
+[lint]
+select = ["E", "F"]
+ignore = []
+
+[lint.per-file-ignores]
+"apps/**" = ["F401", "F841", "E402"]
+"scripts/**" = ["E402", "E722", "F401"]
+"tests/**" = ["F401", "F841", "E402"]
+"enhanced_regime_model.py" = ["F401", "F841"]
+"example_regime_prediction.py" = ["F841"]
+"ev_thresholding_demo.py" = ["F841"]
+"live_trading_bot.py" = ["E402", "E722"]
+"multi_signal_bot.py" = ["E402"]
+"regime_model_utils.py" = ["F401"]
+"ml_pipeline/**" = ["F841"]
