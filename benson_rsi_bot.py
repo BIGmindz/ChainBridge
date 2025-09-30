@@ -255,11 +255,11 @@ def backoff_sleep(attempt: int, base: float = 2.0, max_wait: float = 60.0):
     time.sleep(wait)
 
 
-def safe_fetch_ohlcv(exchange, symbol: str, timeframe: str, limit: int = 200):
+def safe_fetch_ohlcv(exchange: Any, symbol: str, timeframe: str, limit: int = 200) -> Any:
     return exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
 
 
-def safe_fetch_ticker(exchange, symbol: str) -> float:
+def safe_fetch_ticker(exchange: Any, symbol: str) -> float:
     t = exchange.fetch_ticker(symbol)
     price = t.get("last") or t.get("close") or t.get("bid") or t.get("ask")
     if price is None:
@@ -377,7 +377,7 @@ def run_bot(once: bool = False) -> None:
 
     stop = {"flag": False}
 
-    def handle_sigint(sig, frame):
+    def handle_sigint(sig: int, frame: Any) -> None:
         stop["flag"] = True
         print("\nStopping gracefully...")
 
@@ -554,7 +554,7 @@ def test_rsi_no_losses_near_max():
 
 
 def test_insufficient_ohlcv_returns_nan():
-    short_ohlcv = [[0, 0, 0, 0, 100.0, 0.0] for _ in range(10)]
+    short_ohlcv: List[List[float]] = [[0, 0, 0, 0, 100.0, 0.0] for _ in range(10)]
     rsi_val = calculate_rsi_from_ohlcv(short_ohlcv, period=14)
     assert isinstance(rsi_val, float) and math.isnan(rsi_val), f"Expected NaN, got {rsi_val}"
 
