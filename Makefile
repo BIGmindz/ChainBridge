@@ -21,6 +21,14 @@ help:
 	@echo "  down         - Stop Docker containers"
 	@echo "  logs         - View container logs"
 	@echo "  shell        - Open shell in container"
+	@echo "  venv-lean    - Create lean runtime venv (no TF/grpc/absl)"
+	@echo "  install-lean - Install minimal runtime deps into .venv-lean"
+	@echo "  run-integrator-lean - Run integrator smoke test via lean env"
+	@echo "  quick-checks - Run lean quick checks (tests + integrator)"
+	@echo "  run-once-paper     - Run RSI bot once (PAPER=true) using lean env"
+	@echo "  run-once-live      - Run RSI bot once (PAPER=false) using lean env"
+	@echo "  select-dynamic     - Select top volatile USD symbols and update config"
+	@echo "  refresh-and-preflight - Refresh symbols dynamically and preflight all"
 
 venv:
 	@[ -d .venv ] || python3 -m venv .venv
@@ -97,6 +105,20 @@ quick-checks: install-lean
 	  python -c "import yaml, os; print('PyYAML import OK')" && \
 	  pytest -q tests/test_rsi_scenarios.py && \
 	  python scripts/integrator_smoke_test.py
+
+run-once-paper: install-lean
+	@. .venv-lean/bin/activate && export PAPER=true && export EXCHANGE=$${EXCHANGE:-kraken} && python benson_rsi_bot.py --once
+
+run-once-live: install-lean
+	@. .venv-lean/bin/activate && export PAPER=false && export EXCHANGE=$${EXCHANGE:-kraken} && python benson_rsi_bot.py --once
+
+select-dynamic: install-lean
+	@. .venv-lean/bin/activate && python dynamic_crypto_selector.py --exchange $${EXCHANGE:-kraken} --base USD --top-n 30 --timeframe 1h --lookback 24 --config-path config/config.yaml
+
+refresh-and-preflight: install-lean
+	@. .venv-lean/bin/activate && \
+	  python dynamic_crypto_selector.py --exchange $${EXCHANGE:-kraken} --base USD --top-n $${TOP_N:-30} --timeframe $${TF:-1h} --lookback $${LB:-24} --config-path config/config.yaml && \
+	  python scripts/preflight_config_symbols.py
 
 pre-commit-install:
 	@. .venv/bin/activate && python -m pip install -q pre-commit && pre-commit install
