@@ -8,8 +8,9 @@ help:
 	@echo ""
 	@echo "Available targets:"
 	@echo "  venv         - Create Python virtual environment"
-	@echo "  install      - Install dependencies"
+	@echo "  install      - Install dependencies" 
 	@echo "  run          - Run legacy RSI bot"
+	@echo "  run-live     - Run RSI bot continuously (PAPER=false) using lean env"
 	@echo "  api-server   - Start API server"
 	@echo "  rsi-compat   - Run RSI bot in compatibility mode"
 	@echo "  system-test  - Run comprehensive system tests"
@@ -23,10 +24,14 @@ help:
 	@echo "  shell        - Open shell in container"
 	@echo "  venv-lean    - Create lean runtime venv (no TF/grpc/absl)"
 	@echo "  install-lean - Install minimal runtime deps into .venv-lean"
+	@echo "  run-lean     - Run multi-signal test via lean env"
 	@echo "  run-integrator-lean - Run integrator smoke test via lean env"
 	@echo "  quick-checks - Run lean quick checks (tests + integrator)"
+	@echo "  pre-commit-install - Install pre-commit and register hooks"
+	@echo "  pre-commit-run     - Run pre-commit on all files"
 	@echo "  run-once-paper     - Run RSI bot once (PAPER=true) using lean env"
 	@echo "  run-once-live      - Run RSI bot once (PAPER=false) using lean env"
+	@echo "  preflight-order    - Preview normalized order params (no placement)"
 	@echo "  select-dynamic     - Select top volatile USD symbols and update config"
 	@echo "  refresh-and-preflight - Refresh symbols dynamically and preflight all"
 
@@ -125,3 +130,8 @@ pre-commit-install:
 
 pre-commit-run:
 	@. .venv/bin/activate && python -m pip install -q pre-commit && pre-commit run --all-files --show-diff-on-failure
+
+# Ensure the run-live target exists for continuous live runs
+.PHONY: run-live
+run-live: install-lean
+	@. .venv-lean/bin/activate && export PAPER=false && export EXCHANGE=$${EXCHANGE:-kraken} && python benson_rsi_bot.py

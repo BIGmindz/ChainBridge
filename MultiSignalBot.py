@@ -42,9 +42,7 @@ class MultiSignalBot:
         )
 
         # Initialize exchange adapter
-        self.exchange_adapter = ExchangeAdapter(
-            exchange=self.exchange, paper_mode=self.trading_mode.is_paper_trading, budget_manager=self.budget_manager
-        )
+        self.exchange_adapter = ExchangeAdapter(exchange=self.exchange, config={})
 
         print("🚀 MultiSignalBot initialized!")
         print(f"💰 Initial Capital: ${self.initial_capital}")
