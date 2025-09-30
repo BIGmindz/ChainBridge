@@ -24,7 +24,7 @@ class ExchangeAdapter:
     Supports both paper trading and live trading modes.
     """
 
-    def __init__(self, exchange, config: Dict[str, Any]):
+    def __init__(self, exchange, config, paper_mode=None, budget_manager=None, **kwargs):
         self.exchange = exchange
         self.config = config
 
