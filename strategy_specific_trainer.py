@@ -34,16 +34,16 @@ def consolidate_data(data_directory: str) -> pd.DataFrame:
     for file in all_files:
         try:
             if os.path.getsize(file) > 0:
-                header_df = pd.read_csv(file, nrows=0)
+                header_df = pd.read_csv(file, nrows=0)  # type: ignore
                 if all(col in header_df.columns for col in required_columns):
-                    df_list.append(pd.read_csv(file))
+                    df_list.append(pd.read_csv(file))  # type: ignore
         except Exception:
             continue  # Skip corrupted files
 
     if not df_list:
         return pd.DataFrame()
 
-    df = pd.concat(df_list, ignore_index=True)
+    df = pd.concat(df_list, ignore_index=True)  # type: ignore
     df.drop_duplicates(subset=["timestamp", "symbol"], inplace=True)
     return df
 
@@ -64,7 +64,7 @@ def main():
         logging.info("💡 Required CSV columns: timestamp, symbol, price, rsi_value, ob_imbalance, vol_imbalance")
         return
 
-    logging.info(f"📈 Final dataset: {len(consolidated_df)} rows, {len(consolidated_df['symbol'].unique())} unique symbols")
+    logging.info(f"📈 Final dataset: {len(consolidated_df)} rows, {len(consolidated_df['symbol'].unique())} unique symbols")  # type: ignore
 
     # --- Discover Strategies to Train ---
     strategy_dir = "strategies/"
@@ -153,9 +153,9 @@ def main():
 
             # Add additional features if available
             if "africa_factor" in strategy_df.columns:
-                feature_cols.append("africa_factor")
+                feature_cols.append("africa_factor")  # type: ignore
             if "sc_factor" in strategy_df.columns:
-                feature_cols.append("sc_factor")
+                feature_cols.append("sc_factor")  # type: ignore
 
             # Ensure all feature columns exist, filling missing ones with 0
             for col in feature_cols:
@@ -170,9 +170,9 @@ def main():
             y = strategy_df["label"].values
 
             # Count label distribution
-            buy_count = sum(y == 1)
-            hold_count = sum(y == 0)
-            sell_count = sum(y == -1)
+            buy_count = sum(y == 1)  # type: ignore
+            hold_count = sum(y == 0)  # type: ignore
+            sell_count = sum(y == -1)  # type: ignore
             logging.info(f"   📊 Label distribution: BUY={buy_count}, HOLD={hold_count}, SELL={sell_count}")
 
             # --- Train and Save Model & Scaler ---

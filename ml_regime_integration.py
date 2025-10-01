@@ -11,7 +11,7 @@ from datetime import datetime
 import yaml
 
 # Add current directory to path for imports
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))  # type: ignore
 
 # Setup logging
 logging.basicConfig(

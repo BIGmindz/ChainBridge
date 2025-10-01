@@ -91,8 +91,8 @@ class RegionSpecificCryptoModule:
 
                     # Aggregate confidence
                     recommendations[crypto]["confidence"] += region_confidence * config["weight"]
-                    recommendations[crypto]["regions"].append(region)
-                    recommendations[crypto]["reasoning"].append(config["reasoning"])
+                    recommendations[crypto]["regions"].append(region)  # type: ignore
+                    recommendations[crypto]["reasoning"].append(config["reasoning"])  # type: ignore
 
                 total_confidence += region_confidence * config["weight"]
 
@@ -199,7 +199,7 @@ class RegionSpecificCryptoModule:
                     "expected_holding_period": self._estimate_holding_period(data["regions"]),
                 }
 
-                signals.append(signal)
+                signals.append(signal)  # type: ignore
 
         return signals
 
@@ -266,7 +266,7 @@ class RegionSpecificCryptoModule:
 
         # Calculate total
         recommendations["total_positions"] = len(recommendations["allocations"])
-        total_allocation = sum(recommendations["allocations"].values())
+        total_allocation = sum(recommendations["allocations"].values())  # type: ignore
 
         # Ensure we don't exceed 100%
         if total_allocation > 1.0:

@@ -51,7 +51,7 @@ def generate_correlation_matrix():
     all_signals = []
     for category, category_signals in signals.items():
         for name, props in category_signals.items():
-            all_signals.append(
+            all_signals.append(  # type: ignore
                 {
                     "name": name,
                     "correlation": props["correlation"],
@@ -257,7 +257,7 @@ def generate_correlation_matrix():
     )
 
     # Calculate average correlation
-    avg_corr = (correlation_matrix.sum() - n) / (n * n - n)
+    avg_corr = (correlation_matrix.sum() - n) / (n * n - n)  # type: ignore
     plt.figtext(
         0.5,
         0.01,

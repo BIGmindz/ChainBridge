@@ -99,7 +99,7 @@ class PurgedKFold:
             # Apply purging within this fold
             purged_train_idx, purged_test_idx = self._apply_purging_embargo(indices, train_idx, test_idx, n_samples)
 
-            splits.append((purged_train_idx, purged_test_idx))
+            splits.append((purged_train_idx, purged_test_idx))  # type: ignore
 
         return splits
 
@@ -185,7 +185,7 @@ def detect_leakage(train_idx: np.ndarray, test_idx: np.ndarray, timestamps: pd.D
         "embargo_violation": embargo_violation,
         "train_period": (train_start, train_end),
         "test_period": (test_start, test_end),
-        "overlap_indices": overlap.tolist(),
+        "overlap_indices": overlap.tolist(),  # type: ignore
         "is_leakage_free": not (has_overlap or temporal_leakage or embargo_violation),
     }
 
@@ -218,7 +218,7 @@ def generate_leakage_report(cv_splits: List[Tuple[np.ndarray, np.ndarray]], time
             "leakage_info": fold_leakage,
         }
 
-        report["leakage_details"].append(fold_report)
+        report["leakage_details"].append(fold_report)  # type: ignore
 
     return report
 

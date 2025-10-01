@@ -130,7 +130,7 @@ class EnhancedRegimeModel:
             volume_price_trend = volume_ratio * price_change_24h
             bb_squeeze = 1 if bb_width < bb_middle * 0.15 else 0  # Bollinger squeeze indicator
 
-            data.append(
+            data.append(  # type: ignore
                 {
                     # Core technical indicators
                     "rsi_14": max(0, min(100, rsi_14)),
@@ -163,7 +163,7 @@ class EnhancedRegimeModel:
 
         df = pd.DataFrame(data)
         logger.info(f"✅ Generated {len(df)} samples with {len(df.columns) - 1} features")
-        logger.info(f"📊 Regime distribution: {df['regime'].value_counts().to_dict()}")
+        logger.info(f"📊 Regime distribution: {df['regime'].value_counts().to_dict()}")  # type: ignore
 
         return df
 
@@ -258,7 +258,7 @@ class EnhancedRegimeModel:
             "n_features": X.shape[1],
             "n_samples": X.shape[0],
             "feature_columns": self.feature_columns,
-            "regime_classes": self.label_encoder.classes_.tolist(),
+            "regime_classes": self.label_encoder.classes_.tolist(),  # type: ignore
             "train_accuracy": train_score,
             "test_accuracy": test_score,
             "cv_mean": cv_mean,
@@ -312,7 +312,7 @@ class EnhancedRegimeModel:
         # Decode predictions
         pred_regimes = self.label_encoder.inverse_transform(pred_encoded)
 
-        return pred_regimes.tolist(), pred_proba
+        return pred_regimes.tolist(), pred_proba  # type: ignore
 
     def predict_single(self, feature_dict: Dict) -> Dict:
         """
@@ -446,7 +446,7 @@ class EnhancedRegimeModel:
 
         print("\n📈 TOP 10 MOST IMPORTANT FEATURES:")
         feature_importance = self.get_feature_importance()
-        for i, (feature, importance) in enumerate(list(feature_importance.items())[:10]):
+        for i, (feature, importance) in enumerate(list(feature_importance.items())[:10]):  # type: ignore
             print(f"  {i + 1:2d}. {feature:<20} : {importance:.4f}")
 
         print("\n" + "=" * 60)

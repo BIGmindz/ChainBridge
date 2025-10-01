@@ -50,8 +50,8 @@ def _robust_clip_dataframe(df: pd.DataFrame, lower_percentile: float, upper_perc
             lower_bound, upper_bound = _get_clip_bounds(df[col].values, lower_percentile, upper_percentile, clip_method)
 
             # Count outliers before clipping
-            n_outliers_lower = (df[col] < lower_bound).sum()
-            n_outliers_upper = (df[col] > upper_bound).sum()
+            n_outliers_lower = (df[col] < lower_bound).sum()  # type: ignore
+            n_outliers_upper = (df[col] > upper_bound).sum()  # type: ignore
 
             if n_outliers_lower > 0 or n_outliers_upper > 0:
                 logger.debug(
@@ -169,7 +169,7 @@ def remove_constant_features(X: Union[np.ndarray, pd.DataFrame], threshold: floa
         variances = X.var()
         constant_cols = variances[variances < threshold].index
         if len(constant_cols) > 0:
-            logger.info(f"Removing {len(constant_cols)} constant features: {list(constant_cols)}")
+            logger.info(f"Removing {len(constant_cols)} constant features: {list(constant_cols)}")  # type: ignore
             return X.drop(columns=constant_cols)
         return X
 
@@ -182,7 +182,7 @@ def remove_constant_features(X: Union[np.ndarray, pd.DataFrame], threshold: floa
         non_constant_mask = variances >= threshold
 
         if not np.all(non_constant_mask):
-            n_removed = np.sum(~non_constant_mask)
+            n_removed = np.sum(~non_constant_mask)  # type: ignore
             logger.info(f"Removing {n_removed} constant features")
 
         return X[:, non_constant_mask]
@@ -228,7 +228,7 @@ def _handle_missing_dataframe(df: pd.DataFrame, strategy: str) -> pd.DataFrame:
                 raise ValueError(f"Unknown strategy: {strategy}")
 
             df_filled[col] = df[col].fillna(fill_value)
-            logger.debug(f"Filled {df[col].isnull().sum()} missing values in {col} with {fill_value}")
+            logger.debug(f"Filled {df[col].isnull().sum()} missing values in {col} with {fill_value}")  # type: ignore
 
     return df_filled
 
@@ -240,7 +240,7 @@ def _handle_missing_array(arr: np.ndarray, strategy: str) -> np.ndarray:
     if np.ma.is_masked(arr_filled):
         arr_filled = arr_filled.filled(np.nan)
 
-    mask = np.isnan(arr_filled)
+    mask = np.isnan(arr_filled)  # type: ignore
 
     if not np.any(mask):
         return arr_filled
@@ -261,7 +261,7 @@ def _handle_missing_array(arr: np.ndarray, strategy: str) -> np.ndarray:
         # Handle each column separately
         for col_idx in range(arr.shape[1]):
             col_data = arr[:, col_idx]
-            col_mask = np.isnan(col_data)
+            col_mask = np.isnan(col_data)  # type: ignore
 
             if np.any(col_mask):
                 if strategy == "median":

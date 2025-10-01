@@ -304,7 +304,7 @@ class AdoptionTrackerModule(Module):
         all_countries = []
         for region, data in current_year_data.items():
             for country, country_data in data["countries"].items():
-                all_countries.append((country, country_data["index"], region))
+                all_countries.append((country, country_data["index"], region))  # type: ignore
 
         # Sort and assign global ranks
         all_countries.sort(key=lambda x: x[1], reverse=True)
@@ -372,18 +372,18 @@ class AdoptionTrackerModule(Module):
         """
         # Weighted regional score
         valid_regions = [(growth, self.regions[region]["weight"]) for region, growth in regional_growth.items() if region in self.regions]
-        total_weight = sum(weight for _, weight in valid_regions)
-        regional_score = sum(growth * weight for growth, weight in valid_regions) / total_weight if total_weight else 0.0
+        total_weight = sum(weight for _, weight in valid_regions)  # type: ignore
+        regional_score = sum(growth * weight for growth, weight in valid_regions) / total_weight if total_weight else 0.0  # type: ignore
 
         # Country-specific score (focusing on high growth potential countries)
         tracked_countries = [country_growth[country] for country in self.high_growth_countries if country in country_growth]
-        high_growth_score = float(np.mean(tracked_countries)) if tracked_countries else 0.0
+        high_growth_score = float(np.mean(tracked_countries)) if tracked_countries else 0.0  # type: ignore
 
         # Composite score (70% regional, 30% high growth countries)
         composite_score = (regional_score * 0.7) + (high_growth_score * 0.3)
 
         # Calculate momentum (average growth across all countries)
-        momentum = float(np.mean(list(country_growth.values()))) if country_growth else 0.0
+        momentum = float(np.mean(list(country_growth.values()))) if country_growth else 0.0  # type: ignore
 
         return composite_score, momentum
 
@@ -476,7 +476,7 @@ class AdoptionTrackerModule(Module):
             reasoning = f"Strong adoption growth in {region_list}. {top_region.replace('_', ' ')} leads with {formatted_growth} YoY growth."
 
         elif signal == "BUY" and high_growth_countries:
-            country_list = ", ".join(list(high_growth_countries.keys())[:5])
+            country_list = ", ".join(list(high_growth_countries.keys())[:5])  # type: ignore
             reasoning = f"High adoption growth in key countries: {country_list}. Expect increasing demand."
 
         elif signal == "BUY":

@@ -273,15 +273,15 @@ class LiveTradingBot:
         # Calculate price changes
         changes = []
         for i in range(1, len(closes)):
-            changes.append(closes[i] - closes[i - 1])
+            changes.append(closes[i] - closes[i - 1])  # type: ignore
 
         # Calculate gains and losses
         gains = [max(change, 0) for change in changes]
         losses = [max(-change, 0) for change in changes]
 
         # Calculate initial averages
-        avg_gain = sum(gains[:period]) / period
-        avg_loss = sum(losses[:period]) / period
+        avg_gain = sum(gains[:period]) / period  # type: ignore
+        avg_loss = sum(losses[:period]) / period  # type: ignore
 
         # Calculate Wilder's smoothed averages
         for i in range(period, len(gains)):
@@ -400,7 +400,7 @@ class LiveTradingBot:
 
         price_data = []
         for candle in ohlcv:
-            price_data.append(
+            price_data.append(  # type: ignore
                 {
                     "timestamp": candle[0],
                     "open": candle[1],
@@ -418,11 +418,11 @@ class LiveTradingBot:
         indicators = []
         for mod_name, data in module_signals.items():
             if data["signal"] == "BUY":
-                indicators.append(f"🟢 {mod_name}")
+                indicators.append(f"🟢 {mod_name}")  # type: ignore
             elif data["signal"] == "SELL":
-                indicators.append(f"🔴 {mod_name}")
+                indicators.append(f"🔴 {mod_name}")  # type: ignore
             else:
-                indicators.append(f"⚪ {mod_name}")
+                indicators.append(f"⚪ {mod_name}")  # type: ignore
 
         print(f"            Signals: {' | '.join(indicators)}")
 

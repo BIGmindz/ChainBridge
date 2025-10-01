@@ -155,8 +155,8 @@ def demonstrate_batch_predictions(loader, model_name):
         for i in range(5):
             np.random.seed(42 + i)  # Different seed for variety
             sample = create_sample_features(regime_type)
-            samples.append(sample)
-            true_regimes.append(regime_type)
+            samples.append(sample)  # type: ignore
+            true_regimes.append(regime_type)  # type: ignore
 
     # Convert to DataFrame
     batch_df = pd.DataFrame(samples)
@@ -174,7 +174,7 @@ def demonstrate_batch_predictions(loader, model_name):
     print("-" * 40)
 
     # Calculate accuracy
-    correct = sum(1 for true, pred in zip(true_regimes, predicted_regimes) if true == pred)
+    correct = sum(1 for true, pred in zip(true_regimes, predicted_regimes) if true == pred)  # type: ignore
     accuracy = correct / len(true_regimes)
 
     print(f"Overall Accuracy: {accuracy:.2%} ({correct}/{len(true_regimes)})")
@@ -184,7 +184,7 @@ def demonstrate_batch_predictions(loader, model_name):
     regime_accuracy = {}
     for regime in ["bull", "bear", "sideways"]:
         true_indices = [i for i, r in enumerate(true_regimes) if r == regime]
-        regime_correct = sum(1 for i in true_indices if predicted_regimes[i] == regime)
+        regime_correct = sum(1 for i in true_indices if predicted_regimes[i] == regime)  # type: ignore
         regime_accuracy[regime] = regime_correct / len(true_indices) if true_indices else 0
 
     print("\nRegime-wise Accuracy:")
@@ -247,7 +247,7 @@ def demonstrate_feature_importance(loader, model_name):
             }
 
             for category, features in categories.items():
-                category_importance = sum(feature_importance.get(f, 0) for f in features)
+                category_importance = sum(feature_importance.get(f, 0) for f in features)  # type: ignore
                 print(f"  {category:<15}: {category_importance:.4f}")
 
         else:

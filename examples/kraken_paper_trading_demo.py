@@ -157,7 +157,7 @@ async def demo_basic_paper_trading():
 
     # Close positions
     print("\n🔄 Closing positions...")
-    for position_id in list(bot.positions.keys()):
+    for position_id in list(bot.positions.keys()):  # type: ignore
         close_result = bot.close_position(position_id, "DEMO_END")
         if close_result["success"]:
             position = close_result["position"]

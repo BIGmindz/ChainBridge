@@ -15,7 +15,7 @@ import sys
 import os
 
 # Add parent directory to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # type: ignore
 
 from ml_pipeline.triple_barrier_labeling import TripleBarrierLabeler, create_synthetic_labels, analyze_label_distribution
 
@@ -37,7 +37,7 @@ class TestTripleBarrierLabeling(unittest.TestCase):
             trend = i * 0.1
             noise = np.random.normal(0, 1)
             price = base_price + trend + noise
-            prices.append(max(price, 1.0))  # Ensure positive prices
+            prices.append(max(price, 1.0))  # Ensure positive prices  # type: ignore
 
         self.price_series = pd.Series(prices, index=dates)
 

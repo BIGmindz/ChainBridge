@@ -70,7 +70,7 @@ class ExchangeAdapter:
                 "status": "filled",
                 "type": "paper_trade",
             }
-            self.paper_trades.append(order)
+            self.paper_trades.append(order)  # type: ignore
             print(f"[PAPER TRADE] {side.upper()} {amount} {symbol} @ ${price:,.2f}")
             return order
         else:

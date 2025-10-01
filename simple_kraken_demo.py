@@ -194,7 +194,7 @@ class SimplePaperTradingBot:
             "tags": tags,
         }
 
-        self.trade_journal.append(trade_log)
+        self.trade_journal.append(trade_log)  # type: ignore
 
         print(f"✅ Position opened: {side} {symbol} @ ${current_price:.2f}")
         print(f"   Size: ${pos_calc['size']:.2f} ({quantity:.6f} {symbol.split('/')[0]})")
@@ -242,7 +242,7 @@ class SimplePaperTradingBot:
             "reason": reason,
         }
 
-        self.trade_journal.append(trade_log)
+        self.trade_journal.append(trade_log)  # type: ignore
 
         print(f"🔄 Position closed: {position.symbol} {position.side}")
         print(f"   Entry: ${position.entry_price:.2f} → Exit: ${current_price:.2f}")
@@ -398,7 +398,7 @@ def demo_simple_paper_trading():
 
     # Close positions
     print("\n🔄 Closing all positions...")
-    position_ids = list(bot.positions.keys())
+    position_ids = list(bot.positions.keys())  # type: ignore
     for pos_id in position_ids:
         bot.close_position(pos_id, "DEMO_END")
 

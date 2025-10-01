@@ -23,7 +23,7 @@ except ImportError:
     pass
 
 # Add the project root to path to import the trading engine
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))  # type: ignore
 from src.core.unified_trading_engine import MultiSignalTradingEngine  # noqa: E402
 
 
@@ -112,8 +112,8 @@ class MarketRegimeSimulation:
                     # Lower volume in sideways markets
                     volume = np.random.uniform(0.5, 1.5) * last_price / 1000
 
-                prices.append(next_price)
-                volumes.append(volume)
+                prices.append(next_price)  # type: ignore
+                volumes.append(volume)  # type: ignore
                 hour += 1
 
         # Trim to exact length needed
@@ -164,7 +164,7 @@ class MarketRegimeSimulation:
                 "confidence": decision["confidence"],
                 "timestamp": (datetime.now() + timedelta(hours=hour)).isoformat(),
                 "price": current_price,
-                "signals": list(signals.keys()),
+                "signals": list(signals.keys()),  # type: ignore
                 "signal_values": signals,
                 "regime": decision.get("regime", "unknown"),
             }
@@ -173,11 +173,11 @@ class MarketRegimeSimulation:
             self.engine.update_ml_weights(trade_result)
 
             # Store trade result
-            self.trade_results.append(trade_result)
+            self.trade_results.append(trade_result)  # type: ignore
 
             # Store detected regime info
-            self.detected_regimes.append(decision.get("regime", "unknown"))
-            self.regime_confidences.append(decision.get("regime_confidence", 0))
+            self.detected_regimes.append(decision.get("regime", "unknown"))  # type: ignore
+            self.regime_confidences.append(decision.get("regime_confidence", 0))  # type: ignore
 
             # Show progress
             if hour % 24 == 0:
@@ -263,7 +263,7 @@ class MarketRegimeSimulation:
         # Plot 3: Cumulative PnL
         cumulative_pnl = [0]
         for trade in self.trade_results:
-            cumulative_pnl.append(cumulative_pnl[-1] + trade["pnl"])
+            cumulative_pnl.append(cumulative_pnl[-1] + trade["pnl"])  # type: ignore
 
         ax3.plot(range(len(cumulative_pnl)), cumulative_pnl, "g-")
         ax3.set_title("Cumulative PnL")
@@ -299,7 +299,7 @@ class MarketRegimeSimulation:
         if not signal_perf:
             return
 
-        regimes = list(signal_perf.keys())
+        regimes = list(signal_perf.keys())  # type: ignore
 
         # Collect all unique signals across regimes
         all_signals = set()
@@ -317,9 +317,9 @@ class MarketRegimeSimulation:
             win_rates = []
             for signal in all_signals:
                 if signal in signal_perf.get(regime, {}):
-                    win_rates.append(signal_perf[regime][signal].get("win_rate", 0))
+                    win_rates.append(signal_perf[regime][signal].get("win_rate", 0))  # type: ignore
                 else:
-                    win_rates.append(0)
+                    win_rates.append(0)  # type: ignore
 
             x = np.arange(len(all_signals))
             ax1.bar(
@@ -342,9 +342,9 @@ class MarketRegimeSimulation:
             pnl_values = []
             for signal in all_signals:
                 if signal in signal_perf.get(regime, {}):
-                    pnl_values.append(signal_perf[regime][signal].get("total_pnl", 0))
+                    pnl_values.append(signal_perf[regime][signal].get("total_pnl", 0))  # type: ignore
                 else:
-                    pnl_values.append(0)
+                    pnl_values.append(0)  # type: ignore
 
             ax2.bar(
                 x + i * width - width * (len(regimes) - 1) / 2,

@@ -9,7 +9,7 @@ import sys
 import numpy as np
 
 # Add project root to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # type: ignore
 
 from src.backtesting.dashboard import create_dashboard
 

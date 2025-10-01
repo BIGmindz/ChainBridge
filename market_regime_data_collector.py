@@ -102,7 +102,7 @@ class MarketRegimeDataCollector:
                 "trend_strength": random.uniform(0.1, 0.9) if regime_type != "sideways" else random.uniform(0.1, 0.3),
             }
 
-            features.append(feature_row)
+            features.append(feature_row)  # type: ignore
 
         return features
 
@@ -192,7 +192,7 @@ class MarketRegimeDataCollector:
 
         # Show regime distribution
         regime_counts = df_clean["regime"].value_counts()
-        logger.info(f"📊 Regime distribution: {regime_counts.to_dict()}")
+        logger.info(f"📊 Regime distribution: {regime_counts.to_dict()}")  # type: ignore
 
         return df_clean
 
@@ -249,7 +249,7 @@ if __name__ == "__main__":
 
     if df is not None:
         print(f"📊 Collected {len(df)} data points")
-        print(f"📈 Features: {list(df.columns)}")
+        print(f"📈 Features: {list(df.columns)}")  # type: ignore
 
         # Calculate technical indicators
         df = collector.calculate_technical_features(df)

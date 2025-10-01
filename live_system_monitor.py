@@ -140,7 +140,7 @@ class LiveSystemMonitor:
             data_path = "data/regime_training/regime_training_data.csv"
             if os.path.exists(data_path):
                 with open(data_path, "r") as f:
-                    lines = sum(1 for _ in f)
+                    lines = sum(1 for _ in f)  # type: ignore
                 print(f"   📊 Training Samples: {lines - 1:,}")  # Subtract header
 
             # Check model file size

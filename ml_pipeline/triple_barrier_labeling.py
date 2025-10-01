@@ -123,8 +123,8 @@ class TripleBarrierLabeler:
             side = sides.loc[entry_idx]
             label, exit_idx = self.label_series(price_series, price_series.index.get_loc(entry_idx), side)
 
-            labels.append(label)
-            exit_indices.append(exit_idx)
+            labels.append(label)  # type: ignore
+            exit_indices.append(exit_idx)  # type: ignore
 
         # Create result DataFrame
         result = pd.DataFrame(

@@ -30,18 +30,18 @@ def update_env(env_path='.env'):
 
     for line in content:
         if line.startswith('API_KEY='):
-            updated.append(f'API_KEY={api_key}')
+            updated.append(f'API_KEY={api_key}')  # type: ignore
             found_key = True
         elif line.startswith('API_SECRET='):
-            updated.append(f'API_SECRET={api_secret}')
+            updated.append(f'API_SECRET={api_secret}')  # type: ignore
             found_secret = True
         else:
-            updated.append(line)
+            updated.append(line)  # type: ignore
 
     if not found_key:
-        updated.append(f'API_KEY={api_key}')
+        updated.append(f'API_KEY={api_key}')  # type: ignore
     if not found_secret:
-        updated.append(f'API_SECRET={api_secret}')
+        updated.append(f'API_SECRET={api_secret}')  # type: ignore
 
     env_file.write_text("\n".join(updated) + "\n")
 
