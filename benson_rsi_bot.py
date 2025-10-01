@@ -28,7 +28,7 @@ except Exception:  # pragma: no cover - optional dependency in test environments
 import math
 import os
 import signal
-# import time  # noqa: F401
+import time  # noqa: F401
 from datetime import datetime, timezone
 from pathlib import Path
 
