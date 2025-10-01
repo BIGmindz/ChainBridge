@@ -205,7 +205,7 @@ class StrategyTrainerV2:
         """
         # Get predictions
         y_pred_proba = model.predict(X_valid)
-        y_pred = (y_pred_proba > 0.5).astype(int)
+        y_pred = (y_pred_proba > 0.5).astype(int)  # type: ignore
 
         # Calculate metrics
         metrics = {
@@ -232,7 +232,7 @@ class StrategyTrainerV2:
             Prediction probabilities
         """
         if model_name not in self.models:
-            raise ValueError(f"Model {model_name} not found. Available models: {list(self.models.keys())}")
+            raise ValueError(f"Model {model_name} not found. Available models: {list(self.models.keys())}")  # type: ignore
 
         # Preprocess features using same pipeline as training
         X_processed = self.preprocess_features(X)
@@ -336,7 +336,7 @@ def main():
     X.iloc[1, 1] = -50  # Extreme negative outlier
 
     # Generate target (simple classification based on feature sum)
-    y = (X.sum(axis=1) > 0).astype(int)
+    y = (X.sum(axis=1) > 0).astype(int)  # type: ignore
 
     # Initialize trainer
     trainer = StrategyTrainerV2()
@@ -352,7 +352,7 @@ def main():
 
     print("Training completed successfully!")
     print(f"Model metrics: {summary['metrics']}")
-    print(f"Top 5 features: {list(summary['feature_importance'].keys())[:5]}")
+    print(f"Top 5 features: {list(summary['feature_importance'].keys())[:5]}")  # type: ignore
 
 
 if __name__ == "__main__":

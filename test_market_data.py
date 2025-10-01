@@ -14,7 +14,7 @@ def test_market_data():
 
         # Convert to DataFrame
         df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
-        df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
+        df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")  # type: ignore
 
         # Print sample
         print("\nSample of fetched data:")

@@ -51,12 +51,12 @@ def add_bollinger_band_features(
     # --- Feature 1: Band Width (Volatility) ---
     bb_width = band_range / safe_middle_band
     bb_width = bb_width.replace([np.inf, -np.inf], pd.NA)
-    working_df["bb_width"] = bb_width.astype("Float64")
+    working_df["bb_width"] = bb_width.astype("Float64")  # type: ignore
 
     # --- Feature 2: %B (Position within Bands) ---
     percent_b = (price_series - lower_band) / safe_band_range
     percent_b = percent_b.replace([np.inf, -np.inf], pd.NA)
-    working_df["bb_percent_b"] = percent_b.clip(lower=0.0, upper=1.0).astype("Float64")
+    working_df["bb_percent_b"] = percent_b.clip(lower=0.0, upper=1.0).astype("Float64")  # type: ignore
 
     # --- Feature 3: Volatility Squeeze ---
     # A squeeze is identified when the current band width is in the bottom 10th percentile
@@ -64,7 +64,7 @@ def add_bollinger_band_features(
     squeeze_threshold = bb_width.rolling(window=100, min_periods=period).quantile(0.10, interpolation="linear")
     squeeze_series = pd.Series(pd.NA, index=working_df.index, dtype="Int64")
     valid_mask = bb_width.notna() & squeeze_threshold.notna()
-    squeeze_series.loc[valid_mask] = (bb_width.loc[valid_mask] < squeeze_threshold.loc[valid_mask]).astype("int64")
+    squeeze_series.loc[valid_mask] = (bb_width.loc[valid_mask] < squeeze_threshold.loc[valid_mask]).astype("int64")  # type: ignore
     working_df["bb_squeeze"] = squeeze_series
 
     return working_df

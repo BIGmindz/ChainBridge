@@ -42,7 +42,7 @@ def consolidate_data(data_directory: str, trading_symbols: list) -> pd.DataFrame
 
     for file in all_files:
         try:
-            df = pd.read_csv(file)
+            df = pd.read_csv(file)  # type: ignore
             # Standardize column names
             column_mapping = {"rsi": "rsi_value", "timestamp": "timestamp", "ts_utc": "timestamp", "time": "timestamp"}
             df = df.rename(columns=column_mapping)
@@ -52,7 +52,7 @@ def consolidate_data(data_directory: str, trading_symbols: list) -> pd.DataFrame
                 # Filter to only include trading symbols
                 df_filtered = df[df["symbol"].isin(trading_symbols)]
                 if not df_filtered.empty:
-                    df_list.append(df_filtered)
+                    df_list.append(df_filtered)  # type: ignore
                     logging.info(f"Loaded {len(df_filtered)} rows from {os.path.basename(file)} for trading symbols")
         except Exception as e:
             logging.warning(f"Could not load {file}: {e}")
@@ -61,12 +61,12 @@ def consolidate_data(data_directory: str, trading_symbols: list) -> pd.DataFrame
         logging.error("No valid trade logs could be loaded for the configured trading symbols.")
         return pd.DataFrame()
 
-    df = pd.concat(df_list, ignore_index=True)
+    df = pd.concat(df_list, ignore_index=True)  # type: ignore
     df.drop_duplicates(subset=["timestamp", "symbol"], inplace=True)
 
     # Log symbol distribution
     symbol_counts = df["symbol"].value_counts()
-    logging.info(f"Consolidated data for trading symbols: {symbol_counts.to_dict()}")
+    logging.info(f"Consolidated data for trading symbols: {symbol_counts.to_dict()}")  # type: ignore
 
     return df
 
@@ -190,7 +190,7 @@ def main():
                 regime_df[feature] = 0  # Default to 0
 
     logging.info(f"Created regime_df with shape: {regime_df.shape}")
-    logging.info(f"Regime features: {regime_df.columns.tolist()}")
+    logging.info(f"Regime features: {regime_df.columns.tolist()}")  # type: ignore
 
     # Ensure we only predict on rows with the necessary data
     # Don't drop all rows if some features are missing - fill with defaults
@@ -231,11 +231,11 @@ def main():
     logging.info("Training symbol-specific models for each regime...")
     trained_models = 0
 
-    for symbol in historical_df["symbol"].unique():
+    for symbol in historical_df["symbol"].unique():  # type: ignore
         symbol_data = historical_df[historical_df["symbol"] == symbol]
         logging.info(f"Processing {len(symbol_data)} samples for {symbol}")
 
-        for regime_name in symbol_data["regime"].unique():
+        for regime_name in symbol_data["regime"].unique():  # type: ignore
             regime_symbol_data = symbol_data[symbol_data["regime"] == regime_name]
             if len(regime_symbol_data) >= 30:  # Minimum samples for training
                 train_and_save_model(regime_symbol_data, regime_name, symbol, model_dir)

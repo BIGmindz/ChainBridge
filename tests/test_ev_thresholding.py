@@ -271,11 +271,11 @@ class TestPerformanceMetrics:
         losses = returns[returns < 0]
 
         if len(wins) > 0 and len(losses) > 0:
-            gross_profit = wins.sum()
-            gross_loss = abs(losses.sum())
+            gross_profit = wins.sum()  # type: ignore
+            gross_loss = abs(losses.sum())  # type: ignore
             expected_pf = gross_profit / gross_loss
         else:
-            expected_pf = float("inf") if len(wins) > 0 else 0.0
+            expected_pf = float("inf") if len(wins) > 0 else 0.0  # type: ignore
 
         # This is tested indirectly through the optimizer
         assert len(returns) == len([s for s in signals if s != 0])

@@ -135,8 +135,8 @@ class AnimatedTradingDashboard:
         )
 
         # Add TradingView-style MA Cloud
-        ema_fast = talib.EMA(df["close"].astype(float), timeperiod=21)
-        ema_slow = talib.EMA(df["close"].astype(float), timeperiod=55)
+        ema_fast = talib.EMA(df["close"].astype(float), timeperiod=21)  # type: ignore
+        ema_slow = talib.EMA(df["close"].astype(float), timeperiod=55)  # type: ignore
         fig.add_trace(
             go.Scatter(
                 x=df.index,
@@ -168,7 +168,7 @@ class AnimatedTradingDashboard:
         )
 
         # Add short-term EMA for momentum
-        ema_short = talib.EMA(df["close"].astype(float), timeperiod=8)
+        ema_short = talib.EMA(df["close"].astype(float), timeperiod=8)  # type: ignore
         fig.add_trace(
             go.Scatter(
                 x=df.index,

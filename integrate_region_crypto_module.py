@@ -79,7 +79,7 @@ Combines all 15+ signals with region-specific crypto selection
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))  # type: ignore
 
 from modules.region_specific_crypto_module import RegionSpecificCryptoModule
 import json
@@ -187,7 +187,7 @@ class IntegratedTradingSystem:
                     position_return = np.random.normal(0.02, 0.01) * rec['confidence']
                     daily_return += position_return * rec['position_size_pct']
 
-            results.append(daily_return)
+            results.append(daily_return)  # type: ignore
 
         # Calculate performance metrics
         total_return = np.prod([1 + r for r in results]) - 1

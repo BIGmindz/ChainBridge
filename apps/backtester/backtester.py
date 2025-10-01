@@ -63,7 +63,7 @@ def run_backtest(strategy_name: str, strategy_config: dict, data: pd.DataFrame):
 
     # 3. Prepare Features
     feature_cols = strategy_config["signals"]["machine_learning"]["features"]
-    df["price_change_pct"] = df.groupby("symbol")["price"].pct_change() * 100
+    df["price_change_pct"] = df.groupby("symbol")["price"].pct_change() * 100  # type: ignore
     df = df.dropna(subset=feature_cols)
 
     X = df[feature_cols]
@@ -101,7 +101,7 @@ def run_backtest(strategy_name: str, strategy_config: dict, data: pd.DataFrame):
             holdings = 0.0
 
         current_value = cash + (holdings * price)
-        portfolio_values.append(current_value)
+        portfolio_values.append(current_value)  # type: ignore
 
     df["portfolio_value"] = portfolio_values
     df["returns"] = df["portfolio_value"].pct_change()
@@ -119,7 +119,7 @@ def generate_performance_report(df: pd.DataFrame, strategy_name: str, initial_ca
     final_value = df["portfolio_value"].iloc[-1]
     total_return_pct = (final_value - initial_capital) / initial_capital * 100
 
-    daily_returns = df["returns"].resample("D").sum() if isinstance(df.index, pd.DatetimeIndex) else df["returns"]
+    daily_returns = df["returns"].resample("D").sum() if isinstance(df.index, pd.DatetimeIndex) else df["returns"]  # type: ignore
     sharpe_ratio = (daily_returns.mean() / daily_returns.std()) * np.sqrt(252) if daily_returns.std() != 0 else 0
 
     # Max Drawdown Calculation
@@ -153,7 +153,7 @@ def generate_performance_report(df: pd.DataFrame, strategy_name: str, initial_ca
 
 def main():
     try:
-        data = pd.read_csv("data/consolidated_market_data.csv", index_col="timestamp", parse_dates=True)
+        data = pd.read_csv("data/consolidated_market_data.csv", index_col="timestamp", parse_dates=True)  # type: ignore
     except FileNotFoundError:
         logging.error("FATAL: 'data/consolidated_market_data.csv' not found. Please run a data collection script first.")
         return

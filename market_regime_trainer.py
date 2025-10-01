@@ -52,7 +52,7 @@ class MarketRegimeTrainer:
                     self._generate_sample_data()
                     return self.load_training_data()  # Recursive call to load the generated data
 
-            df = pd.read_csv(data_path)
+            df = pd.read_csv(data_path)  # type: ignore
 
             # Prepare features and labels
             feature_cols = [

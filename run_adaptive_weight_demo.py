@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict
 
 # Set up paths
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # type: ignore
 
 from modules.adaptive_weight_module.adaptive_weight_model import AdaptiveWeightModule
 

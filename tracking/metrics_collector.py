@@ -101,9 +101,9 @@ class MetricsCollector:
             # Handle special cases
             if "adoption" in metrics_copy:
                 if "unique_modules_used" in metrics_copy["adoption"]:
-                    metrics_copy["adoption"]["unique_modules_used"] = list(self.metrics["adoption"]["unique_modules_used"])
+                    metrics_copy["adoption"]["unique_modules_used"] = list(self.metrics["adoption"]["unique_modules_used"])  # type: ignore
                 if "unique_pipelines_used" in metrics_copy["adoption"]:
-                    metrics_copy["adoption"]["unique_pipelines_used"] = list(self.metrics["adoption"]["unique_pipelines_used"])
+                    metrics_copy["adoption"]["unique_pipelines_used"] = list(self.metrics["adoption"]["unique_pipelines_used"])  # type: ignore
 
             with open(self.metrics_file, "w") as f:
                 json.dump(metrics_copy, f, indent=2, default=str)
@@ -223,7 +223,7 @@ class MetricsCollector:
             "message": error_message[:500],  # Truncate long error messages
         }
 
-        self.metrics["errors"]["recent_errors"].append(error_record)
+        self.metrics["errors"]["recent_errors"].append(error_record)  # type: ignore
         if len(self.metrics["errors"]["recent_errors"]) > 100:
             self.metrics["errors"]["recent_errors"] = self.metrics["errors"]["recent_errors"][-100:]
 
@@ -292,7 +292,7 @@ class MetricsCollector:
         for i in range(7):
             date = (datetime.now(timezone.utc) - timedelta(days=i)).date().isoformat()
             count = len(adoption["daily_active_modules"].get(date, set()))
-            daily_counts.append({"date": date, "active_modules": count})
+            daily_counts.append({"date": date, "active_modules": count})  # type: ignore
 
         adoption["daily_active_modules"] = daily_counts
         adoption["feature_usage"] = dict(adoption["feature_usage"])

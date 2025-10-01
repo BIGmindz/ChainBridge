@@ -107,7 +107,7 @@ def test_dashboard_structure():
     missing_files = []
     for file in required_files:
         if not os.path.exists(os.path.join(dashboard_dir, file)):
-            missing_files.append(file)
+            missing_files.append(file)  # type: ignore
 
     if missing_files:
         print(f"❌ Missing files: {missing_files}")
@@ -133,12 +133,12 @@ def main():
         print(f"\n📋 Running: {test_name}")
         try:
             result = test_func()
-            results.append((test_name, result))
+            results.append((test_name, result))  # type: ignore
             status = "✅ PASS" if result else "❌ FAIL"
             print(f"Result: {status}")
         except Exception as e:
             print(f"❌ Test failed with exception: {e}")
-            results.append((test_name, False))
+            results.append((test_name, False))  # type: ignore
 
     # Summary
     print("\n" + "=" * 55)

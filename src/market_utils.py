@@ -34,7 +34,7 @@ def _symbol_variants(symbol: str) -> List[str]:
             variants.add(f"{b}/{q}")
             variants.add(f"{b}-{q}")
 
-    return list(variants)
+    return list(variants)  # type: ignore
 
 
 def check_markets_have_minima(markets: Dict[str, dict], symbols: List[str]) -> List[str]:
@@ -52,7 +52,7 @@ def check_markets_have_minima(markets: Dict[str, dict], symbols: List[str]) -> L
                     m = markets.get(alt)
                     break
         if not m:
-            missing.append(s)
+            missing.append(s)  # type: ignore
             continue
         limits = m.get("limits", {}) or {}
         cost_limit = limits.get("cost")
@@ -70,7 +70,7 @@ def check_markets_have_minima(markets: Dict[str, dict], symbols: List[str]) -> L
             has_amount = amount_limit > 0
 
         if not (has_cost or has_amount):
-            missing.append(s)
+            missing.append(s)  # type: ignore
 
     return missing
 

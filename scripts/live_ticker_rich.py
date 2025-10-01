@@ -63,7 +63,7 @@ def sparkline(data, width=12):
     for v in data[-width:]:
         idx = int((v - mn) / (mx - mn) * (len(chars) - 1))
         idx = max(0, min(idx, len(chars) - 1))
-        out.append(chars[idx])
+        out.append(chars[idx])  # type: ignore
     return "".join(out).ljust(width)
 
 
@@ -89,19 +89,19 @@ def build_table(
         sym = t.get("symbol")
         price = t.get("price")
         if sym and price is not None:
-            recent_prices.setdefault(sym, []).append(float(price))
+            recent_prices.setdefault(sym, []).append(float(price))  # type: ignore
     # Also seed from current positions in budget for better sparklines
     for p in (budget or {}).get("positions", []):
         sym = p.get("symbol")
         cur = p.get("current_price") or p.get("entry_price")
         if sym and cur is not None:
-            recent_prices.setdefault(sym, []).append(float(cur))
+            recent_prices.setdefault(sym, []).append(float(cur))  # type: ignore
 
     table = Table.grid(expand=True)
     # Top header panel
     header_text = Text()
-    header_text.append("HEDGE DASH", style="bold cyan")
-    header_text.append(f"  {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}", style="dim white")
+    header_text.append("HEDGE DASH", style="bold cyan")  # type: ignore
+    header_text.append(f"  {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}", style="dim white")  # type: ignore
     header = Panel(Align.center(header_text), style="bold white on black")
 
     # Summary: left column (Capital/Open), right column (Available/Trades)
@@ -109,11 +109,11 @@ def build_table(
     summary.add_column(ratio=1)
     summary.add_column(ratio=1)
     left_col = Text()
-    left_col.append(Text(f"Capital: $ {cap:0.2f}\n", style="bold green"))
-    left_col.append(Text(f"Open: {open_pos}", style="bold"))
+    left_col.append(Text(f"Capital: $ {cap:0.2f}\n", style="bold green"))  # type: ignore
+    left_col.append(Text(f"Open: {open_pos}", style="bold"))  # type: ignore
     right_col = Text()
-    right_col.append(Text(f"Available: $ {avail:0.2f}\n", style="yellow"))
-    right_col.append(Text(f"Trades: {total_trades}", style="bold"))
+    right_col.append(Text(f"Available: $ {avail:0.2f}\n", style="yellow"))  # type: ignore
+    right_col.append(Text(f"Trades: {total_trades}", style="bold"))  # type: ignore
     summary.add_row(left_col, Align.right(right_col))
 
     # Positions table
@@ -127,10 +127,10 @@ def build_table(
 
     for p in (budget or {}).get("positions", []):
         sym = p.get("symbol", "-")
-        entry = float(p.get("entry_price", 0.0))
-        cur = float(p.get("current_price", entry))
-        q = float(p.get("quantity", 0))
-        pnl = float(p.get("pnl", 0.0))
+        entry = float(p.get("entry_price", 0.0))  # type: ignore
+        cur = float(p.get("current_price", entry))  # type: ignore
+        q = float(p.get("quantity", 0))  # type: ignore
+        pnl = float(p.get("pnl", 0.0))  # type: ignore
         spark = sparkline(recent_prices.get(sym, []), width=16)
 
         # Compute delta and stage

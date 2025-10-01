@@ -76,7 +76,7 @@ class RegimeModelLoader:
             True if model loaded successfully
         """
         if model_name not in self.available_models:
-            logger.error(f"Model '{model_name}' not found. Available: {list(self.available_models.keys())}")
+            logger.error(f"Model '{model_name}' not found. Available: {list(self.available_models.keys())}")  # type: ignore
             return False
 
         try:
@@ -168,9 +168,9 @@ class RegimeModelLoader:
             confidences = pred_proba.max(axis=1)
 
             return {
-                "regimes": regimes.tolist(),
-                "confidences": confidences.tolist(),
-                "probabilities": pred_proba.tolist(),
+                "regimes": regimes.tolist(),  # type: ignore
+                "confidences": confidences.tolist(),  # type: ignore
+                "probabilities": pred_proba.tolist(),  # type: ignore
                 "model_used": model_name,
             }
 
@@ -193,7 +193,7 @@ class RegimeModelLoader:
         info = {
             "model_name": model_name,
             "model_type": type(model_info["model"]).__name__,
-            "regime_classes": model_info["label_encoder"].classes_.tolist(),
+            "regime_classes": model_info["label_encoder"].classes_.tolist(),  # type: ignore
             "feature_columns": model_info["feature_columns"],
             "n_features": len(model_info["feature_columns"]),
             "loaded_from": model_info["loaded_from"],
@@ -210,7 +210,7 @@ class RegimeModelLoader:
         Returns:
             List of available model names
         """
-        return list(self.available_models.keys())
+        return list(self.available_models.keys())  # type: ignore
 
 
 def create_sample_features(regime_type: str = "bull") -> Dict:

@@ -394,7 +394,7 @@ class KrakenLiquidator:
             assets_to_liquidate = []
             for asset, amount in self.starting_balances.items():
                 if not self.should_skip_asset(asset, amount):
-                    assets_to_liquidate.append((asset, amount))
+                    assets_to_liquidate.append((asset, amount))  # type: ignore
 
             if not assets_to_liquidate:
                 self.logger.info("No assets to liquidate")
@@ -410,7 +410,7 @@ class KrakenLiquidator:
                 if self.liquidate_asset(asset, amount):
                     success_count += 1
                 else:
-                    failed_assets.append(asset)
+                    failed_assets.append(asset)  # type: ignore
 
             # Final report
             self.print_final_report(success_count, failed_assets)

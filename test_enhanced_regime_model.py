@@ -69,7 +69,7 @@ class TestEnhancedRegimeModel(unittest.TestCase):
             self.assertIn(feature, data.columns)
 
         # Check regime distribution
-        regimes = data["regime"].unique()
+        regimes = data["regime"].unique()  # type: ignore
         self.assertTrue(all(regime in ["bull", "bear", "sideways"] for regime in regimes))
 
         # Check feature bounds
@@ -145,7 +145,7 @@ class TestEnhancedRegimeModel(unittest.TestCase):
         self.assertEqual(len(regimes), 1)
         self.assertIn(regimes[0], ["bull", "bear", "sideways"])
         self.assertEqual(probas.shape, (1, 3))
-        self.assertAlmostEqual(probas[0].sum(), 1.0, places=6)
+        self.assertAlmostEqual(probas[0].sum(), 1.0, places=6)  # type: ignore
 
     def test_single_prediction(self):
         """Test single prediction functionality"""
@@ -244,7 +244,7 @@ class TestEnhancedRegimeModel(unittest.TestCase):
         self.assertTrue(all(isinstance(v, (int, float, np.integer, np.floating)) for v in importance.values()))
 
         # Check that importance values are reasonable
-        total_importance = sum(importance.values())
+        total_importance = sum(importance.values())  # type: ignore
         self.assertGreater(total_importance, 0)
 
 
@@ -397,7 +397,7 @@ class TestIntegration(unittest.TestCase):
                 self.assertLessEqual(result["confidence"], 1.0)
 
                 # Probabilities should sum to 1
-                prob_sum = sum(result["probabilities"].values())
+                prob_sum = sum(result["probabilities"].values())  # type: ignore
                 self.assertAlmostEqual(prob_sum, 1.0, places=6)
 
 
