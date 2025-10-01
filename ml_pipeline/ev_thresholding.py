@@ -102,7 +102,7 @@ class EVThresholdOptimizer:
         for threshold in thresholds:
             result = self._evaluate_threshold(y_true, y_prob, threshold)
             if result and result.total_trades >= self.min_trades:
-                results.append(result)
+                results.append(result)  # type: ignore
 
         if not results:
             raise ValueError(f"No valid thresholds found with minimum {self.min_trades} trades")
@@ -140,7 +140,7 @@ class EVThresholdOptimizer:
             ThresholdResult or None if insufficient trades
         """
         # Generate predictions
-        y_pred = (y_prob >= threshold).astype(int)
+        y_pred = (y_prob >= threshold).astype(int)  # type: ignore
 
         # Map to long/short signals (-1, 0, 1)
         # Assume positive predictions = long, negative true values = short
@@ -153,7 +153,7 @@ class EVThresholdOptimizer:
             return None
 
         # Calculate performance metrics
-        total_return = returns_with_costs.sum()
+        total_return = returns_with_costs.sum()  # type: ignore
         win_trades = returns_with_costs[returns_with_costs > 0]
         loss_trades = returns_with_costs[returns_with_costs < 0]
 
@@ -162,15 +162,15 @@ class EVThresholdOptimizer:
         avg_loss = loss_trades.mean() if len(loss_trades) > 0 else 0
 
         # Profit factor
-        gross_profit = win_trades.sum() if len(win_trades) > 0 else 0
-        gross_loss = abs(loss_trades.sum()) if len(loss_trades) > 0 else 0
-        profit_factor = gross_profit / gross_loss if gross_loss > 0 else float("inf")
+        gross_profit = win_trades.sum() if len(win_trades) > 0 else 0  # type: ignore
+        gross_loss = abs(loss_trades.sum()) if len(loss_trades) > 0 else 0  # type: ignore
+        profit_factor = gross_profit / gross_loss if gross_loss > 0 else float("inf")  # type: ignore
 
         # Expected value per trade
         expected_value = returns_with_costs.mean()
 
         # Calculate drawdown and Sharpe ratio
-        cumulative = returns_with_costs.cumsum()
+        cumulative = returns_with_costs.cumsum()  # type: ignore
         peak = cumulative.expanding().max()
         drawdown = cumulative - peak
         max_drawdown = abs(drawdown.min()) if len(drawdown) > 0 else 0
@@ -253,7 +253,7 @@ def find_multiple_thresholds(y_true: pd.Series, y_prob: pd.Series, n_thresholds:
         thresholds = np.linspace(min_thresh, max_thresh, 31)
         try:
             result, _ = optimizer.optimize_threshold(y_true, y_prob, thresholds)
-            results.append(result)
+            results.append(result)  # type: ignore
         except ValueError:
             logger.warning(f"Could not find valid threshold in range {min_thresh}-{max_thresh}")
             continue

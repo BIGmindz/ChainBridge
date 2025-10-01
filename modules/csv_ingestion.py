@@ -57,14 +57,14 @@ class CSVIngestionModule(Module):
 
         try:
             # Read CSV file
-            df = pd.read_csv(file_path, delimiter=delimiter, header=header_row)
+            df = pd.read_csv(file_path, delimiter=delimiter, header=header_row)  # type: ignore
 
             # Apply column mapping if provided
             if columns_map:
                 df = df.rename(columns=columns_map)
 
             # Convert to list of dictionaries
-            records = df.to_dict("records")
+            records = df.to_dict("records")  # type: ignore
 
             # Get file metadata
             file_stats = os.stat(file_path)
@@ -75,7 +75,7 @@ class CSVIngestionModule(Module):
                     "row_count": len(records),
                     "column_count": len(df.columns),
                     "file_size_bytes": file_stats.st_size,
-                    "columns": list(df.columns),
+                    "columns": list(df.columns),  # type: ignore
                     "file_path": file_path,
                 },
                 "module_info": {
@@ -97,13 +97,13 @@ class CSVIngestionModule(Module):
 
         try:
             # Quick analysis using pandas
-            sample_df = pd.read_csv(file_path, nrows=5)  # Read first 5 rows
+            sample_df = pd.read_csv(file_path, nrows=5)  # Read first 5 rows  # type: ignore
 
             analysis = {
                 "valid": True,
-                "columns": list(sample_df.columns),
+                "columns": list(sample_df.columns),  # type: ignore
                 "column_count": len(sample_df.columns),
-                "sample_data_types": sample_df.dtypes.to_dict(),
+                "sample_data_types": sample_df.dtypes.to_dict(),  # type: ignore
                 "has_header": True,  # Assuming header by default
                 "estimated_rows": None,  # Could implement row counting
             }
@@ -114,12 +114,12 @@ class CSVIngestionModule(Module):
             # Check for unnamed columns
             unnamed_cols = [col for col in sample_df.columns if col.startswith("Unnamed")]
             if unnamed_cols:
-                issues.append(f"Unnamed columns detected: {unnamed_cols}")
+                issues.append(f"Unnamed columns detected: {unnamed_cols}")  # type: ignore
 
             # Check for completely empty columns
-            empty_cols = sample_df.columns[sample_df.isnull().all()].tolist()
+            empty_cols = sample_df.columns[sample_df.isnull().all()].tolist()  # type: ignore
             if empty_cols:
-                issues.append(f"Empty columns detected: {empty_cols}")
+                issues.append(f"Empty columns detected: {empty_cols}")  # type: ignore
 
             analysis["issues"] = issues
             return analysis

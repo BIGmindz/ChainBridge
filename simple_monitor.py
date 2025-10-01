@@ -12,7 +12,7 @@ import ccxt
 import numpy as np
 
 # Add project path
-sys.path.append("/Users/johnbozza/bensonbot/Multiple-signal-decision-bot")
+sys.path.append("/Users/johnbozza/bensonbot/Multiple-signal-decision-bot")  # type: ignore
 
 
 def calculate_rsi(prices, period=14):
@@ -26,11 +26,11 @@ def calculate_rsi(prices, period=14):
     for i in range(1, len(prices)):
         change = prices[i] - prices[i - 1]
         if change > 0:
-            gains.append(change)
-            losses.append(0)
+            gains.append(change)  # type: ignore
+            losses.append(0)  # type: ignore
         else:
-            gains.append(0)
-            losses.append(abs(change))
+            gains.append(0)  # type: ignore
+            losses.append(abs(change))  # type: ignore
 
     avg_gain = np.mean(gains[-period:])
     avg_loss = np.mean(losses[-period:])

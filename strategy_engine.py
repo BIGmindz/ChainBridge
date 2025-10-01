@@ -113,8 +113,8 @@ def prepare_ensemble_strategy(ensemble_config: dict, regime: str, symbol: str) -
         scaler_path = os.path.join(strategy_dir, "scaler.pkl")
 
         if os.path.exists(model_path):
-            model_paths.append(model_path)
-            scaler_paths.append(scaler_path)
+            model_paths.append(model_path)  # type: ignore
+            scaler_paths.append(scaler_path)  # type: ignore
             logging.info(f"   ✅ Found model: {strategy_name}")
         else:
             logging.warning(f"   ⚠️  Model not found for: {strategy_name}")

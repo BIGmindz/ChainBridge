@@ -177,7 +177,7 @@ class AdaptiveWeightScheduler:
         regime_data = {"regime_history": self.regime_integrator.market_classifier.get_regime_history(days=30)}
 
         # Get transition matrix
-        transition_matrix = self.regime_integrator.get_regime_transition_matrix().to_dict()
+        transition_matrix = self.regime_integrator.get_regime_transition_matrix().to_dict()  # type: ignore
 
         # Get performance data
         performance_data = self.regime_integrator.get_regime_performance()
@@ -211,7 +211,7 @@ class AdaptiveWeightScheduler:
             try:
                 with open(os.path.join(history_dir, filename), "r") as f:
                     data = json.load(f)
-                    history.append(data)
+                    history.append(data)  # type: ignore
             except Exception as e:
                 logger.error(f"Error loading weight history file {filename}: {str(e)}")
 

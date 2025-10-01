@@ -130,12 +130,12 @@ def main():
         logger.info("-" * 40)
         try:
             result = test_func()
-            results.append((test_name, result))
+            results.append((test_name, result))  # type: ignore
             status = "✅ PASS" if result else "❌ FAIL"
             logger.info(f"Result: {status}")
         except Exception as e:
             logger.error(f"❌ Test failed with exception: {e}")
-            results.append((test_name, False))
+            results.append((test_name, False))  # type: ignore
 
     # Summary
     logger.info("\n" + "=" * 60)

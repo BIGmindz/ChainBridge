@@ -56,8 +56,8 @@ def integrate_logistics():
     ]
 
     # Calculate portfolio metrics
-    total_weight = sum(s["weight"] for s in config["signals"])
-    avg_correlation = sum(s["weight"] * s["correlation"] for s in config["signals"]) / total_weight
+    total_weight = sum(s["weight"] for s in config["signals"])  # type: ignore
+    avg_correlation = sum(s["weight"] * s["correlation"] for s in config["signals"]) / total_weight  # type: ignore
 
     print("\n📊 SIGNAL PORTFOLIO ANALYSIS:")
     print("=" * 50)

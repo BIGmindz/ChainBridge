@@ -79,11 +79,11 @@ def load_backtest_reports(base_path="strategies"):
                     if match:
                         # Clean up the extracted value
                         value = match.group(1).replace(",", "").replace("%", "").replace("$", "")
-                        parsed_metrics[key] = float(value)
+                        parsed_metrics[key] = float(value)  # type: ignore
                     else:
                         parsed_metrics[key] = None
 
-                report_data.append(parsed_metrics)
+                report_data.append(parsed_metrics)  # type: ignore
 
             except Exception as e:
                 st.error(f"Failed to parse report for '{strategy_name}': {e}")

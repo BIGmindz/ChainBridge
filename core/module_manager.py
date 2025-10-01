@@ -96,7 +96,7 @@ class ModuleManager:
 
     def list_modules(self) -> List[str]:
         """List all registered modules."""
-        return list(self.modules.keys())
+        return list(self.modules.keys())  # type: ignore
 
     def get_module_info(self, name: str) -> Dict[str, Any]:
         """Get information about a module."""

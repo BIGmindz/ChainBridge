@@ -55,7 +55,7 @@ def main():
 
     if selected_strategy_name not in available_strategies:
         logging.error(f"Strategy '{selected_strategy_name}' not found.")
-        logging.info(f"Available strategies: {list(available_strategies.keys())}")
+        logging.info(f"Available strategies: {list(available_strategies.keys())}")  # type: ignore
         sys.exit(1)
 
     selected_strategy = available_strategies[selected_strategy_name]

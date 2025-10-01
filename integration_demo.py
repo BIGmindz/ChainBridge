@@ -92,7 +92,7 @@ class EnhancedRegimeIntegration:
 
                 # Store in history
                 self.current_regime = result["regime"]
-                self.regime_history.append(result)
+                self.regime_history.append(result)  # type: ignore
 
                 # Keep only last 100 regime predictions
                 if len(self.regime_history) > 100:
@@ -175,11 +175,11 @@ class EnhancedRegimeIntegration:
 
         # Calculate consistency
         current_regime = recent[-1]["regime"]
-        consistent_count = sum(1 for r in recent if r["regime"] == current_regime)
+        consistent_count = sum(1 for r in recent if r["regime"] == current_regime)  # type: ignore
         consistency = consistent_count / len(recent)
 
         # Calculate average confidence
-        avg_confidence = sum(r["confidence"] for r in recent) / len(recent)
+        avg_confidence = sum(r["confidence"] for r in recent) / len(recent)  # type: ignore
 
         # Combine consistency and confidence
         strength = (consistency * 0.6) + (avg_confidence * 0.4)

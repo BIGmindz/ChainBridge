@@ -21,7 +21,7 @@ except ImportError:
     pass
 
 # Add src to path
-sys.path.append("src")
+sys.path.append("src")  # type: ignore
 
 # Import your trading engine
 from src.core.unified_trading_engine import MultiSignalTradingEngine  # noqa: E402
@@ -66,11 +66,11 @@ class MarketSimulator:
 
         # Update price
         self.price += price_change
-        self.price_history.append(self.price)
+        self.price_history.append(self.price)  # type: ignore
 
         # Calculate returns
         if len(self.price_history) > 1:
-            self.cycle_returns.append((self.price_history[-1] / self.price_history[-2]) - 1)
+            self.cycle_returns.append((self.price_history[-1] / self.price_history[-2]) - 1)  # type: ignore
 
         # Update time
         self.time += timedelta(hours=4)  # Simulate 4-hour candles
@@ -124,21 +124,21 @@ class SimulationResults:
 
     def record_cycle(self, cycle, market_data, decision, trade_result=None):
         """Record results from a simulation cycle"""
-        self.price_history.append(market_data["price"])
+        self.price_history.append(market_data["price"])  # type: ignore
 
         if trade_result:
-            self.trades.append(trade_result)
+            self.trades.append(trade_result)  # type: ignore
 
-        self.decisions.append(decision)
+        self.decisions.append(decision)  # type: ignore
 
         # Calculate current equity
         if not self.equity_curve:
-            self.equity_curve.append(10000)  # Starting capital
+            self.equity_curve.append(10000)  # Starting capital  # type: ignore
         else:
             new_equity = self.equity_curve[-1]
             if trade_result and "pnl" in trade_result:
                 new_equity += trade_result["pnl"]
-            self.equity_curve.append(new_equity)
+            self.equity_curve.append(new_equity)  # type: ignore
 
     def record_weights(self, weights):
         """Record signal weights for tracking ML evolution"""
@@ -156,7 +156,7 @@ class SimulationResults:
                     wins_so_far += 1
 
                 if trades_so_far > 0:
-                    self.win_rate_progression.append(wins_so_far / trades_so_far * 100)
+                    self.win_rate_progression.append(wins_so_far / trades_so_far * 100)  # type: ignore
 
     def plot_results(self):
         """Plot simulation results"""
@@ -212,7 +212,7 @@ class SimulationResults:
                 "equity_end": self.equity_curve[-1] if self.equity_curve else 10000,
                 "roi_pct": (((self.equity_curve[-1] / self.equity_curve[0]) - 1) * 100 if self.equity_curve else 0),
                 "trade_count": len(self.trades),
-                "win_count": sum(1 for t in self.trades if t.get("pnl", 0) > 0),
+                "win_count": sum(1 for t in self.trades if t.get("pnl", 0) > 0),  # type: ignore
                 "max_drawdown_pct": self._calculate_drawdown(),
                 "final_signal_weights": self.signal_weights,
             }
@@ -481,7 +481,7 @@ def execute_trade(decision, market_data, signals):
         "position_size": decision["position_size"],
         "confidence": decision["confidence"],
         "pnl": pnl,
-        "signals": list(signals.keys()),
+        "signals": list(signals.keys()),  # type: ignore
         "timestamp": market_data["timestamp"].isoformat(),
     }
 

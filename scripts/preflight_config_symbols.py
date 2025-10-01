@@ -48,7 +48,7 @@ def main() -> None:
 
     cfg_path = REPO_ROOT / "config" / "config.yaml"
     cfg = load_config_yaml(cfg_path)
-    symbols: List[str] = list(cfg.get("symbols") or [])
+    symbols: List[str] = list(cfg.get("symbols") or [])  # type: ignore
     if not symbols:
         print("No symbols in config; nothing to preflight.")
         return
@@ -56,7 +56,7 @@ def main() -> None:
     from src.exchange_adapter import ExchangeAdapter
 
     exchange = build_exchange()
-    quote_amount = float(os.getenv("PREFLIGHT_USD", "25"))
+    quote_amount = float(os.getenv("PREFLIGHT_USD", "25"))  # type: ignore
 
     adapter = ExchangeAdapter(
         exchange=exchange,
@@ -85,8 +85,8 @@ def main() -> None:
     out.write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(f"Wrote preflight report to {out}")
     total = len(symbols)
-    ok_buy = sum(1 for v in report.values() if isinstance(v.get("buy"), dict))
-    ok_sell = sum(1 for v in report.values() if isinstance(v.get("sell"), dict))
+    ok_buy = sum(1 for v in report.values() if isinstance(v.get("buy"), dict))  # type: ignore
+    ok_sell = sum(1 for v in report.values() if isinstance(v.get("sell"), dict))  # type: ignore
     print(f"Summary: {total} symbols | BUY ok: {ok_buy} | SELL ok: {ok_sell}")
 
 

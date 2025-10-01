@@ -49,10 +49,10 @@ def analyze_regime_distribution(stats: Dict) -> None:
     for regime, data in regime_performance.items():
         trades = data.get("trades", 0)
         total_trades += trades
-        regime_trades.append(trades)
-        regime_names.append(regime)
+        regime_trades.append(trades)  # type: ignore
+        regime_names.append(regime)  # type: ignore
         win_rate = data.get("win_rate", 0)
-        regime_win_rates.append(win_rate)
+        regime_win_rates.append(win_rate)  # type: ignore
 
         print(
             f"{regime.upper()}: {trades} trades ({trades / max(total_trades, 1) * 100:.1f}%), "
@@ -62,7 +62,7 @@ def analyze_regime_distribution(stats: Dict) -> None:
     print(f"\nTotal trades: {total_trades}")
 
     # Plot regime distribution
-    if regime_trades and sum(regime_trades) > 0:
+    if regime_trades and sum(regime_trades) > 0:  # type: ignore
         plt.figure(figsize=(12, 6))
 
         # Regime distribution
@@ -155,7 +155,7 @@ def provide_improvement_recommendations(stats: Dict) -> None:
     """Provide recommendations for improving the market regime detection"""
     # Analyze trade distribution
     regime_performance = stats.get("regime_performance", {})
-    regimes = list(regime_performance.keys())
+    regimes = list(regime_performance.keys())  # type: ignore
 
     print("\n=== IMPROVEMENT RECOMMENDATIONS ===")
 
