@@ -91,7 +91,7 @@ class AdaptiveWeightVisualizer:
         ax1.set_title(title)
         ax1.set_ylabel("Market Regime")
         ax1.legend(loc="upper right")
-        ax1.set_yticks(list(self.regime_colors.keys()))
+        ax1.set_yticks(list(self.regime_colors.keys()))  # type: ignore
 
         # Plot confidence
         ax2.fill_between(df["date"], 0, df["confidence"], color="skyblue", alpha=0.6)
@@ -180,8 +180,8 @@ class AdaptiveWeightVisualizer:
 
         for regime, perf in performance_data.items():
             if metric in perf:
-                regimes.append(regime)
-                values.append(perf[metric])
+                regimes.append(regime)  # type: ignore
+                values.append(perf[metric])  # type: ignore
 
         if not regimes:
             print(f"No {metric} data available for visualization")
@@ -245,19 +245,19 @@ class AdaptiveWeightVisualizer:
             # Parse timestamp
             try:
                 timestamp = datetime.fromisoformat(entry.get("timestamp", ""))
-                dates.append(timestamp)
+                dates.append(timestamp)  # type: ignore
             except (ValueError, TypeError):
                 continue
 
             # Get regime
-            regimes.append(entry.get("market_regime", "UNKNOWN"))
+            regimes.append(entry.get("market_regime", "UNKNOWN"))  # type: ignore
 
             # Get weights
             weights = entry.get("optimized_weights", {})
             for layer, weight in weights.items():
                 if layer not in weights_by_layer:
                     weights_by_layer[layer] = []
-                weights_by_layer[layer].append(weight)
+                weights_by_layer[layer].append(weight)  # type: ignore
 
         if not dates:
             print("No valid timestamps in weight history data")

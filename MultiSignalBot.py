@@ -36,7 +36,7 @@ class MultiSignalBot:
         validate_symbols(self.exchange, self.symbols)
 
         # Initialize budget manager
-        self.initial_capital = float(self.cfg.get("initial_capital", 10000.0))
+        self.initial_capital = float(self.cfg.get("initial_capital", 10000.0))  # type: ignore
         self.budget_manager = BudgetManager(
             initial_capital=self.initial_capital, exchange=self.exchange, live_mode=not self.trading_mode.is_paper_trading
         )

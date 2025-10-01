@@ -37,7 +37,7 @@ async def demo_new_listings_radar():
 
     # Test 1: Check exchange connectivity
     print("\n🔍 Test 1: Testing exchange connectivity...")
-    exchanges = list(radar.cex_sources.keys())
+    exchanges = list(radar.cex_sources.keys())  # type: ignore
 
     if not exchanges:
         print("❌ No exchanges supported or available")

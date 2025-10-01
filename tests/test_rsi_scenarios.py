@@ -30,14 +30,14 @@ def test_rsi_flatline():
 def test_rsi_uptrend():
     """Test RSI calculation with clear uptrend."""
     from benson_rsi_bot import wilder_rsi
-    prices = list(range(100, 120))
+    prices = list(range(100, 120))  # type: ignore
     rsi = wilder_rsi(prices)
     assert rsi > 70, "Uptrend should give overbought RSI"
 
 def test_rsi_downtrend():
     """Test RSI calculation with clear downtrend."""
     from benson_rsi_bot import wilder_rsi
-    prices = list(range(120, 100, -1))
+    prices = list(range(120, 100, -1))  # type: ignore
     rsi = wilder_rsi(prices)
     assert rsi < 30, "Downtrend should give oversold RSI"
 
@@ -57,10 +57,10 @@ def test_rsi_edge_cases():
     
     # Test with zero prices
     zero_prices = [0.0] * 20
-    rsi: float = float(wilder_rsi(zero_prices))
+    rsi: float = float(wilder_rsi(zero_prices))  # type: ignore
     assert 40 <= rsi <= 60, "Zero prices should give neutral RSI"
     
     # Test with very large price jumps
     volatile_prices = [100.0] * 10 + [1000000.0] * 10
-    rsi: float = float(wilder_rsi(volatile_prices))
+    rsi: float = float(wilder_rsi(volatile_prices))  # type: ignore
     assert rsi > 70, "Large upward move should give overbought RSI"

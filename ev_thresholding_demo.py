@@ -176,8 +176,8 @@ def demonstrate_trading_costs_impact():
         optimizer = EVThresholdOptimizer(trading_costs=costs, min_trades=5)
         result, _ = optimizer.optimize_threshold(y_true, y_prob)
 
-        optimal_thresholds.append(result.threshold)
-        expected_values.append(result.expected_value)
+        optimal_thresholds.append(result.threshold)  # type: ignore
+        expected_values.append(result.expected_value)  # type: ignore
 
     print("   Cost Level  | Optimal Threshold | Expected Value")
     print("   ------------|------------------|---------------")

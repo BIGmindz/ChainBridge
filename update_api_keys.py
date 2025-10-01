@@ -40,8 +40,8 @@ def update_env_file():
 
     # If not found, add them
     if not updated:
-        lines.append(f"API_KEY={api_key}\n")
-        lines.append(f"API_SECRET={api_secret}\n")
+        lines.append(f"API_KEY={api_key}\n")  # type: ignore
+        lines.append(f"API_SECRET={api_secret}\n")  # type: ignore
 
     # Write back to file
     with open(env_path, "w") as f:

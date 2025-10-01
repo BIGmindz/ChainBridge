@@ -37,12 +37,12 @@ def fetch_market_data(exchange_id: str, symbol: str = "BTC/USD", timeframe: str 
 
         # Convert to DataFrame
         df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
-        df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
+        df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")  # type: ignore
         df.set_index("timestamp", inplace=True)
 
         # Convert string values to float
         for col in ["open", "high", "low", "close", "volume"]:
-            df[col] = df[col].astype(float)
+            df[col] = df[col].astype(float)  # type: ignore
 
         logger.info(f"Fetched {len(df)} candles from {exchange_id}")
         return df

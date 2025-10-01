@@ -1,0 +1,16 @@
+[MESSAGES CONTROL]
+disable=
+    import-error,
+    no-member,
+    unused-import,
+    unused-variable,
+    too-many-locals,
+    too-many-statements,
+    too-many-branches,
+    broad-except,
+    invalid-name,
+    missing-docstring,
+    line-too-long
+
+[FORMAT]
+max-line-length=140

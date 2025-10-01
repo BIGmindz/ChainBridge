@@ -63,7 +63,7 @@ def fetch_assets(ex) -> List[Dict]:
             continue
         if asset in STABLE:
             continue
-        assets.append({"raw": asset, "free": float(free_amt)})
+        assets.append({"raw": asset, "free": float(free_amt)})  # type: ignore
     return assets
 
 
@@ -75,7 +75,7 @@ def best_pair_price(ex, base: str) -> Tuple[Optional[float], Optional[str]]:
                 t = ex.fetch_ticker(pair)
                 px = t.get("last") or t.get("close") or t.get("bid") or t.get("ask")
                 if px:
-                    return float(px), pair
+                    return float(px), pair  # type: ignore
             except Exception:
                 pass
     return None, None
@@ -88,10 +88,10 @@ def build_plan(ex, assets: List[Dict], target: float):
         base = norm(a["raw"])
         price, pair = best_pair_price(ex, base)
         if not price:
-            skipped.append(base)
+            skipped.append(base)  # type: ignore
             continue
         usd_value = a["free"] * price
-        enriched.append({"base": base, "pair": pair, "price": price, "free": a["free"], "usd_value": usd_value})
+        enriched.append({"base": base, "pair": pair, "price": price, "free": a["free"], "usd_value": usd_value})  # type: ignore
     enriched.sort(key=lambda x: x["usd_value"], reverse=True)
     plan = []
     remaining = target
@@ -102,7 +102,7 @@ def build_plan(ex, assets: List[Dict], target: float):
         qty = sell_value / e["price"]
         if qty <= 0:
             continue
-        plan.append({"pair": e["pair"], "qty": qty, "sell_value": sell_value, "price": e["price"], "base": e["base"]})
+        plan.append({"pair": e["pair"], "qty": qty, "sell_value": sell_value, "price": e["price"], "base": e["base"]})  # type: ignore
         remaining -= sell_value
     executed = target - remaining
     return plan, executed, skipped

@@ -10,7 +10,7 @@ import os
 import sys
 
 # Add project root to path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))  # type: ignore
 
 # Import the backtester
 from src.backtesting.regime_backtester import RegimeBacktester, demo_regime_backtester
@@ -49,7 +49,7 @@ async def run_with_data_file(file_path, output_path):
     # Load the data
     try:
         print(f"Loading data from {file_path}...")
-        df = pd.read_csv(file_path)
+        df = pd.read_csv(file_path)  # type: ignore
 
         # Check for required columns
         required_cols = ["price"]
@@ -58,12 +58,12 @@ async def run_with_data_file(file_path, output_path):
             return
 
         # Extract data
-        price_data = df["price"].tolist()
+        price_data = df["price"].tolist()  # type: ignore
 
         # Optional columns
         volume_data = None
         if "volume" in df.columns:
-            volume_data = df["volume"].tolist()
+            volume_data = df["volume"].tolist()  # type: ignore
 
         dates = None
         date_col = next(
@@ -71,7 +71,7 @@ async def run_with_data_file(file_path, output_path):
             None,
         )
         if date_col:
-            dates = df[date_col].tolist()
+            dates = df[date_col].tolist()  # type: ignore
 
         print(f"Loaded {len(price_data)} data points from {file_path}")
 

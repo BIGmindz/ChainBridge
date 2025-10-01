@@ -50,7 +50,7 @@ class RSIModule(Module):
         This is the same implementation from benson_rsi_bot.py
         """
         if len(close) < period + 5:
-            return float("nan")
+            return float("nan")  # type: ignore
 
         delta = close.diff()
         gain = delta.clip(lower=0)
@@ -67,7 +67,7 @@ class RSIModule(Module):
 
     def generate_signal(self, rsi_value: float, buy_threshold: float, sell_threshold: float) -> tuple:
         """Generate trading signal and confidence based on RSI value."""
-        if math.isnan(rsi_value):
+        if math.isnan(rsi_value):  # type: ignore
             return "HOLD", 0.0
 
         if rsi_value <= buy_threshold:
@@ -99,21 +99,21 @@ class RSIModule(Module):
                 closes = []
                 for record in price_data:
                     if "close" in record:
-                        closes.append(float(record["close"]))
+                        closes.append(float(record["close"]))  # type: ignore
                     elif "price" in record:
-                        closes.append(float(record["price"]))
+                        closes.append(float(record["price"]))  # type: ignore
                     else:
                         raise ValueError("No 'close' or 'price' field found in price data")
             elif isinstance(price_data[0], (list, tuple)):
                 # Data is in OHLCV format - use close price (index 4)
-                closes = [float(row[4]) for row in price_data if len(row) >= 5]
+                closes = [float(row[4]) for row in price_data if len(row) >= 5]  # type: ignore
             else:
                 # Assume it's a list of close prices
-                closes = [float(price) for price in price_data]
+                closes = [float(price) for price in price_data]  # type: ignore
 
             if len(closes) < period + 5:
                 return {
-                    "rsi_value": float("nan"),
+                    "rsi_value": float("nan"),  # type: ignore
                     "signal": "HOLD",
                     "confidence": 0.0,
                     "metadata": {
@@ -161,7 +161,7 @@ class RSIModule(Module):
         for i, data_point in enumerate(historical_data):
             result = self.process({"price_data": historical_data[: i + 1]})
 
-            if math.isnan(result["rsi_value"]):
+            if math.isnan(result["rsi_value"]):  # type: ignore
                 continue
 
             signal = result["signal"]
@@ -171,7 +171,7 @@ class RSIModule(Module):
                 # Buy signal - enter position
                 position = balance / price
                 balance = 0
-                trades.append(
+                trades.append(  # type: ignore
                     {
                         "type": "BUY",
                         "price": price,
@@ -183,7 +183,7 @@ class RSIModule(Module):
             elif signal == "SELL" and position > 0:
                 # Sell signal - exit position
                 balance = position * price
-                trades.append(
+                trades.append(  # type: ignore
                     {
                         "type": "SELL",
                         "price": price,

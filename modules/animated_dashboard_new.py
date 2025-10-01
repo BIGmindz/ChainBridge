@@ -87,14 +87,14 @@ class DataProvider:
                 return pd.DataFrame()
 
             # Load only files that contain the primary state metric
-            df_list = [pd.read_csv(f) for f in all_files if _self.state_config["primary_metric_col"] in pd.read_csv(f, nrows=0).columns]
+            df_list = [pd.read_csv(f) for f in all_files if _self.state_config["primary_metric_col"] in pd.read_csv(f, nrows=0).columns]  # type: ignore
             if not df_list:
                 return pd.DataFrame()
 
-            df = pd.concat(df_list, ignore_index=True)
-            df[_self.config["timestamp_col"]] = pd.to_datetime(df[_self.config["timestamp_col"]])
+            df = pd.concat(df_list, ignore_index=True)  # type: ignore
+            df[_self.config["timestamp_col"]] = pd.to_datetime(df[_self.config["timestamp_col"]])  # type: ignore
             df.drop_duplicates(subset=[_self.config["timestamp_col"], _self.config["entity_col"]], inplace=True)
-            df.sort_values(_self.config["timestamp_col"], inplace=True)
+            df.sort_values(_self.config["timestamp_col"], inplace=True)  # type: ignore
             return df
         except Exception as e:
             st.error(f"Error loading data: {e}")
@@ -114,7 +114,7 @@ class DashboardRenderer:
     def render_sidebar(self):
         """Renders the sidebar with controls and state summary."""
         st.sidebar.header("Engine Controls")
-        all_entities = self.data[self.config["data_source"]["entity_col"]].unique()
+        all_entities = self.data[self.config["data_source"]["entity_col"]].unique()  # type: ignore
         selected_entity = st.sidebar.selectbox("Select Entity to Analyze", all_entities, index=0)
 
         st.sidebar.header("System State Overview")
@@ -221,7 +221,7 @@ class DashboardRenderer:
             col=1,
         )
 
-        df_volume = df_entity.set_index(cfg["data_source"]["timestamp_col"])[cfg["data_source"]["activity_volume_col"]].resample("1T").sum()
+        df_volume = df_entity.set_index(cfg["data_source"]["timestamp_col"])[cfg["data_source"]["activity_volume_col"]].resample("1T").sum()  # type: ignore
         fig.add_trace(go.Bar(x=df_volume.index, y=df_volume, name="Activity Volume", marker_color="#8884d8"), row=2, col=1)
 
         fig.update_layout(

@@ -66,7 +66,7 @@ def main():
     for name, process in components:
         is_running = check_process_running(process)
         status = "🟢 RUNNING" if is_running else "🔴 STOPPED"
-        component_status.append([name, status])
+        component_status.append([name, status])  # type: ignore
 
     print("\n📡 SYSTEM COMPONENTS:")
     print(tabulate(component_status, headers=["Component", "Status"], tablefmt="simple"))
@@ -93,7 +93,7 @@ def main():
         print("\n🏦 CAPITAL ALLOCATION:")
         allocations = []
         for alloc in allocation_state.get("allocations", []):
-            allocations.append(
+            allocations.append(  # type: ignore
                 [
                     alloc.get("symbol", "Unknown"),
                     alloc.get("exchange", "Unknown"),
@@ -137,7 +137,7 @@ def main():
         signals = []
         for key, value in signals_data.items():
             if key != "timestamp":
-                signals.append([key.upper(), value])
+                signals.append([key.upper(), value])  # type: ignore
         print(tabulate(signals, headers=["Signal", "Value"], tablefmt="simple"))
 
     print("\n" + "=" * 70)

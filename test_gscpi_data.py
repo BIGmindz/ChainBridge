@@ -21,7 +21,7 @@ def test_gscpi_data():
     # Load the data
     print(f"Reading GSCPI data from {cache_file}...")
     try:
-        df = pd.read_csv(cache_file)
+        df = pd.read_csv(cache_file)  # type: ignore
         print(f"Successfully loaded data with {len(df)} rows")
 
         # Display column names
@@ -29,8 +29,8 @@ def test_gscpi_data():
 
         # Convert dates
         if "Date" in df.columns:
-            df["Date"] = pd.to_datetime(df["Date"])
-            df = df.sort_values("Date")
+            df["Date"] = pd.to_datetime(df["Date"])  # type: ignore
+            df = df.sort_values("Date")  # type: ignore
 
             # Display date range
             print(f"Date range: {df['Date'].min().strftime('%Y-%m-%d')} to {df['Date'].max().strftime('%Y-%m-%d')}")

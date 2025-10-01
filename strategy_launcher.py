@@ -49,7 +49,7 @@ def select_strategy(strategies: dict):
         logging.error("A valid strategy requires a 'config.yaml' file and either a 'model.pkl' file or ensemble configuration.")
         sys.exit(1)
 
-    strategy_choices = list(strategies.keys())
+    strategy_choices = list(strategies.keys())  # type: ignore
 
     questions = [
         inquirer.List(

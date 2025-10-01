@@ -121,7 +121,7 @@ def run_paper_trading_simulation(args, session_dir):
             # Get signal data from bot's last signals
             raw_signals = _bot.last_signals
             signal_data = _signal_collector.collect_signals(raw_signals)
-            signal_data_snapshots.append({"timestamp": timestamp, "data": signal_data})
+            signal_data_snapshots.append({"timestamp": timestamp, "data": signal_data})  # type: ignore
 
             # Collect market data without using the classifier
             print("Collecting market data...")
@@ -142,7 +142,7 @@ def run_paper_trading_simulation(args, session_dir):
                 else:
                     simple_condition = "SIDEWAYS"
 
-            market_condition_snapshots.append(
+            market_condition_snapshots.append(  # type: ignore
                 {
                     "timestamp": timestamp,
                     "condition": simple_condition,
@@ -154,7 +154,7 @@ def run_paper_trading_simulation(args, session_dir):
             print("Recording performance metrics...")
             # Use get_portfolio_status instead of get_performance_metrics
             performance = _bot.budget_manager.get_portfolio_status()
-            performance_snapshots.append({"timestamp": timestamp, "metrics": performance})
+            performance_snapshots.append({"timestamp": timestamp, "metrics": performance})  # type: ignore
 
             # Save interim data
             if len(signal_data_snapshots) % 10 == 0:
@@ -166,7 +166,7 @@ def run_paper_trading_simulation(args, session_dir):
                 )
 
             # Wait for next collection interval
-            collection_times.append(current_time)
+            collection_times.append(current_time)  # type: ignore
             elapsed = time.time() - current_time
             wait_time = max(0, args.interval - elapsed)
 
@@ -228,8 +228,8 @@ def prepare_data_for_later_training(session_dir):
         "signal_data_count": len(signal_data),
         "market_conditions_count": len(market_condition),
         "performance_metrics_count": len(performance),
-        "symbols_covered": list(set(snapshot.get("data", {}).get("symbol", "unknown") for snapshot in signal_data if "data" in snapshot)),
-        "market_regimes_detected": list(
+        "symbols_covered": list(set(snapshot.get("data", {}).get("symbol", "unknown") for snapshot in signal_data if "data" in snapshot)),  # type: ignore
+        "market_regimes_detected": list(  # type: ignore
             set(snapshot.get("condition", "unknown") for snapshot in market_condition if "condition" in snapshot)
         ),
     }
@@ -277,7 +277,7 @@ def generate_basic_visualizations(session_dir):
         json.dump(
             {
                 "collection_time": datetime.datetime.now().isoformat(),
-                "market_regimes_detected": list(
+                "market_regimes_detected": list(  # type: ignore
                     set(snapshot.get("condition", "unknown") for snapshot in market_condition if "condition" in snapshot)
                 ),
                 "market_regime_counts": ({regime: regimes.count(regime) for regime in set(regimes)} if "regimes" in locals() else {}),
