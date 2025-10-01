@@ -64,11 +64,11 @@ rsi:
   period: 14
   sell_threshold: 65
 symbols:
-- SOL/USD
 - AVAX/USD
+- SOL/USD
 - NEAR/USD
-- DOGE/USD
-- WIF/USD
+- SEI/USD
+- ETH/USD
 timeframe: 5m
 trading:
   max_open_trades: 1

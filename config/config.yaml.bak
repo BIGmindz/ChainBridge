@@ -44,7 +44,7 @@ risk:
 rsi:
   period: 14
   buy_threshold: 35
-  sell_threshold: 64
+  sell_threshold: 65
 
 macd:
   fast: 12
