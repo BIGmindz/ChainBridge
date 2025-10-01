@@ -191,7 +191,7 @@ class LiveTradingBot:
                 self._display_module_signals(signal_result["modules"])
 
                 # Execute trade if confidence is high enough
-                if confidence >= 0.6 and signal != "HOLD":
+                if confidence >= 0.25 and signal != "HOLD":
                     self._execute_trade(symbol, signal, price, confidence)
 
             except Exception as e:

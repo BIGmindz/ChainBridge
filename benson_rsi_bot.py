@@ -78,12 +78,12 @@ def utc_now_str() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S %Z")
 
 
-def wilder_rsi(close: Any, period: int = 14) -> float:
+def wilder_rsi(close: Any, length: int = 14) -> float:
     """Wilder's RSI. Accepts a pandas Series when available, or any sequence of floats.
 
     Args:
         close: Price series as pandas.Series or sequence of floats
-        period: RSI period (default 14)
+        length: RSI period (default 14)
 
     Returns:
         float: RSI value between 0 and 100
@@ -93,13 +93,13 @@ def wilder_rsi(close: Any, period: int = 14) -> float:
     """
     import math
     # Validate period
-    if period < 1:
+    if length < 1:
         raise ValueError("Period must be positive")
 
     # Normalize input to a list of floats
     try:
         if 'has_pandas' in globals() and has_pandas and isinstance(close, pd.Series):
-            vals = close.astype(float).tolist()
+            vals = close.astype('float64').tolist()
         else:
             vals = [float(x) for x in list(close)]
     except (ValueError, TypeError):
@@ -110,27 +110,27 @@ def wilder_rsi(close: Any, period: int = 14) -> float:
         raise ValueError("Input contains NaN values")
 
     # Validate data length
-    if len(vals) < max(2, period + 1):
-        raise ValueError(f"Insufficient data for RSI calculation (need at least {period + 1} values)")
+    if len(vals) < max(2, length + 1):
+        raise ValueError(f"Insufficient data for RSI calculation (need at least {length + 1} values)")
 
     # Compute price deltas
     deltas = [vals[i] - vals[i - 1] for i in range(1, len(vals))]
     gains = [d if d > 0 else 0.0 for d in deltas]
     losses = [(-d) if d < 0 else 0.0 for d in deltas]
 
-    if len(gains) < period:
+    if len(gains) < length:
         return float('nan')
 
     # Initial average gains/losses (simple average of first 'period' values)
-    avg_gain = sum(gains[:period]) / period
-    avg_loss = sum(losses[:period]) / period
+    avg_gain = sum(gains[:length]) / length
+    avg_loss = sum(losses[:length]) / length
 
     # Wilder smoothing for remaining values
-    for i in range(period, len(gains)):
+    for i in range(length, len(gains)):
         gain = gains[i]
         loss = losses[i]
-        avg_gain = (avg_gain * (period - 1) + gain) / period
-        avg_loss = (avg_loss * (period - 1) + loss) / period
+        avg_gain = (avg_gain * (length - 1) + gain) / length
+        avg_loss = (avg_loss * (length - 1) + loss) / length
 
     # Defensive cases
     if avg_loss == 0 and avg_gain == 0:
@@ -148,7 +148,7 @@ def calculate_rsi_from_ohlcv(ohlcv: List[List[float]], period: int) -> float:
     series = pd.Series(closes, dtype=float)
     if len(series) < period + 5:
         return float("nan")
-    return wilder_rsi(series, period=period)
+    return wilder_rsi(series, length=period)
 
 
 def _ema(series: List[float], period: int) -> Optional[float]:
@@ -393,6 +393,8 @@ def run_bot(once: bool = False) -> None:
 
                 # Compute indicators
                 rsi_val = calculate_rsi_from_ohlcv(ohlcv, rsi_period)
+                # Calculate MACD indicators
+
                 macd_line, macd_sig, macd_hist = calculate_macd_from_ohlcv(
                     ohlcv, fast=macd_fast, slow=macd_slow, signal=macd_signal_p
                 )
@@ -438,7 +440,11 @@ def run_bot(once: bool = False) -> None:
                 # Aggregate decision
                 buys = sum(1 for s in ind_signals.values() if s == "BUY")
                 sells = sum(1 for s in ind_signals.values() if s == "SELL")
+                # Track enabled indicators for confidence calculation
+
                 total_enabled = len(ind_signals)
+
+                print(f"Total enabled indicators: {total_enabled}")
                 signal_out = "HOLD"
                 if mode == "any":
                     if buys > 0 and buys >= sells:
