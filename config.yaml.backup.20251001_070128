@@ -64,27 +64,11 @@ rsi:
   period: 14
   sell_threshold: 65
 symbols:
-symbols:
-- BTC/USD
-- ETH/USD
-- SOL/USD
-- DOGE/USD
-- XRP/USD
-- ADA/USD
 - AVAX/USD
-- ATOM/USD
-- LINK/USD
-- LTC/USD
-- DOT/USD
-- BCH/USD
-- SHIB/USD
-- UNI/USD
-- XLM/USD
-- ETC/USD
-- POL/USD
+- SOL/USD
 - NEAR/USD
-- PEPE/USD
 - SEI/USD
+- ETH/USD
 timeframe: 5m
 trading:
   max_open_trades: 1
