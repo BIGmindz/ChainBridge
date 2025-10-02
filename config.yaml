@@ -64,7 +64,6 @@ rsi:
   period: 14
   sell_threshold: 65
 symbols:
-symbols:
 - BTC/USD
 - ETH/USD
 - SOL/USD
