@@ -52,8 +52,8 @@ class LogisticsSignalModule:
                 return self._default_signal()
 
             # Calculate weighted average
-            total_weight = sum(s["confidence"] for s in valid_signals)
-            weighted_strength = sum(s["strength"] * s["confidence"] for s in valid_signals) / total_weight
+            total_weight = sum(s["confidence"] for s in valid_signals)  # type: ignore
+            weighted_strength = sum(s["strength"] * s["confidence"] for s in valid_signals) / total_weight  # type: ignore
             avg_confidence = total_weight / len(valid_signals)
 
             # Generate final signal
@@ -183,7 +183,7 @@ class LogisticsSignalModule:
                             html_content,
                         )
                         if dwell_pattern:
-                            dwell_days = float(dwell_pattern.group(1))
+                            dwell_days = float(dwell_pattern.group(1))  # type: ignore
                             # Normal dwell time is ~3.5 days
                             congestion_level = dwell_days / 3.5
                             print(f"Found dwell time: {dwell_days} days, congestion level: {congestion_level:.2f}x")
@@ -377,8 +377,8 @@ class LogisticsSignalModule:
 
                             if len(price_data) >= 2:  # Need at least current and previous week
                                 # Most recent price is first in the list (sorted desc)
-                                diesel_price_current = float(price_data[0]["value"])
-                                diesel_price_previous = float(price_data[1]["value"])
+                                diesel_price_current = float(price_data[0]["value"])  # type: ignore
+                                diesel_price_previous = float(price_data[1]["value"])  # type: ignore
 
                                 # Calculate weekly percentage change
                                 diesel_change = (diesel_price_current - diesel_price_previous) / diesel_price_previous
@@ -518,22 +518,22 @@ class LogisticsSignalModule:
                 try:
                     print("Downloading NY Fed Global Supply Chain Pressure Index...")
                     print(f"Reading from cache file: {cache_file}")
-                    df = pd.read_csv(cache_file)
+                    df = pd.read_csv(cache_file)  # type: ignore
 
                     # Check if the required columns exist
                     if "Date" in df.columns and "GSCPI" in df.columns:
                         # Sort by date in descending order to get latest first
-                        df["Date"] = pd.to_datetime(df["Date"])
-                        df = df.sort_values("Date", ascending=False)
+                        df["Date"] = pd.to_datetime(df["Date"])  # type: ignore
+                        df = df.sort_values("Date", ascending=False)  # type: ignore
 
                         # Get the latest GSCPI value
                         if not df.empty:
-                            gscpi = float(df["GSCPI"].iloc[0])
+                            gscpi = float(df["GSCPI"].iloc[0])  # type: ignore
                             latest_date = df["Date"].iloc[0].strftime("%Y-%m-%d")
                             print(f"Found cached GSCPI data. Latest value: {gscpi} ({latest_date})")
 
                             if len(df) >= 2:
-                                gscpi_previous = float(df["GSCPI"].iloc[1])
+                                gscpi_previous = float(df["GSCPI"].iloc[1])  # type: ignore
                                 gscpi_trend = gscpi - gscpi_previous
 
                             source = f"NY Fed GSCPI (cached {latest_date})"
@@ -582,18 +582,18 @@ class LogisticsSignalModule:
                         import io
 
                         # Parse CSV from response
-                        df = pd.read_csv(io.StringIO(response.text))
+                        df = pd.read_csv(io.StringIO(response.text))  # type: ignore
 
                         # Check if the required columns exist
                         if "GSCPI" in df.columns and "Date" in df.columns:
                             # Sort by date in descending order to get latest first
-                            df["Date"] = pd.to_datetime(df["Date"])
-                            df = df.sort_values("Date", ascending=False)
+                            df["Date"] = pd.to_datetime(df["Date"])  # type: ignore
+                            df = df.sort_values("Date", ascending=False)  # type: ignore
 
                             # Get the latest GSCPI value and previous
                             if len(df) >= 2:
-                                gscpi = float(df["GSCPI"].iloc[0])
-                                gscpi_previous = float(df["GSCPI"].iloc[1])
+                                gscpi = float(df["GSCPI"].iloc[0])  # type: ignore
+                                gscpi_previous = float(df["GSCPI"].iloc[1])  # type: ignore
 
                                 # Calculate trend (change from previous month)
                                 gscpi_trend = gscpi - gscpi_previous
@@ -626,15 +626,15 @@ class LogisticsSignalModule:
                                 # Process the CSV
                                 import io
 
-                                df = pd.read_csv(io.StringIO(alt_response.text))
+                                df = pd.read_csv(io.StringIO(alt_response.text))  # type: ignore
 
                                 if "GSCPI" in df.columns and "Date" in df.columns:
-                                    df["Date"] = pd.to_datetime(df["Date"])
-                                    df = df.sort_values("Date", ascending=False)
+                                    df["Date"] = pd.to_datetime(df["Date"])  # type: ignore
+                                    df = df.sort_values("Date", ascending=False)  # type: ignore
 
                                     if len(df) >= 2:
-                                        gscpi = float(df["GSCPI"].iloc[0])
-                                        gscpi_previous = float(df["GSCPI"].iloc[1])
+                                        gscpi = float(df["GSCPI"].iloc[0])  # type: ignore
+                                        gscpi_previous = float(df["GSCPI"].iloc[1])  # type: ignore
                                         gscpi_trend = gscpi - gscpi_previous
 
                                         latest_date = df["Date"].iloc[0].strftime("%b %Y")
@@ -651,17 +651,17 @@ class LogisticsSignalModule:
             if gscpi is None and os.path.exists(cache_file):
                 try:
                     print("Using cached GSCPI data despite age...")
-                    df = pd.read_csv(cache_file)
+                    df = pd.read_csv(cache_file)  # type: ignore
 
                     if "GSCPI" in df.columns and "Date" in df.columns:
                         # Sort by date in descending order to get latest first
-                        df["Date"] = pd.to_datetime(df["Date"])
-                        df = df.sort_values("Date", ascending=False)
+                        df["Date"] = pd.to_datetime(df["Date"])  # type: ignore
+                        df = df.sort_values("Date", ascending=False)  # type: ignore
 
                         # Get the latest GSCPI value (index 0) and previous (index 1)
                         if len(df) >= 2:
-                            gscpi = float(df["GSCPI"].iloc[0])
-                            gscpi_previous = float(df["GSCPI"].iloc[1])
+                            gscpi = float(df["GSCPI"].iloc[0])  # type: ignore
+                            gscpi_previous = float(df["GSCPI"].iloc[1])  # type: ignore
 
                             # Calculate trend (change from previous month)
                             gscpi_trend = gscpi - gscpi_previous

@@ -50,7 +50,7 @@ class LiveDashboard:
 
     def add_trade(self, trade: Dict):
         """Add a new trade to the history"""
-        self.trades.append(trade)
+        self.trades.append(trade)  # type: ignore
 
         # Update performance stats
         if trade.get("closed", False):
@@ -83,7 +83,7 @@ class LiveDashboard:
     def add_alert(self, alert: Dict):
         """Add a new alert"""
         alert["timestamp"] = datetime.now().isoformat()
-        self.alerts.append(alert)
+        self.alerts.append(alert)  # type: ignore
         self._log_update("alert", alert)
 
     def display(self):

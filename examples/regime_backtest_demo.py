@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Add project root to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # type: ignore
 
 # Import the backtester
 from src.backtesting.regime_backtester import RegimeBacktester

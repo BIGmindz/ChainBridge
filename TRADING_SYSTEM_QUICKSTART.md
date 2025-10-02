@@ -8,6 +8,8 @@ This guide provides quick steps to set up and run the Multiple-Signal Trading Sy
 - Required dependencies installed (`pip install -r requirements.txt`)
 - New Listings Radar dependencies installed (`pip install -r requirements-listings.txt`)
 
+
+
 ## Step 1: Start Full System Live Monitoring
 
 Start the system monitor in a separate terminal window:

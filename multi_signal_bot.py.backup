@@ -180,7 +180,7 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
     # Override with environment variables if available (for live trading)
     env_api_key = os.getenv("API_KEY", "").strip()
     env_api_secret = os.getenv("API_SECRET", "").strip()
-    
+
     print(f"DEBUG: env_api_key='{env_api_key[:10]}...' , env_api_secret len={len(env_api_secret)}")
 
     if env_api_key and env_api_secret:

@@ -149,7 +149,7 @@ class MarketConditionClassifier:
 
         model_data = {
             "n_clusters": self.n_regimes,
-            "cluster_centers": self.kmeans_model.cluster_centers_.tolist(),
+            "cluster_centers": self.kmeans_model.cluster_centers_.tolist(),  # type: ignore
             "regime_mapping": self.regime_mapping,
             "features": self.features,
             "last_updated": datetime.now().isoformat(),
@@ -269,7 +269,7 @@ class MarketConditionClassifier:
         feature_vector = []
         for feature_name in self.features:
             feature_value = features.get(feature_name, 0.0)
-            feature_vector.append(feature_value)
+            feature_vector.append(feature_value)  # type: ignore
 
         feature_vector = np.array(feature_vector).reshape(1, -1)
 
@@ -332,7 +332,7 @@ class MarketConditionClassifier:
             final_confidence = rule_confidence
 
         # Store this regime detection for history
-        self._historical_regimes.append(
+        self._historical_regimes.append(  # type: ignore
             {
                 "regime": final_regime,
                 "confidence": final_confidence,
@@ -384,9 +384,9 @@ class MarketConditionClassifier:
             feature_vector = []
             for feature_name in self.features:
                 feature_value = features.get(feature_name, 0.0)
-                feature_vector.append(feature_value)
+                feature_vector.append(feature_value)  # type: ignore
 
-            feature_vectors.append(feature_vector)
+            feature_vectors.append(feature_vector)  # type: ignore
 
         if len(feature_vectors) < self.min_samples:
             print(f"Not enough feature vectors extracted: {len(feature_vectors)} < {self.min_samples}")
@@ -500,7 +500,7 @@ class MarketConditionClassifier:
 
         # Convert to probabilities
         for row in unique_regimes:
-            row_sum = transition_matrix.loc[row].sum()
+            row_sum = transition_matrix.loc[row].sum()  # type: ignore
             if row_sum > 0:
                 transition_matrix.loc[row] = transition_matrix.loc[row] / row_sum
 

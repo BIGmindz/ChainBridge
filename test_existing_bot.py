@@ -8,7 +8,7 @@ import os
 import sys
 
 # Add your existing src folder to path
-sys.path.append("src")
+sys.path.append("src")  # type: ignore
 
 # Import your engine
 from src.core.unified_trading_engine import MultiSignalTradingEngine
@@ -83,7 +83,7 @@ async def demo_your_bot():
             if cycle == 0:
                 pnl = 75.0
 
-            engine.update_ml_weights({"pnl": pnl, "signals": list(signals.keys())})
+            engine.update_ml_weights({"pnl": pnl, "signals": list(signals.keys())})  # type: ignore
 
             print(f"\n💰 Result: {'WIN' if pnl > 0 else 'LOSS'} (${pnl:+.2f})")
 

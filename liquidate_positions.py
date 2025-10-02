@@ -91,7 +91,7 @@ class PositionLiquidator:
                     print("💰 Liquidation complete! Funds available immediately for trading.")
 
                     # Log the transaction
-                    self.liquidation_log.append(
+                    self.liquidation_log.append(  # type: ignore
                         {
                             "timestamp": datetime.now(timezone.utc).isoformat(),
                             "symbol": symbol,

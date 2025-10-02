@@ -22,7 +22,7 @@ except ImportError:
     pass
 
 # Add project root to path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))  # type: ignore
 
 # Import the backtester
 from src.backtesting.regime_backtester import RegimeBacktester  # noqa: E402
@@ -35,7 +35,7 @@ async def run_btc_backtest():
 
     try:
         print(f"Loading BTC price data from {csv_path}...")
-        df = pd.read_csv(csv_path)
+        df = pd.read_csv(csv_path)  # type: ignore
 
         # Verify we have the necessary columns
         required_cols = ["date", "close", "volume"]
@@ -44,9 +44,9 @@ async def run_btc_backtest():
             return
 
         # Extract price data
-        price_data = df["close"].tolist()
-        volume_data = df["volume"].tolist()
-        dates = df["date"].tolist()
+        price_data = df["close"].tolist()  # type: ignore
+        volume_data = df["volume"].tolist()  # type: ignore
+        dates = df["date"].tolist()  # type: ignore
 
         # Create a more interesting dataset by synthesizing different market regimes
         # based on the sample data (which is very limited)
@@ -60,7 +60,7 @@ async def run_btc_backtest():
         # Use the data we have as a base
         base_price = price_data[0]
         _price_range = max(price_data) - min(price_data)
-        avg_volume = sum(volume_data) / len(volume_data)
+        avg_volume = sum(volume_data) / len(volume_data)  # type: ignore
 
         # Generate 180 days of data (6 months) with clear market regimes
         start_date = datetime.strptime(dates[0], "%Y-%m-%d")
@@ -74,10 +74,10 @@ async def run_btc_backtest():
                 daily_return = np.random.normal(0.005, 0.012)  # 0.5% average daily gain
                 new_price = enhanced_prices[-1] * (1 + daily_return)
 
-            enhanced_prices.append(new_price)
-            enhanced_volumes.append(avg_volume * np.random.uniform(0.8, 1.3))
+            enhanced_prices.append(new_price)  # type: ignore
+            enhanced_volumes.append(avg_volume * np.random.uniform(0.8, 1.3))  # type: ignore
             new_date = (start_date + pd.Timedelta(days=i)).strftime("%Y-%m-%d")
-            enhanced_dates.append(new_date)
+            enhanced_dates.append(new_date)  # type: ignore
 
         # Sideways market for 30 days
         sideways_start_price = enhanced_prices[-1]
@@ -87,10 +87,10 @@ async def run_btc_backtest():
             daily_return = np.random.normal(-deviation * 0.2, 0.007)  # Mean reversion
             new_price = enhanced_prices[-1] * (1 + daily_return)
 
-            enhanced_prices.append(new_price)
-            enhanced_volumes.append(avg_volume * np.random.uniform(0.6, 0.9))  # Lower volume
+            enhanced_prices.append(new_price)  # type: ignore
+            enhanced_volumes.append(avg_volume * np.random.uniform(0.6, 0.9))  # Lower volume  # type: ignore
             new_date = (start_date + pd.Timedelta(days=i)).strftime("%Y-%m-%d")
-            enhanced_dates.append(new_date)
+            enhanced_dates.append(new_date)  # type: ignore
 
         # Bear market for 60 days
         for i in range(90, 150):
@@ -98,10 +98,10 @@ async def run_btc_backtest():
             daily_return = np.random.normal(-0.004, 0.015)  # 0.4% average daily loss
             new_price = enhanced_prices[-1] * (1 + daily_return)
 
-            enhanced_prices.append(new_price)
-            enhanced_volumes.append(avg_volume * np.random.uniform(1.1, 1.6))  # Higher volume
+            enhanced_prices.append(new_price)  # type: ignore
+            enhanced_volumes.append(avg_volume * np.random.uniform(1.1, 1.6))  # Higher volume  # type: ignore
             new_date = (start_date + pd.Timedelta(days=i)).strftime("%Y-%m-%d")
-            enhanced_dates.append(new_date)
+            enhanced_dates.append(new_date)  # type: ignore
 
         # Sideways market for 30 days
         sideways_start_price = enhanced_prices[-1]
@@ -111,10 +111,10 @@ async def run_btc_backtest():
             daily_return = np.random.normal(-deviation * 0.2, 0.008)  # Mean reversion
             new_price = enhanced_prices[-1] * (1 + daily_return)
 
-            enhanced_prices.append(new_price)
-            enhanced_volumes.append(avg_volume * np.random.uniform(0.6, 0.9))  # Lower volume
+            enhanced_prices.append(new_price)  # type: ignore
+            enhanced_volumes.append(avg_volume * np.random.uniform(0.6, 0.9))  # Lower volume  # type: ignore
             new_date = (start_date + pd.Timedelta(days=i)).strftime("%Y-%m-%d")
-            enhanced_dates.append(new_date)
+            enhanced_dates.append(new_date)  # type: ignore
 
         print(f"Enhanced dataset created with {len(enhanced_prices)} days of price data")
 

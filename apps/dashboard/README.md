@@ -10,6 +10,8 @@ A Streamlit application that provides a consolidated view of all strategy backte
 - **Professional UI**: Clean, modern interface with proper formatting
 - **Real-time Updates**: Cached data loading with automatic refresh
 
+
+
 ## Usage
 
 ### Basic Usage
@@ -26,11 +28,15 @@ streamlit run apps/dashboard/comparison_dashboard.py
 
 1. **Backtest Reports**: Run the backtester first to generate reports
 
+
+
    ```bash
    python apps/backtester/backtester.py
    ```
 
 2. **Report Format**: The dashboard expects `backtest_report.md` files in each strategy directory
+
+
 
 ## Dashboard Features
 
@@ -40,11 +46,15 @@ streamlit run apps/dashboard/comparison_dashboard.py
 - **Best Sharpe Ratio**: Strategy with highest risk-adjusted returns
 - **Lowest Drawdown**: Strategy with smallest maximum drawdown
 
+
+
 ### Strategy Leaderboard
 
 - **Sortable Columns**: Click any column header to sort
 - **Formatted Metrics**: Properly formatted percentages, currency, and ratios
 - **Complete Data**: All key performance metrics in one view
+
+
 
 ## Data Sources
 
@@ -82,11 +92,15 @@ Expected markdown format in backtest reports:
 4. **Select Candidates**: Identify top performers for live deployment
 5. **Allocate Capital**: Make informed capital allocation decisions
 
+
+
 ## Dependencies
 
 - streamlit
 - pandas
 - plotly (for future chart enhancements)
+
+
 
 ## Configuration
 
@@ -97,6 +111,8 @@ The dashboard automatically discovers strategies and reports. No configuration r
 - Gracefully handles missing reports
 - Shows clear warnings when no data is available
 - Provides helpful guidance for next steps
+
+
 
 ## Future Enhancements
 

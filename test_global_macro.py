@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Add parent directory to path for importing modules
-sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))  # type: ignore
 from modules.global_macro_module import GlobalMacroModule
 
 

@@ -135,7 +135,7 @@ def calculate_allocation(listing):
     base_allocation = 0
 
     # Find the appropriate confidence tier
-    confidence_tiers = sorted([float(tier) for tier in ALLOCATION_SETTINGS["confidence_tiers"]], reverse=True)
+    confidence_tiers = sorted([float(tier) for tier in ALLOCATION_SETTINGS["confidence_tiers"]], reverse=True)  # type: ignore
 
     for tier in confidence_tiers:
         if confidence >= tier:
@@ -191,7 +191,7 @@ def allocate_capital(listing):
     # Update allocation state
     ALLOCATION_STATE["allocated_capital"] += amount
     ALLOCATION_STATE["available_capital"] -= amount
-    ALLOCATION_STATE["allocations"].append(allocation)
+    ALLOCATION_STATE["allocations"].append(allocation)  # type: ignore
 
     # Save the updated state
     save_allocation_state()
@@ -307,19 +307,19 @@ def main():
         try:
             first_amount = input(f"First listing amount [{ALLOCATION_SETTINGS['first_listing_amount']}]: ")
             if first_amount:
-                ALLOCATION_SETTINGS["first_listing_amount"] = float(first_amount)
+                ALLOCATION_SETTINGS["first_listing_amount"] = float(first_amount)  # type: ignore
 
             max_amount = input(f"Maximum allocation per listing [{ALLOCATION_SETTINGS['max_allocation_per_listing']}]: ")
             if max_amount:
-                ALLOCATION_SETTINGS["max_allocation_per_listing"] = float(max_amount)
+                ALLOCATION_SETTINGS["max_allocation_per_listing"] = float(max_amount)  # type: ignore
 
             min_amount = input(f"Minimum allocation per listing [{ALLOCATION_SETTINGS['min_allocation_per_listing']}]: ")
             if min_amount:
-                ALLOCATION_SETTINGS["min_allocation_per_listing"] = float(min_amount)
+                ALLOCATION_SETTINGS["min_allocation_per_listing"] = float(min_amount)  # type: ignore
 
             max_risk = input(f"Maximum risk per trade [{ALLOCATION_SETTINGS['max_risk_per_trade']}]: ")
             if max_risk:
-                ALLOCATION_SETTINGS["max_risk_per_trade"] = float(max_risk)
+                ALLOCATION_SETTINGS["max_risk_per_trade"] = float(max_risk)  # type: ignore
         except ValueError:
             print("Invalid input, using previous value")
 

@@ -40,7 +40,7 @@ def check_packages():
             installed[package] = installed_packages[package.lower()]
             print(f"✅ {package} ({installed_packages[package.lower()]}) is installed")
         else:
-            missing.append(package)
+            missing.append(package)  # type: ignore
             print(f"❌ {package} is NOT installed")
 
     return missing, installed

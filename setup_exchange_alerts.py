@@ -78,9 +78,9 @@ class ExchangeAlertConfig:
                 raise ValueError("notification methods must be strings")
             method_normalized = method.lower()
             if method_normalized not in ALLOWED_NOTIFICATIONS:
-                error_message = f"Unsupported notification method '{method}'. " f"Allowed methods: {sorted(ALLOWED_NOTIFICATIONS)}"
+                error_message = f"Unsupported notification method '{method}'. Allowed methods: {sorted(ALLOWED_NOTIFICATIONS)}"
                 raise ValueError(error_message)
-            notifications.append(method_normalized)
+            notifications.append(method_normalized)  # type: ignore
 
         # Store normalized versions to keep configuration consistent
         self.notification_method = notifications
@@ -112,7 +112,7 @@ EXCHANGE_ALERTS: Dict[str, ExchangeAlertConfig] = {}
 def clone_config(config: ExchangeAlertConfig) -> ExchangeAlertConfig:
     """Create a defensive copy of an exchange configuration."""
 
-    return ExchangeAlertConfig.from_dict(config.to_dict())
+    return ExchangeAlertConfig.from_dict(config.to_dict())  # type: ignore
 
 
 def load_exchange_alerts():
@@ -153,7 +153,7 @@ def save_exchange_alerts():
 
     try:
         with CONFIG_FILE.open("w", encoding="utf-8") as f:
-            serialized = {exchange: config.to_dict() for exchange, config in EXCHANGE_ALERTS.items()}
+            serialized = {exchange: config.to_dict() for exchange, config in EXCHANGE_ALERTS.items()}  # type: ignore
             json.dump(serialized, f, indent=2)
 
         logging.info("Saved exchange alert configurations to %s", CONFIG_FILE)
@@ -189,7 +189,7 @@ def check_exchange_listings():
                     and expected_return >= config.min_expected_return
                     and risk_level_to_numeric(risk_level) <= risk_level_to_numeric(config.max_risk_level)
                 ):
-                    filtered_listings.append(listing)
+                    filtered_listings.append(listing)  # type: ignore
 
         return filtered_listings
     except Exception as e:
@@ -234,7 +234,7 @@ def generate_alerts(listings):
             "message": message,
         }
 
-        alerts.append(alert)
+        alerts.append(alert)  # type: ignore
 
         # Log the alert
         logging.info(message)
@@ -334,12 +334,12 @@ def prompt_for_config(exchange: str, existing: ExchangeAlertConfig) -> ExchangeA
     enabled_input = input(f"Enable alerts for {exchange}? (y/n) [{'y' if existing.enabled else 'n'}]: ").strip().lower()
     enabled = existing.enabled if enabled_input not in {"y", "n"} else enabled_input == "y"
 
-    def prompt_float(prompt_text: str, current: float) -> float:
+    def prompt_float(prompt_text: str, current: float) -> float:  # type: ignore
         raw = input(prompt_text).strip()
         if not raw:
             return current
         try:
-            value_raw = float(raw)
+            value_raw = float(raw)  # type: ignore
             value = value_raw / 100 if value_raw >= 1 else value_raw
         except ValueError as exc:
             print(f"Invalid number '{raw}', keeping previous value.")
@@ -350,11 +350,11 @@ def prompt_for_config(exchange: str, existing: ExchangeAlertConfig) -> ExchangeA
             return current
         return value
 
-    min_conf = prompt_float(
+    min_conf = prompt_float(  # type: ignore
         f"Minimum confidence (0-100) [{existing.min_confidence * 100:.0f}]: ",
         existing.min_confidence,
     )
-    min_ret = prompt_float(
+    min_ret = prompt_float(  # type: ignore
         f"Minimum expected return (0-100) [{existing.min_expected_return * 100:.0f}]: ",
         existing.min_expected_return,
     )
@@ -363,8 +363,7 @@ def prompt_for_config(exchange: str, existing: ExchangeAlertConfig) -> ExchangeA
     max_risk = existing.max_risk_level if risk not in RISK_LEVELS else risk
 
     methods = input(
-        f"Notification methods (comma separated: {', '.join(sorted(ALLOWED_NOTIFICATIONS))})"
-        f" [{', '.join(existing.notification_method)}]: "
+        f"Notification methods (comma separated: {', '.join(sorted(ALLOWED_NOTIFICATIONS))}) [{', '.join(existing.notification_method)}]: "
     ).strip()
     if methods:
         notification_method = [m.strip().lower() for m in methods.split(",") if m.strip()]

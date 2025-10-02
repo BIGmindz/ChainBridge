@@ -10,6 +10,8 @@
 
 - Coinbase discovery/radar queries were disabled via an env/config guard to avoid cross-exchange polling.
 
+
+
 ## Artifacts
 
 - `artifacts/bot_live_2025-09-19_19-09-06Z.log`
@@ -18,6 +20,8 @@
 
 - `artifacts/multi_signal_trades_2025-09-19_19-09-06Z.json`
 
+
+
 ## Findings
 
 - Preflight minima checks passed for monitored symbols; bot proceeded to open positions.
@@ -25,6 +29,8 @@
 - Some external data sources (MARAD, EIA, NY Fed) returned timeouts or malformed cached data; bot fell back to seasonal approximations.
 
 - A prior test run encountered an "Insufficient funds" error for a sequential order; recommendation: implement pre-reserve capital or better atomic order sequencing.
+
+
 
 ## Changes made during this session
 
@@ -36,6 +42,8 @@
 
 - Fixed minor bugs and improved alignment and ANSI-safe rendering.
 
+
+
 ## Next recommended actions
 
 1. Implement pre-reserve capital logic to avoid sequential orders failing due to insufficient funds.
@@ -45,5 +53,7 @@
 3. Consider increasing logging verbosity for order responses to capture partial fills and rejections.
 
 4. Review and sanitize external data caching (GSCPI) to avoid parsing errors.
+
+
 
 If you want, I can open a follow-up PR with the proposed pre-reserve change and a simple unit test.

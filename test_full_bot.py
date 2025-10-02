@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 
 # Ensure we can import from project modules
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))  # type: ignore
 
 # Try importing core components
 try:
@@ -101,7 +101,7 @@ def generate_test_data(days=120, with_regime_change=True):
             volume *= 2  # Volume spike in bull market
 
         # Add row to data
-        data.append(
+        data.append(  # type: ignore
             {
                 "timestamp": dates[i],
                 "open": open_price,

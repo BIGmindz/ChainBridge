@@ -15,6 +15,8 @@ The Rapid Fire ML Training System is designed to optimize the signal weights and
 - **Win/loss tracking** with emphasis on learning from mistakes
 - **Visualization of signal importance** to identify most valuable signals
 
+
+
 ## Installation
 
 ### Full Version (with TensorFlow)
@@ -84,6 +86,8 @@ After running a training session, you'll find the following outputs in the `data
 - **Visualizations**: Charts showing performance over time and signal importance
 - **Training Data**: Raw data collected during the training session
 
+
+
 For the TensorFlow version, a trained model will also be saved for later use in production.
 
 ## Technical Details
@@ -97,6 +101,8 @@ The system works with the bot's 15 signals across 4 categories:
 3. **Global Macro Signals**: Inflation, Regulatory, Remittance, CBDC, FATF
 4. **Adoption Signals**: Chainalysis Global Adoption
 
+
+
 ### Learning Process
 
 1. The system runs multiple trading cycles during the 30-minute period
@@ -105,6 +111,8 @@ The system works with the bot's 15 signals across 4 categories:
 4. Signal weights are adjusted to prioritize effective signals
 5. The dashboard updates every 15 minutes to show progress
 
+
+
 ### Model Architecture
 
 The TensorFlow model uses a simple dense neural network:
@@ -112,6 +120,8 @@ The TensorFlow model uses a simple dense neural network:
 - Input layer: 15 neurons (one for each signal)
 - Hidden layers: 64, 32, and 16 neurons with ReLU activation
 - Output layer: 3 neurons with softmax activation (BUY, SELL, HOLD)
+
+
 
 ## Integration
 
