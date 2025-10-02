@@ -162,11 +162,11 @@ class RegimePerformanceDashboard:
                 row = [regime]
                 for metric in metrics:
                     value = regime_metrics.get(metric, 0)
-                    row.append(value)
-                data.append(row)
+                    row.append(value)  # type: ignore
+                data.append(row)  # type: ignore
 
         # Convert to numpy array for easier manipulation
-        data_array = np.array([[r[0]] + [float(x) for x in r[1:]] for r in data])
+        data_array = np.array([[r[0]] + [float(x) for x in r[1:]] for r in data])  # type: ignore
 
         if len(data_array) == 0:
             ax.text(
@@ -188,12 +188,12 @@ class RegimePerformanceDashboard:
         for row in data_array:
             regime = row[0]
             formatted_row = [
-                f"{float(row[1]):.2%}",  # Total Return
-                f"{float(row[2]):.2f}",  # Sharpe Ratio
-                f"{float(row[3]):.2%}",  # Max Drawdown
-                f"{float(row[4]):.2%}",  # Win Rate
+                f"{float(row[1]):.2%}",  # Total Return  # type: ignore
+                f"{float(row[2]):.2f}",  # Sharpe Ratio  # type: ignore
+                f"{float(row[3]):.2%}",  # Max Drawdown  # type: ignore
+                f"{float(row[4]):.2%}",  # Win Rate  # type: ignore
             ]
-            display_data.append([regime] + formatted_row)
+            display_data.append([regime] + formatted_row)  # type: ignore
 
         table = ax.table(
             cellText=display_data,
@@ -211,7 +211,7 @@ class RegimePerformanceDashboard:
         for i, row in enumerate(data_array):
             # Total Return (higher is better)
             cell = table[(i + 1, 1)]
-            value = float(row[1])
+            value = float(row[1])  # type: ignore
             if value > 0.1:
                 cell.set_facecolor("#c6efce")  # Light green
             elif value < 0:
@@ -219,7 +219,7 @@ class RegimePerformanceDashboard:
 
             # Sharpe Ratio (higher is better)
             cell = table[(i + 1, 2)]
-            value = float(row[2])
+            value = float(row[2])  # type: ignore
             if value > 1.0:
                 cell.set_facecolor("#c6efce")
             elif value < 0:
@@ -227,7 +227,7 @@ class RegimePerformanceDashboard:
 
             # Max Drawdown (lower is better)
             cell = table[(i + 1, 3)]
-            value = float(row[3])
+            value = float(row[3])  # type: ignore
             if value < 0.1:
                 cell.set_facecolor("#c6efce")
             elif value > 0.2:
@@ -235,7 +235,7 @@ class RegimePerformanceDashboard:
 
             # Win Rate (higher is better)
             cell = table[(i + 1, 4)]
-            value = float(row[4])
+            value = float(row[4])  # type: ignore
             if value > 0.6:
                 cell.set_facecolor("#c6efce")
             elif value < 0.4:
@@ -264,7 +264,7 @@ class RegimePerformanceDashboard:
             return
 
         # Convert to percentages
-        labels = list(regime_counts.keys())
+        labels = list(regime_counts.keys())  # type: ignore
         sizes = [count / total_periods * 100 for count in regime_counts.values()]
 
         # Create pie chart
@@ -310,13 +310,13 @@ class RegimePerformanceDashboard:
         for regime in regimes:
             signals = self.results[regime].get("signals", [])
 
-            buy_count = np.sum(signals == 1)
-            sell_count = np.sum(signals == -1)
-            hold_count = np.sum(signals == 0)
+            buy_count = np.sum(signals == 1)  # type: ignore
+            sell_count = np.sum(signals == -1)  # type: ignore
+            hold_count = np.sum(signals == 0)  # type: ignore
 
-            buy_counts.append(buy_count)
-            sell_counts.append(sell_count)
-            hold_counts.append(hold_count)
+            buy_counts.append(buy_count)  # type: ignore
+            sell_counts.append(sell_count)  # type: ignore
+            hold_counts.append(hold_count)  # type: ignore
 
         # Create bar chart
         x = np.arange(len(regimes))
@@ -346,14 +346,14 @@ class RegimePerformanceDashboard:
 
             if len(returns) > 0:
                 volatility = np.std(returns) * np.sqrt(252)  # Annualized
-                volatilities.append(volatility)
+                volatilities.append(volatility)  # type: ignore
 
                 # Max drawdown is already in the metrics
                 max_drawdown = self.results[regime].get("metrics", {}).get("max_drawdown", 0)
-                max_drawdowns.append(max_drawdown)
+                max_drawdowns.append(max_drawdown)  # type: ignore
             else:
-                volatilities.append(0)
-                max_drawdowns.append(0)
+                volatilities.append(0)  # type: ignore
+                max_drawdowns.append(0)  # type: ignore
 
         # Create horizontal bar chart
         y_pos = np.arange(len(regimes))
@@ -415,7 +415,7 @@ class RegimePerformanceDashboard:
                     )
 
             f.write("\n-- Regime Distribution --\n")
-            total_periods = sum(len(data.get("returns", [])) for regime, data in self.results.items() if regime != "Overall")
+            total_periods = sum(len(data.get("returns", [])) for regime, data in self.results.items() if regime != "Overall")  # type: ignore
 
             if total_periods > 0:
                 f.write("\n{:<15} {:<15} {:<15}\n".format("Regime", "Periods", "Percentage"))
@@ -438,9 +438,9 @@ class RegimePerformanceDashboard:
                 for regime, data in self.results.items():
                     if regime != "Overall" and "signals" in data:
                         signals = data["signals"]
-                        buy_count = np.sum(signals == 1)
-                        sell_count = np.sum(signals == -1)
-                        hold_count = np.sum(signals == 0)
+                        buy_count = np.sum(signals == 1)  # type: ignore
+                        sell_count = np.sum(signals == -1)  # type: ignore
+                        hold_count = np.sum(signals == 0)  # type: ignore
 
                         f.write("{:<15} {:<15} {:<15} {:<15}\n".format(regime, buy_count, sell_count, hold_count))
 
@@ -453,7 +453,7 @@ class RegimePerformanceDashboard:
                 serializable_data = {}
                 for key, value in data.items():
                     if isinstance(value, np.ndarray):
-                        serializable_data[key] = value.tolist()
+                        serializable_data[key] = value.tolist()  # type: ignore
                     else:
                         serializable_data[key] = value
                 serializable_results[regime] = serializable_data

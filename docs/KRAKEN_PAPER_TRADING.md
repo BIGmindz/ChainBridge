@@ -1,4 +1,5 @@
 # Kraken Paper Trading Module
+
 ## Professional Paper Trading Engine with ML Integration
 
 A comprehensive paper trading implementation specifically designed for the Kraken exchange with real-time price feeds, advanced risk management, and machine learning integration.
@@ -14,9 +15,11 @@ A comprehensive paper trading implementation specifically designed for the Krake
 - **WebSocket Simulation**: Real-time data feed simulation
 - **Emergency Risk Controls**: Automatic position closure on risk limit breaches
 
+
+
 ### 📁 Module Structure
 
-```
+```text
 src/
 ├── kraken_paper_live_bot.py      # Core paper trading engine
 ├── ml_trading_integration.py     # ML signal integration layer
@@ -110,6 +113,7 @@ for symbol, result in results.items():
 The `config/kraken_paper_trading.yaml` file provides comprehensive configuration options:
 
 #### Core Settings
+
 ```yaml
 initial_capital: 10000.0
 symbols: ["BTC/USD", "ETH/USD", "ADA/USD"]
@@ -117,6 +121,7 @@ exchange: "kraken"
 ```
 
 #### Risk Management
+
 ```yaml
 risk_management:
   max_position_size: 0.1          # 10% max per position
@@ -128,6 +133,7 @@ risk_management:
 ```
 
 #### ML Integration
+
 ```yaml
 ml_integration:
   confidence_threshold: 0.6        # Minimum confidence to trade
@@ -154,9 +160,12 @@ await bot.run_live_trading()
 #### 2. Correlation-based Position Sizing
 
 The bot automatically adjusts position sizes based on correlation:
+
 - Similar assets (BTC/ETH) get reduced allocation
 - Different asset classes maintain full allocation
 - Real-time correlation monitoring
+
+
 
 #### 3. Dynamic Risk Management
 
@@ -180,13 +189,17 @@ print(f"Trade journal exported to: {journal_path}")
 ### 📊 Performance Tracking
 
 #### Key Metrics
+
 - **Win Rate**: Percentage of profitable trades
 - **Profit Factor**: Gross profit / Gross loss
 - **Sharpe Ratio**: Risk-adjusted return metric
 - **Maximum Drawdown**: Largest peak-to-trough decline
 - **Average Win/Loss**: Mean profit and loss per trade
 
+
+
 #### Real-time Monitoring
+
 ```python
 # Get performance metrics
 metrics = bot.performance
@@ -200,13 +213,17 @@ print(f"Sharpe Ratio: {bot._calculate_sharpe_ratio(daily_returns):.2f}")
 ### 🤖 ML Signal Integration
 
 #### Supported Signal Types
+
 - **RSI**: Relative Strength Index signals
 - **MACD**: Moving Average Convergence Divergence
 - **Bollinger Bands**: Volatility-based signals
 - **Volume Profile**: Volume-based momentum
 - **Sentiment Analysis**: Market sentiment indicators
 
+
+
 #### Signal Processing
+
 ```python
 # Aggregate signals with confidence weighting
 aggregated_signal = ml_integration._aggregate_signals(signal_data, symbol)
@@ -217,6 +234,7 @@ print(f"Signal Count: {aggregated_signal['signal_count']}")
 ```
 
 #### Performance Feedback Loop
+
 ```python
 # Update signal performance based on trade outcomes
 ml_integration.update_signal_performance(position_id, 'WIN', pnl=150.0)
@@ -229,20 +247,25 @@ print(f"Best performing module: {report['summary']['best_performing_module']}")
 ### 🧪 Testing and Validation
 
 #### Run Basic Tests
+
 ```bash
 python test_kraken_paper_trading.py
 ```
 
 #### Run Demo
+
 ```bash
 python examples/kraken_paper_trading_demo.py --demo all --duration 5
 ```
 
 #### Demo Options
+
 - `--demo basic`: Basic paper trading features
 - `--demo ml`: ML signal integration
 - `--demo risk`: Risk management features
 - `--demo all`: Complete feature demonstration
+
+
 
 ### 🔌 Integration with Existing Bot
 
@@ -254,10 +277,10 @@ from src.kraken_paper_live_bot import KrakenPaperLiveBot
 class EnhancedMultiSignalBot:
     def __init__(self):
         # Existing initialization...
-        
+
         # Add Kraken paper trading
         self.kraken_bot = KrakenPaperLiveBot(self.config)
-        
+
     async def execute_trade_decision(self, symbol, decision):
         # Use Kraken bot for execution
         if decision['action'] in ['BUY', 'SELL']:
@@ -297,6 +320,7 @@ risk_metrics = dashboard['risk_metrics']
 ### 📈 Production Deployment
 
 #### 1. Environment Setup
+
 ```bash
 # Install additional dependencies
 pip install websockets asyncio
@@ -309,6 +333,7 @@ cp config/kraken_paper_trading.yaml config/production.yaml
 ```
 
 #### 2. Production Configuration
+
 ```yaml
 # production.yaml
 paper_trading:
@@ -327,39 +352,49 @@ logging:
 ```
 
 #### 3. Monitoring Setup
+
 ```python
 # Set up periodic performance reporting
 async def performance_monitor():
     while True:
         dashboard = kraken_bot.get_performance_dashboard()
-        
+
         # Log key metrics
         logger.info(f"Portfolio: ${dashboard['account']['portfolio_value']:,.2f}")
         logger.info(f"Return: {dashboard['account']['total_return_pct']:+.2f}%")
         logger.info(f"Drawdown: {dashboard['performance']['max_drawdown']:-.2%}")
-        
+
         await asyncio.sleep(3600)  # Every hour
 ```
 
 ### 🛡️ Risk Management
 
 #### Position Sizing Rules
+
 1. **Maximum Position Size**: 10% of capital per position
 2. **Correlation Adjustment**: Reduce size for correlated positions
 3. **Volatility Adjustment**: Smaller positions for higher volatility
 4. **Confidence Weighting**: Position size scales with ML confidence
 
+
+
 #### Stop Loss Management
+
 1. **Fixed Percentage**: Default 3% stop loss
 2. **Volatility-based**: Adjust based on symbol volatility
 3. **Trailing Stops**: Dynamic stop loss adjustment
 4. **Time-based**: Close positions after maximum duration
 
+
+
 #### Emergency Controls
+
 1. **Drawdown Limit**: Close all positions at 15% drawdown
 2. **Daily Loss Limit**: Stop trading after 5% daily loss
 3. **Consecutive Losses**: Stop after 5 consecutive losses
 4. **Correlation Monitoring**: Reduce exposure during high correlation
+
+
 
 ### 📋 Trade Journal Format
 
@@ -401,6 +436,8 @@ async def performance_monitor():
 #### Common Issues
 
 1. **Import Errors**
+
+
    ```python
    # Add to Python path
    import sys
@@ -408,12 +445,16 @@ async def performance_monitor():
    ```
 
 2. **WebSocket Connection Issues**
+
+
    ```python
    # Use fallback polling if WebSocket fails
    config['price_feed']['backup_polling_interval'] = 5.0
    ```
 
 3. **Memory Usage**
+
+
    ```python
    # Limit trade history size
    if len(self.trade_journal) > 10000:
@@ -428,17 +469,22 @@ async def performance_monitor():
 4. **Real Trading**: Transition from paper to live trading
 5. **Advanced Analytics**: Add more sophisticated metrics
 
+
+
 ### 📞 Support
 
 For issues or questions:
+
 1. Check the test suite: `python test_kraken_paper_trading.py`
 2. Run the demo: `python examples/kraken_paper_trading_demo.py`
 3. Review the configuration: `config/kraken_paper_trading.yaml`
 4. Check logs: `logs/kraken_paper_trading.log`
 
+
+
 ---
 
-**Version**: 1.0.0  
-**Author**: BIGmindz  
-**License**: MIT  
+**Version**: 1.0.0
+**Author**: BIGmindz
+**License**: MIT
 **Status**: Ready for Production Integration

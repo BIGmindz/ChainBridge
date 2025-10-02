@@ -76,13 +76,13 @@ class LogisticsSignalsModule:
 
             # Try to load real data if available
             if os.path.exists(f"{self.data_path}/port_congestion.csv"):
-                data["port_congestion"] = pd.read_csv(f"{self.data_path}/port_congestion.csv", parse_dates=["date"])
+                data["port_congestion"] = pd.read_csv(f"{self.data_path}/port_congestion.csv", parse_dates=["date"])  # type: ignore
 
             if os.path.exists(f"{self.data_path}/diesel_prices.csv"):
-                data["diesel_prices"] = pd.read_csv(f"{self.data_path}/diesel_prices.csv", parse_dates=["date"])
+                data["diesel_prices"] = pd.read_csv(f"{self.data_path}/diesel_prices.csv", parse_dates=["date"])  # type: ignore
 
             if os.path.exists(f"{self.data_path}/container_rates.csv"):
-                data["container_rates"] = pd.read_csv(f"{self.data_path}/container_rates.csv", parse_dates=["date"])
+                data["container_rates"] = pd.read_csv(f"{self.data_path}/container_rates.csv", parse_dates=["date"])  # type: ignore
 
             # If any data is missing, generate all to ensure consistency
             if len(data) < 3:
@@ -153,7 +153,7 @@ class LogisticsSignalsModule:
 
         for metric, df in self.historical_data.items():
             if not df.empty:
-                latest_data[metric] = float(df["value"].iloc[-1])
+                latest_data[metric] = float(df["value"].iloc[-1])  # type: ignore
             else:
                 latest_data[metric] = 0.5  # Default to neutral
 
@@ -236,8 +236,8 @@ class LogisticsSignalsModule:
         buy_signals = [s for s in signals.values() if s["signal"] == "BUY"]
         sell_signals = [s for s in signals.values() if s["signal"] == "SELL"]
 
-        buy_strength = sum(s["confidence"] for s in buy_signals) / len(signals) if buy_signals else 0
-        sell_strength = sum(s["confidence"] for s in sell_signals) / len(signals) if sell_signals else 0
+        buy_strength = sum(s["confidence"] for s in buy_signals) / len(signals) if buy_signals else 0  # type: ignore
+        sell_strength = sum(s["confidence"] for s in sell_signals) / len(signals) if sell_signals else 0  # type: ignore
 
         # Determine final signal
         if buy_strength > sell_strength and buy_strength > 0.2:

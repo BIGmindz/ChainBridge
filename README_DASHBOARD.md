@@ -28,9 +28,13 @@ A powerful, real-time dashboard for monitoring and analyzing trading bot perform
   - Customizable Indicators
   - Dark Theme Optimized
 
+
+
 ## Quick Start
 
 1. Setup the environment:
+
+
 
 ```bash
 make venv
@@ -39,11 +43,15 @@ make install
 
 1. Run the dashboard:
 
+
+
 ```bash
 ./run_dashboard.sh
 ```
 
 1. Access the dashboard at: `http://localhost:8050`
+
+
 
 ## Data Sources
 
@@ -53,12 +61,16 @@ The dashboard automatically reads:
 - Real-time market data from configured exchanges
 - Technical indicators and signals from the trading bot
 
+
+
 ## Configuration
 
 - Update intervals can be adjusted in the dashboard UI
 - Default port (8050) can be modified in `run_dashboard.sh`
 - Indicator settings are configurable through the UI
 - Color schemes and layouts follow system dark/light mode
+
+
 
 ## Requirements
 
@@ -69,5 +81,7 @@ The dashboard automatically reads:
   - plotly
   - pandas
   - numpy
+
+
 
 All dependencies are automatically installed by the setup script.

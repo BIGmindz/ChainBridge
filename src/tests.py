@@ -43,7 +43,7 @@ def test_insufficient_ohlcv_returns_nan():
     """Test that insufficient OHLCV data returns NaN."""
     short_ohlcv = [[0, 0, 0, 0, 100.0, 0.0] for _ in range(10)]
     rsi_val = calculate_rsi_from_ohlcv(short_ohlcv, period=14)
-    assert isinstance(rsi_val, float) and math.isnan(rsi_val), f"Expected NaN, got {rsi_val}"
+    assert isinstance(rsi_val, float) and math.isnan(rsi_val), f"Expected NaN, got {rsi_val}"  # type: ignore
 
 
 def run_tests():

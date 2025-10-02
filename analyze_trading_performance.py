@@ -55,7 +55,7 @@ class TradingPerformanceAnalyzer:
                 self.trades_df = pd.DataFrame(trades)
 
                 # Convert timestamp to datetime
-                self.trades_df["timestamp"] = pd.to_datetime(self.trades_df["timestamp"])
+                self.trades_df["timestamp"] = pd.to_datetime(self.trades_df["timestamp"])  # type: ignore
 
                 print(f"✅ Loaded {len(self.trades_df)} trades from {self.trades_file}")
             except Exception as e:
@@ -110,7 +110,7 @@ class TradingPerformanceAnalyzer:
             "buy_trades": len(self.trades_df[self.trades_df["action"] == "BUY"]),
             "sell_trades": len(self.trades_df[self.trades_df["action"] == "SELL"]),
             "unique_symbols": self.trades_df["symbol"].nunique(),
-            "symbols_traded": self.trades_df["symbol"].unique().tolist(),
+            "symbols_traded": self.trades_df["symbol"].unique().tolist(),  # type: ignore
             "start_date": self.trades_df["timestamp"].min(),
             "end_date": self.trades_df["timestamp"].max(),
             "avg_confidence": self.trades_df["confidence"].mean(),
@@ -228,8 +228,8 @@ class TradingPerformanceAnalyzer:
 
         for module, stats in self.signal_performance.items():
             if "agreement_rate" in stats:
-                modules.append(module)
-                agreement_rates.append(stats["agreement_rate"])
+                modules.append(module)  # type: ignore
+                agreement_rates.append(stats["agreement_rate"])  # type: ignore
 
         # Create the chart
         plt.figure(figsize=(10, 6))

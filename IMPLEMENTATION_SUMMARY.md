@@ -58,6 +58,8 @@
    - NEW: Recent trade monitoring
    - NEW: Automatic refreshing for live updates
 
+
+
 ## Key Features Added
 
 1. **Dynamic Market Selection**
@@ -96,6 +98,8 @@
    - Test mode for system verification
    - Analysis mode for performance evaluation
 
+
+
 ## Benefits
 
 - **Better Trading Opportunities**: Focus on volatile markets with sufficient liquidity
@@ -106,6 +110,8 @@
 - **Professional Money Management**: Mathematically optimal position sizing
 - **Risk Control**: Stop-loss and take-profit management with drawdown protection
 - **Portfolio Tracking**: Real-time capital and performance monitoring
+
+
 
 ## Key Correlation Analysis
 
@@ -121,6 +127,8 @@ The logistics-based signals include:
 - Port congestion: Predicts inflation → BTC hedge trades
 - Diesel prices: Mining costs → BTC production economics
 - Container rates: Supply chain stress → Risk-on/off flows
+
+
 
 ## Next Steps
 

@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 
 # Add parent directory to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # type: ignore
 
 # Import the GlobalMacroModule
 from modules.global_macro_module import GlobalMacroModule
@@ -87,7 +87,7 @@ def run_global_macro_demo():
 
             # Calculate price
             price = base_price + trend_component + noise
-            prices.append(price)
+            prices.append(price)  # type: ignore
 
         # Create DataFrame
         df = pd.DataFrame({"Date": dates, "Price": prices})

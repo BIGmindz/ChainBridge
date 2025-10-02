@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Add parent directory to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # type: ignore
 
 # Import the AdoptionTrackerModule
 from modules.adoption_tracker_module import AdoptionTrackerModule
@@ -59,7 +59,7 @@ def test_adoption_tracker():
                 countries = []
                 for country, country_data in region_data.get("countries", {}).items():
                     growth = country_data.get("yoy_change", 0)
-                    countries.append((country, growth))
+                    countries.append((country, growth))  # type: ignore
 
                 # Sort by growth
                 countries.sort(key=lambda x: x[1], reverse=True)
@@ -89,10 +89,10 @@ def test_adoption_tracker():
         above_threshold = []
 
         for region, data in adoption_data.get("current_year_data", {}).items():
-            regions.append(region.replace("_", " "))
+            regions.append(region.replace("_", " "))  # type: ignore
             growth = data.get("yoy_change", 0)
-            growth_rates.append(growth * 100)  # Convert to percentage
-            above_threshold.append(growth > tracker.buy_threshold)
+            growth_rates.append(growth * 100)  # Convert to percentage  # type: ignore
+            above_threshold.append(growth > tracker.buy_threshold)  # type: ignore
 
         # Sort by growth rate
         sorted_indices = np.argsort(growth_rates)[::-1]

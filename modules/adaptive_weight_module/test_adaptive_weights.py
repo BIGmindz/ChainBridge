@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Set up paths
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # type: ignore
 
 # Import the modules to test
 from modules.adaptive_weight_module.adaptive_weight_model import AdaptiveWeightModule
@@ -241,7 +241,7 @@ class AdaptiveWeightTester:
             }
 
         # Calculate overall accuracy
-        correct_count = sum(1 for r in results.values() if r.get("correct", False))
+        correct_count = sum(1 for r in results.values() if r.get("correct", False))  # type: ignore
         accuracy = correct_count / len(results) if results else 0.0
 
         summary = {
@@ -393,7 +393,7 @@ class AdaptiveWeightTester:
     def _visualize_regime_detection(self, results: Dict[str, Any]) -> str:
         """Visualize regime detection results"""
         # Extract data
-        scenarios = list(results.get("scenario_results", {}).keys())
+        scenarios = list(results.get("scenario_results", {}).keys())  # type: ignore
         expected = [results["scenario_results"][s]["expected_regime"] for s in scenarios]
         detected = [results["scenario_results"][s]["detected_regime"] for s in scenarios]
         confidences = [results["scenario_results"][s]["confidence"] for s in scenarios]
@@ -440,7 +440,7 @@ class AdaptiveWeightTester:
     def _visualize_weight_optimization(self, results: Dict[str, Any]) -> str:
         """Visualize weight optimization results"""
         # Extract data
-        scenarios = list(results.keys())
+        scenarios = list(results.keys())  # type: ignore
         regimes = [results[s].get("detected_regime", "UNKNOWN") for s in scenarios]
 
         # Extract weights by layer
@@ -455,7 +455,7 @@ class AdaptiveWeightTester:
         for scenario in scenarios:
             optimized_weights = results[scenario].get("optimized_weights", {})
             for layer in layers:
-                weights_by_layer[layer].append(optimized_weights.get(layer, 0.0))
+                weights_by_layer[layer].append(optimized_weights.get(layer, 0.0))  # type: ignore
 
         # Create figure
         plt.figure(figsize=(12, 8))

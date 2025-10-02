@@ -1,0 +1,32 @@
+exchange: kraken
+api:
+  key: "${API_KEY}"
+  secret: "${API_SECRET}"
+symbols:
+  - SOL/USD
+  - DOGE/USD
+  - SHIB/USD
+  - AVAX/USD
+  - ATOM/USD
+  - PRO/USD
+  - WLFI/USD
+  - KIN/USD
+  - CRO/USD
+  - ZORA/USD
+timeframe: 5m
+poll_seconds: 30
+cooldown_minutes: 5
+initial_capital: 1000.0
+budget_management:
+  compound_profits: true
+  max_positions: 5
+  max_risk_per_trade: 0.02
+  position_size_method: kelly
+  reduce_on_drawdown: true
+rsi:
+  period: 14
+  buy_threshold: 35
+  sell_threshold: 65
+csv_log: benson_signals.csv
+multi_signal_log: multi_signal_trades.json
+metrics_file: trading_metrics.json

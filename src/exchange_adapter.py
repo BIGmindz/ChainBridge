@@ -12,6 +12,7 @@ from typing import Any, Dict, List
 
 try:
     from dotenv import load_dotenv  # type: ignore
+
     load_dotenv()
 except ImportError:
     pass  # dotenv not available, use system env vars
@@ -23,7 +24,7 @@ class ExchangeAdapter:
     Supports both paper trading and live trading modes.
     """
 
-    def __init__(self, exchange, config: Dict[str, Any]):
+    def __init__(self, exchange, config, paper_mode=None, budget_manager=None, **kwargs):
         self.exchange = exchange
         self.config = config
 
@@ -69,7 +70,7 @@ class ExchangeAdapter:
                 "status": "filled",
                 "type": "paper_trade",
             }
-            self.paper_trades.append(order)
+            self.paper_trades.append(order)  # type: ignore
             print(f"[PAPER TRADE] {side.upper()} {amount} {symbol} @ ${price:,.2f}")
             return order
         else:

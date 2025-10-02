@@ -4,7 +4,7 @@ This directory contains the "Strategy as a Service" architecture for the BensonB
 
 ## Architecture Overview
 
-```
+```text
 strategies/
 ├── bull_trend/          # Aggressive trend-following strategy
 │   ├── config.yaml      # Strategy-specific configuration
@@ -24,17 +24,23 @@ strategies/
 3. **Strategy Execution**: Selected strategy is passed to the strategy engine
 4. **Independent Deployment**: Each strategy runs with its own configuration and model
 
+
+
 ## Creating New Strategies
 
 To create a new trading strategy:
 
 1. **Create Strategy Directory**:
 
+
+
    ```bash
    mkdir strategies/my_new_strategy
    ```
 
 2. **Add Configuration File**:
+
+
    Create `strategies/my_new_strategy/config.yaml` with strategy-specific settings:
 
    ```yaml
@@ -50,9 +56,13 @@ To create a new trading strategy:
    ```
 
 3. **Add Trained Model**:
+
+
    Place your trained model at `strategies/my_new_strategy/model.pkl`
 
 4. **Strategy is Ready**: The launcher will automatically discover and offer your new strategy
+
+
 
 ## Strategy Types
 
@@ -63,6 +73,8 @@ To create a new trading strategy:
 - **Trend-following approach**
 - **Optimized for upward markets**
 
+
+
 ### Bear Defense Strategy
 
 - **Conservative position sizing** (max 3 positions)
@@ -70,12 +82,16 @@ To create a new trading strategy:
 - **Short-biased approach**
 - **Optimized for downward markets**
 
+
+
 ### Sideways Range Strategy
 
 - **Moderate position sizing** (5 positions)
 - **Balanced risk tolerance** (12% per trade)
 - **Mean-reversion approach**
 - **Optimized for ranging markets**
+
+
 
 ## Usage
 
@@ -91,6 +107,8 @@ This will:
 2. Present an interactive menu for selection
 3. Launch the selected strategy with its configuration
 
+
+
 ## Integration with Regime Detection
 
 While strategies can be selected manually, they are designed to work with the automatic regime detection system:
@@ -98,6 +116,8 @@ While strategies can be selected manually, they are designed to work with the au
 - **Bull Trend** ← Deployed when regime detection identifies bull markets
 - **Bear Defense** ← Deployed when regime detection identifies bear markets
 - **Sideways Range** ← Deployed when regime detection identifies sideways markets
+
+
 
 ## Future Enhancements
 

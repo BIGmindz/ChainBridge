@@ -70,11 +70,11 @@ class PatternEngine:
 
         # Check for double bottom
         if self._check_pattern(data, "double_bottom"):
-            patterns.append({"name": "double_bottom", "confidence": 0.8, "signal": "buy"})
+            patterns.append({"name": "double_bottom", "confidence": 0.8, "signal": "buy"})  # type: ignore
 
         # Check for head and shoulders
         if self._check_pattern(data, "head_shoulders"):
-            patterns.append({"name": "head_shoulders", "confidence": 0.75, "signal": "sell"})
+            patterns.append({"name": "head_shoulders", "confidence": 0.75, "signal": "sell"})  # type: ignore
 
         # Additional patterns would be checked here
 

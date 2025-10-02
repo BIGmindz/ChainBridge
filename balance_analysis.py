@@ -66,7 +66,7 @@ def main():
             if usd_value > 0:
                 total_value += usd_value
                 if usd_value >= 1.0:  # Only include meaningful amounts
-                    assets_to_check.append((asset, amount, usd_value))
+                    assets_to_check.append((asset, amount, usd_value))  # type: ignore
 
     print("\n=== SUMMARY ===")
     print(f"Total USD value: ${total_value:.2f}")

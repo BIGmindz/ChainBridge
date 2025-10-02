@@ -9,9 +9,10 @@ import sys
 import logging
 import os
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s | %(levelname)s | %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
 
-def discover_strategies(base_path='strategies'):
+
+def discover_strategies(base_path="strategies"):
     """Scans the strategy directory to find all available trading strategies."""
     if not os.path.exists(base_path):
         return {}
@@ -20,16 +21,14 @@ def discover_strategies(base_path='strategies'):
     for strategy_name in os.listdir(base_path):
         strategy_path = os.path.join(base_path, strategy_name)
         if os.path.isdir(strategy_path):
-            config_path = os.path.join(strategy_path, 'config.yaml')
-            model_path = os.path.join(strategy_path, 'model.pkl')
+            config_path = os.path.join(strategy_path, "config.yaml")
+            model_path = os.path.join(strategy_path, "model.pkl")
 
             # A valid strategy must have both a config and a model file.
             if os.path.exists(config_path) and os.path.exists(model_path):
-                strategies[strategy_name] = {
-                    "config_path": config_path,
-                    "model_path": model_path
-                }
+                strategies[strategy_name] = {"config_path": config_path, "model_path": model_path}
     return strategies
+
 
 def main():
     """
@@ -56,7 +55,7 @@ def main():
 
     if selected_strategy_name not in available_strategies:
         logging.error(f"Strategy '{selected_strategy_name}' not found.")
-        logging.info(f"Available strategies: {list(available_strategies.keys())}")
+        logging.info(f"Available strategies: {list(available_strategies.keys())}")  # type: ignore
         sys.exit(1)
 
     selected_strategy = available_strategies[selected_strategy_name]
@@ -68,10 +67,10 @@ def main():
     try:
         # Pass the selected strategy's paths to the engine via environment variables
         env = os.environ.copy()
-        env['BENSON_STRATEGY_CONFIG'] = selected_strategy['config_path']
-        env['BENSON_STRATEGY_MODEL'] = selected_strategy['model_path']
+        env["BENSON_STRATEGY_CONFIG"] = selected_strategy["config_path"]
+        env["BENSON_STRATEGY_MODEL"] = selected_strategy["model_path"]
 
-        strategy_engine_script = 'strategy_engine.py'
+        strategy_engine_script = "strategy_engine.py"
         if not os.path.exists(strategy_engine_script):
             logging.error(f"FATAL: Strategy Engine not found at '{strategy_engine_script}'.")
             sys.exit(1)
@@ -87,6 +86,7 @@ def main():
         logging.error(f"The trading session exited with an error (code {e.returncode}).")
     except Exception as e:
         logging.error(f"An unexpected error occurred: {e}")
+
 
 if __name__ == "__main__":
     main()

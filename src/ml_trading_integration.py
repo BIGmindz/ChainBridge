@@ -548,7 +548,7 @@ class MLTradingIntegration:
             self.signal_performance[key]["total_signals"] += 1
 
             # Store for later outcome evaluation
-            self.position_outcomes.append(
+            self.position_outcomes.append(  # type: ignore
                 {
                     "position_id": position_id,
                     "module_signals": signal_details,
@@ -581,7 +581,7 @@ class MLTradingIntegration:
 
                         # Update recent outcomes (keep last 20)
                         recent_outcomes = self.signal_performance[key]["recent_outcomes"]
-                        recent_outcomes.append(
+                        recent_outcomes.append(  # type: ignore
                             {
                                 "outcome": outcome,
                                 "pnl": pnl,
@@ -636,7 +636,7 @@ class MLTradingIntegration:
                 "recent_outcomes": perf_data["recent_outcomes"][-5:],  # Last 5 outcomes
             }
 
-            success_rates.append(success_rate)
+            success_rates.append(success_rate)  # type: ignore
 
         # Calculate summary statistics
         report["summary"]["total_modules"] = len(set(key.rsplit("_", 1)[0] for key in self.signal_performance.keys()))
@@ -654,7 +654,7 @@ class MLTradingIntegration:
                 total = perf_data["total_signals"]
                 if total > 5:  # Only consider modules with sufficient data
                     success_rate = perf_data["successful_signals"] / total
-                    module_performance[module_name].append(success_rate)
+                    module_performance[module_name].append(success_rate)  # type: ignore
 
             # Calculate average success rate per module
             avg_module_performance = {module: np.mean(rates) for module, rates in module_performance.items() if rates}

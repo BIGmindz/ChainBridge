@@ -10,18 +10,18 @@ feature standardization but benefit from outlier handling.
 import numpy as np
 import pandas as pd
 import lightgbm as lgb
-from sklearn.model_selection import train_test_split, TimeSeriesSplit
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import logging
 import yaml
 import os
-from typing import Dict, List, Tuple, Optional, Any
+from typing import Dict, Tuple, Optional, Any
 from pathlib import Path
 
 # Import our robust preprocessing utilities
 from utils.feature_hygiene import robust_clip, remove_constant_features, handle_missing_values
 
 logger = logging.getLogger(__name__)
+
 
 class StrategyTrainerV2:
     """
@@ -48,14 +48,13 @@ class StrategyTrainerV2:
 
         # Setup logging
         logging.basicConfig(
-            level=getattr(logging, self.config.get('logging_level', 'INFO')),
-            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            level=getattr(logging, self.config.get("logging_level", "INFO")), format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         )
 
     def _load_config(self, config_path: str) -> Dict[str, Any]:
         """Load configuration from YAML file."""
         try:
-            with open(config_path, 'r') as f:
+            with open(config_path, "r") as f:
                 config = yaml.safe_load(f)
             logger.info(f"Configuration loaded from {config_path}")
             return config
@@ -69,29 +68,20 @@ class StrategyTrainerV2:
     def _get_default_config(self) -> Dict[str, Any]:
         """Get default configuration."""
         return {
-            'model_params': {
-                'objective': 'binary',
-                'metric': 'binary_logloss',
-                'boosting_type': 'gbdt',
-                'num_leaves': 31,
-                'learning_rate': 0.05,
-                'feature_fraction': 0.9,
-                'bagging_fraction': 0.8,
-                'bagging_freq': 5,
-                'verbose': -1
+            "model_params": {
+                "objective": "binary",
+                "metric": "binary_logloss",
+                "boosting_type": "gbdt",
+                "num_leaves": 31,
+                "learning_rate": 0.05,
+                "feature_fraction": 0.9,
+                "bagging_fraction": 0.8,
+                "bagging_freq": 5,
+                "verbose": -1,
             },
-            'training_params': {
-                'test_size': 0.2,
-                'random_state': 42,
-                'early_stopping_rounds': 50,
-                'num_boost_round': 1000
-            },
-            'preprocessing': {
-                'clip_percentiles': (1.0, 99.0),
-                'remove_constants': True,
-                'handle_missing': 'median'
-            },
-            'logging_level': 'INFO'
+            "training_params": {"test_size": 0.2, "random_state": 42, "early_stopping_rounds": 50, "num_boost_round": 1000},
+            "preprocessing": {"clip_percentiles": (1.0, 99.0), "remove_constants": True, "handle_missing": "median"},
+            "logging_level": "INFO",
         }
 
     def preprocess_features(self, X: pd.DataFrame) -> pd.DataFrame:
@@ -107,24 +97,24 @@ class StrategyTrainerV2:
         logger.info("Starting feature preprocessing...")
 
         # Handle missing values
-        X = handle_missing_values(X, strategy=self.config['preprocessing']['handle_missing'])
+        X = handle_missing_values(X, strategy=self.config["preprocessing"]["handle_missing"])
         logger.info(f"Handled missing values, shape: {X.shape}")
 
         # Remove constant features
-        if self.config['preprocessing']['remove_constants']:
+        if self.config["preprocessing"]["remove_constants"]:
             X = remove_constant_features(X)
             logger.info(f"Removed constant features, shape: {X.shape}")
 
         # Apply robust clipping instead of StandardScaler
-        lower_pct, upper_pct = self.config['preprocessing']['clip_percentiles']
+        lower_pct, upper_pct = self.config["preprocessing"]["clip_percentiles"]
         X = robust_clip(X, lower_percentile=lower_pct, upper_percentile=upper_pct)
         logger.info(f"Applied robust clipping ({lower_pct}%, {upper_pct}%), shape: {X.shape}")
 
         return X
 
-    def train_model(self, X: pd.DataFrame, y: pd.Series,
-                   model_name: str = "default_model",
-                   custom_params: Optional[Dict] = None) -> lgb.Booster:
+    def train_model(
+        self, X: pd.DataFrame, y: pd.Series, model_name: str = "default_model", custom_params: Optional[Dict] = None
+    ) -> lgb.Booster:
         """
         Train a LightGBM model with robust preprocessing.
 
@@ -150,23 +140,20 @@ class StrategyTrainerV2:
         valid_data = lgb.Dataset(X_valid, label=y_valid, reference=train_data)
 
         # Get model parameters
-        params = self.config['model_params'].copy()
+        params = self.config["model_params"].copy()
         if custom_params:
             params.update(custom_params)
 
         # Train model
-        callbacks = [
-            lgb.early_stopping(self.config['training_params']['early_stopping_rounds']),
-            lgb.log_evaluation(period=100)
-        ]
+        callbacks = [lgb.early_stopping(self.config["training_params"]["early_stopping_rounds"]), lgb.log_evaluation(period=100)]
 
         model = lgb.train(
             params,
             train_data,
-            num_boost_round=self.config['training_params']['num_boost_round'],
+            num_boost_round=self.config["training_params"]["num_boost_round"],
             valid_sets=[train_data, valid_data],
-            valid_names=['train', 'valid'],
-            callbacks=callbacks
+            valid_names=["train", "valid"],
+            callbacks=callbacks,
         )
 
         # Store model and evaluate
@@ -174,10 +161,7 @@ class StrategyTrainerV2:
         self._evaluate_model(model, X_valid, y_valid, model_name)
 
         # Store feature importance
-        self.feature_importance[model_name] = dict(zip(
-            X_train.columns,
-            model.feature_importance(importance_type='gain')
-        ))
+        self.feature_importance[model_name] = dict(zip(X_train.columns, model.feature_importance(importance_type="gain")))
 
         logger.info(f"Model {model_name} trained successfully")
         return model
@@ -193,7 +177,7 @@ class StrategyTrainerV2:
         Returns:
             Train/validation splits
         """
-        test_size = self.config['training_params']['test_size']
+        test_size = self.config["training_params"]["test_size"]
 
         # For time series, we want to use the most recent data for validation
         split_idx = int(len(X) * (1 - test_size))
@@ -206,8 +190,7 @@ class StrategyTrainerV2:
         logger.info(f"Time series split: train={len(X_train)}, valid={len(X_valid)}")
         return X_train, X_valid, y_train, y_valid
 
-    def _evaluate_model(self, model: lgb.Booster, X_valid: pd.DataFrame,
-                       y_valid: pd.Series, model_name: str) -> Dict[str, float]:
+    def _evaluate_model(self, model: lgb.Booster, X_valid: pd.DataFrame, y_valid: pd.Series, model_name: str) -> Dict[str, float]:
         """
         Evaluate model performance and store metrics.
 
@@ -222,14 +205,14 @@ class StrategyTrainerV2:
         """
         # Get predictions
         y_pred_proba = model.predict(X_valid)
-        y_pred = (y_pred_proba > 0.5).astype(int)
+        y_pred = (y_pred_proba > 0.5).astype(int)  # type: ignore
 
         # Calculate metrics
         metrics = {
-            'accuracy': accuracy_score(y_valid, y_pred),
-            'precision': precision_score(y_valid, y_pred, zero_division=0),
-            'recall': recall_score(y_valid, y_pred, zero_division=0),
-            'f1_score': f1_score(y_valid, y_pred, zero_division=0)
+            "accuracy": accuracy_score(y_valid, y_pred),
+            "precision": precision_score(y_valid, y_pred, zero_division=0),
+            "recall": recall_score(y_valid, y_pred, zero_division=0),
+            "f1_score": f1_score(y_valid, y_pred, zero_division=0),
         }
 
         self.model_metrics[model_name] = metrics
@@ -249,15 +232,14 @@ class StrategyTrainerV2:
             Prediction probabilities
         """
         if model_name not in self.models:
-            raise ValueError(f"Model {model_name} not found. Available models: {list(self.models.keys())}")
+            raise ValueError(f"Model {model_name} not found. Available models: {list(self.models.keys())}")  # type: ignore
 
         # Preprocess features using same pipeline as training
         X_processed = self.preprocess_features(X)
 
         return self.models[model_name].predict(X_processed)
 
-    def get_feature_importance(self, model_name: str = "default_model",
-                              top_n: Optional[int] = None) -> Dict[str, float]:
+    def get_feature_importance(self, model_name: str = "default_model", top_n: Optional[int] = None) -> Dict[str, float]:
         """
         Get feature importance for trained model.
 
@@ -330,13 +312,14 @@ class StrategyTrainerV2:
             raise ValueError(f"Model {model_name} not found")
 
         summary = {
-            'model_name': model_name,
-            'metrics': self.model_metrics.get(model_name, {}),
-            'feature_importance': self.get_feature_importance(model_name, top_n=20),
-            'config': self.config
+            "model_name": model_name,
+            "metrics": self.model_metrics.get(model_name, {}),
+            "feature_importance": self.get_feature_importance(model_name, top_n=20),
+            "config": self.config,
         }
 
         return summary
+
 
 def main():
     """Example usage of StrategyTrainerV2."""
@@ -346,17 +329,14 @@ def main():
     n_features = 20
 
     # Generate synthetic financial features
-    X = pd.DataFrame(
-        np.random.randn(n_samples, n_features),
-        columns=[f'feature_{i}' for i in range(n_features)]
-    )
+    X = pd.DataFrame(np.random.randn(n_samples, n_features), columns=[f"feature_{i}" for i in range(n_features)])
 
     # Add some outliers to demonstrate robust clipping
     X.iloc[0, 0] = 100  # Extreme positive outlier
     X.iloc[1, 1] = -50  # Extreme negative outlier
 
     # Generate target (simple classification based on feature sum)
-    y = (X.sum(axis=1) > 0).astype(int)
+    y = (X.sum(axis=1) > 0).astype(int)  # type: ignore
 
     # Initialize trainer
     trainer = StrategyTrainerV2()
@@ -372,7 +352,8 @@ def main():
 
     print("Training completed successfully!")
     print(f"Model metrics: {summary['metrics']}")
-    print(f"Top 5 features: {list(summary['feature_importance'].keys())[:5]}")
+    print(f"Top 5 features: {list(summary['feature_importance'].keys())[:5]}")  # type: ignore
+
 
 if __name__ == "__main__":
     main()
