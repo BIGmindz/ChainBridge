@@ -12,6 +12,8 @@ The TensorFlow Adaptive Weight Model is a machine learning system that dynamical
 - **Performance Visualization**: Provides comprehensive dashboards and visualizations of model performance
 - **Seamless Integration**: Works with the existing multi-signal trading bot framework
 
+
+
 ## Architecture
 
 The adaptive weight model consists of several key components:
@@ -23,6 +25,8 @@ The adaptive weight model consists of several key components:
 5. **Retraining Scheduler**: Automates the daily model retraining process
 6. **Weight Visualizer**: Provides insights into weight adjustments and model performance
 
+
+
 ## Signal Portfolio Integration
 
 The model optimizes weights across the four signal layers:
@@ -31,6 +35,8 @@ The model optimizes weights across the four signal layers:
 - **LAYER_2_LOGISTICS**: 30-45 day signals (Port_Congestion, Diesel, Supply_Chain, Container)
 - **LAYER_3_GLOBAL_MACRO**: 45-90 day signals (Inflation, Regulatory, Remittance, CBDC, FATF)
 - **LAYER_4_ADOPTION**: 3-6 month signals (Chainalysis_Global)
+
+
 
 ## Usage
 
@@ -64,6 +70,8 @@ The model uses the following features to detect market regimes:
 - RSI values
 - Bollinger Band width
 
+
+
 ### Weight Optimization
 
 The TensorFlow neural network takes three inputs:
@@ -71,6 +79,8 @@ The TensorFlow neural network takes three inputs:
 1. Signal data from all 15 signals
 2. Market regime one-hot encoding
 3. Market features (volatility, trend, etc.)
+
+
 
 It outputs optimized weights for each signal, which are then applied to the decision-making process.
 
@@ -82,6 +92,8 @@ The model automatically retrains every 24 hours, using:
 - Performance metrics by regime
 - Signal performance correlation with market conditions
 
+
+
 ## Dependencies
 
 - TensorFlow 2.16.1
@@ -91,6 +103,8 @@ The model automatically retrains every 24 hours, using:
 - matplotlib 3.9.0
 - seaborn 0.13.1
 - schedule 1.2.1
+
+
 
 ## Implementation Details
 

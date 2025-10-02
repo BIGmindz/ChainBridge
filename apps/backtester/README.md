@@ -10,6 +10,8 @@ A production-grade backtesting engine designed for the "Pattern as a Service" ar
 - **Multi-Strategy Support**: Automatically discovers and backtests all strategies
 - **ML Model Integration**: Loads trained models and scalers from strategy directories
 
+
+
 ## Usage
 
 ### Basic Usage
@@ -28,6 +30,8 @@ python -m apps.backtester.backtester
 2. **Historical Data**: `data/consolidated_market_data.csv` must exist
 3. **Strategy Configs**: Each strategy needs a valid `config.yaml`
 
+
+
 ### Data Format
 
 The backtester expects historical data in CSV format with columns:
@@ -36,6 +40,8 @@ The backtester expects historical data in CSV format with columns:
 - `symbol`: Trading symbol (e.g., 'BTC/USD')
 - `price`: Asset price
 - Additional feature columns as defined in strategy configs
+
+
 
 ## Output
 
@@ -50,6 +56,8 @@ For each strategy, the backtester generates:
 2. **Equity Curve Chart** (`strategies/{strategy}/backtest_equity_curve.html`)
    - Interactive Plotly chart
    - Portfolio value over time
+
+
 
 ## Configuration
 
@@ -81,6 +89,8 @@ The backtester follows the "Pattern as a Service" architecture:
 6. **Performance Analysis**: Calculates comprehensive metrics
 7. **Report Generation**: Creates professional reports and visualizations
 
+
+
 ## Dependencies
 
 - pandas
@@ -90,6 +100,8 @@ The backtester follows the "Pattern as a Service" architecture:
 - plotly
 - pyyaml
 
+
+
 ## Error Handling
 
 The backtester includes robust error handling for:
@@ -98,5 +110,7 @@ The backtester includes robust error handling for:
 - Invalid configurations
 - Data format issues
 - Feature mismatches
+
+
 
 Failed strategies are logged but don't stop the overall backtesting process.

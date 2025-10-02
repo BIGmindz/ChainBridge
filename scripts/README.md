@@ -3,10 +3,13 @@ Usage: Validate markets dump
 This folder contains helper scripts for maintainers.
 
 - `validate_markets.py`: Load a local markets JSON (export of `exchange.markets`) and
+
+
   check that configured symbols in `config.yaml` have detectable minima via
   `src.market_utils.check_markets_have_minima`.
 
 Example:
+
 ```bash
 .venv/bin/python3 scripts/validate_markets.py /path/to/markets.json
 ```

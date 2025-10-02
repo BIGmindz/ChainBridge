@@ -11,11 +11,15 @@ BensonBot is a sophisticated multi-signal cryptocurrency decision bot built with
 - Generates trade signals with entry timing, stop-loss, and take-profit levels
 - 20-40% average returns per successful listing
 
+
+
 ### 🌐 Region-Specific Crypto Mapping
 
 - Maps macroeconomic signals to specific cryptocurrencies by region
 - Targets the right assets for regional economic conditions
 - Integrates with global macro module for comprehensive signal generation
+
+
 
 ### 📊 System Monitoring and Dashboard
 
@@ -23,6 +27,8 @@ BensonBot is a sophisticated multi-signal cryptocurrency decision bot built with
 - Trading performance dashboard with key metrics
 - Automatic restart of critical components if they fail
 - Resource usage tracking and optimization
+
+
 
 ## 🚀 Previous Features - Professional Budget Management & Volatile Crypto Selection
 
@@ -36,11 +42,15 @@ The latest version includes professional budget management with Kelly Criterion 
 - Dynamic risk adjustment based on drawdown
 - Capital preservation with maximum position limits
 
+
+
 ### 📊 Volatile Cryptocurrency Selection
 
 - Automatic identification of highest-volatility trading pairs
 - Volatility calculation using price standard deviation
 - Configuration updates with selected pairs
+
+
 
 ### 🚢 Logistics-Based Signal Module (NEW!)
 
@@ -51,6 +61,8 @@ The latest version includes professional budget management with Kelly Criterion 
 - Diesel price monitoring for mining cost economics
 - Container rate tracking for supply chain stress indicators
 - Predictive power superior to lagging technical indicators
+
+
 
 ### One-Step Trading System
 
@@ -115,11 +127,15 @@ BensonBot prioritizes security by using environment variables for sensitive data
 
 1. **Copy the environment template:**
 
+
+
    ```bash
    cp .env.example .env
    ```
 
 2. **Edit `.env` with your credentials:**
+
+
 
    ```bash
    # Replace placeholder values with your actual API credentials
@@ -129,6 +145,8 @@ BensonBot prioritizes security by using environment variables for sensitive data
    ```
 
 3. **Verify `.env` is in your `.gitignore`:**
+
+
    The `.env` file should never be committed to version control as it contains sensitive credentials.
 
 ### Environment Variables Reference
@@ -159,6 +177,8 @@ api:
 - ❌ **DON'T**: Share API keys in chat, logs, or screenshots
 - ❌ **DON'T**: Use production API keys in development environments
 
+
+
 ## ✅ Preflight Checks & Market Validation
 
 Before running the bot in live mode (`PAPER=false`), the system performs a preflight check to ensure your configured symbols have exchange-reported minima and valid price data. This prevents creating orders below exchange minimums or acting on symbols with invalid prices (for example, symbols returning a last price of 0.0).
@@ -181,6 +201,8 @@ This script reads `config.yaml` to find configured symbols and prints any symbol
 - **Performance Analysis**: Detailed metrics and visualizations for strategy evaluation
 - **Regime Detection**: Optimizes strategies for bull, bear, and sideways markets
 
+
+
 ### Core Architecture
 
 Benson features a modular architecture with the following components:
@@ -191,12 +213,16 @@ Benson features a modular architecture with the following components:
 - **Business Impact Tracking**: ROI metrics, usage analytics, and adoption tracking
 - **Cloud-Native Design**: Containerized deployment with scalability support
 
+
+
 ## 📊 Available Modules
 
 ### Data Ingestion
 
 - **CSV Ingestion**: Process CSV files with flexible column mapping
 - **Alternative Data**: Geopolitical and sentiment data integration
+
+
 
 ### Trading Signal Analysis
 
@@ -207,6 +233,8 @@ Benson features a modular architecture with the following components:
 - **Sentiment Analysis Module**: Alternative data sentiment scoring from multiple sources
 - **Multi-Signal Aggregator**: Intelligent combination of uncorrelated signals
 
+
+
 ### Machine Learning & Forecasting
 
 - **Sales Forecasting**: ML-powered sales predictions with trend analysis
@@ -214,15 +242,21 @@ Benson features a modular architecture with the following components:
 - **Adaptive Signal Optimization**: Regime-specific signal weighting and position sizing
 - **Custom Modules**: Extensible framework for additional analysis
 
+
+
 ### Business Intelligence
 
 - **Metrics Collection**: Automated tracking of usage and performance
 - **ROI Calculation**: Business impact measurement and reporting
 
+
+
 ## 📘 Documentation
 
 - [Regime-Specific Backtesting](./docs/REGIME_SPECIFIC_BACKTESTING.md): Learn how to evaluate trading strategy performance across different market regimes
 - [Market Regime Detection](./docs/MARKET_REGIME_DETECTION.md): Understand how the system identifies bull, bear, and sideways markets
+
+
 
 ## 🔧 API Examples
 
@@ -344,6 +378,8 @@ See README-QUICK-CHECKS.md for a fast, TensorFlow-free validation path and pre-c
 - **ROI Reporting**: Cost-benefit analysis of system usage
 - **Performance Monitoring**: Error rates, execution times, and reliability metrics
 
+
+
 View metrics:
 
 ```bash
@@ -377,6 +413,8 @@ curl -X POST http://localhost:8000/modules/register \
 - `PORT`: API server port (default: 8000)
 - `HOST`: API server host (default: 0.0.0.0)
 - `BENSON_CONFIG`: Configuration file path
+
+
 
 ### Module Configuration
 
@@ -412,6 +450,8 @@ docker-compose --profile rsi-only up benson-rsi
 - [Modular Architecture Guide](MODULAR_ARCHITECTURE.md)
 - [API Documentation](http://localhost:8000/docs) (when running)
 - [Module Development Guide](MODULAR_ARCHITECTURE.md#creating-custom-modules)
+
+
 
 ## 🛠️ Development
 
@@ -452,12 +492,16 @@ python benson_system.py --mode test  # System tests
 - ✅ Cloud-native deployment ready
 - ✅ Backward compatibility with existing RSI bot
 
+
+
 ## 🤝 Contributing
 
 1. Create custom modules following the `Module` interface
 2. Add new API endpoints for additional functionality
 3. Extend business impact tracking for new metrics
 4. Improve ML models and forecasting accuracy
+
+
 
 ## 📄 License
 
