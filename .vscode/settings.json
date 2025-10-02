@@ -1,0 +1,23 @@
+{
+  "markdownlint.config": {
+    "default": true,
+    "MD013": false,
+    "MD012": false,
+    "MD033": false,
+    "MD041": false
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "**/.venv": true,
+    "**/node_modules": true
+  },
+  "search.exclude": {
+    "**/.git": true,
+    "**/.venv": true,
+    "**/node_modules": true,
+    "**/vscode-vfs": true
+  },
+  "markdownlint.ignore": [
+    "**/vscode-vfs/**"
+  ]
+}
