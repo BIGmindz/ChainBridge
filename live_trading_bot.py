@@ -53,7 +53,7 @@ from modules.logistics_signal_module import LogisticsSignalModule
 from modules.global_macro_module import GlobalMacroModule
 from modules.adoption_tracker_module import AdoptionTrackerModule
 from modules.region_specific_crypto_module import RegionSpecificCryptoModule
-from modules.new_listings_radar import NewListingsRadar
+from modules.new_listings_radar import ListingsMonitor
 from modules.multi_signal_aggregator_module import MultiSignalAggregatorModule
 
 
@@ -132,7 +132,7 @@ class LiveTradingBot:
         self.global_macro = GlobalMacroModule()
         self.adoption_tracker = AdoptionTrackerModule()
         self.region_crypto = RegionSpecificCryptoModule()
-        self.new_listings_radar = NewListingsRadar({})
+        self.new_listings_radar = ListingsMonitor()  # type: ignore
         self.aggregator = MultiSignalAggregatorModule()
 
         # Register modules with manager

@@ -19,8 +19,22 @@
   },
   "markdownlint.run": "onSave",
   "markdownlint.config": {
-    "default": false
+    "default": false,
+    "MD013": false,
+    "MD022": false,
+    "MD024": false,
+    "MD029": false,
+    "MD031": false,
+    "MD033": false,
+    "MD040": false,
+    "MD041": false
   },
+  "markdownlint.ignore": [
+    "vscode-vfs://**",
+    "**/node_modules/**",
+    "**/.venv/**"
+  ],
   "yaml.validate": true,
-  "python.analysis.typeCheckingMode": "basic"
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.diagnosticMode": "workspace"
 }
