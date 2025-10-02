@@ -4,20 +4,27 @@
     "MD013": false,
     "MD012": false,
     "MD033": false,
-    "MD041": false
+    "MD041": false,
+    "MD022": false,
+    "MD031": false,
+    "MD032": false,
+    "MD040": false
   },
+  "markdownlint.ignore": [
+    "**/vscode-vfs/**",
+    "**/.venv/**",
+    "**/node_modules/**"
+  ],
   "files.exclude": {
     "**/.git": true,
     "**/.venv": true,
-    "**/node_modules": true
+    "**/node_modules": true,
+    "**/__pycache__": true,
+    "**/*.pyc": true
   },
   "search.exclude": {
-    "**/.git": true,
     "**/.venv": true,
     "**/node_modules": true,
-    "**/vscode-vfs": true
-  },
-  "markdownlint.ignore": [
-    "**/vscode-vfs/**"
-  ]
+    "**/__pycache__": true
+  }
 }
