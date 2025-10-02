@@ -8,6 +8,8 @@ This repo supports fast, offline validations without heavy ML stacks.
 - Quick checks: RSI scenario tests + integrator smoke test (TF-optional)
 - Linting via Ruff with repo-aware config (`ruff.toml`)
 
+
+
 ## One-time setup
 
 ```sh
@@ -28,6 +30,8 @@ What it does:
 - Verifies PyYAML import
 - Runs `tests/test_rsi_scenarios.py`
 - Runs `scripts/integrator_smoke_test.py` (returns equal/default weights if TF is absent)
+
+
 
 ## Lint and format
 
@@ -56,11 +60,15 @@ The GitHub Actions workflow runs:
 - Lean quick checks: `make quick-checks`
 - Lint (`ruff`) and type checks (`mypy`)
 
+
+
 ## Troubleshooting
 
 - Externally managed system Python (PEP 668): always use a virtualenv (`.venv` or `.venv-lean`).
 - If `make quick-checks` fails on the smoke test with a TF import error, that’s expected; it falls back to `status: "default_weights"`.
 - Ensure `.venv-lean` is not tracked by Git (it is ignored via `.gitignore`).
+
+
 
 ## Files
 

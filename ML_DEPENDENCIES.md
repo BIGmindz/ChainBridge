@@ -35,11 +35,15 @@ If you encounter errors related to missing modules:
 
 1. For TensorFlow errors:
 
+
+
    ```bash
    pip install tensorflow>=2.8.0
    ```
 
 2. For scikit-learn errors:
+
+
 
    ```bash
    pip install scikit-learn>=1.0.0
@@ -47,11 +51,15 @@ If you encounter errors related to missing modules:
 
 3. For joblib errors:
 
+
+
    ```bash
    pip install joblib>=1.1.0
    ```
 
 4. For scheduling errors:
+
+
 
    ```bash
    pip install schedule>=1.1.0

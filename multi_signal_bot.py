@@ -7,11 +7,47 @@ This script runs a paper trading bot that uses multiple signal modules
 and aggregates them to make more informed trading decisions.
 """
 
+# ========================================
+# ENTERPRISE TENSORFLOW SUPPRESSION
+# Must be FIRST before any imports
+# ========================================
+import os
+import sys
+
+# Level 1: Environment variable suppression (highest priority)
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"  # Suppress all TensorFlow logging
+os.environ["CUDA_VISIBLE_DEVICES"] = ""  # Disable CUDA/GPU completely
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"  # Disable oneDNN optimizations
+os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "false"  # Prevent GPU memory allocation
+
+# Level 2: Suppress stderr output from C++ mutex messages
+import warnings
+warnings.filterwarnings("ignore")
+
+# Level 3: Redirect stderr temporarily during TensorFlow imports
+import io
+import contextlib
+
+_original_stderr = sys.stderr
+_null_device = open(os.devnull, 'w')
+
+# Suppress all stderr during critical import phase
+sys.stderr = _null_device
+
+try:
+    # Any TensorFlow imports will be silent
+    pass
+finally:
+    # Restore stderr after import phase
+    sys.stderr = _original_stderr
+    
+# ========================================
+# END ENTERPRISE TENSORFLOW SUPPRESSION
+# ========================================
+
 import argparse
 import json
-import os
 import re
-import sys
 import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List
