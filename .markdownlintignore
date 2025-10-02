@@ -1,8 +1,16 @@
-# Ignore GitHub VFS files
-vscode-vfs://
+# Ignore virtual file system paths
+vscode-vfs://**
+vscode-vfs://**/*
 
-# Ignore generated files
+# Ignore dependencies
 node_modules/
 .venv/
+__pycache__/
+
+# Ignore git
 .git/
-*.bundle
+
+# Ignore build artifacts
+*.pyc
+.pytest_cache/
+.coverage
