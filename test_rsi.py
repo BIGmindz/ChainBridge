@@ -25,7 +25,7 @@ load_dotenv()
 
 
 def _build_exchange() -> ccxt.Exchange:
-    kraken_config = {"enableRateLimit": True}
+    kraken_config: dict = {"enableRateLimit": True}
 
     api_key = os.getenv("KRAKEN_API_KEY")
     api_secret = os.getenv("KRAKEN_API_SECRET")

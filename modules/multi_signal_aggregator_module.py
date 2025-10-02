@@ -24,20 +24,40 @@ class MultiSignalAggregatorModule(Module):
             config.get(
                 "signal_weights",
                 {
-                    "RSI": 0.20,
-                    "MACD": 0.25,
-                    "BollingerBands": 0.20,
-                    "VolumeProfile": 0.15,
-                    "SentimentAnalysis": 0.20,
+                    # Core momentum/mean-reversion signals
+                    "RSI": 0.12,
+                    "MACD": 0.16,
+                    "BollingerBands": 0.12,
+                    # Market microstructure and sentiment
+                    "VolumeProfile": 0.08,
+                    "SentimentAnalysis": 0.12,
+                    # Phase 1 enhancement modules
+                    "WilliamsR": 0.07,
+                    "ADX": 0.08,
+                    "VWAP": 0.05,
+                    # Phase 2 advanced pattern modules
+                    "FibonacciRetracement": 0.08,
+                    "ParabolicSAR": 0.06,
+                    "IchimokuCloud": 0.06,
                 },
             )
             if config
             else {
-                "RSI": 0.20,
-                "MACD": 0.25,
-                "BollingerBands": 0.20,
-                "VolumeProfile": 0.15,
-                "SentimentAnalysis": 0.20,
+                # Core momentum/mean-reversion signals
+                "RSI": 0.12,
+                "MACD": 0.16,
+                "BollingerBands": 0.12,
+                # Market microstructure and sentiment
+                "VolumeProfile": 0.08,
+                "SentimentAnalysis": 0.12,
+                # Phase 1 enhancement modules
+                "WilliamsR": 0.07,
+                "ADX": 0.08,
+                "VWAP": 0.05,
+                # Phase 2 advanced pattern modules
+                "FibonacciRetracement": 0.08,
+                "ParabolicSAR": 0.06,
+                "IchimokuCloud": 0.06,
             }
         )
         self.consensus_threshold = config.get("consensus_threshold", 0.4) if config else 0.4  # Reduced from 0.6 to 0.4 for more trades
@@ -47,16 +67,21 @@ class MultiSignalAggregatorModule(Module):
     def get_schema(self) -> Dict[str, Any]:
         return {
             "input": {
-                "signals": "dict of individual signal results from each module",
+                "signals": (
+                    "dict of individual signal results from each module (RSI, MACD, BollingerBands, "
+                    "VolumeProfile, SentimentAnalysis, WilliamsR, ADX, VWAP, FibonacciRetracement, ParabolicSAR, "
+                    "IchimokuCloud, ... )"
+                ),
                 "price_data": "current price data for context",
                 "signal_weights": "dict (optional, custom weights for each signal)",
                 "consensus_threshold": "float (optional, minimum consensus for strong signals)",
                 "include_correlation_analysis": "boolean (optional, default: true)",
             },
             "output": {
-                "final_signal": "string (BUY/SELL/HOLD)",
-                "final_confidence": "float (0-1)",
+                "signal": "string (BUY/SELL/HOLD)",
+                "confidence": "float (0-1)",
                 "consensus_score": "float (0-1)",
+                "weighted_score": "float (-1 to 1)",
                 "signal_strength": "string (STRONG/MODERATE/WEAK)",
                 "individual_signals": "dict (processed individual signals)",
                 "signal_consensus": {
@@ -75,6 +100,13 @@ class MultiSignalAggregatorModule(Module):
                     "overall_risk": "string (LOW/MEDIUM/HIGH)",
                     "conflicting_signals": "boolean",
                     "signal_divergence": "float",
+                },
+                "current_price": "float (optional, last observed price)",
+                "trading_recommendation": {
+                    "action": "string",
+                    "strength": "string",
+                    "risk_level": "string",
+                    "position_size_suggestion": "string",
                 },
                 "metadata": {"signals_processed": "integer", "weights_used": "dict"},
             },
