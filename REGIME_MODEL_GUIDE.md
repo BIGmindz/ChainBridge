@@ -5,41 +5,59 @@ This guide explains how to use the enhanced LightGBM multiclass classification m
 ## Overview
 
 The regime detection model is a comprehensive machine learning solution that classifies market conditions into three regimes:
+
 - **Bull Market**: Strong upward trending conditions
-- **Bear Market**: Strong downward trending conditions  
+- **Bear Market**: Strong downward trending conditions
 - **Sideways Market**: Consolidation or range-bound conditions
+
+
 
 ## Features
 
 The model uses **18 financial and technical features**:
 
 ### Core Technical Indicators
+
 - `rsi_14`: 14-period Relative Strength Index
 - `macd`: MACD line value
 - `macd_signal`: MACD signal line
 - `macd_hist`: MACD histogram (MACD - Signal)
 
+
+
 ### Bollinger Bands
+
 - `bb_upper`: Upper Bollinger Band
 - `bb_middle`: Middle Bollinger Band (SMA)
-- `bb_lower`: Lower Bollinger Band  
+- `bb_lower`: Lower Bollinger Band
 - `bb_width`: Band width (upper - lower)
 - `bb_position`: Price position within bands (0-1)
 - `bb_squeeze`: Bollinger squeeze indicator (0 or 1)
 
+
+
 ### Volume and Price Metrics
+
 - `volume_ratio`: Volume relative to average
 - `price_change_1h`: 1-hour price change percentage
 - `price_change_24h`: 24-hour price change percentage
 
+
+
 ### Volatility and Trend
+
 - `volatility_24h`: 24-hour price volatility
 - `trend_strength`: Trend strength indicator (-1 to 1)
 
+
+
 ### Enhanced Features
+
 - `momentum_rsi`: RSI with momentum adjustment
 - `price_momentum`: Price change normalized by volatility
 - `volume_price_trend`: Volume-weighted price trend
+
+
 
 ## Installation and Setup
 
@@ -53,7 +71,7 @@ pip install lightgbm scikit-learn joblib pandas numpy
 
 The system includes several model files:
 
-```
+```text
 ml_models/
 ├── enhanced_regime_model.pkl    # Enhanced model (18 features)
 └── regime_detection_model.pkl   # Original model (14 features)
@@ -169,12 +187,12 @@ class TradingStrategy:
     def __init__(self):
         self.regime_model = RegimeModelLoader()
         self.regime_model.load_model('enhanced')
-    
+
     def get_current_regime(self, market_features):
         """Get current market regime"""
         result = self.regime_model.predict_regime(market_features, 'enhanced')
         return result['regime'], result['confidence']
-    
+
     def adjust_strategy_for_regime(self, regime, confidence):
         """Adjust trading parameters based on regime"""
         if regime == 'bull' and confidence > 0.7:
@@ -209,20 +227,20 @@ class RegimeMonitor:
         self.loader.load_model('enhanced')
         self.current_regime = None
         self.last_update = None
-    
+
     def update_regime(self, market_data):
         """Update current market regime"""
         result = self.loader.predict_regime(market_data, 'enhanced')
-        
+
         # Only update if confidence is high enough
         if result['confidence'] > 0.6:
             if self.current_regime != result['regime']:
                 print(f"🔄 Regime change detected: {self.current_regime} → {result['regime']}")
                 self.current_regime = result['regime']
                 self.last_update = datetime.now()
-        
+
         return result
-    
+
     def get_regime_status(self):
         """Get current regime status"""
         return {
@@ -253,9 +271,11 @@ result = {
 ### Confidence Interpretation
 
 - **> 0.8**: Very high confidence - strong signal
-- **0.6 - 0.8**: Good confidence - reliable signal  
+- **0.6 - 0.8**: Good confidence - reliable signal
 - **0.4 - 0.6**: Moderate confidence - use with caution
 - **< 0.4**: Low confidence - consider market uncertainty
+
+
 
 ### Feature Importance
 
@@ -267,11 +287,15 @@ The model ranks features by importance. Typical rankings:
 4. **bb_position** - Position within volatility bands
 5. **macd_hist** - Momentum divergence signal
 
+
+
 ## Troubleshooting
 
 ### Common Issues
 
 1. **Missing Features Error**
+
+
    ```python
    # Make sure all required features are present
    required_features = loader.get_model_info('enhanced')['feature_columns']
@@ -281,6 +305,8 @@ The model ranks features by importance. Typical rankings:
    ```
 
 2. **Model Loading Failed**
+
+
    ```python
    # Check if model file exists
    import os
@@ -295,6 +321,8 @@ The model ranks features by importance. Typical rankings:
    - Increase training data size
    - Consider market regime changes
 
+
+
 ### Model Retraining
 
 ```python
@@ -302,14 +330,14 @@ The model ranks features by importance. Typical rankings:
 def retrain_model_weekly():
     """Retrain model with recent data"""
     from enhanced_regime_model import EnhancedRegimeModel
-    
+
     # Get recent market data (implement your data collection)
     recent_data = collect_recent_market_data(days=30)
-    
+
     # Retrain model
     model = EnhancedRegimeModel()
     results = model.train_model(recent_data)
-    
+
     # Only save if performance is good
     if results['test_accuracy'] > 0.75:
         model.save_model()
@@ -326,27 +354,27 @@ def retrain_model_weekly():
 def ensemble_regime_prediction(features):
     """Use both models for ensemble prediction"""
     loader = RegimeModelLoader()
-    
+
     # Load both models
     loader.load_model('enhanced')
     loader.load_model('original')
-    
+
     # Get predictions from both
     enhanced_result = loader.predict_regime(features, 'enhanced')
     original_result = loader.predict_regime(features, 'original')
-    
+
     # Simple ensemble - average probabilities
     ensemble_probs = {}
     for regime in enhanced_result['probabilities'].keys():
         ensemble_probs[regime] = (
-            enhanced_result['probabilities'][regime] + 
+            enhanced_result['probabilities'][regime] +
             original_result['probabilities'][regime]
         ) / 2
-    
+
     # Get final prediction
     final_regime = max(ensemble_probs, key=ensemble_probs.get)
     final_confidence = ensemble_probs[final_regime]
-    
+
     return {
         'regime': final_regime,
         'confidence': final_confidence,
@@ -360,22 +388,22 @@ def ensemble_regime_prediction(features):
 ```python
 def engineer_additional_features(price_data, volume_data):
     """Add custom features to improve model performance"""
-    
+
     # Calculate additional technical indicators
     features = {}
-    
+
     # Custom RSI variants
     features['rsi_7'] = calculate_rsi(price_data, period=7)
     features['rsi_21'] = calculate_rsi(price_data, period=21)
-    
+
     # Volume-weighted features
     features['vwap'] = calculate_vwap(price_data, volume_data)
     features['volume_momentum'] = calculate_volume_momentum(volume_data)
-    
+
     # Volatility features
     features['realized_vol'] = calculate_realized_volatility(price_data)
     features['vol_ratio'] = features['realized_vol'] / features['volatility_24h']
-    
+
     return features
 ```
 
@@ -388,11 +416,15 @@ def engineer_additional_features(price_data, volume_data):
 5. **Monitoring**: Track model performance and regime change accuracy
 6. **Fallback Strategy**: Have a backup strategy when model confidence is low
 
+
+
 ## Support and Contributing
 
 - **Issues**: Report bugs or request features via GitHub issues
 - **Documentation**: Contribute to documentation improvements
 - **Models**: Share improved models or feature engineering techniques
+
+
 
 ## License
 

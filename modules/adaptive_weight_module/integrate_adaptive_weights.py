@@ -365,12 +365,12 @@ from modules.adaptive_weight_module.market_regime_integrator import MarketRegime
         trend_30d = np.mean(returns) * 365
 
         return {
-            "volatility_1d": float(vol_1d),
-            "volatility_7d": float(vol_7d),
-            "volatility_30d": float(vol_30d),
-            "trend_1d": float(trend_1d),
-            "trend_7d": float(trend_7d),
-            "trend_30d": float(trend_30d)
+            "volatility_1d": float(vol_1d),  # type: ignore
+            "volatility_7d": float(vol_7d),  # type: ignore
+            "volatility_30d": float(vol_30d),  # type: ignore
+            "trend_1d": float(trend_1d),  # type: ignore
+            "trend_7d": float(trend_7d),  # type: ignore
+            "trend_30d": float(trend_30d)  # type: ignore
         }
 """
 

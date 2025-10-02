@@ -82,8 +82,8 @@ def integrate_adoption_tracker():
     category_weights = {}
 
     for category, signals in signal_portfolio.items():
-        category_correlations[category] = sum(s["correlation"] for s in signals) / len(signals)
-        category_weights[category] = sum(s["weight"] for s in signals)
+        category_correlations[category] = sum(s["correlation"] for s in signals) / len(signals)  # type: ignore
+        category_weights[category] = sum(s["weight"] for s in signals)  # type: ignore
 
     # Print the portfolio metrics
     print("\nSignal Portfolio Analysis:")
@@ -92,8 +92,8 @@ def integrate_adoption_tracker():
         print(f"  • {category.replace('_', ' ')}: {correlation:.2f} correlation, {category_weights[category] * 100:.0f}% weight")
 
     # Calculate the weighted average correlation
-    total_weight = sum(category_weights.values())
-    weighted_correlation = sum(corr * category_weights[cat] / total_weight for cat, corr in category_correlations.items())
+    total_weight = sum(category_weights.values())  # type: ignore
+    weighted_correlation = sum(corr * category_weights[cat] / total_weight for cat, corr in category_correlations.items())  # type: ignore
 
     # Calculate diversification score (lower correlation = higher diversification)
     diversification_score = max(0, 1 - weighted_correlation)

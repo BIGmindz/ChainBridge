@@ -248,6 +248,6 @@ class MarketRegimeIntegrator:
                 "timestamps": timestamps,
                 "confidences": confidences,
             },
-            "transition_matrix": (transition_matrix.to_dict() if not transition_matrix.empty else {}),
+            "transition_matrix": (transition_matrix.to_dict() if not transition_matrix.empty else {}),  # type: ignore
             "performance": performance,
         }

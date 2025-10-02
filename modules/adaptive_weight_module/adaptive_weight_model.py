@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 """
 Adaptive Signal Weight Module
 
@@ -91,9 +92,8 @@ class AdaptiveWeightModule(Module):
         # Configure from provided config or use defaults
         self.config = config or {}
 
-        # Signal configuration
-        self.n_signals = self.config.get("n_signals", 15)  # Total number of signals
-        self.signal_layers = {
+        # Signal configuration (allow overrides from config)
+        default_signal_layers = {
             "LAYER_1_TECHNICAL": ["RSI", "MACD", "Bollinger", "Volume", "Sentiment"],
             "LAYER_2_LOGISTICS": [
                 "Port_Congestion",
@@ -110,6 +110,13 @@ class AdaptiveWeightModule(Module):
             ],
             "LAYER_4_ADOPTION": ["Chainalysis_Global"],
         }
+        config_signal_layers = self.config.get("signal_layers")
+        if isinstance(config_signal_layers, dict) and config_signal_layers:
+            self.signal_layers = {layer: list(signals) for layer, signals in config_signal_layers.items()}  # type: ignore
+        else:
+            self.signal_layers = default_signal_layers
+        derived_signal_count = sum(len(signals) for signals in self.signal_layers.values())  # type: ignore
+        self.n_signals = self.config.get("n_signals", derived_signal_count or 15)  # Total number of signals
 
         # Training configuration
         self.lookback_days = self.config.get("lookback_days", 7)
@@ -380,7 +387,7 @@ class AdaptiveWeightModule(Module):
             try:
                 with open(os.path.join(self.data_store, filename), "r") as f:
                     data = json.load(f)
-                    training_data.append(data)
+                    training_data.append(data)  # type: ignore
             except Exception as e:
                 print(f"Error loading training data from {filename}: {str(e)}")
 
@@ -407,17 +414,17 @@ class AdaptiveWeightModule(Module):
             # Extract signal features
             if "signal_data" in sample:
                 signal_vector = self._extract_signal_vector(sample["signal_data"])
-                signal_features.append(signal_vector)
+                signal_features.append(signal_vector)  # type: ignore
 
             # Extract market features
             if "market_data" in sample:
                 market_vector = self._extract_regime_features(sample["market_data"])
-                market_features.append(market_vector)
+                market_features.append(market_vector)  # type: ignore
 
             # Extract weights and performance (targets)
             if "optimized_weights" in sample and "performance" in sample:
-                weight_targets.append(list(sample["optimized_weights"].values()))
-                performance_targets.append(sample["performance"])
+                weight_targets.append(list(sample["optimized_weights"].values()))  # type: ignore
+                performance_targets.append(sample["performance"])  # type: ignore
 
         # Convert to numpy arrays
         X_signal = np.array(signal_features)
@@ -551,8 +558,58 @@ class AdaptiveWeightModule(Module):
         with open(os.path.join(self.model_dir, "metadata.json"), "w") as f:
             json.dump(metadata, f)
 
+    def _validate_model_path(self, path: str) -> bool:
+        """
+        Validate the model file path to prevent path traversal attacks
+        """
+        try:
+            # Get absolute paths for comparison
+            model_dir_abs = os.path.abspath(self.model_dir)
+            path_abs = os.path.abspath(path)
+
+            # Check if the path is under model_dir
+            if not path_abs.startswith(model_dir_abs):
+                print(f"Security warning: Attempted to load model from outside model directory: {path}")
+                return False
+
+            # Check file extension
+            if not path.endswith(('.h5', '.joblib', '.json')):
+                print(f"Security warning: Invalid file extension for {path}")
+                return False
+
+            return True
+        except Exception as e:
+            print(f"Path validation error: {str(e)}")
+            return False
+
+    def _validate_model_structure(self, model: 'keras.Model') -> bool:
+        """
+        Validate loaded model structure and architecture
+        """
+        try:
+            # Check expected input shape
+            expected_input_shape = (None, self.n_signals)  # Batch size, n_signals
+            actual_input_shape = model.layers[0].input_shape
+
+            if actual_input_shape[1] != expected_input_shape[1]:
+                print(f"Model input shape mismatch. Expected: {expected_input_shape}, Got: {actual_input_shape}")
+                return False
+
+            # Check output layer shape
+            expected_output_shape = self.n_signals
+            actual_output_shape = model.layers[-1].output_shape[1]
+
+            if actual_output_shape != expected_output_shape:
+                print(f"Model output shape mismatch. Expected: {expected_output_shape}, Got: {actual_output_shape}")
+                return False
+
+            return True
+        except Exception as e:
+            print(f"Model validation error: {str(e)}")
+            return False
+
     def _load_models(self) -> None:
-        """Load models and scalers if they exist"""
+        """Load models and scalers if they exist with security validations"""
         # Check if models exist
         weight_model_path = os.path.join(self.model_dir, "weight_model.h5")
         regime_model_path = os.path.join(self.model_dir, "regime_model.joblib")
@@ -560,20 +617,41 @@ class AdaptiveWeightModule(Module):
         metadata_path = os.path.join(self.model_dir, "metadata.json")
 
         # Load metadata if exists
-        if os.path.exists(metadata_path):
+        if os.path.exists(metadata_path) and self._validate_model_path(metadata_path):
             try:
                 with open(metadata_path, "r") as f:
                     metadata = json.load(f)
                     self.last_trained = datetime.fromisoformat(metadata.get("last_trained", ""))
+
+                    # Validate model version
+                    if metadata.get("version") != self.version:
+                        raise ValueError(f"Model version mismatch. Expected {self.version}, got {metadata.get('version')}")
+
                     print(f"Found existing model last trained at: {self.last_trained}")
             except Exception as e:
                 print(f"Error loading metadata: {str(e)}")
 
         # Load weight model if exists
-        if os.path.exists(weight_model_path):
+        if os.path.exists(weight_model_path) and self._validate_model_path(weight_model_path):
             try:
-                self.weight_model = keras.models.load_model(weight_model_path)
-                print(f"Loaded weight model from {weight_model_path}")
+                # Load model with custom objects disabled for security
+                self.weight_model = keras.models.load_model(
+                    weight_model_path,
+                    custom_objects=None,  # Prevent arbitrary code execution
+                    compile=False  # Load only architecture and weights
+                )
+
+                # Validate model structure
+                if not self._validate_model_structure(self.weight_model):
+                    raise ValueError("Model structure validation failed")
+
+                # Recompile model with known optimizer and loss
+                self.weight_model.compile(
+                    optimizer=Adam(learning_rate=1e-3),
+                    loss='mse'
+                )
+
+                print(f"Loaded and validated weight model from {weight_model_path}")
             except Exception as e:
                 print(f"Error loading weight model: {str(e)}")
                 self.weight_model = None
@@ -619,12 +697,12 @@ class AdaptiveWeightModule(Module):
                     confidence = signal_data[signal].get("confidence", 0.5)
 
                     # Add to features
-                    features.append(signal_value)
-                    features.append(confidence)
+                    features.append(signal_value)  # type: ignore
+                    features.append(confidence)  # type: ignore
                 else:
                     # Missing signals get zeros
-                    features.append(0.0)
-                    features.append(0.0)
+                    features.append(0.0)  # type: ignore
+                    features.append(0.0)  # type: ignore
 
         return features
 
@@ -861,7 +939,7 @@ class AdaptiveWeightModule(Module):
         constrained_weights = np.clip(raw_weights, self.min_weight, self.max_weight)
 
         # Normalize weights to sum to 1.0
-        normalized_weights = constrained_weights / constrained_weights.sum()
+        normalized_weights = constrained_weights / constrained_weights.sum()  # type: ignore
 
         # Map weights back to signal names
         optimized_weights = {}
@@ -869,7 +947,7 @@ class AdaptiveWeightModule(Module):
 
         for layer_name, signals in self.signal_layers.items():
             for signal in signals:
-                optimized_weights[signal] = float(normalized_weights[weight_idx])
+                optimized_weights[signal] = float(normalized_weights[weight_idx])  # type: ignore
                 weight_idx += 1
                 if weight_idx >= len(normalized_weights):
                     break

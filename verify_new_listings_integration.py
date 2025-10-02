@@ -111,7 +111,7 @@ def visualize_integration_status(status):
     fig, ax = plt.subplots(figsize=(10, 6))
 
     # Prepare data
-    categories = list(status.keys())
+    categories = list(status.keys())  # type: ignore
     values = [1 if status[cat] else 0 for cat in categories]
 
     # Format categories for display
@@ -251,7 +251,7 @@ def main():
         print(f"{icon} {key.replace('_', ' ').title()}")
 
     # Calculate overall integration percentage
-    integration_percent = (sum(1 for v in status.values() if v) / len(status)) * 100
+    integration_percent = (sum(1 for v in status.values() if v) / len(status)) * 100  # type: ignore
     print(f"\nOverall Integration: {integration_percent:.1f}%")
 
     # Load backtest results

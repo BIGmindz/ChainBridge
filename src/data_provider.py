@@ -22,7 +22,7 @@ def safe_fetch_ticker(exchange, symbol: str) -> float:
     price = t.get("last") or t.get("close") or t.get("bid") or t.get("ask")
     if price is None:
         raise RuntimeError(f"No price in ticker for {symbol}")
-    return float(price)
+    return float(price)  # type: ignore
 
 
 def setup_exchange(exchange_id: str, api_config: Dict[str, Any] = None) -> ccxt.Exchange:

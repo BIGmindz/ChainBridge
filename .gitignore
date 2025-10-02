@@ -1,47 +1,28 @@
-# Python
+
+.env
+.env.*
+.env.backup
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.pytest_cache/
-.env
-.venv
+.Python
 venv/
+.venv/
 .envrc
-
-# OS / IDE
-.DS_Store
 .vscode/
 .idea/
-
-# Tests / coverage
-htmlcov/
-.coverage
-*.cover
-*.log
-
-# Build
-build/
-dist/
-*.egg-info/
-
-# Backups
-*.save
-
-# Kraken Paper Trading specific files
+*.swp
+.DS_Store
 logs/
-kraken_paper_trading.log
-enhanced_multi_signal_bot.log
-kraken_paper_trade_journal_*.json
-
-# Trading data files (exclude sensitive data)
-trading_state_*.json
-*.csv.bak
-
-# Ignore virtualenvs
-.venv
-.venv*/
-.venv312/
-venv/
-.pytest_cache/
-__pycache__/
+*.log
+*.json
+benson_metrics.json
+multi_signal_trades.json
+trading_metrics.json
+allocation_state*.json
+budget_state*.json
+local_repo_snapshot.bundle
+Dockerfile.*.local
+docker-compose.override.yml
+.venv-lean/

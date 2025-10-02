@@ -241,12 +241,12 @@ class EnhancedMultiSignalBot:
 
                     elif "error" in result:
                         error_msg = f"{symbol}: {result['error']}"
-                        results["errors"].append(error_msg)
+                        results["errors"].append(error_msg)  # type: ignore
                         print(f"   ❌ {error_msg}")
 
                 except Exception as e:
                     error_msg = f"Error processing {symbol}: {e}"
-                    results["errors"].append(error_msg)
+                    results["errors"].append(error_msg)  # type: ignore
                     print(f"   ❌ {error_msg}")
 
             # Step 4: Update performance metrics
@@ -266,7 +266,7 @@ class EnhancedMultiSignalBot:
 
         except Exception as e:
             error_msg = f"Cycle error: {e}"
-            results["errors"].append(error_msg)
+            results["errors"].append(error_msg)  # type: ignore
             self.logger.error(error_msg)
 
         return results

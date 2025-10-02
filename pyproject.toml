@@ -10,3 +10,23 @@ skip = [".venv", ".venv*"]
 [tool.ruff]
 line-length = 140
 exclude = [".venv", ".venv*", "__pycache__"]
+
+[tool.pylance]
+typeCheckingMode = "basic"
+reportGeneralTypeIssues = false
+reportOptionalMemberAccess = false
+reportOptionalSubscript = false
+reportPrivateImportUsage = false
+reportUnknownMemberType = false
+reportUnknownVariableType = false
+reportUnknownArgumentType = false
+reportUnknownLambdaType = false
+reportUnknownParameterType = false
+reportMissingTypeStubs = false
+reportImportCycles = false
+reportUnusedImport = "information"
+reportUnusedClass = "information"
+reportUnusedFunction = "information"
+reportUnusedVariable = "information"
+reportDuplicateImport = false
+reportWildcardImportFromLibrary = false

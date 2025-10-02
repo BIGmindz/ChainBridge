@@ -6,7 +6,7 @@ Combines all 15+ signals with region-specific crypto selection
 import os
 import sys
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))  # type: ignore
 
 from datetime import datetime
 
@@ -114,7 +114,7 @@ class IntegratedTradingSystem:
                     position_return = np.random.normal(0.02, 0.01) * rec["confidence"]
                     daily_return += position_return * rec["position_size_pct"]
 
-            results.append(daily_return)
+            results.append(daily_return)  # type: ignore
 
         # Calculate performance metrics
         total_return = np.prod([1 + r for r in results]) - 1

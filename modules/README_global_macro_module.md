@@ -11,6 +11,8 @@ The GlobalMacroModule is a powerful addition to the multi-signal crypto trading 
 - **Multi-Factor Analysis**: Combines adoption metrics, inflation rates, regulatory trends, remittance flows, and CBDC development
 - **Global Coverage**: Monitors key markets including India, USA, Brazil, Argentina, Venezuela, El Salvador, Japan, and Nigeria
 
+
+
 ## Signal Components
 
 The GlobalMacroModule analyzes several key macro indicators:
@@ -21,6 +23,8 @@ The GlobalMacroModule analyzes several key macro indicators:
 4. **Remittance Signal**: Analyzes cross-border payment flows that drive stablecoin adoption
 5. **CBDC Signal**: Monitors central bank digital currency development for infrastructure impacts
 
+
+
 ## Signal Generation
 
 The module generates signals by calculating a weighted average of its components:
@@ -28,6 +32,8 @@ The module generates signals by calculating a weighted average of its components
 - **BUY Signal**: Generated when global adoption is surging, inflation is high in key markets, regulations are becoming more favorable, or remittance flows are increasing
 - **SELL Signal**: Generated when regulatory crackdowns occur, inflation stabilizes, or multiple countries implement restrictive policies
 - **HOLD Signal**: Generated when macro signals are mixed or inconclusive
+
+
 
 ## Key Insight Generation
 
@@ -38,6 +44,8 @@ The module provides actionable insights such as:
 - "✅ Positive regulatory momentum - institutions coming"
 - "⚠️ Regulatory crackdowns - reduce exposure"
 - "💰 Remittance corridors hot - stablecoins bullish"
+
+
 
 ## Integration
 

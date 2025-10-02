@@ -10,6 +10,8 @@ This patch addresses the 60+ issues related to optional dependencies in the Mult
 4. **Type Annotations**: Updated type annotations to use Python 3.9+ syntax
 5. **Documentation**: Created ML_DEPENDENCIES.md with detailed installation instructions
 
+
+
 ## Installation Guide
 
 For core functionality:
@@ -41,6 +43,8 @@ pip install -r requirements-dev.txt
 
 3. **New Files**:
    - ML_DEPENDENCIES.md
+
+
 
 ## Graceful Degradation
 

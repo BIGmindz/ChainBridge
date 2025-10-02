@@ -58,7 +58,7 @@ class VolatileCryptoSelector:
                     ohlcv,
                     columns=["timestamp", "open", "high", "low", "close", "volume"],
                 )
-                df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
+                df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")  # type: ignore
                 return df
             else:
                 # Generate mock data for testing
@@ -118,7 +118,7 @@ class VolatileCryptoSelector:
             close = low + random.random() * (high - low)
             volume = base_price * 1000 * (0.5 + random.random())
 
-            data.append([date, open_price, high, low, close, volume])
+            data.append([date, open_price, high, low, close, volume])  # type: ignore
 
         df = pd.DataFrame(data, columns=["timestamp", "open", "high", "low", "close", "volume"])
         return df

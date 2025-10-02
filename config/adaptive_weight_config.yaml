@@ -25,7 +25,7 @@ volatility_threshold: 0.02
 trend_threshold: 0.005
 regime_features:
   - "volatility_1d"
-  - "volatility_7d" 
+  - "volatility_7d"
   - "volatility_30d"
   - "trend_1d"
   - "trend_7d"
@@ -46,7 +46,7 @@ signal_layers:
   LAYER_2_LOGISTICS:
     - "Port_Congestion"
     - "Diesel"
-    - "Supply_Chain" 
+    - "Supply_Chain"
     - "Container"
   LAYER_3_GLOBAL_MACRO:
     - "Inflation"

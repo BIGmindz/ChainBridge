@@ -14,13 +14,17 @@ The foundation of the modular architecture:
 - **DataProcessor** (`core/data_processor.py`): Handles data normalization and validation
 - **Pipeline** (`core/pipeline.py`): Orchestrates multi-step processing workflows
 
+
+
 ### 2. Modules (`modules/`)
 
 Pluggable modules for specific functionality:
 
 - **CSVIngestionModule** (`modules/csv_ingestion.py`): CSV file ingestion and processing
-- **RSIModule** (`modules/rsi_module.py`): RSI calculation and trading signals  
+- **RSIModule** (`modules/rsi_module.py`): RSI calculation and trading signals
 - **SalesForecastingModule** (`modules/sales_forecasting.py`): ML-powered sales forecasting
+
+
 
 ### 3. API Layer (`api/`)
 
@@ -30,6 +34,8 @@ REST API for system interaction:
 - Swagger/OpenAPI documentation at `/docs`
 - Health checks and monitoring endpoints
 
+
+
 ### 4. Business Impact Tracking (`tracking/`)
 
 Metrics and ROI measurement:
@@ -37,6 +43,8 @@ Metrics and ROI measurement:
 - **MetricsCollector** (`tracking/metrics_collector.py`): Comprehensive usage and business impact tracking
 - ROI calculation and adoption metrics
 - Error tracking and reliability metrics
+
+
 
 ## Getting Started
 
@@ -49,16 +57,22 @@ pip install -r requirements.txt
 ### Running the System
 
 1. **API Server Mode (Recommended)**:
+
+
    ```bash
    python benson_system.py --mode api-server --port 8000
    ```
 
 2. **RSI Compatibility Mode**:
+
+
    ```bash
    python benson_system.py --mode rsi-compat --once
    ```
 
 3. **System Tests**:
+
+
    ```bash
    python benson_system.py --mode test
    ```
@@ -76,16 +90,19 @@ docker-compose --profile legacy up benson-legacy
 ## API Usage Examples
 
 ### Health Check
+
 ```bash
 curl http://localhost:8000/health
 ```
 
 ### List Available Modules
+
 ```bash
 curl http://localhost:8000/modules
 ```
 
 ### Execute RSI Analysis
+
 ```bash
 curl -X POST http://localhost:8000/modules/RSIModule/execute \
   -H "Content-Type: application/json" \
@@ -101,6 +118,7 @@ curl -X POST http://localhost:8000/modules/RSIModule/execute \
 ```
 
 ### Ingest CSV Data
+
 ```bash
 curl -X POST http://localhost:8000/modules/CSVIngestionModule/execute \
   -H "Content-Type: application/json" \
@@ -113,6 +131,7 @@ curl -X POST http://localhost:8000/modules/CSVIngestionModule/execute \
 ```
 
 ### Sales Forecasting
+
 ```bash
 curl -X POST http://localhost:8000/modules/SalesForecastingModule/execute \
   -H "Content-Type: application/json" \
@@ -129,6 +148,7 @@ curl -X POST http://localhost:8000/modules/SalesForecastingModule/execute \
 ```
 
 ### View Metrics and ROI
+
 ```bash
 curl http://localhost:8000/metrics
 ```
@@ -143,19 +163,20 @@ from typing import Dict, Any
 
 class CustomModule(Module):
     VERSION = "1.0.0"
-    
+
     def get_schema(self) -> Dict[str, Any]:
         return {
             'input': {'data': 'string'},
             'output': {'result': 'string'}
         }
-        
+
     def process(self, data: Dict[str, Any]) -> Dict[str, Any]:
         # Your custom processing logic here
         return {'result': 'processed'}
 ```
 
 Register the module:
+
 ```bash
 curl -X POST http://localhost:8000/modules/register \
   -H "Content-Type: application/json" \
@@ -182,6 +203,7 @@ curl -X POST http://localhost:8000/pipelines \
 ```
 
 Execute pipeline:
+
 ```bash
 curl -X POST http://localhost:8000/pipelines/data_analysis_pipeline/execute \
   -H "Content-Type: application/json" \
@@ -200,7 +222,10 @@ The system automatically tracks:
 - **ROI Metrics**: Automation time savings, cost reduction estimates
 - **Reliability Metrics**: Error rates, uptime, success rates
 
+
+
 Access business impact reports:
+
 ```bash
 curl http://localhost:8000/metrics/modules
 curl http://localhost:8000/metrics/pipelines
@@ -214,9 +239,12 @@ curl http://localhost:8000/metrics/pipelines
 - `HOST`: API server host (default: 0.0.0.0)
 - `BENSON_CONFIG`: Path to configuration file
 
+
+
 ### Module Configuration
 
 Modules can be configured when loaded:
+
 ```python
 module_manager.load_module("modules.rsi_module", {
     "period": 14,
@@ -274,6 +302,8 @@ The API can be deployed on AWS Lambda, Google Cloud Functions, or Azure Function
 - Error tracking and alerting
 - Performance monitoring
 
+
+
 ## Security Considerations
 
 - API authentication (implement as needed)
@@ -281,12 +311,16 @@ The API can be deployed on AWS Lambda, Google Cloud Functions, or Azure Function
 - Rate limiting
 - Secure module loading
 
+
+
 ## Extending the System
 
 1. **Add New Data Sources**: Create ingestion modules for different data formats
 2. **Add ML Models**: Integrate new forecasting or analysis algorithms
 3. **Add Business Logic**: Create domain-specific processing modules
 4. **Add Connectors**: Integrate with external APIs and services
+
+
 
 ## Support and Troubleshooting
 

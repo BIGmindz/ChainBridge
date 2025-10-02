@@ -16,7 +16,7 @@ api:
 # Trading Pairs
 symbols:
   - "BTC/USD"
-  - "ETH/USD" 
+  - "ETH/USD"
   - "ADA/USD"
   - "DOT/USD"
   - "LINK/USD"
@@ -30,12 +30,12 @@ risk_management:
   max_drawdown_limit: 0.15  # 15% maximum drawdown before emergency stop
   stop_loss_pct: 0.03  # Default 3% stop loss
   take_profit_pct: 0.06  # Default 6% take profit (2:1 ratio)
-  
+
   # Position sizing adjustments
   volatility_adjustment: true
   correlation_adjustment: true
   drawdown_scaling: true  # Reduce position sizes during drawdown
-  
+
   # Emergency stops
   daily_loss_limit: 0.05  # 5% daily loss limit
   consecutive_losses_limit: 5  # Close all after 5 consecutive losses
@@ -47,7 +47,7 @@ performance_tracking:
   enable_correlation_monitoring: true
   sharpe_ratio_calculation: true
   risk_free_rate: 0.02  # 2% annual risk-free rate
-  
+
   # Export settings
   auto_export_interval_hours: 24
   export_format: "json"  # json, csv, excel
@@ -67,7 +67,7 @@ logging:
   log_file: "logs/kraken_paper_trading.log"
   log_rotation: "daily"
   max_log_files: 30
-  
+
   # Trading specific logs
   log_all_price_updates: false
   log_position_updates: true
@@ -80,16 +80,16 @@ ml_integration:
   confidence_threshold: 0.6  # Minimum ML confidence to trade
   model_weight_in_sizing: 0.3  # How much ML confidence affects position size
   signal_aggregation: "weighted_average"  # weighted_average, majority_vote
-  
+
   # Signal sources
   signal_sources:
     - "rsi"
-    - "macd" 
+    - "macd"
     - "bollinger_bands"
     - "volume_profile"
     - "sentiment_analysis"
 
-# Alert Configuration  
+# Alert Configuration
 alerts:
   enable: true
   alert_types:
@@ -99,7 +99,7 @@ alerts:
     - "take_profit_hit"
     - "risk_limit_exceeded"
     - "performance_milestone"
-  
+
   # Alert channels (for future implementation)
   channels:
     console: true
@@ -122,7 +122,7 @@ paper_trading:
   simulate_slippage: true  # Add realistic slippage
   simulate_fees: true     # Deduct realistic trading fees
   market_hours_only: false  # Trade 24/7 for crypto
-  
+
   # Realism settings
   execution_delay_ms: 100  # Realistic order execution delay
   slippage_bps: 5  # 0.05% slippage
@@ -134,7 +134,7 @@ advanced:
   enable_volatility_clustering: true  # Volatility-based risk adjustment
   enable_momentum_filters: true  # Momentum-based entry filters
   enable_correlation_matrix: true  # Real-time correlation monitoring
-  
+
   # Optimization features
   dynamic_stop_losses: true  # Trailing and ATR-based stops
   position_scaling: true     # Scale into/out of positions
@@ -146,7 +146,7 @@ development:
   test_mode: false
   mock_price_data: false
   simulation_speed: 1.0  # 1.0 = real-time, >1.0 = faster
-  
+
   # Testing scenarios
   stress_test_scenarios:
     - "flash_crash"
@@ -160,7 +160,7 @@ integration:
   exchange_adapter: true  # Use existing ExchangeAdapter
   signal_modules: true   # Integrate with signal modules
   dashboard: true        # Enable performance dashboard
-  
+
   # External systems (future)
   external_signals: false
   portfolio_sync: false

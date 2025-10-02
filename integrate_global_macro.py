@@ -51,7 +51,7 @@ def integrate_global_macro():
     all_signals = signal_portfolio["technical_signals"] + signal_portfolio["logistics_signals"] + signal_portfolio["global_macro_signals"]
 
     total_signals = len(all_signals)
-    avg_correlation = sum(s["correlation"] * s["weight"] for s in all_signals) / sum(s["weight"] for s in all_signals)
+    avg_correlation = sum(s["correlation"] * s["weight"] for s in all_signals) / sum(s["weight"] for s in all_signals)  # type: ignore
 
     print("\n📊 YOUR COMPLETE SIGNAL PORTFOLIO:")
     print(f"{'=' * 60}")

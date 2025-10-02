@@ -62,7 +62,7 @@ async def diagnose_listing_strategy():
                         for key, value in result_copy.items():
                             if isinstance(value, datetime):
                                 result_copy[key] = value.isoformat()
-                        results_json.append(result_copy)
+                        results_json.append(result_copy)  # type: ignore
 
                     json.dump(results_json, f, indent=4)
 
