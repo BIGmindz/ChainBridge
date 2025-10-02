@@ -14,6 +14,8 @@ The **Chainalysis Adoption Tracker** module is a forward-looking signal generato
 - **Signal Diversification**: Enhances overall signal portfolio diversification
 - **Adaptive Thresholds**: Generates BUY signals when adoption growth exceeds 40% YoY
 
+
+
 ## Signal Generation Logic
 
 The Chainalysis Adoption Tracker generates signals based on the following conditions:
@@ -40,6 +42,8 @@ The module assigns different weights to global regions based on their impact on 
 - **East Asia**: 8% (China, Japan, South Korea)
 - **Western Europe**: 8% (UK, Germany, France)
 
+
+
 ## Integration with Multi-Signal Bot
 
 The Chainalysis Adoption Tracker has been fully integrated with the multi-signal bot system:
@@ -48,6 +52,8 @@ The Chainalysis Adoption Tracker has been fully integrated with the multi-signal
 - Incorporated in the main signal aggregation logic
 - Included in the signal diversification analysis
 - Demonstrated in the multi-signal demo system
+
+
 
 ## Implementation
 
@@ -59,6 +65,8 @@ The module is implemented in `/modules/adoption_tracker_module.py` with the foll
 - `calculate_composite_score()` for signal generation
 - `generate_signal()` and `generate_reasoning()` for decision logic
 
+
+
 ## Testing
 
 The module includes comprehensive testing:
@@ -68,6 +76,8 @@ The module includes comprehensive testing:
 - Included in `multi_signal_demo.py` for scenario testing
 - Generates visualizations of regional adoption growth
 - Saves detailed test results to JSON files
+
+
 
 ## Example Signal Output
 
@@ -106,6 +116,8 @@ To use the Chainalysis Adoption Tracker in your trading system:
 5. Get confidence: `confidence = result['confidence']  # 0.0 to 1.0`
 6. Read the reasoning: `reasoning = result['reasoning']`
 
+
+
 ## Configuration
 
 The module can be configured through the optional config parameter:
@@ -126,6 +138,8 @@ adoption_tracker = AdoptionTrackerModule(config)
 - Incorporate institutional adoption metrics
 - Add correlation with regulatory developments by region
 - Enhance visualizations with interactive charts
+
+
 
 ## Conclusion
 

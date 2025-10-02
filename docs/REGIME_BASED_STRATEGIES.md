@@ -13,6 +13,8 @@ This document provides comprehensive guidance on implementing and optimizing tra
 7. [Best Practices](#best-practices)
 8. [Advanced Topics](#advanced-topics)
 
+
+
 ## Introduction to Market Regimes
 
 Market regimes represent distinct periods in financial markets characterized by specific patterns of price action, volatility, and correlation between assets. Trading strategies that adapt to these different regimes typically outperform static approaches.
@@ -43,6 +45,8 @@ Market regimes represent distinct periods in financial markets characterized by 
    - Characterized by small price movements and low trading volume
    - Often occurs during holiday periods or before major announcements
    - Technical indicators: Low ATR, narrow Bollinger Bands
+
+
 
 ## Identifying Market Regimes
 
@@ -93,11 +97,15 @@ def detect_regime_statistical(prices, window=50):
 - **ADX (Average Directional Index)**: Strength of trends
 - **RSI (Relative Strength Index)**: Overbought/oversold conditions
 
+
+
 ### Market Breadth Indicators
 
 - Advance/Decline Line
 - Number of stocks above 50/200-day moving average
 - New highs vs. new lows
+
+
 
 ### Example Implementation
 
@@ -153,6 +161,8 @@ Different strategies perform better in different market regimes. Here's how to o
   - Trailing stops rather than fixed stops
   - Higher overbought thresholds for oscillators
 
+
+
 ### Bearish Regime Strategies
 
 - **Short Selling**: More effective in established downtrends
@@ -161,6 +171,8 @@ Different strategies perform better in different market regimes. Here's how to o
   - Tighter stop losses
   - Lower oversold thresholds for oscillators
   - Faster moving averages for trend identification
+
+
 
 ### Sideways Regime Strategies
 
@@ -171,6 +183,8 @@ Different strategies perform better in different market regimes. Here's how to o
   - Shorter holding periods
   - More emphasis on support/resistance levels
 
+
+
 ### Volatile Regime Strategies
 
 - **Volatility-based Position Sizing**: Reduce position size
@@ -179,6 +193,8 @@ Different strategies perform better in different market regimes. Here's how to o
   - Wider stop losses
   - Shorter holding periods
   - Less frequent trading
+
+
 
 ### Parameter Optimization Example
 
@@ -224,6 +240,8 @@ Proper regime-specific backtesting involves:
 2. **Separate Evaluation**: Test strategy performance within each regime separately
 3. **Parameter Optimization**: Find optimal parameters for each regime
 4. **Transition Management**: Test smooth transitions between regimes
+
+
 
 ### Using the RegimeBacktester
 
@@ -287,6 +305,8 @@ The regime performance dashboard provides:
 4. **Trade Analysis**: Distribution of buy/sell/hold signals by regime
 5. **Risk Metrics**: Volatility and drawdown visualization
 
+
+
 ### Performance Metrics to Consider
 
 For each regime, analyze:
@@ -295,6 +315,8 @@ For each regime, analyze:
 - **Risk Metrics**: Volatility, max drawdown, Sortino ratio
 - **Trade Metrics**: Win rate, profit factor, average win/loss
 - **Exposure Metrics**: Time in market, number of trades
+
+
 
 ### Sample Performance Analysis
 
@@ -447,6 +469,8 @@ Handle transitions between regimes carefully to avoid excessive trading:
 - Implement confidence thresholds before changing regimes
 - Consider overlapping regime periods for gradual transitions
 
+
+
 ### 2. Avoiding Overfitting
 
 Be cautious about overfitting regime-specific parameters:
@@ -454,6 +478,8 @@ Be cautious about overfitting regime-specific parameters:
 - Use cross-validation across multiple regime cycles
 - Keep parameter differences between regimes meaningful but not extreme
 - Test on out-of-sample data that includes various regime types
+
+
 
 ### 3. Monitoring and Adaptation
 
@@ -463,6 +489,8 @@ Continuously monitor regime detection and performance:
 - Periodically re-optimize regime-specific parameters
 - Consider ensemble methods that combine multiple regime detection approaches
 
+
+
 ### 4. Risk Management
 
 Adjust risk management based on regime characteristics:
@@ -470,6 +498,8 @@ Adjust risk management based on regime characteristics:
 - Reduce position sizes in volatile regimes
 - Set wider stops in trending regimes
 - Consider correlation shifts between assets in different regimes
+
+
 
 ## Advanced Topics
 

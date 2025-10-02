@@ -12,6 +12,8 @@ The market regime detection feature enhances the multi-signal trading engine by 
 - **Performance Tracking by Regime**: Analyzes trading performance in different market conditions
 - **Visualization Tools**: Provides visual analysis of regime detection and signal performance
 
+
+
 ## How It Works
 
 ### Market Regime Classification
@@ -22,6 +24,8 @@ The `MarketRegimeDetector` class analyzes price data to detect the current marke
 - **Bear Market**: Strong downtrend with consistent lower highs and lower lows
 - **Sideways Market**: Range-bound price action without a clear trend
 - **Unknown**: Not enough data to determine the market regime
+
+
 
 ### Signal Optimization by Regime
 
@@ -34,12 +38,16 @@ Each signal category is weighted differently depending on the market regime:
 - **On-chain**: 1.3x weight (confirms strength of bull runs)
 - **Proprietary**: 1.1x weight (boosted for unique insights)
 
+
+
 #### Bear Markets
 
 - **Technical Indicators**: 1.0x weight (neutral)
 - **Sentiment**: 1.3x weight (crucial in bear markets)
 - **On-chain**: 1.2x weight (shows capital flows in bear markets)
 - **Proprietary**: 1.1x weight (boosted for unique insights)
+
+
 
 #### Sideways Markets
 
@@ -48,6 +56,8 @@ Each signal category is weighted differently depending on the market regime:
 - **On-chain**: 0.9x weight (less useful in sideways markets)
 - **Proprietary**: 1.2x weight (boosted for unique insights)
 
+
+
 ### Position Sizing Adjustments
 
 Position sizes are automatically adjusted based on the market regime:
@@ -55,6 +65,8 @@ Position sizes are automatically adjusted based on the market regime:
 - **Bull Markets**: Larger position sizes for BUY signals (1.2x)
 - **Bear Markets**: Larger position sizes for SELL signals (1.2x)
 - **Sideways Markets**: Reduced position sizes (0.8x) to account for higher uncertainty
+
+
 
 ## Usage
 
@@ -111,12 +123,16 @@ This will:
 3. Generate visualizations of regime detection and trading performance
 4. Save performance statistics to `market_regime_stats.json`
 
+
+
 ## Visualization Outputs
 
 The example script generates two visualization files:
 
 - `market_regime_simulation.png`: Shows price action with detected regimes and PnL
 - `signal_regime_performance.png`: Shows signal performance by market regime
+
+
 
 ## Configuration
 
@@ -133,6 +149,8 @@ detector.volatility_threshold = 0.08  # 8% average daily change for high volatil
 
 - NumPy for mathematical operations
 - Matplotlib for visualizations (optional, for examples only)
+
+
 
 ## Integration with Existing Systems
 
