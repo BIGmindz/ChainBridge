@@ -1,20 +1,37 @@
-{
-  // Completely disable markdownlint extension
-  "markdownlint.run": "onSave",
-  "markdownlint.config": {
-    "default": false
-  },
-  
-  // File exclusions
-  "files.exclude": {
-    "**/.git": true,
-    "**/.venv": true,
-    "**/node_modules": true,
-    "**/__pycache__": true,
-    "**/*.pyc": true
-  },
-  
-  // Search exclusions  
+{{
+
+  "files.exclude": {  // Completely disable markdownlint extension
+
+    "**/.git": true,  "markdownlint.run": "onSave",
+
+    "**/.svn": true,  "markdownlint.config": {
+
+    "**/.hg": true,    "default": false
+
+    "**/CVS": true,  },
+
+    "**/.DS_Store": true,  
+
+    "**/Thumbs.db": true,  // File exclusions
+
+    "vscode-vfs://**/*": true  "files.exclude": {
+
+  },    "**/.git": true,
+
+  "markdownlint.config": {    "**/.venv": true,
+
+    "default": false,    "**/node_modules": true,
+
+    "MD013": false,    "**/__pycache__": true,
+
+    "MD033": false    "**/*.pyc": true
+
+  },  },
+
+  "markdownlint.run": "onSave"  
+
+}  // Search exclusions  
+
   "search.exclude": {
     "**/.venv": true,
     "**/node_modules": true,
