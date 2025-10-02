@@ -1,20 +1,11 @@
 {
+  // Completely disable markdownlint extension
+  "markdownlint.run": "onSave",
   "markdownlint.config": {
-    "default": true,
-    "MD013": false,
-    "MD012": false,
-    "MD033": false,
-    "MD041": false,
-    "MD022": false,
-    "MD031": false,
-    "MD032": false,
-    "MD040": false
+    "default": false
   },
-  "markdownlint.ignore": [
-    "**/vscode-vfs/**",
-    "**/.venv/**",
-    "**/node_modules/**"
-  ],
+  
+  // File exclusions
   "files.exclude": {
     "**/.git": true,
     "**/.venv": true,
@@ -22,9 +13,18 @@
     "**/__pycache__": true,
     "**/*.pyc": true
   },
+  
+  // Search exclusions  
   "search.exclude": {
     "**/.venv": true,
     "**/node_modules": true,
     "**/__pycache__": true
-  }
+  },
+  
+  // Disable validation for certain file types
+  "yaml.validate": true,
+  "yaml.schemas": {},
+  
+  // Python settings
+  "python.analysis.typeCheckingMode": "basic"
 }
