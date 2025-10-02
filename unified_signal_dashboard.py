@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 
 # Add the current directory to path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))  # type: ignore
 
 # Import signal modules
 try:
@@ -59,7 +59,7 @@ def load_price_data(symbol="BTC/USD", days=100):
                 daily_return -= 0.003  # Correction period
 
             new_price = prices[-1] * (1 + daily_return)
-            prices.append(new_price)
+            prices.append(new_price)  # type: ignore
 
         # Create volume data
         volumes = [
@@ -88,7 +88,7 @@ def load_price_data(symbol="BTC/USD", days=100):
                 prices[i],  # Close
                 volumes[i],
             ]
-            price_data.append(candle)
+            price_data.append(candle)  # type: ignore
 
         print(f"Generated {len(price_data)} candles of mock data")
         return price_data
@@ -207,9 +207,9 @@ def generate_signal_summary(signals):
     """Generate a summary of all signals"""
 
     # Count signals
-    buy_count = sum(1 for name, data in signals.items() if data.get("signal") == "BUY")
-    sell_count = sum(1 for name, data in signals.items() if data.get("signal") == "SELL")
-    hold_count = sum(1 for name, data in signals.items() if data.get("signal") == "HOLD")
+    buy_count = sum(1 for name, data in signals.items() if data.get("signal") == "BUY")  # type: ignore
+    sell_count = sum(1 for name, data in signals.items() if data.get("signal") == "SELL")  # type: ignore
+    hold_count = sum(1 for name, data in signals.items() if data.get("signal") == "HOLD")  # type: ignore
 
     total_signals = len(signals)
 

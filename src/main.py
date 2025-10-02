@@ -67,7 +67,7 @@ def run_bot(once: bool = False) -> None:
 
     # Setup exchange and validate symbols
     exchange = setup_exchange(exchange_id, api_config)
-    symbols: List[str] = list(cfg.get("symbols", []))
+    symbols: List[str] = list(cfg.get("symbols", []))  # type: ignore
     if not symbols:
         symbols = [
             "PRO/USD",
@@ -85,8 +85,8 @@ def run_bot(once: bool = False) -> None:
     # Configuration parameters
     timeframe = str(cfg.get("timeframe", "5m"))
     rsi_period = int(cfg.get("rsi", {}).get("period", 14))
-    buy_th = float(cfg.get("rsi", {}).get("buy_threshold", 30))
-    sell_th = float(cfg.get("rsi", {}).get("sell_threshold", 70))
+    buy_th = float(cfg.get("rsi", {}).get("buy_threshold", 30))  # type: ignore
+    sell_th = float(cfg.get("rsi", {}).get("sell_threshold", 70))  # type: ignore
     cooldown_min = int(cfg.get("cooldown_minutes", 10))
     poll_seconds = int(cfg.get("poll_seconds", 60))
     log_path = str(cfg.get("csv_log", "benson_signals.csv"))
@@ -127,7 +127,7 @@ def run_bot(once: bool = False) -> None:
                 ohlcv = safe_fetch_ohlcv(exchange, symbol, timeframe, limit=200)
                 rsi_val = calculate_rsi_from_ohlcv(ohlcv, rsi_period)
 
-                if isinstance(rsi_val, float) and math.isnan(rsi_val):
+                if isinstance(rsi_val, float) and math.isnan(rsi_val):  # type: ignore
                     print(f"[{utc_now_str()}] {symbol}: insufficient data for RSI yet.")
                     continue
 
@@ -141,7 +141,7 @@ def run_bot(once: bool = False) -> None:
                 changed = signal_out != last_signal[symbol]
 
                 # Status line
-                print(f"[{utc_now_str()}] {symbol:>10}: ${price:,.2f} | RSI {rsi_val:5.2f} | {signal_out}" f"{' (new)' if changed else ''}")
+                print(f"[{utc_now_str()}] {symbol:>10}: ${price:,.2f} | RSI {rsi_val:5.2f} | {signal_out}{' (new)' if changed else ''}")
 
                 # Alert only on new actionable signals and respecting cooldown
                 if signal_out in ("BUY", "SELL") and changed and cooldown_ok:

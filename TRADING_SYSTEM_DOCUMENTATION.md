@@ -62,6 +62,8 @@ The main trading bot that integrates multiple signal modules:
 - Region-Specific Crypto Module
 - New Listings Radar Module
 
+
+
 ### 2. New Listings Radar (`modules/new_listings_radar_module.py`)
 
 Monitors major exchanges for new coin listings and generates trading signals:
@@ -69,6 +71,8 @@ Monitors major exchanges for new coin listings and generates trading signals:
 - Supported Exchanges: Kraken, Coinbase, Binance, OKX, KuCoin
 - Features: Announcement parsing, risk filtering, signal generation, backtest capability
 - Average Returns: 20-40% per listing
+
+
 
 ### 3. Exchange Alerts (`setup_exchange_alerts.py`)
 
@@ -78,6 +82,8 @@ Sets up alerts for monitoring exchanges:
 - Alert notifications for new listings
 - Risk-based filtering
 
+
+
 ### 4. Capital Allocation (`allocate_capital.py`)
 
 Manages capital allocation for trading:
@@ -86,6 +92,8 @@ Manages capital allocation for trading:
 - Risk-based position sizing
 - Confidence-based allocation
 
+
+
 ### 5. System Monitor (`monitor_live_system.py`)
 
 Provides real-time monitoring of the trading system:
@@ -93,6 +101,8 @@ Provides real-time monitoring of the trading system:
 - Component status monitoring
 - Trading metrics dashboard
 - Automatic restart of failed components
+
+
 
 ## Configuration
 
@@ -146,6 +156,8 @@ The New Listings Radar module monitors exchange APIs and announcement pages for 
 - Entry Strategy
 - Exit Strategy
 
+
+
 ### 2. Exchange Alerts
 
 The exchange alert system monitors the New Listings Radar for new listings that meet the configured criteria. Alerts include:
@@ -157,6 +169,8 @@ The exchange alert system monitors the New Listings Radar for new listings that 
 - Risk Level
 - Timestamp
 
+
+
 ### 3. Capital Allocation
 
 The capital allocation system calculates position sizes based on:
@@ -165,6 +179,8 @@ The capital allocation system calculates position sizes based on:
 - Risk level
 - Expected return
 - Available capital
+
+
 
 For the first listing, it allocates $1000 as specified.
 
@@ -176,6 +192,8 @@ The system monitor checks the status of all components and provides a real-time 
 - Trading metrics
 - Active listings
 - Open positions
+
+
 
 ## Additional Resources
 

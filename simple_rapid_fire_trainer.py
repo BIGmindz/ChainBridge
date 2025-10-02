@@ -190,7 +190,7 @@ class SimpleRapidFireTrainer:
             timestamp: The time of the decision
             symbol: The trading symbol
         """
-        self.decision_history.append(
+        self.decision_history.append(  # type: ignore
             {
                 "timestamp": timestamp,
                 "signals": signals,
@@ -220,7 +220,7 @@ class SimpleRapidFireTrainer:
 
         for decision in self.decision_history:
             if decision["timestamp"] < cutoff_time and not decision.get("evaluated", False):
-                symbol = decision.get("symbol", list(current_prices.keys())[0])
+                symbol = decision.get("symbol", list(current_prices.keys())[0])  # type: ignore
                 current_price = current_prices.get(symbol, 0)
 
                 if current_price > 0:
@@ -243,13 +243,13 @@ class SimpleRapidFireTrainer:
                         # Record which signals contributed to successful decisions
                         for signal, value in decision["signals"].items():
                             if abs(value) > 0.01:  # Only count non-zero signals
-                                successful_signals[signal].append(value)
+                                successful_signals[signal].append(value)  # type: ignore
                     else:
                         self.losses += 1
                         # Record which signals contributed to unsuccessful decisions
                         for signal, value in decision["signals"].items():
                             if abs(value) > 0.01:  # Only count non-zero signals
-                                unsuccessful_signals[signal].append(value)
+                                unsuccessful_signals[signal].append(value)  # type: ignore
 
                     self.total_trades += 1
 
@@ -280,8 +280,8 @@ class SimpleRapidFireTrainer:
 
             if successful or unsuccessful:
                 # Calculate average signal value for successful and unsuccessful decisions
-                avg_success = sum(successful) / len(successful) if successful else 0
-                avg_failure = sum(unsuccessful) / len(unsuccessful) if unsuccessful else 0
+                avg_success = sum(successful) / len(successful) if successful else 0  # type: ignore
+                avg_failure = sum(unsuccessful) / len(unsuccessful) if unsuccessful else 0  # type: ignore
 
                 # Calculate success rate
                 total_occurrences = len(successful) + len(unsuccessful)
@@ -301,7 +301,7 @@ class SimpleRapidFireTrainer:
             self.signal_weights[signal] = max(0.01, self.signal_weights[signal])
 
         # Normalize weights to sum to 1
-        total_weight = sum(self.signal_weights.values())
+        total_weight = sum(self.signal_weights.values())  # type: ignore
         if total_weight > 0:
             for signal in self.signals:
                 self.signal_weights[signal] /= total_weight
@@ -317,9 +317,9 @@ class SimpleRapidFireTrainer:
         win_rate = (self.wins / self.total_trades * 100) if self.total_trades > 0 else 0
 
         # Update dashboard data
-        self.dashboard_data["timestamp"].append(timestamp)
-        self.dashboard_data["capital"].append(portfolio["current_capital"])
-        self.dashboard_data["win_rate"].append(win_rate)
+        self.dashboard_data["timestamp"].append(timestamp)  # type: ignore
+        self.dashboard_data["capital"].append(portfolio["current_capital"])  # type: ignore
+        self.dashboard_data["win_rate"].append(win_rate)  # type: ignore
 
         # Identify best and worst signals
         if self.signal_weights:
@@ -435,8 +435,8 @@ class SimpleRapidFireTrainer:
 
             # Plot signal weights
             plt.figure(figsize=(12, 8))
-            signals = list(self.signal_weights.keys())
-            weights = list(self.signal_weights.values())
+            signals = list(self.signal_weights.keys())  # type: ignore
+            weights = list(self.signal_weights.values())  # type: ignore
 
             # Sort by weight for better visualization
             sorted_indices = np.argsort(weights)[::-1]

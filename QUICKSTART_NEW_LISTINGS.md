@@ -5,11 +5,15 @@ This guide provides a quick overview of how to use the New Listings Radar module
 ## Setup
 
 1. Install dependencies:
+
+
    ```bash
    python setup_new_listings.py
    ```
 
 2. Verify installation:
+
+
    ```bash
    pip list | grep beautifulsoup4
    ```
@@ -42,6 +46,8 @@ The module is already integrated with the main bot:
 
 1. Make sure `modules/new_listings_radar_module.py` is properly installed
 2. Run the main bot which will include this module:
+
+
    ```bash
    python multi_signal_bot.py
    ```
@@ -76,6 +82,8 @@ tail -n 50 logs/dashboard.log | grep "NewListingsRadar"
 If you encounter issues:
 
 1. Check dependencies:
+
+
    ```bash
    python setup_new_listings.py
    ```

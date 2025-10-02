@@ -54,7 +54,7 @@ def generate_realistic_test_data(periods: int = 100, base_price: float = 45000, 
         close = current_price
         volume = 1000 + abs(noise * 50000)  # Volume varies with price action
 
-        price_data.append(
+        price_data.append(  # type: ignore
             {
                 "timestamp": (datetime.now() + timedelta(days=i)).isoformat(),
                 "open": round(open_price, 2),
@@ -77,27 +77,27 @@ def print_signal_summary(signal_result: Dict[str, Any], module_name: str) -> Non
     details = []
     if module_name == "RSI":
         rsi_value = signal_result.get("rsi_value", 0)
-        details.append(f"RSI: {rsi_value:.1f}")
+        details.append(f"RSI: {rsi_value:.1f}")  # type: ignore
     elif module_name == "MACD":
         macd_value = signal_result.get("macd_line", 0)
         signal_line = signal_result.get("signal_line", 0)
-        details.append(f"MACD: {macd_value:.2f}")
-        details.append(f"Signal: {signal_line:.2f}")
+        details.append(f"MACD: {macd_value:.2f}")  # type: ignore
+        details.append(f"Signal: {signal_line:.2f}")  # type: ignore
     elif module_name == "BollingerBands":
         percent_b = signal_result.get("percent_b", 0)
         volatility_state = signal_result.get("volatility_state", "NORMAL")
-        details.append(f"%B: {percent_b:.2f}")
-        details.append(f"Vol: {volatility_state}")
+        details.append(f"%B: {percent_b:.2f}")  # type: ignore
+        details.append(f"Vol: {volatility_state}")  # type: ignore
     elif module_name == "VolumeProfile":
         poc = signal_result.get("point_of_control", 0)
         volume_trend = signal_result.get("volume_trend", "STABLE")
-        details.append(f"POC: ${poc:,.0f}")
-        details.append(f"Vol Trend: {volume_trend}")
+        details.append(f"POC: ${poc:,.0f}")  # type: ignore
+        details.append(f"Vol Trend: {volume_trend}")  # type: ignore
     elif module_name == "SentimentAnalysis":
         sentiment_score = signal_result.get("composite_sentiment_score", 0)
         sentiment_strength = signal_result.get("sentiment_strength", "WEAK")
-        details.append(f"Sentiment: {sentiment_score:.2f}")
-        details.append(f"Strength: {sentiment_strength}")
+        details.append(f"Sentiment: {sentiment_score:.2f}")  # type: ignore
+        details.append(f"Strength: {sentiment_strength}")  # type: ignore
 
     details_str = " | ".join(details)
     confidence_bar = "█" * int(confidence * 10) + "░" * (10 - int(confidence * 10))
@@ -153,7 +153,7 @@ def run_comprehensive_demo():
     for module_path, display_name, config in signal_modules:
         try:
             module_name = module_manager.load_module(module_path, config)
-            loaded_modules.append((module_name, display_name))
+            loaded_modules.append((module_name, display_name))  # type: ignore
             print(f"✓ Loaded: {display_name}")
         except Exception as e:
             print(f"✗ Failed to load {display_name}: {e}")
@@ -345,13 +345,13 @@ def run_comprehensive_demo():
                     # Convert signal to numerical score
                     score = 1 if signal_data["signal"] == "BUY" else -1 if signal_data["signal"] == "SELL" else 0
                     score *= signal_data.get("confidence", 0)
-                    signal_variations[signal_name].append(score)
+                    signal_variations[signal_name].append(score)  # type: ignore
 
         print(f"\nSignal diversity across {len(scenario_results)} market scenarios:")
         for signal_name, scores in signal_variations.items():
             if scores:
                 diversity = len(set([round(s, 1) for s in scores])) / len(scores) if scores else 0
-                avg_score = sum(scores) / len(scores)
+                avg_score = sum(scores) / len(scores)  # type: ignore
                 print(f"  {signal_name:15}: Diversity {diversity:.2f}, Avg Score {avg_score:+.2f}")
 
     print("\n" + "=" * 80)

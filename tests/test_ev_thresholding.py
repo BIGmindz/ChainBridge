@@ -13,12 +13,8 @@ Tests cover:
 import pytest
 import numpy as np
 import pandas as pd
-from ml_pipeline.ev_thresholding import (
-    EVThresholdOptimizer,
-    TradingCosts,
-    ThresholdResult,
-    find_multiple_thresholds
-)
+from ml_pipeline.ev_thresholding import EVThresholdOptimizer, TradingCosts, ThresholdResult, find_multiple_thresholds
+
 
 class TestEVThresholdOptimizer:
     """Test suite for EVThresholdOptimizer class."""
@@ -29,7 +25,7 @@ class TestEVThresholdOptimizer:
 
         # Create synthetic trading data
         n_samples = 1000
-        dates = pd.date_range('2020-01-01', periods=n_samples, freq='H')
+        dates = pd.date_range("2020-01-01", periods=n_samples, freq="H")
 
         # Generate realistic returns with some predictability
         true_returns = np.random.randn(n_samples) * 0.02  # 2% vol
@@ -44,8 +40,8 @@ class TestEVThresholdOptimizer:
         predictions = skill * future_returns + (1 - skill) * noise
         predictions = 1 / (1 + np.exp(-predictions))  # Sigmoid to [0,1]
 
-        self.y_true = pd.Series(true_returns, index=dates, name='returns')
-        self.y_prob = pd.Series(predictions, index=dates, name='predictions')
+        self.y_true = pd.Series(true_returns, index=dates, name="returns")
+        self.y_prob = pd.Series(predictions, index=dates, name="predictions")
 
     def test_initialization(self):
         """Test EVThresholdOptimizer initialization."""
@@ -57,12 +53,7 @@ class TestEVThresholdOptimizer:
 
     def test_trading_costs(self):
         """Test TradingCosts class."""
-        costs = TradingCosts(
-            commission_pct=0.001,
-            slippage_pct=0.0005,
-            spread_pct=0.0002,
-            market_impact_pct=0.0001
-        )
+        costs = TradingCosts(commission_pct=0.001, slippage_pct=0.0005, spread_pct=0.0002, market_impact_pct=0.0001)
 
         expected_total = 0.001 + 0.0005 + 0.0002 + 0.0001
         assert costs.total_cost_pct == expected_total
@@ -71,9 +62,7 @@ class TestEVThresholdOptimizer:
         """Test basic threshold optimization."""
         optimizer = EVThresholdOptimizer(min_trades=1)  # Lower threshold for test
 
-        result, curve = optimizer.optimize_threshold(
-            self.y_true, self.y_prob, return_curve=True
-        )
+        result, curve = optimizer.optimize_threshold(self.y_true, self.y_prob, return_curve=True)
 
         assert isinstance(result, ThresholdResult)
         assert 0.1 <= result.threshold <= 0.9
@@ -84,20 +73,17 @@ class TestEVThresholdOptimizer:
         # Check curve data
         assert curve is not None
         assert len(curve) > 0
-        assert 'threshold' in curve.columns
-        assert 'expected_value' in curve.columns
+        assert "threshold" in curve.columns
+        assert "expected_value" in curve.columns
 
     def test_optimize_threshold_with_costs(self):
         """Test threshold optimization with trading costs."""
         high_costs = TradingCosts(
             commission_pct=0.005,  # 0.5% commission
-            slippage_pct=0.002,    # 0.2% slippage
+            slippage_pct=0.002,  # 0.2% slippage
         )
 
-        optimizer = EVThresholdOptimizer(
-            trading_costs=high_costs,
-            min_trades=1
-        )
+        optimizer = EVThresholdOptimizer(trading_costs=high_costs, min_trades=1)
 
         result, _ = optimizer.optimize_threshold(self.y_true, self.y_prob)
 
@@ -107,7 +93,7 @@ class TestEVThresholdOptimizer:
     def test_evaluate_threshold_insufficient_trades(self):
         """Test handling of insufficient trades."""
         # Create data that will result in very few trades
-        dates = pd.date_range('2020-01-01', periods=10, freq='H')
+        dates = pd.date_range("2020-01-01", periods=10, freq="H")
         y_true = pd.Series([0.01] * 10, index=dates)
         y_prob = pd.Series([0.99] * 10, index=dates)  # All very high confidence
 
@@ -155,7 +141,7 @@ class TestEVThresholdOptimizer:
             avg_win=0.015,
             avg_loss=-0.008,
             max_drawdown=0.05,
-            sharpe_ratio=1.5
+            sharpe_ratio=1.5,
         )
 
         assert result.threshold == 0.6
@@ -164,6 +150,7 @@ class TestEVThresholdOptimizer:
         assert result.profit_factor == 1.2
         assert result.total_trades == 100
 
+
 class TestMultipleThresholds:
     """Test suite for multiple threshold finding."""
 
@@ -171,7 +158,7 @@ class TestMultipleThresholds:
         """Set up test data."""
         np.random.seed(42)
         n_samples = 500
-        dates = pd.date_range('2020-01-01', periods=n_samples, freq='H')
+        dates = pd.date_range("2020-01-01", periods=n_samples, freq="H")
 
         # Create test data
         true_returns = np.random.randn(n_samples) * 0.02
@@ -182,9 +169,7 @@ class TestMultipleThresholds:
 
     def test_find_multiple_thresholds(self):
         """Test finding multiple thresholds."""
-        results = find_multiple_thresholds(
-            self.y_true, self.y_prob, n_thresholds=3, min_trades=1
-        )
+        results = find_multiple_thresholds(self.y_true, self.y_prob, n_thresholds=3, min_trades=1)
 
         assert len(results) <= 3  # May find fewer if some ranges fail
 
@@ -203,19 +188,18 @@ class TestMultipleThresholds:
         small_y_true = pd.Series([0.01, -0.01])
         small_y_prob = pd.Series([0.6, 0.4])
 
-        results = find_multiple_thresholds(
-            small_y_true, small_y_prob, n_thresholds=3, min_trades=1
-        )
+        results = find_multiple_thresholds(small_y_true, small_y_prob, n_thresholds=3, min_trades=1)
 
         # Should still work with small data
         assert len(results) >= 0
+
 
 class TestEdgeCases:
     """Test edge cases and error conditions."""
 
     def test_all_positive_predictions(self):
         """Test with all positive predictions."""
-        dates = pd.date_range('2020-01-01', periods=100, freq='H')
+        dates = pd.date_range("2020-01-01", periods=100, freq="H")
         y_true = pd.Series(np.random.randn(100) * 0.02, index=dates)
         y_prob = pd.Series([0.9] * 100, index=dates)  # All high confidence
 
@@ -227,7 +211,7 @@ class TestEdgeCases:
 
     def test_all_negative_predictions(self):
         """Test with all negative predictions."""
-        dates = pd.date_range('2020-01-01', periods=100, freq='H')
+        dates = pd.date_range("2020-01-01", periods=100, freq="H")
         y_true = pd.Series(np.random.randn(100) * 0.02, index=dates)
         y_prob = pd.Series([0.1] * 100, index=dates)  # All low confidence
 
@@ -239,27 +223,23 @@ class TestEdgeCases:
 
     def test_extreme_thresholds(self):
         """Test optimization with extreme threshold ranges."""
-        dates = pd.date_range('2020-01-01', periods=100, freq='H')
+        dates = pd.date_range("2020-01-01", periods=100, freq="H")
         y_true = pd.Series(np.random.randn(100) * 0.02, index=dates)
         y_prob = pd.Series(np.random.rand(100), index=dates)
 
         optimizer = EVThresholdOptimizer(min_trades=1)
 
         # Test very high threshold
-        result, _ = optimizer.optimize_threshold(
-            y_true, y_prob, thresholds=np.array([0.95])
-        )
+        result, _ = optimizer.optimize_threshold(y_true, y_prob, thresholds=np.array([0.95]))
         assert result.threshold == 0.95
 
         # Test very low threshold
-        result, _ = optimizer.optimize_threshold(
-            y_true, y_prob, thresholds=np.array([0.05])
-        )
+        result, _ = optimizer.optimize_threshold(y_true, y_prob, thresholds=np.array([0.05]))
         assert result.threshold == 0.05
 
     def test_zero_returns(self):
         """Test with zero returns (no market movement)."""
-        dates = pd.date_range('2020-01-01', periods=100, freq='H')
+        dates = pd.date_range("2020-01-01", periods=100, freq="H")
         y_true = pd.Series([0.0] * 100, index=dates)  # No returns
         y_prob = pd.Series(np.random.rand(100), index=dates)
 
@@ -271,6 +251,7 @@ class TestEdgeCases:
         # Expected value should be negative due to trading costs
         assert result.expected_value < 0.0
         assert result.total_trades > 0
+
 
 class TestPerformanceMetrics:
     """Test performance metric calculations."""
@@ -290,14 +271,15 @@ class TestPerformanceMetrics:
         losses = returns[returns < 0]
 
         if len(wins) > 0 and len(losses) > 0:
-            gross_profit = wins.sum()
-            gross_loss = abs(losses.sum())
+            gross_profit = wins.sum()  # type: ignore
+            gross_loss = abs(losses.sum())  # type: ignore
             expected_pf = gross_profit / gross_loss
         else:
-            expected_pf = float('inf') if len(wins) > 0 else 0.0
+            expected_pf = float("inf") if len(wins) > 0 else 0.0  # type: ignore
 
         # This is tested indirectly through the optimizer
         assert len(returns) == len([s for s in signals if s != 0])
+
 
 if __name__ == "__main__":
     pytest.main([__file__])

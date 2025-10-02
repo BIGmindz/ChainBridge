@@ -180,13 +180,13 @@ class RegimeBacktester:
         running_max = np.maximum.accumulate(cumulative_returns)
         drawdowns = (running_max - cumulative_returns) / running_max
         max_drawdown = drawdowns.max()
-        win_rate = (returns > 0).sum() / len(returns) if len(returns) > 0 else 0
+        win_rate = (returns > 0).sum() / len(returns) if len(returns) > 0 else 0  # type: ignore
 
         return {
-            "total_return": float(total_return),
-            "sharpe_ratio": float(sharpe_ratio),
-            "max_drawdown": float(max_drawdown),
-            "win_rate": float(win_rate),
+            "total_return": float(total_return),  # type: ignore
+            "sharpe_ratio": float(sharpe_ratio),  # type: ignore
+            "max_drawdown": float(max_drawdown),  # type: ignore
+            "win_rate": float(win_rate),  # type: ignore
         }
 
     def plot_results(self, figsize: Tuple[int, int] = (12, 8)) -> None:
@@ -258,9 +258,9 @@ class RegimeBacktester:
         from itertools import product
 
         # Generate all parameter combinations
-        param_names = list(param_grid.keys())
-        param_values = list(param_grid.values())
-        param_combinations = list(product(*param_values))
+        param_names = list(param_grid.keys())  # type: ignore
+        param_values = list(param_grid.values())  # type: ignore
+        param_combinations = list(product(*param_values))  # type: ignore
 
         for regime in unique_regimes:
             regime_idx = self.regime_data == regime

@@ -27,8 +27,8 @@ class SignalDataCollector:
         self.data_dir = self.config.get("data_dir", os.path.join("data", "adaptive_weight_data"))
         os.makedirs(self.data_dir, exist_ok=True)
 
-        # Signal configuration
-        self.signal_layers = {
+        # Signal configuration (allow overrides from config)
+        default_signal_layers = {
             "LAYER_1_TECHNICAL": ["RSI", "MACD", "Bollinger", "Volume", "Sentiment"],
             "LAYER_2_LOGISTICS": [
                 "Port_Congestion",
@@ -45,6 +45,11 @@ class SignalDataCollector:
             ],
             "LAYER_4_ADOPTION": ["Chainalysis_Global"],
         }
+        config_signal_layers = self.config.get("signal_layers")
+        if isinstance(config_signal_layers, dict) and config_signal_layers:
+            self.signal_layers = {layer: list(signals) for layer, signals in config_signal_layers.items()}  # type: ignore
+        else:
+            self.signal_layers = default_signal_layers
 
         # Data collection settings
         self.lookback_days = self.config.get("lookback_days", 7)
@@ -222,7 +227,7 @@ class SignalDataCollector:
                     data = json.load(f)
                     # Only include records with performance data
                     if "performance" in data:
-                        training_data.append(data)
+                        training_data.append(data)  # type: ignore
             except Exception as e:
                 print(f"Error loading training data from {filename}: {str(e)}")
 
@@ -290,8 +295,8 @@ class SignalDataCollector:
         # Create standardized signal
         std_signal = {
             "signal": raw_signal.get("signal", defaults["signal"]),
-            "strength": float(raw_signal.get("strength", defaults["strength"])),
-            "confidence": float(raw_signal.get("confidence", defaults["confidence"])),
+            "strength": float(raw_signal.get("strength", defaults["strength"])),  # type: ignore
+            "confidence": float(raw_signal.get("confidence", defaults["confidence"])),  # type: ignore
         }
 
         # Convert signal to direction (-1 = SELL, 0 = HOLD, 1 = BUY)
@@ -319,7 +324,7 @@ class SignalDataCollector:
         # Calculate volatility (standard deviation of returns)
         volatility = np.std(returns) if len(returns) > 0 else 0.0
 
-        return float(volatility)
+        return float(volatility)  # type: ignore
 
     def _calculate_trend(self, price_history: List[Dict[str, Any]], days: int) -> float:
         """Calculate price trend over specified days"""
@@ -332,7 +337,7 @@ class SignalDataCollector:
         # Calculate simple trend (ending price / starting price - 1)
         trend = (recent_prices[-1] / recent_prices[0] - 1) if recent_prices[0] > 0 else 0.0
 
-        return float(trend)
+        return float(trend)  # type: ignore
 
     def _calculate_volume_change(self, volume_history: List[float], days: int) -> float:
         """Calculate volume change over specified days"""
@@ -345,7 +350,7 @@ class SignalDataCollector:
         # Calculate volume change
         volume_change = (recent_volumes[-1] / recent_volumes[0] - 1) if recent_volumes[0] > 0 else 0.0
 
-        return float(volume_change)
+        return float(volume_change)  # type: ignore
 
     def _create_signal_mapping(self) -> Dict[str, Dict[str, str]]:
         """Create mapping between module-specific signal formats"""

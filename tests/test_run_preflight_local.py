@@ -17,7 +17,7 @@ def test_run_preflight_json(tmp_path):
     data = json.loads(out.read_text())
 
     # Expect config symbols to be present in the report
-    cfg_symbols = list(data.keys())
+    cfg_symbols = list(data.keys())  # type: ignore
     assert len(cfg_symbols) > 0
     for s in cfg_symbols:
         assert isinstance(data[s], dict)

@@ -17,6 +17,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class TripleBarrierLabeler:
     """
     Triple-barrier labeling for financial time series.
@@ -24,11 +25,13 @@ class TripleBarrierLabeler:
     Based on "Advances in Financial Machine Learning" by Marcos Lopez de Prado.
     """
 
-    def __init__(self,
-                 pt: float = 0.02,      # Profit-taking barrier (2%)
-                 sl: float = -0.01,     # Stop-loss barrier (-1%)
-                 max_h: int = 24,       # Maximum holding period (hours)
-                 min_h: int = 1):       # Minimum holding period
+    def __init__(
+        self,
+        pt: float = 0.02,  # Profit-taking barrier (2%)
+        sl: float = -0.01,  # Stop-loss barrier (-1%)
+        max_h: int = 24,  # Maximum holding period (hours)
+        min_h: int = 1,
+    ):  # Minimum holding period
         """
         Initialize triple barrier labeler.
 
@@ -43,10 +46,7 @@ class TripleBarrierLabeler:
         self.max_h = max_h
         self.min_h = min_h
 
-    def label_series(self,
-                    price_series: pd.Series,
-                    entry_idx: int,
-                    side: int = 1) -> Tuple[int, Optional[int]]:
+    def label_series(self, price_series: pd.Series, entry_idx: int, side: int = 1) -> Tuple[int, Optional[int]]:
         """
         Label a single entry point using triple barrier method.
 
@@ -96,10 +96,7 @@ class TripleBarrierLabeler:
         # Max holding period reached
         return 0, max_lookahead - 1
 
-    def apply_labels(self,
-                    price_series: pd.Series,
-                    entry_points: pd.Series,
-                    sides: Optional[pd.Series] = None) -> pd.DataFrame:
+    def apply_labels(self, price_series: pd.Series, entry_points: pd.Series, sides: Optional[pd.Series] = None) -> pd.DataFrame:
         """
         Apply triple barrier labeling to multiple entry points.
 
@@ -126,22 +123,23 @@ class TripleBarrierLabeler:
             side = sides.loc[entry_idx]
             label, exit_idx = self.label_series(price_series, price_series.index.get_loc(entry_idx), side)
 
-            labels.append(label)
-            exit_indices.append(exit_idx)
+            labels.append(label)  # type: ignore
+            exit_indices.append(exit_idx)  # type: ignore
 
         # Create result DataFrame
-        result = pd.DataFrame({
-            'entry_idx': entry_indices,
-            'label': labels,
-            'exit_idx': exit_indices,
-            'side': [sides.loc[idx] for idx in entry_indices if idx in sides.index]
-        })
+        result = pd.DataFrame(
+            {
+                "entry_idx": entry_indices,
+                "label": labels,
+                "exit_idx": exit_indices,
+                "side": [sides.loc[idx] for idx in entry_indices if idx in sides.index],
+            }
+        )
 
         return result
 
-def create_synthetic_labels(price_series: pd.Series,
-                          entry_probability: float = 0.1,
-                          seed: int = 42) -> pd.DataFrame:
+
+def create_synthetic_labels(price_series: pd.Series, entry_probability: float = 0.1, seed: int = 42) -> pd.DataFrame:
     """
     Create synthetic entry points for testing triple barrier labeling.
 
@@ -156,22 +154,17 @@ def create_synthetic_labels(price_series: pd.Series,
     np.random.seed(seed)
 
     # Create random entry points
-    entry_points = pd.Series(
-        np.random.random(len(price_series)) < entry_probability,
-        index=price_series.index
-    )
+    entry_points = pd.Series(np.random.random(len(price_series)) < entry_probability, index=price_series.index)
 
     # Random sides (long/short)
-    sides = pd.Series(
-        np.random.choice([-1, 1], len(price_series)),
-        index=price_series.index
-    )
+    sides = pd.Series(np.random.choice([-1, 1], len(price_series)), index=price_series.index)
 
     # Apply triple barrier labeling
     labeler = TripleBarrierLabeler(pt=0.02, sl=-0.01, max_h=24)
     labels_df = labeler.apply_labels(price_series, entry_points, sides)
 
     return labels_df
+
 
 def analyze_label_distribution(labels_df: pd.DataFrame) -> dict:
     """
@@ -184,16 +177,16 @@ def analyze_label_distribution(labels_df: pd.DataFrame) -> dict:
         Dictionary with label distribution statistics
     """
     total_labels = len(labels_df)
-    label_counts = labels_df['label'].value_counts()
+    label_counts = labels_df["label"].value_counts()
 
     distribution = {
-        'total_samples': total_labels,
-        'profit_taking': label_counts.get(1, 0),
-        'stop_loss': label_counts.get(-1, 0),
-        'max_holding': label_counts.get(0, 0),
-        'profit_taking_pct': label_counts.get(1, 0) / total_labels * 100,
-        'stop_loss_pct': label_counts.get(-1, 0) / total_labels * 100,
-        'max_holding_pct': label_counts.get(0, 0) / total_labels * 100,
+        "total_samples": total_labels,
+        "profit_taking": label_counts.get(1, 0),
+        "stop_loss": label_counts.get(-1, 0),
+        "max_holding": label_counts.get(0, 0),
+        "profit_taking_pct": label_counts.get(1, 0) / total_labels * 100,
+        "stop_loss_pct": label_counts.get(-1, 0) / total_labels * 100,
+        "max_holding_pct": label_counts.get(0, 0) / total_labels * 100,
     }
 
     return distribution

@@ -42,23 +42,23 @@ def close_positions():
                 sell_price = (entry_price * Decimal("1.01")).quantize(Decimal("0.00000001"))
 
             pnl = (sell_price - entry_price) * quantity
-            pnl_f = float(pnl)
+            pnl_f = float(pnl)  # type: ignore
 
             # Create SELL trade record
             sell_trade = {
                 "timestamp": now,
                 "symbol": symbol,
                 "action": "SELL",
-                "price": float(sell_price),
+                "price": float(sell_price),  # type: ignore
                 "size": pos.get("size"),
-                "quantity": float(quantity),
+                "quantity": float(quantity),  # type: ignore
                 "confidence": None,
                 "signals": {},
                 "id": f"{pos.get('id')}_CLOSE",
                 "closed_from_id": pos.get("id"),
                 "realized_pnl": pnl_f,
             }
-            trades.append(sell_trade)
+            trades.append(sell_trade)  # type: ignore
 
             # Update budget numbers
             budget["available_capital"] = round(budget.get("available_capital", 0) + pos.get("size") + pnl_f, 2)
@@ -84,7 +84,7 @@ def close_positions():
             print(f"Closed {symbol} at {sell_price} for PnL {pnl_f}")
             # Do not add this pos to new_positions (removes it)
         else:
-            new_positions.append(pos)
+            new_positions.append(pos)  # type: ignore
 
     if not closed_any:
         print("No matching open positions found to close.")
@@ -99,7 +99,7 @@ def close_positions():
 
     print("\nSummary:")
     print(f"  Positions closed: {len(TARGET_SYMBOLS)} (attempted)")
-    print(f"  Total realized PnL: {float(total_realized):.8f}")
+    print(f"  Total realized PnL: {float(total_realized):.8f}")  # type: ignore
     print(f"  Updated {BUDGET_FILE} and {TRADES_FILE}")
 
 

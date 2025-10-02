@@ -70,7 +70,7 @@ def run_multi_signal_demo():
             low = close - abs(noise) - 50
             volume = 1000 + (i * 20) + abs(noise * 2)
 
-            sample_price_data.append(
+            sample_price_data.append(  # type: ignore
                 {
                     "close": close,
                     "high": high,

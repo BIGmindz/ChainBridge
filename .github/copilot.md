@@ -22,12 +22,17 @@ As a new developer, I'm relying on GitHub Copilot to help me structure and build
     *   Before creating a pull request, please make sure the code is well-tested.
     *   The pull request description should clearly explain the changes and the problem they solve.
 
+
+
 ## Project Goals
 
 The main goal is to develop a robust machine learning bot that can:
+
 - Ingest multiple data signals.
 - Process and analyze these signals.
 - Make decisions based on machine learning models.
 - Be scalable and produce uncorrelated signals.
+
+
 
 When you generate code, please keep these goals in mind. For example, suggest scalable solutions and robust error handling.

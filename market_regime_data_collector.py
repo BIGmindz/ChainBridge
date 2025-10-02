@@ -4,7 +4,6 @@ Market Regime Data Collector - Collects and processes market data for ML trainin
 """
 
 import os
-import sys
 import logging
 import pandas as pd
 import numpy as np
@@ -12,20 +11,18 @@ from datetime import datetime, timedelta
 import random
 
 # Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s | %(levelname)s | %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
 logger = logging.getLogger(__name__)
+
 
 class MarketRegimeDataCollector:
     """
     Collects market data and calculates technical indicators for regime detection
     """
 
-    def __init__(self, data_dir='data/regime_training'):
+    def __init__(self, data_dir="data/regime_training"):
         self.data_dir = data_dir
-        self.symbols = ['BTC/USD', 'ETH/USD', 'SOL/USD']
+        self.symbols = ["BTC/USD", "ETH/USD", "SOL/USD"]
         os.makedirs(data_dir, exist_ok=True)
 
     def collect_multi_asset_features(self):
@@ -57,18 +54,18 @@ class MarketRegimeDataCollector:
         # Generate 1000 data points with regime-specific patterns
         for i in range(1000):
             # Create regime-specific patterns
-            regime_type = random.choice(['bull', 'bear', 'sideways'])
+            regime_type = random.choice(["bull", "bear", "sideways"])
 
             # Generate realistic price data based on regime
             base_price = self._get_base_price(symbol)
 
-            if regime_type == 'bull':
+            if regime_type == "bull":
                 # Bull market: upward trending with oversold RSI
                 trend_factor = 1 + (i * 0.001)  # Gradual upward trend
                 volatility = 0.015  # Moderate volatility
                 rsi_base = random.uniform(20, 40)  # Oversold
                 momentum = random.uniform(0.01, 0.05)  # Positive momentum
-            elif regime_type == 'bear':
+            elif regime_type == "bear":
                 # Bear market: downward trending with overbought RSI
                 trend_factor = 1 - (i * 0.0008)  # Gradual downward trend
                 volatility = 0.018  # Higher volatility
@@ -85,37 +82,33 @@ class MarketRegimeDataCollector:
 
             # Calculate technical indicators
             feature_row = {
-                'timestamp': datetime.now() - timedelta(days=i),
-                'symbol': symbol,
-                'price': price,
-                'volume': random.uniform(100, 10000),
-                'rsi_14': rsi_base + random.uniform(-5, 5),  # RSI around regime base
-                'macd': random.uniform(-500, 500),
-                'macd_signal': random.uniform(-500, 500),
-                'macd_hist': random.uniform(-200, 200),
-                'bb_upper': price * (1 + random.uniform(0.02, 0.08)),
-                'bb_middle': price,
-                'bb_lower': price * (1 - random.uniform(0.02, 0.08)),
-                'bb_width': random.uniform(0.02, 0.08),
-                'bb_position': random.uniform(-0.5, 0.5),
-                'volume_ratio': random.uniform(0.5, 2.0),
-                'price_change_1h': random.uniform(-0.05, 0.05),
-                'price_change_24h': momentum + random.uniform(-0.02, 0.02),  # Momentum-based
-                'volatility_24h': volatility + random.uniform(-0.005, 0.005),
-                'trend_strength': random.uniform(0.1, 0.9) if regime_type != 'sideways' else random.uniform(0.1, 0.3)
+                "timestamp": datetime.now() - timedelta(days=i),
+                "symbol": symbol,
+                "price": price,
+                "volume": random.uniform(100, 10000),
+                "rsi_14": rsi_base + random.uniform(-5, 5),  # RSI around regime base
+                "macd": random.uniform(-500, 500),
+                "macd_signal": random.uniform(-500, 500),
+                "macd_hist": random.uniform(-200, 200),
+                "bb_upper": price * (1 + random.uniform(0.02, 0.08)),
+                "bb_middle": price,
+                "bb_lower": price * (1 - random.uniform(0.02, 0.08)),
+                "bb_width": random.uniform(0.02, 0.08),
+                "bb_position": random.uniform(-0.5, 0.5),
+                "volume_ratio": random.uniform(0.5, 2.0),
+                "price_change_1h": random.uniform(-0.05, 0.05),
+                "price_change_24h": momentum + random.uniform(-0.02, 0.02),  # Momentum-based
+                "volatility_24h": volatility + random.uniform(-0.005, 0.005),
+                "trend_strength": random.uniform(0.1, 0.9) if regime_type != "sideways" else random.uniform(0.1, 0.3),
             }
 
-            features.append(feature_row)
+            features.append(feature_row)  # type: ignore
 
         return features
 
     def _get_base_price(self, symbol):
         """Get base price for symbol"""
-        prices = {
-            'BTC/USD': 45000,
-            'ETH/USD': 2800,
-            'SOL/USD': 150
-        }
+        prices = {"BTC/USD": 45000, "ETH/USD": 2800, "SOL/USD": 150}
         return prices.get(symbol, 1000)
 
     def _calculate_rsi_mock(self):
@@ -128,28 +121,28 @@ class MarketRegimeDataCollector:
         logger.info("🔧 Calculating technical indicators...")
 
         # RSI calculation
-        df['rsi_14'] = self._calculate_rsi(df['price'])
+        df["rsi_14"] = self._calculate_rsi(df["price"])
 
         # MACD
-        df['macd'], df['macd_signal'], df['macd_hist'] = self._calculate_macd(df['price'])
+        df["macd"], df["macd_signal"], df["macd_hist"] = self._calculate_macd(df["price"])
 
         # Bollinger Bands
-        df['bb_upper'], df['bb_middle'], df['bb_lower'] = self._calculate_bollinger_bands(df['price'])
-        df['bb_width'] = (df['bb_upper'] - df['bb_lower']) / df['bb_middle']
-        df['bb_position'] = (df['price'] - df['bb_lower']) / (df['bb_upper'] - df['bb_lower']) - 0.5
+        df["bb_upper"], df["bb_middle"], df["bb_lower"] = self._calculate_bollinger_bands(df["price"])
+        df["bb_width"] = (df["bb_upper"] - df["bb_lower"]) / df["bb_middle"]
+        df["bb_position"] = (df["price"] - df["bb_lower"]) / (df["bb_upper"] - df["bb_lower"]) - 0.5
 
         # Volume ratio
-        df['volume_ratio'] = df['volume'] / df['volume'].rolling(20).mean()
+        df["volume_ratio"] = df["volume"] / df["volume"].rolling(20).mean()
 
         # Price changes
-        df['price_change_1h'] = df['price'].pct_change(1)
-        df['price_change_24h'] = df['price'].pct_change(24)
+        df["price_change_1h"] = df["price"].pct_change(1)
+        df["price_change_24h"] = df["price"].pct_change(24)
 
         # Volatility
-        df['volatility_24h'] = df['price'].pct_change(24).rolling(24).std()
+        df["volatility_24h"] = df["price"].pct_change(24).rolling(24).std()
 
         # Trend strength
-        df['trend_strength'] = abs(df['price'].pct_change(50).rolling(50).mean())
+        df["trend_strength"] = abs(df["price"].pct_change(50).rolling(50).mean())
 
         logger.info("✅ Technical indicators calculated")
         return df
@@ -184,22 +177,22 @@ class MarketRegimeDataCollector:
         logger.info("🏷️  Labeling market regimes...")
 
         # Drop rows with NaN values that can't be calculated (due to rolling windows)
-        df_clean = df.dropna(subset=['rsi_14', 'trend_strength', 'price_change_24h', 'volatility_24h', 'bb_position'])
+        df_clean = df.dropna(subset=["rsi_14", "trend_strength", "price_change_24h", "volatility_24h", "bb_position"])
 
         # More robust regime detection based on actual data patterns
         conditions = [
-            (df_clean['rsi_14'] < 45) & (df_clean['price_change_24h'] > 0.005),  # Bull: oversold + positive momentum (relaxed)
-            (df_clean['rsi_14'] > 55) & (df_clean['price_change_24h'] < -0.005),  # Bear: overbought + negative momentum (relaxed)
-            (df_clean['volatility_24h'] < 0.5) & (abs(df_clean['bb_position']) < 0.4)  # Sideways: moderate vol + price not too extreme
+            (df_clean["rsi_14"] < 45) & (df_clean["price_change_24h"] > 0.005),  # Bull: oversold + positive momentum (relaxed)
+            (df_clean["rsi_14"] > 55) & (df_clean["price_change_24h"] < -0.005),  # Bear: overbought + negative momentum (relaxed)
+            (df_clean["volatility_24h"] < 0.5) & (abs(df_clean["bb_position"]) < 0.4),  # Sideways: moderate vol + price not too extreme
         ]
 
-        choices = ['bull', 'bear', 'sideways']
+        choices = ["bull", "bear", "sideways"]
 
-        df_clean['regime'] = np.select(conditions, choices, default='sideways')
+        df_clean["regime"] = np.select(conditions, choices, default="sideways")
 
         # Show regime distribution
-        regime_counts = df_clean['regime'].value_counts()
-        logger.info(f"📊 Regime distribution: {regime_counts.to_dict()}")
+        regime_counts = df_clean["regime"].value_counts()
+        logger.info(f"📊 Regime distribution: {regime_counts.to_dict()}")  # type: ignore
 
         return df_clean
 
@@ -220,20 +213,20 @@ class MarketRegimeDataCollector:
         try:
             # Generate current market features
             features = {
-                'rsi_14': random.uniform(20, 80),
-                'macd': random.uniform(-500, 500),
-                'macd_signal': random.uniform(-500, 500),
-                'macd_hist': random.uniform(-200, 200),
-                'bb_upper': random.uniform(40000, 60000),
-                'bb_middle': random.uniform(35000, 55000),
-                'bb_lower': random.uniform(30000, 50000),
-                'bb_width': random.uniform(0.02, 0.08),
-                'bb_position': random.uniform(-0.5, 0.5),
-                'volume_ratio': random.uniform(0.5, 2.0),
-                'price_change_1h': random.uniform(-0.05, 0.05),
-                'price_change_24h': random.uniform(-0.1, 0.1),
-                'volatility_24h': random.uniform(0.01, 0.08),
-                'trend_strength': random.uniform(0.1, 0.9)
+                "rsi_14": random.uniform(20, 80),
+                "macd": random.uniform(-500, 500),
+                "macd_signal": random.uniform(-500, 500),
+                "macd_hist": random.uniform(-200, 200),
+                "bb_upper": random.uniform(40000, 60000),
+                "bb_middle": random.uniform(35000, 55000),
+                "bb_lower": random.uniform(30000, 50000),
+                "bb_width": random.uniform(0.02, 0.08),
+                "bb_position": random.uniform(-0.5, 0.5),
+                "volume_ratio": random.uniform(0.5, 2.0),
+                "price_change_1h": random.uniform(-0.05, 0.05),
+                "price_change_24h": random.uniform(-0.1, 0.1),
+                "volatility_24h": random.uniform(0.01, 0.08),
+                "trend_strength": random.uniform(0.1, 0.9),
             }
 
             logger.info("📊 Current market features generated")
@@ -242,6 +235,7 @@ class MarketRegimeDataCollector:
         except Exception as e:
             logger.error(f"Error getting current features: {e}")
             return None
+
 
 if __name__ == "__main__":
     # Demo the data collector
@@ -255,7 +249,7 @@ if __name__ == "__main__":
 
     if df is not None:
         print(f"📊 Collected {len(df)} data points")
-        print(f"📈 Features: {list(df.columns)}")
+        print(f"📈 Features: {list(df.columns)}")  # type: ignore
 
         # Calculate technical indicators
         df = collector.calculate_technical_features(df)

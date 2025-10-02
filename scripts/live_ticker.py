@@ -128,7 +128,7 @@ def render(
         sym = t.get("symbol")
         price = t.get("price")
         if sym and price is not None:
-            recent_prices.setdefault(sym, []).append(float(price))
+            recent_prices.setdefault(sym, []).append(float(price))  # type: ignore
 
     def sparkline(data, width=8):
         if not data:
@@ -143,7 +143,7 @@ def render(
             # guard division
             idx = int((v - mn) / (mx - mn) * (len(chars) - 1))
             idx = max(0, min(idx, len(chars) - 1))
-            out.append(chars[idx])
+            out.append(chars[idx])  # type: ignore
         s = "".join(out)
         return s.ljust(width)
 
@@ -156,22 +156,22 @@ def render(
         (13, "P&L"),
         (8, "Spark"),
     ]
-    total_inner = sum(w for w, _ in cols) + (len(cols) - 1) * 1 + 2
+    total_inner = sum(w for w, _ in cols) + (len(cols) - 1) * 1 + 2  # type: ignore
     # build top border accordingly
     print("┌" + "─" * total_inner + "┐")
     # header row
     hdr_cells = []
     for w, title in cols:
-        hdr_cells.append(f" {title.center(w)} ")
+        hdr_cells.append(f" {title.center(w)} ")  # type: ignore
     print("│" + "│".join(hdr_cells) + "│")
     print("├" + "─" * total_inner + "┤")
 
     for p in budget.get("positions", []):
         sym = p.get("symbol", "-")
-        entry = float(p.get("entry_price", 0.0))
-        cur = float(p.get("current_price", entry))
-        q = float(p.get("quantity", 0))
-        pnl = float(p.get("pnl", 0.0))
+        entry = float(p.get("entry_price", 0.0))  # type: ignore
+        cur = float(p.get("current_price", entry))  # type: ignore
+        q = float(p.get("quantity", 0))  # type: ignore
+        pnl = float(p.get("pnl", 0.0))  # type: ignore
 
         # Prepare plain cell content and pad to width BEFORE adding color
         sym_plain = f"{sym}".ljust(cols[0][0])

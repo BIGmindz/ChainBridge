@@ -13,13 +13,8 @@ Tests cover:
 import pytest
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
-from ml_pipeline.purged_kfold import (
-    PurgedKFold,
-    detect_leakage,
-    generate_leakage_report,
-    walk_forward_split
-)
+from ml_pipeline.purged_kfold import PurgedKFold, detect_leakage, generate_leakage_report, walk_forward_split
+
 
 class TestPurgedKFold:
     """Test suite for PurgedKFold class."""
@@ -27,11 +22,8 @@ class TestPurgedKFold:
     def setup_method(self):
         """Set up test data."""
         # Create synthetic time series data
-        dates = pd.date_range('2020-01-01', periods=1000, freq='H')
-        self.X = pd.DataFrame({
-            'feature1': np.random.randn(1000),
-            'feature2': np.random.randn(1000)
-        }, index=dates)
+        dates = pd.date_range("2020-01-01", periods=1000, freq="H")
+        self.X = pd.DataFrame({"feature1": np.random.randn(1000), "feature2": np.random.randn(1000)}, index=dates)
 
     def test_initialization(self):
         """Test PurgedKFold initialization."""
@@ -103,7 +95,7 @@ class TestPurgedKFold:
 
     def test_no_datetime_index_error(self):
         """Test error when X doesn't have DatetimeIndex."""
-        X_no_dt = pd.DataFrame({'a': [1, 2, 3]})  # No datetime index
+        X_no_dt = pd.DataFrame({"a": [1, 2, 3]})  # No datetime index
 
         pkf = PurgedKFold()
         with pytest.raises(ValueError, match="must have a DatetimeIndex"):
@@ -111,8 +103,8 @@ class TestPurgedKFold:
 
     def test_edge_case_small_dataset(self):
         """Test behavior with small datasets."""
-        small_dates = pd.date_range('2020-01-01', periods=20, freq='H')
-        small_X = pd.DataFrame({'a': np.random.randn(20)}, index=small_dates)
+        small_dates = pd.date_range("2020-01-01", periods=20, freq="H")
+        small_X = pd.DataFrame({"a": np.random.randn(20)}, index=small_dates)
 
         pkf = PurgedKFold(n_splits=3)
         splits = pkf.split(small_X)
@@ -140,12 +132,13 @@ class TestPurgedKFold:
             assert len(train_idx) < n_samples
             assert len(test_idx) > 0
 
+
 class TestLeakageDetection:
     """Test suite for leakage detection functions."""
 
     def setup_method(self):
         """Set up test data."""
-        dates = pd.date_range('2020-01-01', periods=100, freq='H')
+        dates = pd.date_range("2020-01-01", periods=100, freq="H")
         self.timestamps = dates
 
     def test_detect_leakage_no_leakage(self):
@@ -156,10 +149,10 @@ class TestLeakageDetection:
 
         result = detect_leakage(train_idx, test_idx, self.timestamps)
 
-        assert not result['has_index_overlap']
-        assert not result['has_temporal_leakage']
-        assert not result['embargo_violation']
-        assert result['is_leakage_free']
+        assert not result["has_index_overlap"]
+        assert not result["has_temporal_leakage"]
+        assert not result["embargo_violation"]
+        assert result["is_leakage_free"]
 
     def test_detect_leakage_index_overlap(self):
         """Test detection of index overlap."""
@@ -169,9 +162,9 @@ class TestLeakageDetection:
 
         result = detect_leakage(train_idx, test_idx, self.timestamps)
 
-        assert result['has_index_overlap']
-        assert not result['is_leakage_free']
-        assert len(result['overlap_indices']) > 0
+        assert result["has_index_overlap"]
+        assert not result["is_leakage_free"]
+        assert len(result["overlap_indices"]) > 0
 
     def test_detect_leakage_temporal_leakage(self):
         """Test detection of temporal leakage."""
@@ -181,14 +174,14 @@ class TestLeakageDetection:
 
         result = detect_leakage(train_idx, test_idx, self.timestamps)
 
-        assert result['has_temporal_leakage']
-        assert not result['is_leakage_free']
+        assert result["has_temporal_leakage"]
+        assert not result["is_leakage_free"]
 
     def test_detect_leakage_embargo_violation(self):
         """Test detection of embargo violations."""
         # Train too close to test (less than 1 hour gap)
         # Create timestamps with 30-minute frequency for finer control
-        timestamps_30min = pd.date_range('2020-01-01', periods=200, freq='30min')
+        timestamps_30min = pd.date_range("2020-01-01", periods=200, freq="30min")
 
         # Train ends at index 116 (time 2020-01-01 10:00:00)
         # Test starts at index 117 (time 2020-01-01 10:30:00) - only 30 min gap
@@ -197,15 +190,16 @@ class TestLeakageDetection:
 
         result = detect_leakage(train_idx, test_idx, timestamps_30min)
 
-        assert result['embargo_violation']
-        assert not result['is_leakage_free']
+        assert result["embargo_violation"]
+        assert not result["is_leakage_free"]
+
 
 class TestLeakageReport:
     """Test suite for leakage report generation."""
 
     def setup_method(self):
         """Set up test data."""
-        dates = pd.date_range('2020-01-01', periods=200, freq='H')
+        dates = pd.date_range("2020-01-01", periods=200, freq="H")
         self.timestamps = dates
 
     def test_generate_leakage_report_clean(self):
@@ -214,45 +208,46 @@ class TestLeakageReport:
         splits = [
             (np.arange(0, 60), np.arange(80, 120)),
             (np.arange(0, 100), np.arange(120, 160)),
-            (np.arange(0, 140), np.arange(160, 200))
+            (np.arange(0, 140), np.arange(160, 200)),
         ]
 
         report = generate_leakage_report(splits, self.timestamps)
 
-        assert report['total_folds'] == 3
-        assert report['folds_with_leakage'] == 0
-        assert report['overall_status'] == 'PASS'
-        assert len(report['leakage_details']) == 3
+        assert report["total_folds"] == 3
+        assert report["folds_with_leakage"] == 0
+        assert report["overall_status"] == "PASS"
+        assert len(report["leakage_details"]) == 3
 
-        for fold in report['leakage_details']:
-            assert fold['status'] == 'PASS'
+        for fold in report["leakage_details"]:
+            assert fold["status"] == "PASS"
 
     def test_generate_leakage_report_with_leakage(self):
         """Test report generation with leakage."""
         # Create splits with leakage
         splits = [
             (np.arange(0, 60), np.arange(80, 120)),  # Clean
-            (np.arange(0, 100), np.arange(90, 130)), # Leakage
-            (np.arange(0, 140), np.arange(160, 200)) # Clean
+            (np.arange(0, 100), np.arange(90, 130)),  # Leakage
+            (np.arange(0, 140), np.arange(160, 200)),  # Clean
         ]
 
         report = generate_leakage_report(splits, self.timestamps)
 
-        assert report['total_folds'] == 3
-        assert report['folds_with_leakage'] == 1
-        assert report['overall_status'] == 'FAIL'
+        assert report["total_folds"] == 3
+        assert report["folds_with_leakage"] == 1
+        assert report["overall_status"] == "FAIL"
 
-        statuses = [fold['status'] for fold in report['leakage_details']]
-        assert statuses.count('FAIL') == 1
-        assert statuses.count('PASS') == 2
+        statuses = [fold["status"] for fold in report["leakage_details"]]
+        assert statuses.count("FAIL") == 1
+        assert statuses.count("PASS") == 2
+
 
 class TestWalkForwardSplit:
     """Test suite for walk-forward splitting."""
 
     def setup_method(self):
         """Set up test data."""
-        dates = pd.date_range('2020-01-01', periods=1000, freq='H')
-        self.X = pd.DataFrame({'a': np.random.randn(1000)}, index=dates)
+        dates = pd.date_range("2020-01-01", periods=1000, freq="H")
+        self.X = pd.DataFrame({"a": np.random.randn(1000)}, index=dates)
 
     def test_walk_forward_split_sizes(self):
         """Test that walk-forward split creates correct sizes."""
@@ -288,9 +283,7 @@ class TestWalkForwardSplit:
 
     def test_walk_forward_split_embargo(self):
         """Test that embargo is applied correctly."""
-        train_idx, val_idx, test_idx = walk_forward_split(
-            self.X, embargo_pct=0.02
-        )
+        train_idx, val_idx, test_idx = walk_forward_split(self.X, embargo_pct=0.02)
 
         embargo_size = max(1, int(len(self.X) * 0.02))
 
@@ -301,6 +294,7 @@ class TestWalkForwardSplit:
         # Check embargo between val and test
         expected_test_start = val_idx[-1] + embargo_size + 1
         assert test_idx[0] >= expected_test_start
+
 
 if __name__ == "__main__":
     pytest.main([__file__])

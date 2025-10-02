@@ -12,6 +12,8 @@ The regime-specific backtester:
 4. Analyzes how signal weights adapt to different market regimes
 5. Generates comprehensive performance reports and visualizations
 
+
+
 ## Key Features
 
 - **Regime Identification**: Automatically detects bull, bear, and sideways market regimes
@@ -20,6 +22,8 @@ The regime-specific backtester:
 - **ML Weight Adaptation**: Tracks how ML weights adapt in different market conditions
 - **Visualization Tools**: Generates charts comparing performance across regimes
 - **Performance Reports**: Creates detailed text reports with regime-specific metrics
+
+
 
 ## Usage
 
@@ -44,6 +48,8 @@ Your CSV should include at least the following columns:
 - `date` (optional): Date information
 - `volume` (optional): Volume data
 
+
+
 Example:
 
 ```csv
@@ -66,24 +72,24 @@ async def run_backtest():
         volume_data=[1000000, 1200000, 900000, ...],
         dates=['2024-01-01', '2024-01-02', ...]
     )
-    
+
     # Run full backtest across all regimes
     full_results = await backtester.run_full_backtest()
-    
+
     # Run separate backtests for each regime
     bull_results = await backtester.backtest_specific_regime('bull')
     bear_results = await backtester.backtest_specific_regime('bear')
     sideways_results = await backtester.backtest_specific_regime('sideways')
-    
+
     # Or run all regime-specific backtests at once
     regime_results = await backtester.compare_all_regimes()
-    
+
     # Generate visualizations
     backtester.visualize_regime_performance(full_results)
-    
+
     # Save results to file
     backtester.save_results(full_results, 'backtest_results.json')
-    
+
     # Generate performance report
     report = backtester.generate_regime_report(full_results)
     print(report)
@@ -102,6 +108,8 @@ The backtester generates several output files:
 - `regime_distribution.png`: Chart showing trade distribution across regimes
 - `enhanced_btc_dataset.png`: (BTC example only) Visualization of the price dataset with regime markers
 
+
+
 ## Performance Metrics
 
 The backtester calculates and reports the following metrics:
@@ -113,6 +121,8 @@ The backtester calculates and reports the following metrics:
 - Total and average PnL
 - ML adaptation score
 
+
+
 ### Regime-Specific Metrics
 
 - Trades per regime
@@ -120,11 +130,15 @@ The backtester calculates and reports the following metrics:
 - PnL per regime
 - Average PnL per trade in each regime
 
+
+
 ### ML Adaptation Metrics
 
 - Weight changes by signal
 - Initial vs final weights
 - Category adaptation by regime
+
+
 
 ## Example Report
 
@@ -199,6 +213,8 @@ The regime-specific backtester works with the ML weight adaptation system to:
 2. Identify which signals perform best in each regime
 3. Optimize initial weights based on expected market conditions
 
+
+
 ## Best Practices
 
 For the most meaningful results:
@@ -208,6 +224,8 @@ For the most meaningful results:
 3. Run backtests with both default and optimized signal weights
 4. Compare regime-specific performance to identify strengths and weaknesses
 5. Consider adjusting signal weights based on the current market regime
+
+
 
 ## Requirements
 

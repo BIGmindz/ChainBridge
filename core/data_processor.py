@@ -27,7 +27,7 @@ class DataProcessor:
                     dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
                 except Exception:
                     # Try pandas parser for flexible parsing
-                    dt = pd.to_datetime(timestamp)
+                    dt = pd.to_datetime(timestamp)  # type: ignore
             elif isinstance(timestamp, (int, float)):
                 # Unix timestamp
                 dt = datetime.fromtimestamp(timestamp, tz=timezone.utc)
@@ -70,7 +70,7 @@ class DataProcessor:
                     if standard_field == "timestamp":
                         normalized[standard_field] = self.normalize_timestamp(data[variation])
                     elif standard_field in ["price", "volume"]:
-                        normalized[standard_field] = float(data[variation]) if data[variation] is not None else None
+                        normalized[standard_field] = float(data[variation]) if data[variation] is not None else None  # type: ignore
                     else:
                         normalized[standard_field] = str(data[variation])
                     break
@@ -105,7 +105,7 @@ class DataProcessor:
                 raise ValueError(f"Invalid signal value: {signal_value}")
 
         if "confidence" in data:
-            normalized["confidence"] = float(data["confidence"])
+            normalized["confidence"] = float(data["confidence"])  # type: ignore
 
         if "source" in data:
             normalized["source"] = str(data["source"])
@@ -134,12 +134,12 @@ class DataProcessor:
 
         for key, value in data.items():
             if value is None or value == "" or (isinstance(value, str) and value.strip() == ""):
-                null_fields.append(key)
+                null_fields.append(key)  # type: ignore
             else:
                 non_null_fields += 1
 
         if null_fields:
-            quality_report["issues"].append(f"Null/empty fields: {null_fields}")
+            quality_report["issues"].append(f"Null/empty fields: {null_fields}")  # type: ignore
 
         # Calculate completeness score
         quality_report["completeness_score"] = non_null_fields / total_fields if total_fields > 0 else 0.0
@@ -147,7 +147,7 @@ class DataProcessor:
         # Mark as invalid if completeness is too low
         if quality_report["completeness_score"] < 0.5:
             quality_report["valid"] = False
-            quality_report["issues"].append("Data completeness below 50%")
+            quality_report["issues"].append("Data completeness below 50%")  # type: ignore
 
         return quality_report
 
@@ -178,13 +178,13 @@ class DataProcessor:
                 quality = self.validate_data_quality(normalized)
                 normalized["_quality"] = quality
 
-                results["processed"].append(normalized)
+                results["processed"].append(normalized)  # type: ignore
                 results["summary"]["successful"] += 1
                 self.processed_count += 1
 
             except Exception as e:
                 error_info = {"index": i, "error": str(e), "data": record}
-                results["errors"].append(error_info)
+                results["errors"].append(error_info)  # type: ignore
                 results["summary"]["failed"] += 1
                 self.error_count += 1
 

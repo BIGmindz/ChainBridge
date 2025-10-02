@@ -27,7 +27,7 @@ class BudgetManager:
             try:
                 balance = self.exchange.fetch_balance()
                 # Assume the balance returns a dict with a 'free' key containing USD balance
-                self.initial_capital = balance.get('free', {}).get('USD', initial_capital)
+                self.initial_capital = balance.get("free", {}).get("USD", initial_capital)
             except Exception as e:
                 print(f"❌ Failed to fetch live balance: {e}")
                 self.initial_capital = initial_capital
@@ -37,7 +37,7 @@ class BudgetManager:
 
         # Updated risk per trade to 4% and max positions to 10
         self.risk_per_trade = 4.0  # previously 2.0%
-        self.max_positions = 10    # previously 5
+        self.max_positions = 10  # previously 5
 
         # RADICAL FIX: Always fetch real balance in live mode
         if live_mode and exchange:
@@ -91,7 +91,7 @@ class BudgetManager:
         try:
             balance = exchange.fetch_balance()
             usd_balance = balance.get("USD", {}).get("free", 0)
-            return float(usd_balance)
+            return float(usd_balance)  # type: ignore
         except Exception as e:
             print(f"❌ Failed to fetch real balance: {e}")
             return 0.0
@@ -206,18 +206,18 @@ class BudgetManager:
                 if isinstance(cost_limit, dict):
                     cost_min = cost_limit.get("min")
                     if cost_min:
-                        usd_min = float(cost_min)
+                        usd_min = float(cost_min)  # type: ignore
                 elif isinstance(cost_limit, (int, float)):
-                    usd_min = float(cost_limit)
+                    usd_min = float(cost_limit)  # type: ignore
 
                 # Quantity minimum
                 amount_limit = limits.get("amount") or {}
                 if isinstance(amount_limit, dict):
                     amt_min = amount_limit.get("min")
                     if amt_min:
-                        qty_min = float(amt_min)
+                        qty_min = float(amt_min)  # type: ignore
                 elif isinstance(amount_limit, (int, float)):
-                    qty_min = float(amount_limit)
+                    qty_min = float(amount_limit)  # type: ignore
 
                 # Precision-based fallback: use market precision to infer minimal tradable qty
                 precision = m.get("precision", {}) or {}
@@ -390,7 +390,7 @@ class BudgetManager:
             "reason": reason,
         }
 
-        self.trade_history.append(trade_record)
+        self.trade_history.append(trade_record)  # type: ignore
         del self.positions[position_id]
 
         # Print result
@@ -415,7 +415,7 @@ class BudgetManager:
         """
         Get comprehensive portfolio status
         """
-        open_pnl = sum(pos["pnl"] for pos in self.positions.values())
+        open_pnl = sum(pos["pnl"] for pos in self.positions.values())  # type: ignore
 
         win_rate = (self.winning_trades / self.total_trades * 100) if self.total_trades > 0 else 0
 
@@ -491,7 +491,7 @@ class BudgetManager:
         state = {
             "current_capital": self.current_capital,
             "available_capital": self.available_capital,
-            "positions": list(self.positions.values()),
+            "positions": list(self.positions.values()),  # type: ignore
             "trade_history": self.trade_history[-100:],  # Last 100 trades
             "performance": self.get_portfolio_status(),
             "timestamp": datetime.now().isoformat(),

@@ -71,7 +71,7 @@ class NewListingsDashboard:
             else:
                 signal["timestamp"] = datetime.now().isoformat()
 
-            self.listing_data["listings"].append(signal)
+            self.listing_data["listings"].append(signal)  # type: ignore
 
         # Update the listings by exchange
         self.listings_by_exchange = {}
@@ -79,7 +79,7 @@ class NewListingsDashboard:
             exchange = listing.get("exchange", "UNKNOWN")
             if exchange not in self.listings_by_exchange:
                 self.listings_by_exchange[exchange] = []
-            self.listings_by_exchange[exchange].append(listing)
+            self.listings_by_exchange[exchange].append(listing)  # type: ignore
 
         # Save updated data
         self.save_listing_data()
@@ -112,7 +112,7 @@ class NewListingsDashboard:
 
         # Only include the most recent 20 listings
         if len(listings_df) > 20:
-            listings_df = listings_df.sort_values("timestamp", ascending=False).head(20)
+            listings_df = listings_df.sort_values("timestamp", ascending=False).head(20)  # type: ignore
 
         # Create a figure with subplots
         fig, axes = plt.subplots(2, 1, figsize=(14, 12))
@@ -166,12 +166,12 @@ class NewListingsDashboard:
         projections = []
         labels = []
         for scenario, data in self.profit_projections.items():
-            projections.append(data["monthly_return"])
-            labels.append(scenario.replace("_", " ").title())
+            projections.append(data["monthly_return"])  # type: ignore
+            labels.append(scenario.replace("_", " ").title())  # type: ignore
 
         # Add the backtest result
-        projections.append(results.get("monthly_return", 0))
-        labels.append("BACKTEST RESULT")
+        projections.append(results.get("monthly_return", 0))  # type: ignore
+        labels.append("BACKTEST RESULT")  # type: ignore
 
         # Create bar chart
         sns.barplot(x=labels, y=projections, ax=axes[0])
@@ -253,8 +253,8 @@ class NewListingsDashboard:
         print("=" * 80)
 
         for exchange, exchange_listings in self.listings_by_exchange.items():
-            avg_return = sum(item["expected_return"] for item in exchange_listings) / len(exchange_listings)
-            avg_confidence = sum(item["confidence"] for item in exchange_listings) / len(exchange_listings)
+            avg_return = sum(item["expected_return"] for item in exchange_listings) / len(exchange_listings)  # type: ignore
+            avg_confidence = sum(item["confidence"] for item in exchange_listings) / len(exchange_listings)  # type: ignore
 
             print(f"\n{exchange}:")
             print(f"  Listings: {len(exchange_listings)}")
