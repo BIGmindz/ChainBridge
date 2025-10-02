@@ -5,21 +5,28 @@ This guide explains how to use the enhanced LightGBM multiclass classification m
 ## Overview
 
 The regime detection model is a comprehensive machine learning solution that classifies market conditions into three regimes:
+
 - **Bull Market**: Strong upward trending conditions
 - **Bear Market**: Strong downward trending conditions
 - **Sideways Market**: Consolidation or range-bound conditions
+
+
 
 ## Features
 
 The model uses **18 financial and technical features**:
 
 ### Core Technical Indicators
+
 - `rsi_14`: 14-period Relative Strength Index
 - `macd`: MACD line value
 - `macd_signal`: MACD signal line
 - `macd_hist`: MACD histogram (MACD - Signal)
 
+
+
 ### Bollinger Bands
+
 - `bb_upper`: Upper Bollinger Band
 - `bb_middle`: Middle Bollinger Band (SMA)
 - `bb_lower`: Lower Bollinger Band
@@ -27,19 +34,30 @@ The model uses **18 financial and technical features**:
 - `bb_position`: Price position within bands (0-1)
 - `bb_squeeze`: Bollinger squeeze indicator (0 or 1)
 
+
+
 ### Volume and Price Metrics
+
 - `volume_ratio`: Volume relative to average
 - `price_change_1h`: 1-hour price change percentage
 - `price_change_24h`: 24-hour price change percentage
 
+
+
 ### Volatility and Trend
+
 - `volatility_24h`: 24-hour price volatility
 - `trend_strength`: Trend strength indicator (-1 to 1)
 
+
+
 ### Enhanced Features
+
 - `momentum_rsi`: RSI with momentum adjustment
 - `price_momentum`: Price change normalized by volatility
 - `volume_price_trend`: Volume-weighted price trend
+
+
 
 ## Installation and Setup
 
@@ -53,7 +71,7 @@ pip install lightgbm scikit-learn joblib pandas numpy
 
 The system includes several model files:
 
-```
+```text
 ml_models/
 ├── enhanced_regime_model.pkl    # Enhanced model (18 features)
 └── regime_detection_model.pkl   # Original model (14 features)
@@ -257,6 +275,8 @@ result = {
 - **0.4 - 0.6**: Moderate confidence - use with caution
 - **< 0.4**: Low confidence - consider market uncertainty
 
+
+
 ### Feature Importance
 
 The model ranks features by importance. Typical rankings:
@@ -267,11 +287,15 @@ The model ranks features by importance. Typical rankings:
 4. **bb_position** - Position within volatility bands
 5. **macd_hist** - Momentum divergence signal
 
+
+
 ## Troubleshooting
 
 ### Common Issues
 
 1. **Missing Features Error**
+
+
    ```python
    # Make sure all required features are present
    required_features = loader.get_model_info('enhanced')['feature_columns']
@@ -281,6 +305,8 @@ The model ranks features by importance. Typical rankings:
    ```
 
 2. **Model Loading Failed**
+
+
    ```python
    # Check if model file exists
    import os
@@ -294,6 +320,8 @@ The model ranks features by importance. Typical rankings:
    - Check feature quality and scaling
    - Increase training data size
    - Consider market regime changes
+
+
 
 ### Model Retraining
 
@@ -388,11 +416,15 @@ def engineer_additional_features(price_data, volume_data):
 5. **Monitoring**: Track model performance and regime change accuracy
 6. **Fallback Strategy**: Have a backup strategy when model confidence is low
 
+
+
 ## Support and Contributing
 
 - **Issues**: Report bugs or request features via GitHub issues
 - **Documentation**: Contribute to documentation improvements
 - **Models**: Share improved models or feature engineering techniques
+
+
 
 ## License
 
