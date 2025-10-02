@@ -1,0 +1,8 @@
+# Ignore GitHub VFS files
+vscode-vfs://
+
+# Ignore generated files
+node_modules/
+.venv/
+.git/
+*.bundle
