@@ -4,12 +4,11 @@ Fetches real-time sentiment, geopolitical events, and market psychology data
 """
 
 import requests
-import json
 import time
 import logging
 import os
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from datetime import datetime
+from typing import Dict
 
 # Load environment variables
 try:

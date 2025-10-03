@@ -5,7 +5,6 @@ Momentum oscillator measuring overbought/oversold levels using price range.
 """
 
 from typing import Any, Dict, List
-import numpy as np
 import pandas as pd
 
 from core.module_manager import Module

@@ -115,7 +115,6 @@ class ParabolicSARModule(Module):
 
         for i in range(1, length):
             prev_psar = psar[i - 1]
-            prev_trend = bullish
 
             psar[i] = prev_psar + af * (ep - prev_psar)
 

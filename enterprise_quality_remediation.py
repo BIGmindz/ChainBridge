@@ -20,7 +20,7 @@ import sys
 import ast
 import json
 from pathlib import Path
-from typing import Dict, List, Set, Tuple, Optional
+from typing import List, Optional
 from dataclasses import dataclass
 from collections import defaultdict
 
@@ -280,7 +280,7 @@ class EnterpriseQualityRemediator:
         with open(self.project_root / "quality_report.json", 'w') as f:
             json.dump(report_data, f, indent=2)
             
-        print(f"\n📋 Detailed report saved: quality_report.json")
+        print("\n📋 Detailed report saved: quality_report.json")
 
 
 def main():

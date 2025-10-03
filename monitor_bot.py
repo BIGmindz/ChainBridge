@@ -28,7 +28,7 @@ def check_bot_status():
         if 'live_trading_bot.py' in result.stdout:
             return True
         return False
-    except:
+    except Exception:
         return False
 
 def start_bot_if_needed():
@@ -74,18 +74,18 @@ def monitor_bot():
         # Print output line by line as it comes
         if process.stdout:
             for line in iter(process.stdout.readline, ''):
-            if line:
-                # Filter for important information
-                line = line.strip()
-                if any(keyword in line for keyword in [
-                    '📊', '🎯', '💼', '💰', '📈', '🚀', '⚡', 
-                    'BTC/USD', 'ETH/USD', 'SOL/USD', 'XRP/USD',
-                    'Signal:', 'PORTFOLIO', 'BUY', 'SELL', 'HOLD',
-                    'Capital:', 'Balance:', 'Positions:', 'P&L:'
-                ]):
-                    timestamp = datetime.now().strftime('%H:%M:%S')
-                    print(f"[{timestamp}] {line}")
-                    sys.stdout.flush()
+                if line:
+                    # Filter for important information
+                    line = line.strip()
+                    if any(keyword in line for keyword in [
+                        '📊', '🎯', '💼', '💰', '📈', '🚀', '⚡', 
+                        'BTC/USD', 'ETH/USD', 'SOL/USD', 'XRP/USD',
+                        'Signal:', 'PORTFOLIO', 'BUY', 'SELL', 'HOLD',
+                        'Capital:', 'Balance:', 'Positions:', 'P&L:'
+                    ]):
+                        timestamp = datetime.now().strftime('%H:%M:%S')
+                        print(f"[{timestamp}] {line}")
+                        sys.stdout.flush()
                     
     except KeyboardInterrupt:
         print("\n\n🛑 Monitoring stopped by user")
