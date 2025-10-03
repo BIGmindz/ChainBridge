@@ -105,12 +105,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-cov pytest-mock
-          pip install markdownlint-cli
-
-      - name: Markdown lint
-        run: |
-          if ls *.md >/dev/null 2>&1; then npx --yes markdownlint-cli *.md || true; fi
-          if [ -d docs ]; then npx --yes markdownlint-cli "docs/**/*.md" || true; fi
       
       - name: Run tests
         run: |
@@ -146,3 +140,24 @@ jobs:
         run: |
           echo "🔒 Production deployment requires manual approval"
           # Add production deployment logic here
+
+  docs-quality:
+    name: Documentation Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Run fence normalizer & enforce cleanliness
+        run: |
+          if [ -f scripts/normalize_markdown_fences.py ]; then python scripts/normalize_markdown_fences.py; fi
+          git diff --exit-code || (echo '❌ Unnormalized markdown fences detected. Run make docs-fix locally.' && exit 1)
+      - name: Markdown lint
+        run: |
+          if command -v npx >/dev/null 2>&1; then \
+            npx --yes markdownlint-cli '**/*.md'; \
+          else \
+            echo 'markdownlint skipped: npx missing'; \
+          fi
