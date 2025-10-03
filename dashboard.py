@@ -1,11 +1,8 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import os
 import time
-from datetime import datetime
-
 from datetime import datetime
 
 # --- Professional Color Palette ---
@@ -299,7 +296,7 @@ def main():
         
         if display_cols:
             st.dataframe(
-                display_df[display_cols].sort_values("timestamp", ascending=False),
+                display_df[display_cols].sort_values(by="timestamp", ascending=False),  # type: ignore
                 use_container_width=True
             )
         else:

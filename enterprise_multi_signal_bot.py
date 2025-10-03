@@ -6,7 +6,6 @@ Built for both Paper and Live Trading
 """
 
 import os
-import sys
 import json
 import asyncio
 import threading
@@ -22,7 +21,7 @@ import logging
 import pickle
 import numpy as np
 import pandas as pd
-from collections import deque, defaultdict
+from collections import defaultdict
 import uuid
 import warnings
 
@@ -171,11 +170,14 @@ class AsyncSignalProcessor:
             current_hist = float(histogram.iloc[-1])
             prev_hist = float(histogram.iloc[-2])
             if current_hist > 0 and prev_hist <= 0:
-                direction = 'BUY'; confidence = min(abs(current_hist) / 2, 1.0)
+                direction = 'BUY'
+                confidence = min(abs(current_hist) / 2, 1.0)
             elif current_hist < 0 and prev_hist >= 0:
-                direction = 'SELL'; confidence = min(abs(current_hist) / 2, 1.0)
+                direction = 'SELL'
+                confidence = min(abs(current_hist) / 2, 1.0)
             else:
-                direction = 'HOLD'; confidence = 0.3
+                direction = 'HOLD'
+                confidence = 0.3
             return self._create_signal('MACD', current_hist, float(confidence), direction)
         except Exception as e:
             logger.log('ERROR', f"MACD calculation failed: {e}")
@@ -197,11 +199,14 @@ class AsyncSignalProcessor:
             denom = (current_upper - current_lower) or 1e-8
             band_position = (current_price - current_lower) / denom
             if band_position > 0.95:
-                direction = 'SELL'; confidence = 0.8
+                direction = 'SELL'
+                confidence = 0.8
             elif band_position < 0.05:
-                direction = 'BUY'; confidence = 0.8
+                direction = 'BUY'
+                confidence = 0.8
             else:
-                direction = 'HOLD'; confidence = 0.3
+                direction = 'HOLD'
+                confidence = 0.3
             return self._create_signal('BOLLINGER', float(band_position), float(confidence), direction)
         except Exception as e:
             logger.log('ERROR', f"Bollinger calculation failed: {e}")
@@ -216,11 +221,14 @@ class AsyncSignalProcessor:
             avg_volume = float(np.mean(volume_data))
             ratio = recent_volume / (avg_volume + 1e-8)
             if ratio > 2.0:
-                direction = 'BUY'; confidence = min((ratio - 1) / 2, 1.0)
+                direction = 'BUY'
+                confidence = min((ratio - 1) / 2, 1.0)
             elif ratio < 0.5:
-                direction = 'SELL'; confidence = min((1 - ratio) / 0.5, 1.0)
+                direction = 'SELL'
+                confidence = min((1 - ratio) / 0.5, 1.0)
             else:
-                direction = 'HOLD'; confidence = 0.3
+                direction = 'HOLD'
+                confidence = 0.3
             return self._create_signal('VOLUME', float(ratio), float(confidence), direction)
         except Exception as e:
             logger.log('ERROR', f"Volume analysis failed: {e}")
@@ -231,11 +239,14 @@ class AsyncSignalProcessor:
             await asyncio.sleep(0)
             logistics_score = float(np.random.random())
             if logistics_score > 0.7:
-                direction = 'BUY'; confidence = logistics_score
+                direction = 'BUY'
+                confidence = logistics_score
             elif logistics_score < 0.3:
-                direction = 'SELL'; confidence = 1 - logistics_score
+                direction = 'SELL'
+                confidence = 1 - logistics_score
             else:
-                direction = 'HOLD'; confidence = 0.5
+                direction = 'HOLD'
+                confidence = 0.5
             return self._create_signal('LOGISTICS', logistics_score, float(confidence), direction)
         except Exception as e:
             logger.log('ERROR', f"Logistics signal failed: {e}")
@@ -603,7 +614,8 @@ class MutexFreeTradingEngine:
     def run(self):
         self.running = True
         def handler(signum, frame):
-            logger.log('INFO', "Shutdown signal received"); self.running = False
+            logger.log('INFO', "Shutdown signal received")
+            self.running = False
         sig_module.signal(sig_module.SIGINT, handler)
         sig_module.signal(sig_module.SIGTERM, handler)
         try:

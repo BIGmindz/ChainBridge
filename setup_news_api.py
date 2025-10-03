@@ -4,9 +4,7 @@ Quick setup script to add NewsAPI key to .env file
 Run this script and paste your NewsAPI key when prompted.
 """
 
-import os
 import sys
-import getpass
 from pathlib import Path
 
 def setup_news_api():

@@ -140,7 +140,6 @@ class IchimokuCloudModule(Module):
             return None
 
         idx = np.where(valid_mask)[0]
-        last_idx = idx[-1]
         return (
             tenkan.iloc[idx].values,
             kijun.iloc[idx].values,

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+from typing import Any, List
 
 try:
     import pandas as pd  # type: ignore
@@ -41,7 +42,7 @@ except Exception:  # pragma: no cover - optional dependency in test environments
     has_yaml = False
 
 import json
-from typing import Any, Dict, List, Tuple
+from typing import Dict, Tuple
 
 """
 Benson RSI Bot (Coinbase-friendly)

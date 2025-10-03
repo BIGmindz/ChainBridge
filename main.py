@@ -36,7 +36,7 @@ import signal
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 # Ensure imports resolve correctly
 ROOT_DIR = Path(__file__).parent.resolve()
@@ -136,7 +136,7 @@ class BotOrchestrator:
             print(f"❌ Missing required modules: {', '.join(missing)}")
             print("   Install with: pip install -r requirements.txt")
             return False
-        print(f"✅ All required modules available")
+        print("✅ All required modules available")
         
         # Check API credentials for live mode
         if self.mode == "live":

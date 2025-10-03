@@ -9,6 +9,8 @@ import sys
 import time
 from datetime import datetime
 
+import yaml
+
 # Load environment variables from .env if available
 try:
     from dotenv import load_dotenv
@@ -30,6 +32,8 @@ except ImportError:
         print("❌ .env file not found. API keys missing!")
 
 # Load API config from environment
+CONFIG_PATHS = ["config/config.yaml", "config.yaml"]
+
 api_config = {"key": os.getenv("API_KEY", ""), "secret": os.getenv("API_SECRET", "")}
 
 # Set live trading mode
@@ -57,6 +61,24 @@ from modules.new_listings_radar import ListingsMonitor
 from modules.multi_signal_aggregator_module import MultiSignalAggregatorModule
 
 
+def load_bot_config():
+    """Load YAML configuration, falling back to defaults when missing."""
+    for path in CONFIG_PATHS:
+        if os.path.exists(path):
+            try:
+                with open(path, "r", encoding="utf-8") as handle:
+                    data = yaml.safe_load(handle) or {}
+                data.setdefault("_config_path", path)
+                print(f"✅ Loaded configuration from {path}")
+                return data
+            except Exception as exc:
+                print(f"⚠️  Failed to load configuration from {path}: {exc}")
+                break
+
+    print("⚠️  No configuration file found (expected config/config.yaml or config.yaml). Using defaults.")
+    return {}
+
+
 # Preflight check to ensure API keys are loaded
 def preflight_check():
     api_key = os.environ.get("API_KEY")
@@ -69,41 +91,52 @@ def preflight_check():
 
 
 class LiveTradingBot:
-    def __init__(self):
+    def __init__(self, config=None):
         print("🚀 INITIALIZING LIVE TRADING BOT WITH MULTI-SIGNAL AGGREGATION")
+
+        self.config = config or load_bot_config()
 
         # Setup exchange with API keys
         self.exchange = setup_exchange("kraken", api_config)
 
         # Initialize budget manager with live mode
-        self.budget_manager = BudgetManager(initial_capital=10000.0, exchange=self.exchange, live_mode=True)
+        initial_capital = float(
+            (self.config.get("risk") or {}).get("initial_capital", 10000.0)
+        )
+        self.budget_manager = BudgetManager(
+            initial_capital=initial_capital, exchange=self.exchange, live_mode=True
+        )
 
         # Initialize exchange adapter
         self.exchange_adapter = ExchangeAdapter(exchange=self.exchange, config={})
 
-        # Trading symbols (20 USD pairs on Kraken)
-        self.symbols = [
-            "BTC/USD",
-            "ETH/USD",
-            "SOL/USD",
-            "XRP/USD",
-            "ADA/USD",
-            "DOGE/USD",
-            "LTC/USD",
-            "DOT/USD",
-            "LINK/USD",
-            "AVAX/USD",
-            "ATOM/USD",
-            "ARB/USD",
-            "TRX/USD",
-            "XLM/USD",
-            "FIL/USD",
-            "NEAR/USD",
-            "AAVE/USD",
-            "ETC/USD",
-            "BCH/USD",
-            "UNI/USD",
-        ]
+        configured_symbols = self.config.get("symbols") if isinstance(self.config, dict) else None
+        if isinstance(configured_symbols, list) and configured_symbols:
+            self.symbols = [str(symbol) for symbol in configured_symbols]
+        else:
+            # Trading symbols (20 USD pairs on Kraken)
+            self.symbols = [
+                "BTC/USD",
+                "ETH/USD",
+                "SOL/USD",
+                "XRP/USD",
+                "ADA/USD",
+                "DOGE/USD",
+                "LTC/USD",
+                "DOT/USD",
+                "LINK/USD",
+                "AVAX/USD",
+                "ATOM/USD",
+                "ARB/USD",
+                "TRX/USD",
+                "XLM/USD",
+                "FIL/USD",
+                "NEAR/USD",
+                "AAVE/USD",
+                "ETC/USD",
+                "BCH/USD",
+                "UNI/USD",
+            ]
 
         # Initialize multi-signal system
         self._initialize_signal_modules()

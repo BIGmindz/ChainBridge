@@ -63,7 +63,7 @@
 
 ### 4. Git Operations
 ✅ **All changes committed and pushed**
-```
+```text
 Commits made:
 - 02088b1: Repair corrupted settings.json and suppress VFS markdown errors
 - 5171947: Remove duplicate 'symbols' key in config.yaml
@@ -107,7 +107,7 @@ These are Pylance warnings about unresolved imports for:
 - Packages ARE installed and will work at runtime
 
 **Resolution:**
-```
+```text
 1. Reload VS Code window: Cmd+Shift+P → "Developer: Reload Window"
 2. Or restart VS Code
 3. Pylance will then detect all installed packages
@@ -135,7 +135,7 @@ These do not affect functionality and are low-priority cosmetic fixes.
 
 **Immediate (Required):**
 1. **Reload VS Code Window** to apply all configuration changes:
-   ```
+```text
    Cmd+Shift+P → "Developer: Reload Window"
    ```
 
