@@ -35,9 +35,9 @@ class BudgetManager:
             self.initial_capital = initial_capital
         self.available_capital = self.initial_capital
 
-        # Updated risk per trade to 4% and max positions to 10
-        self.risk_per_trade = 4.0  # previously 2.0%
-        self.max_positions = 10  # previously 5
+                # Updated risk per trade to 6% and max positions to 20
+        self.risk_per_trade = 6.0  # increased risk tolerance
+        self.max_positions = 20  # increased position capacity
 
         # RADICAL FIX: Always fetch real balance in live mode
         if live_mode and exchange:
@@ -102,7 +102,7 @@ class BudgetManager:
         Based on hedge fund best practices
         """
         return {
-            "max_risk_per_trade": 0.02,  # 2% max risk per trade
+            "max_risk_per_trade": 0.06,  # 6% max risk per trade
             "max_positions": 5,  # Maximum concurrent positions
             "max_portfolio_risk": 0.10,  # 10% max portfolio risk
             "position_size_method": "kelly",  # kelly, fixed, volatility_adjusted
