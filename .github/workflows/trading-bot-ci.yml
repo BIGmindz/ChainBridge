@@ -47,6 +47,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pylint black flake8 mypy safety bandit
+
+      - name: Normalize markdown fences (dry-run)
+        run: |
+          if [ -f scripts/normalize_markdown_fences.py ]; then \
+            python scripts/normalize_markdown_fences.py; \
+            git diff --exit-code || (echo 'Markdown fence normalization required. Run scripts/normalize_markdown_fences.py locally and commit.' && exit 1); \
+          else \
+            echo 'Normalization script not found'; \
+          fi
       
       - name: Code formatting check
         run: black --check --diff .
@@ -96,6 +105,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-cov pytest-mock
+          pip install markdownlint-cli
+
+      - name: Markdown lint
+        run: |
+          if ls *.md >/dev/null 2>&1; then npx --yes markdownlint-cli *.md || true; fi
+          if [ -d docs ]; then npx --yes markdownlint-cli "docs/**/*.md" || true; fi
       
       - name: Run tests
         run: |
