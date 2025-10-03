@@ -1,15 +1,24 @@
 #!/usr/bin/env python3
-"""
-Normalize Markdown code fences across the repository by ensuring every opening
-triple-backtick fence includes a language. Default language: "text".
+"""Markdown Fence Normalizer & Language Inference
+=================================================
 
-Rules:
-- Replace lines that are an opening fence of the form "```" (optionally with
-  trailing spaces) with "```text".
-- Preserve existing fences that already specify a language, e.g., ```bash.
-- Preserve closing fences (```), do not add a language to closing lines.
+Purpose:
+    Ensure every opening code fence has an explicit language while heuristically
+    inferring a better language than a generic "text" where possible.
 
-Idempotent: Running multiple times will not change already-correct fences.
+Heuristic Inference (ordered):
+    - Bash/Shell: lines starting with `$`, contain common shell cmds (pip install, make, git, ls, export, docker)
+    - Python: lines starting with `import `, `from X import`, shebang `#!/usr/bin/env python`, or typical Python keywords (def, class) without trailing `;`
+    - YAML: presence of typical keys (version:, services:, apiVersion:, kind:, metadata:) early and contains ':' structure
+    - JSON: starts with `{` or `[` and valid JSON-like structure
+    - TOML: lines with `key = value` and at least one bracketed table `[section]`
+    - INI: bracketed section headers and key=value pairs
+    - Markdown: banner fences used for ASCII art (no inference change -> text)
+    - Fallback: text
+
+Idempotent:
+    - Existing language spec preserved
+    - Already inferred fences not re-written unless heuristic changed and previous was 'text'
 """
 
 from __future__ import annotations
@@ -17,10 +26,69 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import re
+import json
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
 FENCE_RE = re.compile(r"^(?P<indent>\s*)(?P<marker>(`{3,}|~{3,}))(?:\s*(?P<lang>\S.*)?)?\s*$")
+
+
+def infer_language(code_block_lines: list[str]) -> str:
+    """Infer a reasonable language for a code fence based on its content.
+
+    We inspect only the first N non-empty lines to keep it fast.
+    Returns a short language token accepted by common highlighters.
+    """
+    SAMPLE_LINES = 12
+    lines = [l.rstrip() for l in code_block_lines if l.strip()][:SAMPLE_LINES]
+    if not lines:
+        return "text"
+
+    joined = "\n".join(lines)
+    first = lines[0]
+
+    shell_indicators = ("$ ", "#!/bin/bash", "#!/usr/bin/env bash")
+    shell_cmds = {"pip", "python", "pytest", "git", "ls", "echo", "cat", "make", "docker", "export"}
+    py_keywords = {"import ", "from ", "def ", "class ", "async def ", "with ", "for ", "if ", "print("}
+    yaml_keys = {"version:", "services:", "apiVersion:", "kind:", "metadata:", "spec:", "name:"}
+
+    # Bash / shell
+    if first.startswith(shell_indicators) or any(l.startswith("$") for l in lines):
+        return "bash"
+    if sum(any(tok in l for tok in shell_cmds) for l in lines) >= 2 and not any(l.strip().startswith("def ") for l in lines):
+        return "bash"
+
+    # Python
+    if first.startswith("#!/usr/bin/env python") or any(l.startswith(k) for k in py_keywords for l in lines):
+        return "python"
+    if any(l.endswith(":") and l.split()[0] in {"class", "def"} for l in lines):
+        return "python"
+
+    # JSON (quick heuristic: starts with { or [ and json.loads succeeds on a trimmed subset)
+    if first.strip().startswith(("{", "[")):
+        snippet = joined
+        # Attempt a safe truncated parse
+        try:
+            json.loads(snippet)
+            return "json"
+        except Exception:
+            pass
+
+    # YAML (contains multiple key: value patterns and yaml-like top keys)
+    yaml_like = sum(1 for l in lines if re.match(r"^[A-Za-z0-9_-]+:\s*", l))
+    if yaml_like >= 2 and any(any(k in l for k in yaml_keys) for l in lines):
+        return "yaml"
+
+    # TOML
+    if sum(1 for l in lines if re.match(r"^[A-Za-z0-9_.-]+\s*=\s*.+", l)) >= 2 and any(l.startswith("[") and l.endswith("]") for l in lines):
+        return "toml"
+
+    # INI
+    if any(l.startswith("[") and l.endswith("]") for l in lines) and sum(1 for l in lines if re.match(r"^[A-Za-z0-9_.-]+\s*=\s*.+", l)) >= 1:
+        return "ini"
+
+    return "text"
 
 
 def normalize_file(path: Path) -> tuple[bool, int]:
@@ -35,6 +103,7 @@ def normalize_file(path: Path) -> tuple[bool, int]:
     out_lines = []
     in_fence = False
     current_marker: str | None = None
+    buffer: list[str] = []  # collect code lines for inference
 
     for line in lines:
         m = FENCE_RE.match(line)
@@ -46,22 +115,35 @@ def normalize_file(path: Path) -> tuple[bool, int]:
             if not in_fence:
                 # Opening fence
                 if not lang:
+                    # We'll tentatively mark as text; inference will adjust when closing encountered
                     out_lines.append(f"{indent}{marker} text")
                     changed = True
                     fixes += 1
                     in_fence = True
                     current_marker = marker
+                    buffer = []
                     continue
                 else:
                     in_fence = True
                     current_marker = marker
+                    buffer = []
             else:
                 # Closing fence: ensure we close only if marker matches
                 if current_marker and marker.startswith(current_marker[0]):
+                    # Perform inference if the opening fence we wrote was 'text'
+                    if buffer and out_lines:
+                        open_line = out_lines[-(len(buffer)+1)] if len(out_lines) >= (len(buffer)+1) else out_lines[-1]
+                        if open_line.strip().startswith(marker) and open_line.strip().endswith(" text"):
+                            inferred = infer_language(buffer)
+                            if inferred != "text":
+                                out_lines[-(len(buffer)+1)] = open_line.replace(" text", f" {inferred}")
+                    buffer = []
                     in_fence = False
                     current_marker = None
 
         out_lines.append(line)
+        if in_fence and not FENCE_RE.match(line):
+            buffer.append(line)
 
     if changed:
         path.write_text("\n".join(out_lines) + ("\n" if text.endswith("\n") else ""), encoding="utf-8")
