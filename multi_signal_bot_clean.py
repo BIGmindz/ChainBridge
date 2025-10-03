@@ -25,8 +25,6 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Level 3: Redirect stderr temporarily during TensorFlow imports
-import io
-import contextlib
 
 _original_stderr = sys.stderr
 _null_device = open(os.devnull, 'w')
