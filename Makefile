@@ -34,6 +34,8 @@ help:
 	@echo "  preflight-order    - Preview normalized order params (no placement)"
 	@echo "  select-dynamic     - Select top volatile USD symbols and update config"
 	@echo "  refresh-and-preflight - Refresh symbols dynamically and preflight all"
+	@echo "  docs-lint    - Check markdown fences + markdownlint (non-fatal)"
+	@echo "  docs-fix     - Normalize fences and show pending changes"
 
 venv:
 	@[ -d .venv ] || python3 -m venv .venv
@@ -62,6 +64,15 @@ lint:
 
 fmt:
 	@. .venv/bin/activate && python -m pip install -q ruff && ruff format .
+
+# Documentation quality helpers
+.PHONY: docs-lint docs-fix
+docs-lint:
+	@. .venv/bin/activate && python scripts/normalize_markdown_fences.py >/dev/null && git diff --quiet || (echo "⚠ Markdown fences need normalization" && git --no-pager diff --name-only)
+	@command -v npx >/dev/null 2>&1 && npx --yes markdownlint-cli '**/*.md' || echo "(markdownlint skipped: npx not available)"
+
+docs-fix:
+	@. .venv/bin/activate && python scripts/normalize_markdown_fences.py && git --no-pager diff || true
 
 docker-build:
 	$(COMPOSE) build
