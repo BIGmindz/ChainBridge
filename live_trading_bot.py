@@ -100,9 +100,21 @@ class LiveTradingBot:
         self.exchange = setup_exchange("kraken", api_config)
 
         # Initialize budget manager with live mode
-        initial_capital = float(
-            (self.config.get("risk") or {}).get("initial_capital", 10000.0)
-        )
+        raw_initial_capital = (self.config.get("risk") or {}).get("initial_capital", 10000.0)
+        initial_capital = 10000.0
+        try:
+            # Some configs may have accidental trailing text (e.g. '426.60loaded from env')
+            if isinstance(raw_initial_capital, str):
+                import re
+                match = re.search(r"[-+]?[0-9]*\.?[0-9]+", raw_initial_capital)
+                if match:
+                    initial_capital = float(match.group(0))
+                else:
+                    raise ValueError(f"No numeric value found in initial_capital string: {raw_initial_capital}")
+            else:
+                initial_capital = float(raw_initial_capital)
+        except Exception as parse_exc:
+            print(f"⚠️  Warning: Failed to parse initial_capital '{raw_initial_capital}' ({parse_exc}); using default {initial_capital}.")
         self.budget_manager = BudgetManager(
             initial_capital=initial_capital, exchange=self.exchange, live_mode=True
         )
