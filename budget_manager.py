@@ -22,7 +22,7 @@ class BudgetManager:
         """
         self.live_mode = live_mode
         self.exchange = exchange
-        if live_mode:
+        if live_mode and self.exchange is not None:
             # Fetch live balance from Kraken account
             try:
                 balance = self.exchange.fetch_balance()
@@ -117,7 +117,7 @@ class BudgetManager:
         symbol: str,
         signal_confidence: float,
         volatility: float = 0.02,
-        price: float = None,
+        price: Optional[float] = None,
     ) -> Dict:
         """
         Calculate optimal position size using Kelly Criterion
@@ -187,7 +187,7 @@ class BudgetManager:
             "method": self.risk_parameters["position_size_method"],
         }
 
-    def _ensure_minimum_order_size(self, symbol: str, position_size_dollars: float, price: float = None) -> float:
+    def _ensure_minimum_order_size(self, symbol: str, position_size_dollars: float, price: Optional[float] = None) -> float:
         """
         Ensure position size meets exchange minimum order requirements.
         If `price` is provided we will compute the quantity and make sure quantity >= minimum quantity for symbol.

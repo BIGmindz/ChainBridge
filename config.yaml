@@ -62,7 +62,7 @@ risk:
 rsi:
   buy_threshold: 35
   period: 14
-  sell_threshold: 65
+  sell_threshold: 64
 symbols:
 - BTC/USD
 - ETH/USD
