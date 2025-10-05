@@ -331,8 +331,9 @@ def run_bot(once: bool = False) -> None:
     # RSI config
     rsi_cfg = dict(cfg.get("rsi", {}))
     rsi_period = int(rsi_cfg.get("period", 14))
-    buy_th = float(rsi_cfg.get("buy_threshold", 30))  # type: ignore
-    sell_th = float(rsi_cfg.get("sell_threshold", 70))  # type: ignore
+    # Canonical RSI thresholds enforced (fallbacks 35/64 if config absent)
+    buy_th = float(rsi_cfg.get("buy_threshold", 35))  # type: ignore
+    sell_th = float(rsi_cfg.get("sell_threshold", 64))  # type: ignore
     # MACD config
     macd_cfg = dict(cfg.get("macd", {}))
     macd_fast = int(macd_cfg.get("fast", 12))
@@ -588,6 +589,11 @@ def run_tests():
     if failures:
         raise SystemExit(f"Tests failed: {failures}")
     print("All tests passed.")
+
+
+# Canonical RSI thresholds (centralized)
+RSI_BUY_THRESHOLD = 35
+RSI_SELL_THRESHOLD = 64
 
 
 if __name__ == "__main__":

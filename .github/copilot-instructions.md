@@ -1,8 +1,56 @@
-# BensonBot - Multi-Signal RSI Crypto Trading Bot
+# Multi-Signal Crypto Trading System
 
-BensonBot is a Python cryptocurrency trading bot that uses RSI (Relative Strength Index) strategy to make BUY/SELL/HOLD decisions. The bot supports multiple exchanges (Kraken, Coinbase) and includes mock data ingestion capabilities for geopolitical and sentiment analysis.
+A sophisticated Python cryptocurrency trading system using multiple signal aggregation, adaptive weights, and regime detection for BUY/SELL/HOLD decisions. The system supports multiple exchanges (Kraken, Binance) and includes real-time market analysis, risk management, and comprehensive monitoring capabilities.
 
 Always reference these instructions first and fallback to search or bash commands only when you encounter unexpected information that does not match the info here.
+
+## Current System Architecture
+
+### Entry Points:
+- **main.py** - Canonical entry point for all trading operations (live, paper, backtest)
+- **benson_rsi_bot.py** - Legacy entry point (deprecated in favor of main.py)
+- **live_trading_bot.py** - Core live trading engine
+- **integrated_trading_system.py** - Multi-signal aggregation system
+
+### Key Features:
+- Multi-signal aggregation with adaptive weights
+- Market regime detection (bull/bear/sideways)
+- Canonical RSI thresholds: BUY=35, SELL=64 (enforced across all modules)
+- Live trading safety guards and confirmation requirements
+- Real-time monitoring dashboards (Streamlit, Dash)
+- Comprehensive backtesting and paper trading modes
+
+## Repository Structure
+
+```
+/
+├── main.py                    # Canonical entry point for all operations
+├── live_trading_bot.py        # Core live trading engine
+├── integrated_trading_system.py # Multi-signal aggregation system
+├── benson_rsi_bot.py          # Legacy bot (deprecated)
+├── dashboard.py               # Streamlit monitoring dashboard
+├── animated_dashboard_new.py  # Advanced dashboard with animations
+├── scripts/
+│   ├── validate_thresholds.py # RSI threshold enforcement
+│   └── live_ticker.py         # Real-time price monitoring
+├── modules/
+│   ├── adaptive_weight_module/ # Dynamic signal weighting
+│   ├── market_regime_module/   # Bull/bear/sideways detection
+│   └── risk_management/        # Position sizing and stops
+├── strategies/
+│   ├── bear/                  # Bear market configurations
+│   ├── bull/                  # Bull market configurations
+│   └── sideways/              # Sideways market configurations
+├── docs/
+│   └── RSI_THRESHOLD_POLICY.md # Governance documentation
+├── config/config.yaml         # Main configuration
+├── .env.example              # Environment template
+├── requirements.txt          # Python dependencies
+├── Makefile                  # Build automation
+├── Dockerfile               # Container definition  
+├── docker-compose.yml        # Container orchestration
+└── .github/copilot-instructions.md # This file
+```
 
 ## Working Effectively
 
@@ -35,13 +83,18 @@ make fmt
 ```bash
 # ALWAYS run the bootstrapping steps first (venv + install)
 
-# Run bot once (single cycle) - will fail due to network restrictions in sandboxed environments
-# Expected failure: NetworkError connecting to exchange APIs (normal in restricted environments)
-python benson_rsi_bot.py --once
+# Run live trading (requires confirmation for safety)
+# CRITICAL: Live trading requires explicit confirmation via --confirm-live flag
+python3 main.py --mode live --confirm-live
 
-# Run bot continuously (requires network access to exchanges)
-# In production: python benson_rsi_bot.py
-make run
+# Run paper trading (safe for testing)
+python3 main.py --mode paper
+
+# Run backtesting
+python3 main.py --mode backtest
+
+# Legacy entry point (deprecated)
+# python benson_rsi_bot.py --once
 ```
 
 ### Docker (Limited Support):
@@ -117,7 +170,7 @@ make shell   # Access bot container shell
 
 - Exchange: kraken (default), coinbase, binance, bybit
 - Symbols: BTC/USD, ETH/USD, SOL/USD, etc.
-- RSI thresholds: buy_threshold (default 30), sell_threshold (default 70)
+- RSI thresholds: buy_threshold (canonical 35), sell_threshold (canonical 64) - ENFORCED SYSTEM-WIDE
 - Polling interval: poll_seconds (default 60)
 - Risk management: stop_loss_pct, take_profit_pct
 

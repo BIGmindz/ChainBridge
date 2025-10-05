@@ -19,7 +19,124 @@ import signal as sig_module
 from dotenv import load_dotenv
 import logging
 import pickle
-import numpy as np
+import uuid
+try:
+    import numpy as np
+    from typing import TYPE_CHECKING
+    if TYPE_CHECKING:
+        from numpy.typing import NDArray
+except Exception:
+    # Lightweight fallback for environments without numpy installed.
+    # Implements only the small subset of numpy functionality used by this file.
+    import random
+    import statistics
+    from typing import Iterable, List, Any
+
+    class _NDArray:
+        def __init__(self, data: Iterable[float]):
+            self._data = [float(x) for x in data]
+
+        def __len__(self):
+            return len(self._data)
+
+        def __getitem__(self, idx):
+            if isinstance(idx, slice):
+                return _NDArray(self._data[idx])
+            return self._data[idx]
+
+        def __iter__(self):
+            return iter(self._data)
+
+        def __repr__(self):
+            return f"_NDArray({self._data})"
+
+        def __add__(self, other):
+            if isinstance(other, _NDArray):
+                return _NDArray([a + b for a, b in zip(self._data, other._data)])
+            else:
+                return _NDArray([a + other for a in self._data])
+
+        def __radd__(self, other):
+            return self.__add__(other)
+
+        def __truediv__(self, other):
+            if isinstance(other, _NDArray):
+                return _NDArray([a / (b if b != 0 else 1e-12) for a, b in zip(self._data, other._data)])
+            else:
+                return _NDArray([a / (other if other != 0 else 1e-12) for a in self._data])
+
+        def __rtruediv__(self, other):
+            # scalar / array not used in this code but implement defensively
+            return _NDArray([(other / a) if a != 0 else float('inf') for a in self._data])
+
+        def __neg__(self):
+            return _NDArray([-a for a in self._data])
+
+        def tolist(self):
+            return list(self._data)
+
+        def __getitem__(self, idx):
+            if isinstance(idx, slice):
+                return _NDArray(self._data[idx])
+            return self._data[idx]
+
+    class _Random:
+        @staticmethod
+        def randn():
+            # approximate standard normal
+            return random.gauss(0, 1)
+
+        @staticmethod
+        def random():
+            return random.random()
+
+        @staticmethod
+        def uniform(a, b):
+            return random.uniform(a, b)
+
+    class _np_fallback:
+        random = _Random()
+
+        @staticmethod
+        def diff(arr: Iterable[float]):
+            lst = list(arr)
+            if len(lst) < 2:
+                return _NDArray([])
+            return _NDArray([lst[i+1] - lst[i] for i in range(len(lst)-1)])
+
+        @staticmethod
+        def array(arr: Iterable[float]):
+            return _NDArray(arr)
+
+        @staticmethod
+        def mean(arr: Iterable[float]):
+            lst = list(arr)
+            return statistics.mean(lst) if len(lst) else 0.0
+
+        @staticmethod
+        def std(arr: Iterable[float]):
+            lst = list(arr)
+            if len(lst) <= 1:
+                return 0.0
+            # use population std to match numpy default ddof=0
+            return statistics.pstdev(lst)
+
+        @staticmethod
+        def min(arr: Iterable[float]):
+            return min(arr) if arr else 0.0
+
+        @staticmethod
+        def max(arr: Iterable[float]):
+            return max(arr) if arr else 0.0
+
+        @staticmethod
+        def argmax(arr: Iterable[float]):
+            lst = list(arr)
+            if not lst:
+                return 0
+            return int(max(range(len(lst)), key=lambda i: lst[i]))
+
+    np = _np_fallback()
 import pandas as pd
 from collections import defaultdict
 import uuid
@@ -137,8 +254,15 @@ class AsyncSignalProcessor:
 
             deltas = np.diff(price_data)
             seed = deltas[: period + 1]
-            up = seed[seed >= 0].sum() / period
-            down = -seed[seed < 0].sum() / period
+            # Safe numpy operations with fallbacks
+            try:
+                up_vals = [float(x) for x in seed if float(x) >= 0]
+                down_vals = [float(x) for x in seed if float(x) < 0]
+                up = sum(up_vals) / period if up_vals else 0.0
+                down = sum(abs(x) for x in down_vals) / period if down_vals else 0.0
+            except Exception:
+                up = 0.0
+                down = 0.0
             rsi = 100 if down == 0 else 100 - (100 / (1 + (up / down)))
 
             if rsi > 70:
@@ -291,7 +415,7 @@ class MLEngine:
                 except Exception as e:
                     logger.log('WARNING', f"Could not load {name}: {e}")
 
-    def extract_features(self, signals: List[ImmutableSignal], price_data: List[float]) -> np.ndarray:
+    def extract_features(self, signals: List[ImmutableSignal], price_data: List[float]) -> Any:
         features: List[float] = []
         values = defaultdict(float)
         confs = defaultdict(float)
@@ -308,7 +432,7 @@ class MLEngine:
                 float(np.std(returns)),
                 float(np.min(returns)),
                 float(np.max(returns)),
-                float(returns[-1]) if len(returns) > 0 else 0.0,
+                # Safe conversion of last return value\n                last_return = 0.0\n                try:\n                    if len(returns) > 0:\n                        last_val = returns[-1]\n                        last_return = float(last_val) if isinstance(last_val, (int, float)) else float(str(last_val))\n                except (ValueError, TypeError, IndexError):\n                    last_return = 0.0\n                last_return,
             ])
         else:
             features.extend([0.0, 0.0, 0.0, 0.0, 0.0])
@@ -318,9 +442,9 @@ class MLEngine:
             features.append((curr - sma20) / (sma20 + 1e-8))
         else:
             features.append(0.0)
-        return np.array(features, dtype=float)
+        try:\n            if hasattr(np, 'array') and hasattr(np, 'float64'):\n                return np.array(features, dtype=np.float64)\n            else:\n                return np.array(features)\n        except Exception:\n            return features  # Return as list if numpy fails
 
-    def predict(self, features: np.ndarray) -> Dict[str, Any]:
+    def predict(self, features: Any) -> Dict[str, Any]:
         result: Dict[str, Any] = {
             'direction': 'HOLD',
             'confidence': 0.5,
@@ -642,7 +766,7 @@ class MutexFreeTradingEngine:
 class MockExchange:
     def __init__(self, symbols: List[str]):
         self.symbols = symbols
-        self.prices = {symbol: 50000 - i * 10000 for i, symbol in enumerate(symbols)}
+        self.prices: Dict[str, float] = {symbol: float(50000 - i * 10000) for i, symbol in enumerate(symbols)}
 
     def fetch_ticker(self, symbol: str) -> Dict:
         price = float(self.prices.get(symbol, 50000))
@@ -664,7 +788,17 @@ class MockExchange:
         return list(reversed(ohlcv))
 
     def create_order(self, **kwargs) -> Dict:
-        return {'id': str(uuid.uuid4()), 'symbol': kwargs.get('symbol'), 'side': kwargs.get('side'), 'type': kwargs.get('type'), 'amount': kwargs.get('amount'), 'price': self.prices.get(kwargs.get('symbol'), 50000), 'timestamp': datetime.now(timezone.utc).isoformat(), 'status': 'closed'}
+        symbol = kwargs.get('symbol', '')
+        return {
+            'id': str(uuid.uuid4()), 
+            'symbol': symbol, 
+            'side': kwargs.get('side'), 
+            'type': kwargs.get('type'), 
+            'amount': kwargs.get('amount'), 
+            'price': self.prices.get(symbol, 50000), 
+            'timestamp': datetime.now(timezone.utc).isoformat(), 
+            'status': 'closed'
+        }
 
 
 # ==============================

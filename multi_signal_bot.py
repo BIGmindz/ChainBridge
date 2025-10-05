@@ -48,7 +48,7 @@ import json
 import re
 import time
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import Dict, List, Any, Optional
 
 import yaml
 from dotenv import load_dotenv
@@ -306,7 +306,7 @@ def build_aggregator_weights(
     return {name: weight / total for name, weight in base_weights.items()}
 
 
-def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, markets_file: str = None) -> None:
+def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, markets_file: Optional[str] = None) -> None:
     """Main bot execution logic."""
     print("\n🚀 Multi-Signal Paper Trading Bot Starting...")
 
