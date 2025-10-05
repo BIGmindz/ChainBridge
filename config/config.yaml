@@ -1,16 +1,7 @@
 exchange: kraken
 
 api:
-  # API crtrading:
-  position_size_usd: 50
-  max_open_trades: 20
-  slippage_bps: 5   # 5 bps = 0.05%
-  min_confidence: 0.40  # Lowered threshold for more trade opportunities
-
-risk:
-  max_risk_per_trade: 0.06
-  cooldown_minutes: 5
-  initial_capital: 426.60loaded from environment variables
+  # API credentials loaded from environment variables
   # Set API_KEY and API_SECRET in your .env file for live trading
   # Leave these blank - they will be populated from environment variables
   key: ${API_KEY}
@@ -45,15 +36,16 @@ trading:
   max_open_trades: 20
   slippage_bps: 5   # 5 bps = 0.05%
   min_confidence: 0.40  # Lowered threshold for more trade opportunities
-
-
   cooldown_minutes: 5
   initial_capital: 426.60
 
+risk:
+  max_risk_per_trade: 0.06
+
 rsi:
   period: 14
-  buy_threshold: 32
-  sell_threshold: 68
+  buy_threshold: 35
+  sell_threshold: 64
 
 macd:
   fast: 12
