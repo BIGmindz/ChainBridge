@@ -7,6 +7,8 @@ Automatically liquidates positions when capital runs low
 import os
 import sys
 import time
+import json
+from pathlib import Path
 from datetime import datetime
 
 import yaml
@@ -160,6 +162,22 @@ class LiveTradingBot:
         print("📈 Signal Modules: RSI, MACD, Bollinger Bands, Volume Profile, Sentiment Analysis,")
         print("   Logistics Signals, Global Macro, Region-Specific Crypto, New Listings Radar")
 
+        # Runtime overrides (injected by orchestrator via config["runtime_overrides"])
+        overrides = (self.config or {}).get("runtime_overrides", {})
+        self.force_execution = bool(overrides.get("force_execution"))
+        self.min_confidence = float(overrides.get("min_confidence", 0.25))
+        self.min_trade_usd = float(overrides.get("min_trade_usd", 50.0))
+        if self.force_execution:
+            print(f"⚡ Force execution override ENABLED (min_confidence={self.min_confidence}, min_trade_usd={self.min_trade_usd})")
+        else:
+            print(f"🔧 Runtime thresholds: min_confidence={self.min_confidence} min_trade_usd={self.min_trade_usd}")
+
+        # Trade event log path / recent trades buffer
+        self.trade_log_path = Path("logs/trades.jsonl")
+        self.trade_log_path.parent.mkdir(parents=True, exist_ok=True)
+        self.recent_trades = []  # in-memory ring buffer for snapshot (last 25)
+        self._forced_trade_done = False
+
     def _initialize_signal_modules(self):
         """Initialize all signal modules and aggregator"""
         print("🔧 Initializing multi-signal modules...")
@@ -201,6 +219,9 @@ class LiveTradingBot:
         # Check if we need to liquidate due to low capital
         self._check_and_liquidate_if_needed()
 
+        # Collect per-symbol snapshots for UI
+        per_symbol_snapshots = []
+
         for symbol in self.symbols:
             try:
                 # Get OHLCV data for signal analysis
@@ -217,8 +238,8 @@ class LiveTradingBot:
 
                 print(f"📊 {symbol}: ${price:.4f}")
 
-                # Check if we have enough capital for a trade
-                min_trade_size = 50.0  # $50 minimum
+                # Check if we have enough capital for a trade (dynamic min)
+                min_trade_size = self.min_trade_usd
                 if self.budget_manager.available_capital < min_trade_size:
                     print(
                         f"⚠️  Insufficient capital for {symbol} (need ${min_trade_size}, have ${self.budget_manager.available_capital:.2f})"
@@ -235,15 +256,54 @@ class LiveTradingBot:
                 # Show individual module signals
                 self._display_module_signals(signal_result["modules"])
 
-                # Execute trade if confidence is high enough
-                if confidence >= 0.25 and signal != "HOLD":
-                    self._execute_trade(symbol, signal, price, confidence)
+                # Append UI snapshot element
+                try:
+                    per_symbol_snapshots.append({
+                        "symbol": symbol,
+                        "price": price,
+                        "aggregated_signal": signal,
+                        "aggregated_confidence": confidence,
+                        "modules": {
+                            m: {
+                                "signal": d.get("signal"),
+                                "confidence": d.get("confidence"),
+                                "value": d.get("value")
+                            } for m, d in signal_result.get("modules", {}).items()
+                        }
+                    })
+                except Exception as snap_exc:
+                    print(f"⚠️  Failed to record snapshot for {symbol}: {snap_exc}")
+
+                # Determine effective signal under force-execution override
+                effective_signal = signal
+                effective_conf = confidence
+                if self.force_execution and not self._forced_trade_done:
+                    if signal == "HOLD":
+                        effective_signal = "BUY"  # Demonstration forced BUY
+                        effective_conf = max(confidence, self.min_confidence)
+                        print("⚡ Force-execution override: converting HOLD -> BUY for demonstration")
+                    # else keep existing non-HOLD actionable signal
+                # Decide if we trade
+                if (
+                    effective_signal != "HOLD" and (
+                        self.force_execution and not self._forced_trade_done or effective_conf >= self.min_confidence
+                    )
+                ):
+                    self._execute_trade(symbol, effective_signal, price, effective_conf)
+                    if self.force_execution and not self._forced_trade_done:
+                        self._forced_trade_done = True  # limit to one forced trade
 
             except Exception as e:
                 print(f"❌ Error with {symbol}: {e}")
 
         # Show portfolio status
         self._show_portfolio_status()
+
+        # Persist UI snapshot
+        try:
+            self._write_ui_snapshot(per_symbol_snapshots)
+        except Exception as w_exc:
+            print(f"⚠️  Failed to write UI snapshot: {w_exc}")
 
         print("✅ Cycle completed")
 
@@ -273,8 +333,8 @@ class LiveTradingBot:
 
             position_size = position_info["size"]
 
-            if position_size < 10.0:  # Minimum $10 trade
-                print(f"⚠️  Position size too small: ${position_size:.2f}")
+            if position_size < self.min_trade_usd:  # Dynamic minimum trade size
+                print(f"⚠️  Position size too small: ${position_size:.2f} (< {self.min_trade_usd})")
                 return
 
             print(f"📈 Executing {signal} for {symbol}")
@@ -289,23 +349,92 @@ class LiveTradingBot:
                 price=price,
             )
 
-            if order:
-                # Record the position in budget manager
+            if not order:
+                print(f"❌ Failed to place {signal} order for {symbol}")
+                self._log_trade_event({
+                    "ts": self._utc_now(),
+                    "symbol": symbol,
+                    "side": signal,
+                    "price": price,
+                    "status": "submit_failed",
+                    "confidence": confidence,
+                    "position_size": position_size,
+                })
+                return
+
+            order_id = order.get("id") or order.get("orderId") or order.get("clientOrderId")
+            print(f"📝 Submitted {signal} order id={order_id} for {symbol} @ {price}")
+            self._log_trade_event({
+                "ts": self._utc_now(),
+                "symbol": symbol,
+                "side": signal,
+                "price": price,
+                "status": "submitted",
+                "confidence": confidence,
+                "position_size": position_size,
+                "order_id": order_id,
+            })
+
+            # Poll for fill
+            final_status, fill_price = self._poll_order_fill(order_id, symbol, signal.lower(), price)
+            if final_status == "filled":
+                # Record the position in budget manager (using fill price if available)
+                entry_price = fill_price or price
                 self.budget_manager.open_position(
                     symbol=symbol,
                     side=signal,
-                    entry_price=price,
+                    entry_price=entry_price,
                     position_size=position_size,
-                    stop_loss=price * 0.97,  # 3% stop loss
-                    take_profit=price * 1.06,  # 6% take profit
+                    stop_loss=entry_price * 0.97,
+                    take_profit=entry_price * 1.06,
                 )
-
-                print(f"✅ {signal} order placed for {symbol} at ${price}")
+                print(f"✅ {signal} FILLED for {symbol} at ${entry_price}")
+                self._log_trade_event({
+                    "ts": self._utc_now(),
+                    "symbol": symbol,
+                    "side": signal,
+                    "price": entry_price,
+                    "status": "filled",
+                    "confidence": confidence,
+                    "position_size": position_size,
+                    "order_id": order_id,
+                })
+            elif final_status == "canceled":
+                print(f"⚠️  {signal} order {order_id} canceled / not filled; releasing capital")
+                self._log_trade_event({
+                    "ts": self._utc_now(),
+                    "symbol": symbol,
+                    "side": signal,
+                    "price": price,
+                    "status": "canceled",
+                    "confidence": confidence,
+                    "position_size": position_size,
+                    "order_id": order_id,
+                })
             else:
-                print(f"❌ Failed to place {signal} order for {symbol}")
+                print(f"⚠️  {signal} order {order_id} unfilled after timeout; marking as expired")
+                self._log_trade_event({
+                    "ts": self._utc_now(),
+                    "symbol": symbol,
+                    "side": signal,
+                    "price": price,
+                    "status": "expired",
+                    "confidence": confidence,
+                    "position_size": position_size,
+                    "order_id": order_id,
+                })
 
         except Exception as e:
             print(f"❌ Trade execution error: {e}")
+            self._log_trade_event({
+                "ts": self._utc_now(),
+                "symbol": symbol,
+                "side": signal,
+                "price": price,
+                "status": "error",
+                "error": str(e),
+                "confidence": confidence,
+            })
 
     def _calculate_rsi(self, ohlcv, period=14):
         """Calculate RSI using Wilder's smoothing method"""
@@ -470,6 +599,141 @@ class LiveTradingBot:
                 indicators.append(f"⚪ {mod_name}")  # type: ignore
 
         print(f"            Signals: {' | '.join(indicators)}")
+
+    # ---------------- Trade Logging & Order Polling -----------------
+    def _utc_now(self):
+        return datetime.utcnow().isoformat() + "Z"
+
+    def _log_trade_event(self, event: dict):
+        try:
+            line = json.dumps(event)
+            with self.trade_log_path.open("a", encoding="utf-8") as fh:
+                fh.write(line + "\n")
+            self.recent_trades.append(event)
+            if len(self.recent_trades) > 25:
+                self.recent_trades = self.recent_trades[-25:]
+        except Exception as exc:
+            print(f"⚠️  Failed to log trade event: {exc}")
+
+    def _poll_order_fill(self, order_id, symbol, side, submitted_price, timeout_seconds=60):
+        """Poll exchange for order fill status.
+
+        Returns: (status, fill_price)
+        status ∈ {filled, canceled, open, expired}
+        """
+        if not order_id:
+            return ("unknown", None)
+        start = time.time()
+        last_status = "submitted"
+        while time.time() - start < timeout_seconds:
+            try:
+                # Attempt to fetch order status via ccxt if available
+                if hasattr(self.exchange, 'fetch_order'):
+                    info = self.exchange.fetch_order(order_id, symbol)  # type: ignore
+                    status = (info.get('status') or '').lower()
+                    filled = info.get('filled')
+                    price = info.get('price') or submitted_price
+                    if status in {"closed", "filled"}:
+                        return ("filled", price)
+                    if status in {"canceled", "cancelled"}:
+                        return ("canceled", None)
+                    last_status = status or last_status
+                time.sleep(3)
+            except Exception:
+                time.sleep(5)
+        return (last_status if last_status != "submitted" else "open", None)
+
+    # ---------------------------------------------------------------
+    # UI Snapshot Support
+    # ---------------------------------------------------------------
+    def _write_ui_snapshot(self, per_symbol_snapshots):
+        """Write latest cycle snapshot for external UI consumption.
+
+        Produces:
+        - ui_snapshot.json (atomically replaced)
+        - ui_history.jsonl (append-only, rolling history)
+        """
+        snapshot_dir = Path(".")
+        snapshot_path = snapshot_dir / "ui_snapshot.json"
+        history_path = snapshot_dir / "ui_history.jsonl"
+
+        portfolio_status = self.budget_manager.get_portfolio_status()
+
+        # --- P&L enrichment ---
+        # Expect per_symbol_snapshots entries to contain at least:
+        #   { symbol, action, confidence, price, position(optional) }
+        # We'll compute unrealized P&L per open position referencing latest price.
+        total_unrealized = 0.0
+        total_cost_basis = 0.0
+        enriched_positions = []
+        try:
+            open_positions = portfolio_status.get("open_positions") or []
+            # open_positions might already contain dictionaries with entry_price & position_size_usd
+            # We will attempt to find latest price from per_symbol_snapshots mapping by symbol.
+            price_lookup = {}
+            for sym_entry in per_symbol_snapshots:
+                sym = sym_entry.get("symbol") or sym_entry.get("pair") or sym_entry.get("ticker")
+                if sym:
+                    price_lookup[sym] = sym_entry.get("price") or sym_entry.get("last_price") or sym_entry.get("close")
+
+            for pos in open_positions:
+                sym = pos.get("symbol")
+                entry = pos.get("entry_price") or pos.get("avg_entry") or 0.0
+                size_usd = pos.get("position_size_usd") or pos.get("usd_value") or pos.get("size_usd") or 0.0
+                qty = pos.get("quantity") or pos.get("base_size") or 0.0
+                side = (pos.get("side") or "").upper()
+                last_price = price_lookup.get(sym)
+                unrealized = 0.0
+                pct = 0.0
+                if last_price and entry and qty:
+                    # Reconstruct USD cost basis if not provided
+                    if size_usd == 0.0:
+                        size_usd = qty * entry
+                    direction = 1 if side == "BUY" else -1
+                    unrealized = direction * (last_price - entry) * qty
+                    total_unrealized += unrealized
+                    total_cost_basis += size_usd
+                    if size_usd:
+                        pct = (unrealized / size_usd) * 100.0
+                enriched = dict(pos)
+                enriched.update({
+                    "last_price": last_price,
+                    "unrealized_pnl": unrealized,
+                    "unrealized_pnl_pct": pct,
+                })
+                enriched_positions.append(enriched)
+        except Exception as exc:
+            print(f"⚠️  P&L enrichment failed: {exc}")
+
+        total_unrealized_pct = (total_unrealized / total_cost_basis * 100.0) if total_cost_basis else 0.0
+        portfolio_status["unrealized_pnl"] = total_unrealized
+        portfolio_status["unrealized_pnl_pct"] = total_unrealized_pct
+        if enriched_positions:
+            portfolio_status["open_positions_enriched"] = enriched_positions
+
+        snapshot = {
+            "ts": datetime.utcnow().isoformat() + "Z",
+            "symbols": per_symbol_snapshots,
+            "portfolio": portfolio_status,
+            "config": {
+                "min_trade_size": 50.0,
+                "initial_capital": self.budget_manager.initial_capital,
+            },
+            "recent_trades": self.recent_trades,
+        }
+
+        # Atomic write
+        tmp_path = snapshot_path.with_suffix(".tmp")
+        with open(tmp_path, "w", encoding="utf-8") as tmp:
+            json.dump(snapshot, tmp, indent=2)
+        os.replace(tmp_path, snapshot_path)
+
+        # Append to history (best-effort)
+        try:
+            with open(history_path, "a", encoding="utf-8") as hist:
+                hist.write(json.dumps(snapshot) + "\n")
+        except Exception:
+            pass
 
     def _show_portfolio_status(self):
         """Show current portfolio status"""
