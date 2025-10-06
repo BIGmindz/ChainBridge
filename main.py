@@ -30,13 +30,14 @@ Documentation:
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 import signal
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 # Ensure imports resolve correctly
 ROOT_DIR = Path(__file__).parent.resolve()
@@ -52,37 +53,48 @@ except ImportError:
 # This is the canonical implementation with all features
 from live_trading_bot import LiveTradingBot as TradingEngine, load_bot_config, preflight_check
 
+CANONICAL_RSI_BUY = 35
+CANONICAL_RSI_SELL = 64
+
+METRICS_PATH = Path("runtime_metrics.json")
+
 
 class BotOrchestrator:
-    """
-    Orchestrates the trading bot lifecycle with proper signal handling,
-    health checks, and operational safety.
-    """
-    
-    def __init__(self, mode: str, config_path: Optional[str] = None):
-        """
-        Initialize the bot orchestrator.
-        
-        Args:
-            mode: Trading mode - "paper" or "live"
-            config_path: Optional path to config file
-        """
+    """Enterprise orchestrator: lifecycle, safety, metrics, overrides."""
+
+    TRADE_LOG_PATH = Path("logs/trades.jsonl")
+
+    def __init__(
+        self,
+        mode: str,
+        config_path: Optional[str] = None,
+        confirm_live: bool = False,
+        force_execution: bool = False,
+        min_confidence: float = 0.0,
+        min_trade_usd: float = 0.0,
+    ):
         self.mode = mode
         self.config_path = config_path
+        self.confirm_live = confirm_live
         self.should_stop = False
         self.engine: Optional[TradingEngine] = None
-        
+        self.force_execution = force_execution
+        self.min_confidence = float(min_confidence or 0.0)
+        self.min_trade_usd = float(min_trade_usd or 0.0)
+
         # Configure paper mode environment variable
         os.environ["PAPER"] = "true" if mode == "paper" else "false"
-        
-        # Setup signal handlers for graceful shutdown
+        try:
+            from src.trading_mode import MODE  # type: ignore
+            MODE.refresh_mode()
+        except Exception:
+            pass
+
         signal.signal(signal.SIGINT, self._signal_handler)
         signal.signal(signal.SIGTERM, self._signal_handler)
-        
         self._print_banner()
     
     def _print_banner(self):
-        """Print startup banner with configuration"""
         mode_indicator = "📝 PAPER" if self.mode == "paper" else "⚠️  LIVE"
         print(f"""
 ╔═══════════════════════════════════════════════════════════════════════╗
@@ -96,12 +108,19 @@ class BotOrchestrator:
 ║                                                                       ║
 ╚═══════════════════════════════════════════════════════════════════════╝
         """)
-        
         if self.mode == "live":
             print("⚠️  WARNING: LIVE TRADING MODE - REAL MONEY AT RISK")
+            if not self._live_confirmation_granted():
+                print("❌ Live mode launch blocked: confirmation guard not satisfied.")
+                print("   Re-run with --confirm-live OR set CONFIRM_LIVE=YES to proceed.")
+                sys.exit(2)
+            print("✅ Live mode confirmation acknowledged (explicit flag or env var).")
             print("⚠️  Ensure you have reviewed configuration and tested in paper mode")
-            print("⚠️  Press Ctrl+C to stop at any time")
-            print()
+            print("⚠️  Press Ctrl+C to stop at any time\n")
+        print(f"📏 Canonical RSI thresholds: BUY={CANONICAL_RSI_BUY} SELL={CANONICAL_RSI_SELL}")
+
+    def _live_confirmation_granted(self) -> bool:
+        return self.confirm_live or os.getenv("CONFIRM_LIVE", "").upper() in {"YES", "Y", "TRUE", "1"}
     
     def _signal_handler(self, signum, frame):
         """Handle shutdown signals gracefully"""
@@ -164,7 +183,7 @@ class BotOrchestrator:
         
         if not config_found:
             print("⚠️  No configuration file found, will use defaults")
-        
+
         print("✅ Environment validation complete\n")
         return True
     
@@ -189,6 +208,33 @@ class BotOrchestrator:
             print(f"❌ Preflight failed: {e}\n")
             return False
     
+    def _emit_metrics(self, cycle: int, mode: str, status: str) -> None:
+        snapshot = {
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "mode": mode,
+            "cycle": cycle,
+            "symbols": getattr(self.engine, "symbols", []),
+            "poll_seconds": getattr(self.engine, "poll_seconds", None),
+            "capital_available": getattr(getattr(self.engine, "budget_manager", {}), "available_capital", None),
+            "capital_total": getattr(getattr(self.engine, "budget_manager", {}), "current_capital", None),
+            "status": status,
+            "rsi_buy": CANONICAL_RSI_BUY,
+            "rsi_sell": CANONICAL_RSI_SELL,
+        }
+        try:
+            existing: List[Dict[str, Any]] = []
+            if METRICS_PATH.exists():
+                with METRICS_PATH.open("r", encoding="utf-8") as fh:
+                    try:
+                        existing = json.load(fh) or []
+                    except json.JSONDecodeError:
+                        existing = []
+            existing.append(snapshot)
+            with METRICS_PATH.open("w", encoding="utf-8") as fh:
+                json.dump(existing[-500:], fh, indent=2)
+        except Exception as exc:
+            print(f"⚠️  Failed to write metrics stub: {exc}")
+
     def run_once(self) -> bool:
         """
         Run a single trading cycle.
@@ -206,12 +252,18 @@ class BotOrchestrator:
                     import yaml
                     with open(self.config_path, 'r') as f:
                         config = yaml.safe_load(f) or {}
-                
+                runtime_overrides = config.get("runtime_overrides", {})
+                runtime_overrides["force_execution"] = self.force_execution
+                if self.min_confidence > 0:
+                    runtime_overrides["min_confidence"] = self.min_confidence
+                if self.min_trade_usd > 0:
+                    runtime_overrides["min_trade_usd"] = self.min_trade_usd
+                config["runtime_overrides"] = runtime_overrides
                 self.engine = TradingEngine(config=config)
             
             # Run one cycle
             self.engine.run_trading_cycle()
-            
+            self._emit_metrics(cycle=1, mode=self.mode, status="cycle_complete")
             print("\n✅ Trading cycle complete")
             return True
             
@@ -241,7 +293,13 @@ class BotOrchestrator:
                 import yaml
                 with open(self.config_path, 'r') as f:
                     config = yaml.safe_load(f) or {}
-            
+            runtime_overrides = config.get("runtime_overrides", {})
+            runtime_overrides["force_execution"] = self.force_execution
+            if self.min_confidence > 0:
+                runtime_overrides["min_confidence"] = self.min_confidence
+            if self.min_trade_usd > 0:
+                runtime_overrides["min_trade_usd"] = self.min_trade_usd
+            config["runtime_overrides"] = runtime_overrides
             self.engine = TradingEngine(config=config)
             
             cycle_count = 0
@@ -256,11 +314,10 @@ class BotOrchestrator:
                 
                 try:
                     self.engine.run_trading_cycle()
-                    error_count = 0  # Reset on success
-                    
-                    # Sleep between cycles
+                    self._emit_metrics(cycle=cycle_count, mode=self.mode, status="cycle_complete")
+                    error_count = 0
                     if not self.should_stop:
-                        sleep_time = self.engine.poll_seconds
+                        sleep_time = getattr(self.engine, "poll_seconds", 30)
                         print(f"\n💤 Sleeping for {sleep_time} seconds...")
                         time.sleep(sleep_time)
                 
@@ -282,12 +339,14 @@ class BotOrchestrator:
                     time.sleep(backoff_time)
             
             print("\n✅ Bot stopped gracefully")
+            self._emit_metrics(cycle=cycle_count, mode=self.mode, status="stopped")
             return 0
         
         except Exception as e:
             print(f"\n❌ Fatal error: {e}")
             import traceback
             traceback.print_exc()
+            self._emit_metrics(cycle=cycle_count if 'cycle_count' in locals() else -1, mode=self.mode, status="fatal_error")
             return 1
 
 
@@ -347,7 +406,28 @@ For more information, see docs/OPERATIONS.md
         type=str,
         help="Comma-separated list of trading symbols (overrides config)"
     )
-    
+    parser.add_argument(
+        "--confirm-live",
+        action="store_true",
+        help="Explicitly confirm launching in --mode live (OR set CONFIRM_LIVE=YES)"
+    )
+    parser.add_argument(
+        "--force-execution",
+        action="store_true",
+        help="Force execution even if confidence below config threshold"
+    )
+    parser.add_argument(
+        "--min-confidence",
+        type=float,
+        default=0.0,
+        help="Override minimum confidence required to execute a trade"
+    )
+    parser.add_argument(
+        "--min-trade-usd",
+        type=float,
+        default=0.0,
+        help="Override minimum trade USD size threshold"
+    )
     return parser.parse_args()
 
 
@@ -363,7 +443,11 @@ def main() -> int:
     # Create orchestrator
     orchestrator = BotOrchestrator(
         mode=args.mode,
-        config_path=args.config
+        config_path=args.config,
+        confirm_live=args.confirm_live,
+        force_execution=args.force_execution,
+        min_confidence=args.min_confidence,
+        min_trade_usd=args.min_trade_usd,
     )
     
     # Preflight-only mode
