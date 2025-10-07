@@ -6,16 +6,18 @@ This guide provides a quick overview of how to use the New Listings Radar module
 
 1. Install dependencies:
 
-
    ```bash
+
    python setup_new_listings.py
+
    ```
 
-2. Verify installation:
-
+1. Verify installation:
 
    ```bash
+
    pip list | grep beautifulsoup4
+
    ```
 
 ## Running the Module
@@ -25,57 +27,74 @@ This guide provides a quick overview of how to use the New Listings Radar module
 Run the New Listings Radar independently:
 
 ```bash
-# Scan for new listings
+
+## Scan for new listings
+
 python run_new_listings_radar.py --scan
 
-# Run with backtest
+## Run with backtest
+
 python run_new_listings_radar.py --backtest --days 30
-```
+
+```text
 
 ### Dashboard Mode
 
 View the visual dashboard of listing opportunities:
 
 ```bash
+
 python new_listings_dashboard.py
-```
+
+```text
 
 ### Integrated Mode
 
 The module is already integrated with the main bot:
 
 1. Make sure `modules/new_listings_radar_module.py` is properly installed
-2. Run the main bot which will include this module:
 
+1. Run the main bot which will include this module:
 
    ```bash
+
    python multi_signal_bot.py
+
    ```
 
 ## Common Commands
 
 ```bash
-# Check setup status
+
+## Check setup status
+
 python setup_new_listings.py
 
-# Run scan and save results
+## Run scan and save results
+
 python run_new_listings_radar.py --scan --save
 
-# Run backtest with custom days
+## Run backtest with custom days
+
 python run_new_listings_radar.py --backtest --days 60
 
-# Run dashboard
+## Run dashboard
+
 python new_listings_dashboard.py
-```
+
+```text
 
 ## Checking Logs
 
 The module logs information to the main bot's logging system:
 
 ```bash
-# View the last 50 lines of logs with listings radar info
+
+## View the last 50 lines of logs with listings radar info
+
 tail -n 50 logs/dashboard.log | grep "NewListingsRadar"
-```
+
+```text
 
 ## Troubleshooting
 
@@ -83,13 +102,14 @@ If you encounter issues:
 
 1. Check dependencies:
 
-
    ```bash
+
    python setup_new_listings.py
+
    ```
 
-2. Verify network connectivity to exchanges
+1. Verify network connectivity to exchanges
 
-3. Check log files for error messages
+1. Check log files for error messages
 
-4. Ensure proper configuration in `config/trading_config.json`
+1. Ensure proper configuration in `config/trading_config.json`
