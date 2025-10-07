@@ -9,13 +9,16 @@ The Rapid Fire ML Training System is designed to optimize the signal weights and
 ## Key Features
 
 - **30-minute intensive paper trading** with $1,000 starting capital
+
 - **Real-time learning and pattern recognition** using TensorFlow
+
 - **Signal weight optimization** based on trading performance
+
 - **Interactive dashboard** with performance metrics and visualizations
+
 - **Win/loss tracking** with emphasis on learning from mistakes
+
 - **Visualization of signal importance** to identify most valuable signals
-
-
 
 ## Installation
 
@@ -24,24 +27,32 @@ The Rapid Fire ML Training System is designed to optimize the signal weights and
 The full version requires TensorFlow and provides advanced pattern recognition capabilities.
 
 ```bash
-# Install dependencies
+
+## Install dependencies
+
 pip install tensorflow pandas numpy matplotlib seaborn
 
-# Run the training
+## Run the training
+
 python run_rapid_fire_training.py
-```
+
+```text
 
 ### Simple Version (No TensorFlow)
 
 A simplified version is provided that doesn't require TensorFlow but still performs signal weight optimization.
 
 ```bash
-# Install dependencies (minimal)
+
+## Install dependencies (minimal)
+
 pip install pandas numpy matplotlib
 
-# Run the simplified version
+## Run the simplified version
+
 python run_simple_rapid_training.py
-```
+
+```text
 
 ## Usage
 
@@ -50,43 +61,52 @@ python run_simple_rapid_training.py
 Both training scripts support the following command line options:
 
 ```bash
+
 --duration INT    Duration of training in minutes (default: 30)
 --cycle INT       Seconds between training cycles (default: 30)
 --capital FLOAT   Initial paper trading capital (default: $1000)
 --config PATH     Path to configuration file (default: config/config.yaml)
 --dashboard INT   Minutes between dashboard updates (default: 15)
-```
+
+```text
 
 ### Examples
 
 Run a standard 30-minute training session:
 
 ```bash
+
 python run_rapid_fire_training.py
-```
+
+```text
 
 Run a shorter 10-minute training session with $5000 capital:
 
 ```bash
+
 python run_rapid_fire_training.py --duration 10 --capital 5000
-```
+
+```text
 
 Run the simplified version with more frequent cycles:
 
 ```bash
+
 python run_simple_rapid_training.py --cycle 15
-```
+
+```text
 
 ## Training Output
 
 After running a training session, you'll find the following outputs in the `data/rapid_fire_sessions/session_YYYYMMDD_HHMMSS/` directory:
 
 - **Signal Weights**: Optimized weights for each signal
+
 - **Performance Metrics**: Capital growth, win rate, and trading statistics
+
 - **Visualizations**: Charts showing performance over time and signal importance
+
 - **Training Data**: Raw data collected during the training session
-
-
 
 For the TensorFlow version, a trained model will also be saved for later use in production.
 
@@ -97,31 +117,34 @@ For the TensorFlow version, a trained model will also be saved for later use in 
 The system works with the bot's 15 signals across 4 categories:
 
 1. **Technical Signals**: RSI, MACD, Bollinger Bands, Volume Profile, Sentiment Analysis
-2. **Logistics Signals**: Port Congestion, Diesel Prices, Supply Chain Pressure, Container Rates
-3. **Global Macro Signals**: Inflation, Regulatory, Remittance, CBDC, FATF
-4. **Adoption Signals**: Chainalysis Global Adoption
 
+1. **Logistics Signals**: Port Congestion, Diesel Prices, Supply Chain Pressure, Container Rates
 
+1. **Global Macro Signals**: Inflation, Regulatory, Remittance, CBDC, FATF
+
+1. **Adoption Signals**: Chainalysis Global Adoption
 
 ### Learning Process
 
 1. The system runs multiple trading cycles during the 30-minute period
-2. For each cycle, it collects signal data and makes a trading decision
-3. Past decisions are evaluated based on price movements
-4. Signal weights are adjusted to prioritize effective signals
-5. The dashboard updates every 15 minutes to show progress
 
+1. For each cycle, it collects signal data and makes a trading decision
 
+1. Past decisions are evaluated based on price movements
+
+1. Signal weights are adjusted to prioritize effective signals
+
+1. The dashboard updates every 15 minutes to show progress
 
 ### Model Architecture
 
 The TensorFlow model uses a simple dense neural network:
 
 - Input layer: 15 neurons (one for each signal)
+
 - Hidden layers: 64, 32, and 16 neurons with ReLU activation
+
 - Output layer: 3 neurons with softmax activation (BUY, SELL, HOLD)
-
-
 
 ## Integration
 
