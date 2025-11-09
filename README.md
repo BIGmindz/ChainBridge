@@ -445,3 +445,50 @@ Issues → GitHub Issues • Security disclosures → security@yourdomain.tld (P
 
 No blockchain theater. Real pipes. Real proof. Real cash.
 
+## Market & Go-To-Market (US ↔ MX Beachhead)
+
+### The Real Addressable Market
+- **TAM (narrative, goods flow):** U.S.–Mexico total goods trade in **2024 = $839.6B**.  
+  Sources: [USTR](https://ustr.gov/countries-regions/americas/mexico), [U.S. Census](https://www.census.gov/foreign-trade/statistics/highlights/top/top2412yr.html)
+
+- **Mode reality (why we start with trucking):** Trucks carry the **majority** of transborder freight by value (e.g., **$87.6B of $134.4B** in Jan 2025 across Canada+Mexico).  
+  Source: [U.S. DOT BTS – Transborder Monthly](https://www.bts.gov/newsroom/north-american-transborder-freight-rose-82-january-2025-january-2024)
+
+- **SAM (monetizable today):** **U.S.–Mexico Cross-Border FTL** freight transport market = **$73.25B (2025)**.  
+  Source: [Mordor Intelligence – US-MX Cross-Border FTL](https://www.mordorintelligence.com/industry-reports/us-mexico-cross-border-ftl-freight-transport-market)
+
+- **Beachhead concentration (Laredo):** Port Laredo handled **>3M incoming trucks** in 2024 and **~50%** of southern-border truck volume.  
+  Source: [BTS – Border Crossing Data (2023–2024)](https://www.bts.gov/newsroom/border-crossing-data-annual-release-2023-2024)
+
+> **Working SAM for the beachhead (Laredo proxy):**  
+> `Beachhead SAM ≈ 50% × $73.25B = **$36.6B**`  
+> *(Border-crossing share is a proxy for FTL spend concentration; actual revenue mix varies by lane and carrier.)*
+
+---
+
+### Share We Intend To Take (SOM Targets)
+- **Year 1 (prove it fast):** **0.25%–0.5% of Beachhead SAM** → **$91.5M–$183M** Payment Volume Managed (PVM).  
+  _Tactics:_ 2–3 carrier groups + 3–5 mid-market shippers; milestone (20/70/10) + sub-cent rails + audit packs.
+
+- **Year 2 (port expansion):** **~1% of Beachhead SAM** → **~$366M PVM** (Laredo slice alone) + pilots at Otay, Ysleta, Hidalgo.
+
+- **Year 3 (corridor play):** **1%–2% of total US–MX FTL** → **$732.5M–$1.465B PVM**.
+
+**Operational Targets we publish:**
+- **STP ≥ 95%**  •  **P95 settlement < 90s**  •  **Audit prep time −80%**  
+- **Network fees target < $0.01** on supported programmable rails; fall back to SWIFT/RTP/ACH/SEPA when economics or coverage demand it.
+
+---
+
+### Why We Win (even if SWIFT/others are present)
+- **Proof-native control plane:** Every settlement ships with a **proof bundle** (lineage + policy hash + tx receipts).  
+- **Rail-agnostic arbitrage:** Choose XRPL/RTP/ACH/SEPA/SWIFT **per event** for cost/latency/risk.  
+- **Event-driven cash:** **Risk-weighted milestones** (20/70/10 ±Δ) tied to real shipment events.  
+- **Integration moat:** ISO 20022 + EDI/API via the **Unifier** → shorter cycles, cleaner cutovers.
+
+---
+
+### Notes & Assumptions
+- Laredo “~50%” figure reflects **share of incoming truck crossings** (proxy for activity density), not unique trucks.  
+- The **$73.25B** FTL figure is an **independent industry estimate (2025)**; we treat it as SAM for monetization.  
+- Figures will be refreshed quarterly as BTS/Census/USTR updates land; our SOM targets are **volume-based**, not dependent on rate inflation.
