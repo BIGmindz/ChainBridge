@@ -22,7 +22,7 @@ Always reference these instructions first and fallback to search or bash command
 
 ## Repository Structure
 
-```
+``` text
 /
 ├── main.py                    # Canonical entry point for all operations
 ├── live_trading_bot.py        # Core live trading engine
