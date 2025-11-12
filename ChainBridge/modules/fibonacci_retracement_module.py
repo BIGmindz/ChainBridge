@@ -35,7 +35,9 @@ class FibonacciRetracementModule(Module):
 
     def get_schema(self) -> Dict[str, Any]:
         return {
-            "input": {"ohlcv_data": "List of OHLCV candles [ts, open, high, low, close, volume]"},
+            "input": {
+                "ohlcv_data": "List of OHLCV candles [ts, open, high, low, close, volume]"
+            },
             "output": {
                 "trend": "UPTREND/DOWNTREND/NEUTRAL",
                 "levels": "Dict of retracement levels and prices",
@@ -69,7 +71,9 @@ class FibonacciRetracementModule(Module):
         levels = self._compute_levels(swing_high, swing_low, trend)
         nearest_level, distance_pct = self._find_nearest_level(current_price, levels)
 
-        signal = self._generate_signal(current_price, nearest_level, trend, distance_pct)
+        signal = self._generate_signal(
+            current_price, nearest_level, trend, distance_pct
+        )
         confidence = self._confidence(distance_pct, structure_range_pct)
 
         return {
@@ -108,7 +112,9 @@ class FibonacciRetracementModule(Module):
             }
         )
 
-    def _compute_levels(self, swing_high: float, swing_low: float, trend: str) -> Dict[str, float]:
+    def _compute_levels(
+        self, swing_high: float, swing_low: float, trend: str
+    ) -> Dict[str, float]:
         price_range = swing_high - swing_low
         levels: Dict[str, float] = {}
 
@@ -126,12 +132,20 @@ class FibonacciRetracementModule(Module):
             levels["100% (High)"] = round(swing_high, 2)
         return levels
 
-    def _find_nearest_level(self, price: float, levels: Dict[str, float]) -> Tuple[Tuple[str, float], float]:
+    def _find_nearest_level(
+        self, price: float, levels: Dict[str, float]
+    ) -> Tuple[Tuple[str, float], float]:
         closest_level = min(levels.items(), key=lambda item: abs(price - item[1]))
-        distance_pct = abs(price - closest_level[1]) / closest_level[1] * 100 if closest_level[1] else np.inf
+        distance_pct = (
+            abs(price - closest_level[1]) / closest_level[1] * 100
+            if closest_level[1]
+            else np.inf
+        )
         return closest_level, distance_pct
 
-    def _generate_signal(self, price: float, nearest: Tuple[str, float], trend: str, distance_pct: float) -> str:
+    def _generate_signal(
+        self, price: float, nearest: Tuple[str, float], trend: str, distance_pct: float
+    ) -> str:
         tolerance = self.config.tolerance_pct
         level_price = nearest[1]
 
@@ -151,7 +165,9 @@ class FibonacciRetracementModule(Module):
         if distance_pct == np.inf:
             return 0.0
         proximity_score = max(0.0, 1 - (distance_pct / (self.config.tolerance_pct * 2)))
-        structure_score = min(1.0, structure_range_pct / (self.config.min_range_pct * 3))
+        structure_score = min(
+            1.0, structure_range_pct / (self.config.min_range_pct * 3)
+        )
         return max(0.1, (proximity_score * 0.6 + structure_score * 0.4))
 
     def _insufficient_data(self, reason: str | None = None) -> Dict[str, Any]:

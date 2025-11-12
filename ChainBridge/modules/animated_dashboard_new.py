@@ -43,7 +43,13 @@ CONFIG = {
         "slow_ma_period": 50,
     },
     "ui_tables": {
-        "recent_events_cols": ["timestamp", "symbol", "action", "price", "combined_score"],
+        "recent_events_cols": [
+            "timestamp",
+            "symbol",
+            "action",
+            "price",
+            "combined_score",
+        ],
         "recent_events_label": "Recent Trades",
     },
 }
@@ -93,7 +99,10 @@ class DataProvider:
 
             df = pd.concat(df_list, ignore_index=True)  # type: ignore
             df[_self.config["timestamp_col"]] = pd.to_datetime(df[_self.config["timestamp_col"]])  # type: ignore
-            df.drop_duplicates(subset=[_self.config["timestamp_col"], _self.config["entity_col"]], inplace=True)
+            df.drop_duplicates(
+                subset=[_self.config["timestamp_col"], _self.config["entity_col"]],
+                inplace=True,
+            )
             df.sort_values(_self.config["timestamp_col"], inplace=True)  # type: ignore
             return df
         except Exception as e:
@@ -115,7 +124,9 @@ class DashboardRenderer:
         """Renders the sidebar with controls and state summary."""
         st.sidebar.header("Engine Controls")
         all_entities = self.data[self.config["data_source"]["entity_col"]].unique()  # type: ignore
-        selected_entity = st.sidebar.selectbox("Select Entity to Analyze", all_entities, index=0)
+        selected_entity = st.sidebar.selectbox(
+            "Select Entity to Analyze", all_entities, index=0
+        )
 
         st.sidebar.header("System State Overview")
         latest_row = self.data.iloc[-1]
@@ -136,28 +147,61 @@ class DashboardRenderer:
         }
         for item, value in state_items.items():
             if isinstance(value, float) and value > 1e-6 or isinstance(value, str):
-                st.sidebar.text(f"- {item.upper()}: {value:,.4f}" if isinstance(value, float) else f"- {item.upper()}: {value}")
+                st.sidebar.text(
+                    f"- {item.upper()}: {value:,.4f}"
+                    if isinstance(value, float)
+                    else f"- {item.upper()}: {value}"
+                )
         return selected_entity
 
     def render_entity_activity_chart(self, entity):
         """Renders the main activity chart for a selected entity."""
         cfg = self.config
-        df_entity = self.data[self.data[cfg["data_source"]["entity_col"]] == entity].copy()
+        df_entity = self.data[
+            self.data[cfg["data_source"]["entity_col"]] == entity
+        ].copy()
         if df_entity.empty:
             st.warning("No data for selected entity.")
             return
 
         df_resampled = (
-            df_entity.set_index(cfg["data_source"]["timestamp_col"])[cfg["data_source"]["value_col"]].resample("1T").ohlc().dropna()
+            df_entity.set_index(cfg["data_source"]["timestamp_col"])[
+                cfg["data_source"]["value_col"]
+            ]
+            .resample("1T")
+            .ohlc()
+            .dropna()
         )
-        df_resampled["ma_fast"] = df_resampled["close"].rolling(window=cfg["visualization"]["fast_ma_period"]).mean()
-        df_resampled["ma_slow"] = df_resampled["close"].rolling(window=cfg["visualization"]["slow_ma_period"]).mean()
+        df_resampled["ma_fast"] = (
+            df_resampled["close"]
+            .rolling(window=cfg["visualization"]["fast_ma_period"])
+            .mean()
+        )
+        df_resampled["ma_slow"] = (
+            df_resampled["close"]
+            .rolling(window=cfg["visualization"]["slow_ma_period"])
+            .mean()
+        )
 
-        events = df_entity[df_entity[cfg["data_source"]["event_col"]].str.contains("SIM_", na=False)]
-        positive_events = events[events[cfg["data_source"]["event_col"]] == cfg["data_source"]["positive_event_str"]]
-        negative_events = events[events[cfg["data_source"]["event_col"]] == cfg["data_source"]["negative_event_str"]]
+        events = df_entity[
+            df_entity[cfg["data_source"]["event_col"]].str.contains("SIM_", na=False)
+        ]
+        positive_events = events[
+            events[cfg["data_source"]["event_col"]]
+            == cfg["data_source"]["positive_event_str"]
+        ]
+        negative_events = events[
+            events[cfg["data_source"]["event_col"]]
+            == cfg["data_source"]["negative_event_str"]
+        ]
 
-        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.02, row_heights=[0.8, 0.2])
+        fig = make_subplots(
+            rows=2,
+            cols=1,
+            shared_xaxes=True,
+            vertical_spacing=0.02,
+            row_heights=[0.8, 0.2],
+        )
 
         # Add primary value trace (Candlestick or Line)
         if cfg["visualization"]["chart_type"] == "candlestick":
@@ -176,7 +220,16 @@ class DashboardRenderer:
                 col=1,
             )
         else:  # Default to line chart
-            fig.add_trace(go.Scatter(x=df_resampled.index, y=df_resampled["close"], name="Value", line=dict(color="#00A8CC")), row=1, col=1)
+            fig.add_trace(
+                go.Scatter(
+                    x=df_resampled.index,
+                    y=df_resampled["close"],
+                    name="Value",
+                    line=dict(color="#00A8CC"),
+                ),
+                row=1,
+                col=1,
+            )
 
         fig.add_trace(
             go.Scatter(
@@ -204,7 +257,12 @@ class DashboardRenderer:
                 y=positive_events[cfg["data_source"]["value_col"]],
                 name="Positive Events",
                 mode="markers",
-                marker=dict(color="#2EBE7B", size=10, symbol="triangle-up", line=dict(width=1, color="White")),
+                marker=dict(
+                    color="#2EBE7B",
+                    size=10,
+                    symbol="triangle-up",
+                    line=dict(width=1, color="White"),
+                ),
             ),
             row=1,
             col=1,
@@ -215,14 +273,28 @@ class DashboardRenderer:
                 y=negative_events[cfg["data_source"]["value_col"]],
                 name="Negative Events",
                 mode="markers",
-                marker=dict(color="#D14E55", size=10, symbol="triangle-down", line=dict(width=1, color="White")),
+                marker=dict(
+                    color="#D14E55",
+                    size=10,
+                    symbol="triangle-down",
+                    line=dict(width=1, color="White"),
+                ),
             ),
             row=1,
             col=1,
         )
 
         df_volume = df_entity.set_index(cfg["data_source"]["timestamp_col"])[cfg["data_source"]["activity_volume_col"]].resample("1T").sum()  # type: ignore
-        fig.add_trace(go.Bar(x=df_volume.index, y=df_volume, name="Activity Volume", marker_color="#8884d8"), row=2, col=1)
+        fig.add_trace(
+            go.Bar(
+                x=df_volume.index,
+                y=df_volume,
+                name="Activity Volume",
+                marker_color="#8884d8",
+            ),
+            row=2,
+            col=1,
+        )
 
         fig.update_layout(
             title=f"{entity} Activity Analysis",
@@ -230,7 +302,9 @@ class DashboardRenderer:
             paper_bgcolor="#0E1117",
             plot_bgcolor="#1A1C22",
             xaxis_rangeslider_visible=False,
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            legend=dict(
+                orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1
+            ),
         )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -239,15 +313,30 @@ class DashboardRenderer:
         col1, col2 = st.columns([2, 1])
         with col1:
             st.subheader(self.config["ui_tables"]["recent_events_label"])
-            events_df = self.data[self.data[self.config["data_source"]["event_col"]].str.contains("SIM_", na=False)].tail(10)
-            st.dataframe(events_df[self.config["ui_tables"]["recent_events_cols"]], use_container_width=True)
+            events_df = self.data[
+                self.data[self.config["data_source"]["event_col"]].str.contains(
+                    "SIM_", na=False
+                )
+            ].tail(10)
+            st.dataframe(
+                events_df[self.config["ui_tables"]["recent_events_cols"]],
+                use_container_width=True,
+            )
         with col2:
             st.subheader("Performance Metrics")
-            event_count = len(self.data[self.data[self.config["data_source"]["event_col"]].str.contains("SIM_", na=False)])
+            event_count = len(
+                self.data[
+                    self.data[self.config["data_source"]["event_col"]].str.contains(
+                        "SIM_", na=False
+                    )
+                ]
+            )
             st.metric("Total Events", event_count)
             wins = len(
                 self.data[self.config["state_tracking"]["performance_metric_col"]]
-                > self.data[self.config["state_tracking"]["performance_metric_col"]].shift(1).fillna(0)
+                > self.data[self.config["state_tracking"]["performance_metric_col"]]
+                .shift(1)
+                .fillna(0)
             )
             success_rate = (wins / event_count) * 100 if event_count > 0 else 0
             st.metric("Success Rate", f"{success_rate:.1f}%")
@@ -258,14 +347,18 @@ class DashboardRenderer:
 # ==============================================================================
 def run_app():
     """The main function to orchestrate the dashboard creation."""
-    st.set_page_config(page_title=CONFIG["dashboard_title"], page_icon="🤖", layout="wide")
+    st.set_page_config(
+        page_title=CONFIG["dashboard_title"], page_icon="🤖", layout="wide"
+    )
     apply_styling()
 
     data_provider = DataProvider(CONFIG)
     df = data_provider.load_data()
 
     if df.empty:
-        st.warning("No valid decision engine data found. Please run the bot to generate logs.")
+        st.warning(
+            "No valid decision engine data found. Please run the bot to generate logs."
+        )
         st.stop()
 
     renderer = DashboardRenderer(CONFIG, df)

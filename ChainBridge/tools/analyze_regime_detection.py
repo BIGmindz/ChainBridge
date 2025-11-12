@@ -126,7 +126,9 @@ def analyze_weight_optimization(stats: Dict) -> None:
     for signal, data in sorted_signals:
         pct_change = data.get("pct_change", 0)
         direction = "↑" if pct_change > 0 else "↓"
-        print(f"{signal}: {direction} {abs(pct_change):.2f}% ({data.get('initial', 0):.4f} → {data.get('current', 0):.4f})")
+        print(
+            f"{signal}: {direction} {abs(pct_change):.2f}% ({data.get('initial', 0):.4f} → {data.get('current', 0):.4f})"
+        )
 
 
 def analyze_regime_confidence(stats: Dict) -> None:
@@ -162,7 +164,9 @@ def provide_improvement_recommendations(stats: Dict) -> None:
     # Check for regime detection balance
     if len(regimes) <= 1:
         print("ISSUE: Only one market regime detected")
-        print("Recommendation: Decrease trend_threshold to make detection more sensitive")
+        print(
+            "Recommendation: Decrease trend_threshold to make detection more sensitive"
+        )
         print("  - Change self.trend_threshold = 0.10 to 0.08")
 
     if "bull" not in regimes and "bear" not in regimes:

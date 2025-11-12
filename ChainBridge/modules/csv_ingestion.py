@@ -97,7 +97,9 @@ class CSVIngestionModule(Module):
 
         try:
             # Quick analysis using pandas
-            sample_df = pd.read_csv(file_path, nrows=5)  # Read first 5 rows  # type: ignore
+            sample_df = pd.read_csv(
+                file_path, nrows=5
+            )  # Read first 5 rows  # type: ignore
 
             analysis = {
                 "valid": True,
@@ -112,7 +114,9 @@ class CSVIngestionModule(Module):
             issues = []
 
             # Check for unnamed columns
-            unnamed_cols = [col for col in sample_df.columns if col.startswith("Unnamed")]
+            unnamed_cols = [
+                col for col in sample_df.columns if col.startswith("Unnamed")
+            ]
             if unnamed_cols:
                 issues.append(f"Unnamed columns detected: {unnamed_cols}")  # type: ignore
 

@@ -31,7 +31,9 @@ import json
 
 ROOT = Path(__file__).resolve().parents[1]
 
-FENCE_RE = re.compile(r"^(?P<indent>\s*)(?P<marker>(`{3,}|~{3,}))(?:\s*(?P<lang>\S.*)?)?\s*$")
+FENCE_RE = re.compile(
+    r"^(?P<indent>\s*)(?P<marker>(`{3,}|~{3,}))(?:\s*(?P<lang>\S.*)?)?\s*$"
+)
 
 
 def infer_language(code_block_lines: list[str]) -> str:
@@ -49,20 +51,57 @@ def infer_language(code_block_lines: list[str]) -> str:
     first = lines[0]
 
     shell_indicators = ("$ ", "#!/bin/bash", "#!/usr/bin/env bash")
-    shell_cmds = {"pip", "python", "pytest", "git", "ls", "echo", "cat", "make", "docker", "export"}
-    py_keywords = {"import ", "from ", "def ", "class ", "async def ", "with ", "for ", "if ", "print("}
-    yaml_keys = {"version:", "services:", "apiVersion:", "kind:", "metadata:", "spec:", "name:"}
+    shell_cmds = {
+        "pip",
+        "python",
+        "pytest",
+        "git",
+        "ls",
+        "echo",
+        "cat",
+        "make",
+        "docker",
+        "export",
+    }
+    py_keywords = {
+        "import ",
+        "from ",
+        "def ",
+        "class ",
+        "async def ",
+        "with ",
+        "for ",
+        "if ",
+        "print(",
+    }
+    yaml_keys = {
+        "version:",
+        "services:",
+        "apiVersion:",
+        "kind:",
+        "metadata:",
+        "spec:",
+        "name:",
+    }
 
     # Bash / shell
-    if first.startswith(shell_indicators) or any(line.startswith("$") for line in lines):
+    if first.startswith(shell_indicators) or any(
+        line.startswith("$") for line in lines
+    ):
         return "bash"
-    if sum(any(tok in line for tok in shell_cmds) for line in lines) >= 2 and not any(line.strip().startswith("def ") for line in lines):
+    if sum(any(tok in line for tok in shell_cmds) for line in lines) >= 2 and not any(
+        line.strip().startswith("def ") for line in lines
+    ):
         return "bash"
 
     # Python
-    if first.startswith("#!/usr/bin/env python") or any(line.startswith(k) for k in py_keywords for line in lines):
+    if first.startswith("#!/usr/bin/env python") or any(
+        line.startswith(k) for k in py_keywords for line in lines
+    ):
         return "python"
-    if any(line.endswith(":") and line.split()[0] in {"class", "def"} for line in lines):
+    if any(
+        line.endswith(":") and line.split()[0] in {"class", "def"} for line in lines
+    ):
         return "python"
 
     # JSON (quick heuristic: starts with { or [ and json.loads succeeds on a trimmed subset)
@@ -81,15 +120,16 @@ def infer_language(code_block_lines: list[str]) -> str:
         return "yaml"
 
     # TOML
-    if sum(1 for line in lines if re.match(r"^[A-Za-z0-9_.-]+\s*=\s*.+", line)) >= 2 and any(
-        line.startswith("[") and line.endswith("]") for line in lines
-    ):
+    if sum(
+        1 for line in lines if re.match(r"^[A-Za-z0-9_.-]+\s*=\s*.+", line)
+    ) >= 2 and any(line.startswith("[") and line.endswith("]") for line in lines):
         return "toml"
 
     # INI
     if (
         any(line.startswith("[") and line.endswith("]") for line in lines)
-        and sum(1 for line in lines if re.match(r"^[A-Za-z0-9_.-]+\s*=\s*.+", line)) >= 1
+        and sum(1 for line in lines if re.match(r"^[A-Za-z0-9_.-]+\s*=\s*.+", line))
+        >= 1
     ):
         return "ini"
 
@@ -137,11 +177,19 @@ def normalize_file(path: Path) -> tuple[bool, int]:
                 if current_marker and marker.startswith(current_marker[0]):
                     # Perform inference if the opening fence we wrote was 'text'
                     if buffer and out_lines:
-                        open_line = out_lines[-(len(buffer) + 1)] if len(out_lines) >= (len(buffer) + 1) else out_lines[-1]
-                        if open_line.strip().startswith(marker) and open_line.strip().endswith(" text"):
+                        open_line = (
+                            out_lines[-(len(buffer) + 1)]
+                            if len(out_lines) >= (len(buffer) + 1)
+                            else out_lines[-1]
+                        )
+                        if open_line.strip().startswith(
+                            marker
+                        ) and open_line.strip().endswith(" text"):
                             inferred = infer_language(buffer)
                             if inferred != "text":
-                                out_lines[-(len(buffer) + 1)] = open_line.replace(" text", f" {inferred}")
+                                out_lines[-(len(buffer) + 1)] = open_line.replace(
+                                    " text", f" {inferred}"
+                                )
                     buffer = []
                     in_fence = False
                     current_marker = None
@@ -151,7 +199,10 @@ def normalize_file(path: Path) -> tuple[bool, int]:
             buffer.append(line)
 
     if changed:
-        path.write_text("\n".join(out_lines) + ("\n" if text.endswith("\n") else ""), encoding="utf-8")
+        path.write_text(
+            "\n".join(out_lines) + ("\n" if text.endswith("\n") else ""),
+            encoding="utf-8",
+        )
     return changed, fixes
 
 

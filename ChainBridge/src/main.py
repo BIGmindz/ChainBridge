@@ -141,16 +141,22 @@ def run_bot(once: bool = False) -> None:
                 changed = signal_out != last_signal[symbol]
 
                 # Status line
-                print(f"[{utc_now_str()}] {symbol:>10}: ${price:,.2f} | RSI {rsi_val:5.2f} | {signal_out}{' (new)' if changed else ''}")
+                print(
+                    f"[{utc_now_str()}] {symbol:>10}: ${price:,.2f} | RSI {rsi_val:5.2f} | {signal_out}{' (new)' if changed else ''}"
+                )
 
                 # Alert only on new actionable signals and respecting cooldown
                 if signal_out in ("BUY", "SELL") and changed and cooldown_ok:
-                    print(f"SIGNAL: {signal_out} {symbol} @ ${price:,.2f} (RSI {rsi_val:0.2f})")
+                    print(
+                        f"SIGNAL: {signal_out} {symbol} @ ${price:,.2f} (RSI {rsi_val:0.2f})"
+                    )
                     last_alert_ts[symbol] = now
 
                 # Persist log line
                 with open(log_path, "a") as f:
-                    f.write(f"{utc_now_str()},{exchange_id},{symbol},{price},{rsi_val:.4f},{signal_out},{timeframe}\n")
+                    f.write(
+                        f"{utc_now_str()},{exchange_id},{symbol},{price},{rsi_val:.4f},{signal_out},{timeframe}\n"
+                    )
 
                 last_signal[symbol] = signal_out
 
@@ -172,7 +178,9 @@ def main():
     """CLI entrypoint."""
     print("[DBG] entered main()")
     parser = argparse.ArgumentParser(description="Benson RSI Bot")
-    parser.add_argument("--once", action="store_true", help="Run a single cycle and exit")
+    parser.add_argument(
+        "--once", action="store_true", help="Run a single cycle and exit"
+    )
     parser.add_argument("--test", action="store_true", help="Run unit tests and exit")
     args = parser.parse_args()
 

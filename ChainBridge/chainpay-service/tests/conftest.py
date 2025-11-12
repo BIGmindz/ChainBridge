@@ -16,7 +16,15 @@ from sqlalchemy.pool import StaticPool
 from fastapi.testclient import TestClient
 
 from app.main import app, get_db
-from app.models import Base, PaymentIntent, PaymentSchedule, RiskTier, PaymentStatus, ScheduleType, PaymentScheduleItem
+from app.models import (
+    Base,
+    PaymentIntent,
+    PaymentSchedule,
+    RiskTier,
+    PaymentStatus,
+    ScheduleType,
+    PaymentScheduleItem,
+)
 
 
 # In-memory SQLite for tests
@@ -125,7 +133,9 @@ def payment_intent_high_risk(db_session: Session) -> PaymentIntent:
 
 
 @pytest.fixture
-def payment_schedule_low_risk(db_session: Session, payment_intent_low_risk: PaymentIntent) -> PaymentSchedule:
+def payment_schedule_low_risk(
+    db_session: Session, payment_intent_low_risk: PaymentIntent
+) -> PaymentSchedule:
     """Create a LOW-risk payment schedule (20/70/10) for testing."""
     schedule = PaymentSchedule(
         payment_intent_id=payment_intent_low_risk.id,
@@ -168,7 +178,9 @@ def payment_schedule_low_risk(db_session: Session, payment_intent_low_risk: Paym
 
 
 @pytest.fixture
-def payment_schedule_high_risk(db_session: Session, payment_intent_high_risk: PaymentIntent) -> PaymentSchedule:
+def payment_schedule_high_risk(
+    db_session: Session, payment_intent_high_risk: PaymentIntent
+) -> PaymentSchedule:
     """Create a HIGH-risk payment schedule (0/80/20) for testing."""
     schedule = PaymentSchedule(
         payment_intent_id=payment_intent_high_risk.id,

@@ -16,7 +16,9 @@ from sklearn.metrics import classification_report, confusion_matrix
 import joblib
 
 # Setup logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -46,11 +48,15 @@ class MarketRegimeTrainer:
                     # Get the most recent file by timestamp
                     latest_file = max(matching_files, key=os.path.getctime)
                     data_path = latest_file
-                    logger.info(f"Using latest training data file: {os.path.basename(data_path)}")
+                    logger.info(
+                        f"Using latest training data file: {os.path.basename(data_path)}"
+                    )
                 else:
                     logger.warning("No training data found, generating sample data")
                     self._generate_sample_data()
-                    return self.load_training_data()  # Recursive call to load the generated data
+                    return (
+                        self.load_training_data()
+                    )  # Recursive call to load the generated data
 
             df = pd.read_csv(data_path)  # type: ignore
 
@@ -113,8 +119,17 @@ class MarketRegimeTrainer:
                 random_state=42,
                 verbose=-1,  # Suppress output
             ),
-            "RandomForest": RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42, class_weight="balanced"),
-            "SVM": SVC(kernel="rbf", C=1.0, gamma="scale", probability=True, random_state=42, class_weight="balanced"),
+            "RandomForest": RandomForestClassifier(
+                n_estimators=100, max_depth=10, random_state=42, class_weight="balanced"
+            ),
+            "SVM": SVC(
+                kernel="rbf",
+                C=1.0,
+                gamma="scale",
+                probability=True,
+                random_state=42,
+                class_weight="balanced",
+            ),
         }
 
         results = {}
@@ -135,7 +150,13 @@ class MarketRegimeTrainer:
                 y_pred = model.predict(X_test)
 
                 # Store results
-                results[name] = {"model": model, "cv_mean": cv_mean, "cv_std": cv_std, "predictions": y_pred, "test_data": (X_test, y_test)}
+                results[name] = {
+                    "model": model,
+                    "cv_mean": cv_mean,
+                    "cv_std": cv_std,
+                    "predictions": y_pred,
+                    "test_data": (X_test, y_test),
+                }
 
                 logger.info(f"✅ {name} trained - CV: {cv_mean:.3f} (+/- {cv_std:.3f})")
             except Exception as e:
@@ -145,7 +166,9 @@ class MarketRegimeTrainer:
         # Select best model
         if results:
             best_model_name = max(results.keys(), key=lambda x: results[x]["cv_mean"])
-            logger.info(f"🏆 Best model: {best_model_name} (CV: {results[best_model_name]['cv_mean']:.3f})")
+            logger.info(
+                f"🏆 Best model: {best_model_name} (CV: {results[best_model_name]['cv_mean']:.3f})"
+            )
 
             return results, best_model_name
         else:
@@ -218,7 +241,9 @@ class MarketRegimeTrainer:
         X = X.fillna(X.mean())
 
         # Split data
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42, stratify=y
+        )
 
         logger.info(f"📊 Training set: {len(X_train)} samples")
         logger.info(f"🧪 Test set: {len(X_test)} samples")
@@ -229,7 +254,9 @@ class MarketRegimeTrainer:
         if results and best_model_name:
             # Save best model
             best_results = results[best_model_name]
-            model_path = self.save_model(best_results, best_model_name, label_encoder, feature_cols)
+            model_path = self.save_model(
+                best_results, best_model_name, label_encoder, feature_cols
+            )
 
             # Evaluate model
             self.evaluate_model(best_results, label_encoder)

@@ -10,7 +10,9 @@ import sys
 import re
 
 # Add project root to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 
 def test_dashboard_import():
@@ -102,7 +104,12 @@ def test_dashboard_structure():
     """Test that the dashboard has the expected structure"""
     dashboard_dir = "apps/dashboard"
 
-    required_files = ["comparison_dashboard.py", "__init__.py", "README.md", "run_dashboard.sh"]
+    required_files = [
+        "comparison_dashboard.py",
+        "__init__.py",
+        "README.md",
+        "run_dashboard.sh",
+    ]
 
     missing_files = []
     for file in required_files:
@@ -162,7 +169,9 @@ def main():
         print("\n💡 To run the dashboard:")
         print("   1. Install streamlit: pip install streamlit")
         print("   2. Run backtester: python apps/backtester/backtester.py")
-        print("   3. Launch dashboard: streamlit run apps/dashboard/comparison_dashboard.py")
+        print(
+            "   3. Launch dashboard: streamlit run apps/dashboard/comparison_dashboard.py"
+        )
     else:
         print("⚠️  Some tests failed. Check the output above.")
 

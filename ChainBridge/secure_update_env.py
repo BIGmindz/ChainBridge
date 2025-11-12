@@ -53,7 +53,9 @@ def update_env(env_path=".env"):
         pass
 
     print("✔ API credentials updated; file permissions set to 600 (if supported).")
-    print("⚠ Treat these credentials as compromised if they were previously committed; rotate them immediately.")
+    print(
+        "⚠ Treat these credentials as compromised if they were previously committed; rotate them immediately."
+    )
 
     return 0
 

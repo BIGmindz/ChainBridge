@@ -33,7 +33,9 @@ import plotly.graph_objects as go
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, PROJECT_ROOT)
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
+)
 
 # --- Core Backtesting Logic ---
 
@@ -50,7 +52,9 @@ def run_backtest(strategy_name: str, strategy_config: dict, data: pd.DataFrame):
         model = joblib.load(os.path.join(strategy_path, "model.pkl"))
         scaler = joblib.load(os.path.join(strategy_path, "scaler.pkl"))
     except FileNotFoundError:
-        logging.error(f"FATAL: model.pkl or scaler.pkl not found for '{strategy_name}'. Please train the strategy first.")
+        logging.error(
+            f"FATAL: model.pkl or scaler.pkl not found for '{strategy_name}'. Please train the strategy first."
+        )
         return
 
     # 2. Filter data for the symbols this strategy trades
@@ -58,7 +62,9 @@ def run_backtest(strategy_name: str, strategy_config: dict, data: pd.DataFrame):
     df = data[data["symbol"].isin(target_symbols)].copy()
 
     if df.empty:
-        logging.warning("No historical data available for the target symbols. Skipping backtest.")
+        logging.warning(
+            "No historical data available for the target symbols. Skipping backtest."
+        )
         return
 
     # 3. Prepare Features
@@ -109,7 +115,9 @@ def run_backtest(strategy_name: str, strategy_config: dict, data: pd.DataFrame):
     generate_performance_report(df, strategy_name, initial_capital)
 
 
-def generate_performance_report(df: pd.DataFrame, strategy_name: str, initial_capital: float):
+def generate_performance_report(
+    df: pd.DataFrame, strategy_name: str, initial_capital: float
+):
     """
     Calculates key performance metrics and saves a report.
     """
@@ -120,7 +128,11 @@ def generate_performance_report(df: pd.DataFrame, strategy_name: str, initial_ca
     total_return_pct = (final_value - initial_capital) / initial_capital * 100
 
     daily_returns = df["returns"].resample("D").sum() if isinstance(df.index, pd.DatetimeIndex) else df["returns"]  # type: ignore
-    sharpe_ratio = (daily_returns.mean() / daily_returns.std()) * np.sqrt(252) if daily_returns.std() != 0 else 0
+    sharpe_ratio = (
+        (daily_returns.mean() / daily_returns.std()) * np.sqrt(252)
+        if daily_returns.std() != 0
+        else 0
+    )
 
     # Max Drawdown Calculation
     cumulative_returns = (1 + df["returns"]).cumprod()
@@ -143,8 +155,14 @@ def generate_performance_report(df: pd.DataFrame, strategy_name: str, initial_ca
 
     # 3. Generate Equity Curve Chart
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df.index, y=df["portfolio_value"], name="Portfolio Value"))
-    fig.update_layout(title=f"Equity Curve - {strategy_name.upper()}", xaxis_title="Date", yaxis_title="Portfolio Value ($)")
+    fig.add_trace(
+        go.Scatter(x=df.index, y=df["portfolio_value"], name="Portfolio Value")
+    )
+    fig.update_layout(
+        title=f"Equity Curve - {strategy_name.upper()}",
+        xaxis_title="Date",
+        yaxis_title="Portfolio Value ($)",
+    )
     chart_path = os.path.join("strategies", strategy_name, "backtest_equity_curve.html")
     fig.write_html(chart_path)
 
@@ -155,7 +173,9 @@ def main():
     try:
         data = pd.read_csv("data/consolidated_market_data.csv", index_col="timestamp", parse_dates=True)  # type: ignore
     except FileNotFoundError:
-        logging.error("FATAL: 'data/consolidated_market_data.csv' not found. Please run a data collection script first.")
+        logging.error(
+            "FATAL: 'data/consolidated_market_data.csv' not found. Please run a data collection script first."
+        )
         return
 
     # Discover and backtest all defined strategies

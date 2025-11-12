@@ -4,9 +4,16 @@ import re
 # Redaction patterns - add more patterns if you need to redact other secrets
 SENSITIVE_PATTERNS = [
     re.compile(r'(API_KEY\s*=\s*["\']?)[A-Za-z0-9+/=._-]{8,}([\'" ]?)', re.IGNORECASE),
-    re.compile(r'(API_SECRET\s*=\s*["\']?)[A-Za-z0-9+/=._-]{8,}([\'" ]?)', re.IGNORECASE),
-    re.compile(r'(api_key["\']?\s*[:=]\s*["\']?)[A-Za-z0-9+/=._-]{8,}([\'" ]?)', re.IGNORECASE),
-    re.compile(r'(api_secret["\']?\s*[:=]\s*["\']?)[A-Za-z0-9+/=._-]{8,}([\'" ]?)', re.IGNORECASE),
+    re.compile(
+        r'(API_SECRET\s*=\s*["\']?)[A-Za-z0-9+/=._-]{8,}([\'" ]?)', re.IGNORECASE
+    ),
+    re.compile(
+        r'(api_key["\']?\s*[:=]\s*["\']?)[A-Za-z0-9+/=._-]{8,}([\'" ]?)', re.IGNORECASE
+    ),
+    re.compile(
+        r'(api_secret["\']?\s*[:=]\s*["\']?)[A-Za-z0-9+/=._-]{8,}([\'" ]?)',
+        re.IGNORECASE,
+    ),
 ]
 
 

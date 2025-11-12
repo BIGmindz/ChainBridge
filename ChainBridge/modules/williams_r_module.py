@@ -26,7 +26,9 @@ class WilliamsRModule(Module):
 
     def get_schema(self) -> Dict[str, Any]:
         return {
-            "input": {"ohlcv_data": "List of OHLCV candles [ts, open, high, low, close, volume]"},
+            "input": {
+                "ohlcv_data": "List of OHLCV candles [ts, open, high, low, close, volume]"
+            },
             "output": {
                 "williams_r_value": "Latest Williams %R reading (-100 to 0)",
                 "signal": "BUY/SELL/HOLD decision",
@@ -63,8 +65,18 @@ class WilliamsRModule(Module):
         }
 
     def _ohlcv_to_dataframe(self, ohlcv: List[List[Any]]) -> pd.DataFrame:
-        df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
-        return df.astype({"open": float, "high": float, "low": float, "close": float, "volume": float})
+        df = pd.DataFrame(
+            ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"]
+        )
+        return df.astype(
+            {
+                "open": float,
+                "high": float,
+                "low": float,
+                "close": float,
+                "volume": float,
+            }
+        )
 
     def _calculate_williams_r(self, df: pd.DataFrame) -> pd.Series:
         high = df["high"]

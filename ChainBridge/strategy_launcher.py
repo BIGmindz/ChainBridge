@@ -4,7 +4,9 @@ import logging
 import os
 import inquirer
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
+)
 
 
 def discover_strategies(base_path="strategies"):
@@ -33,7 +35,9 @@ def discover_strategies(base_path="strategies"):
                     pass
 
             # A valid strategy must have a config file and either a model file or be an ensemble
-            if os.path.exists(config_path) and (os.path.exists(model_path) or is_ensemble):
+            if os.path.exists(config_path) and (
+                os.path.exists(model_path) or is_ensemble
+            ):
                 strategies[strategy_name] = {
                     "config_path": config_path,
                     "model_path": model_path if os.path.exists(model_path) else None,
@@ -45,8 +49,12 @@ def discover_strategies(base_path="strategies"):
 def select_strategy(strategies: dict):
     """Prompts the user to select a strategy to run."""
     if not strategies:
-        logging.error("FATAL: No valid strategies found in the 'strategies/' directory.")
-        logging.error("A valid strategy requires a 'config.yaml' file and either a 'model.pkl' file or ensemble configuration.")
+        logging.error(
+            "FATAL: No valid strategies found in the 'strategies/' directory."
+        )
+        logging.error(
+            "A valid strategy requires a 'config.yaml' file and either a 'model.pkl' file or ensemble configuration."
+        )
         sys.exit(1)
 
     strategy_choices = list(strategies.keys())  # type: ignore
@@ -79,7 +87,9 @@ def main():
 
     strategy_engine_script = "strategy_engine.py"
     if not os.path.exists(strategy_engine_script):
-        logging.error(f"FATAL: Strategy Engine not found at '{strategy_engine_script}'.")
+        logging.error(
+            f"FATAL: Strategy Engine not found at '{strategy_engine_script}'."
+        )
         sys.exit(1)
 
     logging.info("======================================================")
@@ -95,9 +105,13 @@ def main():
         subprocess.run([sys.executable, strategy_engine_script], check=True, env=env)
 
     except KeyboardInterrupt:
-        logging.info("\nMaster launcher detected user shutdown (Ctrl+C). Session terminated.")
+        logging.info(
+            "\nMaster launcher detected user shutdown (Ctrl+C). Session terminated."
+        )
     except subprocess.CalledProcessError as e:
-        logging.error(f"The trading session exited with an error (code {e.returncode}).")
+        logging.error(
+            f"The trading session exited with an error (code {e.returncode})."
+        )
     except Exception as e:
         logging.error(f"An unexpected error occurred: {e}")
 

@@ -59,7 +59,9 @@ class TradingDashboard:
         if self.trades:
             print("\n💰 RECENT TRADES:")
             for trade in self.trades[-5:]:
-                print(f"  {trade.get('timestamp', 'N/A')}: {trade.get('side', 'N/A')} - P&L: ${trade.get('pnl', 0):+.2f}")
+                print(
+                    f"  {trade.get('timestamp', 'N/A')}: {trade.get('side', 'N/A')} - P&L: ${trade.get('pnl', 0):+.2f}"
+                )
 
         print("=" * 60)
 

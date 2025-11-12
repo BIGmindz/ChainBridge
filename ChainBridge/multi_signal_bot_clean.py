@@ -74,14 +74,23 @@ def safe_fetch_ticker(exchange, symbol):
         ticker = exchange.fetch_ticker(symbol)
         if not ticker or not isinstance(ticker, dict):
             raise ValueError(f"Invalid ticker data format for {symbol}")
-        price = ticker.get("last") or ticker.get("close") or ticker.get("bid") or ticker.get("ask")
+        price = (
+            ticker.get("last")
+            or ticker.get("close")
+            or ticker.get("bid")
+            or ticker.get("ask")
+        )
         if price is None or price <= 0:
             raise ValueError(f"No valid price in ticker data for {symbol}")
         return {"last": float(price)}  # type: ignore
     except Exception as e:
-        error_msg = f"🚨 CRITICAL: Failed to fetch live ticker data for {symbol}: {str(e)}"
+        error_msg = (
+            f"🚨 CRITICAL: Failed to fetch live ticker data for {symbol}: {str(e)}"
+        )
         print(error_msg)
-        print("🚨 LIVE TRADING REQUIRES REAL MARKET DATA - Check your connection and API!")
+        print(
+            "🚨 LIVE TRADING REQUIRES REAL MARKET DATA - Check your connection and API!"
+        )
         raise RuntimeError(f"Live ticker fetch failed for {symbol}: {str(e)}")
 
 
@@ -93,9 +102,13 @@ def safe_fetch_ohlcv(exchange, symbol, timeframe, limit=100):
             raise ValueError(f"No OHLCV data received from exchange for {symbol}")
         return ohlcv_data
     except Exception as e:
-        error_msg = f"🚨 CRITICAL: Failed to fetch live OHLCV data for {symbol}: {str(e)}"
+        error_msg = (
+            f"🚨 CRITICAL: Failed to fetch live OHLCV data for {symbol}: {str(e)}"
+        )
         print(error_msg)
-        print("🚨 LIVE TRADING REQUIRES REAL MARKET DATA - Check your connection and API!")
+        print(
+            "🚨 LIVE TRADING REQUIRES REAL MARKET DATA - Check your connection and API!"
+        )
         raise RuntimeError(f"Live data fetch failed for {symbol}: {str(e)}")
 
 
@@ -171,7 +184,9 @@ def prepare_price_data(ohlcv_data, symbol: str = ""):
     if not ohlcv_data or isinstance(ohlcv_data, float):
         error_msg = f"🚨 CRITICAL ERROR: No live OHLCV data available for {symbol}!"
         print(error_msg)
-        print("🚨 This bot requires LIVE market data. Check your internet connection and exchange API.")
+        print(
+            "🚨 This bot requires LIVE market data. Check your internet connection and exchange API."
+        )
         raise RuntimeError(f"Live trading requires real market data for {symbol}")
 
     # Parse real OHLCV data
@@ -203,7 +218,13 @@ def prepare_price_data(ohlcv_data, symbol: str = ""):
 
 
 ADAPTIVE_SIGNAL_LAYERS_DEFAULT: Dict[str, List[str]] = {
-    "LAYER_1_TECHNICAL": ["RSI", "MACD", "BollingerBands", "VolumeProfile", "Sentiment"],
+    "LAYER_1_TECHNICAL": [
+        "RSI",
+        "MACD",
+        "BollingerBands",
+        "VolumeProfile",
+        "Sentiment",
+    ],
     "LAYER_2_LOGISTICS": ["LogisticsSignal"],
     "LAYER_3_GLOBAL_MACRO": ["GlobalMacro", "AdoptionTracker", "RegionCryptoMapper"],
     "LAYER_4_ADOPTION": ["NewListingsRadar"],
@@ -307,7 +328,9 @@ def build_aggregator_weights(
     return {name: weight / total for name, weight in base_weights.items()}
 
 
-def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, markets_file: str = None) -> None:
+def run_multi_signal_bot(
+    once: bool = False, dry_preflight: bool = False, markets_file: str = None
+) -> None:
     """Main bot execution logic."""
     print("\n🚀 Multi-Signal Paper Trading Bot Starting...")
 
@@ -361,12 +384,16 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
                 else:
                     cm = info.get("cost_min")
                     am = info.get("amount_min")
-                    print(f"{s}: found_as={info.get('found_as')}, cost_min={cm}, amount_min={am}")
+                    print(
+                        f"{s}: found_as={info.get('found_as')}, cost_min={cm}, amount_min={am}"
+                    )
 
             # Determine missing symbols as before
             missing = check_markets_have_minima(markets, symbols if symbols else [])
             if missing:
-                print(f"\n🚨 PREFLIGHT FAILED: missing minima/limits for symbols: {missing}")
+                print(
+                    f"\n🚨 PREFLIGHT FAILED: missing minima/limits for symbols: {missing}"
+                )
                 sys.exit(1)
             print("\n✅ PREFLIGHT PASSED: minima/limits present for monitored symbols")
             sys.exit(0)
@@ -381,13 +408,21 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
             markets = exchange.load_markets()
             missing = check_markets_have_minima(markets, symbols if symbols else [])
             if missing:
-                print(f"🚨 LIVE PRECHECK FAILED: missing minima/limits for symbols: {missing}")
-                print("🚨 Aborting live mode. Set PAPER=true to continue in paper mode or fix market metadata.")
+                print(
+                    f"🚨 LIVE PRECHECK FAILED: missing minima/limits for symbols: {missing}"
+                )
+                print(
+                    "🚨 Aborting live mode. Set PAPER=true to continue in paper mode or fix market metadata."
+                )
                 return
-            print("✅ Live preflight checks passed: required minima/limits present for monitored symbols")
+            print(
+                "✅ Live preflight checks passed: required minima/limits present for monitored symbols"
+            )
         except Exception as e:
             print(f"🚨 LIVE PRECHECK FAILED: {e}")
-            print("🚨 Aborting live mode. Set PAPER=true to continue in paper mode or fix markets.")
+            print(
+                "🚨 Aborting live mode. Set PAPER=true to continue in paper mode or fix markets."
+            )
             return
     # Remove problematic symbols that have unreliable price feeds
     filtered = [s for s in symbols if s.upper() != "KIN/USD"]
@@ -406,7 +441,9 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
             print(f"⚠️ Removing unsupported symbols for {exchange_id}: {removed}")
         symbols = supported
         if not symbols:
-            raise RuntimeError(f"No valid symbols remain for {exchange_id} after filtering: {removed}")
+            raise RuntimeError(
+                f"No valid symbols remain for {exchange_id} after filtering: {removed}"
+            )
 
     # Setup exchange adapter
     exchange_adapter = ExchangeAdapter(exchange, cfg)
@@ -493,7 +530,9 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
     # RADICAL FIX: Detect live mode and fetch real balance
     is_live_mode = os.getenv("PAPER", "true").lower() == "false"
     if is_live_mode:
-        budget_manager = BudgetManager(initial_capital=initial_capital, exchange=exchange, live_mode=True)
+        budget_manager = BudgetManager(
+            initial_capital=initial_capital, exchange=exchange, live_mode=True
+        )
     else:
         budget_manager = BudgetManager(initial_capital=initial_capital)
 
@@ -514,8 +553,12 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
     print(f"Exchange: {exchange_id}")
     print(f"Monitoring: {symbols}")
     print(f"Timeframe: {timeframe}")
-    print("Signal Modules: RSI, MACD, Bollinger Bands, Volume Profile, Sentiment Analysis,")
-    print("  Logistics Signals, Global Macro, Region-Specific Crypto, New Listings Radar")
+    print(
+        "Signal Modules: RSI, MACD, Bollinger Bands, Volume Profile, Sentiment Analysis,"
+    )
+    print(
+        "  Logistics Signals, Global Macro, Region-Specific Crypto, New Listings Radar"
+    )
     print(f"Cooldown: {cooldown_min} min")
     print("-" * 80)
 
@@ -556,20 +599,32 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
                         # CRITICAL: Never use mock data - fail if we can't get real data
                         error_msg = f"🚨 CRITICAL: Cannot fetch live price for {symbol}: {str(e)}"
                         print(error_msg)
-                        print("🚨 LIVE TRADING REQUIRES REAL MARKET DATA - Check your connection!")
-                        raise RuntimeError(f"Live trading failed: No real price data for {symbol}")
+                        print(
+                            "🚨 LIVE TRADING REQUIRES REAL MARKET DATA - Check your connection!"
+                        )
+                        raise RuntimeError(
+                            f"Live trading failed: No real price data for {symbol}"
+                        )
 
                     # CRITICAL: Always fetch real OHLCV data - never use mock data
                     try:
-                        ohlcv_data = safe_fetch_ohlcv(exchange, symbol, timeframe, limit=200)
+                        ohlcv_data = safe_fetch_ohlcv(
+                            exchange, symbol, timeframe, limit=200
+                        )
                         if not ohlcv_data or len(ohlcv_data) == 0:
                             raise ValueError(f"No OHLCV data received for {symbol}")
-                        print(f"📊 LIVE OHLCV data fetched for {symbol}: {len(ohlcv_data)} candles")
+                        print(
+                            f"📊 LIVE OHLCV data fetched for {symbol}: {len(ohlcv_data)} candles"
+                        )
                     except Exception as e:
                         error_msg = f"🚨 CRITICAL: Cannot fetch live OHLCV data for {symbol}: {str(e)}"
                         print(error_msg)
-                        print("🚨 LIVE TRADING REQUIRES REAL MARKET DATA - Check your connection!")
-                        raise RuntimeError(f"Live trading failed: No real OHLCV data for {symbol}")
+                        print(
+                            "🚨 LIVE TRADING REQUIRES REAL MARKET DATA - Check your connection!"
+                        )
+                        raise RuntimeError(
+                            f"Live trading failed: No real OHLCV data for {symbol}"
+                        )
 
                     # Format data for signal modules
                     price_data = prepare_price_data(ohlcv_data, symbol)
@@ -580,8 +635,14 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
                     for pos_id in open_positions_ids:
                         pos = budget_manager.positions.get(pos_id)
                         if pos and pos.get("symbol") == symbol:
-                            update_result = budget_manager.update_position(pos_id, last_price)
-                            if isinstance(update_result, dict) and update_result.get("status") is None and update_result.get("success"):
+                            update_result = budget_manager.update_position(
+                                pos_id, last_price
+                            )
+                            if (
+                                isinstance(update_result, dict)
+                                and update_result.get("status") is None
+                                and update_result.get("success")
+                            ):
                                 # A position was closed; record trade in trades log
                                 trade = update_result.get("trade")
                                 if trade:
@@ -589,12 +650,18 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
                                         {
                                             "timestamp": now_utc,
                                             "symbol": trade["symbol"],
-                                            "action": ("SELL" if trade["side"] == "BUY" else "BUY"),
+                                            "action": (
+                                                "SELL"
+                                                if trade["side"] == "BUY"
+                                                else "BUY"
+                                            ),
                                             "price": float(last_price),  # type: ignore
                                             "size": trade["size"],
                                             "quantity": trade["quantity"],
                                             "pnl": trade["pnl"],
-                                            "reason": trade.get("reason", "TAKE_PROFIT"),
+                                            "reason": trade.get(
+                                                "reason", "TAKE_PROFIT"
+                                            ),
                                         }
                                     )
                                     # Also notify exchange adapter (paper)
@@ -623,7 +690,9 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
 
                             # Check for required fields
                             if "signal" not in result:
-                                print(f"Warning: {name} module didn't return a 'signal' field, using {default_signal}")
+                                print(
+                                    f"Warning: {name} module didn't return a 'signal' field, using {default_signal}"
+                                )
                                 result["signal"] = default_signal
 
                             return {
@@ -645,16 +714,24 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
                     print(f"Running signal modules for {symbol}...")
 
                     # RSI signal
-                    module_signals["RSI"] = process_module(rsi, "RSI", {"price_data": price_data})
+                    module_signals["RSI"] = process_module(
+                        rsi, "RSI", {"price_data": price_data}
+                    )
 
                     # MACD signal
-                    module_signals["MACD"] = process_module(macd, "MACD", {"price_data": price_data})
+                    module_signals["MACD"] = process_module(
+                        macd, "MACD", {"price_data": price_data}
+                    )
 
                     # Bollinger Bands signal
-                    module_signals["BollingerBands"] = process_module(bollinger, "BollingerBands", {"price_data": price_data})
+                    module_signals["BollingerBands"] = process_module(
+                        bollinger, "BollingerBands", {"price_data": price_data}
+                    )
 
                     # Volume Profile signal
-                    module_signals["VolumeProfile"] = process_module(volume, "VolumeProfile", {"price_data": price_data})
+                    module_signals["VolumeProfile"] = process_module(
+                        volume, "VolumeProfile", {"price_data": price_data}
+                    )
 
                     # Sentiment signal (alternative data sentiment analysis)
                     module_signals["Sentiment"] = process_module(
@@ -685,16 +762,22 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
                     )
 
                     # Chainalysis Adoption Tracker signal (regional and country adoption growth)
-                    module_signals["AdoptionTracker"] = process_module(adoption_tracker, "AdoptionTracker", {"symbol": symbol})
+                    module_signals["AdoptionTracker"] = process_module(
+                        adoption_tracker, "AdoptionTracker", {"symbol": symbol}
+                    )
 
                     # Region-specific crypto mapping (matches macro/adoption signals to specific cryptos)
                     # Generate sample macro signals for testing
                     macro_test_signals = {
                         "inflation_ARG": 142 if "ARG" in symbol else 3.2,
                         "stablecoin_growth_LATAM": 0.63 if "USD" in symbol else 0.2,
-                        "adoption_rank_IND": (1 if "BTC" in symbol or "ETH" in symbol else 5),
+                        "adoption_rank_IND": (
+                            1 if "BTC" in symbol or "ETH" in symbol else 5
+                        ),
                         "sbi_ripple_news": True if "XRP" in symbol else False,
-                        "port_congestion": (1.4 if "VET" in symbol or "XDC" in symbol else 0.9),
+                        "port_congestion": (
+                            1.4 if "VET" in symbol or "XDC" in symbol else 0.9
+                        ),
                         "el_salvador_btc_news": True if "BTC" in symbol else False,
                     }
 
@@ -717,9 +800,15 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
                                 "value": 0,
                                 "metadata": {
                                     "exchange": listing_signal.get("exchange", ""),
-                                    "position_size": listing_signal.get("position_size", 0.0),
-                                    "expected_return": listing_signal.get("expected_return", 0.0),
-                                    "risk_level": listing_signal.get("risk_level", "MEDIUM"),
+                                    "position_size": listing_signal.get(
+                                        "position_size", 0.0
+                                    ),
+                                    "expected_return": listing_signal.get(
+                                        "expected_return", 0.0
+                                    ),
+                                    "risk_level": listing_signal.get(
+                                        "risk_level", "MEDIUM"
+                                    ),
                                 },
                             }
                         else:
@@ -746,14 +835,19 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
                                 price_data,
                                 adaptive_signal_names,
                             )
-                            adaptive_weights_info = adaptive_integrator.optimize_signal_weights(
-                                adaptive_payload["signals"],
-                                adaptive_payload["market_data"],
+                            adaptive_weights_info = (
+                                adaptive_integrator.optimize_signal_weights(
+                                    adaptive_payload["signals"],
+                                    adaptive_payload["market_data"],
+                                )
                             )
 
                             optimized_weights = {}
                             if isinstance(adaptive_weights_info, dict):
-                                optimized_weights = adaptive_weights_info.get("optimized_weights", {}) or {}
+                                optimized_weights = (
+                                    adaptive_weights_info.get("optimized_weights", {})
+                                    or {}
+                                )
 
                             if optimized_weights:
                                 signal_weights_override = build_aggregator_weights(
@@ -764,28 +858,43 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
 
                             if isinstance(adaptive_weights_info, dict):
                                 adaptive_metadata = {
-                                    "market_regime": adaptive_weights_info.get("market_regime"),
-                                    "regime_confidence": adaptive_weights_info.get("regime_confidence"),
-                                    "model_version": adaptive_weights_info.get("model_version"),
+                                    "market_regime": adaptive_weights_info.get(
+                                        "market_regime"
+                                    ),
+                                    "regime_confidence": adaptive_weights_info.get(
+                                        "regime_confidence"
+                                    ),
+                                    "model_version": adaptive_weights_info.get(
+                                        "model_version"
+                                    ),
                                     "weights": signal_weights_override,
                                 }
                         except Exception as e:
-                            print(f"⚠️ Adaptive weight optimization failed for {symbol}: {e}")
+                            print(
+                                f"⚠️ Adaptive weight optimization failed for {symbol}: {e}"
+                            )
                             adaptive_metadata = {"error": str(e)}
 
                     # Aggregate signals with error handling
                     try:
                         agg_input = {
                             "signals": module_signals,
-                            "price_data": (price_data[-1] if price_data else {"close": last_price}),
+                            "price_data": (
+                                price_data[-1] if price_data else {"close": last_price}
+                            ),
                         }
                         if signal_weights_override:
                             agg_input["signal_weights"] = signal_weights_override
                         print("Aggregating signals...")
                         agg_result = aggregator.process(agg_input)
 
-                        if not isinstance(agg_result, dict) or "signal" not in agg_result:
-                            print("Aggregator didn't return a proper result, using default HOLD")
+                        if (
+                            not isinstance(agg_result, dict)
+                            or "signal" not in agg_result
+                        ):
+                            print(
+                                "Aggregator didn't return a proper result, using default HOLD"
+                            )
                             agg_result = {"signal": "HOLD", "confidence": 0.5}
                         elif adaptive_metadata:
                             agg_result["adaptive_weights"] = adaptive_metadata
@@ -793,15 +902,21 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
                             regime_label = None
                             if isinstance(adaptive_metadata, dict):
                                 regime_label = adaptive_metadata.get("market_regime")
-                            regime_text = f" (regime: {regime_label})" if regime_label else ""
-                            print(f"✅ Adaptive weights applied for {symbol}{regime_text}")
+                            regime_text = (
+                                f" (regime: {regime_label})" if regime_label else ""
+                            )
+                            print(
+                                f"✅ Adaptive weights applied for {symbol}{regime_text}"
+                            )
                     except Exception as e:
                         print(f"Error in signal aggregation: {e}")
                         agg_result = {"signal": "HOLD", "confidence": 0.5}
 
                     # Update last signals
                     last_signals[symbol]["modules"] = module_signals
-                    last_signals[symbol]["aggregated"] = agg_result.get("signal", "HOLD")
+                    last_signals[symbol]["aggregated"] = agg_result.get(
+                        "signal", "HOLD"
+                    )
 
                     # Format signal outputs for display
                     signal_str = ""
@@ -818,7 +933,9 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
                         signal_info = ""
 
                     # Display current status
-                    print(f"[{now_utc}]    {symbol}: ${last_price:,.2f} | {signal_str} {signal_info}")
+                    print(
+                        f"[{now_utc}]    {symbol}: ${last_price:,.2f} | {signal_str} {signal_info}"
+                    )
 
                     # Display individual signal indicators
                     indicators = []
@@ -833,13 +950,18 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
                     print(f"            Signals: {' | '.join(indicators)}")
 
                     # Check if we should execute a trade (not during cooldown period)
-                    if now_ts - last_alert_ts[symbol] >= cooldown_sec and agg_result["signal"] != "HOLD":
+                    if (
+                        now_ts - last_alert_ts[symbol] >= cooldown_sec
+                        and agg_result["signal"] != "HOLD"
+                    ):
                         # Calculate optimal position size using BudgetManager
                         # Extract volatility from any of our modules if available, or use a default
                         volatility = 0.02  # Default volatility
                         if "BollingerBands" in module_signals:
                             if "band_width" in module_signals["BollingerBands"]:
-                                volatility = module_signals["BollingerBands"]["band_width"]
+                                volatility = module_signals["BollingerBands"][
+                                    "band_width"
+                                ]
 
                         # Get position size recommendation from budget manager
                         position_calc = budget_manager.calculate_position_size(
@@ -871,8 +993,12 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
                                         "confidence": agg_result["confidence"],
                                         "signals": module_signals,
                                         "id": budget_result["position"]["id"],
-                                        "stop_loss": budget_result["position"]["stop_loss"],
-                                        "take_profit": budget_result["position"]["take_profit"],
+                                        "stop_loss": budget_result["position"][
+                                            "stop_loss"
+                                        ],
+                                        "take_profit": budget_result["position"][
+                                            "take_profit"
+                                        ],
                                     }
                                     trades.append(trade_record)  # type: ignore
 
@@ -884,7 +1010,9 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
                                         last_price,
                                     )
                                 else:
-                                    print(f"⚠️ Could not open BUY position: {budget_result.get('error', 'Unknown error')}")
+                                    print(
+                                        f"⚠️ Could not open BUY position: {budget_result.get('error', 'Unknown error')}"
+                                    )
 
                             elif agg_result["signal"] == "SELL":
                                 # Execute paper sell with budget manager
@@ -906,8 +1034,12 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
                                         "confidence": agg_result["confidence"],
                                         "signals": module_signals,
                                         "id": budget_result["position"]["id"],
-                                        "stop_loss": budget_result["position"]["stop_loss"],
-                                        "take_profit": budget_result["position"]["take_profit"],
+                                        "stop_loss": budget_result["position"][
+                                            "stop_loss"
+                                        ],
+                                        "take_profit": budget_result["position"][
+                                            "take_profit"
+                                        ],
                                     }
                                     trades.append(trade_record)  # type: ignore
 
@@ -919,9 +1051,13 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
                                         last_price,
                                     )
                                 else:
-                                    print(f"⚠️ Could not open SELL position: {budget_result.get('error', 'Unknown error')}")
+                                    print(
+                                        f"⚠️ Could not open SELL position: {budget_result.get('error', 'Unknown error')}"
+                                    )
                         else:
-                            print(f"⚠️ Cannot open position: {position_calc.get('reason', 'Unknown reason')}")
+                            print(
+                                f"⚠️ Cannot open position: {position_calc.get('reason', 'Unknown reason')}"
+                            )
 
                         # Update last alert timestamp
                         last_alert_ts[symbol] = now_ts
@@ -981,7 +1117,9 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
 def main():
     """CLI entrypoint."""
     parser = argparse.ArgumentParser(description="Multi-Signal Paper Trading Bot")
-    parser.add_argument("--once", action="store_true", help="Run a single cycle and exit")
+    parser.add_argument(
+        "--once", action="store_true", help="Run a single cycle and exit"
+    )
     parser.add_argument("--test", action="store_true", help="Run unit tests and exit")
     parser.add_argument(
         "--dry-preflight",
@@ -1000,7 +1138,9 @@ def main():
         print("Testing functionality not implemented yet.")
         return
 
-    run_multi_signal_bot(once=args.once, dry_preflight=args.dry_preflight, markets_file=args.markets_file)
+    run_multi_signal_bot(
+        once=args.once, dry_preflight=args.dry_preflight, markets_file=args.markets_file
+    )
 
 
 if __name__ == "__main__":

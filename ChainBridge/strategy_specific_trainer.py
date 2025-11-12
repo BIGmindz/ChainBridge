@@ -20,16 +20,29 @@ from sklearn.preprocessing import StandardScaler
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, PROJECT_ROOT)
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
+)
 
 
 def consolidate_data(data_directory: str) -> pd.DataFrame:
     """Finds all relevant CSVs and consolidates them into a single DataFrame."""
-    all_files = [os.path.join(data_directory, f) for f in os.listdir(data_directory) if f.endswith(".csv")]
+    all_files = [
+        os.path.join(data_directory, f)
+        for f in os.listdir(data_directory)
+        if f.endswith(".csv")
+    ]
     if not all_files:
         return pd.DataFrame()
 
-    required_columns = ["timestamp", "symbol", "price", "rsi_value", "ob_imbalance", "vol_imbalance"]
+    required_columns = [
+        "timestamp",
+        "symbol",
+        "price",
+        "rsi_value",
+        "ob_imbalance",
+        "vol_imbalance",
+    ]
     df_list = []
     for file in all_files:
         try:
@@ -60,8 +73,12 @@ def main():
     consolidated_df = consolidate_data("data/")
 
     if consolidated_df.empty:
-        logging.error("❌ No valid historical data found. Please ensure CSV files exist in the data/ directory.")
-        logging.info("💡 Required CSV columns: timestamp, symbol, price, rsi_value, ob_imbalance, vol_imbalance")
+        logging.error(
+            "❌ No valid historical data found. Please ensure CSV files exist in the data/ directory."
+        )
+        logging.info(
+            "💡 Required CSV columns: timestamp, symbol, price, rsi_value, ob_imbalance, vol_imbalance"
+        )
         return
 
     logging.info(f"📈 Final dataset: {len(consolidated_df)} rows, {len(consolidated_df['symbol'].unique())} unique symbols")  # type: ignore
@@ -72,12 +89,18 @@ def main():
         logging.error(f"❌ Strategy directory '{strategy_dir}' not found.")
         return
 
-    strategy_folders = [f for f in os.listdir(strategy_dir) if os.path.isdir(os.path.join(strategy_dir, f))]
+    strategy_folders = [
+        f
+        for f in os.listdir(strategy_dir)
+        if os.path.isdir(os.path.join(strategy_dir, f))
+    ]
     if not strategy_folders:
         logging.error(f"❌ No strategy folders found in '{strategy_dir}'")
         return
 
-    logging.info(f"🎯 Found {len(strategy_folders)} strategies to process: {strategy_folders}")
+    logging.info(
+        f"🎯 Found {len(strategy_folders)} strategies to process: {strategy_folders}"
+    )
 
     trained_strategies = 0
 
@@ -91,7 +114,9 @@ def main():
             # --- Load the strategy's own config to see which symbols it trades ---
             config_path = os.path.join(strategy_path, "config.yaml")
             if not os.path.exists(config_path):
-                logging.warning(f"⚠️  No config.yaml found for strategy '{strategy_name}'. Skipping.")
+                logging.warning(
+                    f"⚠️  No config.yaml found for strategy '{strategy_name}'. Skipping."
+                )
                 continue
 
             with open(config_path, "r") as f:
@@ -99,30 +124,46 @@ def main():
 
             target_symbols = strategy_config.get("exchange", {}).get("symbols", [])
             if not target_symbols:
-                logging.warning(f"⚠️  No symbols defined in config for '{strategy_name}'. Skipping.")
+                logging.warning(
+                    f"⚠️  No symbols defined in config for '{strategy_name}'. Skipping."
+                )
                 continue
 
             logging.info(f"   📊 Strategy targets symbols: {target_symbols}")
 
             # --- Filter the master dataset for this strategy's symbols ---
-            strategy_df = consolidated_df[consolidated_df["symbol"].isin(target_symbols)].copy()
+            strategy_df = consolidated_df[
+                consolidated_df["symbol"].isin(target_symbols)
+            ].copy()
 
             if strategy_df.empty:
-                logging.warning(f"⚠️  No data found for symbols {target_symbols} in strategy '{strategy_name}'. Skipping.")
+                logging.warning(
+                    f"⚠️  No data found for symbols {target_symbols} in strategy '{strategy_name}'. Skipping."
+                )
                 continue
 
-            min_samples = strategy_config.get("signals", {}).get("machine_learning", {}).get("min_training_samples", 30)
+            min_samples = (
+                strategy_config.get("signals", {})
+                .get("machine_learning", {})
+                .get("min_training_samples", 30)
+            )
             if len(strategy_df) < min_samples:
-                logging.warning(f"⚠️  Insufficient data for '{strategy_name}' (have {len(strategy_df)}, need {min_samples}). Skipping.")
+                logging.warning(
+                    f"⚠️  Insufficient data for '{strategy_name}' (have {len(strategy_df)}, need {min_samples}). Skipping."
+                )
                 continue
 
-            logging.info(f"   📈 Training model on {len(strategy_df)} relevant data points...")
+            logging.info(
+                f"   📈 Training model on {len(strategy_df)} relevant data points..."
+            )
 
             # --- Feature Engineering and Labeling ---
             logging.info("   🔧 Performing feature engineering...")
 
             # Calculate price change percentage using diff/shift
-            strategy_df["price_change_pct"] = (strategy_df["price"].diff() / strategy_df["price"].shift(1)) * 100
+            strategy_df["price_change_pct"] = (
+                strategy_df["price"].diff() / strategy_df["price"].shift(1)
+            ) * 100
 
             # Create labels based on future price movement
             strategy_df["future_price"] = strategy_df["price"].shift(-1)
@@ -133,23 +174,36 @@ def main():
             sell_threshold = 0.9995  # 0.05% decrease
 
             # Apply labels where we have future price data
-            mask_buy = strategy_df["future_price"] > strategy_df["price"] * buy_threshold
-            mask_sell = strategy_df["future_price"] < strategy_df["price"] * sell_threshold
+            mask_buy = (
+                strategy_df["future_price"] > strategy_df["price"] * buy_threshold
+            )
+            mask_sell = (
+                strategy_df["future_price"] < strategy_df["price"] * sell_threshold
+            )
 
             strategy_df.loc[mask_buy, "label"] = 1  # BUY
             strategy_df.loc[mask_sell, "label"] = -1  # SELL
 
             # Drop rows with NaN values created by diff() and shift() AFTER all calculations
             logging.info(f"   📊 Before dropna: {len(strategy_df)} rows")
-            strategy_df = strategy_df.dropna(subset=["price_change_pct", "future_price"])
+            strategy_df = strategy_df.dropna(
+                subset=["price_change_pct", "future_price"]
+            )
             logging.info(f"   📊 After dropna: {len(strategy_df)} rows")
 
             if len(strategy_df) < min_samples:
-                logging.warning(f"⚠️  After feature engineering, insufficient data (have {len(strategy_df)}, need {min_samples}). Skipping.")
+                logging.warning(
+                    f"⚠️  After feature engineering, insufficient data (have {len(strategy_df)}, need {min_samples}). Skipping."
+                )
                 continue
 
             # Define feature columns
-            feature_cols = ["rsi_value", "ob_imbalance", "vol_imbalance", "price_change_pct"]
+            feature_cols = [
+                "rsi_value",
+                "ob_imbalance",
+                "vol_imbalance",
+                "price_change_pct",
+            ]
 
             # Add additional features if available
             if "africa_factor" in strategy_df.columns:
@@ -173,7 +227,9 @@ def main():
             buy_count = sum(y == 1)  # type: ignore
             hold_count = sum(y == 0)  # type: ignore
             sell_count = sum(y == -1)  # type: ignore
-            logging.info(f"   📊 Label distribution: BUY={buy_count}, HOLD={hold_count}, SELL={sell_count}")
+            logging.info(
+                f"   📊 Label distribution: BUY={buy_count}, HOLD={hold_count}, SELL={sell_count}"
+            )
 
             # --- Train and Save Model & Scaler ---
             logging.info("   🤖 Training LightGBM model...")
@@ -181,7 +237,13 @@ def main():
             scaler = StandardScaler()
             X_scaled = scaler.fit_transform(X)
 
-            model = LGBMClassifier(objective="multiclass", num_class=3, random_state=42, n_estimators=100, learning_rate=0.1)
+            model = LGBMClassifier(
+                objective="multiclass",
+                num_class=3,
+                random_state=42,
+                n_estimators=100,
+                learning_rate=0.1,
+            )
 
             model.fit(X_scaled, y)
 
@@ -206,7 +268,9 @@ def main():
             logging.error(f"   ❌ Failed to process strategy '{strategy_name}': {e}")
 
     logging.info("=" * 60)
-    logging.info(f"🎉 Training complete! Successfully trained {trained_strategies} strategies.")
+    logging.info(
+        f"🎉 Training complete! Successfully trained {trained_strategies} strategies."
+    )
 
     if trained_strategies == 0:
         logging.warning("⚠️  No strategies were successfully trained.")

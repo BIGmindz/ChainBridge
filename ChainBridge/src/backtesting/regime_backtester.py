@@ -77,9 +77,13 @@ class RegimeBacktester:
                 if abs(trend_i) < 0.001:  # Low trend
                     self.regime_data[i] = 3 if high_vol else 0  # Choppy or Ranging
                 elif trend_i > 0:  # Positive trend
-                    self.regime_data[i] = 4 if high_vol else 1  # Bullish Volatile or Bullish
+                    self.regime_data[i] = (
+                        4 if high_vol else 1
+                    )  # Bullish Volatile or Bullish
                 else:  # Negative trend
-                    self.regime_data[i] = 5 if high_vol else 2  # Bearish Volatile or Bearish
+                    self.regime_data[i] = (
+                        5 if high_vol else 2
+                    )  # Bearish Volatile or Bearish
         # Regime 0: Low volatility, no trend (ranging)
         # Regime 1: Low volatility, positive trend (bullish)
         # Regime 2: Low volatility, negative trend (bearish)
@@ -102,7 +106,9 @@ class RegimeBacktester:
         self,
         strategy_fn: callable,
         params: Dict[str, Union[float, int, str]],
-        regime_specific_params: Optional[Dict[str, Dict[str, Union[float, int, str]]]] = None,
+        regime_specific_params: Optional[
+            Dict[str, Dict[str, Union[float, int, str]]]
+        ] = None,
     ) -> Dict[str, Dict]:
         """
         Run a backtest across all regimes.
@@ -127,7 +133,11 @@ class RegimeBacktester:
 
             # Use regime-specific parameters if available
             regime_params = params.copy()
-            regime_label = self.regime_labels[int(regime)] if int(regime) < len(self.regime_labels) else f"Regime {regime}"
+            regime_label = (
+                self.regime_labels[int(regime)]
+                if int(regime) < len(self.regime_labels)
+                else f"Regime {regime}"
+            )
 
             if regime_specific_params and regime_label in regime_specific_params:
                 regime_params.update(regime_specific_params[regime_label])
@@ -147,7 +157,9 @@ class RegimeBacktester:
             }
 
         # Calculate overall performance
-        overall_returns = self._calculate_returns(self.price_data, strategy_fn(self.price_data, params))
+        overall_returns = self._calculate_returns(
+            self.price_data, strategy_fn(self.price_data, params)
+        )
         overall_metrics = self._calculate_metrics(overall_returns)
         self.results["Overall"] = {
             "returns": overall_returns,
@@ -175,7 +187,9 @@ class RegimeBacktester:
 
         # Calculate metrics
         total_return = np.cumprod(1 + returns)[-1] - 1
-        sharpe_ratio = returns.mean() / returns.std() * np.sqrt(252) if returns.std() > 0 else 0
+        sharpe_ratio = (
+            returns.mean() / returns.std() * np.sqrt(252) if returns.std() > 0 else 0
+        )
         cumulative_returns = np.cumprod(1 + returns)
         running_max = np.maximum.accumulate(cumulative_returns)
         drawdowns = (running_max - cumulative_returns) / running_max
@@ -226,7 +240,14 @@ class RegimeBacktester:
         # Plot regime distribution
         if self.regime_data is not None and len(self.regime_labels) > 0:
             unique_regimes, counts = np.unique(self.regime_data, return_counts=True)
-            labels = [(self.regime_labels[int(r)] if int(r) < len(self.regime_labels) else f"Regime {r}") for r in unique_regimes]
+            labels = [
+                (
+                    self.regime_labels[int(r)]
+                    if int(r) < len(self.regime_labels)
+                    else f"Regime {r}"
+                )
+                for r in unique_regimes
+            ]
             axs[1].bar(labels, counts / len(self.regime_data) * 100)
             axs[1].set_title("Regime Distribution")
             axs[1].set_ylabel("% of Time")
@@ -269,7 +290,11 @@ class RegimeBacktester:
             if len(regime_prices) < 2:
                 continue
 
-            regime_label = self.regime_labels[int(regime)] if int(regime) < len(self.regime_labels) else f"Regime {regime}"
+            regime_label = (
+                self.regime_labels[int(regime)]
+                if int(regime) < len(self.regime_labels)
+                else f"Regime {regime}"
+            )
             best_metric_value = -np.inf
             best_regime_params = None
 

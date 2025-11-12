@@ -28,7 +28,9 @@ except ImportError as e:
 warnings.filterwarnings("ignore")
 
 # Setup logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -66,7 +68,9 @@ class EnhancedRegimeModel:
 
         for i in range(n_samples):
             # Base price simulation with different regimes
-            regime_type = np.random.choice(["bull", "bear", "sideways"], p=[0.4, 0.3, 0.3])
+            regime_type = np.random.choice(
+                ["bull", "bear", "sideways"], p=[0.4, 0.3, 0.3]
+            )
 
             # Generate features based on regime
             if regime_type == "bull":
@@ -103,7 +107,11 @@ class EnhancedRegimeModel:
             bb_position = (
                 np.random.uniform(0.2, 0.8)
                 if regime_type == "sideways"
-                else (np.random.uniform(0.6, 0.9) if regime_type == "bull" else np.random.uniform(0.1, 0.4))
+                else (
+                    np.random.uniform(0.6, 0.9)
+                    if regime_type == "bull"
+                    else np.random.uniform(0.1, 0.4)
+                )
             )
 
             # Volume ratio
@@ -126,9 +134,13 @@ class EnhancedRegimeModel:
 
             # Additional features for enhanced model
             momentum_rsi = rsi_14 + np.random.normal(0, 5)  # RSI with momentum
-            price_momentum = price_change_24h / volatility_24h if volatility_24h > 0 else 0
+            price_momentum = (
+                price_change_24h / volatility_24h if volatility_24h > 0 else 0
+            )
             volume_price_trend = volume_ratio * price_change_24h
-            bb_squeeze = 1 if bb_width < bb_middle * 0.15 else 0  # Bollinger squeeze indicator
+            bb_squeeze = (
+                1 if bb_width < bb_middle * 0.15 else 0
+            )  # Bollinger squeeze indicator
 
             data.append(  # type: ignore
                 {
@@ -162,7 +174,9 @@ class EnhancedRegimeModel:
             )
 
         df = pd.DataFrame(data)
-        logger.info(f"✅ Generated {len(df)} samples with {len(df.columns) - 1} features")
+        logger.info(
+            f"✅ Generated {len(df)} samples with {len(df.columns) - 1} features"
+        )
         logger.info(f"📊 Regime distribution: {df['regime'].value_counts().to_dict()}")  # type: ignore
 
         return df
@@ -190,7 +204,9 @@ class EnhancedRegimeModel:
 
         return X, y
 
-    def train_model(self, df: pd.DataFrame, test_size: float = 0.2, random_state: int = 42) -> Dict:
+    def train_model(
+        self, df: pd.DataFrame, test_size: float = 0.2, random_state: int = 42
+    ) -> Dict:
         """
         Train the enhanced LightGBM regime detection model
 
@@ -213,7 +229,11 @@ class EnhancedRegimeModel:
 
         # Split the data
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y_encoded, test_size=test_size, random_state=random_state, stratify=y_encoded
+            X,
+            y_encoded,
+            test_size=test_size,
+            random_state=random_state,
+            stratify=y_encoded,
         )
 
         # Initialize feature scaler (for numerical stability)
@@ -273,7 +293,9 @@ class EnhancedRegimeModel:
         logger.info(f"🎯 Regime Classes: {self.label_encoder.classes_}")
 
         # Classification report
-        class_report = classification_report(y_test, y_pred, target_names=self.label_encoder.classes_, output_dict=True)
+        class_report = classification_report(
+            y_test, y_pred, target_names=self.label_encoder.classes_, output_dict=True
+        )
 
         return {
             "model": self.model,
@@ -337,7 +359,12 @@ class EnhancedRegimeModel:
         # Get all regime probabilities
         regime_probs = dict(zip(self.label_encoder.classes_, probas[0]))
 
-        return {"regime": regime, "confidence": confidence, "probabilities": regime_probs, "timestamp": datetime.now().isoformat()}
+        return {
+            "regime": regime,
+            "confidence": confidence,
+            "probabilities": regime_probs,
+            "timestamp": datetime.now().isoformat(),
+        }
 
     def save_model(self, filepath: str = None) -> str:
         """
@@ -421,7 +448,9 @@ class EnhancedRegimeModel:
         feature_importance = dict(zip(self.feature_columns, importance_scores))
 
         # Sort by importance
-        feature_importance = dict(sorted(feature_importance.items(), key=lambda x: x[1], reverse=True))
+        feature_importance = dict(
+            sorted(feature_importance.items(), key=lambda x: x[1], reverse=True)
+        )
 
         return feature_importance
 
@@ -442,7 +471,9 @@ class EnhancedRegimeModel:
         print(f"🏷️  Regime Classes: {', '.join(metadata.get('regime_classes', []))}")
         print(f"🎯 Train Accuracy: {metadata.get('train_accuracy', 0):.3f}")
         print(f"🎯 Test Accuracy: {metadata.get('test_accuracy', 0):.3f}")
-        print(f"🎯 CV Score: {metadata.get('cv_mean', 0):.3f} (+/- {metadata.get('cv_std', 0):.3f})")
+        print(
+            f"🎯 CV Score: {metadata.get('cv_mean', 0):.3f} (+/- {metadata.get('cv_std', 0):.3f})"
+        )
 
         print("\n📈 TOP 10 MOST IMPORTANT FEATURES:")
         feature_importance = self.get_feature_importance()
