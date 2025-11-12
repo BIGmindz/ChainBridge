@@ -32,7 +32,7 @@ class TestAuditShipmentsEndpoint:
         )
         db_session.add(intent)
         db_session.commit()
-        
+
         response = client.get(f"/audit/shipments/{intent.freight_token_id}")
         assert response.status_code == 200
 
@@ -53,10 +53,10 @@ class TestAuditShipmentsEndpoint:
         )
         db_session.add(intent)
         db_session.commit()
-        
+
         response = client.get(f"/audit/shipments/{intent.freight_token_id}")
         data = response.json()
-        
+
         assert "shipment_id" in data
         assert "milestones" in data
         assert "summary" in data
@@ -73,7 +73,7 @@ class TestAuditShipmentsEndpoint:
         )
         db_session.add(intent)
         db_session.commit()
-        
+
         # Add multiple milestones
         for i, event in enumerate(["PICKUP_CONFIRMED", "POD_CONFIRMED", "CLAIM_WINDOW_CLOSED"]):
             milestone = MilestoneSettlement(
@@ -86,10 +86,10 @@ class TestAuditShipmentsEndpoint:
             )
             db_session.add(milestone)
         db_session.commit()
-        
+
         response = client.get(f"/audit/shipments/{intent.freight_token_id}")
         data = response.json()
-        
+
         assert len(data["milestones"]) == 3
 
     def test_audit_shipments_summary_calculations(self, client: TestClient, db_session: Session):
@@ -104,7 +104,7 @@ class TestAuditShipmentsEndpoint:
         )
         db_session.add(intent)
         db_session.commit()
-        
+
         # Add milestones with different statuses
         milestone1 = MilestoneSettlement(
             payment_intent_id=intent.id,
@@ -132,11 +132,11 @@ class TestAuditShipmentsEndpoint:
         )
         db_session.add_all([milestone1, milestone2, milestone3])
         db_session.commit()
-        
+
         response = client.get(f"/audit/shipments/{intent.freight_token_id}")
         data = response.json()
         summary = data["summary"]
-        
+
         assert summary.get("total_approved_amount") == 200.0
         assert summary.get("total_settled_amount") == 700.0
 
@@ -156,7 +156,7 @@ class TestAuditPaymentIntentsEndpoint:
         )
         db_session.add(intent)
         db_session.commit()
-        
+
         response = client.get(f"/audit/payment_intents/{intent.id}/milestones")
         assert response.status_code == 200
 
@@ -177,10 +177,10 @@ class TestAuditPaymentIntentsEndpoint:
         )
         db_session.add(intent)
         db_session.commit()
-        
+
         response = client.get(f"/audit/payment_intents/{intent.id}/milestones")
         data = response.json()
-        
+
         assert "payment_intent" in data
         assert "milestones" in data
         assert "summary" in data
@@ -197,11 +197,11 @@ class TestAuditPaymentIntentsEndpoint:
         )
         db_session.add(intent)
         db_session.commit()
-        
+
         response = client.get(f"/audit/payment_intents/{intent.id}/milestones")
         data = response.json()
         payment_intent = data["payment_intent"]
-        
+
         assert payment_intent["id"] == intent.id
         assert payment_intent["amount"] == 3000.0
         assert payment_intent["currency"] == "EUR"
@@ -218,7 +218,7 @@ class TestAuditPaymentIntentsEndpoint:
         )
         db_session.add(intent)
         db_session.commit()
-        
+
         # Add multiple milestones
         for i, event in enumerate(["PICKUP_CONFIRMED", "POD_CONFIRMED", "CLAIM_WINDOW_CLOSED"]):
             milestone = MilestoneSettlement(
@@ -231,10 +231,10 @@ class TestAuditPaymentIntentsEndpoint:
             )
             db_session.add(milestone)
         db_session.commit()
-        
+
         response = client.get(f"/audit/payment_intents/{intent.id}/milestones")
         data = response.json()
-        
+
         assert len(data["milestones"]) == 3
 
     def test_audit_payment_intents_summary_calculations(self, client: TestClient, db_session: Session):
@@ -249,7 +249,7 @@ class TestAuditPaymentIntentsEndpoint:
         )
         db_session.add(intent)
         db_session.commit()
-        
+
         # Add milestones with different statuses
         milestone1 = MilestoneSettlement(
             payment_intent_id=intent.id,
@@ -277,11 +277,11 @@ class TestAuditPaymentIntentsEndpoint:
         )
         db_session.add_all([milestone1, milestone2, milestone3])
         db_session.commit()
-        
+
         response = client.get(f"/audit/payment_intents/{intent.id}/milestones")
         data = response.json()
         summary = data["summary"]
-        
+
         assert summary.get("total_approved_amount") == 4000.0
         assert summary.get("total_settled_amount") == 1000.0
 
@@ -301,7 +301,7 @@ class TestAuditEndpointsEmptyStates:
         )
         db_session.add(intent)
         db_session.commit()
-        
+
         response = client.get(f"/audit/shipments/{intent.freight_token_id}")
         assert response.status_code == 200
         data = response.json()
@@ -319,7 +319,7 @@ class TestAuditEndpointsEmptyStates:
         )
         db_session.add(intent)
         db_session.commit()
-        
+
         response = client.get(f"/audit/payment_intents/{intent.id}/milestones")
         assert response.status_code == 200
         data = response.json()
@@ -337,7 +337,7 @@ class TestAuditEndpointsEmptyStates:
         )
         db_session.add(intent)
         db_session.commit()
-        
+
         for event in ["PICKUP_CONFIRMED", "POD_CONFIRMED", "CLAIM_WINDOW_CLOSED"]:
             milestone = MilestoneSettlement(
                 payment_intent_id=intent.id,
@@ -349,11 +349,11 @@ class TestAuditEndpointsEmptyStates:
             )
             db_session.add(milestone)
         db_session.commit()
-        
+
         response = client.get(f"/audit/shipments/{intent.freight_token_id}")
         data = response.json()
         summary = data["summary"]
-        
+
         assert summary.get("total_approved_amount", 0) == 0
         assert summary.get("total_settled_amount", 0) == 0
 
@@ -373,7 +373,7 @@ class TestAuditEndpointsCrossCurrency:
         )
         db_session.add(intent)
         db_session.commit()
-        
+
         # Add milestones with different currencies
         currencies = ["USD", "EUR", "GBP"]
         for i, currency in enumerate(currencies):
@@ -387,7 +387,7 @@ class TestAuditEndpointsCrossCurrency:
             )
             db_session.add(milestone)
         db_session.commit()
-        
+
         response = client.get(f"/audit/shipments/{intent.freight_token_id}")
         assert response.status_code == 200
         data = response.json()

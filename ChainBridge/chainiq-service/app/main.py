@@ -27,6 +27,7 @@ app = FastAPI(
 
 class ShipmentScoringRequest(BaseModel):
     """Request to score a shipment."""
+
     shipment_id: str
     driver_id: Optional[int] = None
     origin: Optional[str] = None
@@ -36,6 +37,7 @@ class ShipmentScoringRequest(BaseModel):
 
 class ShipmentScoringResponse(BaseModel):
     """Response with shipment risk score."""
+
     shipment_id: str
     risk_score: float = Field(..., ge=0.0, le=1.0)
     risk_category: str  # "low", "medium", "high"
@@ -46,26 +48,22 @@ class ShipmentScoringResponse(BaseModel):
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
-    return {
-        "status": "ok",
-        "service": "chainiq",
-        "version": "1.0.0"
-    }
+    return {"status": "ok", "service": "chainiq", "version": "1.0.0"}
 
 
 @app.post("/score/shipment", response_model=ShipmentScoringResponse)
 async def score_shipment(request: ShipmentScoringRequest) -> ShipmentScoringResponse:
     """
     Score a shipment for logistics risk.
-    
+
     This endpoint returns a risk score between 0.0 (low risk) and 1.0 (high risk).
-    
+
     Args:
         request: Shipment information to score
-        
+
     Returns:
         Risk score and category
-        
+
     Note:
         This is currently a placeholder implementation. Real scoring will
         use the full ML engine with features from shipment history, driver
@@ -74,7 +72,7 @@ async def score_shipment(request: ShipmentScoringRequest) -> ShipmentScoringResp
     # Placeholder implementation: deterministic score based on shipment_id hash
     hash_value = hash(request.shipment_id)
     risk_score = (abs(hash_value) % 100) / 100.0
-    
+
     # Categorize risk
     if risk_score < 0.33:
         risk_category = "low"
@@ -82,16 +80,17 @@ async def score_shipment(request: ShipmentScoringRequest) -> ShipmentScoringResp
         risk_category = "medium"
     else:
         risk_category = "high"
-    
+
     return ShipmentScoringResponse(
         shipment_id=request.shipment_id,
         risk_score=risk_score,
         risk_category=risk_category,
         confidence=0.60,  # Lower confidence for placeholder
-        reasoning="Placeholder scoring - waiting for ML engine integration"
+        reasoning="Placeholder scoring - waiting for ML engine integration",
     )
 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8001)

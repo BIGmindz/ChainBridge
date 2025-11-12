@@ -33,7 +33,8 @@ def setup_environment():
     os.makedirs("data/rapid_fire_sessions", exist_ok=True)
 
     # Print system information
-    print(f"""
+    print(
+        f"""
     ╔══════════════════════════════════════════════════════════════
     ║ 🚀 SIMPLE RAPID FIRE TRAINING SYSTEM (NO TENSORFLOW)
     ║══════════════════════════════════════════════════════════════
@@ -43,7 +44,8 @@ def setup_environment():
     ║ Focus: Signal weight optimization and performance tracking
     ║ Dashboard: Updates every 15 minutes
     ╚══════════════════════════════════════════════════════════════
-    """)
+    """
+    )
 
 
 def main():

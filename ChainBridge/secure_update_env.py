@@ -10,7 +10,8 @@ import getpass
 import os
 from pathlib import Path
 
-def update_env(env_path='.env'):
+
+def update_env(env_path=".env"):
     env_file = Path(env_path)
     if not env_file.exists():
         print("Error: .env file not found in current directory.")
@@ -29,19 +30,19 @@ def update_env(env_path='.env'):
     found_key = found_secret = False
 
     for line in content:
-        if line.startswith('API_KEY='):
-            updated.append(f'API_KEY={api_key}')  # type: ignore
+        if line.startswith("API_KEY="):
+            updated.append(f"API_KEY={api_key}")  # type: ignore
             found_key = True
-        elif line.startswith('API_SECRET='):
-            updated.append(f'API_SECRET={api_secret}')  # type: ignore
+        elif line.startswith("API_SECRET="):
+            updated.append(f"API_SECRET={api_secret}")  # type: ignore
             found_secret = True
         else:
             updated.append(line)  # type: ignore
 
     if not found_key:
-        updated.append(f'API_KEY={api_key}')  # type: ignore
+        updated.append(f"API_KEY={api_key}")  # type: ignore
     if not found_secret:
-        updated.append(f'API_SECRET={api_secret}')  # type: ignore
+        updated.append(f"API_SECRET={api_secret}")  # type: ignore
 
     env_file.write_text("\n".join(updated) + "\n")
 
@@ -55,6 +56,7 @@ def update_env(env_path='.env'):
     print("⚠ Treat these credentials as compromised if they were previously committed; rotate them immediately.")
 
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(update_env())

@@ -41,7 +41,7 @@ def db_session(engine) -> Session:
     """Provide a fresh database session for each test."""
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     db = TestingSessionLocal()
-    
+
     try:
         yield db
     finally:
@@ -52,6 +52,7 @@ def db_session(engine) -> Session:
 @pytest.fixture
 def client(db_session: Session):
     """Provide FastAPI TestClient with test database session."""
+
     def override_get_db():
         try:
             yield db_session
@@ -135,7 +136,7 @@ def payment_schedule_low_risk(db_session: Session, payment_intent_low_risk: Paym
     )
     db_session.add(schedule)
     db_session.flush()
-    
+
     # Add schedule items
     items = [
         PaymentScheduleItem(
@@ -178,7 +179,7 @@ def payment_schedule_high_risk(db_session: Session, payment_intent_high_risk: Pa
     )
     db_session.add(schedule)
     db_session.flush()
-    
+
     # Add schedule items
     items = [
         PaymentScheduleItem(

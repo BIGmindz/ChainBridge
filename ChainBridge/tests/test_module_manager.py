@@ -36,6 +36,7 @@ def test_invalid_input_rejected():
     class BadModule(ExampleModule):
         def validate_input(self, data):  # override to force failure
             return False
+
     mm = ModuleManager()
     mm.register_module("Bad", BadModule())
     with pytest.raises(ValueError):

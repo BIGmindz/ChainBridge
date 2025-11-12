@@ -50,9 +50,7 @@ class ParabolicSARModule(Module):
             return self._insufficient_data()
 
         df = self._to_dataframe(candles)
-        psar_series, trend_series, af_series = self._calculate_psar(
-            df["high"].values, df["low"].values
-        )
+        psar_series, trend_series, af_series = self._calculate_psar(df["high"].values, df["low"].values)
 
         if len(psar_series) == 0:
             return self._insufficient_data()

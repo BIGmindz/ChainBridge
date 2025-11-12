@@ -5,26 +5,25 @@ Mutex-Free, Scalable, ML-Powered Trading System
 Built for both Paper and Live Trading
 """
 
-import asyncio
-import json
-import logging
-import multiprocessing as mp
 import os
-import pickle
-import signal as sig_module
+import json
+import asyncio
 import threading
-import uuid
+import multiprocessing as mp
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 
 import yaml
+import signal as sig_module
 from dotenv import load_dotenv
+import logging
+import pickle
+import uuid
 
 try:
-    from typing import TYPE_CHECKING
-
     import numpy as np
+    from typing import TYPE_CHECKING
 
     if TYPE_CHECKING:
         pass
@@ -33,7 +32,7 @@ except Exception:
     # Implements only the small subset of numpy functionality used by this file.
     import random
     import statistics
-    from typing import Any, Iterable, List
+    from typing import Iterable, List, Any
 
     class _NDArray:
         def __init__(self, data: Iterable[float]):
@@ -135,10 +134,9 @@ except Exception:
             return int(max(range(len(lst)), key=lambda i: lst[i]))
 
     np = _np_fallback()
-import warnings
-from collections import defaultdict
-
 import pandas as pd
+from collections import defaultdict
+import warnings
 
 warnings.filterwarnings("ignore")
 
