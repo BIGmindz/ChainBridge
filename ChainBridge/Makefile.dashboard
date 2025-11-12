@@ -1,0 +1,9 @@
+.PHONY: dashboard install-dashboard
+
+install-dashboard:
+	@echo "Activating venv and installing dashboard requirements..."
+	@. .venv/bin/activate && pip install -r requirements-dashboard.txt
+
+dashboard: install-dashboard
+	@echo "Starting Streamlit dashboard..."
+	@. .venv/bin/activate && streamlit run dashboard.py

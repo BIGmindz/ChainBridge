@@ -1,0 +1,39 @@
+strategy_name: bull_market
+description: 'Aggressive trend-following strategy optimized for bull market conditions'
+
+exchange:
+  name: kraken
+  symbols:
+    - SOL/USD      # High momentum altcoin
+    - AVAX/USD     # Strong upward momentum
+    - DOGE/USD     # High volume meme coin
+    - NEAR/USD     # Emerging blockchain platform
+
+signals:
+  machine_learning:
+    enabled: true
+    min_training_samples: 30
+    model_type: lightgbm
+    features:
+      - rsi_value
+      - ob_imbalance
+      - vol_imbalance
+      - price_change_pct
+
+trading:
+  initial_capital: 10000
+  fees:
+    taker_bps: 25
+
+risk_management:
+  max_positions: 8
+  max_risk_per_trade: 0.12
+  stop_loss_pct: 0.03
+  take_profit_pct: 0.15
+  trailing_stop: true
+
+trading_parameters:
+  rsi_buy_threshold: 40
+  rsi_sell_threshold: 70
+  position_size_multiplier: 1.5
+  cooldown_minutes: 2
