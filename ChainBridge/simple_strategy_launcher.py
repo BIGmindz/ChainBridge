@@ -9,7 +9,9 @@ import sys
 import logging
 import os
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
+)
 
 
 def discover_strategies(base_path="strategies"):
@@ -26,7 +28,10 @@ def discover_strategies(base_path="strategies"):
 
             # A valid strategy must have both a config and a model file.
             if os.path.exists(config_path) and os.path.exists(model_path):
-                strategies[strategy_name] = {"config_path": config_path, "model_path": model_path}
+                strategies[strategy_name] = {
+                    "config_path": config_path,
+                    "model_path": model_path,
+                }
     return strategies
 
 
@@ -38,8 +43,12 @@ def main():
     available_strategies = discover_strategies()
 
     if not available_strategies:
-        logging.error("FATAL: No valid strategies found in the 'strategies/' directory.")
-        logging.error("A valid strategy requires a 'config.yaml' and a 'model.pkl' file in its folder.")
+        logging.error(
+            "FATAL: No valid strategies found in the 'strategies/' directory."
+        )
+        logging.error(
+            "A valid strategy requires a 'config.yaml' and a 'model.pkl' file in its folder."
+        )
         sys.exit(1)
 
     # Get strategy from command line argument or show available options
@@ -72,7 +81,9 @@ def main():
 
         strategy_engine_script = "strategy_engine.py"
         if not os.path.exists(strategy_engine_script):
-            logging.error(f"FATAL: Strategy Engine not found at '{strategy_engine_script}'.")
+            logging.error(
+                f"FATAL: Strategy Engine not found at '{strategy_engine_script}'."
+            )
             sys.exit(1)
 
         logging.info(f"   Config: {selected_strategy['config_path']}")
@@ -81,9 +92,13 @@ def main():
         subprocess.run([sys.executable, strategy_engine_script], check=True, env=env)
 
     except KeyboardInterrupt:
-        logging.info("\nMaster launcher detected user shutdown (Ctrl+C). Session terminated.")
+        logging.info(
+            "\nMaster launcher detected user shutdown (Ctrl+C). Session terminated."
+        )
     except subprocess.CalledProcessError as e:
-        logging.error(f"The trading session exited with an error (code {e.returncode}).")
+        logging.error(
+            f"The trading session exited with an error (code {e.returncode})."
+        )
     except Exception as e:
         logging.error(f"An unexpected error occurred: {e}")
 

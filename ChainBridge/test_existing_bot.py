@@ -56,7 +56,9 @@ async def demo_your_bot():
                 direction = "HOLD →"
                 color = "🟡"
 
-            print(f"  {color} {name:12} | {direction:7} | Strength: {abs(value) * 100:5.1f}%")
+            print(
+                f"  {color} {name:12} | {direction:7} | Strength: {abs(value) * 100:5.1f}%"
+            )
 
         # Make decision
         decision = engine.make_ml_decision(signals)

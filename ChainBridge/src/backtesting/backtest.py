@@ -31,7 +31,9 @@ class BacktestEngine:
         self.custom_metrics = {}
 
         # Configure risk parameters
-        self.position_size_pct = self.config.get("position_size_pct", 0.02)  # 2% risk per trade
+        self.position_size_pct = self.config.get(
+            "position_size_pct", 0.02
+        )  # 2% risk per trade
         self.max_positions = self.config.get("max_positions", 5)
         self.stop_loss_pct = self.config.get("stop_loss_pct", 0.05)
         self.take_profit_pct = self.config.get("take_profit_pct", 0.1)
@@ -82,13 +84,17 @@ class BacktestEngine:
             # Show progress for long backtests
             if i % progress_step == 0 or i == total_bars - 1:
                 pct_complete = (i + 1) / total_bars * 100
-                print(f"  {pct_complete:.1f}% complete... Current equity: ${self.current_capital:,.2f}")
+                print(
+                    f"  {pct_complete:.1f}% complete... Current equity: ${self.current_capital:,.2f}"
+                )
 
         # Calculate final metrics
         results = self._calculate_results()
 
         # Print a safer version of the results summary
-        win_rate_str = f"{results.get('win_rate', 0):.1%}" if "win_rate" in results else "N/A"
+        win_rate_str = (
+            f"{results.get('win_rate', 0):.1%}" if "win_rate" in results else "N/A"
+        )
         print(
             f"\n✅ Backtest complete: {results.get('total_trades', 0)} trades, "
             + f"{results.get('total_return', 0):.2%} return, {win_rate_str} win rate"
@@ -212,7 +218,9 @@ class BacktestEngine:
         }
         self.trades.append(trade)  # type: ignore
 
-    def _close_position(self, symbol: str, current_price: float, pnl: float, reason: str):
+    def _close_position(
+        self, symbol: str, current_price: float, pnl: float, reason: str
+    ):
         """Close an existing position"""
         if symbol not in self.positions:
             return
@@ -242,9 +250,13 @@ class BacktestEngine:
 
         for symbol, position in self.positions.items():
             if position["side"] == "BUY":
-                pos_pnl = (current_price / position["entry_price"] - 1) * position["size"]
+                pos_pnl = (current_price / position["entry_price"] - 1) * position[
+                    "size"
+                ]
             else:  # SELL
-                pos_pnl = (1 - current_price / position["entry_price"]) * position["size"]
+                pos_pnl = (1 - current_price / position["entry_price"]) * position[
+                    "size"
+                ]
             unrealized_pnl += pos_pnl
 
         # Update equity curve with current value (cash + positions)
@@ -261,7 +273,9 @@ class BacktestEngine:
         }
 
         # Calculate returns
-        results["total_return"] = (self.current_capital - self.initial_capital) / self.initial_capital
+        results["total_return"] = (
+            self.current_capital - self.initial_capital
+        ) / self.initial_capital
 
         # Calculate win/loss metrics
         closed_trades = [t for t in self.trades if t["status"] == "closed"]
@@ -269,7 +283,9 @@ class BacktestEngine:
             winning_trades = [t for t in closed_trades if t["pnl"] > 0]
             results["winning_trades"] = len(winning_trades)
             results["losing_trades"] = len(closed_trades) - len(winning_trades)
-            results["win_rate"] = len(winning_trades) / len(closed_trades) if closed_trades else 0
+            results["win_rate"] = (
+                len(winning_trades) / len(closed_trades) if closed_trades else 0
+            )
 
             # Calculate average win/loss
             if winning_trades:
@@ -290,12 +306,20 @@ class BacktestEngine:
         returns = equity_series.pct_change().dropna()
         if len(returns) > 0:
             # Sharpe ratio (assuming 252 trading days per year)
-            results["sharpe_ratio"] = (returns.mean() / returns.std()) * np.sqrt(252) if returns.std() > 0 else 0
+            results["sharpe_ratio"] = (
+                (returns.mean() / returns.std()) * np.sqrt(252)
+                if returns.std() > 0
+                else 0
+            )
 
             # Sortino ratio (downside deviation only)
             negative_returns = returns[returns < 0]
             downside_deviation = negative_returns.std()
-            results["sortino_ratio"] = (returns.mean() / downside_deviation) * np.sqrt(252) if downside_deviation > 0 else 0
+            results["sortino_ratio"] = (
+                (returns.mean() / downside_deviation) * np.sqrt(252)
+                if downside_deviation > 0
+                else 0
+            )
 
         # Maximum drawdown
         peak = equity_series.expanding().max()
@@ -335,13 +359,18 @@ class BacktestEngine:
     def save_results(self, filename: str = None):
         """Save backtest results to JSON file"""
         if filename is None:
-            filename = f"backtest_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            filename = (
+                f"backtest_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            )
 
         # Calculate final results
         results = self._calculate_results()
 
         # Add trade summary
-        results["trades"] = [{k: str(v) if isinstance(v, datetime) else v for k, v in t.items()} for t in self.trades]
+        results["trades"] = [
+            {k: str(v) if isinstance(v, datetime) else v for k, v in t.items()}
+            for t in self.trades
+        ]
 
         # Add equity curve (sampled to reduce file size if very large)
         max_equity_points = 1000

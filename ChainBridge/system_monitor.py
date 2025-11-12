@@ -117,7 +117,11 @@ class SystemMonitor:
         # Header
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         print("╔" + "═" * 60 + "╗")
-        print(f"║ 📊 SYSTEM MONITOR - {current_time}" + " " * (60 - 19 - len(current_time)) + "║")
+        print(
+            f"║ 📊 SYSTEM MONITOR - {current_time}"
+            + " " * (60 - 19 - len(current_time))
+            + "║"
+        )
         print("╠" + "═" * 60 + "╣")
 
         # Component status
@@ -188,7 +192,9 @@ class SystemMonitor:
 
                     # Restart if needed
                     if restart_failed and not running and component["critical"]:
-                        logging.warning(f"Critical component {component['name']} not running, restarting...")
+                        logging.warning(
+                            f"Critical component {component['name']} not running, restarting..."
+                        )
                         self.restart_process(component["restart_cmd"])
 
                 # Update metrics
@@ -214,9 +220,15 @@ def clear_screen():
 
 def main():
     """Main entry point"""
-    parser = argparse.ArgumentParser(description="Live System Monitor for Multiple-signal-decision-bot")
-    parser.add_argument("--interval", type=int, default=60, help="Update interval in seconds")
-    parser.add_argument("--dashboard", action="store_true", help="Display live dashboard")
+    parser = argparse.ArgumentParser(
+        description="Live System Monitor for Multiple-signal-decision-bot"
+    )
+    parser.add_argument(
+        "--interval", type=int, default=60, help="Update interval in seconds"
+    )
+    parser.add_argument(
+        "--dashboard", action="store_true", help="Display live dashboard"
+    )
     parser.add_argument(
         "--restart-failed",
         action="store_true",

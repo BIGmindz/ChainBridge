@@ -154,17 +154,23 @@ class MLTradingIntegration:
         for module_name, module in self.module_manager.modules.items():
             try:
                 # Get signal from module
-                signal_result = await self._get_module_signal(module, symbol, current_price)
+                signal_result = await self._get_module_signal(
+                    module, symbol, current_price
+                )
 
                 if signal_result:
                     signals[module_name] = signal_result
 
             except Exception as e:
-                self.logger.error(f"Error getting signal from {module_name} for {symbol}: {e}")
+                self.logger.error(
+                    f"Error getting signal from {module_name} for {symbol}: {e}"
+                )
 
         return signals
 
-    async def _get_module_signal(self, module, symbol: str, price_data) -> Optional[Dict[str, Any]]:
+    async def _get_module_signal(
+        self, module, symbol: str, price_data
+    ) -> Optional[Dict[str, Any]]:
         """
         Get signal from a specific module
 
@@ -185,14 +191,18 @@ class MLTradingIntegration:
             elif hasattr(module, "calculate"):
                 return await module.calculate(symbol, price_data)
             else:
-                self.logger.warning(f"Module {module.__class__.__name__} has no recognized signal method")
+                self.logger.warning(
+                    f"Module {module.__class__.__name__} has no recognized signal method"
+                )
                 return None
 
         except Exception as e:
             self.logger.error(f"Error calling module {module.__class__.__name__}: {e}")
             return None
 
-    def _aggregate_signals(self, signal_data: Dict[str, Any], symbol: str) -> Dict[str, Any]:
+    def _aggregate_signals(
+        self, signal_data: Dict[str, Any], symbol: str
+    ) -> Dict[str, Any]:
         """
         Aggregate signals from multiple modules using weighted average
 
@@ -220,7 +230,9 @@ class MLTradingIntegration:
             module_weight = self.signal_weights.get(module_name, 0.1)
 
             # Adjust weight based on historical performance
-            performance_multiplier = self._get_module_performance_multiplier(module_name, symbol)
+            performance_multiplier = self._get_module_performance_multiplier(
+                module_name, symbol
+            )
             adjusted_weight = module_weight * performance_multiplier
 
             # Extract signal strength and direction
@@ -332,7 +344,9 @@ class MLTradingIntegration:
 
         return "HOLD"
 
-    def _get_module_performance_multiplier(self, module_name: str, symbol: str) -> float:
+    def _get_module_performance_multiplier(
+        self, module_name: str, symbol: str
+    ) -> float:
         """
         Get performance-based weight multiplier for a module
 
@@ -367,7 +381,9 @@ class MLTradingIntegration:
         else:
             return 0.5 + success_rate  # 0.5x to 1.0x
 
-    def _make_trading_decision(self, symbol: str, aggregated_signal: Dict[str, Any]) -> Dict[str, Any]:
+    def _make_trading_decision(
+        self, symbol: str, aggregated_signal: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Make final trading decision based on aggregated signal and risk management
 
@@ -386,7 +402,9 @@ class MLTradingIntegration:
         last_signal_key = f"{symbol}_{signal}"
 
         if last_signal_key in self.last_signal_time:
-            time_since_last = (now - self.last_signal_time[last_signal_key]).total_seconds() / 60
+            time_since_last = (
+                now - self.last_signal_time[last_signal_key]
+            ).total_seconds() / 60
             if time_since_last < self.cooldown_minutes:
                 return {
                     "action": "HOLD",
@@ -395,7 +413,9 @@ class MLTradingIntegration:
                 }
 
         # Check if we already have a position in this symbol
-        existing_positions = [pos for pos in self.paper_bot.positions.values() if pos.symbol == symbol]
+        existing_positions = [
+            pos for pos in self.paper_bot.positions.values() if pos.symbol == symbol
+        ]
 
         if signal == "HOLD":
             return {
@@ -426,7 +446,9 @@ class MLTradingIntegration:
             "reason": f"ML decision with {confidence:.2f} confidence",
             "signal_details": aggregated_signal.get("details", {}),
             "stop_loss_pct": self._calculate_dynamic_stop_loss(confidence, volatility),
-            "take_profit_pct": self._calculate_dynamic_take_profit(confidence, volatility),
+            "take_profit_pct": self._calculate_dynamic_take_profit(
+                confidence, volatility
+            ),
         }
 
     def _calculate_symbol_volatility(self, symbol: str) -> float:
@@ -449,7 +471,9 @@ class MLTradingIntegration:
         else:
             return 0.06  # 6% for altcoins
 
-    def _calculate_dynamic_stop_loss(self, confidence: float, volatility: float) -> float:
+    def _calculate_dynamic_stop_loss(
+        self, confidence: float, volatility: float
+    ) -> float:
         """Calculate dynamic stop loss based on confidence and volatility"""
         base_stop = 0.03  # 3% base stop loss
 
@@ -461,7 +485,9 @@ class MLTradingIntegration:
 
         return base_stop + confidence_adjustment + volatility_adjustment
 
-    def _calculate_dynamic_take_profit(self, confidence: float, volatility: float) -> float:
+    def _calculate_dynamic_take_profit(
+        self, confidence: float, volatility: float
+    ) -> float:
         """Calculate dynamic take profit based on confidence and volatility"""
         base_tp = 0.06  # 6% base take profit
 
@@ -473,7 +499,9 @@ class MLTradingIntegration:
 
         return base_tp + confidence_adjustment + volatility_adjustment
 
-    async def _execute_trade(self, symbol: str, decision: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_trade(
+        self, symbol: str, decision: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Execute trading decision using the paper bot
 
@@ -516,7 +544,9 @@ class MLTradingIntegration:
                 )
 
                 # Track the signal for performance feedback
-                self._track_signal_usage(decision["signal_details"], symbol, result["position_id"])
+                self._track_signal_usage(
+                    decision["signal_details"], symbol, result["position_id"]
+                )
 
             return result
 
@@ -524,7 +554,9 @@ class MLTradingIntegration:
             self.logger.error(f"Error executing trade for {symbol}: {e}")
             return {"success": False, "error": str(e)}
 
-    def _track_signal_usage(self, signal_details: Dict[str, Any], symbol: str, position_id: str):
+    def _track_signal_usage(
+        self, signal_details: Dict[str, Any], symbol: str, position_id: str
+    ):
         """
         Track signal usage for performance feedback loop
 
@@ -570,7 +602,9 @@ class MLTradingIntegration:
         for outcome_record in self.position_outcomes:
             if outcome_record["position_id"] == position_id:
                 # Update performance for each module that contributed
-                for module_name, signal_info in outcome_record["module_signals"].items():
+                for module_name, signal_info in outcome_record[
+                    "module_signals"
+                ].items():
                     key = f"{module_name}_{outcome_record['symbol']}"
 
                     if key in self.signal_performance:
@@ -580,7 +614,9 @@ class MLTradingIntegration:
                             self.signal_performance[key]["failed_signals"] += 1
 
                         # Update recent outcomes (keep last 20)
-                        recent_outcomes = self.signal_performance[key]["recent_outcomes"]
+                        recent_outcomes = self.signal_performance[key][
+                            "recent_outcomes"
+                        ]
                         recent_outcomes.append(  # type: ignore
                             {
                                 "outcome": outcome,
@@ -632,16 +668,24 @@ class MLTradingIntegration:
                 "successful_signals": successful,
                 "failed_signals": perf_data["failed_signals"],
                 "success_rate": success_rate,
-                "performance_multiplier": self._get_module_performance_multiplier(module_name, symbol),
+                "performance_multiplier": self._get_module_performance_multiplier(
+                    module_name, symbol
+                ),
                 "recent_outcomes": perf_data["recent_outcomes"][-5:],  # Last 5 outcomes
             }
 
             success_rates.append(success_rate)  # type: ignore
 
         # Calculate summary statistics
-        report["summary"]["total_modules"] = len(set(key.rsplit("_", 1)[0] for key in self.signal_performance.keys()))
-        report["summary"]["active_modules"] = len([sr for sr in success_rates if sr > 0])
-        report["summary"]["avg_success_rate"] = np.mean(success_rates) if success_rates else 0.0
+        report["summary"]["total_modules"] = len(
+            set(key.rsplit("_", 1)[0] for key in self.signal_performance.keys())
+        )
+        report["summary"]["active_modules"] = len(
+            [sr for sr in success_rates if sr > 0]
+        )
+        report["summary"]["avg_success_rate"] = (
+            np.mean(success_rates) if success_rates else 0.0
+        )
 
         # Find best and worst performing modules
         if success_rates:
@@ -657,7 +701,11 @@ class MLTradingIntegration:
                     module_performance[module_name].append(success_rate)  # type: ignore
 
             # Calculate average success rate per module
-            avg_module_performance = {module: np.mean(rates) for module, rates in module_performance.items() if rates}
+            avg_module_performance = {
+                module: np.mean(rates)
+                for module, rates in module_performance.items()
+                if rates
+            }
 
             if avg_module_performance:
                 best_module = max(
@@ -718,7 +766,9 @@ async def create_ml_trading_system(
     # etc.
 
     # Create ML integration
-    ml_integration = MLTradingIntegration(paper_bot, module_manager, config.get("ml_integration", {}))
+    ml_integration = MLTradingIntegration(
+        paper_bot, module_manager, config.get("ml_integration", {})
+    )
 
     return paper_bot, ml_integration
 
@@ -749,7 +799,9 @@ async def run_integrated_trading_loop(
             # Log results
             for symbol, result in results.items():
                 if "execution" in result and result["execution"].get("success"):
-                    logger.info(f"Trade executed for {symbol}: {result['decision']['action']}")
+                    logger.info(
+                        f"Trade executed for {symbol}: {result['decision']['action']}"
+                    )
                 elif "error" in result:
                     logger.error(f"Error processing {symbol}: {result['error']}")
 

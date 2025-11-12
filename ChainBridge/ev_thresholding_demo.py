@@ -8,7 +8,12 @@ prediction thresholds for maximum P&L considering trading costs.
 
 import numpy as np
 import pandas as pd
-from ml_pipeline.ev_thresholding import EVThresholdOptimizer, TradingCosts, find_multiple_thresholds, plot_threshold_curve
+from ml_pipeline.ev_thresholding import (
+    EVThresholdOptimizer,
+    TradingCosts,
+    find_multiple_thresholds,
+    plot_threshold_curve,
+)
 
 
 def create_synthetic_trading_data(n_samples=2000):
@@ -78,7 +83,9 @@ def demonstrate_ev_thresholding():
             min_trades=10,
         )
 
-        optimal_result, curve_data = optimizer.optimize_threshold(y_true, y_prob, return_curve=True)
+        optimal_result, curve_data = optimizer.optimize_threshold(
+            y_true, y_prob, return_curve=True
+        )
 
         results[scenario_name] = {"result": optimal_result, "curve": curve_data}
 
@@ -98,7 +105,9 @@ def demonstrate_ev_thresholding():
         min_trades=1,
     )
 
-    standard_result, _ = standard_optimizer.optimize_threshold(y_true, y_prob, thresholds=np.array([0.5]))
+    standard_result, _ = standard_optimizer.optimize_threshold(
+        y_true, y_prob, thresholds=np.array([0.5])
+    )
 
     optimal_result = results["Medium Costs"]["result"]
 
@@ -120,7 +129,9 @@ def demonstrate_ev_thresholding():
 
     risk_levels = ["Conservative", "Moderate", "Aggressive"]
     for i, (level, result) in enumerate(zip(risk_levels, multiple_results)):
-        print(f"   {level}: Threshold {result.threshold:.3f}, EV {result.expected_value:.6f}")
+        print(
+            f"   {level}: Threshold {result.threshold:.3f}, EV {result.expected_value:.6f}"
+        )
 
     print()
 
@@ -171,7 +182,9 @@ def demonstrate_trading_costs_impact():
     expected_values = []
 
     for cost_pct in cost_levels:
-        costs = TradingCosts(commission_pct=cost_pct, slippage_pct=cost_pct / 2, spread_pct=cost_pct / 4)
+        costs = TradingCosts(
+            commission_pct=cost_pct, slippage_pct=cost_pct / 2, spread_pct=cost_pct / 4
+        )
 
         optimizer = EVThresholdOptimizer(trading_costs=costs, min_trades=5)
         result, _ = optimizer.optimize_threshold(y_true, y_prob)

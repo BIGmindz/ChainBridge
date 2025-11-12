@@ -17,7 +17,9 @@ import logging
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Setup logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -51,8 +53,12 @@ def test_ensemble_module_loading():
     try:
         # Set up environment variables for ensemble
         os.environ["BENSON_IS_ENSEMBLE"] = "true"
-        os.environ["BENSON_ENSEMBLE_MODELS"] = "strategies/bull_market/model.pkl,strategies/sideways_market/model.pkl"
-        os.environ["BENSON_ENSEMBLE_SCALERS"] = "strategies/bull_market/scaler.pkl,strategies/sideways_market/scaler.pkl"
+        os.environ["BENSON_ENSEMBLE_MODELS"] = (
+            "strategies/bull_market/model.pkl,strategies/sideways_market/model.pkl"
+        )
+        os.environ["BENSON_ENSEMBLE_SCALERS"] = (
+            "strategies/bull_market/scaler.pkl,strategies/sideways_market/scaler.pkl"
+        )
         os.environ["BENSON_VOTING_MECHANISM"] = "majority_vote"
 
         from modules.machine_learning_module import EnsembleVotingModule
@@ -79,8 +85,12 @@ def test_sample_prediction():
     try:
         # Set up environment variables
         os.environ["BENSON_IS_ENSEMBLE"] = "true"
-        os.environ["BENSON_ENSEMBLE_MODELS"] = "strategies/bull_market/model.pkl,strategies/sideways_market/model.pkl"
-        os.environ["BENSON_ENSEMBLE_SCALERS"] = "strategies/bull_market/scaler.pkl,strategies/sideways_market/scaler.pkl"
+        os.environ["BENSON_ENSEMBLE_MODELS"] = (
+            "strategies/bull_market/model.pkl,strategies/sideways_market/model.pkl"
+        )
+        os.environ["BENSON_ENSEMBLE_SCALERS"] = (
+            "strategies/bull_market/scaler.pkl,strategies/sideways_market/scaler.pkl"
+        )
         os.environ["BENSON_VOTING_MECHANISM"] = "majority_vote"
 
         from modules.machine_learning_module import EnsembleVotingModule
@@ -88,7 +98,13 @@ def test_sample_prediction():
         ensemble = EnsembleVotingModule()
 
         # Sample price data
-        sample_price_data = {"close": 45000.0, "rsi_value": 65.0, "ob_imbalance": 0.1, "vol_imbalance": 0.05, "previous_price": 44500.0}
+        sample_price_data = {
+            "close": 45000.0,
+            "rsi_value": 65.0,
+            "ob_imbalance": 0.1,
+            "vol_imbalance": 0.05,
+            "previous_price": 44500.0,
+        }
 
         # Get ensemble signal
         result = ensemble.get_signal(sample_price_data, "BTC/USD")

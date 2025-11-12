@@ -58,7 +58,9 @@ class VWAPModule(Module):
         signal_strength = self._signal_strength(abs(deviation_pct))
         vwap_slope = self._calculate_slope(vwap_df)
         volume_profile = self._volume_profile(df, vwap_df)
-        confidence = self._confidence(abs(deviation_pct), df["volume"].iloc[-1], vwap_slope)
+        confidence = self._confidence(
+            abs(deviation_pct), df["volume"].iloc[-1], vwap_slope
+        )
 
         return {
             "vwap_value": round(current_vwap, 6),
@@ -72,8 +74,19 @@ class VWAPModule(Module):
         }
 
     def _ohlcv_to_dataframe(self, ohlcv: List[List[Any]]) -> pd.DataFrame:
-        df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
-        df = df.astype({"timestamp": int, "open": float, "high": float, "low": float, "close": float, "volume": float})
+        df = pd.DataFrame(
+            ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"]
+        )
+        df = df.astype(
+            {
+                "timestamp": int,
+                "open": float,
+                "high": float,
+                "low": float,
+                "close": float,
+                "volume": float,
+            }
+        )
         df["datetime"] = pd.to_datetime(df["timestamp"], unit="ms")
         df["hour"] = df["datetime"].dt.hour
         return df
@@ -90,10 +103,14 @@ class VWAPModule(Module):
             session_df = df[df["session_id"] == session].copy()
             session_df["cum_price_volume"] = session_df["price_volume"].cumsum()
             session_df["cum_volume"] = session_df["volume"].cumsum()
-            session_df["vwap"] = session_df["cum_price_volume"] / session_df["cum_volume"]
+            session_df["vwap"] = (
+                session_df["cum_price_volume"] / session_df["cum_volume"]
+            )
             frames.append(session_df)
 
-        return pd.concat(frames, ignore_index=True)[["vwap", "volume", "typical_price", "datetime"]]
+        return pd.concat(frames, ignore_index=True)[
+            ["vwap", "volume", "typical_price", "datetime"]
+        ]
 
     def _generate_signal(self, price: float, vwap: float, deviation: float) -> str:
         abs_dev = abs(deviation)
@@ -126,7 +143,9 @@ class VWAPModule(Module):
             direction = "FLAT"
         return {"direction": direction, "strength": round(abs(slope_pct), 4)}
 
-    def _volume_profile(self, df: pd.DataFrame, vwap_df: pd.DataFrame) -> Dict[str, Any]:
+    def _volume_profile(
+        self, df: pd.DataFrame, vwap_df: pd.DataFrame
+    ) -> Dict[str, Any]:
         recent = min(20, len(df))
         prices = df.tail(recent)
         vwap = vwap_df.tail(recent)
@@ -149,8 +168,14 @@ class VWAPModule(Module):
             "below_vwap_pct": round(below_pct, 1),
         }
 
-    def _confidence(self, deviation: float, volume: float, slope: Dict[str, Any]) -> float:
-        base = 0.8 if deviation >= self.strong_deviation_threshold else 0.6 if deviation >= self.deviation_threshold else 0.3
+    def _confidence(
+        self, deviation: float, volume: float, slope: Dict[str, Any]
+    ) -> float:
+        base = (
+            0.8
+            if deviation >= self.strong_deviation_threshold
+            else 0.6 if deviation >= self.deviation_threshold else 0.3
+        )
         volume_factor = min(1.0, volume / (self.min_volume_threshold * 5))
         slope_strength = slope.get("strength", 0)
         slope_factor = min(1.0, slope_strength)
@@ -164,7 +189,11 @@ class VWAPModule(Module):
             "signal": "HOLD",
             "signal_strength": "NEUTRAL",
             "vwap_slope": {"direction": "UNKNOWN", "strength": 0.0},
-            "volume_profile": {"profile": "NO_DATA", "above_vwap_pct": 0, "below_vwap_pct": 0},
+            "volume_profile": {
+                "profile": "NO_DATA",
+                "above_vwap_pct": 0,
+                "below_vwap_pct": 0,
+            },
             "confidence": 0.0,
             "error": msg,
         }

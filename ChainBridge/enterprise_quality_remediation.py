@@ -64,7 +64,15 @@ class EnterpriseQualityRemediator:
 
     def _should_skip_file(self, file_path: Path) -> bool:
         """Determine if file should be skipped in analysis."""
-        skip_patterns = {".venv", "__pycache__", ".git", "node_modules", "build", "dist", ".pytest_cache"}
+        skip_patterns = {
+            ".venv",
+            "__pycache__",
+            ".git",
+            "node_modules",
+            "build",
+            "dist",
+            ".pytest_cache",
+        }
         return any(pattern in str(file_path) for pattern in skip_patterns)
 
     def _analyze_file(self, file_path: Path) -> None:
@@ -251,7 +259,11 @@ class EnterpriseQualityRemediator:
 
         print(f"Total Issues Found: {len(self.issues)}")
         print(f"Fixes Applied: {self.fixes_applied}")
-        print(f"Success Rate: {(self.fixes_applied/len(self.issues)*100):.1f}%" if self.issues else "100%")
+        print(
+            f"Success Rate: {(self.fixes_applied/len(self.issues)*100):.1f}%"
+            if self.issues
+            else "100%"
+        )
 
         print("\nIssue Breakdown by Type:")
         for issue_type, count in sorted(by_type.items()):

@@ -102,7 +102,10 @@ class UIServerHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(data)
         except Exception as exc:
-            self._send_json({"error": f"static_error: {exc}"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            self._send_json(
+                {"error": f"static_error: {exc}"},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
 
     def _load_trades(self, limit: int = 50):
         try:

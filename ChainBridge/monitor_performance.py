@@ -24,7 +24,9 @@ def monitor_performance():
     trades_file = "multi_signal_trades.json"
 
     while True:
-        print(f"\n📊 Performance Update - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(
+            f"\n📊 Performance Update - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        )
         print("-" * 60)
 
         # Check budget performance
@@ -35,10 +37,16 @@ def monitor_performance():
 
                 performance = budget_data.get("performance", {})
                 print("\n💰 BUDGET PERFORMANCE:")
-                print(f"  Current Capital: ${performance.get('current_capital', 0):,.2f}")
-                print(f"  Total P&L: ${performance.get('total_pnl', 0):+,.2f} ({performance.get('total_pnl_pct', 0):+.1f}%)")
+                print(
+                    f"  Current Capital: ${performance.get('current_capital', 0):,.2f}"
+                )
+                print(
+                    f"  Total P&L: ${performance.get('total_pnl', 0):+,.2f} ({performance.get('total_pnl_pct', 0):+.1f}%)"
+                )
                 print(f"  Win Rate: {performance.get('win_rate', 0):.1f}%")
-                print(f"  Current Drawdown: {performance.get('current_drawdown', 0):.1f}%")
+                print(
+                    f"  Current Drawdown: {performance.get('current_drawdown', 0):.1f}%"
+                )
             except Exception as e:
                 print(f"⚠️ Error reading budget data: {e}")
         else:

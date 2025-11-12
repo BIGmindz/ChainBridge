@@ -59,7 +59,10 @@ class EnhancedTechnicalIndicators:
 
         # Bollinger Bands with volatility scoring
         bb_upper, bb_middle, bb_lower = talib.BBANDS(
-            close, timeperiod=self.config.bb_period, nbdevup=self.config.bb_std, nbdevdn=self.config.bb_std
+            close,
+            timeperiod=self.config.bb_period,
+            nbdevup=self.config.bb_std,
+            nbdevdn=self.config.bb_std,
         )
 
         bb_width = (bb_upper - bb_lower) / bb_middle
@@ -77,14 +80,20 @@ class EnhancedTechnicalIndicators:
                 "width": bb_width,
                 "position": bb_position,
                 "volatility_score": self._normalize_score(bb_width),
-                "signal": self._get_bb_signal(bb_position[-1] if len(bb_position) > 0 else 0),
-                "alert_level": self._get_alert_level(bb_position[-1] if len(bb_position) > 0 else 0),
+                "signal": self._get_bb_signal(
+                    bb_position[-1] if len(bb_position) > 0 else 0
+                ),
+                "alert_level": self._get_alert_level(
+                    bb_position[-1] if len(bb_position) > 0 else 0
+                ),
             },
             "atr": {
                 "value": atr,
                 "percentage": atr_pct,
                 "volatility_score": self._normalize_score(atr_pct),
-                "alert_level": self._get_volatility_alert(atr_pct[-1] if len(atr_pct) > 0 else 0),
+                "alert_level": self._get_volatility_alert(
+                    atr_pct[-1] if len(atr_pct) > 0 else 0
+                ),
             },
         }
 
@@ -100,7 +109,10 @@ class EnhancedTechnicalIndicators:
 
         # MACD with signal strength
         macd, signal, hist = talib.MACD(
-            close, fastperiod=self.config.macd_fast, slowperiod=self.config.macd_slow, signalperiod=self.config.macd_signal
+            close,
+            fastperiod=self.config.macd_fast,
+            slowperiod=self.config.macd_slow,
+            signalperiod=self.config.macd_signal,
         )
 
         # Stochastic with momentum scoring
@@ -121,7 +133,9 @@ class EnhancedTechnicalIndicators:
         return {
             "rsi": {
                 "value": rsi,
-                "trend_strength": self._get_rsi_strength(rsi[-1] if len(rsi) > 0 else 50),
+                "trend_strength": self._get_rsi_strength(
+                    rsi[-1] if len(rsi) > 0 else 50
+                ),
                 "signal": self._get_rsi_signal(rsi[-1] if len(rsi) > 0 else 50),
                 "alert_level": self._get_alert_level(rsi[-1] if len(rsi) > 0 else 50),
             },
@@ -130,15 +144,25 @@ class EnhancedTechnicalIndicators:
                 "signal": signal,
                 "histogram": hist,
                 "momentum_score": self._normalize_score(hist),
-                "signal_strength": self._get_macd_strength(hist[-1] if len(hist) > 0 else 0),
+                "signal_strength": self._get_macd_strength(
+                    hist[-1] if len(hist) > 0 else 0
+                ),
                 "alert_level": self._get_macd_alert(hist[-1] if len(hist) > 0 else 0),
             },
             "stochastic": {
                 "k": slowk,
                 "d": slowd,
-                "momentum_score": self._get_stoch_momentum(slowk[-1] if len(slowk) > 0 else 50, slowd[-1] if len(slowd) > 0 else 50),
-                "signal": self._get_stoch_signal(slowk[-1] if len(slowk) > 0 else 50, slowd[-1] if len(slowd) > 0 else 50),
-                "alert_level": self._get_stoch_alert(slowk[-1] if len(slowk) > 0 else 50),
+                "momentum_score": self._get_stoch_momentum(
+                    slowk[-1] if len(slowk) > 0 else 50,
+                    slowd[-1] if len(slowd) > 0 else 50,
+                ),
+                "signal": self._get_stoch_signal(
+                    slowk[-1] if len(slowk) > 0 else 50,
+                    slowd[-1] if len(slowd) > 0 else 50,
+                ),
+                "alert_level": self._get_stoch_alert(
+                    slowk[-1] if len(slowk) > 0 else 50
+                ),
             },
             "mfi": {
                 "value": mfi,
@@ -167,16 +191,24 @@ class EnhancedTechnicalIndicators:
                 "volume_ma": volume_ma,
                 "volume_ratio": volume_ratio,
                 "intensity_score": self._normalize_score(volume_ratio),
-                "signal": self._get_volume_signal(volume_ratio[-1] if len(volume_ratio) > 0 else 1),
-                "alert_level": self._get_volume_alert(volume_ratio[-1] if len(volume_ratio) > 0 else 1),
+                "signal": self._get_volume_signal(
+                    volume_ratio[-1] if len(volume_ratio) > 0 else 1
+                ),
+                "alert_level": self._get_volume_alert(
+                    volume_ratio[-1] if len(volume_ratio) > 0 else 1
+                ),
             },
             "obv": {
                 "value": obv,
                 "ma": obv_ma,
                 "ratio": obv_ratio,
                 "trend_score": self._normalize_score(obv_ratio),
-                "signal": self._get_obv_signal(obv_ratio[-1] if len(obv_ratio) > 0 else 1),
-                "alert_level": self._get_obv_alert(obv_ratio[-1] if len(obv_ratio) > 0 else 1),
+                "signal": self._get_obv_signal(
+                    obv_ratio[-1] if len(obv_ratio) > 0 else 1
+                ),
+                "alert_level": self._get_obv_alert(
+                    obv_ratio[-1] if len(obv_ratio) > 0 else 1
+                ),
             },
         }
 
@@ -197,9 +229,15 @@ class EnhancedTechnicalIndicators:
         return {
             "ema_cloud": {
                 "emas": emas,
-                "cloud_strength": self._get_ema_cloud_strength(emas, close[-1] if len(close) > 0 else 0),
-                "signal": self._get_ema_signal(emas, close[-1] if len(close) > 0 else 0),
-                "alert_level": self._get_ema_alert(emas, close[-1] if len(close) > 0 else 0),
+                "cloud_strength": self._get_ema_cloud_strength(
+                    emas, close[-1] if len(close) > 0 else 0
+                ),
+                "signal": self._get_ema_signal(
+                    emas, close[-1] if len(close) > 0 else 0
+                ),
+                "alert_level": self._get_ema_alert(
+                    emas, close[-1] if len(close) > 0 else 0
+                ),
             },
             "adx": {
                 "value": adx,

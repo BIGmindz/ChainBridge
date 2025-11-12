@@ -276,8 +276,12 @@ def render(
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--interval", type=float, default=2.0, help="Seconds between updates")
-    p.add_argument("--cycles", type=int, default=0, help="Number of cycles to run (0 = infinite)")
+    p.add_argument(
+        "--interval", type=float, default=2.0, help="Seconds between updates"
+    )
+    p.add_argument(
+        "--cycles", type=int, default=0, help="Number of cycles to run (0 = infinite)"
+    )
     p.add_argument(
         "--gui",
         action="store_true",
@@ -288,14 +292,18 @@ def main():
         action="store_true",
         help="Emphasize header and numbers (bigger, bolder output)",
     )
-    p.add_argument("--delta-up", type=float, default=0.5, help="Percent threshold for 'up' status")
+    p.add_argument(
+        "--delta-up", type=float, default=0.5, help="Percent threshold for 'up' status"
+    )
     p.add_argument(
         "--delta-down",
         type=float,
         default=0.5,
         help="Percent threshold for 'down' status",
     )
-    p.add_argument("--show-arrows", action="store_true", help="Show ▲/▼ next to Current")
+    p.add_argument(
+        "--show-arrows", action="store_true", help="Show ▲/▼ next to Current"
+    )
     p.add_argument(
         "--gradient",
         action="store_true",

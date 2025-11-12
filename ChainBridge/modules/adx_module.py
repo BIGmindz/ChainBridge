@@ -63,8 +63,18 @@ class ADXModule(Module):
         }
 
     def _ohlcv_to_dataframe(self, ohlcv: List[List[Any]]) -> pd.DataFrame:
-        df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
-        return df.astype({"open": float, "high": float, "low": float, "close": float, "volume": float})
+        df = pd.DataFrame(
+            ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"]
+        )
+        return df.astype(
+            {
+                "open": float,
+                "high": float,
+                "low": float,
+                "close": float,
+                "volume": float,
+            }
+        )
 
     def _calculate_adx(self, df: pd.DataFrame) -> pd.DataFrame:
         high, low, close = df["high"], df["low"], df["close"]
@@ -82,13 +92,17 @@ class ADXModule(Module):
 
         return pd.DataFrame({"adx": adx, "plus_di": plus_di, "minus_di": minus_di})
 
-    def _true_range(self, high: pd.Series, low: pd.Series, close: pd.Series) -> pd.Series:
+    def _true_range(
+        self, high: pd.Series, low: pd.Series, close: pd.Series
+    ) -> pd.Series:
         tr1 = high - low
         tr2 = (high - close.shift(1)).abs()
         tr3 = (low - close.shift(1)).abs()
         return pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
 
-    def _directional_movement(self, high: pd.Series, low: pd.Series) -> tuple[pd.Series, pd.Series]:
+    def _directional_movement(
+        self, high: pd.Series, low: pd.Series
+    ) -> tuple[pd.Series, pd.Series]:
         up_move = high.diff()
         down_move = -low.diff()
         plus_dm = up_move.where((up_move > down_move) & (up_move > 0), 0.0)
@@ -122,8 +136,14 @@ class ADXModule(Module):
             return "SELL"
         return "HOLD"
 
-    def _calculate_confidence(self, adx: float, plus_di: float, minus_di: float) -> float:
-        base = 0.2 if adx < self.weak_trend_threshold else 0.7 if adx >= self.strong_trend_threshold else 0.5
+    def _calculate_confidence(
+        self, adx: float, plus_di: float, minus_di: float
+    ) -> float:
+        base = (
+            0.2
+            if adx < self.weak_trend_threshold
+            else 0.7 if adx >= self.strong_trend_threshold else 0.5
+        )
         di_spread = abs(plus_di - minus_di)
         di_factor = min(1.0, di_spread / 20)
         return min(1.0, base * (0.7 + 0.3 * di_factor))

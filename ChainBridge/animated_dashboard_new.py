@@ -52,14 +52,23 @@ class AnimatedTradingDashboard:
                 values=[abs(angle), 360 - abs(angle)],
                 rotation=135 if angle >= 0 else -45,
                 hole=0.7,
-                marker_colors=[RH_COLORS["green"] if angle >= 0 else RH_COLORS["red"], "rgba(0,0,0,0)"],
+                marker_colors=[
+                    RH_COLORS["green"] if angle >= 0 else RH_COLORS["red"],
+                    "rgba(0,0,0,0)",
+                ],
                 showlegend=False,
                 hoverinfo="skip",
                 textinfo="none",
             )
         )
         fig.add_annotation(
-            text="NEUTRAL", x=0.5, y=0.5, showarrow=False, font=dict(size=20, color="white"), xanchor="center", yanchor="middle"
+            text="NEUTRAL",
+            x=0.5,
+            y=0.5,
+            showarrow=False,
+            font=dict(size=20, color="white"),
+            xanchor="center",
+            yanchor="middle",
         )
         fig.update_layout(
             paper_bgcolor="rgba(0,0,0,0)",
@@ -72,11 +81,19 @@ class AnimatedTradingDashboard:
         return fig
 
     def calculate_signal_strength(self, signals):
-        signal_values = {"Strong Sell": -2, "Sell": -1, "Neutral": 0, "Buy": 1, "Strong Buy": 2}
+        signal_values = {
+            "Strong Sell": -2,
+            "Sell": -1,
+            "Neutral": 0,
+            "Buy": 1,
+            "Strong Buy": 2,
+        }
         weights = {"RSI": 0.3, "MACD": 0.4, "BB": 0.3}
         total_strength = 0
         for signal in signals:
-            total_strength += signal_values.get(signal["status"], 0) * weights[signal["name"]]
+            total_strength += (
+                signal_values.get(signal["status"], 0) * weights[signal["name"]]
+            )
         return total_strength
 
     def get_signal_color(self, strength):
@@ -107,7 +124,12 @@ class AnimatedTradingDashboard:
                         "marginBottom": "20px",
                         "borderBottom": "1px solid rgba(255,255,255,0.1)",
                     },
-                    children=[html.H1("Signal Dashboard", style={"margin": "0", "color": "#ffffff"})],
+                    children=[
+                        html.H1(
+                            "Signal Dashboard",
+                            style={"margin": "0", "color": "#ffffff"},
+                        )
+                    ],
                 ),
                 html.Div(
                     style={"padding": "20px"},
@@ -121,20 +143,37 @@ class AnimatedTradingDashboard:
                                 "boxShadow": "0 4px 6px rgba(0,0,0,0.1)",
                             },
                             children=[
-                                html.H2("Signal Strength", style={"textAlign": "center", "marginBottom": "20px"}),
+                                html.H2(
+                                    "Signal Strength",
+                                    style={
+                                        "textAlign": "center",
+                                        "marginBottom": "20px",
+                                    },
+                                ),
                                 dcc.Graph(
                                     id="signal-gauge",
                                     figure=self.create_gauge_figure(),
                                     config={"displayModeBar": False},
-                                    style={"width": "300px", "height": "300px", "margin": "0 auto"},
+                                    style={
+                                        "width": "300px",
+                                        "height": "300px",
+                                        "margin": "0 auto",
+                                    },
                                 ),
                                 html.Div(
                                     id="signal-value",
-                                    style={"textAlign": "center", "fontSize": "24px", "fontWeight": "bold", "marginTop": "20px"},
+                                    style={
+                                        "textAlign": "center",
+                                        "fontSize": "24px",
+                                        "fontWeight": "bold",
+                                        "marginTop": "20px",
+                                    },
                                 ),
                             ],
                         ),
-                        dcc.Interval(id="interval-component", interval=1000, n_intervals=0),
+                        dcc.Interval(
+                            id="interval-component", interval=1000, n_intervals=0
+                        ),
                     ],
                 ),
             ],
@@ -142,7 +181,11 @@ class AnimatedTradingDashboard:
 
     def setup_callbacks(self):
         @self.app.callback(
-            [dash.Output("signal-gauge", "figure"), dash.Output("signal-value", "children"), dash.Output("signal-value", "style")],
+            [
+                dash.Output("signal-gauge", "figure"),
+                dash.Output("signal-value", "children"),
+                dash.Output("signal-value", "style"),
+            ],
             [dash.Input("interval-component", "n_intervals")],
         )
         def update_signal_gauge(n):
@@ -154,8 +197,12 @@ class AnimatedTradingDashboard:
             strength = self.calculate_signal_strength(signals)
             color, status = self.get_signal_color(strength)
             gauge_figure = self.create_gauge_figure(strength)
-            gauge_figure.update_layout(paper_bgcolor=RH_COLORS["black"], plot_bgcolor=RH_COLORS["black"])
-            gauge_figure.update_annotations(dict(text=status.upper(), font=dict(color=color, size=24)))
+            gauge_figure.update_layout(
+                paper_bgcolor=RH_COLORS["black"], plot_bgcolor=RH_COLORS["black"]
+            )
+            gauge_figure.update_annotations(
+                dict(text=status.upper(), font=dict(color=color, size=24))
+            )
             signal_style = {
                 "color": color,
                 "fontSize": "24px",

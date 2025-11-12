@@ -35,7 +35,12 @@ class TradingCosts:
     @property
     def total_cost_pct(self) -> float:
         """Total trading cost as percentage."""
-        return self.commission_pct + self.slippage_pct + self.spread_pct + self.market_impact_pct
+        return (
+            self.commission_pct
+            + self.slippage_pct
+            + self.spread_pct
+            + self.market_impact_pct
+        )
 
 
 @dataclass
@@ -80,7 +85,11 @@ class EVThresholdOptimizer:
         self.min_trades = min_trades
 
     def optimize_threshold(
-        self, y_true: pd.Series, y_prob: pd.Series, thresholds: Optional[np.ndarray] = None, return_curve: bool = False
+        self,
+        y_true: pd.Series,
+        y_prob: pd.Series,
+        thresholds: Optional[np.ndarray] = None,
+        return_curve: bool = False,
     ) -> Tuple[ThresholdResult, Optional[pd.DataFrame]]:
         """
         Find optimal threshold that maximizes expected value.
@@ -105,7 +114,9 @@ class EVThresholdOptimizer:
                 results.append(result)  # type: ignore
 
         if not results:
-            raise ValueError(f"No valid thresholds found with minimum {self.min_trades} trades")
+            raise ValueError(
+                f"No valid thresholds found with minimum {self.min_trades} trades"
+            )
 
         # Find optimal threshold
         optimal_result = max(results, key=lambda x: x.expected_value)
@@ -127,7 +138,9 @@ class EVThresholdOptimizer:
 
         return optimal_result, curve_data
 
-    def _evaluate_threshold(self, y_true: pd.Series, y_prob: pd.Series, threshold: float) -> Optional[ThresholdResult]:
+    def _evaluate_threshold(
+        self, y_true: pd.Series, y_prob: pd.Series, threshold: float
+    ) -> Optional[ThresholdResult]:
         """
         Evaluate a single threshold's performance.
 
@@ -157,7 +170,11 @@ class EVThresholdOptimizer:
         win_trades = returns_with_costs[returns_with_costs > 0]
         loss_trades = returns_with_costs[returns_with_costs < 0]
 
-        win_rate = len(win_trades) / len(returns_with_costs) if len(returns_with_costs) > 0 else 0
+        win_rate = (
+            len(win_trades) / len(returns_with_costs)
+            if len(returns_with_costs) > 0
+            else 0
+        )
         avg_win = win_trades.mean() if len(win_trades) > 0 else 0
         avg_loss = loss_trades.mean() if len(loss_trades) > 0 else 0
 
@@ -177,7 +194,9 @@ class EVThresholdOptimizer:
 
         # Sharpe ratio (annualized, assuming daily returns)
         if len(returns_with_costs) > 1:
-            sharpe_ratio = returns_with_costs.mean() / returns_with_costs.std() * np.sqrt(252)
+            sharpe_ratio = (
+                returns_with_costs.mean() / returns_with_costs.std() * np.sqrt(252)
+            )
         else:
             sharpe_ratio = 0
 
@@ -193,7 +212,9 @@ class EVThresholdOptimizer:
             sharpe_ratio=sharpe_ratio,
         )
 
-    def _calculate_returns_with_costs(self, y_true: pd.Series, signals: np.ndarray) -> pd.Series:
+    def _calculate_returns_with_costs(
+        self, y_true: pd.Series, signals: np.ndarray
+    ) -> pd.Series:
         """
         Calculate returns after accounting for trading costs.
 
@@ -217,7 +238,9 @@ class EVThresholdOptimizer:
 
         # Calculate trading costs for each trade
         # Charge a fixed cost for every trade (simplified model)
-        trading_costs = pd.Series(self.trading_costs.total_cost_pct * position_size, index=returns.index)
+        trading_costs = pd.Series(
+            self.trading_costs.total_cost_pct * position_size, index=returns.index
+        )
         trading_costs = trading_costs * trade_mask  # Only charge for actual trades
 
         # Apply costs to returns
@@ -226,7 +249,9 @@ class EVThresholdOptimizer:
         return net_returns[trade_mask]
 
 
-def find_multiple_thresholds(y_true: pd.Series, y_prob: pd.Series, n_thresholds: int = 3, **kwargs) -> List[ThresholdResult]:
+def find_multiple_thresholds(
+    y_true: pd.Series, y_prob: pd.Series, n_thresholds: int = 3, **kwargs
+) -> List[ThresholdResult]:
     """
     Find multiple optimal thresholds for different risk levels.
 
@@ -255,13 +280,17 @@ def find_multiple_thresholds(y_true: pd.Series, y_prob: pd.Series, n_thresholds:
             result, _ = optimizer.optimize_threshold(y_true, y_prob, thresholds)
             results.append(result)  # type: ignore
         except ValueError:
-            logger.warning(f"Could not find valid threshold in range {min_thresh}-{max_thresh}")
+            logger.warning(
+                f"Could not find valid threshold in range {min_thresh}-{max_thresh}"
+            )
             continue
 
     return results
 
 
-def plot_threshold_curve(curve_data: pd.DataFrame, optimal_threshold: float, save_path: Optional[str] = None):
+def plot_threshold_curve(
+    curve_data: pd.DataFrame, optimal_threshold: float, save_path: Optional[str] = None
+):
     """
     Plot threshold optimization curve.
 
@@ -276,8 +305,16 @@ def plot_threshold_curve(curve_data: pd.DataFrame, optimal_threshold: float, sav
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 10))
 
         # Expected Value curve
-        ax1.plot(curve_data["threshold"], curve_data["expected_value"], "b-", linewidth=2)
-        ax1.axvline(x=optimal_threshold, color="r", linestyle="--", alpha=0.7, label=f"Optimal: {optimal_threshold:.3f}")
+        ax1.plot(
+            curve_data["threshold"], curve_data["expected_value"], "b-", linewidth=2
+        )
+        ax1.axvline(
+            x=optimal_threshold,
+            color="r",
+            linestyle="--",
+            alpha=0.7,
+            label=f"Optimal: {optimal_threshold:.3f}",
+        )
         ax1.set_xlabel("Threshold")
         ax1.set_ylabel("Expected Value")
         ax1.set_title("Expected Value vs Threshold")
@@ -293,7 +330,9 @@ def plot_threshold_curve(curve_data: pd.DataFrame, optimal_threshold: float, sav
         ax2.grid(True, alpha=0.3)
 
         # Profit Factor curve
-        ax3.plot(curve_data["threshold"], curve_data["profit_factor"], "orange", linewidth=2)
+        ax3.plot(
+            curve_data["threshold"], curve_data["profit_factor"], "orange", linewidth=2
+        )
         ax3.axvline(x=optimal_threshold, color="r", linestyle="--", alpha=0.7)
         ax3.set_xlabel("Threshold")
         ax3.set_ylabel("Profit Factor")
@@ -301,7 +340,9 @@ def plot_threshold_curve(curve_data: pd.DataFrame, optimal_threshold: float, sav
         ax3.grid(True, alpha=0.3)
 
         # Trade Count curve
-        ax4.plot(curve_data["threshold"], curve_data["total_trades"], "purple", linewidth=2)
+        ax4.plot(
+            curve_data["threshold"], curve_data["total_trades"], "purple", linewidth=2
+        )
         ax4.axvline(x=optimal_threshold, color="r", linestyle="--", alpha=0.7)
         ax4.set_xlabel("Threshold")
         ax4.set_ylabel("Total Trades")

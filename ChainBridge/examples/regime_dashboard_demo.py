@@ -136,7 +136,9 @@ def generate_demo_data():
             vol = 1.8  # High volatility
 
         # Random walk with drift
-        price_data[i] = price_data[i - 1] * (1 + drift / 100 + vol / 100 * np.random.randn())
+        price_data[i] = price_data[i - 1] * (
+            1 + drift / 100 + vol / 100 * np.random.randn()
+        )
 
     # Create regime labels
     regime_labels = ["Sideways", "Bullish", "Bearish", "Choppy", "Bullish Volatile"]
@@ -181,7 +183,9 @@ def main():
 
     # Run the backtest
     print("Running backtest...")
-    results = backtester.run_backtest(simple_rsi_strategy, default_params, regime_specific_params)
+    results = backtester.run_backtest(
+        simple_rsi_strategy, default_params, regime_specific_params
+    )
 
     # Print summary results
     print("\nBacktest Results Summary:")

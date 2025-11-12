@@ -55,7 +55,9 @@ def load_demo_data(data_file: str = None) -> Dict[str, Any]:
     return tester.sample_data
 
 
-def run_demo(data: Dict[str, Any], output_dir: str, scenario: str = "bull_market") -> Dict[str, Any]:
+def run_demo(
+    data: Dict[str, Any], output_dir: str, scenario: str = "bull_market"
+) -> Dict[str, Any]:
     """
     Run the adaptive weight model demo
 
@@ -147,7 +149,9 @@ def run_demo(data: Dict[str, Any], output_dir: str, scenario: str = "bull_market
         {
             "regime_history": {
                 "regimes": [detected_regime] * 10,
-                "timestamps": [(datetime.now() - timedelta(hours=i)).isoformat() for i in range(10)],
+                "timestamps": [
+                    (datetime.now() - timedelta(hours=i)).isoformat() for i in range(10)
+                ],
                 "confidences": [confidence] * 10,
             }
         }
@@ -206,7 +210,9 @@ def main():
         help="Market scenario to demonstrate",
     )
     parser.add_argument("--data-file", "-d", help="Path to data file")
-    parser.add_argument("--output-dir", "-o", default="demo_results", help="Directory for output files")
+    parser.add_argument(
+        "--output-dir", "-o", default="demo_results", help="Directory for output files"
+    )
     args = parser.parse_args()
 
     # Load or generate demo data

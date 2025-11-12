@@ -17,7 +17,11 @@ import os
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # type: ignore
 
-from ml_pipeline.triple_barrier_labeling import TripleBarrierLabeler, create_synthetic_labels, analyze_label_distribution
+from ml_pipeline.triple_barrier_labeling import (
+    TripleBarrierLabeler,
+    create_synthetic_labels,
+    analyze_label_distribution,
+)
 
 
 class TestTripleBarrierLabeling(unittest.TestCase):
@@ -115,7 +119,9 @@ class TestTripleBarrierLabeling(unittest.TestCase):
 
     def test_synthetic_labels_creation(self):
         """Test creation of synthetic labels."""
-        labels_df = create_synthetic_labels(self.price_series, entry_probability=0.2, seed=42)
+        labels_df = create_synthetic_labels(
+            self.price_series, entry_probability=0.2, seed=42
+        )
 
         # Check that we have some labels
         self.assertGreater(len(labels_df), 0)
@@ -131,7 +137,9 @@ class TestTripleBarrierLabeling(unittest.TestCase):
     def test_label_distribution_analysis(self):
         """Test analysis of label distribution."""
         # Create synthetic labels
-        labels_df = create_synthetic_labels(self.price_series, entry_probability=0.3, seed=123)
+        labels_df = create_synthetic_labels(
+            self.price_series, entry_probability=0.3, seed=123
+        )
 
         # Analyze distribution
         distribution = analyze_label_distribution(labels_df)
@@ -151,7 +159,11 @@ class TestTripleBarrierLabeling(unittest.TestCase):
             self.assertIn(key, distribution)
 
         # Check that percentages sum to 100 (approximately)
-        pct_sum = distribution["profit_taking_pct"] + distribution["stop_loss_pct"] + distribution["max_holding_pct"]
+        pct_sum = (
+            distribution["profit_taking_pct"]
+            + distribution["stop_loss_pct"]
+            + distribution["max_holding_pct"]
+        )
 
         self.assertAlmostEqual(pct_sum, 100.0, places=1)
 
@@ -160,7 +172,9 @@ class TestTripleBarrierLabeling(unittest.TestCase):
         labeler = TripleBarrierLabeler(pt=0.03, sl=-0.02, max_h=5)
 
         # Create entry points
-        entry_points = pd.Series([False] * len(self.price_series), index=self.price_series.index)
+        entry_points = pd.Series(
+            [False] * len(self.price_series), index=self.price_series.index
+        )
         entry_points.iloc[10] = True
         entry_points.iloc[30] = True
         entry_points.iloc[50] = True

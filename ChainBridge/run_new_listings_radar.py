@@ -27,7 +27,9 @@ async def main():
     parser = argparse.ArgumentParser(description="New Listings Radar")
     parser.add_argument("--scan", action="store_true", help="Scan for new listings")
     parser.add_argument("--backtest", action="store_true", help="Run backtest")
-    parser.add_argument("--days", type=int, default=30, help="Number of days for backtest")
+    parser.add_argument(
+        "--days", type=int, default=30, help="Number of days for backtest"
+    )
     parser.add_argument("--save", action="store_true", help="Save results to file")
     parser.add_argument(
         "--output",

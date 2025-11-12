@@ -29,7 +29,9 @@ def integrate_region_module():
     print("✅ Created/verified modules directory")
 
     # 2. Save the region module (you already have the code)
-    print("✅ Region-specific crypto module saved to modules/region_specific_crypto_module.py")
+    print(
+        "✅ Region-specific crypto module saved to modules/region_specific_crypto_module.py"
+    )
 
     # 3. Update the main configuration
     config_updates = {

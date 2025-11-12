@@ -40,7 +40,9 @@ class AdaptiveWeightTrainer:
         self.model = AdaptiveWeightModule(self.config)
 
         # Configure data paths
-        self.data_dir = os.path.join(self.config.get("data_dir", "data"), "adaptive_weight_data")
+        self.data_dir = os.path.join(
+            self.config.get("data_dir", "data"), "adaptive_weight_data"
+        )
         os.makedirs(self.data_dir, exist_ok=True)
 
         # Training configuration
@@ -50,14 +52,20 @@ class AdaptiveWeightTrainer:
         self.early_stopping_patience = self.config.get("early_stopping_patience", 10)
 
         # Model checkpoint directory
-        self.checkpoint_dir = os.path.join(self.config.get("model_dir", "models"), "adaptive_weight_checkpoints")
+        self.checkpoint_dir = os.path.join(
+            self.config.get("model_dir", "models"), "adaptive_weight_checkpoints"
+        )
         os.makedirs(self.checkpoint_dir, exist_ok=True)
 
         # TensorBoard logs directory
-        self.logs_dir = os.path.join(self.config.get("logs_dir", "logs"), "adaptive_weight_logs")
+        self.logs_dir = os.path.join(
+            self.config.get("logs_dir", "logs"), "adaptive_weight_logs"
+        )
         os.makedirs(self.logs_dir, exist_ok=True)
 
-    def collect_training_data(self, lookback_days: int = 30) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
+    def collect_training_data(
+        self, lookback_days: int = 30
+    ) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
         """
         Collect and preprocess training data from stored results
 
@@ -116,7 +124,9 @@ class AdaptiveWeightTrainer:
         # Check if we have enough data
         min_samples = self.config.get("min_samples_required", 50)
         if len(signal_data_list) < min_samples:
-            print(f"Insufficient data for training: {len(signal_data_list)} samples < {min_samples}")
+            print(
+                f"Insufficient data for training: {len(signal_data_list)} samples < {min_samples}"
+            )
             return {}, {}
 
         # Convert lists to numpy arrays
@@ -153,7 +163,9 @@ class AdaptiveWeightTrainer:
                 elif isinstance(signal_value, (int, float)):
                     signals.append(float(signal_value))  # type: ignore
                 else:
-                    signals.append(0.0)  # Default value for missing signals  # type: ignore
+                    signals.append(
+                        0.0
+                    )  # Default value for missing signals  # type: ignore
 
         return np.array(signals)
 
@@ -245,13 +257,17 @@ class AdaptiveWeightTrainer:
                 restore_best_weights=True,
             ),
             ModelCheckpoint(
-                filepath=os.path.join(self.checkpoint_dir, "model_{epoch:02d}_{val_loss:.4f}.h5"),
+                filepath=os.path.join(
+                    self.checkpoint_dir, "model_{epoch:02d}_{val_loss:.4f}.h5"
+                ),
                 save_best_only=True,
                 monitor="val_loss",
                 mode="min",
             ),
             TensorBoard(
-                log_dir=os.path.join(self.logs_dir, datetime.now().strftime("%Y%m%d-%H%M%S")),
+                log_dir=os.path.join(
+                    self.logs_dir, datetime.now().strftime("%Y%m%d-%H%M%S")
+                ),
                 histogram_freq=1,
             ),
         ]
@@ -359,15 +375,23 @@ class AdaptiveWeightTrainer:
                 signal_names.extend(signals)
 
             # Create a dictionary mapping signal names to weights
-            weight_dict = {signal: weight for signal, weight in zip(signal_names, predicted_weights)}
+            weight_dict = {
+                signal: weight
+                for signal, weight in zip(signal_names, predicted_weights)
+            }
 
             # Group weights by layer
             layer_weights = {}
             for layer, signals in self.model.signal_layers.items():
-                layer_weights[layer] = {signal: weight_dict.get(signal, 0.0) for signal in signals}
+                layer_weights[layer] = {
+                    signal: weight_dict.get(signal, 0.0) for signal in signals
+                }
 
             # Calculate average weight per layer
-            layer_avg_weights = {layer: np.mean([w for w in weights.values()]) for layer, weights in layer_weights.items()}
+            layer_avg_weights = {
+                layer: np.mean([w for w in weights.values()])
+                for layer, weights in layer_weights.items()
+            }
 
             return {
                 "status": "success",

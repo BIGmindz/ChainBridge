@@ -32,7 +32,9 @@ class MarketRegimeIntegrator:
         self.market_classifier = MarketConditionClassifier(self.config)
 
         # Directory to store regime history and statistics
-        self.data_dir = os.path.join(self.config.get("data_dir", "data"), "market_regime_data")
+        self.data_dir = os.path.join(
+            self.config.get("data_dir", "data"), "market_regime_data"
+        )
         os.makedirs(self.data_dir, exist_ok=True)
 
         # Regime statistics and history
@@ -74,7 +76,9 @@ class MarketRegimeIntegrator:
         volume_history = market_data.get("volume_history", [])
 
         # Detect regime
-        regime_results = self.market_classifier.detect_regime(price_history, volume_history)
+        regime_results = self.market_classifier.detect_regime(
+            price_history, volume_history
+        )
 
         # Update regime history and statistics
         self._update_regime_stats(regime_results)
@@ -148,7 +152,9 @@ class MarketRegimeIntegrator:
 
         return adjusted_weights
 
-    def update_performance_metrics(self, regime: str, metrics: Dict[str, float]) -> None:
+    def update_performance_metrics(
+        self, regime: str, metrics: Dict[str, float]
+    ) -> None:
         """
         Update performance metrics for a specific regime
 
@@ -183,19 +189,27 @@ class MarketRegimeIntegrator:
             # Update Sharpe ratio (weighted average)
             old_weight = (n_trades - 1) / n_trades
             new_weight = 1 / n_trades
-            regime_perf["sharpe"] = regime_perf["sharpe"] * old_weight + metrics.get("sharpe", 0.0) * new_weight
+            regime_perf["sharpe"] = (
+                regime_perf["sharpe"] * old_weight
+                + metrics.get("sharpe", 0.0) * new_weight
+            )
 
             # Keep track of worst drawdown
-            regime_perf["max_drawdown"] = max(regime_perf["max_drawdown"], metrics.get("max_drawdown", 0.0))
+            regime_perf["max_drawdown"] = max(
+                regime_perf["max_drawdown"], metrics.get("max_drawdown", 0.0)
+            )
 
             # Update average trade duration
             regime_perf["avg_trade_duration"] = (
-                regime_perf["avg_trade_duration"] * old_weight + metrics.get("avg_trade_duration", 0.0) * new_weight
+                regime_perf["avg_trade_duration"] * old_weight
+                + metrics.get("avg_trade_duration", 0.0) * new_weight
             )
 
         # Calculate win rate
         if regime_perf["total_trades"] > 0:
-            regime_perf["win_rate"] = (regime_perf["winning_trades"] / regime_perf["total_trades"]) * 100.0
+            regime_perf["win_rate"] = (
+                regime_perf["winning_trades"] / regime_perf["total_trades"]
+            ) * 100.0
 
         # Save updated statistics
         self.save_regime_stats()

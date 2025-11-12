@@ -207,7 +207,11 @@ async def update_shipment(
 # --- FREIGHT TOKEN ENDPOINTS ---
 
 
-@app.post("/shipments/{shipment_id}/tokenize", response_model=FreightTokenResponse, status_code=201)
+@app.post(
+    "/shipments/{shipment_id}/tokenize",
+    response_model=FreightTokenResponse,
+    status_code=201,
+)
 async def tokenize_shipment(
     shipment_id: int,
     payload: TokenizeShipmentRequest,
@@ -240,16 +244,27 @@ async def tokenize_shipment(
         raise HTTPException(status_code=404, detail="Shipment not found")
 
     # Check if token already exists for this shipment
-    existing_token = db.query(FreightTokenModel).filter(FreightTokenModel.shipment_id == shipment_id).first()
+    existing_token = (
+        db.query(FreightTokenModel)
+        .filter(FreightTokenModel.shipment_id == shipment_id)
+        .first()
+    )
     if existing_token:
-        raise HTTPException(status_code=400, detail=f"Freight token already exists for shipment {shipment_id}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Freight token already exists for shipment {shipment_id}",
+        )
 
     # Call ChainIQ service for risk scoring
     chainiq_result = await call_chainiq(
         shipment_id=shipment_id,
         origin=shipment.origin,
         destination=shipment.destination,
-        planned_delivery_date=(shipment.planned_delivery_date.isoformat() if shipment.planned_delivery_date else None),
+        planned_delivery_date=(
+            shipment.planned_delivery_date.isoformat()
+            if shipment.planned_delivery_date
+            else None
+        ),
     )
 
     # Create new token with ChainIQ scoring
@@ -298,9 +313,15 @@ async def get_shipment_token(
         raise HTTPException(status_code=404, detail="Shipment not found")
 
     # Get token
-    token = db.query(FreightTokenModel).filter(FreightTokenModel.shipment_id == shipment_id).first()
+    token = (
+        db.query(FreightTokenModel)
+        .filter(FreightTokenModel.shipment_id == shipment_id)
+        .first()
+    )
     if not token:
-        raise HTTPException(status_code=404, detail="No freight token for this shipment")
+        raise HTTPException(
+            status_code=404, detail="No freight token for this shipment"
+        )
 
     return token
 
@@ -357,7 +378,11 @@ async def get_token(
 # --- SHIPMENT EVENT ENDPOINTS ---
 
 
-@app.post("/shipments/{shipment_id}/events", response_model=ShipmentEventResponse, status_code=201)
+@app.post(
+    "/shipments/{shipment_id}/events",
+    response_model=ShipmentEventResponse,
+    status_code=201,
+)
 async def create_shipment_event(
     shipment_id: int,
     event_data: ShipmentEventCreate,
@@ -399,11 +424,15 @@ async def create_shipment_event(
     db.commit()
     db.refresh(db_event)
 
-    logger.info(f"Event recorded: shipment_id={shipment_id}, event_type={event_data.event_type}, id={db_event.id}")
+    logger.info(
+        f"Event recorded: shipment_id={shipment_id}, event_type={event_data.event_type}, id={db_event.id}"
+    )
 
     # Call ChainPay webhook asynchronously (fire and forget)
     try:
-        await call_chainpay_webhook(shipment_id, event_data.event_type, occurred_at, db_event.id)
+        await call_chainpay_webhook(
+            shipment_id, event_data.event_type, occurred_at, db_event.id
+        )
     except Exception as e:
         # Log but don't fail the request - ChainPay can retry via other means
         logger.warning(f"Failed to call ChainPay webhook for event {db_event.id}: {e}")
@@ -439,9 +468,16 @@ async def list_shipment_events(
         raise HTTPException(status_code=404, detail="Shipment not found")
 
     # Query events ordered by occurred_at (descending)
-    query = db.query(ShipmentEventModel).filter(ShipmentEventModel.shipment_id == shipment_id)
+    query = db.query(ShipmentEventModel).filter(
+        ShipmentEventModel.shipment_id == shipment_id
+    )
     total = query.count()
-    events = query.order_by(ShipmentEventModel.occurred_at.desc()).offset(skip).limit(limit).all()
+    events = (
+        query.order_by(ShipmentEventModel.occurred_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
 
     return ShipmentEventListResponse(total=total, events=events)
 
@@ -485,7 +521,9 @@ async def call_chainpay_webhook(
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.post(webhook_url, json=payload)
             response.raise_for_status()
-            logger.info(f"ChainPay webhook succeeded for event {event_id}: {response.status_code}")
+            logger.info(
+                f"ChainPay webhook succeeded for event {event_id}: {response.status_code}"
+            )
     except httpx.TimeoutException as e:
         logger.warning(f"ChainPay webhook timeout for event {event_id}: {e}")
         raise
@@ -493,7 +531,9 @@ async def call_chainpay_webhook(
         logger.warning(f"ChainPay webhook connection error for event {event_id}: {e}")
         raise
     except httpx.HTTPStatusError as e:
-        logger.warning(f"ChainPay webhook HTTP error for event {event_id}: {e.response.status_code}")
+        logger.warning(
+            f"ChainPay webhook HTTP error for event {event_id}: {e.response.status_code}"
+        )
         raise
 
 

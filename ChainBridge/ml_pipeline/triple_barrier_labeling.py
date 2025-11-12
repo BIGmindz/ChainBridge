@@ -46,7 +46,9 @@ class TripleBarrierLabeler:
         self.max_h = max_h
         self.min_h = min_h
 
-    def label_series(self, price_series: pd.Series, entry_idx: int, side: int = 1) -> Tuple[int, Optional[int]]:
+    def label_series(
+        self, price_series: pd.Series, entry_idx: int, side: int = 1
+    ) -> Tuple[int, Optional[int]]:
         """
         Label a single entry point using triple barrier method.
 
@@ -76,7 +78,9 @@ class TripleBarrierLabeler:
             sl_barrier = entry_price * (1 - self.sl)  # Price going up is bad
 
         # Look ahead for barrier hits
-        max_lookahead = min(entry_idx + self.max_h + 1, len(price_series))  # +1 to include the max_h index
+        max_lookahead = min(
+            entry_idx + self.max_h + 1, len(price_series)
+        )  # +1 to include the max_h index
 
         for i in range(entry_idx + self.min_h, max_lookahead):
             current_price = price_series.iloc[i]
@@ -96,7 +100,12 @@ class TripleBarrierLabeler:
         # Max holding period reached
         return 0, max_lookahead - 1
 
-    def apply_labels(self, price_series: pd.Series, entry_points: pd.Series, sides: Optional[pd.Series] = None) -> pd.DataFrame:
+    def apply_labels(
+        self,
+        price_series: pd.Series,
+        entry_points: pd.Series,
+        sides: Optional[pd.Series] = None,
+    ) -> pd.DataFrame:
         """
         Apply triple barrier labeling to multiple entry points.
 
@@ -121,7 +130,9 @@ class TripleBarrierLabeler:
                 continue
 
             side = sides.loc[entry_idx]
-            label, exit_idx = self.label_series(price_series, price_series.index.get_loc(entry_idx), side)
+            label, exit_idx = self.label_series(
+                price_series, price_series.index.get_loc(entry_idx), side
+            )
 
             labels.append(label)  # type: ignore
             exit_indices.append(exit_idx)  # type: ignore
@@ -139,7 +150,9 @@ class TripleBarrierLabeler:
         return result
 
 
-def create_synthetic_labels(price_series: pd.Series, entry_probability: float = 0.1, seed: int = 42) -> pd.DataFrame:
+def create_synthetic_labels(
+    price_series: pd.Series, entry_probability: float = 0.1, seed: int = 42
+) -> pd.DataFrame:
     """
     Create synthetic entry points for testing triple barrier labeling.
 
@@ -154,10 +167,15 @@ def create_synthetic_labels(price_series: pd.Series, entry_probability: float = 
     np.random.seed(seed)
 
     # Create random entry points
-    entry_points = pd.Series(np.random.random(len(price_series)) < entry_probability, index=price_series.index)
+    entry_points = pd.Series(
+        np.random.random(len(price_series)) < entry_probability,
+        index=price_series.index,
+    )
 
     # Random sides (long/short)
-    sides = pd.Series(np.random.choice([-1, 1], len(price_series)), index=price_series.index)
+    sides = pd.Series(
+        np.random.choice([-1, 1], len(price_series)), index=price_series.index
+    )
 
     # Apply triple barrier labeling
     labeler = TripleBarrierLabeler(pt=0.02, sl=-0.01, max_h=24)

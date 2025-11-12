@@ -15,7 +15,9 @@ class BudgetManager:
     This turns paper trading into realistic practice
     """
 
-    def __init__(self, initial_capital: float = 10000.0, exchange=None, live_mode: bool = False):
+    def __init__(
+        self, initial_capital: float = 10000.0, exchange=None, live_mode: bool = False
+    ):
         """
         Initialize with your starting capital
         Default $10,000 for realistic paper trading
@@ -27,7 +29,9 @@ class BudgetManager:
             try:
                 balance = self.exchange.fetch_balance()
                 # Assume the balance returns a dict with a 'free' key containing USD balance
-                self.initial_capital = balance.get("free", {}).get("USD", initial_capital)
+                self.initial_capital = balance.get("free", {}).get(
+                    "USD", initial_capital
+                )
             except Exception as e:
                 print(f"❌ Failed to fetch live balance: {e}")
                 self.initial_capital = initial_capital
@@ -45,7 +49,9 @@ class BudgetManager:
                 real_balance = self._fetch_real_balance(exchange)
                 if real_balance > 0:
                     initial_capital = real_balance
-                    print(f"🚀 LIVE BALANCE DETECTED: ${real_balance:,.2f} (overriding config)")
+                    print(
+                        f"🚀 LIVE BALANCE DETECTED: ${real_balance:,.2f} (overriding config)"
+                    )
             except Exception as e:
                 print(f"⚠️  Could not fetch real balance: {e}")
 
@@ -140,10 +146,14 @@ class BudgetManager:
             # Simplified Kelly: f = (p*b - q)/b
             # where p = win probability, b = win/loss ratio, q = loss probability
 
-            win_prob = 0.45 + (signal_confidence * 0.2)  # Convert confidence to probability
+            win_prob = 0.45 + (
+                signal_confidence * 0.2
+            )  # Convert confidence to probability
             win_loss_ratio = self.risk_parameters["take_profit_multiplier"]
 
-            kelly_fraction = (win_prob * win_loss_ratio - (1 - win_prob)) / win_loss_ratio
+            kelly_fraction = (
+                win_prob * win_loss_ratio - (1 - win_prob)
+            ) / win_loss_ratio
             kelly_fraction = max(0, min(kelly_fraction, 0.25))  # Cap at 25%
 
             position_size_pct = base_size * kelly_fraction / 0.25  # Scale to base size
@@ -169,14 +179,20 @@ class BudgetManager:
 
         # Ensure we have enough capital
         if position_size_dollars > self.available_capital:
-            position_size_dollars = self.available_capital * 0.95  # Use 95% of available
+            position_size_dollars = (
+                self.available_capital * 0.95
+            )  # Use 95% of available
 
         # Ensure minimum order size is met (use price to enforce quantity minima when available)
         original_size = position_size_dollars
-        position_size_dollars = self._ensure_minimum_order_size(symbol, position_size_dollars, price)
+        position_size_dollars = self._ensure_minimum_order_size(
+            symbol, position_size_dollars, price
+        )
 
         if position_size_dollars != original_size:
-            print(f"📈 Adjusted position size for {symbol}: ${original_size:.2f} → ${position_size_dollars:.2f} (minimum requirement)")
+            print(
+                f"📈 Adjusted position size for {symbol}: ${original_size:.2f} → ${position_size_dollars:.2f} (minimum requirement)"
+            )
 
         return {
             "size": position_size_dollars,
@@ -187,7 +203,9 @@ class BudgetManager:
             "method": self.risk_parameters["position_size_method"],
         }
 
-    def _ensure_minimum_order_size(self, symbol: str, position_size_dollars: float, price: Optional[float] = None) -> float:
+    def _ensure_minimum_order_size(
+        self, symbol: str, position_size_dollars: float, price: Optional[float] = None
+    ) -> float:
         """
         Ensure position size meets exchange minimum order requirements.
         If `price` is provided we will compute the quantity and make sure quantity >= minimum quantity for symbol.
@@ -267,11 +285,19 @@ class BudgetManager:
         # Calculate stop loss and take profit if not provided
         if stop_loss is None:
             sl_distance = entry_price * 0.03  # 3% stop loss
-            stop_loss = entry_price - sl_distance if side == "BUY" else entry_price + sl_distance
+            stop_loss = (
+                entry_price - sl_distance
+                if side == "BUY"
+                else entry_price + sl_distance
+            )
 
         if take_profit is None:
             tp_distance = entry_price * 0.06  # 6% take profit (2:1 ratio)
-            take_profit = entry_price + tp_distance if side == "BUY" else entry_price - tp_distance
+            take_profit = (
+                entry_price + tp_distance
+                if side == "BUY"
+                else entry_price - tp_distance
+            )
 
         # Create position
         position_id = f"{symbol}_{datetime.now().timestamp()}"
@@ -324,10 +350,14 @@ class BudgetManager:
         # Calculate P&L
         if position["side"] == "BUY":
             pnl = (current_price - position["entry_price"]) * position["quantity"]
-            pnl_pct = (current_price - position["entry_price"]) / position["entry_price"]
+            pnl_pct = (current_price - position["entry_price"]) / position[
+                "entry_price"
+            ]
         else:  # SELL
             pnl = (position["entry_price"] - current_price) * position["quantity"]
-            pnl_pct = (position["entry_price"] - current_price) / position["entry_price"]
+            pnl_pct = (position["entry_price"] - current_price) / position[
+                "entry_price"
+            ]
 
         position["pnl"] = pnl
         position["pnl_pct"] = pnl_pct
@@ -346,7 +376,9 @@ class BudgetManager:
 
         return {"status": "UPDATED", "pnl": pnl, "pnl_pct": pnl_pct}
 
-    def close_position(self, position_id: str, exit_price: float, reason: str = "MANUAL") -> Dict:
+    def close_position(
+        self, position_id: str, exit_price: float, reason: str = "MANUAL"
+    ) -> Dict:
         """
         Close a position and update capital
         """
@@ -377,7 +409,9 @@ class BudgetManager:
         if self.current_capital > self.peak_capital:
             self.peak_capital = self.current_capital
 
-        self.current_drawdown = (self.current_capital - self.peak_capital) / self.peak_capital
+        self.current_drawdown = (
+            self.current_capital - self.peak_capital
+        ) / self.peak_capital
         self.max_drawdown = min(self.max_drawdown, self.current_drawdown)
 
         # Record trade
@@ -417,14 +451,20 @@ class BudgetManager:
         """
         open_pnl = sum(pos["pnl"] for pos in self.positions.values())  # type: ignore
 
-        win_rate = (self.winning_trades / self.total_trades * 100) if self.total_trades > 0 else 0
+        win_rate = (
+            (self.winning_trades / self.total_trades * 100)
+            if self.total_trades > 0
+            else 0
+        )
 
         return {
             "current_capital": self.current_capital,
             "available_capital": self.available_capital,
             "initial_capital": self.initial_capital,
             "total_pnl": self.current_capital - self.initial_capital,
-            "total_pnl_pct": (self.current_capital - self.initial_capital) / self.initial_capital * 100,
+            "total_pnl_pct": (self.current_capital - self.initial_capital)
+            / self.initial_capital
+            * 100,
             "open_positions": len(self.positions),
             "open_pnl": open_pnl,
             "total_trades": self.total_trades,
@@ -482,7 +522,9 @@ class BudgetManager:
             print("-" * 40)
             for pos_id, pos in self.positions.items():
                 emoji = "🟢" if pos["pnl"] > 0 else "🔴"
-                print(f"{emoji} {pos['symbol']}: ${pos['pnl']:+,.2f} ({pos['pnl_pct'] * 100:+.1f}%)")
+                print(
+                    f"{emoji} {pos['symbol']}: ${pos['pnl']:+,.2f} ({pos['pnl_pct'] * 100:+.1f}%)"
+                )
 
     def save_state(self, filename: str = "budget_state.json"):
         """
@@ -513,7 +555,9 @@ if __name__ == "__main__":
     print("=" * 60)
 
     # Open a position
-    position_calc = budget.calculate_position_size("BTC/USD", signal_confidence=0.75, volatility=0.03)
+    position_calc = budget.calculate_position_size(
+        "BTC/USD", signal_confidence=0.75, volatility=0.03
+    )
     print("\n📊 Position Size Calculation:")
     print(f"  Allocated: ${position_calc['size']:,.2f}")
     print(f"  Percentage: {position_calc['size_pct'] * 100:.1f}%")

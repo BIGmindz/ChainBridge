@@ -45,7 +45,9 @@ class AdaptiveWeightTester:
         self.visualizer = AdaptiveWeightVisualizer(self.config)
 
         # Results directory
-        self.results_dir = os.path.join(self.config.get("results_dir", "test_results"), "adaptive_weight_tests")
+        self.results_dir = os.path.join(
+            self.config.get("results_dir", "test_results"), "adaptive_weight_tests"
+        )
         os.makedirs(self.results_dir, exist_ok=True)
 
         # Configure test settings
@@ -74,19 +76,34 @@ class AdaptiveWeightTester:
         base_price = 20000.0
 
         # Generate timestamps
-        timestamps = [(datetime.now() - timedelta(days=days - i)).isoformat() for i in range(days + 1)]
+        timestamps = [
+            (datetime.now() - timedelta(days=days - i)).isoformat()
+            for i in range(days + 1)
+        ]
 
         # Bull market - strong uptrend
-        bull_prices = [base_price * (1 + 0.02 * i + np.random.normal(0, 0.01)) for i in range(days + 1)]
+        bull_prices = [
+            base_price * (1 + 0.02 * i + np.random.normal(0, 0.01))
+            for i in range(days + 1)
+        ]
 
         # Bear market - strong downtrend
-        bear_prices = [base_price * (1 - 0.015 * i + np.random.normal(0, 0.01)) for i in range(days + 1)]
+        bear_prices = [
+            base_price * (1 - 0.015 * i + np.random.normal(0, 0.01))
+            for i in range(days + 1)
+        ]
 
         # Sideways market - range-bound
-        sideways_prices = [base_price * (1 + np.sin(i / 5) * 0.03 + np.random.normal(0, 0.005)) for i in range(days + 1)]
+        sideways_prices = [
+            base_price * (1 + np.sin(i / 5) * 0.03 + np.random.normal(0, 0.005))
+            for i in range(days + 1)
+        ]
 
         # Volatile market - large swings
-        volatile_prices = [base_price * (1 + np.sin(i / 3) * 0.08 + np.random.normal(0, 0.02)) for i in range(days + 1)]
+        volatile_prices = [
+            base_price * (1 + np.sin(i / 3) * 0.08 + np.random.normal(0, 0.02))
+            for i in range(days + 1)
+        ]
 
         # Store scenarios
         self.sample_data["bull_market"] = {
@@ -120,7 +137,11 @@ class AdaptiveWeightTester:
             base_volume = 1000.0
 
             # Generate volumes (higher on bigger price moves)
-            volumes = [base_volume * (1 + 2 * abs(change) / base_price + np.random.normal(0, 0.1)) for change in price_changes]
+            volumes = [
+                base_volume
+                * (1 + 2 * abs(change) / base_price + np.random.normal(0, 0.1))
+                for change in price_changes
+            ]
 
             # Add first volume point
             volumes = [base_volume] + volumes
@@ -200,7 +221,11 @@ class AdaptiveWeightTester:
                     layer_signals[signal_name] = {
                         "value": signal_value,
                         "strength": abs(signal_value),
-                        "signal": ("BUY" if signal_value > 0.2 else ("SELL" if signal_value < -0.2 else "HOLD")),
+                        "signal": (
+                            "BUY"
+                            if signal_value > 0.2
+                            else ("SELL" if signal_value < -0.2 else "HOLD")
+                        ),
                     }
 
                 signal_data[layer_name] = layer_signals
@@ -227,7 +252,9 @@ class AdaptiveWeightTester:
             expected_regime = scenario_data.get("expected_regime")
 
             # Detect regime
-            regime_results = self.regime_classifier.detect_regime(price_history, volume_history)
+            regime_results = self.regime_classifier.detect_regime(
+                price_history, volume_history
+            )
             detected_regime = regime_results.get("regime")
             confidence = regime_results.get("confidence", 0.0)
 
@@ -281,7 +308,9 @@ class AdaptiveWeightTester:
             }
 
             # Add volatility features
-            regime_features = self.regime_classifier.extract_features(price_history, volume_history)
+            regime_features = self.regime_classifier.extract_features(
+                price_history, volume_history
+            )
             market_data.update(regime_features)
 
             # Detect regime first
@@ -322,7 +351,9 @@ class AdaptiveWeightTester:
 
         return results
 
-    def _analyze_weights(self, weights: Dict[str, float], regime: str) -> Dict[str, Any]:
+    def _analyze_weights(
+        self, weights: Dict[str, float], regime: str
+    ) -> Dict[str, Any]:
         """Analyze weights for a specific regime"""
         # Define expected weight patterns
         expected_patterns = {
@@ -355,9 +386,15 @@ class AdaptiveWeightTester:
         # Check if weights match expected patterns
         pattern = expected_patterns.get(regime, {})
         insights = {
-            "highest_weight_layer": (max(weights.items(), key=lambda x: x[1])[0] if weights else "N/A"),
-            "lowest_weight_layer": (min(weights.items(), key=lambda x: x[1])[0] if weights else "N/A"),
-            "weight_spread": (max(weights.values()) - min(weights.values()) if weights else 0.0),
+            "highest_weight_layer": (
+                max(weights.items(), key=lambda x: x[1])[0] if weights else "N/A"
+            ),
+            "lowest_weight_layer": (
+                min(weights.items(), key=lambda x: x[1])[0] if weights else "N/A"
+            ),
+            "weight_spread": (
+                max(weights.values()) - min(weights.values()) if weights else 0.0
+            ),
             "matches_expected_pattern": True,
         }
 
@@ -394,8 +431,12 @@ class AdaptiveWeightTester:
         """Visualize regime detection results"""
         # Extract data
         scenarios = list(results.get("scenario_results", {}).keys())  # type: ignore
-        expected = [results["scenario_results"][s]["expected_regime"] for s in scenarios]
-        detected = [results["scenario_results"][s]["detected_regime"] for s in scenarios]
+        expected = [
+            results["scenario_results"][s]["expected_regime"] for s in scenarios
+        ]
+        detected = [
+            results["scenario_results"][s]["detected_regime"] for s in scenarios
+        ]
         confidences = [results["scenario_results"][s]["confidence"] for s in scenarios]
 
         # Create figure
@@ -466,7 +507,9 @@ class AdaptiveWeightTester:
         offsets = [-1.5 * width, -0.5 * width, 0.5 * width, 1.5 * width]
 
         for i, layer in enumerate(layers):
-            plt.bar([j + offsets[i] for j in x], weights_by_layer[layer], width, label=layer)
+            plt.bar(
+                [j + offsets[i] for j in x], weights_by_layer[layer], width, label=layer
+            )
 
         # Configure plot
         plt.xlabel("Scenario (Market Regime)")

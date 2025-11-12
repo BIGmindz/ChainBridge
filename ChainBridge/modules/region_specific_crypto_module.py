@@ -90,7 +90,9 @@ class RegionSpecificCryptoModule:
                         }
 
                     # Aggregate confidence
-                    recommendations[crypto]["confidence"] += region_confidence * config["weight"]
+                    recommendations[crypto]["confidence"] += (
+                        region_confidence * config["weight"]
+                    )
                     recommendations[crypto]["regions"].append(region)  # type: ignore
                     recommendations[crypto]["reasoning"].append(config["reasoning"])  # type: ignore
 
@@ -103,7 +105,11 @@ class RegionSpecificCryptoModule:
             "timestamp": datetime.now().isoformat(),
             "recommendations": trading_signals,
             "total_confidence": total_confidence,
-            "active_regions": [r for r, c in self.region_crypto_map.items() if self._analyze_region(r, macro_signals) > 0.5],
+            "active_regions": [
+                r
+                for r, c in self.region_crypto_map.items()
+                if self._analyze_region(r, macro_signals) > 0.5
+            ],
             "module": self.name,
         }
 
@@ -182,7 +188,9 @@ class RegionSpecificCryptoModule:
         signals = []
 
         # Sort by confidence
-        sorted_recs = sorted(recommendations.items(), key=lambda x: x[1]["confidence"], reverse=True)
+        sorted_recs = sorted(
+            recommendations.items(), key=lambda x: x[1]["confidence"], reverse=True
+        )
 
         for crypto, data in sorted_recs[:5]:  # Top 5 only
             if data["confidence"] > 0.3:
@@ -196,7 +204,9 @@ class RegionSpecificCryptoModule:
                     "position_size_pct": position_size,
                     "regions": data["regions"],
                     "reasoning": " + ".join(data["reasoning"][:2]),  # Top 2 reasons
-                    "expected_holding_period": self._estimate_holding_period(data["regions"]),
+                    "expected_holding_period": self._estimate_holding_period(
+                        data["regions"]
+                    ),
                 }
 
                 signals.append(signal)  # type: ignore

@@ -69,10 +69,14 @@ class IchimokuCloudModule(Module):
         cloud_top = max(span_a[-1], span_b[-1])
         cloud_bottom = min(span_a[-1], span_b[-1])
         cloud_position = self._cloud_position(current_price, cloud_bottom, cloud_top)
-        trend = self._trend_direction(current_price, tenkan[-1], kijun[-1], cloud_position, chikou)
+        trend = self._trend_direction(
+            current_price, tenkan[-1], kijun[-1], cloud_position, chikou
+        )
 
         signal = self._generate_signal(trend, tenkan[-1], kijun[-1])
-        confidence = self._confidence(trend, cloud_position, tenkan[-1], kijun[-1], current_price)
+        confidence = self._confidence(
+            trend, cloud_position, tenkan[-1], kijun[-1], current_price
+        )
 
         return {
             "trend": trend,
@@ -84,7 +88,9 @@ class IchimokuCloudModule(Module):
                 "base_line": round(float(kijun[-1]), 2),
                 "leading_span_a": round(float(span_a[-1]), 2),
                 "leading_span_b": round(float(span_b[-1]), 2),
-                "lagging_span": round(float(chikou[-1]), 2) if not np.isnan(chikou[-1]) else None,
+                "lagging_span": (
+                    round(float(chikou[-1]), 2) if not np.isnan(chikou[-1]) else None
+                ),
             },
             "metadata": {
                 "module_version": self.VERSION,
@@ -135,7 +141,9 @@ class IchimokuCloudModule(Module):
 
         chikou = close.shift(-disp)
 
-        valid_mask = (~tenkan.isna()) & (~kijun.isna()) & (~span_a.isna()) & (~span_b.isna())
+        valid_mask = (
+            (~tenkan.isna()) & (~kijun.isna()) & (~span_a.isna()) & (~span_b.isna())
+        )
         if not valid_mask.any():
             return None
 
@@ -148,7 +156,9 @@ class IchimokuCloudModule(Module):
             chikou.iloc[idx].values,
         )
 
-    def _cloud_position(self, price: float, cloud_bottom: float, cloud_top: float) -> str:
+    def _cloud_position(
+        self, price: float, cloud_bottom: float, cloud_top: float
+    ) -> str:
         if price > cloud_top:
             return "ABOVE_CLOUD"
         if price < cloud_bottom:
@@ -164,11 +174,17 @@ class IchimokuCloudModule(Module):
         chikou: np.ndarray,
     ) -> str:
         chikou_latest = chikou[-1]
-        chikou_confirmation = chikou_latest > price if not np.isnan(chikou_latest) else False
+        chikou_confirmation = (
+            chikou_latest > price if not np.isnan(chikou_latest) else False
+        )
 
         if cloud_position == "ABOVE_CLOUD" and tenkan > kijun and chikou_confirmation:
             return "BULLISH"
-        if cloud_position == "BELOW_CLOUD" and tenkan < kijun and not chikou_confirmation:
+        if (
+            cloud_position == "BELOW_CLOUD"
+            and tenkan < kijun
+            and not chikou_confirmation
+        ):
             return "BEARISH"
         return "NEUTRAL"
 
@@ -213,4 +229,9 @@ class IchimokuCloudModule(Module):
         return self.config.span_b_period + self.config.displacement
 
     def validate_config(self) -> bool:
-        return self.config.conversion_period > 0 < self.config.base_period < self.config.span_b_period
+        return (
+            self.config.conversion_period
+            > 0
+            < self.config.base_period
+            < self.config.span_b_period
+        )

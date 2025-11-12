@@ -88,7 +88,9 @@ class VolatileCryptoSelector:
                 continue
 
         # Sort by score and get top N
-        sorted_cryptos = sorted(volatility_data.items(), key=lambda x: x[1]["score"], reverse=True)[:top_n]
+        sorted_cryptos = sorted(
+            volatility_data.items(), key=lambda x: x[1]["score"], reverse=True
+        )[:top_n]
 
         self.top_cryptos = [crypto for crypto, _ in sorted_cryptos]
         self.volatility_scores = dict(sorted_cryptos)
@@ -165,7 +167,9 @@ class VolatileCryptoSelector:
             with open(config_path, "w") as file:
                 yaml.dump(config, file, default_flow_style=False)
 
-            print(f"✅ Updated {config_path} with top {len(self.top_cryptos)} volatile cryptocurrencies")
+            print(
+                f"✅ Updated {config_path} with top {len(self.top_cryptos)} volatile cryptocurrencies"
+            )
             return True
 
         except Exception as e:

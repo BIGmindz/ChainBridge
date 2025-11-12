@@ -6,14 +6,18 @@ def test_market_data():
     try:
         # Initialize exchange
         print("Initializing Kraken exchange...")
-        exchange = ccxt.kraken({"apiKey": "1234", "secret": "dummy", "enableRateLimit": True})
+        exchange = ccxt.kraken(
+            {"apiKey": "1234", "secret": "dummy", "enableRateLimit": True}
+        )
 
         # Fetch OHLCV data
         print("Fetching BTC/USD data...")
         ohlcv = exchange.fetch_ohlcv("BTC/USD", "1m", limit=100)
 
         # Convert to DataFrame
-        df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
+        df = pd.DataFrame(
+            ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"]
+        )
         df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")  # type: ignore
 
         # Print sample

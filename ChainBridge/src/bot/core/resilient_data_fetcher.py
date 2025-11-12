@@ -28,7 +28,12 @@ class CircuitState(Enum):
 class CircuitBreaker:
     """Circuit breaker pattern implementation"""
 
-    def __init__(self, failure_threshold: int = 5, recovery_timeout: int = 60, expected_exception: type = Exception):
+    def __init__(
+        self,
+        failure_threshold: int = 5,
+        recovery_timeout: int = 60,
+        expected_exception: type = Exception,
+    ):
         self.failure_threshold = failure_threshold
         self.recovery_timeout = recovery_timeout
         self.expected_exception = expected_exception
@@ -56,7 +61,10 @@ class CircuitBreaker:
 
     def _should_attempt_reset(self) -> bool:
         """Check if enough time has passed to attempt reset"""
-        return self.last_failure_time and time.time() - self.last_failure_time >= self.recovery_timeout
+        return (
+            self.last_failure_time
+            and time.time() - self.last_failure_time >= self.recovery_timeout
+        )
 
     def _on_success(self):
         """Handle successful call"""
@@ -163,18 +171,32 @@ class ResilientDataFetcher:
             logger.info(f"Using FALLBACK value for {url}")
             return fallback_value, "fallback"
 
-    def _fetch_with_retry(self, url: str, max_retries: int, backoff_factor: float, timeout: int, headers: Dict, params: Dict) -> Any:
+    def _fetch_with_retry(
+        self,
+        url: str,
+        max_retries: int,
+        backoff_factor: float,
+        timeout: int,
+        headers: Dict,
+        params: Dict,
+    ) -> Any:
         """Fetch with exponential backoff retry logic"""
 
         for attempt in range(max_retries):
             try:
-                response = requests.get(url, params=params, headers=headers, timeout=timeout)
+                response = requests.get(
+                    url, params=params, headers=headers, timeout=timeout
+                )
 
                 # Handle rate limiting (429)
                 if response.status_code == 429:
                     if attempt < max_retries - 1:
-                        retry_after = int(response.headers.get("Retry-After", backoff_factor**attempt))
-                        logger.warning(f"Rate limited on {url}, retrying after {retry_after}s")
+                        retry_after = int(
+                            response.headers.get("Retry-After", backoff_factor**attempt)
+                        )
+                        logger.warning(
+                            f"Rate limited on {url}, retrying after {retry_after}s"
+                        )
                         time.sleep(retry_after)
                         continue
                     else:
@@ -197,7 +219,9 @@ class ResilientDataFetcher:
             except requests.exceptions.RequestException as e:
                 if attempt < max_retries - 1:
                     wait_time = backoff_factor**attempt
-                    logger.warning(f"Request failed for {url}: {e}, retrying in {wait_time}s")
+                    logger.warning(
+                        f"Request failed for {url}: {e}, retrying in {wait_time}s"
+                    )
                     time.sleep(wait_time)
                 else:
                     raise
@@ -217,7 +241,9 @@ class ResilientDataFetcher:
         parsed = urlparse(url)
         return f"{parsed.scheme}://{parsed.netloc}"
 
-    def _get_from_cache(self, cache_key: str, cache_ttl: Optional[int]) -> Optional[Any]:
+    def _get_from_cache(
+        self, cache_key: str, cache_ttl: Optional[int]
+    ) -> Optional[Any]:
         """Retrieve data from cache if not expired"""
         cache_file = self.cache_dir / f"{cache_key}.json"
 

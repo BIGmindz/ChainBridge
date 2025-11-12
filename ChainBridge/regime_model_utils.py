@@ -87,7 +87,9 @@ class RegimeModelLoader:
                 "model": model_data["model"],
                 "label_encoder": model_data["label_encoder"],
                 "feature_scaler": model_data.get("feature_scaler"),
-                "feature_columns": model_data.get("feature_columns", model_data.get("feature_cols")),
+                "feature_columns": model_data.get(
+                    "feature_columns", model_data.get("feature_cols")
+                ),
                 "metadata": model_data.get("metadata", {}),
                 "loaded_from": filepath,
             }
@@ -101,7 +103,9 @@ class RegimeModelLoader:
             logger.error(f"Error loading model '{model_name}': {e}")
             return False
 
-    def predict_regime(self, features: Union[Dict, pd.DataFrame], model_name: str = "enhanced") -> Dict:
+    def predict_regime(
+        self, features: Union[Dict, pd.DataFrame], model_name: str = "enhanced"
+    ) -> Dict:
         """
         Predict market regime using specified model
 
@@ -161,7 +165,12 @@ class RegimeModelLoader:
             # Get all probabilities
             regime_probs = dict(zip(label_encoder.classes_, pred_proba))
 
-            return {"regime": regime, "confidence": confidence, "probabilities": regime_probs, "model_used": model_name}
+            return {
+                "regime": regime,
+                "confidence": confidence,
+                "probabilities": regime_probs,
+                "model_used": model_name,
+            }
         else:
             # Multiple predictions
             regimes = label_encoder.inverse_transform(pred_encoded)
@@ -248,8 +257,10 @@ def create_sample_features(regime_type: str = "bull") -> Dict:
         features.update(
             {
                 "momentum_rsi": features["rsi_14"] + np.random.normal(0, 3),
-                "price_momentum": features["price_change_24h"] / features["volatility_24h"],
-                "volume_price_trend": features["volume_ratio"] * features["price_change_24h"],
+                "price_momentum": features["price_change_24h"]
+                / features["volatility_24h"],
+                "volume_price_trend": features["volume_ratio"]
+                * features["price_change_24h"],
                 "bb_squeeze": 0,  # No squeeze in trending market
             }
         )
@@ -277,8 +288,10 @@ def create_sample_features(regime_type: str = "bull") -> Dict:
         features.update(
             {
                 "momentum_rsi": features["rsi_14"] + np.random.normal(0, 3),
-                "price_momentum": features["price_change_24h"] / features["volatility_24h"],
-                "volume_price_trend": features["volume_ratio"] * features["price_change_24h"],
+                "price_momentum": features["price_change_24h"]
+                / features["volatility_24h"],
+                "volume_price_trend": features["volume_ratio"]
+                * features["price_change_24h"],
                 "bb_squeeze": 0,  # No squeeze in trending market
             }
         )
@@ -306,8 +319,13 @@ def create_sample_features(regime_type: str = "bull") -> Dict:
         features.update(
             {
                 "momentum_rsi": features["rsi_14"] + np.random.normal(0, 3),
-                "price_momentum": features["price_change_24h"] / features["volatility_24h"] if features["volatility_24h"] > 0 else 0,
-                "volume_price_trend": features["volume_ratio"] * features["price_change_24h"],
+                "price_momentum": (
+                    features["price_change_24h"] / features["volatility_24h"]
+                    if features["volatility_24h"] > 0
+                    else 0
+                ),
+                "volume_price_trend": features["volume_ratio"]
+                * features["price_change_24h"],
                 "bb_squeeze": 1,  # Squeeze in sideways market
             }
         )
@@ -318,7 +336,9 @@ def create_sample_features(regime_type: str = "bull") -> Dict:
     return features
 
 
-def quick_predict(features: Union[Dict, pd.DataFrame], model_name: str = "enhanced") -> str:
+def quick_predict(
+    features: Union[Dict, pd.DataFrame], model_name: str = "enhanced"
+) -> str:
     """
     Quick prediction function for convenience
 
@@ -382,7 +402,9 @@ def main():
         # Make prediction
         result = loader.predict_regime(sample_features, model_to_use)
 
-        print(f"  Predicted: {result['regime']} (confidence: {result['confidence']:.3f})")
+        print(
+            f"  Predicted: {result['regime']} (confidence: {result['confidence']:.3f})"
+        )
         print("  Probabilities:")
         for regime, prob in result["probabilities"].items():
             print(f"    {regime}: {prob:.3f}")

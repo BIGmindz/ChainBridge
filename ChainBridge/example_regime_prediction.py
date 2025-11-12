@@ -76,7 +76,11 @@ def demonstrate_model_loading_and_prediction():
     print(f"📋 Available models: {available_models}")
 
     # Try to load enhanced model first, then original
-    model_name = "enhanced" if "enhanced" in available_models else ("original" if "original" in available_models else None)
+    model_name = (
+        "enhanced"
+        if "enhanced" in available_models
+        else ("original" if "original" in available_models else None)
+    )
 
     if model_name is None:
         print("❌ No models found. Please train a model first.")
@@ -185,7 +189,9 @@ def demonstrate_batch_predictions(loader, model_name):
     for regime in ["bull", "bear", "sideways"]:
         true_indices = [i for i, r in enumerate(true_regimes) if r == regime]
         regime_correct = sum(1 for i in true_indices if predicted_regimes[i] == regime)  # type: ignore
-        regime_accuracy[regime] = regime_correct / len(true_indices) if true_indices else 0
+        regime_accuracy[regime] = (
+            regime_correct / len(true_indices) if true_indices else 0
+        )
 
     print("\nRegime-wise Accuracy:")
     for regime, acc in regime_accuracy.items():
@@ -201,7 +207,9 @@ def demonstrate_batch_predictions(loader, model_name):
         confidence = confidences[i]
         status = "✅" if true_regime == pred_regime else "❌"
 
-        print(f"{status} Sample {i + 1}: True={true_regime}, Pred={pred_regime} (conf: {confidence:.3f})")
+        print(
+            f"{status} Sample {i + 1}: True={true_regime}, Pred={pred_regime} (conf: {confidence:.3f})"
+        )
 
 
 def demonstrate_feature_importance(loader, model_name):
@@ -222,7 +230,9 @@ def demonstrate_feature_importance(loader, model_name):
             feature_importance = dict(zip(feature_columns, importance_scores))
 
             # Sort by importance
-            sorted_features = sorted(feature_importance.items(), key=lambda x: x[1], reverse=True)
+            sorted_features = sorted(
+                feature_importance.items(), key=lambda x: x[1], reverse=True
+            )
 
             print("🏆 TOP 10 MOST IMPORTANT FEATURES:")
             print("-" * 40)
@@ -239,9 +249,20 @@ def demonstrate_feature_importance(loader, model_name):
             categories = {
                 "RSI": ["rsi_14", "momentum_rsi"],
                 "MACD": ["macd", "macd_signal", "macd_hist"],
-                "Bollinger Bands": ["bb_upper", "bb_middle", "bb_lower", "bb_width", "bb_position", "bb_squeeze"],
+                "Bollinger Bands": [
+                    "bb_upper",
+                    "bb_middle",
+                    "bb_lower",
+                    "bb_width",
+                    "bb_position",
+                    "bb_squeeze",
+                ],
                 "Volume": ["volume_ratio", "volume_price_trend"],
-                "Price Change": ["price_change_1h", "price_change_24h", "price_momentum"],
+                "Price Change": [
+                    "price_change_1h",
+                    "price_change_24h",
+                    "price_momentum",
+                ],
                 "Volatility": ["volatility_24h"],
                 "Trend": ["trend_strength"],
             }
@@ -271,7 +292,9 @@ def create_live_market_simulation():
     print("-" * 55)
 
     loader = RegimeModelLoader()
-    model_name = "enhanced" if "enhanced" in loader.list_available_models() else "original"
+    model_name = (
+        "enhanced" if "enhanced" in loader.list_available_models() else "original"
+    )
 
     if not loader.load_model(model_name):
         print("❌ Could not load model for simulation")
@@ -285,7 +308,9 @@ def create_live_market_simulation():
         np.random.seed(int(date.timestamp()))
 
         # Randomly choose market condition
-        market_condition = np.random.choice(["bull", "bear", "sideways"], p=[0.4, 0.3, 0.3])
+        market_condition = np.random.choice(
+            ["bull", "bear", "sideways"], p=[0.4, 0.3, 0.3]
+        )
         features = create_sample_features(market_condition)
 
         # Make prediction

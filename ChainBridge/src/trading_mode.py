@@ -33,6 +33,8 @@ class TradingMode:
             api_secret = os.getenv("API_SECRET")
 
             if not api_key or not api_secret:
-                raise ValueError("Live trading mode requires API_KEY and API_SECRET environment variables")
+                raise ValueError(
+                    "Live trading mode requires API_KEY and API_SECRET environment variables"
+                )
 
         return True

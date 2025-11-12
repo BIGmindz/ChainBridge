@@ -28,7 +28,11 @@ def fix_markdown_file(filepath):
                     fixed_lines.append("")
                 fixed_lines.append(line)
                 # Add blank after if needed
-                if i + 1 < len(lines) and lines[i + 1].strip() and not lines[i + 1].startswith("#"):
+                if (
+                    i + 1 < len(lines)
+                    and lines[i + 1].strip()
+                    and not lines[i + 1].startswith("#")
+                ):
                     fixed_lines.append("")
                 i += 1
                 continue
@@ -45,16 +49,34 @@ def fix_markdown_file(filepath):
                     # Detect language from context
                     if i + 1 < len(lines):
                         next_line = lines[i + 1].lower()
-                        if "import " in next_line or "def " in next_line or "class " in next_line:
-                            fence_line = line.replace("```", "```python", 1).replace("````", "````python", 1)
-                        elif "export" in next_line or "const " in next_line or "npm " in next_line:
-                            fence_line = line.replace("```", "```bash", 1).replace("````", "````bash", 1)
+                        if (
+                            "import " in next_line
+                            or "def " in next_line
+                            or "class " in next_line
+                        ):
+                            fence_line = line.replace("```", "```python", 1).replace(
+                                "````", "````python", 1
+                            )
+                        elif (
+                            "export" in next_line
+                            or "const " in next_line
+                            or "npm " in next_line
+                        ):
+                            fence_line = line.replace("```", "```bash", 1).replace(
+                                "````", "````bash", 1
+                            )
                         elif "- [ ]" in next_line or "- [x]" in next_line:
-                            fence_line = line.replace("```", "```text", 1).replace("````", "````text", 1)
+                            fence_line = line.replace("```", "```text", 1).replace(
+                                "````", "````text", 1
+                            )
                         elif "apiVersion:" in next_line or "kind:" in next_line:
-                            fence_line = line.replace("```", "```yaml", 1).replace("````", "````yaml", 1)
+                            fence_line = line.replace("```", "```yaml", 1).replace(
+                                "````", "````yaml", 1
+                            )
                         else:
-                            fence_line = line.replace("```", "```text", 1).replace("````", "````text", 1)
+                            fence_line = line.replace("```", "```text", 1).replace(
+                                "````", "````text", 1
+                            )
 
                 fixed_lines.append(fence_line)
                 i += 1
@@ -75,12 +97,18 @@ def fix_markdown_file(filepath):
             # MD032: Lists need blank lines before/after
             if re.match(r"^[\s]*[-*\d]+\.?\s+", line):
                 # Start of list - add blank before
-                if fixed_lines and fixed_lines[-1].strip() and not re.match(r"^[\s]*[-*\d]+\.?\s+", fixed_lines[-1]):
+                if (
+                    fixed_lines
+                    and fixed_lines[-1].strip()
+                    and not re.match(r"^[\s]*[-*\d]+\.?\s+", fixed_lines[-1])
+                ):
                     fixed_lines.append("")
                 fixed_lines.append(line)
                 i += 1
                 # Continue through list
-                while i < len(lines) and (re.match(r"^[\s]*[-*\d]+\.?\s+", lines[i]) or not lines[i].strip()):
+                while i < len(lines) and (
+                    re.match(r"^[\s]*[-*\d]+\.?\s+", lines[i]) or not lines[i].strip()
+                ):
                     fixed_lines.append(lines[i])
                     i += 1
                 # Add blank after list

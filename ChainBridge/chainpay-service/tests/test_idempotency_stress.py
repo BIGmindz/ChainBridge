@@ -74,7 +74,9 @@ class TestIdempotencyUniqueConstraint:
         )
         assert len(settlements) == 1
 
-    def test_different_event_types_allow_multiple_settlements(self, db_session: Session):
+    def test_different_event_types_allow_multiple_settlements(
+        self, db_session: Session
+    ):
         """Different event types should allow multiple settlements for same intent."""
         intent = PaymentIntent(
             freight_token_id=502,
@@ -102,7 +104,11 @@ class TestIdempotencyUniqueConstraint:
         db_session.commit()
 
         # Verify all three settlements exist
-        settlements = db_session.query(MilestoneSettlement).filter(MilestoneSettlement.payment_intent_id == intent.id).all()
+        settlements = (
+            db_session.query(MilestoneSettlement)
+            .filter(MilestoneSettlement.payment_intent_id == intent.id)
+            .all()
+        )
         assert len(settlements) == 3
 
     def test_duplicate_event_different_intent_allowed(self, db_session: Session):
@@ -148,7 +154,11 @@ class TestIdempotencyUniqueConstraint:
         db_session.commit()
 
         # Both should exist
-        settlements = db_session.query(MilestoneSettlement).filter(MilestoneSettlement.event_type == "POD_CONFIRMED").all()
+        settlements = (
+            db_session.query(MilestoneSettlement)
+            .filter(MilestoneSettlement.event_type == "POD_CONFIRMED")
+            .all()
+        )
         assert len(settlements) == 2
 
 
@@ -240,7 +250,11 @@ class TestStressMultipleMilestones:
         db_session.commit()
 
         # Verify all 100 exist
-        settlements = db_session.query(MilestoneSettlement).filter(MilestoneSettlement.payment_intent_id == intent.id).all()
+        settlements = (
+            db_session.query(MilestoneSettlement)
+            .filter(MilestoneSettlement.payment_intent_id == intent.id)
+            .all()
+        )
         assert len(settlements) == 100
 
     def test_create_many_intents_with_same_event_type(self, db_session: Session):
@@ -274,14 +288,20 @@ class TestStressMultipleMilestones:
         db_session.commit()
 
         # Verify all 50 POD_CONFIRMED settlements exist
-        settlements = db_session.query(MilestoneSettlement).filter(MilestoneSettlement.event_type == "POD_CONFIRMED").all()
+        settlements = (
+            db_session.query(MilestoneSettlement)
+            .filter(MilestoneSettlement.event_type == "POD_CONFIRMED")
+            .all()
+        )
         assert len(settlements) == 50
 
 
 class TestIdempotencyDataIntegrity:
     """Test data integrity under idempotency constraints."""
 
-    def test_payment_intent_amount_unchanged_after_duplicate_attempt(self, db_session: Session):
+    def test_payment_intent_amount_unchanged_after_duplicate_attempt(
+        self, db_session: Session
+    ):
         """Payment intent amount should not be modified by duplicate settlement attempt."""
         original_amount = 1000.0
         intent = PaymentIntent(
@@ -343,7 +363,12 @@ class TestIdempotencyDataIntegrity:
 
         # Create three settlements (20/70/10 split)
         settlement_amounts = [200.0, 700.0, 100.0]
-        for i, (event, amount) in enumerate(zip(["PICKUP_CONFIRMED", "POD_CONFIRMED", "CLAIM_WINDOW_CLOSED"], settlement_amounts)):
+        for i, (event, amount) in enumerate(
+            zip(
+                ["PICKUP_CONFIRMED", "POD_CONFIRMED", "CLAIM_WINDOW_CLOSED"],
+                settlement_amounts,
+            )
+        ):
             milestone = MilestoneSettlement(
                 payment_intent_id=intent.id,
                 event_type=event,
@@ -356,6 +381,10 @@ class TestIdempotencyDataIntegrity:
         db_session.commit()
 
         # Verify sum of settlements equals intent amount
-        settlements = db_session.query(MilestoneSettlement).filter(MilestoneSettlement.payment_intent_id == intent.id).all()
+        settlements = (
+            db_session.query(MilestoneSettlement)
+            .filter(MilestoneSettlement.payment_intent_id == intent.id)
+            .all()
+        )
         total_settled = sum(s.amount for s in settlements)
         assert abs(total_settled - total_intent_amount) < 0.01

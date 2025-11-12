@@ -50,7 +50,10 @@ class VolatileCryptoSelector:
         """Fetch historical OHLCV data for volatility calculation"""
         try:
             if self.exchange:
-                since = int((datetime.now() - timedelta(days=self.lookback_days)).timestamp() * 1000)
+                since = int(
+                    (datetime.now() - timedelta(days=self.lookback_days)).timestamp()
+                    * 1000
+                )
                 ohlcv = self.exchange.fetch_ohlcv(symbol, timeframe, since=since)
 
                 # Convert to DataFrame
@@ -120,7 +123,9 @@ class VolatileCryptoSelector:
 
             data.append([date, open_price, high, low, close, volume])  # type: ignore
 
-        df = pd.DataFrame(data, columns=["timestamp", "open", "high", "low", "close", "volume"])
+        df = pd.DataFrame(
+            data, columns=["timestamp", "open", "high", "low", "close", "volume"]
+        )
         return df
 
     def calculate_volatility(self, symbol: str) -> float:
@@ -174,7 +179,11 @@ class VolatileCryptoSelector:
             return common_volatiles[:top_n]
 
         # Filter USD pairs (or USDT if no USD pairs available)
-        usd_pairs = [symbol for symbol in markets.keys() if symbol.endswith("/USD") or symbol.endswith("/USDT")]
+        usd_pairs = [
+            symbol
+            for symbol in markets.keys()
+            if symbol.endswith("/USD") or symbol.endswith("/USDT")
+        ]
 
         # If we don't have enough pairs, use predefined list
         if len(usd_pairs) < top_n:

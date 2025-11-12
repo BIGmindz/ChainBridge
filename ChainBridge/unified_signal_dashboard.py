@@ -64,7 +64,8 @@ def load_price_data(symbol="BTC/USD", days=100):
         # Create volume data
         volumes = [
             (
-                np.random.normal(1000000, 300000) * (1 + 0.2 * abs(prices[i] / prices[i - 1] - 1))
+                np.random.normal(1000000, 300000)
+                * (1 + 0.2 * abs(prices[i] / prices[i - 1] - 1))
                 if i > 0
                 else np.random.normal(1000000, 300000)
             )
@@ -74,7 +75,9 @@ def load_price_data(symbol="BTC/USD", days=100):
         # Create high/low/open data
         highs = [price * (1 + np.random.uniform(0, 0.03)) for price in prices]
         lows = [price * (1 - np.random.uniform(0, 0.03)) for price in prices]
-        opens = [prices[i - 1] if i > 0 else prices[0] * 0.99 for i in range(len(prices))]
+        opens = [
+            prices[i - 1] if i > 0 else prices[0] * 0.99 for i in range(len(prices))
+        ]
 
         # Create OHLCV data format
         price_data = []
@@ -127,9 +130,15 @@ def generate_signals(symbol="BTC/USD"):
     try:
         signals["RSI"] = process_module(rsi, "RSI", {"price_data": price_data})
         signals["MACD"] = process_module(macd, "MACD", {"price_data": price_data})
-        signals["BollingerBands"] = process_module(bollinger, "BollingerBands", {"price_data": price_data})
-        signals["VolumeProfile"] = process_module(volume, "VolumeProfile", {"price_data": price_data})
-        signals["Sentiment"] = process_module(sentiment, "Sentiment", {"symbol": symbol})
+        signals["BollingerBands"] = process_module(
+            bollinger, "BollingerBands", {"price_data": price_data}
+        )
+        signals["VolumeProfile"] = process_module(
+            volume, "VolumeProfile", {"price_data": price_data}
+        )
+        signals["Sentiment"] = process_module(
+            sentiment, "Sentiment", {"symbol": symbol}
+        )
     except Exception as e:
         print(f"Error processing technical indicators: {e}")
 
@@ -137,7 +146,9 @@ def generate_signals(symbol="BTC/USD"):
     print("=" * 40)
     # Logistics signals
     try:
-        signals["Logistics"] = process_module(logistics, "Logistics", {"price_data": price_data, "symbol": symbol})
+        signals["Logistics"] = process_module(
+            logistics, "Logistics", {"price_data": price_data, "symbol": symbol}
+        )
     except Exception as e:
         print(f"Error processing logistics signals: {e}")
 
@@ -145,7 +156,9 @@ def generate_signals(symbol="BTC/USD"):
     print("=" * 40)
     # Global macro signals
     try:
-        signals["GlobalMacro"] = process_module(macro, "GlobalMacro", {"price_data": price_data, "symbol": symbol})
+        signals["GlobalMacro"] = process_module(
+            macro, "GlobalMacro", {"price_data": price_data, "symbol": symbol}
+        )
     except Exception as e:
         print(f"Error processing global macro signals: {e}")
 
@@ -237,7 +250,11 @@ def generate_signal_summary(signals):
         weight = weight * max(0.1, confidence)  # Minimum weight is 10% of base weight
 
         # Calculate signal score (-1 for SELL, 0 for HOLD, +1 for BUY)
-        signal_value = 1 if data.get("signal") == "BUY" else (-1 if data.get("signal") == "SELL" else 0)
+        signal_value = (
+            1
+            if data.get("signal") == "BUY"
+            else (-1 if data.get("signal") == "SELL" else 0)
+        )
 
         weighted_score += signal_value * weight
         total_weight += weight
@@ -291,15 +308,21 @@ def display_unified_dashboard(result):
 
     # Create header banner
     print("\n" + "=" * 80)
-    print(f"  🚀 UNIFIED TRADING SIGNAL DASHBOARD - {timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(
+        f"  🚀 UNIFIED TRADING SIGNAL DASHBOARD - {timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
+    )
     print("=" * 80)
 
     # Symbol info
     print(f"\n  SYMBOL: {symbol}")
 
     # Display consensus
-    consensus_emoji = "🟢" if consensus == "BUY" else "🔴" if consensus == "SELL" else "⚪"
-    print(f"\n  CONSENSUS: {consensus_emoji} {consensus} - {consensus_strength:.1f}% Strength")
+    consensus_emoji = (
+        "🟢" if consensus == "BUY" else "🔴" if consensus == "SELL" else "⚪"
+    )
+    print(
+        f"\n  CONSENSUS: {consensus_emoji} {consensus} - {consensus_strength:.1f}% Strength"
+    )
     print(f"  Signal Count: {buy_count} BUY, {sell_count} SELL, {hold_count} HOLD")
 
     # Technical indicator section

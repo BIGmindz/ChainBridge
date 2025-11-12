@@ -100,16 +100,20 @@ async def score_shipment(
 
     except httpx.TimeoutException:
         logger.warning(
-            f"ChainIQ service timeout while scoring shipment {shipment_id}. " "Proceeding with token creation without risk scoring."
+            f"ChainIQ service timeout while scoring shipment {shipment_id}. "
+            "Proceeding with token creation without risk scoring."
         )
         return None
     except httpx.ConnectError:
         logger.warning(
-            f"ChainIQ service unavailable while scoring shipment {shipment_id}. " "Proceeding with token creation without risk scoring."
+            f"ChainIQ service unavailable while scoring shipment {shipment_id}. "
+            "Proceeding with token creation without risk scoring."
         )
         return None
     except Exception as e:
-        logger.error(f"Error calling ChainIQ service for shipment {shipment_id}: {str(e)}")
+        logger.error(
+            f"Error calling ChainIQ service for shipment {shipment_id}: {str(e)}"
+        )
         return None
 
 

@@ -22,7 +22,13 @@ TV_COLORS = {
 }
 
 # Robinhood Color Scheme
-RH_COLORS = {"green": "#00C805", "red": "#FF5000", "black": "#1E2124", "dark_gray": "#18191A", "light_gray": "#8C8C8E"}
+RH_COLORS = {
+    "green": "#00C805",
+    "red": "#FF5000",
+    "black": "#1E2124",
+    "dark_gray": "#18191A",
+    "light_gray": "#8C8C8E",
+}
 
 
 class AnimatedTradingDashboard:
@@ -40,13 +46,21 @@ class AnimatedTradingDashboard:
                     [
                         html.Div(
                             [
-                                html.H2("BTC-USD", style={"color": "#ffffff", "margin": 0}),
+                                html.H2(
+                                    "BTC-USD", style={"color": "#ffffff", "margin": 0}
+                                ),
                                 html.Div(id="price-change", className="price-change"),
                             ],
-                            style={"display": "flex", "alignItems": "center", "gap": "15px"},
+                            style={
+                                "display": "flex",
+                                "alignItems": "center",
+                                "gap": "15px",
+                            },
                         ),
                         html.Div(id="live-clock", className="live-clock"),
-                        dcc.Interval(id="interval-component", interval=1000, n_intervals=0),
+                        dcc.Interval(
+                            id="interval-component", interval=1000, n_intervals=0
+                        ),
                     ],
                     className="nav-bar",
                 ),
@@ -58,13 +72,25 @@ class AnimatedTradingDashboard:
                             [
                                 html.Div(
                                     [
-                                        html.H1(id="current-price", className="current-price"),
-                                        html.Div(id="price-metrics", className="price-metrics"),
+                                        html.H1(
+                                            id="current-price",
+                                            className="current-price",
+                                        ),
+                                        html.Div(
+                                            id="price-metrics",
+                                            className="price-metrics",
+                                        ),
                                     ],
                                     className="price-header",
                                 ),
-                                dcc.Graph(id="main-chart", config={"displayModeBar": False}, className="main-chart"),
-                                dcc.Interval(id="chart-interval", interval=5000, n_intervals=0),
+                                dcc.Graph(
+                                    id="main-chart",
+                                    config={"displayModeBar": False},
+                                    className="main-chart",
+                                ),
+                                dcc.Interval(
+                                    id="chart-interval", interval=5000, n_intervals=0
+                                ),
                             ],
                             className="chart-container",
                         ),
@@ -72,21 +98,42 @@ class AnimatedTradingDashboard:
                         html.Div(
                             [
                                 html.Div(
-                                    [html.H3("Key Stats", className="section-title"), html.Div(id="key-stats", className="stats-grid")],
+                                    [
+                                        html.H3("Key Stats", className="section-title"),
+                                        html.Div(
+                                            id="key-stats", className="stats-grid"
+                                        ),
+                                    ],
                                     className="stats-container",
                                 ),
                                 html.Div(
                                     [
-                                        html.H3("Trading Signals", className="section-title"),
-                                        html.Div(id="signal-panel", className="signal-container"),
+                                        html.H3(
+                                            "Trading Signals", className="section-title"
+                                        ),
+                                        html.Div(
+                                            id="signal-panel",
+                                            className="signal-container",
+                                        ),
                                     ],
                                     className="signals-container",
                                 ),
                                 html.Div(
                                     [
-                                        html.H3("Technical Analysis", className="section-title"),
-                                        dcc.Graph(id="indicator-grid", config={"displayModeBar": False}, className="indicator-chart"),
-                                        dcc.Interval(id="indicator-interval", interval=2000, n_intervals=0),
+                                        html.H3(
+                                            "Technical Analysis",
+                                            className="section-title",
+                                        ),
+                                        dcc.Graph(
+                                            id="indicator-grid",
+                                            config={"displayModeBar": False},
+                                            className="indicator-chart",
+                                        ),
+                                        dcc.Interval(
+                                            id="indicator-interval",
+                                            interval=2000,
+                                            n_intervals=0,
+                                        ),
                                     ],
                                     className="indicators-container",
                                 ),
@@ -102,7 +149,14 @@ class AnimatedTradingDashboard:
 
     def update_main_chart(self, df: pd.DataFrame) -> go.Figure:
         """Create a TradingView-style professional chart with Robinhood aesthetics."""
-        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3], subplot_titles=("", "Volume"))
+        fig = make_subplots(
+            rows=2,
+            cols=1,
+            shared_xaxes=True,
+            vertical_spacing=0.03,
+            row_heights=[0.7, 0.3],
+            subplot_titles=("", "Volume"),
+        )
 
         if df.empty:
             return fig
@@ -128,10 +182,26 @@ class AnimatedTradingDashboard:
         # Add Bollinger Bands with gradient fill
         bb_data = self.indicators._calculate_price_action(df)["bollinger_bands"]
         fig.add_trace(
-            go.Scatter(x=df.index, y=bb_data["upper"], name="BB Upper", line=dict(color="rgba(0,255,0,0.5)"), fill=None), row=1, col=1
+            go.Scatter(
+                x=df.index,
+                y=bb_data["upper"],
+                name="BB Upper",
+                line=dict(color="rgba(0,255,0,0.5)"),
+                fill=None,
+            ),
+            row=1,
+            col=1,
         )
         fig.add_trace(
-            go.Scatter(x=df.index, y=bb_data["lower"], name="BB Lower", line=dict(color="rgba(255,0,0,0.5)"), fill="tonexty"), row=1, col=1
+            go.Scatter(
+                x=df.index,
+                y=bb_data["lower"],
+                name="BB Lower",
+                line=dict(color="rgba(255,0,0,0.5)"),
+                fill="tonexty",
+            ),
+            row=1,
+            col=1,
         )
 
         # Add TradingView-style MA Cloud
@@ -184,15 +254,33 @@ class AnimatedTradingDashboard:
         )
 
         # Volume Bars with Color Intensity
-        colors = ["#00ff00" if row["close"] >= row["open"] else "#ff0000" for idx, row in df.iterrows()]
-        fig.add_trace(go.Bar(x=df.index, y=df["volume"], name="Volume", marker_color=colors, opacity=0.6), row=2, col=1)
+        colors = [
+            "#00ff00" if row["close"] >= row["open"] else "#ff0000"
+            for idx, row in df.iterrows()
+        ]
+        fig.add_trace(
+            go.Bar(
+                x=df.index,
+                y=df["volume"],
+                name="Volume",
+                marker_color=colors,
+                opacity=0.6,
+            ),
+            row=2,
+            col=1,
+        )
 
         # Add Moving Averages with Glow Effect
         for period in [8, 21, 55]:
             ema = talib.EMA(df["close"], timeperiod=period)
             fig.add_trace(
                 go.Scatter(
-                    x=df.index, y=ema, name=f"EMA {period}", line=dict(width=2, color=f"rgba({255 - period * 2},255,{period * 3},0.8)")
+                    x=df.index,
+                    y=ema,
+                    name=f"EMA {period}",
+                    line=dict(
+                        width=2, color=f"rgba({255 - period * 2},255,{period * 3},0.8)"
+                    ),
                 ),
                 row=1,
                 col=1,
@@ -204,7 +292,12 @@ class AnimatedTradingDashboard:
             paper_bgcolor="#1E2124",  # Robinhood dark theme
             plot_bgcolor="#1E2124",
             showlegend=True,
-            legend=dict(bgcolor="rgba(30, 33, 36, 0.8)", bordercolor="rgba(255, 255, 255, 0.1)", borderwidth=1, font=dict(size=10)),
+            legend=dict(
+                bgcolor="rgba(30, 33, 36, 0.8)",
+                bordercolor="rgba(255, 255, 255, 0.1)",
+                borderwidth=1,
+                font=dict(size=10),
+            ),
             xaxis_rangeslider_visible=False,
             margin=dict(l=40, r=40, t=40, b=40),
             # TradingView-style grid
@@ -229,10 +322,18 @@ class AnimatedTradingDashboard:
             ),
             # Volume subplot styling
             xaxis2=dict(
-                gridcolor="rgba(58, 58, 58, 0.15)", showgrid=True, showline=True, linecolor="rgba(58, 58, 58, 0.3)", tickfont=dict(size=8)
+                gridcolor="rgba(58, 58, 58, 0.15)",
+                showgrid=True,
+                showline=True,
+                linecolor="rgba(58, 58, 58, 0.3)",
+                tickfont=dict(size=8),
             ),
             yaxis2=dict(
-                gridcolor="rgba(58, 58, 58, 0.15)", showgrid=True, showline=True, linecolor="rgba(58, 58, 58, 0.3)", tickfont=dict(size=8)
+                gridcolor="rgba(58, 58, 58, 0.15)",
+                showgrid=True,
+                showline=True,
+                linecolor="rgba(58, 58, 58, 0.3)",
+                tickfont=dict(size=8),
             ),
         )
 
@@ -258,7 +359,9 @@ class AnimatedTradingDashboard:
                 html.Div(
                     [
                         html.H3(signal["name"], style={"color": signal["color"]}),
-                        html.H4(signal["value"], style={"animation": "pulse 2s infinite"}),
+                        html.H4(
+                            signal["value"], style={"animation": "pulse 2s infinite"}
+                        ),
                         html.P(signal["description"], style={"opacity": "0.8"}),
                     ],
                     className="signal-card",

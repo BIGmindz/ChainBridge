@@ -142,7 +142,11 @@ class InternalLedgerRail(PaymentRail):
         from .models import MilestoneSettlement as MilestoneSettlementModel
 
         try:
-            milestone = self.db.query(MilestoneSettlementModel).filter(MilestoneSettlementModel.id == milestone_id).first()
+            milestone = (
+                self.db.query(MilestoneSettlementModel)
+                .filter(MilestoneSettlementModel.id == milestone_id)
+                .first()
+            )
 
             if not milestone:
                 return SettlementResult(
@@ -153,7 +157,9 @@ class InternalLedgerRail(PaymentRail):
                 )
 
             # Generate reference ID (INTERNAL_LEDGER:timestamp:milestone_id)
-            reference_id = f"INTERNAL_LEDGER:{datetime.utcnow().isoformat()}:{milestone_id}"
+            reference_id = (
+                f"INTERNAL_LEDGER:{datetime.utcnow().isoformat()}:{milestone_id}"
+            )
 
             # Mark milestone as APPROVED (v2: will be marked SETTLED when funds actually transfer)
             from .models import PaymentStatus
@@ -179,7 +185,9 @@ class InternalLedgerRail(PaymentRail):
             )
 
         except Exception as e:
-            logger.error(f"Internal ledger settlement failed: milestone_id={milestone_id}, error={str(e)}")
+            logger.error(
+                f"Internal ledger settlement failed: milestone_id={milestone_id}, error={str(e)}"
+            )
             return SettlementResult(
                 success=False,
                 provider=SettlementProvider.INTERNAL_LEDGER,
@@ -239,7 +247,9 @@ def should_release_now(risk_score: float, event_type: str) -> ReleaseStrategy:
             return ReleaseStrategy.MANUAL_REVIEW
 
 
-def get_release_delay_hours(risk_score: float, event_type: str, release_strategy: ReleaseStrategy) -> Optional[int]:
+def get_release_delay_hours(
+    risk_score: float, event_type: str, release_strategy: ReleaseStrategy
+) -> Optional[int]:
     """
     Get the number of hours to delay a payment based on strategy.
 

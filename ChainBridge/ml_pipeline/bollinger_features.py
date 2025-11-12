@@ -61,7 +61,9 @@ def add_bollinger_band_features(
     # --- Feature 3: Volatility Squeeze ---
     # A squeeze is identified when the current band width is in the bottom 10th percentile
     # of its own rolling history (e.g., over the last 100 periods).
-    squeeze_threshold = bb_width.rolling(window=100, min_periods=period).quantile(0.10, interpolation="linear")
+    squeeze_threshold = bb_width.rolling(window=100, min_periods=period).quantile(
+        0.10, interpolation="linear"
+    )
     squeeze_series = pd.Series(pd.NA, index=working_df.index, dtype="Int64")
     valid_mask = bb_width.notna() & squeeze_threshold.notna()
     squeeze_series.loc[valid_mask] = (bb_width.loc[valid_mask] < squeeze_threshold.loc[valid_mask]).astype("int64")  # type: ignore
