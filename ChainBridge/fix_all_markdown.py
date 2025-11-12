@@ -46,9 +46,15 @@ def fix_md_content(content):
                 lang = "text"
                 if next_line:
                     nl_lower = next_line.lower()
-                    if any(k in nl_lower for k in ["import ", "def ", "class ", "from ", "__"]):
+                    if any(
+                        k in nl_lower
+                        for k in ["import ", "def ", "class ", "from ", "__"]
+                    ):
                         lang = "python"
-                    elif any(k in nl_lower for k in ["export ", "const ", "function", "npm ", "yarn "]):
+                    elif any(
+                        k in nl_lower
+                        for k in ["export ", "const ", "function", "npm ", "yarn "]
+                    ):
                         lang = "bash"
                     elif "apiVersion:" in nl_lower or "kind:" in nl_lower:
                         lang = "yaml"
@@ -73,8 +79,12 @@ def fix_md_content(content):
             continue
 
         # MD032: Lists need blank lines
-        is_list = re.match(r"^[\s]*[-*+][\s]", curr) or re.match(r"^[\s]*\d+\.[\s]", curr)
-        prev_is_list = re.match(r"^[\s]*[-*+][\s]", prev) or re.match(r"^[\s]*\d+\.[\s]", prev)
+        is_list = re.match(r"^[\s]*[-*+][\s]", curr) or re.match(
+            r"^[\s]*\d+\.[\s]", curr
+        )
+        prev_is_list = re.match(r"^[\s]*[-*+][\s]", prev) or re.match(
+            r"^[\s]*\d+\.[\s]", prev
+        )
 
         if is_list and not prev_is_list:
             # Start of list - add blank before
@@ -85,7 +95,9 @@ def fix_md_content(content):
 
         # Check if list ends
         if is_list:
-            next_is_list = re.match(r"^[\s]*[-*+][\s]", next_line) or re.match(r"^[\s]*\d+\.[\s]", next_line)
+            next_is_list = re.match(r"^[\s]*[-*+][\s]", next_line) or re.match(
+                r"^[\s]*\d+\.[\s]", next_line
+            )
             if not next_is_list and next_line.strip():
                 # List ending, add blank after
                 result.append("")

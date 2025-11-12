@@ -10,7 +10,9 @@ from datetime import datetime
 import joblib
 
 # Setup logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -70,7 +72,9 @@ class MarketRegimeController:
                 "trend_strength": np.random.uniform(0.1, 0.9),
             }
 
-            logger.info(f"📊 Generated current market features: RSI={features['rsi_14']:.1f}")
+            logger.info(
+                f"📊 Generated current market features: RSI={features['rsi_14']:.1f}"
+            )
             return features
 
         except Exception as e:
@@ -101,9 +105,16 @@ class MarketRegimeController:
             regime = self.label_encoder.inverse_transform([prediction_encoded])[0]
             confidence = prediction_proba[prediction_encoded]
 
-            self.last_prediction = {"regime": regime, "confidence": confidence, "timestamp": datetime.now(), "features": features}
+            self.last_prediction = {
+                "regime": regime,
+                "confidence": confidence,
+                "timestamp": datetime.now(),
+                "features": features,
+            }
 
-            logger.info(f"🎯 ML Regime Detection: {regime} (confidence: {confidence:.3f})")
+            logger.info(
+                f"🎯 ML Regime Detection: {regime} (confidence: {confidence:.3f})"
+            )
             return regime
 
         except Exception as e:
@@ -136,9 +147,15 @@ class MarketRegimeController:
     def get_regime_status(self):
         """Get current regime detection status"""
         return {
-            "current_regime": self.last_prediction["regime"] if self.last_prediction else None,
-            "confidence": self.last_prediction["confidence"] if self.last_prediction else None,
-            "last_update": self.last_prediction["timestamp"] if self.last_prediction else None,
+            "current_regime": (
+                self.last_prediction["regime"] if self.last_prediction else None
+            ),
+            "confidence": (
+                self.last_prediction["confidence"] if self.last_prediction else None
+            ),
+            "last_update": (
+                self.last_prediction["timestamp"] if self.last_prediction else None
+            ),
             "model_loaded": self.model is not None,
         }
 

@@ -16,7 +16,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 try:
     from enhanced_regime_model import EnhancedRegimeModel
-    from regime_model_utils import RegimeModelLoader, create_sample_features, quick_predict
+    from regime_model_utils import (
+        RegimeModelLoader,
+        create_sample_features,
+        quick_predict,
+    )
 except ImportError as e:
     print(f"Import error: {e}")
     sys.exit(1)
@@ -70,11 +74,15 @@ class TestEnhancedRegimeModel(unittest.TestCase):
 
         # Check regime distribution
         regimes = data["regime"].unique()  # type: ignore
-        self.assertTrue(all(regime in ["bull", "bear", "sideways"] for regime in regimes))
+        self.assertTrue(
+            all(regime in ["bull", "bear", "sideways"] for regime in regimes)
+        )
 
         # Check feature bounds
         self.assertTrue((data["rsi_14"] >= 0).all() and (data["rsi_14"] <= 100).all())
-        self.assertTrue((data["bb_position"] >= 0).all() and (data["bb_position"] <= 1).all())
+        self.assertTrue(
+            (data["bb_position"] >= 0).all() and (data["bb_position"] <= 1).all()
+        )
         self.assertTrue((data["volume_ratio"] > 0).all())
         self.assertTrue((data["volatility_24h"] > 0).all())
 
@@ -241,7 +249,12 @@ class TestEnhancedRegimeModel(unittest.TestCase):
 
         # Check structure
         self.assertEqual(len(importance), 18)  # Should have all features
-        self.assertTrue(all(isinstance(v, (int, float, np.integer, np.floating)) for v in importance.values()))
+        self.assertTrue(
+            all(
+                isinstance(v, (int, float, np.integer, np.floating))
+                for v in importance.values()
+            )
+        )
 
         # Check that importance values are reasonable
         total_importance = sum(importance.values())  # type: ignore

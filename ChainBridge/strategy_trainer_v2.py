@@ -18,7 +18,11 @@ from typing import Dict, Tuple, Optional, Any
 from pathlib import Path
 
 # Import our robust preprocessing utilities
-from utils.feature_hygiene import robust_clip, remove_constant_features, handle_missing_values
+from utils.feature_hygiene import (
+    robust_clip,
+    remove_constant_features,
+    handle_missing_values,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +52,8 @@ class StrategyTrainerV2:
 
         # Setup logging
         logging.basicConfig(
-            level=getattr(logging, self.config.get("logging_level", "INFO")), format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            level=getattr(logging, self.config.get("logging_level", "INFO")),
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         )
 
     def _load_config(self, config_path: str) -> Dict[str, Any]:
@@ -79,8 +84,17 @@ class StrategyTrainerV2:
                 "bagging_freq": 5,
                 "verbose": -1,
             },
-            "training_params": {"test_size": 0.2, "random_state": 42, "early_stopping_rounds": 50, "num_boost_round": 1000},
-            "preprocessing": {"clip_percentiles": (1.0, 99.0), "remove_constants": True, "handle_missing": "median"},
+            "training_params": {
+                "test_size": 0.2,
+                "random_state": 42,
+                "early_stopping_rounds": 50,
+                "num_boost_round": 1000,
+            },
+            "preprocessing": {
+                "clip_percentiles": (1.0, 99.0),
+                "remove_constants": True,
+                "handle_missing": "median",
+            },
             "logging_level": "INFO",
         }
 
@@ -97,7 +111,9 @@ class StrategyTrainerV2:
         logger.info("Starting feature preprocessing...")
 
         # Handle missing values
-        X = handle_missing_values(X, strategy=self.config["preprocessing"]["handle_missing"])
+        X = handle_missing_values(
+            X, strategy=self.config["preprocessing"]["handle_missing"]
+        )
         logger.info(f"Handled missing values, shape: {X.shape}")
 
         # Remove constant features
@@ -108,12 +124,18 @@ class StrategyTrainerV2:
         # Apply robust clipping instead of StandardScaler
         lower_pct, upper_pct = self.config["preprocessing"]["clip_percentiles"]
         X = robust_clip(X, lower_percentile=lower_pct, upper_percentile=upper_pct)
-        logger.info(f"Applied robust clipping ({lower_pct}%, {upper_pct}%), shape: {X.shape}")
+        logger.info(
+            f"Applied robust clipping ({lower_pct}%, {upper_pct}%), shape: {X.shape}"
+        )
 
         return X
 
     def train_model(
-        self, X: pd.DataFrame, y: pd.Series, model_name: str = "default_model", custom_params: Optional[Dict] = None
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        model_name: str = "default_model",
+        custom_params: Optional[Dict] = None,
     ) -> lgb.Booster:
         """
         Train a LightGBM model with robust preprocessing.
@@ -145,7 +167,10 @@ class StrategyTrainerV2:
             params.update(custom_params)
 
         # Train model
-        callbacks = [lgb.early_stopping(self.config["training_params"]["early_stopping_rounds"]), lgb.log_evaluation(period=100)]
+        callbacks = [
+            lgb.early_stopping(self.config["training_params"]["early_stopping_rounds"]),
+            lgb.log_evaluation(period=100),
+        ]
 
         model = lgb.train(
             params,
@@ -161,12 +186,16 @@ class StrategyTrainerV2:
         self._evaluate_model(model, X_valid, y_valid, model_name)
 
         # Store feature importance
-        self.feature_importance[model_name] = dict(zip(X_train.columns, model.feature_importance(importance_type="gain")))
+        self.feature_importance[model_name] = dict(
+            zip(X_train.columns, model.feature_importance(importance_type="gain"))
+        )
 
         logger.info(f"Model {model_name} trained successfully")
         return model
 
-    def _time_series_split(self, X: pd.DataFrame, y: pd.Series) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
+    def _time_series_split(
+        self, X: pd.DataFrame, y: pd.Series
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
         """
         Split data maintaining time series order.
 
@@ -190,7 +219,13 @@ class StrategyTrainerV2:
         logger.info(f"Time series split: train={len(X_train)}, valid={len(X_valid)}")
         return X_train, X_valid, y_train, y_valid
 
-    def _evaluate_model(self, model: lgb.Booster, X_valid: pd.DataFrame, y_valid: pd.Series, model_name: str) -> Dict[str, float]:
+    def _evaluate_model(
+        self,
+        model: lgb.Booster,
+        X_valid: pd.DataFrame,
+        y_valid: pd.Series,
+        model_name: str,
+    ) -> Dict[str, float]:
         """
         Evaluate model performance and store metrics.
 
@@ -239,7 +274,9 @@ class StrategyTrainerV2:
 
         return self.models[model_name].predict(X_processed)
 
-    def get_feature_importance(self, model_name: str = "default_model", top_n: Optional[int] = None) -> Dict[str, float]:
+    def get_feature_importance(
+        self, model_name: str = "default_model", top_n: Optional[int] = None
+    ) -> Dict[str, float]:
         """
         Get feature importance for trained model.
 
@@ -256,7 +293,9 @@ class StrategyTrainerV2:
         importance = self.feature_importance[model_name]
 
         if top_n:
-            sorted_features = sorted(importance.items(), key=lambda x: x[1], reverse=True)
+            sorted_features = sorted(
+                importance.items(), key=lambda x: x[1], reverse=True
+            )
             importance = dict(sorted_features[:top_n])
 
         return importance
@@ -329,7 +368,10 @@ def main():
     n_features = 20
 
     # Generate synthetic financial features
-    X = pd.DataFrame(np.random.randn(n_samples, n_features), columns=[f"feature_{i}" for i in range(n_features)])
+    X = pd.DataFrame(
+        np.random.randn(n_samples, n_features),
+        columns=[f"feature_{i}" for i in range(n_features)],
+    )
 
     # Add some outliers to demonstrate robust clipping
     X.iloc[0, 0] = 100  # Extreme positive outlier

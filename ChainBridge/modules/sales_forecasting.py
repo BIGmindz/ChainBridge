@@ -53,7 +53,9 @@ class SalesForecastingModule(Module):
 
         return sma
 
-    def exponential_smoothing(self, data: List[float], alpha: float = 0.3) -> List[float]:
+    def exponential_smoothing(
+        self, data: List[float], alpha: float = 0.3
+    ) -> List[float]:
         """Apply exponential smoothing to data."""
         if not data:
             return []
@@ -103,7 +105,9 @@ class SalesForecastingModule(Module):
 
         return trend, strength
 
-    def generate_forecast(self, historical_data: List[float], periods: int) -> List[float]:
+    def generate_forecast(
+        self, historical_data: List[float], periods: int
+    ) -> List[float]:
         """Generate forecast using exponential smoothing and trend analysis."""
         if not historical_data or periods <= 0:
             return []
@@ -120,14 +124,19 @@ class SalesForecastingModule(Module):
 
         # Calculate average change for trend projection
         if len(smoothed_data) >= 2:
-            recent_changes = [smoothed_data[i] - smoothed_data[i - 1] for i in range(1, min(len(smoothed_data), 5))]
+            recent_changes = [
+                smoothed_data[i] - smoothed_data[i - 1]
+                for i in range(1, min(len(smoothed_data), 5))
+            ]
             avg_change = np.mean(recent_changes) if recent_changes else 0
         else:
             avg_change = 0
 
         # Apply trend dampening for longer forecasts
         for i in range(periods):
-            dampening_factor = max(0.1, 1.0 - (i * 0.1))  # Reduce trend impact over time
+            dampening_factor = max(
+                0.1, 1.0 - (i * 0.1)
+            )  # Reduce trend impact over time
             trend_adjustment = avg_change * dampening_factor
 
             # Add some noise reduction for stability
@@ -144,7 +153,9 @@ class SalesForecastingModule(Module):
 
         return forecast
 
-    def calculate_accuracy_metrics(self, actual: List[float], predicted: List[float]) -> Dict[str, float]:
+    def calculate_accuracy_metrics(
+        self, actual: List[float], predicted: List[float]
+    ) -> Dict[str, float]:
         """Calculate forecast accuracy metrics."""
         if len(actual) != len(predicted) or len(actual) == 0:
             return {"rmse": 0.0, "mae": 0.0, "mape": 0.0}
@@ -162,7 +173,12 @@ class SalesForecastingModule(Module):
         mask = actual_arr != 0
         mape = 0.0
         if np.any(mask):
-            mape = np.mean(np.abs((actual_arr[mask] - predicted_arr[mask]) / actual_arr[mask])) * 100
+            mape = (
+                np.mean(
+                    np.abs((actual_arr[mask] - predicted_arr[mask]) / actual_arr[mask])
+                )
+                * 100
+            )
 
         return {"rmse": float(rmse), "mae": float(mae), "mape": float(mape)}  # type: ignore
 
@@ -184,7 +200,11 @@ class SalesForecastingModule(Module):
             for record in historical_sales:
                 if isinstance(record, dict):
                     # Extract sales amount
-                    amount = record.get("amount") or record.get("sales") or record.get("value")
+                    amount = (
+                        record.get("amount")
+                        or record.get("sales")
+                        or record.get("value")
+                    )
                     if amount is not None:
                         sales_values.append(float(amount))  # type: ignore
 
@@ -229,9 +249,13 @@ class SalesForecastingModule(Module):
                         forecast_dates.append(next_date.isoformat())  # type: ignore
                 except Exception:
                     # If date parsing fails, generate sequential dates
-                    forecast_dates = [f"forecast_period_{i}" for i in range(1, forecast_periods + 1)]
+                    forecast_dates = [
+                        f"forecast_period_{i}" for i in range(1, forecast_periods + 1)
+                    ]
             else:
-                forecast_dates = [f"forecast_period_{i}" for i in range(1, forecast_periods + 1)]
+                forecast_dates = [
+                    f"forecast_period_{i}" for i in range(1, forecast_periods + 1)
+                ]
 
             # Calculate metrics (using simple validation approach)
             metrics = {"rmse": 0.0, "mae": 0.0, "mape": 0.0}
@@ -241,8 +265,12 @@ class SalesForecastingModule(Module):
                 if validation_size > 0:
                     train_data = sales_values[:-validation_size]
                     actual_values = sales_values[-validation_size:]
-                    predicted_values = self.generate_forecast(train_data, validation_size)
-                    metrics = self.calculate_accuracy_metrics(actual_values, predicted_values)
+                    predicted_values = self.generate_forecast(
+                        train_data, validation_size
+                    )
+                    metrics = self.calculate_accuracy_metrics(
+                        actual_values, predicted_values
+                    )
 
             result = {
                 "forecast": [

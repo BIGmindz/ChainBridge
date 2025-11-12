@@ -8,7 +8,10 @@ import pandas as pd
 
 
 def vol_target_position_size(
-    price_series: pd.Series, max_capital_at_risk: float, target_ann_vol: float = 0.25, ewm_span: int = 100
+    price_series: pd.Series,
+    max_capital_at_risk: float,
+    target_ann_vol: float = 0.25,
+    ewm_span: int = 100,
 ) -> float:
     """
     Calculates position size in USD based on volatility targeting.
@@ -71,7 +74,10 @@ def calculate_realized_volatility(price_series: pd.Series, window: int = 100) ->
 
 
 def get_volatility_adjusted_position_size(
-    base_position_size: float, current_volatility: float, target_volatility: float = 0.25, max_leverage: float = 1.0
+    base_position_size: float,
+    current_volatility: float,
+    target_volatility: float = 0.25,
+    max_leverage: float = 1.0,
 ) -> float:
     """
     Adjust position size based on current market volatility.
@@ -100,7 +106,12 @@ def get_volatility_adjusted_position_size(
     return base_position_size * scale_factor
 
 
-def calculate_kelly_position_size(win_probability: float, win_loss_ratio: float, capital: float, max_risk_pct: float = 0.02) -> float:
+def calculate_kelly_position_size(
+    win_probability: float,
+    win_loss_ratio: float,
+    capital: float,
+    max_risk_pct: float = 0.02,
+) -> float:
     """
     Calculate position size using Kelly Criterion.
 
@@ -120,7 +131,9 @@ def calculate_kelly_position_size(win_probability: float, win_loss_ratio: float,
     if win_loss_ratio <= 0:
         return 0.0
 
-    kelly_fraction = (win_probability * win_loss_ratio - loss_probability) / win_loss_ratio
+    kelly_fraction = (
+        win_probability * win_loss_ratio - loss_probability
+    ) / win_loss_ratio
 
     # Cap Kelly fraction for safety
     kelly_fraction = max(0.0, min(kelly_fraction, 0.25))

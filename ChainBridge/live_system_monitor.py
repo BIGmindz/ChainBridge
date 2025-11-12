@@ -74,7 +74,11 @@ class LiveSystemMonitor:
             if result:
                 # Extract additional info
                 status = result.get("status", {})
-                confidence = "High" if status.get("confidence", 0) > 0.8 else "Medium" if status.get("confidence", 0) > 0.6 else "Low"
+                confidence = (
+                    "High"
+                    if status.get("confidence", 0) > 0.8
+                    else "Medium" if status.get("confidence", 0) > 0.6 else "Low"
+                )
 
                 return {
                     "regime": result.get("regime"),
@@ -99,7 +103,9 @@ class LiveSystemMonitor:
             # Check training data
             data_path = "data/regime_training/regime_training_data.csv"
             data_exists = os.path.exists(data_path)
-            print(f"   📊 Training Data: {'✅ Available' if data_exists else '❌ Missing'}")
+            print(
+                f"   📊 Training Data: {'✅ Available' if data_exists else '❌ Missing'}"
+            )
 
             # Check logs
             log_files = [f for f in os.listdir("logs") if f.endswith(".log")]
@@ -122,7 +128,12 @@ class LiveSystemMonitor:
             for log_file in log_files:
                 if os.path.exists(log_file):
                     # Get last 3 lines
-                    result = subprocess.run(["tail", "-3", log_file], capture_output=True, text=True, timeout=5)
+                    result = subprocess.run(
+                        ["tail", "-3", log_file],
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                    )
 
                     if result.returncode == 0 and result.stdout.strip():
                         lines = result.stdout.strip().split("\n")
@@ -168,7 +179,9 @@ class LiveSystemMonitor:
                 self.run_monitoring_cycle()
 
                 if self.monitoring_active:
-                    print(f"\n⏳ Waiting {interval_seconds} seconds until next cycle...")
+                    print(
+                        f"\n⏳ Waiting {interval_seconds} seconds until next cycle..."
+                    )
                     time.sleep(interval_seconds)
 
         except KeyboardInterrupt:

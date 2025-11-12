@@ -13,7 +13,10 @@ import yaml
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.FileHandler("system_monitor.log"), logging.StreamHandler(sys.stdout)],
+    handlers=[
+        logging.FileHandler("system_monitor.log"),
+        logging.StreamHandler(sys.stdout),
+    ],
 )
 
 
@@ -56,8 +59,12 @@ class SystemMonitor:
         try:
             config = load_config(self.config_path)
             if config:
-                self.trading_metrics["symbol"] = config.get("trading", {}).get("symbol", "BTC/USD")
-                logging.info(f"Loaded configuration: symbol={self.trading_metrics['symbol']}")
+                self.trading_metrics["symbol"] = config.get("trading", {}).get(
+                    "symbol", "BTC/USD"
+                )
+                logging.info(
+                    f"Loaded configuration: symbol={self.trading_metrics['symbol']}"
+                )
             else:
                 logging.warning("Could not load configuration, using defaults")
         except Exception as e:
@@ -96,7 +103,9 @@ class SystemMonitor:
 
         for component, config in self.components.items():
             if config is None:
-                logging.warning(f"Configuration for component '{component}' is None. Skipping.")
+                logging.warning(
+                    f"Configuration for component '{component}' is None. Skipping."
+                )
                 continue
             # Check if process is running
             running = self.is_process_running(config.get("process_pattern", ""))
@@ -117,8 +126,12 @@ class SystemMonitor:
                     self.trading_metrics["allocated_capital"] = budget_data.get(
                         "allocated_capital", self.trading_metrics["allocated_capital"]
                     )
-                    self.trading_metrics["open_positions"] = len(budget_data.get("positions", []))
-                    self.trading_metrics["last_update"] = datetime.datetime.now().isoformat()
+                    self.trading_metrics["open_positions"] = len(
+                        budget_data.get("positions", [])
+                    )
+                    self.trading_metrics["last_update"] = (
+                        datetime.datetime.now().isoformat()
+                    )
         except Exception as e:
             logging.error(f"Error updating trading metrics: {e}")
 
@@ -127,7 +140,9 @@ class SystemMonitor:
             if os.path.exists("diagnostic_listings.json"):
                 with open("diagnostic_listings.json", "r") as f:
                     listings_data = json.load(f)
-                    self.trading_metrics["active_signals"] = len(listings_data) if listings_data else 0
+                    self.trading_metrics["active_signals"] = (
+                        len(listings_data) if listings_data else 0
+                    )
                     self.trading_metrics["current_listings"] = (
                         [
                             {
@@ -162,7 +177,9 @@ class SystemMonitor:
         os.system("clear" if os.name == "posix" else "cls")
 
         print("\n" + "=" * 70)
-        print(f"🚀 MULTIPLE-SIGNAL-DECISION-BOT MONITOR - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(
+            f"🚀 MULTIPLE-SIGNAL-DECISION-BOT MONITOR - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        )
         print("=" * 70)
 
         # Components Status
@@ -170,14 +187,20 @@ class SystemMonitor:
         print("-" * 70)
         for component, config in self.components.items():
             status_color = "🟢" if config.get("status") == "Running" else "🔴"
-            print(f"{status_color} {component.upper()}: {config.get('status', 'Unknown')}")
+            print(
+                f"{status_color} {component.upper()}: {config.get('status', 'Unknown')}"
+            )
 
         # Trading Metrics
         print("\n💰 TRADING METRICS:")
         print("-" * 70)
         print(f"Trading Symbol: {self.trading_metrics.get('symbol', 'N/A')}")
-        print(f"Available Capital: ${self.trading_metrics.get('available_capital', 0):.2f}")
-        print(f"Allocated Capital: ${self.trading_metrics.get('allocated_capital', 0):.2f}")
+        print(
+            f"Available Capital: ${self.trading_metrics.get('available_capital', 0):.2f}"
+        )
+        print(
+            f"Allocated Capital: ${self.trading_metrics.get('allocated_capital', 0):.2f}"
+        )
         print(f"Open Positions: {self.trading_metrics.get('open_positions', 0)}")
         print(f"Active Signals: {self.trading_metrics.get('active_signals', 0)}")
 
@@ -199,7 +222,9 @@ class SystemMonitor:
 
     def monitor_loop(self, interval=10, dashboard=False):
         """Main monitoring loop"""
-        logging.info(f"Monitor loop started with interval={interval}, dashboard={dashboard}")
+        logging.info(
+            f"Monitor loop started with interval={interval}, dashboard={dashboard}"
+        )
         logging.info(f"Self components: {self.components}")
         try:
             while True:
@@ -231,11 +256,26 @@ def load_config(path="config/config.yaml"):
 
 def main():
     """Main execution function"""
-    parser = argparse.ArgumentParser(description="Live System Monitor for Multiple-signal-decision-bot")
-    parser.add_argument("--interval", type=int, default=10, help="Update interval in seconds")
-    parser.add_argument("--dashboard", action="store_true", help="Display live dashboard")
-    parser.add_argument("--restart-failed", action="store_true", help="Automatically restart failed components")
-    parser.add_argument("--config", type=str, default="config/config.yaml", help="Path to configuration file")
+    parser = argparse.ArgumentParser(
+        description="Live System Monitor for Multiple-signal-decision-bot"
+    )
+    parser.add_argument(
+        "--interval", type=int, default=10, help="Update interval in seconds"
+    )
+    parser.add_argument(
+        "--dashboard", action="store_true", help="Display live dashboard"
+    )
+    parser.add_argument(
+        "--restart-failed",
+        action="store_true",
+        help="Automatically restart failed components",
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        default="config/config.yaml",
+        help="Path to configuration file",
+    )
 
     args = parser.parse_args()
 
@@ -249,7 +289,11 @@ def main():
 
     try:
         # Create a thread for the monitor loop
-        monitor_thread = threading.Thread(target=monitor.monitor_loop, args=(args.interval, args.dashboard), daemon=True)
+        monitor_thread = threading.Thread(
+            target=monitor.monitor_loop,
+            args=(args.interval, args.dashboard),
+            daemon=True,
+        )
         monitor_thread.start()
 
         # Keep the main thread alive

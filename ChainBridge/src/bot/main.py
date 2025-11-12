@@ -79,7 +79,14 @@ class EnterpriseBot:
     - Graceful shutdown
     """
 
-    def __init__(self, mode: str, confirm_live: bool = False, once: bool = False, min_confidence: float = 0.25, metrics_port: int = 9090):
+    def __init__(
+        self,
+        mode: str,
+        confirm_live: bool = False,
+        once: bool = False,
+        min_confidence: float = 0.25,
+        metrics_port: int = 9090,
+    ):
         self.mode = mode
         self.confirm_live = confirm_live
         self.once = once
@@ -88,7 +95,9 @@ class EnterpriseBot:
 
         # Initialize enterprise components
         self.secrets = get_secrets_manager()
-        self.observability = init_observability(service_name="trading-bot", metrics_port=metrics_port, enable_metrics=True)
+        self.observability = init_observability(
+            service_name="trading-bot", metrics_port=metrics_port, enable_metrics=True
+        )
         self.data_fetcher = get_resilient_fetcher()
 
         # Trading bot instance
@@ -102,7 +111,9 @@ class EnterpriseBot:
 
     def _print_banner(self):
         """Print enterprise banner"""
-        mode_indicator = "📝 PAPER TRADING" if self.mode == "paper" else "⚠️  LIVE TRADING"
+        mode_indicator = (
+            "📝 PAPER TRADING" if self.mode == "paper" else "⚠️  LIVE TRADING"
+        )
         print(
             f"""
 ╔═══════════════════════════════════════════════════════════════════════╗
@@ -127,7 +138,9 @@ class EnterpriseBot:
 
     def _signal_handler(self, signum, frame):
         """Handle shutdown signals gracefully"""
-        self.observability.logger.warning(f"Received signal {signum}, initiating graceful shutdown")
+        self.observability.logger.warning(
+            f"Received signal {signum}, initiating graceful shutdown"
+        )
         print(f"\n🛑 Received signal {signum}. Shutting down gracefully...")
         self.should_stop = True
 
@@ -138,7 +151,9 @@ class EnterpriseBot:
         with self.observability.measure_operation("environment_validation"):
             # Check Python version
             if sys.version_info < (3, 9):
-                self.observability.logger.error(f"Python 3.9+ required, got {sys.version}")
+                self.observability.logger.error(
+                    f"Python 3.9+ required, got {sys.version}"
+                )
                 return False
             print(f"✅ Python version: {sys.version.split()[0]}")
 
@@ -175,16 +190,30 @@ class EnterpriseBot:
 
         for source_name, url in sources:
             try:
-                _, status = self.data_fetcher.fetch_with_resilience(url=url, fallback_value={"status": "fallback"}, cache_ttl=60, timeout=5)
+                _, status = self.data_fetcher.fetch_with_resilience(
+                    url=url,
+                    fallback_value={"status": "fallback"},
+                    cache_ttl=60,
+                    timeout=5,
+                )
 
-                status_emoji = {"live": "🟢", "cache": "🟡", "stale_cache": "🟠", "fallback": "🔴"}.get(status, "⚪")
+                status_emoji = {
+                    "live": "🟢",
+                    "cache": "🟡",
+                    "stale_cache": "🟠",
+                    "fallback": "🔴",
+                }.get(status, "⚪")
 
                 print(f"  {status_emoji} {source_name}: {status}")
-                self.observability.metrics.update_data_source_status(source_name, status)
+                self.observability.metrics.update_data_source_status(
+                    source_name, status
+                )
 
             except Exception as e:
                 print(f"  🔴 {source_name}: ERROR - {e}")
-                self.observability.metrics.update_data_source_status(source_name, "down")
+                self.observability.metrics.update_data_source_status(
+                    source_name, "down"
+                )
 
     def check_secrets_rotation(self):
         """Check if any secrets need rotation"""
@@ -194,12 +223,16 @@ class EnterpriseBot:
 
         for secret_key in secrets_to_check:
             if self.secrets.check_rotation_needed(secret_key, max_age_days=30):
-                self.observability.logger.warning(f"Secret rotation needed: {secret_key}", secret=secret_key)
+                self.observability.logger.warning(
+                    f"Secret rotation needed: {secret_key}", secret=secret_key
+                )
                 print(f"  ⚠️  {secret_key}: Rotation recommended (>30 days)")
             else:
                 metadata = self.secrets.get_secret_metadata(secret_key)
                 if metadata:
-                    print(f"  ✅ {secret_key}: OK (accessed {metadata.access_count} times)")
+                    print(
+                        f"  ✅ {secret_key}: OK (accessed {metadata.access_count} times)"
+                    )
 
     def initialize_bot(self) -> bool:
         """Initialize trading bot with enterprise configuration"""
@@ -289,7 +322,9 @@ class EnterpriseBot:
                 try:
                     cycle_count += 1
                     print(f"\n{'='*70}")
-                    print(f"Trading Cycle #{cycle_count} - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                    print(
+                        f"Trading Cycle #{cycle_count} - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+                    )
                     print(f"{'='*70}")
 
                     self.run_trading_cycle()
@@ -302,7 +337,9 @@ class EnterpriseBot:
                     print("\n\n🛑 Keyboard interrupt detected")
                     break
                 except Exception as e:
-                    self.observability.logger.error(f"Unexpected error in main loop: {e}")
+                    self.observability.logger.error(
+                        f"Unexpected error in main loop: {e}"
+                    )
                     print(f"\n❌ Unexpected error: {e}")
                     print("⏳ Waiting 60 seconds before retry...")
                     time.sleep(60)
@@ -313,27 +350,59 @@ class EnterpriseBot:
 
 def main() -> int:
     """Entry point"""
-    parser = argparse.ArgumentParser(description="Enterprise Trading Bot v2.0", formatter_class=argparse.RawDescriptionHelpFormatter)
-
-    parser.add_argument("--mode", choices=["live", "paper"], default="paper", help="Trading mode (default: paper)")
-
-    parser.add_argument(
-        "--confirm", "--confirm-live", action="store_true", dest="confirm_live", help="Confirm live trading mode (required for --mode live)"
+    parser = argparse.ArgumentParser(
+        description="Enterprise Trading Bot v2.0",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    parser.add_argument("--once", action="store_true", help="Run single cycle then exit")
+    parser.add_argument(
+        "--mode",
+        choices=["live", "paper"],
+        default="paper",
+        help="Trading mode (default: paper)",
+    )
 
-    parser.add_argument("--min-confidence", type=float, default=0.25, help="Minimum signal confidence to execute trades (default: 0.25)")
+    parser.add_argument(
+        "--confirm",
+        "--confirm-live",
+        action="store_true",
+        dest="confirm_live",
+        help="Confirm live trading mode (required for --mode live)",
+    )
 
-    parser.add_argument("--metrics-port", type=int, default=9090, help="Prometheus metrics port (default: 9090)")
+    parser.add_argument(
+        "--once", action="store_true", help="Run single cycle then exit"
+    )
 
-    parser.add_argument("--preflight", action="store_true", help="Run preflight checks only (no trading)")
+    parser.add_argument(
+        "--min-confidence",
+        type=float,
+        default=0.25,
+        help="Minimum signal confidence to execute trades (default: 0.25)",
+    )
+
+    parser.add_argument(
+        "--metrics-port",
+        type=int,
+        default=9090,
+        help="Prometheus metrics port (default: 9090)",
+    )
+
+    parser.add_argument(
+        "--preflight",
+        action="store_true",
+        help="Run preflight checks only (no trading)",
+    )
 
     args = parser.parse_args()
 
     # Create enterprise bot
     bot = EnterpriseBot(
-        mode=args.mode, confirm_live=args.confirm_live, once=args.once, min_confidence=args.min_confidence, metrics_port=args.metrics_port
+        mode=args.mode,
+        confirm_live=args.confirm_live,
+        once=args.once,
+        min_confidence=args.min_confidence,
+        metrics_port=args.metrics_port,
     )
 
     # Run preflight checks only

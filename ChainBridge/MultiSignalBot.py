@@ -32,13 +32,17 @@ class MultiSignalBot:
         self.exchange = setup_exchange("kraken", {})
 
         # Load symbols
-        self.symbols = self.cfg.get("symbols", ["WIF/USD", "DOGE/USD", "NEAR/USD", "SOL/USD", "PEPE/USD"])
+        self.symbols = self.cfg.get(
+            "symbols", ["WIF/USD", "DOGE/USD", "NEAR/USD", "SOL/USD", "PEPE/USD"]
+        )
         validate_symbols(self.exchange, self.symbols)
 
         # Initialize budget manager
         self.initial_capital = float(self.cfg.get("initial_capital", 10000.0))  # type: ignore
         self.budget_manager = BudgetManager(
-            initial_capital=self.initial_capital, exchange=self.exchange, live_mode=not self.trading_mode.is_paper_trading
+            initial_capital=self.initial_capital,
+            exchange=self.exchange,
+            live_mode=not self.trading_mode.is_paper_trading,
         )
 
         # Initialize exchange adapter
@@ -46,7 +50,9 @@ class MultiSignalBot:
 
         print("🚀 MultiSignalBot initialized!")
         print(f"💰 Initial Capital: ${self.initial_capital}")
-        print(f"🎯 Trading Mode: {'LIVE' if not self.trading_mode.is_paper_trading else 'PAPER'}")
+        print(
+            f"🎯 Trading Mode: {'LIVE' if not self.trading_mode.is_paper_trading else 'PAPER'}"
+        )
         print(f"📊 Symbols: {', '.join(self.symbols)}")
 
     def _load_config(self):
@@ -89,10 +95,17 @@ class MultiSignalBot:
             position_size = self.initial_capital * 0.02 / price  # 2% of capital
 
             if position_size > 0:
-                order = self.exchange_adapter.place_order(symbol=symbol, side=signal.lower(), amount=position_size, price=price)
+                order = self.exchange_adapter.place_order(
+                    symbol=symbol,
+                    side=signal.lower(),
+                    amount=position_size,
+                    price=price,
+                )
 
                 if order:
-                    print(f"📈 {signal} {symbol} at ${price} (Size: {position_size:.4f})")
+                    print(
+                        f"📈 {signal} {symbol} at ${price} (Size: {position_size:.4f})"
+                    )
 
         except Exception as e:
             print(f"❌ Trade error: {e}")

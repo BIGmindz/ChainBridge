@@ -58,7 +58,9 @@ class LiveDataIngestor:
                 }
 
                 self._cache_data(cache_key, result)
-                logger.info(f"Fear & Greed Index: {result['score']} ({result['classification']})")
+                logger.info(
+                    f"Fear & Greed Index: {result['score']} ({result['classification']})"
+                )
                 return result
 
         except Exception as e:
@@ -76,7 +78,11 @@ class LiveDataIngestor:
 
         if not self.news_api_key:
             logger.warning("NEWS_API_KEY not configured, using fallback")
-            return {"sentiment_score": 0.5, "article_count": 0, "timestamp": datetime.now()}
+            return {
+                "sentiment_score": 0.5,
+                "article_count": 0,
+                "timestamp": datetime.now(),
+            }
 
         try:
             # Fetch from NewsAPI
@@ -103,12 +109,22 @@ class LiveDataIngestor:
                 score = self._analyze_text_sentiment(text)
                 sentiment_scores.append(score)
 
-            avg_sentiment = sum(sentiment_scores) / len(sentiment_scores) if sentiment_scores else 0.5
+            avg_sentiment = (
+                sum(sentiment_scores) / len(sentiment_scores)
+                if sentiment_scores
+                else 0.5
+            )
 
-            result = {"sentiment_score": avg_sentiment, "article_count": len(articles), "timestamp": datetime.now()}
+            result = {
+                "sentiment_score": avg_sentiment,
+                "article_count": len(articles),
+                "timestamp": datetime.now(),
+            }
 
             self._cache_data(cache_key, result)
-            logger.info(f"News Sentiment: {avg_sentiment:.2f} ({len(articles)} articles)")
+            logger.info(
+                f"News Sentiment: {avg_sentiment:.2f} ({len(articles)} articles)"
+            )
             return result
 
         except Exception as e:
@@ -126,7 +142,9 @@ class LiveDataIngestor:
         try:
             # Fetch Reddit crypto discussions
             headers = {"User-Agent": "BensonBot/1.0"}
-            response = requests.get(self.reddit_sentiment_url, headers=headers, timeout=10)
+            response = requests.get(
+                self.reddit_sentiment_url, headers=headers, timeout=10
+            )
             response.raise_for_status()
 
             data = response.json()
@@ -145,9 +163,17 @@ class LiveDataIngestor:
                 weighted_score = score * min(upvotes / 100, 2.0)  # Cap weight at 2x
                 sentiment_scores.append(weighted_score)
 
-            avg_sentiment = sum(sentiment_scores) / len(sentiment_scores) if sentiment_scores else 0.5
+            avg_sentiment = (
+                sum(sentiment_scores) / len(sentiment_scores)
+                if sentiment_scores
+                else 0.5
+            )
 
-            result = {"social_sentiment": avg_sentiment, "post_count": len(posts), "timestamp": datetime.now()}
+            result = {
+                "social_sentiment": avg_sentiment,
+                "post_count": len(posts),
+                "timestamp": datetime.now(),
+            }
 
             self._cache_data(cache_key, result)
             logger.info(f"Social Sentiment: {avg_sentiment:.2f} ({len(posts)} posts)")
@@ -166,8 +192,14 @@ class LiveDataIngestor:
             return self.cache[cache_key]
 
         if not self.news_api_key:
-            logger.warning("NEWS_API_KEY not configured for geopolitical data, using fallback")
-            return {"geopolitical_score": 0.5, "events_count": 0, "timestamp": datetime.now()}
+            logger.warning(
+                "NEWS_API_KEY not configured for geopolitical data, using fallback"
+            )
+            return {
+                "geopolitical_score": 0.5,
+                "events_count": 0,
+                "timestamp": datetime.now(),
+            }
 
         try:
             # Fetch geopolitical news
@@ -193,11 +225,27 @@ class LiveDataIngestor:
                 text = f"{title} {description}"
 
                 # Keywords that indicate crypto-relevant geopolitical events
-                positive_keywords = ["adoption", "approval", "legal", "framework", "support"]
-                negative_keywords = ["ban", "regulation", "crackdown", "sanctions", "restrict"]
+                positive_keywords = [
+                    "adoption",
+                    "approval",
+                    "legal",
+                    "framework",
+                    "support",
+                ]
+                negative_keywords = [
+                    "ban",
+                    "regulation",
+                    "crackdown",
+                    "sanctions",
+                    "restrict",
+                ]
 
-                positive_score = sum(1 for keyword in positive_keywords if keyword in text)
-                negative_score = sum(1 for keyword in negative_keywords if keyword in text)
+                positive_score = sum(
+                    1 for keyword in positive_keywords if keyword in text
+                )
+                negative_score = sum(
+                    1 for keyword in negative_keywords if keyword in text
+                )
 
                 # Convert to 0-1 scale (0.5 = neutral)
                 if positive_score > negative_score:
@@ -209,18 +257,30 @@ class LiveDataIngestor:
 
                 impact_scores.append(max(0, min(1, score)))
 
-            avg_impact = sum(impact_scores) / len(impact_scores) if impact_scores else 0.5
+            avg_impact = (
+                sum(impact_scores) / len(impact_scores) if impact_scores else 0.5
+            )
 
-            result = {"geopolitical_score": avg_impact, "events_count": len(articles), "timestamp": datetime.now()}
+            result = {
+                "geopolitical_score": avg_impact,
+                "events_count": len(articles),
+                "timestamp": datetime.now(),
+            }
 
             self._cache_data(cache_key, result)
-            logger.info(f"Geopolitical Score: {avg_impact:.2f} ({len(articles)} events)")
+            logger.info(
+                f"Geopolitical Score: {avg_impact:.2f} ({len(articles)} events)"
+            )
             return result
 
         except Exception as e:
             logger.warning(f"Failed to fetch geopolitical data: {e}")
 
-        return {"geopolitical_score": 0.5, "events_count": 0, "timestamp": datetime.now()}
+        return {
+            "geopolitical_score": 0.5,
+            "events_count": 0,
+            "timestamp": datetime.now(),
+        }
 
     def _analyze_text_sentiment(self, text: str) -> float:
         """Simple sentiment analysis"""
@@ -228,8 +288,30 @@ class LiveDataIngestor:
             return 0.5
 
         # Simple keyword-based sentiment
-        positive_words = ["bullish", "positive", "growth", "gains", "up", "rise", "surge", "moon", "pump", "rally"]
-        negative_words = ["bearish", "negative", "crash", "down", "fall", "dump", "fear", "sell", "loss", "drop"]
+        positive_words = [
+            "bullish",
+            "positive",
+            "growth",
+            "gains",
+            "up",
+            "rise",
+            "surge",
+            "moon",
+            "pump",
+            "rally",
+        ]
+        negative_words = [
+            "bearish",
+            "negative",
+            "crash",
+            "down",
+            "fall",
+            "dump",
+            "fear",
+            "sell",
+            "loss",
+            "drop",
+        ]
 
         text_lower = text.lower()
         positive_count = sum(1 for word in positive_words if word in text_lower)

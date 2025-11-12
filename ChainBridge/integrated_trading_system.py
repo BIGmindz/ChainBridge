@@ -89,7 +89,9 @@ class IntegratedTradingSystem:
             print(f"\n{rec['symbol']}:")
             print(f"  Action: {rec['action']}")
             print(f"  Confidence: {rec['confidence'] * 100:.1f}%")
-            print(f"  Position Size: {rec['position_size_pct'] * 100:.1f}% of portfolio")
+            print(
+                f"  Position Size: {rec['position_size_pct'] * 100:.1f}% of portfolio"
+            )
             print(f"  Regions: {', '.join(rec['regions'])}")
             print(f"  Hold Period: {rec['expected_holding_period']}")
 

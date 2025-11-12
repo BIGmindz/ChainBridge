@@ -63,13 +63,22 @@ except Exception:
 
         def __truediv__(self, other):
             if isinstance(other, _NDArray):
-                return _NDArray([a / (b if b != 0 else 1e-12) for a, b in zip(self._data, other._data)])
+                return _NDArray(
+                    [
+                        a / (b if b != 0 else 1e-12)
+                        for a, b in zip(self._data, other._data)
+                    ]
+                )
             else:
-                return _NDArray([a / (other if other != 0 else 1e-12) for a in self._data])
+                return _NDArray(
+                    [a / (other if other != 0 else 1e-12) for a in self._data]
+                )
 
         def __rtruediv__(self, other):
             # scalar / array not used in this code but implement defensively
-            return _NDArray([(other / a) if a != 0 else float("inf") for a in self._data])
+            return _NDArray(
+                [(other / a) if a != 0 else float("inf") for a in self._data]
+            )
 
         def __neg__(self):
             return _NDArray([-a for a in self._data])
@@ -172,15 +181,21 @@ class EnterpriseLogger:
         # Console handler
         console = logging.StreamHandler()
         console.setLevel(logging.INFO)
-        console_format = logging.Formatter("%(asctime)s | %(levelname)s | %(message)s", datefmt="%H:%M:%S")
+        console_format = logging.Formatter(
+            "%(asctime)s | %(levelname)s | %(message)s", datefmt="%H:%M:%S"
+        )
         console.setFormatter(console_format)
 
         # File handler
         from logging.handlers import RotatingFileHandler
 
-        file_handler = RotatingFileHandler("bigmindz_trading.log", maxBytes=50 * 1024 * 1024, backupCount=10)
+        file_handler = RotatingFileHandler(
+            "bigmindz_trading.log", maxBytes=50 * 1024 * 1024, backupCount=10
+        )
         file_handler.setLevel(logging.DEBUG)
-        file_format = logging.Formatter("%(asctime)s | %(processName)s-%(process)d | %(threadName)s | %(levelname)s | %(message)s")
+        file_format = logging.Formatter(
+            "%(asctime)s | %(processName)s-%(process)d | %(threadName)s | %(levelname)s | %(message)s"
+        )
         file_handler.setFormatter(file_format)
 
         self.logger.addHandler(console)
@@ -245,7 +260,9 @@ class AsyncSignalProcessor:
     def __init__(self, processor_id: str):
         self.processor_id = processor_id
 
-    async def process_rsi(self, price_data: List[float], period: int = 14) -> ImmutableSignal:
+    async def process_rsi(
+        self, price_data: List[float], period: int = 14
+    ) -> ImmutableSignal:
         try:
             await asyncio.sleep(0)
             if len(price_data) < period + 1:
@@ -301,12 +318,16 @@ class AsyncSignalProcessor:
             else:
                 direction = "HOLD"
                 confidence = 0.3
-            return self._create_signal("MACD", current_hist, float(confidence), direction)
+            return self._create_signal(
+                "MACD", current_hist, float(confidence), direction
+            )
         except Exception as e:
             logger.log("ERROR", f"MACD calculation failed: {e}")
             return self._create_signal("MACD", 0.0, 0.0, "HOLD")
 
-    async def process_bollinger(self, price_data: List[float], period: int = 20) -> ImmutableSignal:
+    async def process_bollinger(
+        self, price_data: List[float], period: int = 20
+    ) -> ImmutableSignal:
         try:
             await asyncio.sleep(0)
             if len(price_data) < period:
@@ -330,7 +351,9 @@ class AsyncSignalProcessor:
             else:
                 direction = "HOLD"
                 confidence = 0.3
-            return self._create_signal("BOLLINGER", float(band_position), float(confidence), direction)
+            return self._create_signal(
+                "BOLLINGER", float(band_position), float(confidence), direction
+            )
         except Exception as e:
             logger.log("ERROR", f"Bollinger calculation failed: {e}")
             return self._create_signal("BOLLINGER", 0.5, 0.0, "HOLD")
@@ -352,7 +375,9 @@ class AsyncSignalProcessor:
             else:
                 direction = "HOLD"
                 confidence = 0.3
-            return self._create_signal("VOLUME", float(ratio), float(confidence), direction)
+            return self._create_signal(
+                "VOLUME", float(ratio), float(confidence), direction
+            )
         except Exception as e:
             logger.log("ERROR", f"Volume analysis failed: {e}")
             return self._create_signal("VOLUME", 1.0, 0.0, "HOLD")
@@ -370,16 +395,24 @@ class AsyncSignalProcessor:
             else:
                 direction = "HOLD"
                 confidence = 0.5
-            return self._create_signal("LOGISTICS", logistics_score, float(confidence), direction)
+            return self._create_signal(
+                "LOGISTICS", logistics_score, float(confidence), direction
+            )
         except Exception as e:
             logger.log("ERROR", f"Logistics signal failed: {e}")
             return self._create_signal("LOGISTICS", 0.5, 0.0, "HOLD")
 
-    def _create_signal(self, signal_type: str, value: float, confidence: float, direction: str) -> ImmutableSignal:
+    def _create_signal(
+        self, signal_type: str, value: float, confidence: float, direction: str
+    ) -> ImmutableSignal:
         return ImmutableSignal(
             id=str(uuid.uuid4()),
             timestamp=datetime.now(timezone.utc),
-            symbol=self.processor_id.split("_")[0] if "_" in self.processor_id else "UNKNOWN",
+            symbol=(
+                self.processor_id.split("_")[0]
+                if "_" in self.processor_id
+                else "UNKNOWN"
+            ),
             signal_type=signal_type,
             value=float(value),
             confidence=float(confidence),
@@ -414,7 +447,9 @@ class MLEngine:
                 except Exception as e:
                     logger.log("WARNING", f"Could not load {name}: {e}")
 
-    def extract_features(self, signals: List[ImmutableSignal], price_data: List[float]) -> Any:
+    def extract_features(
+        self, signals: List[ImmutableSignal], price_data: List[float]
+    ) -> Any:
         features: List[float] = []
         values = defaultdict(float)
         confs = defaultdict(float)
@@ -477,7 +512,9 @@ class MLEngine:
                 from collections import Counter
 
                 vote, count = Counter(preds).most_common(1)[0]
-                result["direction"] = ["SELL", "HOLD", "BUY"][int(vote)] if 0 <= vote <= 2 else "HOLD"
+                result["direction"] = (
+                    ["SELL", "HOLD", "BUY"][int(vote)] if 0 <= vote <= 2 else "HOLD"
+                )
                 result["confidence"] = count / len(preds)
                 result["models_agree"] = count >= len(preds) * 0.7
                 result["risk_score"] = 1.0 - result["confidence"]
@@ -503,7 +540,9 @@ class ParallelSignalAggregator:
             "ML": 0.15,
         }
 
-    async def aggregate_signals(self, signals: List[ImmutableSignal], price_data: List[float]) -> SignalAggregation:
+    async def aggregate_signals(
+        self, signals: List[ImmutableSignal], price_data: List[float]
+    ) -> SignalAggregation:
         symbol = signals[0].symbol if signals else "UNKNOWN"
         buy_score = sell_score = hold_score = 0.0
         for s in signals:
@@ -559,7 +598,9 @@ class ParallelSignalAggregator:
 
 
 class MutexFreeTradingEngine:
-    def __init__(self, config_path: str = "config.yaml", mode: str = "paper", once: bool = False):
+    def __init__(
+        self, config_path: str = "config.yaml", mode: str = "paper", once: bool = False
+    ):
         self.mode = mode
         self.once = once
         self.config = self._load_config(config_path)
@@ -594,7 +635,10 @@ class MutexFreeTradingEngine:
 
     def _initialize_components(self):
         self._setup_exchange()
-        self.processors = {symbol: AsyncSignalProcessor(f"{symbol}_processor") for symbol in self.symbols}
+        self.processors = {
+            symbol: AsyncSignalProcessor(f"{symbol}_processor")
+            for symbol in self.symbols
+        }
         self.ml_engine = MLEngine()
         self.aggregator = ParallelSignalAggregator(self.ml_engine)
         self.io_pool = ThreadPoolExecutor(max_workers=10)
@@ -623,8 +667,16 @@ class MutexFreeTradingEngine:
     async def fetch_market_data(self, symbol: str) -> Optional[Dict]:
         try:
             loop = asyncio.get_event_loop()
-            ticker = await loop.run_in_executor(self.io_pool, self.exchange.fetch_ticker, symbol)
-            ohlcv = await loop.run_in_executor(self.io_pool, self.exchange.fetch_ohlcv, symbol, self.config.get("timeframe", "5m"), 100)
+            ticker = await loop.run_in_executor(
+                self.io_pool, self.exchange.fetch_ticker, symbol
+            )
+            ohlcv = await loop.run_in_executor(
+                self.io_pool,
+                self.exchange.fetch_ohlcv,
+                symbol,
+                self.config.get("timeframe", "5m"),
+                100,
+            )
             return {
                 "symbol": symbol,
                 "price": ticker.get("last", 0),
@@ -655,7 +707,8 @@ class MutexFreeTradingEngine:
             signals = await asyncio.gather(*tasks)
             agg = await self.aggregator.aggregate_signals(signals, prices)
             logger.log(
-                "INFO", f"{symbol}: ${data['price']:.2f} | Signal: {agg.aggregated_direction} (Conf: {agg.aggregated_confidence:.2f})"
+                "INFO",
+                f"{symbol}: ${data['price']:.2f} | Signal: {agg.aggregated_direction} (Conf: {agg.aggregated_confidence:.2f})",
             )
             return agg
         except Exception as e:
@@ -663,7 +716,10 @@ class MutexFreeTradingEngine:
             return None
 
     async def execute_trade(self, aggregation: SignalAggregation) -> bool:
-        if aggregation.aggregated_direction == "HOLD" or aggregation.aggregated_confidence < 0.6:
+        if (
+            aggregation.aggregated_direction == "HOLD"
+            or aggregation.aggregated_confidence < 0.6
+        ):
             return False
         try:
             symbol = aggregation.symbol
@@ -673,7 +729,9 @@ class MutexFreeTradingEngine:
             price = float(ticker["last"])
             side = "buy" if direction == "BUY" else "sell"
             if self.mode == "live":
-                order = self.exchange.create_order(symbol=symbol, type="market", side=side, amount=size / price)
+                order = self.exchange.create_order(
+                    symbol=symbol, type="market", side=side, amount=size / price
+                )
             else:
                 order = {
                     "id": str(uuid.uuid4()),
@@ -697,7 +755,10 @@ class MutexFreeTradingEngine:
             }
             self.shared_state["trades"].append(trade_record)
             self.shared_state["positions"][symbol] = trade_record
-            logger.log("INFO", f"✅ Trade executed: {side.upper()} {size/price:.4f} {symbol} @ ${price:.2f}")
+            logger.log(
+                "INFO",
+                f"✅ Trade executed: {side.upper()} {size/price:.4f} {symbol} @ ${price:.2f}",
+            )
             return True
         except Exception as e:
             logger.log("ERROR", f"Trade execution failed: {e}")
@@ -706,7 +767,9 @@ class MutexFreeTradingEngine:
     async def run_once(self):
         tasks = [self.process_symbol(s) for s in self.symbols]
         aggs = await asyncio.gather(*tasks)
-        trade_tasks = [self.execute_trade(a) for a in aggs if a and a.aggregated_confidence > 0.7]
+        trade_tasks = [
+            self.execute_trade(a) for a in aggs if a and a.aggregated_confidence > 0.7
+        ]
         if trade_tasks:
             await asyncio.gather(*trade_tasks)
         self._update_metrics()
@@ -787,7 +850,9 @@ class MutexFreeTradingEngine:
 class MockExchange:
     def __init__(self, symbols: List[str]):
         self.symbols = symbols
-        self.prices: Dict[str, float] = {symbol: float(50000 - i * 10000) for i, symbol in enumerate(symbols)}
+        self.prices: Dict[str, float] = {
+            symbol: float(50000 - i * 10000) for i, symbol in enumerate(symbols)
+        }
 
     def fetch_ticker(self, symbol: str) -> Dict:
         price = float(self.prices.get(symbol, 50000))
@@ -810,7 +875,10 @@ class MockExchange:
             high_p = max(open_p, close_p) * (1 + abs(np.random.randn()) * 0.001)
             low_p = min(open_p, close_p) * (1 - abs(np.random.randn()) * 0.001)
             vol = float(np.random.uniform(100, 1000))
-            ts = int((datetime.now(timezone.utc) - timedelta(minutes=i * 5)).timestamp() * 1000)
+            ts = int(
+                (datetime.now(timezone.utc) - timedelta(minutes=i * 5)).timestamp()
+                * 1000
+            )
             ohlcv.append([ts, open_p, high_p, low_p, close_p, vol])
         return list(reversed(ohlcv))
 
@@ -837,15 +905,28 @@ def deploy():
     import argparse
 
     parser = argparse.ArgumentParser(description="BIGmindz Trading Platform")
-    parser.add_argument("--mode", choices=["paper", "live"], default="paper", help="Trading mode (default: paper)")
-    parser.add_argument("--config", default="config.yaml", help="Configuration file path")
+    parser.add_argument(
+        "--mode",
+        choices=["paper", "live"],
+        default="paper",
+        help="Trading mode (default: paper)",
+    )
+    parser.add_argument(
+        "--config", default="config.yaml", help="Configuration file path"
+    )
     parser.add_argument("--symbols", nargs="+", help="Override symbols to trade")
-    parser.add_argument("--once", action="store_true", help="Run a single cycle and exit")
+    parser.add_argument(
+        "--once", action="store_true", help="Run a single cycle and exit"
+    )
     args = parser.parse_args()
 
     if args.mode == "live":
-        print("⚠️  WARNING: Live trading mode selected! This will trade with REAL money.")
-        resp = os.environ.get("BIGMINDZ_LIVE_CONFIRM") or input("Type 'CONFIRM' to proceed: ")
+        print(
+            "⚠️  WARNING: Live trading mode selected! This will trade with REAL money."
+        )
+        resp = os.environ.get("BIGMINDZ_LIVE_CONFIRM") or input(
+            "Type 'CONFIRM' to proceed: "
+        )
         if resp != "CONFIRM":
             print("Live trading cancelled.")
             return

@@ -28,7 +28,9 @@ class SimpleRapidFireTrainer:
     without TensorFlow dependency
     """
 
-    def __init__(self, config_path: str = "config/config.yaml", initial_capital: float = 1000.0):
+    def __init__(
+        self, config_path: str = "config/config.yaml", initial_capital: float = 1000.0
+    ):
         """
         Initialize the SimpleRapidFireTrainer system
 
@@ -83,14 +85,18 @@ class SimpleRapidFireTrainer:
         ]
 
         # Signal weights (will be dynamically adjusted)
-        self.signal_weights = {signal: 1.0 / len(self.signals) for signal in self.signals}
+        self.signal_weights = {
+            signal: 1.0 / len(self.signals) for signal in self.signals
+        }
 
         # Learning rate for weight adjustments
         self.learning_rate = 0.01
 
         # Training session directory
         self.session_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.session_dir = os.path.join("data", "rapid_fire_sessions", f"session_{self.session_timestamp}")
+        self.session_dir = os.path.join(
+            "data", "rapid_fire_sessions", f"session_{self.session_timestamp}"
+        )
         os.makedirs(self.session_dir, exist_ok=True)
         os.makedirs(os.path.join(self.session_dir, "visualizations"), exist_ok=True)
         os.makedirs(os.path.join(self.session_dir, "data"), exist_ok=True)
@@ -219,7 +225,9 @@ class SimpleRapidFireTrainer:
         unsuccessful_signals = {signal: [] for signal in self.signals}
 
         for decision in self.decision_history:
-            if decision["timestamp"] < cutoff_time and not decision.get("evaluated", False):
+            if decision["timestamp"] < cutoff_time and not decision.get(
+                "evaluated", False
+            ):
                 symbol = decision.get("symbol", list(current_prices.keys())[0])  # type: ignore
                 current_price = current_prices.get(symbol, 0)
 
@@ -285,7 +293,9 @@ class SimpleRapidFireTrainer:
 
                 # Calculate success rate
                 total_occurrences = len(successful) + len(unsuccessful)
-                success_rate = len(successful) / total_occurrences if total_occurrences > 0 else 0
+                success_rate = (
+                    len(successful) / total_occurrences if total_occurrences > 0 else 0
+                )
 
                 # Update weight based on success rate and signal correlation with success
                 weight_adjustment = (success_rate - 0.5) * self.learning_rate
@@ -383,7 +393,9 @@ class SimpleRapidFireTrainer:
     def _format_signal_weights(self) -> str:
         """Format signal weights for display"""
         result = ""
-        for i, (signal, weight) in enumerate(sorted(self.signal_weights.items(), key=lambda x: x[1], reverse=True)):
+        for i, (signal, weight) in enumerate(
+            sorted(self.signal_weights.items(), key=lambda x: x[1], reverse=True)
+        ):
             result += f"║ {signal}: {weight:.4f}"
             if i < len(self.signal_weights) - 1:
                 result += "\n"
@@ -446,7 +458,10 @@ class SimpleRapidFireTrainer:
             bars = plt.bar(sorted_signals, sorted_weights)
 
             # Color best and worst signals
-            if self.dashboard_data["best_signal"] and self.dashboard_data["worst_signal"]:
+            if (
+                self.dashboard_data["best_signal"]
+                and self.dashboard_data["worst_signal"]
+            ):
                 best_signal = self.dashboard_data["best_signal"][0]
                 worst_signal = self.dashboard_data["worst_signal"][0]
 
@@ -474,16 +489,30 @@ class SimpleRapidFireTrainer:
 
         results = {
             "timestamp": datetime.now().isoformat(),
-            "duration_minutes": (datetime.now() - datetime.strptime(self.session_timestamp, "%Y%m%d_%H%M%S")).total_seconds() / 60,
+            "duration_minutes": (
+                datetime.now()
+                - datetime.strptime(self.session_timestamp, "%Y%m%d_%H%M%S")
+            ).total_seconds()
+            / 60,
             "initial_capital": self.initial_capital,
-            "final_capital": (self.dashboard_data["capital"][-1] if self.dashboard_data["capital"] else self.initial_capital),
+            "final_capital": (
+                self.dashboard_data["capital"][-1]
+                if self.dashboard_data["capital"]
+                else self.initial_capital
+            ),
             "return_pct": (
-                ((self.dashboard_data["capital"][-1] / self.initial_capital) - 1) * 100 if self.dashboard_data["capital"] else 0
+                ((self.dashboard_data["capital"][-1] / self.initial_capital) - 1) * 100
+                if self.dashboard_data["capital"]
+                else 0
             ),
             "trades": self.total_trades,
             "wins": self.wins,
             "losses": self.losses,
-            "win_rate": (self.dashboard_data["win_rate"][-1] if self.dashboard_data["win_rate"] else 0),
+            "win_rate": (
+                self.dashboard_data["win_rate"][-1]
+                if self.dashboard_data["win_rate"]
+                else 0
+            ),
             "signal_weights": self.signal_weights,
             "best_signal": self.dashboard_data["best_signal"],
             "worst_signal": self.dashboard_data["worst_signal"],
@@ -559,7 +588,9 @@ class SimpleRapidFireTrainer:
                 minutes = int(remaining_time // 60)
                 seconds = int(remaining_time % 60)
 
-                print(f"[{datetime.now().strftime('%H:%M:%S')}] {symbol}: ${price:.2f} | {action} | Remaining: {minutes}m {seconds}s")
+                print(
+                    f"[{datetime.now().strftime('%H:%M:%S')}] {symbol}: ${price:.2f} | {action} | Remaining: {minutes}m {seconds}s"
+                )
 
                 # Wait for next cycle
                 cycle_duration = time.time() - cycle_start
@@ -592,7 +623,9 @@ def main():
     """Main function to run the SimpleRapidFireTrainer"""
     import argparse
 
-    parser = argparse.ArgumentParser(description="Run Simple Rapid Fire Training (No TensorFlow)")
+    parser = argparse.ArgumentParser(
+        description="Run Simple Rapid Fire Training (No TensorFlow)"
+    )
     parser.add_argument(
         "--duration",
         type=int,
@@ -621,7 +654,9 @@ def main():
     args = parser.parse_args()
 
     # Create and run the trainer
-    trainer = SimpleRapidFireTrainer(config_path=args.config, initial_capital=args.capital)
+    trainer = SimpleRapidFireTrainer(
+        config_path=args.config, initial_capital=args.capital
+    )
 
     trainer.run_training(duration_minutes=args.duration, cycle_seconds=args.cycle)
 

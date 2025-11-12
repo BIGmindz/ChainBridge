@@ -88,7 +88,9 @@ class SettlementRequest(BaseModel):
     """Request to settle a payment intent."""
 
     settlement_notes: Optional[str] = Field(None, max_length=500)
-    force_approval: bool = Field(default=False, description="Override risk checks (requires special permission)")
+    force_approval: bool = Field(
+        default=False, description="Override risk checks (requires special permission)"
+    )
 
 
 class SettlementResponse(BaseModel):
@@ -149,7 +151,9 @@ class PaymentScheduleItemCreate(BaseModel):
     """Schema for creating a payment schedule item."""
 
     event_type: str = Field(..., max_length=50, description="Shipment event type")
-    percentage: float = Field(..., ge=0.0, le=1.0, description="Percentage of total payment (0.0-1.0)")
+    percentage: float = Field(
+        ..., ge=0.0, le=1.0, description="Percentage of total payment (0.0-1.0)"
+    )
     order: int = Field(..., ge=1, description="Sequence order in schedule")
 
 

@@ -3,7 +3,9 @@ import sys
 from importlib import util
 
 # Ensure we load the local main.py directly
-spec = util.spec_from_file_location("bmain", "/Users/johnbozza/Multiple-signal-decision-bot/main.py")
+spec = util.spec_from_file_location(
+    "bmain", "/Users/johnbozza/Multiple-signal-decision-bot/main.py"
+)
 mod = util.module_from_spec(spec)
 spec.loader.exec_module(mod)
 

@@ -77,7 +77,9 @@ def load_bot_config():
                 print(f"⚠️  Failed to load configuration from {path}: {exc}")
                 break
 
-    print("⚠️  No configuration file found (expected config/config.yaml or config.yaml). Using defaults.")
+    print(
+        "⚠️  No configuration file found (expected config/config.yaml or config.yaml). Using defaults."
+    )
     return {}
 
 
@@ -89,7 +91,9 @@ def preflight_check():
         print("❌ Missing API_KEY or API_SECRET in environment.")
         sys.exit(1)
     else:
-        print(f"✅ API keys loaded. API_KEY: {api_key[:10]}..., API_SECRET: {api_secret[:10]}...")
+        print(
+            f"✅ API keys loaded. API_KEY: {api_key[:10]}..., API_SECRET: {api_secret[:10]}..."
+        )
 
 
 class LiveTradingBot:
@@ -102,7 +106,9 @@ class LiveTradingBot:
         self.exchange = setup_exchange("kraken", api_config)
 
         # Initialize budget manager with live mode
-        raw_initial_capital = (self.config.get("risk") or {}).get("initial_capital", 10000.0)
+        raw_initial_capital = (self.config.get("risk") or {}).get(
+            "initial_capital", 10000.0
+        )
         initial_capital = 10000.0
         try:
             # Some configs may have accidental trailing text (e.g. '426.60loaded from env')
@@ -113,17 +119,25 @@ class LiveTradingBot:
                 if match:
                     initial_capital = float(match.group(0))
                 else:
-                    raise ValueError(f"No numeric value found in initial_capital string: {raw_initial_capital}")
+                    raise ValueError(
+                        f"No numeric value found in initial_capital string: {raw_initial_capital}"
+                    )
             else:
                 initial_capital = float(raw_initial_capital)
         except Exception as parse_exc:
-            print(f"⚠️  Warning: Failed to parse initial_capital '{raw_initial_capital}' ({parse_exc}); using default {initial_capital}.")
-        self.budget_manager = BudgetManager(initial_capital=initial_capital, exchange=self.exchange, live_mode=True)
+            print(
+                f"⚠️  Warning: Failed to parse initial_capital '{raw_initial_capital}' ({parse_exc}); using default {initial_capital}."
+            )
+        self.budget_manager = BudgetManager(
+            initial_capital=initial_capital, exchange=self.exchange, live_mode=True
+        )
 
         # Initialize exchange adapter
         self.exchange_adapter = ExchangeAdapter(exchange=self.exchange, config={})
 
-        configured_symbols = self.config.get("symbols") if isinstance(self.config, dict) else None
+        configured_symbols = (
+            self.config.get("symbols") if isinstance(self.config, dict) else None
+        )
         if isinstance(configured_symbols, list) and configured_symbols:
             self.symbols = [str(symbol) for symbol in configured_symbols]
         else:
@@ -157,9 +171,15 @@ class LiveTradingBot:
         print(f"💰 Initial Capital: ${self.budget_manager.initial_capital:,.2f}")
         print(f"📊 Trading Symbols: {', '.join(self.symbols)}")
         print("⚠️  LIVE TRADING MODE - REAL ORDERS WILL BE PLACED!")
-        print("🔄 MULTI-SIGNAL AGGREGATION ENABLED - All signals flow through aggregator")
-        print("📈 Signal Modules: RSI, MACD, Bollinger Bands, Volume Profile, Sentiment Analysis,")
-        print("   Logistics Signals, Global Macro, Region-Specific Crypto, New Listings Radar")
+        print(
+            "🔄 MULTI-SIGNAL AGGREGATION ENABLED - All signals flow through aggregator"
+        )
+        print(
+            "📈 Signal Modules: RSI, MACD, Bollinger Bands, Volume Profile, Sentiment Analysis,"
+        )
+        print(
+            "   Logistics Signals, Global Macro, Region-Specific Crypto, New Listings Radar"
+        )
 
         # Runtime overrides (injected by orchestrator via config["runtime_overrides"])
         overrides = (self.config or {}).get("runtime_overrides", {})
@@ -167,9 +187,13 @@ class LiveTradingBot:
         self.min_confidence = float(overrides.get("min_confidence", 0.25))
         self.min_trade_usd = float(overrides.get("min_trade_usd", 50.0))
         if self.force_execution:
-            print(f"⚡ Force execution override ENABLED (min_confidence={self.min_confidence}, min_trade_usd={self.min_trade_usd})")
+            print(
+                f"⚡ Force execution override ENABLED (min_confidence={self.min_confidence}, min_trade_usd={self.min_trade_usd})"
+            )
         else:
-            print(f"🔧 Runtime thresholds: min_confidence={self.min_confidence} min_trade_usd={self.min_trade_usd}")
+            print(
+                f"🔧 Runtime thresholds: min_confidence={self.min_confidence} min_trade_usd={self.min_trade_usd}"
+            )
 
         # Trade event log path / recent trades buffer
         self.trade_log_path = Path("logs/trades.jsonl")
@@ -264,7 +288,11 @@ class LiveTradingBot:
                             "aggregated_signal": signal,
                             "aggregated_confidence": confidence,
                             "modules": {
-                                m: {"signal": d.get("signal"), "confidence": d.get("confidence"), "value": d.get("value")}
+                                m: {
+                                    "signal": d.get("signal"),
+                                    "confidence": d.get("confidence"),
+                                    "value": d.get("value"),
+                                }
                                 for m, d in signal_result.get("modules", {}).items()
                             },
                         }
@@ -279,11 +307,15 @@ class LiveTradingBot:
                     if signal == "HOLD":
                         effective_signal = "BUY"  # Demonstration forced BUY
                         effective_conf = max(confidence, self.min_confidence)
-                        print("⚡ Force-execution override: converting HOLD -> BUY for demonstration")
+                        print(
+                            "⚡ Force-execution override: converting HOLD -> BUY for demonstration"
+                        )
                     # else keep existing non-HOLD actionable signal
                 # Decide if we trade
                 if effective_signal != "HOLD" and (
-                    self.force_execution and not self._forced_trade_done or effective_conf >= self.min_confidence
+                    self.force_execution
+                    and not self._forced_trade_done
+                    or effective_conf >= self.min_confidence
                 ):
                     self._execute_trade(symbol, effective_signal, price, effective_conf)
                     if self.force_execution and not self._forced_trade_done:
@@ -309,15 +341,21 @@ class LiveTradingBot:
             # Check if capital is below threshold
             threshold = 100.0  # $100 minimum
             if self.budget_manager.available_capital < threshold:
-                print(f"⚠️  LOW CAPITAL ALERT: ${self.budget_manager.available_capital:.2f} < ${threshold:.2f}")
+                print(
+                    f"⚠️  LOW CAPITAL ALERT: ${self.budget_manager.available_capital:.2f} < ${threshold:.2f}"
+                )
 
                 # Trigger automatic liquidation
                 liquidation_result = self.budget_manager.check_low_capital_and_liquidate(self.exchange_adapter)  # type: ignore
 
                 if liquidation_result["status"] == "recovered":
-                    print(f"💰 CAPITAL RECOVERED: ${liquidation_result['available_capital']:,.2f}")
+                    print(
+                        f"💰 CAPITAL RECOVERED: ${liquidation_result['available_capital']:,.2f}"
+                    )
                 else:
-                    print(f"⚠️  CAPITAL STILL LOW: ${liquidation_result['available_capital']:,.2f}")
+                    print(
+                        f"⚠️  CAPITAL STILL LOW: ${liquidation_result['available_capital']:,.2f}"
+                    )
 
         except Exception as e:
             print(f"❌ Error checking liquidation: {e}")
@@ -325,12 +363,16 @@ class LiveTradingBot:
     def _execute_trade(self, symbol, signal, price, confidence):
         try:
             # Calculate position size using budget manager
-            position_info = self.budget_manager.calculate_position_size(symbol=symbol, signal_confidence=confidence, price=price)
+            position_info = self.budget_manager.calculate_position_size(
+                symbol=symbol, signal_confidence=confidence, price=price
+            )
 
             position_size = position_info["size"]
 
             if position_size < self.min_trade_usd:  # Dynamic minimum trade size
-                print(f"⚠️  Position size too small: ${position_size:.2f} (< {self.min_trade_usd})")
+                print(
+                    f"⚠️  Position size too small: ${position_size:.2f} (< {self.min_trade_usd})"
+                )
                 return
 
             print(f"📈 Executing {signal} for {symbol}")
@@ -360,7 +402,9 @@ class LiveTradingBot:
                 )
                 return
 
-            order_id = order.get("id") or order.get("orderId") or order.get("clientOrderId")
+            order_id = (
+                order.get("id") or order.get("orderId") or order.get("clientOrderId")
+            )
             print(f"📝 Submitted {signal} order id={order_id} for {symbol} @ {price}")
             self._log_trade_event(
                 {
@@ -376,7 +420,9 @@ class LiveTradingBot:
             )
 
             # Poll for fill
-            final_status, fill_price = self._poll_order_fill(order_id, symbol, signal.lower(), price)
+            final_status, fill_price = self._poll_order_fill(
+                order_id, symbol, signal.lower(), price
+            )
             if final_status == "filled":
                 # Record the position in budget manager (using fill price if available)
                 entry_price = fill_price or price
@@ -402,7 +448,9 @@ class LiveTradingBot:
                     }
                 )
             elif final_status == "canceled":
-                print(f"⚠️  {signal} order {order_id} canceled / not filled; releasing capital")
+                print(
+                    f"⚠️  {signal} order {order_id} canceled / not filled; releasing capital"
+                )
                 self._log_trade_event(
                     {
                         "ts": self._utc_now(),
@@ -416,7 +464,9 @@ class LiveTradingBot:
                     }
                 )
             else:
-                print(f"⚠️  {signal} order {order_id} unfilled after timeout; marking as expired")
+                print(
+                    f"⚠️  {signal} order {order_id} unfilled after timeout; marking as expired"
+                )
                 self._log_trade_event(
                     {
                         "ts": self._utc_now(),
@@ -450,7 +500,9 @@ class LiveTradingBot:
             return 50.0  # Default neutral RSI
 
         # Extract closing prices
-        closes = [candle[4] for candle in ohlcv]  # OHLCV format: [timestamp, open, high, low, close, volume]
+        closes = [
+            candle[4] for candle in ohlcv
+        ]  # OHLCV format: [timestamp, open, high, low, close, volume]
 
         # Calculate price changes
         changes = []
@@ -489,32 +541,48 @@ class LiveTradingBot:
             module_signals = {}
 
             # RSI signal
-            module_signals["RSI"] = self._process_module(self.rsi, "RSI", {"price_data": price_data})
+            module_signals["RSI"] = self._process_module(
+                self.rsi, "RSI", {"price_data": price_data}
+            )
 
             # MACD signal
-            module_signals["MACD"] = self._process_module(self.macd, "MACD", {"price_data": price_data})
+            module_signals["MACD"] = self._process_module(
+                self.macd, "MACD", {"price_data": price_data}
+            )
 
             # Bollinger Bands signal
-            module_signals["BollingerBands"] = self._process_module(self.bollinger, "BollingerBands", {"price_data": price_data})
+            module_signals["BollingerBands"] = self._process_module(
+                self.bollinger, "BollingerBands", {"price_data": price_data}
+            )
 
             # Volume Profile signal
-            module_signals["VolumeProfile"] = self._process_module(self.volume, "VolumeProfile", {"price_data": price_data})
+            module_signals["VolumeProfile"] = self._process_module(
+                self.volume, "VolumeProfile", {"price_data": price_data}
+            )
 
             # Sentiment Analysis signal
-            module_signals["SentimentAnalysis"] = self._process_module(self.sentiment, "SentimentAnalysis", {"price_data": price_data})
+            module_signals["SentimentAnalysis"] = self._process_module(
+                self.sentiment, "SentimentAnalysis", {"price_data": price_data}
+            )
 
             # Logistics signal
             module_signals["LogisticsSignal"] = self._process_module(
-                self.logistics, "LogisticsSignal", {"price_data": price_data, "symbol": symbol}
+                self.logistics,
+                "LogisticsSignal",
+                {"price_data": price_data, "symbol": symbol},
             )
 
             # Global Macro signal
             module_signals["GlobalMacro"] = self._process_module(
-                self.global_macro, "GlobalMacro", {"price_data": price_data, "symbol": symbol}
+                self.global_macro,
+                "GlobalMacro",
+                {"price_data": price_data, "symbol": symbol},
             )
 
             # Adoption Tracker signal
-            module_signals["AdoptionTracker"] = self._process_module(self.adoption_tracker, "AdoptionTracker", {"symbol": symbol})
+            module_signals["AdoptionTracker"] = self._process_module(
+                self.adoption_tracker, "AdoptionTracker", {"symbol": symbol}
+            )
 
             # Region-specific crypto mapping
             macro_test_signals = {
@@ -526,7 +594,9 @@ class LiveTradingBot:
                 "el_salvador_btc_news": True if "BTC" in symbol else False,
             }
             module_signals["RegionCryptoMapper"] = self._process_module(
-                self.region_crypto, "RegionCryptoMapper", {"symbol": symbol, "macro_signals": macro_test_signals}
+                self.region_crypto,
+                "RegionCryptoMapper",
+                {"symbol": symbol, "macro_signals": macro_test_signals},
             )
 
             # New Listings Radar
@@ -539,9 +609,17 @@ class LiveTradingBot:
                         "value": 0,
                     }
                 else:
-                    module_signals["NewListingsRadar"] = {"signal": "HOLD", "confidence": 0.0, "value": 0}
+                    module_signals["NewListingsRadar"] = {
+                        "signal": "HOLD",
+                        "confidence": 0.0,
+                        "value": 0,
+                    }
             except:
-                module_signals["NewListingsRadar"] = {"signal": "HOLD", "confidence": 0.0, "value": 0}
+                module_signals["NewListingsRadar"] = {
+                    "signal": "HOLD",
+                    "confidence": 0.0,
+                    "value": 0,
+                }
 
             # Aggregate all signals through MultiSignalAggregatorModule
             agg_input = {
@@ -554,7 +632,11 @@ class LiveTradingBot:
             if not isinstance(agg_result, dict) or "signal" not in agg_result:
                 agg_result = {"signal": "HOLD", "confidence": 0.5}
 
-            return {"signal": agg_result.get("signal", "HOLD"), "confidence": agg_result.get("confidence", 0.5), "modules": module_signals}
+            return {
+                "signal": agg_result.get("signal", "HOLD"),
+                "confidence": agg_result.get("confidence", 0.5),
+                "modules": module_signals,
+            }
 
         except Exception as e:
             print(f"❌ Error in multi-signal generation: {e}")
@@ -623,7 +705,9 @@ class LiveTradingBot:
         except Exception as exc:
             print(f"⚠️  Failed to log trade event: {exc}")
 
-    def _poll_order_fill(self, order_id, symbol, side, submitted_price, timeout_seconds=60):
+    def _poll_order_fill(
+        self, order_id, symbol, side, submitted_price, timeout_seconds=60
+    ):
         """Poll exchange for order fill status.
 
         Returns: (status, fill_price)
@@ -679,14 +763,27 @@ class LiveTradingBot:
             # We will attempt to find latest price from per_symbol_snapshots mapping by symbol.
             price_lookup = {}
             for sym_entry in per_symbol_snapshots:
-                sym = sym_entry.get("symbol") or sym_entry.get("pair") or sym_entry.get("ticker")
+                sym = (
+                    sym_entry.get("symbol")
+                    or sym_entry.get("pair")
+                    or sym_entry.get("ticker")
+                )
                 if sym:
-                    price_lookup[sym] = sym_entry.get("price") or sym_entry.get("last_price") or sym_entry.get("close")
+                    price_lookup[sym] = (
+                        sym_entry.get("price")
+                        or sym_entry.get("last_price")
+                        or sym_entry.get("close")
+                    )
 
             for pos in open_positions:
                 sym = pos.get("symbol")
                 entry = pos.get("entry_price") or pos.get("avg_entry") or 0.0
-                size_usd = pos.get("position_size_usd") or pos.get("usd_value") or pos.get("size_usd") or 0.0
+                size_usd = (
+                    pos.get("position_size_usd")
+                    or pos.get("usd_value")
+                    or pos.get("size_usd")
+                    or 0.0
+                )
                 qty = pos.get("quantity") or pos.get("base_size") or 0.0
                 side = (pos.get("side") or "").upper()
                 last_price = price_lookup.get(sym)
@@ -714,7 +811,9 @@ class LiveTradingBot:
         except Exception as exc:
             print(f"⚠️  P&L enrichment failed: {exc}")
 
-        total_unrealized_pct = (total_unrealized / total_cost_basis * 100.0) if total_cost_basis else 0.0
+        total_unrealized_pct = (
+            (total_unrealized / total_cost_basis * 100.0) if total_cost_basis else 0.0
+        )
         portfolio_status["unrealized_pnl"] = total_unrealized
         portfolio_status["unrealized_pnl_pct"] = total_unrealized_pct
         if enriched_positions:
@@ -752,7 +851,9 @@ class LiveTradingBot:
         print(f"   💰 Current Capital: ${status['current_capital']:,.2f}")
         print(f"   💵 Available Capital: ${status['available_capital']:,.2f}")
         print(f"   📊 Open Positions: {status['open_positions']}")
-        print(f"   💚 Total P&L: ${status['total_pnl']:+,.2f} ({status['total_pnl_pct']:+.1f}%)")
+        print(
+            f"   💚 Total P&L: ${status['total_pnl']:+,.2f} ({status['total_pnl_pct']:+.1f}%)"
+        )
         print(f"   📈 Win Rate: {status['win_rate']:.1f}%")
         print(f"   🎯 Total Trades: {status['total_trades']}")
 

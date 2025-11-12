@@ -51,8 +51,12 @@ def run_multi_signal_demo():
             "modules.macd_module",
             {"fast_period": 12, "slow_period": 26, "signal_period": 9},
         )
-        module_manager.load_module("modules.bollinger_bands_module", {"period": 20, "std_multiplier": 2.0})
-        module_manager.load_module("modules.volume_profile_module", {"lookback_periods": 50})
+        module_manager.load_module(
+            "modules.bollinger_bands_module", {"period": 20, "std_multiplier": 2.0}
+        )
+        module_manager.load_module(
+            "modules.volume_profile_module", {"lookback_periods": 50}
+        )
         module_manager.load_module("modules.sentiment_analysis_module")
         module_manager.load_module("modules.multi_signal_aggregator_module")
 
@@ -62,7 +66,9 @@ def run_multi_signal_demo():
         sample_price_data = []
         base_price = 45000
         for i in range(60):  # 60 periods of data
-            price_variation = 100 * math.sin(i * 0.1) + (i * 25)  # Trend with oscillation
+            price_variation = 100 * math.sin(i * 0.1) + (
+                i * 25
+            )  # Trend with oscillation
             noise = (i % 3 - 1) * 50  # Small random-like noise
 
             close = base_price + price_variation + noise
@@ -89,22 +95,36 @@ def run_multi_signal_demo():
         individual_signals = {}
 
         # RSI Analysis
-        rsi_result = module_manager.execute_module("RSIModule", {"price_data": sample_price_data})
+        rsi_result = module_manager.execute_module(
+            "RSIModule", {"price_data": sample_price_data}
+        )
         individual_signals["RSI"] = rsi_result
-        print(f"  RSI: {rsi_result['signal']} (Confidence: {rsi_result['confidence']:.2f}, Value: {rsi_result['rsi_value']:.1f})")
+        print(
+            f"  RSI: {rsi_result['signal']} (Confidence: {rsi_result['confidence']:.2f}, Value: {rsi_result['rsi_value']:.1f})"
+        )
 
         # MACD Analysis
-        macd_result = module_manager.execute_module("MACDModule", {"price_data": sample_price_data})
+        macd_result = module_manager.execute_module(
+            "MACDModule", {"price_data": sample_price_data}
+        )
         individual_signals["MACD"] = macd_result
-        print(f"  MACD: {macd_result['signal']} (Confidence: {macd_result['confidence']:.2f}, Value: {macd_result['macd_line']:.1f})")
+        print(
+            f"  MACD: {macd_result['signal']} (Confidence: {macd_result['confidence']:.2f}, Value: {macd_result['macd_line']:.1f})"
+        )
 
         # Bollinger Bands Analysis
-        bb_result = module_manager.execute_module("BollingerBandsModule", {"price_data": sample_price_data})
+        bb_result = module_manager.execute_module(
+            "BollingerBandsModule", {"price_data": sample_price_data}
+        )
         individual_signals["BollingerBands"] = bb_result
-        print(f"  Bollinger Bands: {bb_result['signal']} (Confidence: {bb_result['confidence']:.2f}, %B: {bb_result['percent_b']:.2f})")
+        print(
+            f"  Bollinger Bands: {bb_result['signal']} (Confidence: {bb_result['confidence']:.2f}, %B: {bb_result['percent_b']:.2f})"
+        )
 
         # Volume Profile Analysis
-        vp_result = module_manager.execute_module("VolumeProfileModule", {"price_data": sample_price_data})
+        vp_result = module_manager.execute_module(
+            "VolumeProfileModule", {"price_data": sample_price_data}
+        )
         individual_signals["VolumeProfile"] = vp_result
         print(
             f"  Volume Profile: {vp_result['signal']} (Confidence: {vp_result['confidence']:.2f}, POC: ${vp_result['point_of_control']:,.0f})"
@@ -124,7 +144,9 @@ def run_multi_signal_demo():
             "price_data": sample_price_data[-1],  # Current price data
         }
 
-        final_result = module_manager.execute_module("MultiSignalAggregatorModule", aggregation_input)
+        final_result = module_manager.execute_module(
+            "MultiSignalAggregatorModule", aggregation_input
+        )
 
         print("\n" + "=" * 60)
         print("MULTI-SIGNAL ANALYSIS RESULTS")
@@ -146,7 +168,10 @@ def run_multi_signal_demo():
         for factor in final_result["decision_factors"]:
             print(f"  • {factor}")
 
-        if "correlation_analysis" in final_result and final_result["correlation_analysis"]:
+        if (
+            "correlation_analysis" in final_result
+            and final_result["correlation_analysis"]
+        ):
             print("\nSignal Independence:")
             corr = final_result["correlation_analysis"]
             print(f"  Diversification Score: {corr['diversification_score']:.2f}")
@@ -190,7 +215,10 @@ def run_rsi_bot_compatibility(once: bool = False):
             {"close": 45200, "timestamp": "2024-01-01T00:15:00Z"},
             {"close": 45300, "timestamp": "2024-01-01T00:20:00Z"},
             # Add enough data points for RSI calculation
-        ] + [{"close": 45000 + (i * 10), "timestamp": f"2024-01-01T{i:02d}:00:00Z"} for i in range(20)]
+        ] + [
+            {"close": 45000 + (i * 10), "timestamp": f"2024-01-01T{i:02d}:00:00Z"}
+            for i in range(20)
+        ]
 
         # Execute RSI analysis
         input_data = {"price_data": sample_price_data}
@@ -325,14 +353,18 @@ def run_system_tests():
         if multi_signal_validation["valid"]:
             print("✓ Multi-signal pipeline creation successful")
         else:
-            print(f"✗ Multi-signal pipeline validation failed: {multi_signal_validation['issues']}")
+            print(
+                f"✗ Multi-signal pipeline validation failed: {multi_signal_validation['issues']}"
+            )
 
         # Test metrics collector
         print("Testing metrics collector...")
         metrics_collector = MetricsCollector()
         metrics_collector.track_module_execution("test_module", 1.0, 100, 200)
         metrics = metrics_collector.get_all_metrics()
-        print(f"✓ Metrics collection working - {len(metrics)} metric categories tracked")
+        print(
+            f"✓ Metrics collection working - {len(metrics)} metric categories tracked"
+        )
 
         print("\n✓ All modular architecture tests passed!")
         print(f"✓ Total modules loaded: {len(module_manager.list_modules())}")
@@ -345,7 +377,9 @@ def run_system_tests():
 
 def main():
     """Main entry point for the Benson system."""
-    parser = argparse.ArgumentParser(description="Benson Multi-Signal Decision Bot - Modular Architecture")
+    parser = argparse.ArgumentParser(
+        description="Benson Multi-Signal Decision Bot - Modular Architecture"
+    )
 
     parser.add_argument(
         "--mode",
@@ -353,9 +387,15 @@ def main():
         default="api-server",
         help="Run mode: rsi-compat (RSI bot compatibility), api-server (API server), test (run tests), multi-signal-demo (demonstrate multi-signal analysis)",
     )
-    parser.add_argument("--once", action="store_true", help="Run once and exit (for rsi-compat mode)")
-    parser.add_argument("--port", type=int, default=8000, help="Port for API server (default: 8000)")
-    parser.add_argument("--host", default="0.0.0.0", help="Host for API server (default: 0.0.0.0)")
+    parser.add_argument(
+        "--once", action="store_true", help="Run once and exit (for rsi-compat mode)"
+    )
+    parser.add_argument(
+        "--port", type=int, default=8000, help="Port for API server (default: 8000)"
+    )
+    parser.add_argument(
+        "--host", default="0.0.0.0", help="Host for API server (default: 0.0.0.0)"
+    )
 
     args = parser.parse_args()
 

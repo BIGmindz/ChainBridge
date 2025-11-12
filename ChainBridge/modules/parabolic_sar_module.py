@@ -50,7 +50,9 @@ class ParabolicSARModule(Module):
             return self._insufficient_data()
 
         df = self._to_dataframe(candles)
-        psar_series, trend_series, af_series = self._calculate_psar(df["high"].values, df["low"].values)
+        psar_series, trend_series, af_series = self._calculate_psar(
+            df["high"].values, df["low"].values
+        )
 
         if len(psar_series) == 0:
             return self._insufficient_data()
@@ -91,7 +93,9 @@ class ParabolicSARModule(Module):
             }
         )
 
-    def _calculate_psar(self, highs: np.ndarray, lows: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def _calculate_psar(
+        self, highs: np.ndarray, lows: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         length = len(highs)
         if length < 2:
             return np.array([]), np.array([]), np.array([])

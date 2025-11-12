@@ -39,7 +39,9 @@ def close_positions():
                 sell_price = Decimal(str(take_profit))
             else:
                 # fallback: small profit over entry
-                sell_price = (entry_price * Decimal("1.01")).quantize(Decimal("0.00000001"))
+                sell_price = (entry_price * Decimal("1.01")).quantize(
+                    Decimal("0.00000001")
+                )
 
             pnl = (sell_price - entry_price) * quantity
             pnl_f = float(pnl)  # type: ignore
@@ -61,8 +63,12 @@ def close_positions():
             trades.append(sell_trade)  # type: ignore
 
             # Update budget numbers
-            budget["available_capital"] = round(budget.get("available_capital", 0) + pos.get("size") + pnl_f, 2)
-            budget["current_capital"] = round(budget.get("current_capital", 0) + pnl_f, 2)
+            budget["available_capital"] = round(
+                budget.get("available_capital", 0) + pos.get("size") + pnl_f, 2
+            )
+            budget["current_capital"] = round(
+                budget.get("current_capital", 0) + pnl_f, 2
+            )
 
             # Update performance
             perf = budget.get("performance", {})
@@ -91,7 +97,9 @@ def close_positions():
         return
 
     budget["positions"] = new_positions
-    budget["trade_history"] = budget.get("trade_history", []) + [t for t in trades if t.get("action") == "SELL"]
+    budget["trade_history"] = budget.get("trade_history", []) + [
+        t for t in trades if t.get("action") == "SELL"
+    ]
     budget["timestamp"] = datetime.utcnow().isoformat()
 
     save_json(BUDGET_FILE, budget)

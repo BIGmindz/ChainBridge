@@ -136,7 +136,9 @@ class PatternEngine:
 
         return optimized
 
-    def predict_price_movement(self, data: pd.DataFrame, lookforward: int = 10) -> Tuple[float, float]:
+    def predict_price_movement(
+        self, data: pd.DataFrame, lookforward: int = 10
+    ) -> Tuple[float, float]:
         """
         Predict price movement direction and confidence
         Returns (direction, confidence) where direction is in range [-1, 1]

@@ -9,7 +9,9 @@ from typing import Type, Callable, Any
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
-def raises(exc_type: Type[BaseException], func: Callable[..., Any], *args: Any, **kwargs: Any) -> None:
+def raises(
+    exc_type: Type[BaseException], func: Callable[..., Any], *args: Any, **kwargs: Any
+) -> None:
     """Simple replacement for pytest.raises to avoid external dependency."""
     if not isinstance(exc_type, type) or not issubclass(exc_type, BaseException):
         raise TypeError("exc_type must be an Exception type")
@@ -18,7 +20,9 @@ def raises(exc_type: Type[BaseException], func: Callable[..., Any], *args: Any, 
     except exc_type:
         return
     except Exception as e:
-        raise AssertionError(f"Expected {exc_type.__name__}, but got {type(e).__name__}: {e}")
+        raise AssertionError(
+            f"Expected {exc_type.__name__}, but got {type(e).__name__}: {e}"
+        )
     raise AssertionError(f"Expected {exc_type.__name__} to be raised")
     raise AssertionError(f"Expected {exc_type.__name__} to be raised")
 

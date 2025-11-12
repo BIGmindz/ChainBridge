@@ -31,7 +31,10 @@ def test_volatility_targeting():
     target_vol = 0.25  # 25% target volatility
 
     position_size = vol_target_position_size(
-        price_series=price_series, max_capital_at_risk=max_capital, target_ann_vol=target_vol, ewm_span=100
+        price_series=price_series,
+        max_capital_at_risk=max_capital,
+        target_ann_vol=target_vol,
+        ewm_span=100,
     )
 
     print(f"   Calculated Position Size: ${position_size:.2f}")
@@ -56,7 +59,11 @@ def test_volatility_targeting():
     # Test position size calculation
     try:
         position_calc = budget_manager.calculate_position_size(
-            symbol="BTC/USD", signal_confidence=0.8, volatility=0.02, price=50000, price_series=price_series
+            symbol="BTC/USD",
+            signal_confidence=0.8,
+            volatility=0.02,
+            price=50000,
+            price_series=price_series,
         )
         print(f"   Calculated Position Size: ${position_calc['size']:.2f}")
         print(f"   Position Size %: {position_calc['size_pct']:.3f}")
@@ -65,7 +72,9 @@ def test_volatility_targeting():
     except TypeError as e:
         print(f"   ⚠️  Parameter not supported: {e}")
         # Fallback to basic calculation
-        position_calc = budget_manager.calculate_position_size(symbol="BTC/USD", signal_confidence=0.8, volatility=0.02, price=50000)
+        position_calc = budget_manager.calculate_position_size(
+            symbol="BTC/USD", signal_confidence=0.8, volatility=0.02, price=50000
+        )
         print(f"   Fallback Position Size: ${position_calc['size']:.2f}")
         print(f"   Method Used: {position_calc['method']}")
 
@@ -90,7 +99,9 @@ def test_volatility_targeting():
             )
         except TypeError:
             # Fallback for older version without price_series
-            calc = test_manager.calculate_position_size(symbol="BTC/USD", signal_confidence=0.8, volatility=0.02, price=50000)
+            calc = test_manager.calculate_position_size(
+                symbol="BTC/USD", signal_confidence=0.8, volatility=0.02, price=50000
+            )
 
         print(f"   {method:20} | ${calc['size']:>8.2f} | {calc['size_pct']:.3f}")
 
@@ -99,18 +110,33 @@ def test_volatility_targeting():
 
     # Test with insufficient data
     short_series = pd.Series([50000, 50001, 50002])
-    small_position = vol_target_position_size(price_series=short_series, max_capital_at_risk=10000, target_ann_vol=0.25, ewm_span=100)
+    small_position = vol_target_position_size(
+        price_series=short_series,
+        max_capital_at_risk=10000,
+        target_ann_vol=0.25,
+        ewm_span=100,
+    )
     print(f"   Small Data Position Size: ${small_position:.2f}")
 
     # Test with zero volatility
     flat_series = pd.Series([50000] * 200)
-    flat_position = vol_target_position_size(price_series=flat_series, max_capital_at_risk=10000, target_ann_vol=0.25, ewm_span=100)
+    flat_position = vol_target_position_size(
+        price_series=flat_series,
+        max_capital_at_risk=10000,
+        target_ann_vol=0.25,
+        ewm_span=100,
+    )
     print(f"   Flat Market Position Size: ${flat_position:.2f}")
 
     # Test with high volatility
     volatile_prices = np.random.normal(50000, 5000, 200)
     volatile_series = pd.Series(volatile_prices)
-    volatile_position = vol_target_position_size(price_series=volatile_series, max_capital_at_risk=10000, target_ann_vol=0.25, ewm_span=100)
+    volatile_position = vol_target_position_size(
+        price_series=volatile_series,
+        max_capital_at_risk=10000,
+        target_ann_vol=0.25,
+        ewm_span=100,
+    )
     print(f"   High Volatility Position Size: ${volatile_position:.2f}")
 
     print("\n✅ VOLATILITY TARGETING TESTS COMPLETED")

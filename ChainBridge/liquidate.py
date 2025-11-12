@@ -85,14 +85,18 @@ class KrakenLiquidator:
         # Console handler
         console_handler = logging.StreamHandler()
         console_handler.setLevel(logging.INFO)
-        console_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        console_formatter = logging.Formatter(
+            "%(asctime)s - %(levelname)s - %(message)s"
+        )
         console_handler.setFormatter(console_formatter)
         logger.addHandler(console_handler)
 
         # File handler
         file_handler = logging.FileHandler(log_filename)
         file_handler.setLevel(logging.DEBUG)
-        file_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        file_formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
         file_handler.setFormatter(file_formatter)
         logger.addHandler(file_handler)
 
@@ -186,7 +190,9 @@ class KrakenLiquidator:
             except Exception as e:
                 self.logger.warning(f"Failed to get {usdt_symbol} price: {e}")
 
-        self.logger.warning(f"Could not estimate USD value for {asset} (underlying: {underlying_asset})")
+        self.logger.warning(
+            f"Could not estimate USD value for {asset} (underlying: {underlying_asset})"
+        )
         return 0.0
 
     def should_skip_asset(self, asset: str, amount: float) -> bool:
@@ -196,7 +202,9 @@ class KrakenLiquidator:
 
         usd_value = self.usd_value(asset, amount)
         if usd_value < self.config.min_usd_value:
-            self.logger.info(f"Skipping {asset}: {amount} (dust < ${self.config.min_usd_value})")
+            self.logger.info(
+                f"Skipping {asset}: {amount} (dust < ${self.config.min_usd_value})"
+            )
             return True
 
         return False
@@ -262,7 +270,9 @@ class KrakenLiquidator:
 
         return 0.0  # Conservative estimate
 
-    def place_market_order_safe(self, symbol: str, side: str, amount: float) -> Optional[Dict]:
+    def place_market_order_safe(
+        self, symbol: str, side: str, amount: float
+    ) -> Optional[Dict]:
         """Place market order with slippage protection."""
         if self.config.dry_run:
             self.logger.info(f"[DRY RUN] Would {side} {amount} {symbol}")
@@ -293,8 +303,12 @@ class KrakenLiquidator:
             if hasattr(self.exchange, "amount_to_precision"):
                 amount = self.exchange.amount_to_precision(symbol, amount)
 
-            order = self.exchange.create_order(symbol=symbol, type="market", side=side, amount=amount)
-            self.logger.info(f"Placed {side} order: {amount} {symbol} (slippage: {slippage:.2f}%)")
+            order = self.exchange.create_order(
+                symbol=symbol, type="market", side=side, amount=amount
+            )
+            self.logger.info(
+                f"Placed {side} order: {amount} {symbol} (slippage: {slippage:.2f}%)"
+            )
             return order
         except Exception as e:
             self.logger.error(f"Failed to place {side} order for {symbol}: {e}")
@@ -316,7 +330,9 @@ class KrakenLiquidator:
             for order in open_orders:
                 try:
                     self.exchange.cancel_order(order["id"], order["symbol"])
-                    self.logger.info(f"Cancelled order {order['id']} for {order['symbol']}")
+                    self.logger.info(
+                        f"Cancelled order {order['id']} for {order['symbol']}"
+                    )
                 except Exception as e:
                     self.logger.error(f"Failed to cancel order {order['id']}: {e}")
 
@@ -344,7 +360,9 @@ class KrakenLiquidator:
         market = self.markets[symbol]
         min_amount = market.get("limits", {}).get("amount", {}).get("min", 0)
         if amount < min_amount:
-            self.logger.warning(f"Amount {amount} below minimum {min_amount} for {symbol}")
+            self.logger.warning(
+                f"Amount {amount} below minimum {min_amount} for {symbol}"
+            )
             return False
 
         # Place the order
@@ -450,7 +468,9 @@ class KrakenLiquidator:
             self.logger.info(f"  {self.config.target_quote}: {target_balance}")
             self.logger.info(f"  USD: {usd_balance}")
 
-            total_usd_value = self.usd_value(self.config.target_quote, target_balance) + usd_balance
+            total_usd_value = (
+                self.usd_value(self.config.target_quote, target_balance) + usd_balance
+            )
             self.logger.info(f"  Total USD value: ${total_usd_value:.2f}")
 
         except Exception as e:
@@ -461,7 +481,9 @@ class KrakenLiquidator:
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(description="Safe liquidation of Kraken spot holdings to target quote currency")
+    parser = argparse.ArgumentParser(
+        description="Safe liquidation of Kraken spot holdings to target quote currency"
+    )
 
     parser.add_argument(
         "--target-quote",
@@ -490,7 +512,9 @@ def main():
         help="Cancel all open spot orders before liquidation",
     )
 
-    parser.add_argument("--force", action="store_true", help="Ignore slippage limits and proceed anyway")
+    parser.add_argument(
+        "--force", action="store_true", help="Ignore slippage limits and proceed anyway"
+    )
 
     parser.add_argument(
         "--live",

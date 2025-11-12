@@ -88,7 +88,9 @@ async def run_btc_backtest():
             new_price = enhanced_prices[-1] * (1 + daily_return)
 
             enhanced_prices.append(new_price)  # type: ignore
-            enhanced_volumes.append(avg_volume * np.random.uniform(0.6, 0.9))  # Lower volume  # type: ignore
+            enhanced_volumes.append(
+                avg_volume * np.random.uniform(0.6, 0.9)
+            )  # Lower volume  # type: ignore
             new_date = (start_date + pd.Timedelta(days=i)).strftime("%Y-%m-%d")
             enhanced_dates.append(new_date)  # type: ignore
 
@@ -99,7 +101,9 @@ async def run_btc_backtest():
             new_price = enhanced_prices[-1] * (1 + daily_return)
 
             enhanced_prices.append(new_price)  # type: ignore
-            enhanced_volumes.append(avg_volume * np.random.uniform(1.1, 1.6))  # Higher volume  # type: ignore
+            enhanced_volumes.append(
+                avg_volume * np.random.uniform(1.1, 1.6)
+            )  # Higher volume  # type: ignore
             new_date = (start_date + pd.Timedelta(days=i)).strftime("%Y-%m-%d")
             enhanced_dates.append(new_date)  # type: ignore
 
@@ -112,11 +116,15 @@ async def run_btc_backtest():
             new_price = enhanced_prices[-1] * (1 + daily_return)
 
             enhanced_prices.append(new_price)  # type: ignore
-            enhanced_volumes.append(avg_volume * np.random.uniform(0.6, 0.9))  # Lower volume  # type: ignore
+            enhanced_volumes.append(
+                avg_volume * np.random.uniform(0.6, 0.9)
+            )  # Lower volume  # type: ignore
             new_date = (start_date + pd.Timedelta(days=i)).strftime("%Y-%m-%d")
             enhanced_dates.append(new_date)  # type: ignore
 
-        print(f"Enhanced dataset created with {len(enhanced_prices)} days of price data")
+        print(
+            f"Enhanced dataset created with {len(enhanced_prices)} days of price data"
+        )
 
         # Visualize the enhanced dataset
         try:

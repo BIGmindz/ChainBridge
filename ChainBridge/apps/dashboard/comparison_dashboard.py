@@ -78,7 +78,12 @@ def load_backtest_reports(base_path="strategies"):
                     match = re.search(pattern, content)
                     if match:
                         # Clean up the extracted value
-                        value = match.group(1).replace(",", "").replace("%", "").replace("$", "")
+                        value = (
+                            match.group(1)
+                            .replace(",", "")
+                            .replace("%", "")
+                            .replace("$", "")
+                        )
                         parsed_metrics[key] = float(value)  # type: ignore
                     else:
                         parsed_metrics[key] = None
@@ -111,8 +116,12 @@ st.markdown("---")
 reports_df = load_backtest_reports()
 
 if reports_df.empty:
-    st.warning("No backtest reports found. Please run the backtester on one or more strategies first.")
-    st.info("The backtester expects to find `backtest_report.md` files in each `strategies/{strategy_name}/` directory.")
+    st.warning(
+        "No backtest reports found. Please run the backtester on one or more strategies first."
+    )
+    st.info(
+        "The backtester expects to find `backtest_report.md` files in each `strategies/{strategy_name}/` directory."
+    )
 else:
     # --- Key Metrics Overview ---
     st.subheader("Top Performers at a Glance")
@@ -121,15 +130,30 @@ else:
         # Find the best strategy for each key metric
         best_return = reports_df.loc[reports_df["Total Return"].idxmax()]
         best_sharpe = reports_df.loc[reports_df["Annualized Sharpe Ratio"].idxmax()]
-        best_drawdown = reports_df.loc[reports_df["Max Drawdown"].idxmax()]  # Note: Higher value (closer to 0) is better
+        best_drawdown = reports_df.loc[
+            reports_df["Max Drawdown"].idxmax()
+        ]  # Note: Higher value (closer to 0) is better
 
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("Best Return", f"{best_return['Total Return']:.2f}%", delta=best_return["Strategy"])
+            st.metric(
+                "Best Return",
+                f"{best_return['Total Return']:.2f}%",
+                delta=best_return["Strategy"],
+            )
         with col2:
-            st.metric("Best Sharpe Ratio", f"{best_sharpe['Annualized Sharpe Ratio']:.2f}", delta=best_sharpe["Strategy"])
+            st.metric(
+                "Best Sharpe Ratio",
+                f"{best_sharpe['Annualized Sharpe Ratio']:.2f}",
+                delta=best_sharpe["Strategy"],
+            )
         with col3:
-            st.metric("Lowest Drawdown", f"{best_drawdown['Max Drawdown']:.2f}%", delta=best_drawdown["Strategy"], delta_color="inverse")
+            st.metric(
+                "Lowest Drawdown",
+                f"{best_drawdown['Max Drawdown']:.2f}%",
+                delta=best_drawdown["Strategy"],
+                delta_color="inverse",
+            )
     else:
         st.info("Run the backtester to generate performance data for comparison.")
 
@@ -141,13 +165,23 @@ else:
     if not reports_df.empty:
         # Formatting for better readability
         formatted_df = reports_df.copy()
-        formatted_df["Total Return"] = formatted_df["Total Return"].map("{:.2f}%".format)
-        formatted_df["Final Portfolio Value"] = formatted_df["Final Portfolio Value"].map("${:,.2f}".format)
-        formatted_df["Annualized Sharpe Ratio"] = formatted_df["Annualized Sharpe Ratio"].map("{:.2f}".format)
-        formatted_df["Max Drawdown"] = formatted_df["Max Drawdown"].map("{:.2f}%".format)
+        formatted_df["Total Return"] = formatted_df["Total Return"].map(
+            "{:.2f}%".format
+        )
+        formatted_df["Final Portfolio Value"] = formatted_df[
+            "Final Portfolio Value"
+        ].map("${:,.2f}".format)
+        formatted_df["Annualized Sharpe Ratio"] = formatted_df[
+            "Annualized Sharpe Ratio"
+        ].map("{:.2f}".format)
+        formatted_df["Max Drawdown"] = formatted_df["Max Drawdown"].map(
+            "{:.2f}%".format
+        )
 
         st.dataframe(formatted_df.set_index("Strategy"), use_container_width=True)
 
         st.info("Click on column headers to sort by a specific metric.")
     else:
-        st.info("No strategy data available. Run the backtester first to generate reports.")
+        st.info(
+            "No strategy data available. Run the backtester first to generate reports."
+        )

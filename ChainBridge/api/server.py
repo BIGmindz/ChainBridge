@@ -50,16 +50,30 @@ class ModuleExecutionRequest(BaseModel):
 
 
 class MultiSignalAnalysisRequest(BaseModel):
-    price_data: List[Dict[str, Any]] = Field(..., description="Historical price data for analysis")
-    signal_modules: Optional[List[str]] = Field(None, description="List of signal modules to use (default: all)")
-    signal_weights: Optional[Dict[str, float]] = Field(None, description="Custom weights for each signal")
-    include_individual_signals: bool = Field(True, description="Include individual signal results")
+    price_data: List[Dict[str, Any]] = Field(
+        ..., description="Historical price data for analysis"
+    )
+    signal_modules: Optional[List[str]] = Field(
+        None, description="List of signal modules to use (default: all)"
+    )
+    signal_weights: Optional[Dict[str, float]] = Field(
+        None, description="Custom weights for each signal"
+    )
+    include_individual_signals: bool = Field(
+        True, description="Include individual signal results"
+    )
 
 
 class MultiSignalBacktestRequest(BaseModel):
-    historical_data: List[Dict[str, Any]] = Field(..., description="Historical price data for backtesting")
-    initial_balance: float = Field(10000, description="Starting balance for backtesting")
-    signal_modules: Optional[List[str]] = Field(None, description="List of signal modules to use")
+    historical_data: List[Dict[str, Any]] = Field(
+        ..., description="Historical price data for backtesting"
+    )
+    initial_balance: float = Field(
+        10000, description="Starting balance for backtesting"
+    )
+    signal_modules: Optional[List[str]] = Field(
+        None, description="List of signal modules to use"
+    )
 
 
 class PipelineExecutionRequest(BaseModel):
@@ -70,7 +84,9 @@ class PipelineExecutionRequest(BaseModel):
 class ModuleRegistrationRequest(BaseModel):
     module_name: str = Field(..., description="Name to register the module as")
     module_path: str = Field(..., description="Python import path to the module")
-    config: Optional[Dict[str, Any]] = Field(None, description="Configuration for the module")
+    config: Optional[Dict[str, Any]] = Field(
+        None, description="Configuration for the module"
+    )
 
 
 class PipelineCreationRequest(BaseModel):
@@ -80,7 +96,9 @@ class PipelineCreationRequest(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str = "healthy"
-    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    timestamp: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+    )
     version: str = "1.0.0"
     modules_loaded: int
     active_pipelines: int
@@ -193,7 +211,9 @@ async def execute_module(module_name: str, request: ModuleExecutionRequest):
 
         # Track metrics
         execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
-        metrics_collector.track_module_execution(module_name, execution_time, len(str(request.input_data)), len(str(result)))
+        metrics_collector.track_module_execution(
+            module_name, execution_time, len(str(request.input_data)), len(str(result))
+        )
 
         return {
             "result": result,
@@ -229,7 +249,9 @@ async def create_pipeline(request: PipelineCreationRequest):
 
         # Add steps to the pipeline
         for step in request.steps:
-            pipeline.add_step(step.get("name"), step.get("module_name"), step.get("config", {}))
+            pipeline.add_step(
+                step.get("name"), step.get("module_name"), step.get("config", {})
+            )
 
         # Validate the pipeline
         validation = pipeline.validate_pipeline()
@@ -240,7 +262,9 @@ async def create_pipeline(request: PipelineCreationRequest):
             )
 
         pipelines[request.pipeline_name] = pipeline
-        metrics_collector.track_pipeline_creation(request.pipeline_name, len(request.steps))
+        metrics_collector.track_pipeline_creation(
+            request.pipeline_name, len(request.steps)
+        )
 
         return {
             "message": f"Pipeline '{request.pipeline_name}' created successfully",
@@ -257,7 +281,9 @@ async def create_pipeline(request: PipelineCreationRequest):
 async def get_pipeline_info(pipeline_name: str):
     """Get information about a specific pipeline."""
     if pipeline_name not in pipelines:
-        raise HTTPException(status_code=404, detail=f"Pipeline '{pipeline_name}' not found")
+        raise HTTPException(
+            status_code=404, detail=f"Pipeline '{pipeline_name}' not found"
+        )
 
     pipeline = pipelines[pipeline_name]
     return {
@@ -271,7 +297,9 @@ async def get_pipeline_info(pipeline_name: str):
 async def execute_pipeline(pipeline_name: str, request: PipelineExecutionRequest):
     """Execute a specific pipeline."""
     if pipeline_name not in pipelines:
-        raise HTTPException(status_code=404, detail=f"Pipeline '{pipeline_name}' not found")
+        raise HTTPException(
+            status_code=404, detail=f"Pipeline '{pipeline_name}' not found"
+        )
 
     try:
         pipeline = pipelines[pipeline_name]
@@ -280,7 +308,9 @@ async def execute_pipeline(pipeline_name: str, request: PipelineExecutionRequest
         result = pipeline.execute(request.input_data)
 
         execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
-        metrics_collector.track_pipeline_execution(pipeline_name, execution_time, len(pipeline.steps), True)
+        metrics_collector.track_pipeline_execution(
+            pipeline_name, execution_time, len(pipeline.steps), True
+        )
 
         return {
             "result": result,
@@ -364,7 +394,9 @@ async def multi_signal_analysis(request: MultiSignalAnalysisRequest):
                     result = module_manager.execute_module(module_name, {})
                 else:
                     # Other modules need price data
-                    result = module_manager.execute_module(module_name, {"price_data": request.price_data})
+                    result = module_manager.execute_module(
+                        module_name, {"price_data": request.price_data}
+                    )
 
                 individual_signals[module_name.replace("Module", "")] = result
 
@@ -373,7 +405,9 @@ async def multi_signal_analysis(request: MultiSignalAnalysisRequest):
                 continue
 
         if not individual_signals:
-            raise HTTPException(status_code=400, detail="No signal modules executed successfully")
+            raise HTTPException(
+                status_code=400, detail="No signal modules executed successfully"
+            )
 
         # Execute multi-signal aggregation
         aggregation_input = {
@@ -384,7 +418,9 @@ async def multi_signal_analysis(request: MultiSignalAnalysisRequest):
         if request.signal_weights:
             aggregation_input["signal_weights"] = request.signal_weights
 
-        aggregated_result = module_manager.execute_module("MultiSignalAggregatorModule", aggregation_input)
+        aggregated_result = module_manager.execute_module(
+            "MultiSignalAggregatorModule", aggregation_input
+        )
 
         execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
 
@@ -439,7 +475,9 @@ async def multi_signal_backtest(request: MultiSignalBacktestRequest):
                         # Use mock sentiment data for backtesting
                         result = module_manager.execute_module(module_name, {})
                     else:
-                        result = module_manager.execute_module(module_name, {"price_data": window_data})
+                        result = module_manager.execute_module(
+                            module_name, {"price_data": window_data}
+                        )
 
                     signal_history[module_name.replace("Module", "")].append(result)  # type: ignore
 
@@ -496,7 +534,9 @@ async def get_available_signals():
                             "module_name": module_name,
                             "display_name": module_name.replace("Module", ""),
                             "version": info.get("version", "1.0.0"),
-                            "signal_type": info.get("schema", {}).get("metadata", {}).get("signal_type", "unknown"),
+                            "signal_type": info.get("schema", {})
+                            .get("metadata", {})
+                            .get("signal_type", "unknown"),
                             "schema": info.get("schema", {}),
                             "available": True,
                         }

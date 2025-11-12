@@ -22,7 +22,9 @@ from core.module_manager import ModuleManager
 from tracking.metrics_collector import MetricsCollector
 
 
-def generate_realistic_test_data(periods: int = 100, base_price: float = 45000, volatility: float = 0.02) -> List[Dict[str, Any]]:
+def generate_realistic_test_data(
+    periods: int = 100, base_price: float = 45000, volatility: float = 0.02
+) -> List[Dict[str, Any]]:
     """
     Generate realistic cryptocurrency price data for testing.
 
@@ -102,7 +104,9 @@ def print_signal_summary(signal_result: Dict[str, Any], module_name: str) -> Non
     details_str = " | ".join(details)
     confidence_bar = "█" * int(confidence * 10) + "░" * (10 - int(confidence * 10))
 
-    print(f"  {module_name:15} │ {signal:4} │ {confidence:.2f} │{confidence_bar}│ {details_str}")
+    print(
+        f"  {module_name:15} │ {signal:4} │ {confidence:.2f} │{confidence_bar}│ {details_str}"
+    )
 
 
 def run_comprehensive_demo():
@@ -191,8 +195,12 @@ def run_comprehensive_demo():
         # Generate price data for this scenario
         price_data = generate_realistic_test_data(periods, base_price, volatility)
         print(f"  Generated {len(price_data)} periods of price data")
-        print(f"  Price range: ${price_data[0]['close']:,.0f} - ${price_data[-1]['close']:,.0f}")
-        print(f"  Total return: {((price_data[-1]['close'] / price_data[0]['close']) - 1) * 100:.1f}%")
+        print(
+            f"  Price range: ${price_data[0]['close']:,.0f} - ${price_data[-1]['close']:,.0f}"
+        )
+        print(
+            f"  Total return: {((price_data[-1]['close'] / price_data[0]['close']) - 1) * 100:.1f}%"
+        )
 
         # Execute individual signal analyses
         print(f"\n3. INDIVIDUAL SIGNAL ANALYSIS - {scenario_name.upper()}")
@@ -204,7 +212,9 @@ def run_comprehensive_demo():
 
         # RSI Analysis
         try:
-            rsi_result = module_manager.execute_module("RSIModule", {"price_data": price_data})
+            rsi_result = module_manager.execute_module(
+                "RSIModule", {"price_data": price_data}
+            )
             individual_signals["RSI"] = rsi_result
             print_signal_summary(rsi_result, "RSI")
         except Exception as e:
@@ -212,7 +222,9 @@ def run_comprehensive_demo():
 
         # MACD Analysis
         try:
-            macd_result = module_manager.execute_module("MACDModule", {"price_data": price_data})
+            macd_result = module_manager.execute_module(
+                "MACDModule", {"price_data": price_data}
+            )
             individual_signals["MACD"] = macd_result
             print_signal_summary(macd_result, "MACD")
         except Exception as e:
@@ -220,7 +232,9 @@ def run_comprehensive_demo():
 
         # Bollinger Bands Analysis
         try:
-            bb_result = module_manager.execute_module("BollingerBandsModule", {"price_data": price_data})
+            bb_result = module_manager.execute_module(
+                "BollingerBandsModule", {"price_data": price_data}
+            )
             individual_signals["BollingerBands"] = bb_result
             print_signal_summary(bb_result, "BollingerBands")
         except Exception as e:
@@ -228,7 +242,9 @@ def run_comprehensive_demo():
 
         # Volume Profile Analysis
         try:
-            vp_result = module_manager.execute_module("VolumeProfileModule", {"price_data": price_data})
+            vp_result = module_manager.execute_module(
+                "VolumeProfileModule", {"price_data": price_data}
+            )
             individual_signals["VolumeProfile"] = vp_result
             print_signal_summary(vp_result, "VolumeProfile")
         except Exception as e:
@@ -261,7 +277,9 @@ def run_comprehensive_demo():
                     "price_data": price_data[-1],
                 }
 
-                final_result = module_manager.execute_module("MultiSignalAggregatorModule", aggregation_input)
+                final_result = module_manager.execute_module(
+                    "MultiSignalAggregatorModule", aggregation_input
+                )
 
                 print(f"Final Decision: {final_result['final_signal']}")
                 print(f"Confidence: {final_result['final_confidence']:.2f}")
@@ -286,7 +304,10 @@ def run_comprehensive_demo():
                     "consensus": final_result["consensus_score"],
                     "risk": final_result["risk_assessment"]["overall_risk"],
                     "individual_signals": individual_signals,
-                    "price_return": ((price_data[-1]["close"] / price_data[0]["close"]) - 1) * 100,
+                    "price_return": (
+                        (price_data[-1]["close"] / price_data[0]["close"]) - 1
+                    )
+                    * 100,
                 }
 
             except Exception as e:
@@ -301,7 +322,9 @@ def run_comprehensive_demo():
     print("-" * 60)
 
     if scenario_results:
-        print(f"{'Scenario':15} │ {'Signal':6} │ {'Conf':5} │ {'Cons':5} │ {'Risk':6} │ {'Return':7}")
+        print(
+            f"{'Scenario':15} │ {'Signal':6} │ {'Conf':5} │ {'Cons':5} │ {'Risk':6} │ {'Return':7}"
+        )
         print("-" * 60)
 
         for scenario_name, result in scenario_results.items():
@@ -343,16 +366,26 @@ def run_comprehensive_demo():
                 if signal_name in result["individual_signals"]:
                     signal_data = result["individual_signals"][signal_name]
                     # Convert signal to numerical score
-                    score = 1 if signal_data["signal"] == "BUY" else -1 if signal_data["signal"] == "SELL" else 0
+                    score = (
+                        1
+                        if signal_data["signal"] == "BUY"
+                        else -1 if signal_data["signal"] == "SELL" else 0
+                    )
                     score *= signal_data.get("confidence", 0)
                     signal_variations[signal_name].append(score)  # type: ignore
 
         print(f"\nSignal diversity across {len(scenario_results)} market scenarios:")
         for signal_name, scores in signal_variations.items():
             if scores:
-                diversity = len(set([round(s, 1) for s in scores])) / len(scores) if scores else 0
+                diversity = (
+                    len(set([round(s, 1) for s in scores])) / len(scores)
+                    if scores
+                    else 0
+                )
                 avg_score = sum(scores) / len(scores)  # type: ignore
-                print(f"  {signal_name:15}: Diversity {diversity:.2f}, Avg Score {avg_score:+.2f}")
+                print(
+                    f"  {signal_name:15}: Diversity {diversity:.2f}, Avg Score {avg_score:+.2f}"
+                )
 
     print("\n" + "=" * 80)
     print("DEMONSTRATION COMPLETED SUCCESSFULLY!")
@@ -360,7 +393,9 @@ def run_comprehensive_demo():
 
     print("\n✓ Multi-signal system demonstrates:")
     print(f"  • Integration of {len(loaded_modules)} uncorrelated signal modules")
-    print(f"  • Adaptive decision making across {len(scenario_results)} market scenarios")
+    print(
+        f"  • Adaptive decision making across {len(scenario_results)} market scenarios"
+    )
     print("  • Risk-aware confidence scoring and consensus analysis")
     print("  • Independence verification between different signal types")
     print("  • Comprehensive performance tracking and metrics collection")

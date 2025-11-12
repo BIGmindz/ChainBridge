@@ -81,7 +81,11 @@ def scan_file(path: str) -> List[str]:
     except Exception as e:
         return [f"{rel}: ERROR reading file: {e}"]
 
-    pats = PY_PATTERNS if path.endswith(".py") else YAML_PATTERNS if path.endswith((".yaml", ".yml")) else []
+    pats = (
+        PY_PATTERNS
+        if path.endswith(".py")
+        else YAML_PATTERNS if path.endswith((".yaml", ".yml")) else []
+    )
     if not pats:
         return []
 
@@ -105,9 +109,13 @@ def scan_file(path: str) -> List[str]:
                 continue
             if val in (CANON_BUY, CANON_SELL):
                 continue
-            snippet = lower_text[max(0, m.start() - CONTEXT_WINDOW) : m.end() + CONTEXT_WINDOW]
+            snippet = lower_text[
+                max(0, m.start() - CONTEXT_WINDOW) : m.end() + CONTEXT_WINDOW
+            ]
             if "rsi" in snippet:
-                issues.append(f"{rel}: RSI threshold {val} != canonical {CANON_BUY}/{CANON_SELL}")
+                issues.append(
+                    f"{rel}: RSI threshold {val} != canonical {CANON_BUY}/{CANON_SELL}"
+                )
     return issues
 
 
@@ -124,7 +132,9 @@ def collect_divergences() -> List[str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--warn-only", action="store_true", help="Do not exit non-zero on divergences")
+    parser.add_argument(
+        "--warn-only", action="store_true", help="Do not exit non-zero on divergences"
+    )
     args = parser.parse_args()
 
     print(f"Canonical RSI thresholds (fixed) BUY={CANON_BUY} SELL={CANON_SELL}")

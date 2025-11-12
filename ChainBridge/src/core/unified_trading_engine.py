@@ -41,8 +41,12 @@ class MarketRegimeDetector:
         self.volatility_history = deque(maxlen=lookback_period)
 
         # Regime detection thresholds - adjusted for better sensitivity
-        self.trend_threshold = 0.10  # 10% price change to indicate bull/bear (lowered from 15%)
-        self.volatility_threshold = 0.04  # 4% average daily change for high volatility (lowered from 5%)
+        self.trend_threshold = (
+            0.10  # 10% price change to indicate bull/bear (lowered from 15%)
+        )
+        self.volatility_threshold = (
+            0.04  # 4% average daily change for high volatility (lowered from 5%)
+        )
 
         # Current market regime
         self.current_regime = MarketRegime.UNKNOWN
@@ -124,10 +128,14 @@ class MarketRegimeDetector:
             avg_volatility = sum(self.volatility_history) / len(self.volatility_history)  # type: ignore
 
             # Calculate regime with advanced logic
-            new_regime, new_confidence = self._calculate_regime(price_change, avg_volatility)
+            new_regime, new_confidence = self._calculate_regime(
+                price_change, avg_volatility
+            )
 
             # Apply regime transition smoothing
-            smoothed_regime, smoothed_confidence = self._smooth_regime_transition(new_regime, new_confidence)
+            smoothed_regime, smoothed_confidence = self._smooth_regime_transition(
+                new_regime, new_confidence
+            )
 
             # Update current regime
             self.current_regime = smoothed_regime
@@ -155,7 +163,9 @@ class MarketRegimeDetector:
             self.regime_history.append(self.current_regime)  # type: ignore
             return self.current_regime
 
-    def _calculate_regime(self, price_change: float, volatility: float) -> Tuple[MarketRegime, float]:
+    def _calculate_regime(
+        self, price_change: float, volatility: float
+    ) -> Tuple[MarketRegime, float]:
         """
         Calculate the market regime using price change and volatility
 
@@ -169,7 +179,9 @@ class MarketRegimeDetector:
         # Calculate base regime from price action
         if price_change > self.trend_threshold:
             base_regime = MarketRegime.BULL
-            base_confidence = min(0.5 + abs(price_change) / 2, 0.9)  # Higher change = higher confidence
+            base_confidence = min(
+                0.5 + abs(price_change) / 2, 0.9
+            )  # Higher change = higher confidence
         elif price_change < -self.trend_threshold:
             base_regime = MarketRegime.BEAR
             base_confidence = min(0.5 + abs(price_change) / 2, 0.9)
@@ -180,7 +192,9 @@ class MarketRegimeDetector:
 
         return base_regime, base_confidence
 
-    def _smooth_regime_transition(self, new_regime: MarketRegime, new_confidence: float) -> Tuple[MarketRegime, float]:
+    def _smooth_regime_transition(
+        self, new_regime: MarketRegime, new_confidence: float
+    ) -> Tuple[MarketRegime, float]:
         """
         Smooth transitions between market regimes to prevent frequent switching
 
@@ -203,14 +217,18 @@ class MarketRegimeDetector:
         if new_regime != self.current_regime:
             # Count recent detections of the new regime
             recent_history = (
-                self.regime_history[-min_consecutive_detections:] if len(self.regime_history) >= min_consecutive_detections else []
+                self.regime_history[-min_consecutive_detections:]
+                if len(self.regime_history) >= min_consecutive_detections
+                else []
             )
             new_regime_count = sum(1 for r in recent_history if r == new_regime)  # type: ignore
 
             # If we don't have enough consecutive detections, stick with current regime
             if new_regime_count < min_consecutive_detections - 1:
                 # Reduce confidence when we stick with existing regime against new detection
-                adjusted_confidence = self.confidence * 0.95  # Slightly reduce confidence
+                adjusted_confidence = (
+                    self.confidence * 0.95
+                )  # Slightly reduce confidence
                 return self.current_regime, adjusted_confidence
 
             # If confidence is too low for a switch, stay with current regime
@@ -285,7 +303,9 @@ class MultiSignalTradingEngine:
 
         # ML components
         self.ml_weights = {k: v["weight"] for k, v in self.signals.items()}
-        self.initial_weights = self.ml_weights.copy()  # Store initial weights for comparison
+        self.initial_weights = (
+            self.ml_weights.copy()
+        )  # Store initial weights for comparison
         self.position_multiplier = 1.0
         self.trade_history = []
         self.weight_history = []  # Track weight changes over time
@@ -302,11 +322,17 @@ class MultiSignalTradingEngine:
         # Store historical weight changes for analysis
         self.record_weights()
 
-        print(f"✅ Loaded {len([s for s in self.signals.values() if s['enabled']])} active signals")
+        print(
+            f"✅ Loaded {len([s for s in self.signals.values() if s['enabled']])} active signals"
+        )
         if self.enhanced_ml:
-            print("✨ Enhanced ML adaptation enabled - faster learning from trading results")
+            print(
+                "✨ Enhanced ML adaptation enabled - faster learning from trading results"
+            )
         if self.regime_aware:
-            print("🔍 Market regime detection active - optimizing for bull/bear/sideways markets")
+            print(
+                "🔍 Market regime detection active - optimizing for bull/bear/sideways markets"
+            )
 
     def _load_existing_config(self, path: str) -> dict:
         """Load your existing configuration"""
@@ -329,7 +355,9 @@ class MultiSignalTradingEngine:
 
         return default_config
 
-    async def collect_all_signals(self, current_price: float = None, current_volume: float = None) -> Dict:
+    async def collect_all_signals(
+        self, current_price: float = None, current_volume: float = None
+    ) -> Dict:
         """Collect signals from all sources and update market regime detection
 
         Args:
@@ -345,8 +373,12 @@ class MultiSignalTradingEngine:
 
             # Update market regime detector
             if self.regime_aware:
-                self.current_regime = self.regime_detector.update(current_price, current_volume)
-                self.current_regime, self.regime_confidence = self.regime_detector.get_regime()
+                self.current_regime = self.regime_detector.update(
+                    current_price, current_volume
+                )
+                self.current_regime, self.regime_confidence = (
+                    self.regime_detector.get_regime()
+                )
 
                 # Track regime history
                 self.regime_history.append(  # type: ignore
@@ -492,8 +524,12 @@ class MultiSignalTradingEngine:
 
             # Apply regime-specific weight adjustments if enabled
             if self.regime_aware and hasattr(self, "regime_detector"):
-                signal_category = self.signals.get(name, {}).get("category", "technical")
-                regime_modifier = self.regime_detector.get_optimization_weights(signal_category)
+                signal_category = self.signals.get(name, {}).get(
+                    "category", "technical"
+                )
+                regime_modifier = self.regime_detector.get_optimization_weights(
+                    signal_category
+                )
 
                 # Apply regime modifier with confidence scaling
                 # Higher regime confidence = stronger weight adjustment
@@ -543,7 +579,12 @@ class MultiSignalTradingEngine:
             action = "HOLD"
 
         # Position sizing with compounding and regime adjustment
-        position_size = abs(composite) * total_confidence * self.position_multiplier * self.config["position_size"]
+        position_size = (
+            abs(composite)
+            * total_confidence
+            * self.position_multiplier
+            * self.config["position_size"]
+        )
 
         # Adjust position size based on regime confidence
         if self.regime_aware and regime_confidence > 0.7:
@@ -585,7 +626,11 @@ class MultiSignalTradingEngine:
             for signal in trade_result.get("signals", []):
                 if signal in self.ml_weights:
                     # Higher update rate for winning signals (1.05 -> 1.10-1.25)
-                    signal_value = trade_result.get("signal_values", {}).get(signal, {"value": 0}).get("value", 0)
+                    signal_value = (
+                        trade_result.get("signal_values", {})
+                        .get(signal, {"value": 0})
+                        .get("value", 0)
+                    )
                     signal_strength = abs(signal_value)
 
                     # Apply larger updates to stronger signals
@@ -597,13 +642,17 @@ class MultiSignalTradingEngine:
                 # Increased from 1.02 to be more responsive
                 compound_rate = 1.03 + (0.02 * confidence)
                 self.position_multiplier *= compound_rate
-                self.position_multiplier = min(self.position_multiplier, 3.5)  # Increased max multiplier
+                self.position_multiplier = min(
+                    self.position_multiplier, 3.5
+                )  # Increased max multiplier
         else:
             # Losing trade - decrease weights more aggressively
             for signal in trade_result.get("signals", []):
                 if signal in self.ml_weights:
                     # More aggressive decrease (0.97 -> 0.85-0.95)
-                    penalty_factor = 1.0 - (actual_learning_rate * 1.2)  # Higher penalty
+                    penalty_factor = 1.0 - (
+                        actual_learning_rate * 1.2
+                    )  # Higher penalty
                     self.ml_weights[signal] *= penalty_factor
 
             # Reduce position size after consecutive losses
@@ -747,7 +796,9 @@ class MultiSignalTradingEngine:
                 signal_perf["total_pnl"] += pnl
 
                 if signal_perf["trades"] > 0:
-                    signal_perf["win_rate"] = (signal_perf["win_trades"] / signal_perf["trades"]) * 100
+                    signal_perf["win_rate"] = (
+                        signal_perf["win_trades"] / signal_perf["trades"]
+                    ) * 100
 
         return signal_performance
 
@@ -831,7 +882,9 @@ class MultiSignalTradingEngine:
             "win_rate": (wins / len(self.trade_history)) * 100,
             "total_pnl": total_pnl,
             "position_multiplier": self.position_multiplier,
-            "top_signals": sorted(self.ml_weights.items(), key=lambda x: x[1], reverse=True)[:3],
+            "top_signals": sorted(
+                self.ml_weights.items(), key=lambda x: x[1], reverse=True
+            )[:3],
             "ml_adaptation": adaptation_score,
             "weight_changes": weight_changes,
             "market_regime": current_regime_info,

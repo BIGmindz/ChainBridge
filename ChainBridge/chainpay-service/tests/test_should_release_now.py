@@ -145,7 +145,9 @@ class TestEventTypeConsistency:
         """Test uppercase event type names."""
         assert should_release_now(0.15, "PICKUP_CONFIRMED") == ReleaseStrategy.IMMEDIATE
         assert should_release_now(0.15, "POD_CONFIRMED") == ReleaseStrategy.IMMEDIATE
-        assert should_release_now(0.15, "CLAIM_WINDOW_CLOSED") == ReleaseStrategy.IMMEDIATE
+        assert (
+            should_release_now(0.15, "CLAIM_WINDOW_CLOSED") == ReleaseStrategy.IMMEDIATE
+        )
 
     def test_medium_risk_pod_uppercase(self):
         """Test MEDIUM-risk with uppercase POD_CONFIRMED."""
@@ -155,8 +157,13 @@ class TestEventTypeConsistency:
     def test_high_risk_events_uppercase(self):
         """Test HIGH-risk with uppercase event types."""
         assert should_release_now(0.85, "PICKUP_CONFIRMED") == ReleaseStrategy.PENDING
-        assert should_release_now(0.85, "POD_CONFIRMED") == ReleaseStrategy.MANUAL_REVIEW
-        assert should_release_now(0.85, "CLAIM_WINDOW_CLOSED") == ReleaseStrategy.MANUAL_REVIEW
+        assert (
+            should_release_now(0.85, "POD_CONFIRMED") == ReleaseStrategy.MANUAL_REVIEW
+        )
+        assert (
+            should_release_now(0.85, "CLAIM_WINDOW_CLOSED")
+            == ReleaseStrategy.MANUAL_REVIEW
+        )
 
 
 class TestRegressionAndCrossScenarios:

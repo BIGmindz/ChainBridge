@@ -62,7 +62,10 @@ class MarketSimulator:
         self.current_trend += bias
 
         # Calculate price change with volatility
-        price_change = self.price * (self.current_trend * TREND_STRENGTH + random.normalvariate(0, 0.02) * VOLATILITY)
+        price_change = self.price * (
+            self.current_trend * TREND_STRENGTH
+            + random.normalvariate(0, 0.02) * VOLATILITY
+        )
 
         # Update price
         self.price += price_change
@@ -210,7 +213,11 @@ class SimulationResults:
             results = {
                 "equity_start": self.equity_curve[0] if self.equity_curve else 10000,
                 "equity_end": self.equity_curve[-1] if self.equity_curve else 10000,
-                "roi_pct": (((self.equity_curve[-1] / self.equity_curve[0]) - 1) * 100 if self.equity_curve else 0),
+                "roi_pct": (
+                    ((self.equity_curve[-1] / self.equity_curve[0]) - 1) * 100
+                    if self.equity_curve
+                    else 0
+                ),
                 "trade_count": len(self.trades),
                 "win_count": sum(1 for t in self.trades if t.get("pnl", 0) > 0),  # type: ignore
                 "max_drawdown_pct": self._calculate_drawdown(),
@@ -219,7 +226,9 @@ class SimulationResults:
 
             # Calculate win rate
             if results["trade_count"] > 0:
-                results["win_rate"] = results["win_count"] / results["trade_count"] * 100
+                results["win_rate"] = (
+                    results["win_count"] / results["trade_count"] * 100
+                )
             else:
                 results["win_rate"] = 0
 
@@ -278,7 +287,9 @@ async def run_minute_paper():
     # Create data directory if it doesn't exist
     os.makedirs("data", exist_ok=True)
 
-    print(f"\n📈 Beginning {SIMULATION_CYCLES} trading cycles across different market conditions...")
+    print(
+        f"\n📈 Beginning {SIMULATION_CYCLES} trading cycles across different market conditions..."
+    )
 
     # Tracking variables
     total_cycles = 0
@@ -320,7 +331,9 @@ async def run_minute_paper():
                     direction = "HOLD →"
                     color = "🟡"
 
-                print(f"  {color} {name:12} | {direction:7} | Strength: {abs(value) * 100:5.1f}%")
+                print(
+                    f"  {color} {name:12} | {direction:7} | Strength: {abs(value) * 100:5.1f}%"
+                )
 
             # Make decision
             decision = engine.make_ml_decision(signals)
@@ -343,7 +356,9 @@ async def run_minute_paper():
                 # Update ML weights
                 engine.update_ml_weights(trade_result)
 
-                print(f"\n💰 Trade: {'WIN' if trade_result['pnl'] > 0 else 'LOSS'} (${trade_result['pnl']:+.2f})")
+                print(
+                    f"\n💰 Trade: {'WIN' if trade_result['pnl'] > 0 else 'LOSS'} (${trade_result['pnl']:+.2f})"
+                )
 
             # Record results
             results.record_cycle(total_cycles, market_data, decision, trade_result)
@@ -377,12 +392,16 @@ async def run_minute_paper():
     print(f"Trades Executed: {trades_executed}")
     print(f"Starting Capital: ${results.equity_curve[0]:.2f}")
     print(f"Final Capital: ${results.equity_curve[-1]:.2f}")
-    print(f"ROI: {((results.equity_curve[-1] / results.equity_curve[0]) - 1) * 100:+.2f}%")
+    print(
+        f"ROI: {((results.equity_curve[-1] / results.equity_curve[0]) - 1) * 100:+.2f}%"
+    )
     print(f"Win Rate: {report['win_rate']:.1f}%")
     print(f"Max Drawdown: {report['max_drawdown_pct']:.1f}%")
 
     print("\n🧠 ML-OPTIMIZED SIGNAL WEIGHTS:")
-    for signal, weight in sorted(engine.ml_weights.items(), key=lambda x: x[1], reverse=True):
+    for signal, weight in sorted(
+        engine.ml_weights.items(), key=lambda x: x[1], reverse=True
+    ):
         print(f"  {signal}: {weight:.3f}")
 
     print("\n📝 MACHINE LEARNING INSIGHTS:")
@@ -392,17 +411,23 @@ async def run_minute_paper():
 
     if weight_changes:
         # Sort by percentage change
-        gainers = sorted(weight_changes.items(), key=lambda x: x[1]["pct_change"], reverse=True)[:3]
+        gainers = sorted(
+            weight_changes.items(), key=lambda x: x[1]["pct_change"], reverse=True
+        )[:3]
         losers = sorted(weight_changes.items(), key=lambda x: x[1]["pct_change"])[:3]
 
         print(f"  ML Adaptation Score: {stats.get('ml_adaptation', 0):.2f}%")
         print("\n  Most improved signals:")
         for signal, data in gainers:
-            print(f"    {signal}: {data['pct_change']:+.1f}% weight change ({data['initial']:.3f} → {data['current']:.3f})")
+            print(
+                f"    {signal}: {data['pct_change']:+.1f}% weight change ({data['initial']:.3f} → {data['current']:.3f})"
+            )
 
         print("\n  Decreased signals:")
         for signal, data in losers:
-            print(f"    {signal}: {data['pct_change']:+.1f}% weight change ({data['initial']:.3f} → {data['current']:.3f})")
+            print(
+                f"    {signal}: {data['pct_change']:+.1f}% weight change ({data['initial']:.3f} → {data['current']:.3f})"
+            )
     else:
         # Fallback to old method if weight_changes not available
         initial_weights = {
@@ -418,7 +443,10 @@ async def run_minute_paper():
         }
 
         # Find biggest gainers and losers
-        changes = {s: (engine.ml_weights[s] - initial_weights[s]) / initial_weights[s] * 100 for s in initial_weights}
+        changes = {
+            s: (engine.ml_weights[s] - initial_weights[s]) / initial_weights[s] * 100
+            for s in initial_weights
+        }
         gainers = sorted(changes.items(), key=lambda x: x[1], reverse=True)[:3]
         losers = sorted(changes.items(), key=lambda x: x[1])[:3]
 
@@ -442,7 +470,9 @@ async def collect_biased_signals(engine, biases):
     for name, bias in biases.items():
         if name in signals:
             # Add bias to signal value (limited to -1 to +1 range)
-            signals[name]["value"] = max(-1, min(1, signals[name]["value"] + bias * 0.3))
+            signals[name]["value"] = max(
+                -1, min(1, signals[name]["value"] + bias * 0.3)
+            )
 
     return signals
 
@@ -463,7 +493,9 @@ def execute_trade(decision, market_data, signals):
 
     # Determine trade outcome (affected by decision confidence and market trend)
     # If buy in uptrend or sell in downtrend, higher chance of success
-    alignment = (decision["action"] == "BUY" and trend > 0) or (decision["action"] == "SELL" and trend < 0)
+    alignment = (decision["action"] == "BUY" and trend > 0) or (
+        decision["action"] == "SELL" and trend < 0
+    )
     alignment_boost = 0.2 if alignment else -0.2
 
     # Add some randomness (market is unpredictable!)
@@ -471,7 +503,9 @@ def execute_trade(decision, market_data, signals):
 
     # Calculate PnL based on position size, confidence, alignment and luck
     base_pnl = decision["position_size"] * 10000  # % of capital
-    pnl_multiplier = (decision["confidence"] * 0.4) + (alignment_boost * 0.3) + (luck_factor * 0.3)
+    pnl_multiplier = (
+        (decision["confidence"] * 0.4) + (alignment_boost * 0.3) + (luck_factor * 0.3)
+    )
     pnl = base_pnl * pnl_multiplier
 
     # Return trade result

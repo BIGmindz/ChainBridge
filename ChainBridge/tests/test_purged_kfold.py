@@ -13,7 +13,12 @@ Tests cover:
 import pytest
 import numpy as np
 import pandas as pd
-from ml_pipeline.purged_kfold import PurgedKFold, detect_leakage, generate_leakage_report, walk_forward_split
+from ml_pipeline.purged_kfold import (
+    PurgedKFold,
+    detect_leakage,
+    generate_leakage_report,
+    walk_forward_split,
+)
 
 
 class TestPurgedKFold:
@@ -23,7 +28,10 @@ class TestPurgedKFold:
         """Set up test data."""
         # Create synthetic time series data
         dates = pd.date_range("2020-01-01", periods=1000, freq="H")
-        self.X = pd.DataFrame({"feature1": np.random.randn(1000), "feature2": np.random.randn(1000)}, index=dates)
+        self.X = pd.DataFrame(
+            {"feature1": np.random.randn(1000), "feature2": np.random.randn(1000)},
+            index=dates,
+        )
 
     def test_initialization(self):
         """Test PurgedKFold initialization."""
@@ -91,7 +99,9 @@ class TestPurgedKFold:
                 expected_embargo = pd.Timedelta(hours=int(1000 * 0.03))  # ~30 hours
 
                 # Allow some tolerance for edge cases
-                assert gap >= expected_embargo * 0.8, f"Fold {i}: gap {gap} < expected {expected_embargo * 0.8}"
+                assert (
+                    gap >= expected_embargo * 0.8
+                ), f"Fold {i}: gap {gap} < expected {expected_embargo * 0.8}"
 
     def test_no_datetime_index_error(self):
         """Test error when X doesn't have DatetimeIndex."""

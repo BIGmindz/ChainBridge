@@ -36,7 +36,9 @@ class ListingsMonitor:
     def scan_exchanges(self):
         """Scan all exchanges for new listings"""
         logging.info("📡 Scanning exchanges for new listings...")
-        print("\n        ╔════════════════════════════════════════════════════════════╗")
+        print(
+            "\n        ╔════════════════════════════════════════════════════════════╗"
+        )
         print("        ║   EXECUTING NEW LISTINGS STRATEGY                        ║")
         print("        ╚════════════════════════════════════════════════════════════╝")
 
@@ -100,8 +102,12 @@ def main():
     """Main entry point"""
     parser = argparse.ArgumentParser(description="New Listings Radar Monitor")
     parser.add_argument("--scan", action="store_true", help="Scan exchanges once")
-    parser.add_argument("--monitor", action="store_true", help="Continuously monitor for new listings")
-    parser.add_argument("--interval", type=int, default=600, help="Scan interval in seconds")
+    parser.add_argument(
+        "--monitor", action="store_true", help="Continuously monitor for new listings"
+    )
+    parser.add_argument(
+        "--interval", type=int, default=600, help="Scan interval in seconds"
+    )
     args = parser.parse_args()
 
     monitor = ListingsMonitor()

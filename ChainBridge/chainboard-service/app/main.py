@@ -67,7 +67,9 @@ async def create_driver(
     existing = db.query(DriverModel).filter(DriverModel.email == driver.email).first()
 
     if existing:
-        raise HTTPException(status_code=400, detail=f"Driver with email {driver.email} already exists")
+        raise HTTPException(
+            status_code=400, detail=f"Driver with email {driver.email} already exists"
+        )
 
     # Create new driver
     db_driver = DriverModel(**driver.model_dump())
@@ -218,7 +220,10 @@ async def search_drivers(
         HTTPException: If no search criteria provided
     """
     if not email and not dot_number:
-        raise HTTPException(status_code=400, detail="At least one search parameter (email or dot_number) is required")
+        raise HTTPException(
+            status_code=400,
+            detail="At least one search parameter (email or dot_number) is required",
+        )
 
     query = db.query(DriverModel).filter(DriverModel.is_active)
 

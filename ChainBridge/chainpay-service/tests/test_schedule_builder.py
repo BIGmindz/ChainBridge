@@ -110,7 +110,9 @@ class TestHighRiskScheduleBuilding:
     def test_high_risk_zero_pickup_percentage(self):
         """HIGH-risk should have exactly 0% for PICKUP_CONFIRMED."""
         items = build_default_schedule(RiskTierSchedule.HIGH)
-        pickup_item = next(item for item in items if item["event_type"] == "PICKUP_CONFIRMED")
+        pickup_item = next(
+            item for item in items if item["event_type"] == "PICKUP_CONFIRMED"
+        )
         assert pickup_item["percentage"] == 0.0
 
 
@@ -173,17 +175,29 @@ class TestScheduleStructureValidation:
 
     def test_schedule_percentages_non_negative(self):
         """All percentages should be non-negative."""
-        for risk_tier in [RiskTierSchedule.LOW, RiskTierSchedule.MEDIUM, RiskTierSchedule.HIGH]:
+        for risk_tier in [
+            RiskTierSchedule.LOW,
+            RiskTierSchedule.MEDIUM,
+            RiskTierSchedule.HIGH,
+        ]:
             items = build_default_schedule(risk_tier)
             for item in items:
-                assert item["percentage"] >= 0.0, f"Negative percentage in {risk_tier}: {item}"
+                assert (
+                    item["percentage"] >= 0.0
+                ), f"Negative percentage in {risk_tier}: {item}"
 
     def test_schedule_percentages_not_exceed_one(self):
         """No single percentage should exceed 1.0."""
-        for risk_tier in [RiskTierSchedule.LOW, RiskTierSchedule.MEDIUM, RiskTierSchedule.HIGH]:
+        for risk_tier in [
+            RiskTierSchedule.LOW,
+            RiskTierSchedule.MEDIUM,
+            RiskTierSchedule.HIGH,
+        ]:
             items = build_default_schedule(risk_tier)
             for item in items:
-                assert item["percentage"] <= 1.0, f"Percentage > 1.0 in {risk_tier}: {item}"
+                assert (
+                    item["percentage"] <= 1.0
+                ), f"Percentage > 1.0 in {risk_tier}: {item}"
 
 
 class TestScheduleConsistency:

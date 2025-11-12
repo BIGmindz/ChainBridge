@@ -112,7 +112,9 @@ def build_default_schedule_for_risk(
             {"event_type": "POD_CONFIRMED", "percentage": 0.70, "sequence": 2},
             {"event_type": "CLAIM_WINDOW_CLOSED", "percentage": 0.20, "sequence": 3},
         ]
-        description = "Medium-risk: Hold more until POD with final release at claims closure"
+        description = (
+            "Medium-risk: Hold more until POD with final release at claims closure"
+        )
     else:
         risk_tier = RiskTier.HIGH
         schedule_items = [
@@ -179,7 +181,11 @@ def process_milestone_for_intent(
         Tuple of (MilestoneSettlement if created or None, status message)
     """
     # Find PaymentSchedule
-    schedule = db.query(PaymentScheduleModel).filter(PaymentScheduleModel.payment_intent_id == payment_intent.id).first()
+    schedule = (
+        db.query(PaymentScheduleModel)
+        .filter(PaymentScheduleModel.payment_intent_id == payment_intent.id)
+        .first()
+    )
 
     if not schedule:
         logger.warning(f"No payment schedule for payment intent {payment_intent.id}")
@@ -196,7 +202,9 @@ def process_milestone_for_intent(
     )
 
     if not schedule_item:
-        logger.warning(f"No schedule item for event_type={event_payload.event_type} in schedule {schedule.id}")
+        logger.warning(
+            f"No schedule item for event_type={event_payload.event_type} in schedule {schedule.id}"
+        )
         return None, f"Event type {event_payload.event_type} not in payment schedule"
 
     # Check if milestone already settled (idempotency via unique constraint)
@@ -211,7 +219,8 @@ def process_milestone_for_intent(
 
     if existing_milestone:
         logger.info(
-            f"Milestone already exists for payment_intent={payment_intent.id}, " f"event_type={event_payload.event_type} (idempotent)"
+            f"Milestone already exists for payment_intent={payment_intent.id}, "
+            f"event_type={event_payload.event_type} (idempotent)"
         )
         return existing_milestone, "Milestone already created (idempotent)"
 
@@ -272,14 +281,24 @@ def process_milestone_for_intent(
             )
 
             if result.success:
-                logger.info(f"Payment rail processing succeeded: milestone={milestone.id}, " f"reference={result.reference_id}")
+                logger.info(
+                    f"Payment rail processing succeeded: milestone={milestone.id}, "
+                    f"reference={result.reference_id}"
+                )
                 return milestone, f"Milestone created and released: {result.message}"
             else:
-                logger.error(f"Payment rail processing failed: milestone={milestone.id}, error={result.error}")
-                return milestone, f"Milestone created but rail processing failed: {result.error}"
+                logger.error(
+                    f"Payment rail processing failed: milestone={milestone.id}, error={result.error}"
+                )
+                return (
+                    milestone,
+                    f"Milestone created but rail processing failed: {result.error}",
+                )
 
         except Exception as e:
-            logger.error(f"Error routing to payment rail: milestone={milestone.id}, error={str(e)}")
+            logger.error(
+                f"Error routing to payment rail: milestone={milestone.id}, error={str(e)}"
+            )
             return milestone, f"Milestone created but rail processing errored: {str(e)}"
 
     else:
@@ -330,11 +349,17 @@ async def create_payment_intent(
     # Fetch freight token from ChainFreight service
     token = await fetch_freight_token(payload.freight_token_id)
     if token is None:
-        raise HTTPException(status_code=404, detail=f"Freight token {payload.freight_token_id} not found or unreachable")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Freight token {payload.freight_token_id} not found or unreachable",
+        )
 
     # Validate token is in appropriate status for payment
     if token.status not in ["active", "locked"]:
-        raise HTTPException(status_code=400, detail=f"Token status '{token.status}' not eligible for settlement")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Token status '{token.status}' not eligible for settlement",
+        )
 
     # Determine risk tier
     risk_tier_str = map_risk_to_tier(token.risk_category)
@@ -360,7 +385,9 @@ async def create_payment_intent(
     try:
         build_default_schedule_for_risk(db, payment_intent)
     except Exception as e:
-        logger.error(f"Failed to build payment schedule for intent {payment_intent.id}: {e}")
+        logger.error(
+            f"Failed to build payment schedule for intent {payment_intent.id}: {e}"
+        )
         # Continue without schedule - not a fatal error
 
     logger.info(
@@ -424,7 +451,9 @@ async def get_payment_intent(
     Raises:
         HTTPException: If payment intent not found
     """
-    payment_intent = db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
+    payment_intent = (
+        db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
+    )
 
     if not payment_intent:
         raise HTTPException(status_code=404, detail="Payment intent not found")
@@ -435,7 +464,9 @@ async def get_payment_intent(
 # --- SETTLEMENT ENDPOINTS ---
 
 
-@app.post("/payment_intents/{payment_id}/assess_risk", response_model=RiskAssessmentResponse)
+@app.post(
+    "/payment_intents/{payment_id}/assess_risk", response_model=RiskAssessmentResponse
+)
 async def assess_risk(
     payment_id: int,
     db: Session = Depends(get_db),
@@ -456,7 +487,9 @@ async def assess_risk(
     Raises:
         HTTPException: If payment intent not found
     """
-    payment_intent = db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
+    payment_intent = (
+        db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
+    )
 
     if not payment_intent:
         raise HTTPException(status_code=404, detail="Payment intent not found")
@@ -516,14 +549,22 @@ async def settle_payment(
     Raises:
         HTTPException: If payment intent not found or invalid state
     """
-    payment_intent = db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
+    payment_intent = (
+        db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
+    )
 
     if not payment_intent:
         raise HTTPException(status_code=404, detail="Payment intent not found")
 
     # Check if already settled
-    if payment_intent.status in [PaymentStatus.SETTLED, PaymentStatus.REJECTED, PaymentStatus.CANCELLED]:
-        raise HTTPException(status_code=400, detail=f"Payment already {payment_intent.status.value}")
+    if payment_intent.status in [
+        PaymentStatus.SETTLED,
+        PaymentStatus.REJECTED,
+        PaymentStatus.CANCELLED,
+    ]:
+        raise HTTPException(
+            status_code=400, detail=f"Payment already {payment_intent.status.value}"
+        )
 
     # Implement risk-based settlement logic
     action_taken = ""
@@ -561,11 +602,16 @@ async def settle_payment(
             payment_intent.settlement_approved_at = datetime.utcnow()
             action_taken = "approved"
             settlement_reason = "High risk - manual override approved"
-            logger.warning(f"High-risk payment {payment_id} force-approved " f"for token {payment_intent.freight_token_id}")
+            logger.warning(
+                f"High-risk payment {payment_id} force-approved "
+                f"for token {payment_intent.freight_token_id}"
+            )
         else:
             payment_intent.status = PaymentStatus.REJECTED
             action_taken = "rejected"
-            settlement_reason = "High risk token - requires manual review and force_approval flag"
+            settlement_reason = (
+                "High risk token - requires manual review and force_approval flag"
+            )
 
     # Add settlement notes
     if payload.settlement_notes:
@@ -585,7 +631,8 @@ async def settle_payment(
     db.refresh(payment_intent)
 
     logger.info(
-        f"Payment {payment_id} settlement action: {action_taken} " f"(risk_tier={payment_intent.risk_tier}, reason={settlement_reason})"
+        f"Payment {payment_id} settlement action: {action_taken} "
+        f"(risk_tier={payment_intent.risk_tier}, reason={settlement_reason})"
     )
 
     return SettlementResponse(
@@ -598,7 +645,9 @@ async def settle_payment(
     )
 
 
-@app.post("/payment_intents/{payment_id}/complete", response_model=PaymentIntentResponse)
+@app.post(
+    "/payment_intents/{payment_id}/complete", response_model=PaymentIntentResponse
+)
 async def complete_settlement(
     payment_id: int,
     db: Session = Depends(get_db),
@@ -619,13 +668,18 @@ async def complete_settlement(
     Raises:
         HTTPException: If payment not in appropriate status
     """
-    payment_intent = db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
+    payment_intent = (
+        db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
+    )
 
     if not payment_intent:
         raise HTTPException(status_code=404, detail="Payment intent not found")
 
     if payment_intent.status != PaymentStatus.APPROVED:
-        raise HTTPException(status_code=400, detail=f"Payment must be in APPROVED status, currently {payment_intent.status.value}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Payment must be in APPROVED status, currently {payment_intent.status.value}",
+        )
 
     payment_intent.status = PaymentStatus.SETTLED
     payment_intent.settlement_completed_at = datetime.utcnow()
@@ -649,7 +703,9 @@ async def complete_settlement(
 # --- SETTLEMENT HISTORY ENDPOINTS ---
 
 
-@app.get("/payment_intents/{payment_id}/history", response_model=SettlementHistoryResponse)
+@app.get(
+    "/payment_intents/{payment_id}/history", response_model=SettlementHistoryResponse
+)
 async def get_settlement_history(
     payment_id: int,
     db: Session = Depends(get_db),
@@ -667,12 +723,19 @@ async def get_settlement_history(
     Raises:
         HTTPException: If payment intent not found
     """
-    payment_intent = db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
+    payment_intent = (
+        db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
+    )
 
     if not payment_intent:
         raise HTTPException(status_code=404, detail="Payment intent not found")
 
-    logs = db.query(SettlementLog).filter(SettlementLog.payment_intent_id == payment_id).order_by(SettlementLog.created_at).all()
+    logs = (
+        db.query(SettlementLog)
+        .filter(SettlementLog.payment_intent_id == payment_id)
+        .order_by(SettlementLog.created_at)
+        .all()
+    )
 
     return SettlementHistoryResponse(
         payment_intent_id=payment_intent.id,
@@ -684,7 +747,11 @@ async def get_settlement_history(
 # --- WEBHOOK ENDPOINTS ---
 
 
-@app.post("/webhooks/shipment_event", response_model=ShipmentEventWebhookResponse, status_code=200)
+@app.post(
+    "/webhooks/shipment_event",
+    response_model=ShipmentEventWebhookResponse,
+    status_code=200,
+)
 async def process_shipment_event(
     event: ShipmentEventWebhookRequest,
     db: Session = Depends(get_db),
@@ -720,11 +787,15 @@ async def process_shipment_event(
 
     for payment_intent in payment_intents:
         try:
-            milestone, status_msg = process_milestone_for_intent(db, payment_intent, event)
+            milestone, status_msg = process_milestone_for_intent(
+                db, payment_intent, event
+            )
             if milestone:
                 milestone_count += 1
         except Exception as e:
-            logger.error(f"Error processing milestone for payment_intent {payment_intent.id}: {e}")
+            logger.error(
+                f"Error processing milestone for payment_intent {payment_intent.id}: {e}"
+            )
             db.rollback()
             continue
 
@@ -760,16 +831,25 @@ async def build_and_attach_schedule(
     Raises:
         HTTPException: If payment intent not found or schedule already exists
     """
-    payment_intent = db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
+    payment_intent = (
+        db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
+    )
 
     if not payment_intent:
         raise HTTPException(status_code=404, detail="Payment intent not found")
 
     # Check if schedule already exists
-    existing_schedule = db.query(PaymentScheduleModel).filter(PaymentScheduleModel.payment_intent_id == payment_id).first()
+    existing_schedule = (
+        db.query(PaymentScheduleModel)
+        .filter(PaymentScheduleModel.payment_intent_id == payment_id)
+        .first()
+    )
 
     if existing_schedule:
-        raise HTTPException(status_code=400, detail="Payment schedule already exists for this payment intent")
+        raise HTTPException(
+            status_code=400,
+            detail="Payment schedule already exists for this payment intent",
+        )
 
     # Build default schedule based on risk tier
     schedule_items = build_default_schedule(risk_tier=payment_intent.risk_tier)
@@ -796,7 +876,8 @@ async def build_and_attach_schedule(
     db.refresh(schedule)
 
     logger.info(
-        f"Built and attached payment schedule: id={schedule.id}, " f"payment_intent={payment_id}, risk_tier={payment_intent.risk_tier}"
+        f"Built and attached payment schedule: id={schedule.id}, "
+        f"payment_intent={payment_id}, risk_tier={payment_intent.risk_tier}"
     )
 
     return {
@@ -838,7 +919,11 @@ async def get_shipment_audit(
     """
     # Query all payment intents (TODO: filter by shipment_id when fully integrated)
     # For now, we return milestones for all intents that have associated events
-    milestones = db.query(MilestoneSettlementModel).order_by(MilestoneSettlementModel.created_at).all()
+    milestones = (
+        db.query(MilestoneSettlementModel)
+        .order_by(MilestoneSettlementModel.created_at)
+        .all()
+    )
 
     if not milestones:
         return {
@@ -870,7 +955,11 @@ async def get_shipment_audit(
 
     for milestone in milestones:
         # Get associated payment intent
-        payment_intent = db.query(PaymentIntentModel).filter(PaymentIntentModel.id == milestone.payment_intent_id).first()
+        payment_intent = (
+            db.query(PaymentIntentModel)
+            .filter(PaymentIntentModel.id == milestone.payment_intent_id)
+            .first()
+        )
 
         if not payment_intent:
             continue
@@ -885,9 +974,15 @@ async def get_shipment_audit(
             "status": milestone.status.value,
             "provider": milestone.provider,
             "reference": milestone.reference,
-            "occurred_at": milestone.occurred_at.isoformat() if milestone.occurred_at else None,
-            "settled_at": milestone.settled_at.isoformat() if milestone.settled_at else None,
-            "created_at": milestone.created_at.isoformat() if milestone.created_at else None,
+            "occurred_at": (
+                milestone.occurred_at.isoformat() if milestone.occurred_at else None
+            ),
+            "settled_at": (
+                milestone.settled_at.isoformat() if milestone.settled_at else None
+            ),
+            "created_at": (
+                milestone.created_at.isoformat() if milestone.created_at else None
+            ),
             "payment_intent": {
                 "risk_score": payment_intent.risk_score,
                 "risk_tier": payment_intent.risk_tier.value,
@@ -937,7 +1032,9 @@ async def get_payment_intent_milestones(
     Raises:
         HTTPException: If payment intent not found
     """
-    payment_intent = db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
+    payment_intent = (
+        db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
+    )
 
     if not payment_intent:
         raise HTTPException(status_code=404, detail="Payment intent not found")
@@ -963,8 +1060,12 @@ async def get_payment_intent_milestones(
             "status": milestone.status.value,
             "provider": milestone.provider,
             "reference": milestone.reference,
-            "occurred_at": milestone.occurred_at.isoformat() if milestone.occurred_at else None,
-            "settled_at": milestone.settled_at.isoformat() if milestone.settled_at else None,
+            "occurred_at": (
+                milestone.occurred_at.isoformat() if milestone.occurred_at else None
+            ),
+            "settled_at": (
+                milestone.settled_at.isoformat() if milestone.settled_at else None
+            ),
             "created_at": milestone.created_at.isoformat(),
         }
 

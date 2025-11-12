@@ -46,7 +46,9 @@ async def demo_new_listings_radar():
     print(f"✅ Found {len(exchanges)} supported exchanges: {', '.join(exchanges)}")
     # Check if exchanges have required properties
     for exchange, config in radar.cex_sources.items():
-        print(f"  • {exchange}: {'url' in config and 'weight' in config and 'avg_pump' in config}")
+        print(
+            f"  • {exchange}: {'url' in config and 'weight' in config and 'avg_pump' in config}"
+        )
 
     # Test 2: Check announcement parsing and methods
     print("\n🔍 Test 2: Testing announcement parsing methods...")
@@ -115,7 +117,9 @@ async def demo_new_listings_radar():
                 print("ℹ️ No specific backtest parameters found (may use defaults)")
 
             print("\n📈 Backtest capability available")
-            print("  • To run a backtest: python run_new_listings_radar.py --backtest --days 30")
+            print(
+                "  • To run a backtest: python run_new_listings_radar.py --backtest --days 30"
+            )
         else:
             print("❌ Backtest method not found")
 

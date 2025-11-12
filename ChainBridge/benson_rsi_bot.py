@@ -113,7 +113,9 @@ def wilder_rsi(close: Any, length: int = 14) -> float:
 
     # Validate data length
     if len(vals) < max(2, length + 1):
-        raise ValueError(f"Insufficient data for RSI calculation (need at least {length + 1} values)")
+        raise ValueError(
+            f"Insufficient data for RSI calculation (need at least {length + 1} values)"
+        )
 
     # Compute price deltas
     deltas = [vals[i] - vals[i - 1] for i in range(1, len(vals))]
@@ -171,7 +173,9 @@ def _ema(series: List[float], period: int) -> float:
     return float(ema_val)  # type: ignore
 
 
-def calculate_macd_from_ohlcv(ohlcv: List[List[float]], fast: int = 12, slow: int = 26, signal: int = 9) -> Tuple[float, float, float]:
+def calculate_macd_from_ohlcv(
+    ohlcv: List[List[float]], fast: int = 12, slow: int = 26, signal: int = 9
+) -> Tuple[float, float, float]:
     """Return (macd_line, signal_line, histogram). NaNs (float('nan')) when insufficient data.  # type: ignore
 
     Uses EMA with standard smoothing. Requires at least slow+signal values for stability.
@@ -230,7 +234,9 @@ def calculate_macd_from_ohlcv(ohlcv: List[List[float]], fast: int = 12, slow: in
     return float(macd_line), float(signal_line), float(hist)  # type: ignore
 
 
-def calculate_bollinger_from_ohlcv(ohlcv: List[List[float]], period: int = 20, stddev: float = 2.0) -> Tuple[float, float, float]:
+def calculate_bollinger_from_ohlcv(
+    ohlcv: List[List[float]], period: int = 20, stddev: float = 2.0
+) -> Tuple[float, float, float]:
     """Return (lower, middle, upper) Bollinger Band values for the latest close.
 
     Returns NaNs when insufficient data.
@@ -255,7 +261,9 @@ def backoff_sleep(attempt: int, base: float = 2.0, max_wait: float = 60.0):
     time.sleep(wait)
 
 
-def safe_fetch_ohlcv(exchange: Any, symbol: str, timeframe: str, limit: int = 200) -> Any:
+def safe_fetch_ohlcv(
+    exchange: Any, symbol: str, timeframe: str, limit: int = 200
+) -> Any:
     return exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
 
 
@@ -277,7 +285,9 @@ def run_bot(once: bool = False) -> None:
     try:
         import ccxt  # type: ignore
     except Exception as exc:
-        raise ImportError("The 'ccxt' package is required to run the live bot. Install with: pip install ccxt") from exc
+        raise ImportError(
+            "The 'ccxt' package is required to run the live bot. Install with: pip install ccxt"
+        ) from exc
 
     # Load .env (repo root or home) so EXCHANGE, PAPER, API_KEY, API_SECRET are available
     try:
@@ -363,7 +373,9 @@ def run_bot(once: bool = False) -> None:
 
     if not os.path.exists(log_path):
         with open(log_path, "w") as f:
-            f.write("ts_utc,exchange,symbol,price,rsi,macd_hist,bb_pos,signal,timeframe\n")
+            f.write(
+                "ts_utc,exchange,symbol,price,rsi,macd_hist,bb_pos,signal,timeframe\n"
+            )
 
     print("Benson Bot Starting...")
     print(f"Exchange: {exchange_id}")
@@ -371,7 +383,9 @@ def run_bot(once: bool = False) -> None:
     print(f"Timeframe: {timeframe}")
     print(f"RSI: period={rsi_period} | Buy<{buy_th} | Sell>{sell_th}")
     if use_macd:
-        print(f"MACD: fast={macd_fast} slow={macd_slow} signal={macd_signal_p} | hist_th={macd_hist_th}")
+        print(
+            f"MACD: fast={macd_fast} slow={macd_slow} signal={macd_signal_p} | hist_th={macd_hist_th}"
+        )
     if use_boll:
         print(f"Bollinger: period={bb_period} std={bb_std}")
     print(f"Cooldown: {cooldown_min} min")
@@ -397,8 +411,12 @@ def run_bot(once: bool = False) -> None:
                 rsi_val = calculate_rsi_from_ohlcv(ohlcv, rsi_period)
                 # Calculate MACD indicators
 
-                macd_line, macd_sig, macd_hist = calculate_macd_from_ohlcv(ohlcv, fast=macd_fast, slow=macd_slow, signal=macd_signal_p)
-                bb_lower, bb_mid, bb_upper = calculate_bollinger_from_ohlcv(ohlcv, period=bb_period, stddev=bb_std)
+                macd_line, macd_sig, macd_hist = calculate_macd_from_ohlcv(
+                    ohlcv, fast=macd_fast, slow=macd_slow, signal=macd_signal_p
+                )
+                bb_lower, bb_mid, bb_upper = calculate_bollinger_from_ohlcv(
+                    ohlcv, period=bb_period, stddev=bb_std
+                )
 
                 # Individual signals
                 ind_signals: Dict[str, str] = {}
@@ -474,7 +492,9 @@ def run_bot(once: bool = False) -> None:
 
                 # Alert only on new actionable signals and respecting cooldown
                 if signal_out in ("BUY", "SELL") and changed and cooldown_ok:
-                    print(f"SIGNAL: {signal_out} {symbol} @ ${price:,.2f} (RSI {rsi_val:0.2f})")
+                    print(
+                        f"SIGNAL: {signal_out} {symbol} @ ${price:,.2f} (RSI {rsi_val:0.2f})"
+                    )
                     last_alert_ts[symbol] = now
 
                 # Persist log line (include MACD and Bollinger summaries)
@@ -485,7 +505,9 @@ def run_bot(once: bool = False) -> None:
                     if not (math.isnan(bb_lower) or math.isnan(bb_upper)) and (bb_upper - bb_lower) > 0:  # type: ignore
                         bbpos_val = (price - bb_lower) / (bb_upper - bb_lower)
                         bbpos = f"{bbpos_val:.4f}"
-                    f.write(f"{utc_now_str()},{exchange_id},{symbol},{price},{rsi_str},{macd_str},{bbpos},{signal_out},{timeframe}\n")
+                    f.write(
+                        f"{utc_now_str()},{exchange_id},{symbol},{price},{rsi_str},{macd_str},{bbpos},{signal_out},{timeframe}\n"
+                    )
 
                 last_signal[symbol] = signal_out
 
@@ -511,7 +533,9 @@ def run_bot(once: bool = False) -> None:
 def main():
     print("[DBG] entered main()")
     parser = argparse.ArgumentParser(description="Benson RSI Bot")
-    parser.add_argument("--once", action="store_true", help="Run a single cycle and exit")
+    parser.add_argument(
+        "--once", action="store_true", help="Run a single cycle and exit"
+    )
     parser.add_argument("--test", action="store_true", help="Run unit tests and exit")
     args = parser.parse_args()
 
@@ -548,7 +572,9 @@ def test_rsi_downtrend():
 def test_rsi_no_losses_near_max():
     s = pd.Series(range(1, 60), dtype=float)
     rsi = wilder_rsi(s, 14)
-    assert rsi >= 95 or math.isclose(rsi, 100.0, rel_tol=0.01), f"Expected RSI near 100, got {rsi}"
+    assert rsi >= 95 or math.isclose(
+        rsi, 100.0, rel_tol=0.01
+    ), f"Expected RSI near 100, got {rsi}"
 
 
 def test_insufficient_ohlcv_returns_nan():

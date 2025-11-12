@@ -57,7 +57,10 @@ class EnsembleVotingModule(Module):
             "input": {
                 "type": "object",
                 "properties": {
-                    "price_data": {"type": "object", "description": "Current price and technical data"},
+                    "price_data": {
+                        "type": "object",
+                        "description": "Current price and technical data",
+                    },
                     "symbol": {"type": "string", "description": "Trading symbol"},
                 },
                 "required": ["price_data", "symbol"],
@@ -65,11 +68,27 @@ class EnsembleVotingModule(Module):
             "output": {
                 "type": "object",
                 "properties": {
-                    "signal": {"type": "string", "enum": ["BUY", "SELL", "HOLD"], "description": "Ensemble trading signal"},
-                    "confidence": {"type": "number", "description": "Confidence in the ensemble signal"},
-                    "ensemble_votes": {"type": "object", "description": "Breakdown of votes from individual models"},
-                    "individual_predictions": {"type": "array", "description": "Predictions from each individual model"},
-                    "model_count": {"type": "integer", "description": "Number of models in the ensemble"},
+                    "signal": {
+                        "type": "string",
+                        "enum": ["BUY", "SELL", "HOLD"],
+                        "description": "Ensemble trading signal",
+                    },
+                    "confidence": {
+                        "type": "number",
+                        "description": "Confidence in the ensemble signal",
+                    },
+                    "ensemble_votes": {
+                        "type": "object",
+                        "description": "Breakdown of votes from individual models",
+                    },
+                    "individual_predictions": {
+                        "type": "array",
+                        "description": "Predictions from each individual model",
+                    },
+                    "model_count": {
+                        "type": "integer",
+                        "description": "Number of models in the ensemble",
+                    },
                 },
             },
         }
@@ -133,7 +152,9 @@ class EnsembleVotingModule(Module):
                 if os.path.exists(model_path):
                     model = joblib.load(model_path)
                     self.models.append(model)  # type: ignore
-                    logging.info(f"✅ Loaded model {i + 1}: {os.path.basename(model_path)}")
+                    logging.info(
+                        f"✅ Loaded model {i + 1}: {os.path.basename(model_path)}"
+                    )
 
                     # Load corresponding scaler if available
                     if i < len(self.scaler_paths) and self.scaler_paths[i]:
@@ -141,7 +162,9 @@ class EnsembleVotingModule(Module):
                         if os.path.exists(scaler_path):
                             scaler = joblib.load(scaler_path)
                             self.scalers.append(scaler)  # type: ignore
-                            logging.info(f"✅ Loaded scaler {i + 1}: {os.path.basename(scaler_path)}")
+                            logging.info(
+                                f"✅ Loaded scaler {i + 1}: {os.path.basename(scaler_path)}"
+                            )
                         else:
                             self.scalers.append(None)  # type: ignore
                             logging.warning(f"⚠️  Scaler not found: {scaler_path}")
@@ -157,7 +180,9 @@ class EnsembleVotingModule(Module):
                 self.models.append(None)  # type: ignore
                 self.scalers.append(None)  # type: ignore
 
-        logging.info(f"🎯 Ensemble ready with {len([m for m in self.models if m is not None])} active models")
+        logging.info(
+            f"🎯 Ensemble ready with {len([m for m in self.models if m is not None])} active models"
+        )
 
     def get_signal(self, price_data: Dict[str, Any], symbol: str) -> Dict[str, Any]:
         """
@@ -210,7 +235,9 @@ class EnsembleVotingModule(Module):
                     try:
                         features_scaled = scaler.transform(features_df)
                     except ValueError as ve:
-                        logging.warning(f"Feature mismatch for model {i + 1}, skipping: {ve}")
+                        logging.warning(
+                            f"Feature mismatch for model {i + 1}, skipping: {ve}"
+                        )
                         continue
                 else:
                     features_scaled = features_df.values
@@ -228,12 +255,16 @@ class EnsembleVotingModule(Module):
                     # Direct prediction
                     prediction = model.predict(features_scaled)[0]
                     signal = self._prediction_to_signal(prediction)
-                    confidence = 0.5  # Default confidence for models without probabilities
+                    confidence = (
+                        0.5  # Default confidence for models without probabilities
+                    )
 
                 predictions.append(signal)  # type: ignore
                 confidences.append(confidence)  # type: ignore
 
-                logging.debug(f"Model {i + 1} prediction: {signal} (confidence: {confidence:.3f})")
+                logging.debug(
+                    f"Model {i + 1} prediction: {signal} (confidence: {confidence:.3f})"
+                )
 
             except Exception as e:
                 logging.warning(f"Model {i + 1} prediction failed: {e}")
@@ -250,7 +281,9 @@ class EnsembleVotingModule(Module):
             }
 
         # Perform ensemble voting
-        ensemble_signal, ensemble_confidence, vote_breakdown = self._perform_voting(predictions, confidences)
+        ensemble_signal, ensemble_confidence, vote_breakdown = self._perform_voting(
+            predictions, confidences
+        )
 
         return {
             "signal": ensemble_signal,
@@ -260,7 +293,9 @@ class EnsembleVotingModule(Module):
             "model_count": len([m for m in self.models if m is not None]),
         }
 
-    def _extract_features(self, price_data: Dict[str, Any], symbol: str) -> Optional[Dict[str, float]]:
+    def _extract_features(
+        self, price_data: Dict[str, Any], symbol: str
+    ) -> Optional[Dict[str, float]]:
         """Extract ML features from price data"""
         try:
             # Extract basic price and technical features
@@ -331,7 +366,9 @@ class EnsembleVotingModule(Module):
         else:
             return "HOLD"
 
-    def _perform_voting(self, predictions: List[str], confidences: List[float]) -> Tuple[str, float, Dict]:
+    def _perform_voting(
+        self, predictions: List[str], confidences: List[float]
+    ) -> Tuple[str, float, Dict]:
         """
         Perform ensemble voting based on configured mechanism.
 
@@ -346,21 +383,29 @@ class EnsembleVotingModule(Module):
             # Default to majority vote
             return self._majority_vote(predictions, confidences)
 
-    def _majority_vote(self, predictions: List[str], confidences: List[float]) -> Tuple[str, float, Dict]:
+    def _majority_vote(
+        self, predictions: List[str], confidences: List[float]
+    ) -> Tuple[str, float, Dict]:
         """Perform simple majority voting"""
         # Count votes for each signal
         vote_counts = Counter(predictions)
 
         # Find the signal with most votes
         max_votes = max(vote_counts.values())
-        winners = [signal for signal, count in vote_counts.items() if count == max_votes]
+        winners = [
+            signal for signal, count in vote_counts.items() if count == max_votes
+        ]
 
         # If tie, choose the one with highest average confidence
         if len(winners) > 1:
             winner_confidences = {}
             for winner in winners:
-                winner_indices = [i for i, pred in enumerate(predictions) if pred == winner]
-                winner_confidences[winner] = np.mean([confidences[i] for i in winner_indices])
+                winner_indices = [
+                    i for i, pred in enumerate(predictions) if pred == winner
+                ]
+                winner_confidences[winner] = np.mean(
+                    [confidences[i] for i in winner_indices]
+                )
 
             ensemble_signal = max(winner_confidences, key=winner_confidences.get)
             ensemble_confidence = winner_confidences[ensemble_signal]
@@ -376,7 +421,9 @@ class EnsembleVotingModule(Module):
 
         return ensemble_signal, ensemble_confidence, vote_breakdown
 
-    def _weighted_vote(self, predictions: List[str], confidences: List[float]) -> Tuple[str, float, Dict]:
+    def _weighted_vote(
+        self, predictions: List[str], confidences: List[float]
+    ) -> Tuple[str, float, Dict]:
         """Perform weighted voting based on model confidences"""
         # Calculate weighted scores for each signal
         signal_weights = {"BUY": 0.0, "SELL": 0.0, "HOLD": 0.0}

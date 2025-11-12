@@ -47,7 +47,10 @@ def test_safe_extract_risk_data():
     assert risk_category is None
 
     # Invalid risk score format
-    data_invalid = {"risk_score": "invalid", "risk_category": 123}  # non-string category
+    data_invalid = {
+        "risk_score": "invalid",
+        "risk_category": 123,
+    }  # non-string category
     risk_score, risk_category = _safe_extract_risk_data(data_invalid)
     assert risk_score is None
     assert risk_category == "123"  # converted to string
@@ -60,19 +63,29 @@ def test_safe_get_consistency_across_modules():
     # Both module versions should work the same
     assert _safe_get(test_data, "value") == payment_safe_get(test_data, "value")
     assert _safe_get(test_data, "text") == payment_safe_get(test_data, "text")
-    assert _safe_get(test_data, "missing", "default") == payment_safe_get(test_data, "missing", "default")
+    assert _safe_get(test_data, "missing", "default") == payment_safe_get(
+        test_data, "missing", "default"
+    )
 
 
 def test_real_world_api_scenarios():
     """Test scenarios that might occur with real API responses."""
     # ChainIQ returns varying response formats
-    chainiq_response_1 = {"risk_score": 0.67, "risk_category": "high", "recommended_action": "manual_review"}
+    chainiq_response_1 = {
+        "risk_score": 0.67,
+        "risk_category": "high",
+        "recommended_action": "manual_review",
+    }
 
     # Sometimes ChainIQ might return just a score
     chainiq_response_2 = 0.23  # Raw float
 
     # Sometimes missing or null
-    chainiq_response_3 = {"risk_score": None, "risk_category": None, "error": "service_unavailable"}
+    chainiq_response_3 = {
+        "risk_score": None,
+        "risk_category": None,
+        "error": "service_unavailable",
+    }
 
     # Test extraction from normal response
     risk_score, risk_category = _safe_extract_risk_data(chainiq_response_1)
@@ -92,7 +105,13 @@ def test_real_world_api_scenarios():
 def test_payment_provider_response_handling():
     """Test safe handling of payment provider responses."""
     # Stripe response format
-    stripe_response = {"id": "payout_1234", "amount": 100000, "currency": "usd", "status": "paid", "arrival_date": 1699884000}  # cents
+    stripe_response = {
+        "id": "payout_1234",
+        "amount": 100000,
+        "currency": "usd",
+        "status": "paid",
+        "arrival_date": 1699884000,
+    }  # cents
 
     # Extract using _safe_get from payment_rails
     amount_cents = payment_safe_get(stripe_response, "amount", 0)

@@ -51,10 +51,14 @@ class AdaptiveWeightIntegrator:
         self.data_collector = SignalDataCollector(self.config)
 
         # Data storage path
-        self.data_dir = os.path.join(self.config.get("data_dir", "data"), "adaptive_weight_data")
+        self.data_dir = os.path.join(
+            self.config.get("data_dir", "data"), "adaptive_weight_data"
+        )
         os.makedirs(self.data_dir, exist_ok=True)
 
-    def optimize_signal_weights(self, signal_data: Dict[str, Any], market_data: Dict[str, Any]) -> Dict[str, Any]:
+    def optimize_signal_weights(
+        self, signal_data: Dict[str, Any], market_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Optimize signal weights based on current market conditions
 
@@ -88,7 +92,9 @@ class AdaptiveWeightIntegrator:
             optimized_weights = self.weight_model.process(model_input)
 
             # Save the results for future training
-            self._save_optimization_results(std_signals, std_market, regime_results, optimized_weights)
+            self._save_optimization_results(
+                std_signals, std_market, regime_results, optimized_weights
+            )
 
             return optimized_weights
 
@@ -141,7 +147,9 @@ class AdaptiveWeightIntegrator:
             "status": "default_weights",
         }
 
-    def update_performance_metrics(self, regime: str, metrics: Dict[str, float]) -> None:
+    def update_performance_metrics(
+        self, regime: str, metrics: Dict[str, float]
+    ) -> None:
         """
         Update performance metrics for a specific market regime
 
@@ -237,7 +245,9 @@ from modules.adaptive_weight_module.market_regime_integrator import MarketRegime
             import_spot = content.find("\n\nclass")
 
         if import_spot != -1:
-            new_content = content[:import_spot] + import_statement + content[import_spot:]
+            new_content = (
+                content[:import_spot] + import_statement + content[import_spot:]
+            )
 
             # Add adaptive weight initialization to the __init__ method
             init_pattern = "def __init__(self, config=None):"
@@ -260,9 +270,13 @@ from modules.adaptive_weight_module.market_regime_integrator import MarketRegime
             init_end = new_content.find("\n    def", new_content.find(init_pattern))
             if init_end != -1:
                 # Find the last line of the __init__ method
-                last_line = new_content.rfind("\n        ", new_content.find(init_pattern), init_end)
+                last_line = new_content.rfind(
+                    "\n        ", new_content.find(init_pattern), init_end
+                )
                 if last_line != -1:
-                    new_content = new_content[:last_line] + init_code + new_content[last_line:]
+                    new_content = (
+                        new_content[:last_line] + init_code + new_content[last_line:]
+                    )
 
             # Add adaptive weight logic to the decision making process
             decision_pattern = "def make_decision(self, signals):"
@@ -298,12 +312,20 @@ from modules.adaptive_weight_module.market_regime_integrator import MarketRegime
 """
 
             # Find where to insert the weight code
-            signal_weights_line = new_content.find("signal_weights = {", new_content.find(decision_pattern))
+            signal_weights_line = new_content.find(
+                "signal_weights = {", new_content.find(decision_pattern)
+            )
             if signal_weights_line != -1:
                 # Find the end of the signal_weights block
-                weights_end = new_content.find("\n", new_content.find("}", signal_weights_line))
+                weights_end = new_content.find(
+                    "\n", new_content.find("}", signal_weights_line)
+                )
                 if weights_end != -1:
-                    new_content = new_content[: weights_end + 1] + weight_code + new_content[weights_end + 1 :]
+                    new_content = (
+                        new_content[: weights_end + 1]
+                        + weight_code
+                        + new_content[weights_end + 1 :]
+                    )
 
             # Add method to get market data
             market_data_method = """
@@ -378,7 +400,11 @@ from modules.adaptive_weight_module.market_regime_integrator import MarketRegime
             last_method_end = new_content.rfind("\n\n    def ")
             last_method_block_end = new_content.find("\n\n", last_method_end + 10)
             if last_method_block_end != -1:
-                new_content = new_content[:last_method_block_end] + market_data_method + new_content[last_method_block_end:]
+                new_content = (
+                    new_content[:last_method_block_end]
+                    + market_data_method
+                    + new_content[last_method_block_end:]
+                )
 
             # Write the patched file
             with open(file_path, "w") as f:
@@ -399,4 +425,6 @@ if __name__ == "__main__":
 
     logger.info("Adaptive weight model integration complete")
     print("Adaptive weight model has been integrated with the multi-signal bot")
-    print("To use adaptive weights, set 'use_adaptive_weights': true in your configuration")
+    print(
+        "To use adaptive weights, set 'use_adaptive_weights': true in your configuration"
+    )

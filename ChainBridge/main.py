@@ -52,7 +52,11 @@ except ImportError:
 
 # Import the complete multi-signal bot implementation
 # This is the canonical implementation with all features
-from live_trading_bot import LiveTradingBot as TradingEngine, load_bot_config, preflight_check
+from live_trading_bot import (
+    LiveTradingBot as TradingEngine,
+    load_bot_config,
+    preflight_check,
+)
 
 CANONICAL_RSI_BUY = 35
 CANONICAL_RSI_SELL = 64
@@ -116,15 +120,24 @@ class BotOrchestrator:
             print("⚠️  WARNING: LIVE TRADING MODE - REAL MONEY AT RISK")
             if not self._live_confirmation_granted():
                 print("❌ Live mode launch blocked: confirmation guard not satisfied.")
-                print("   Re-run with --confirm-live OR set CONFIRM_LIVE=YES to proceed.")
+                print(
+                    "   Re-run with --confirm-live OR set CONFIRM_LIVE=YES to proceed."
+                )
                 sys.exit(2)
             print("✅ Live mode confirmation acknowledged (explicit flag or env var).")
             print("⚠️  Ensure you have reviewed configuration and tested in paper mode")
             print("⚠️  Press Ctrl+C to stop at any time\n")
-        print(f"📏 Canonical RSI thresholds: BUY={CANONICAL_RSI_BUY} SELL={CANONICAL_RSI_SELL}")
+        print(
+            f"📏 Canonical RSI thresholds: BUY={CANONICAL_RSI_BUY} SELL={CANONICAL_RSI_SELL}"
+        )
 
     def _live_confirmation_granted(self) -> bool:
-        return self.confirm_live or os.getenv("CONFIRM_LIVE", "").upper() in {"YES", "Y", "TRUE", "1"}
+        return self.confirm_live or os.getenv("CONFIRM_LIVE", "").upper() in {
+            "YES",
+            "Y",
+            "TRUE",
+            "1",
+        }
 
     def _signal_handler(self, signum, frame):
         """Handle shutdown signals gracefully"""
@@ -215,8 +228,12 @@ class BotOrchestrator:
             "cycle": cycle,
             "symbols": getattr(self.engine, "symbols", []),
             "poll_seconds": getattr(self.engine, "poll_seconds", None),
-            "capital_available": getattr(getattr(self.engine, "budget_manager", {}), "available_capital", None),
-            "capital_total": getattr(getattr(self.engine, "budget_manager", {}), "current_capital", None),
+            "capital_available": getattr(
+                getattr(self.engine, "budget_manager", {}), "available_capital", None
+            ),
+            "capital_total": getattr(
+                getattr(self.engine, "budget_manager", {}), "current_capital", None
+            ),
             "status": status,
             "rsi_buy": CANONICAL_RSI_BUY,
             "rsi_sell": CANONICAL_RSI_SELL,
@@ -312,12 +329,16 @@ class BotOrchestrator:
             while not self.should_stop:
                 cycle_count += 1
                 print(f"\n{'='*80}")
-                print(f"Cycle #{cycle_count} - {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}")
+                print(
+                    f"Cycle #{cycle_count} - {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}"
+                )
                 print(f"{'='*80}\n")
 
                 try:
                     self.engine.run_trading_cycle()
-                    self._emit_metrics(cycle=cycle_count, mode=self.mode, status="cycle_complete")
+                    self._emit_metrics(
+                        cycle=cycle_count, mode=self.mode, status="cycle_complete"
+                    )
                     error_count = 0
                     if not self.should_stop:
                         sleep_time = getattr(self.engine, "poll_seconds", 30)
@@ -333,7 +354,9 @@ class BotOrchestrator:
                     print(f"\n❌ Error in cycle #{cycle_count}: {e}")
 
                     if error_count >= max_consecutive_errors:
-                        print(f"\n🚨 Too many consecutive errors ({error_count}). Stopping for safety.")
+                        print(
+                            f"\n🚨 Too many consecutive errors ({error_count}). Stopping for safety."
+                        )
                         return 1
 
                     # Exponential backoff
@@ -350,7 +373,11 @@ class BotOrchestrator:
             import traceback
 
             traceback.print_exc()
-            self._emit_metrics(cycle=cycle_count if "cycle_count" in locals() else -1, mode=self.mode, status="fatal_error")
+            self._emit_metrics(
+                cycle=cycle_count if "cycle_count" in locals() else -1,
+                mode=self.mode,
+                status="fatal_error",
+            )
             return 1
 
 
@@ -387,17 +414,49 @@ For more information, see docs/OPERATIONS.md
         help="Trading mode: 'paper' for simulation, 'live' for real trading (default: paper)",
     )
 
-    parser.add_argument("--once", action="store_true", help="Run a single trading cycle and exit")
+    parser.add_argument(
+        "--once", action="store_true", help="Run a single trading cycle and exit"
+    )
 
-    parser.add_argument("--preflight", action="store_true", help="Run preflight checks and exit (no trading)")
+    parser.add_argument(
+        "--preflight",
+        action="store_true",
+        help="Run preflight checks and exit (no trading)",
+    )
 
-    parser.add_argument("--config", type=str, help="Path to configuration file (default: config/config.yaml)")
+    parser.add_argument(
+        "--config",
+        type=str,
+        help="Path to configuration file (default: config/config.yaml)",
+    )
 
-    parser.add_argument("--symbols", type=str, help="Comma-separated list of trading symbols (overrides config)")
-    parser.add_argument("--confirm-live", action="store_true", help="Explicitly confirm launching in --mode live (OR set CONFIRM_LIVE=YES)")
-    parser.add_argument("--force-execution", action="store_true", help="Force execution even if confidence below config threshold")
-    parser.add_argument("--min-confidence", type=float, default=0.0, help="Override minimum confidence required to execute a trade")
-    parser.add_argument("--min-trade-usd", type=float, default=0.0, help="Override minimum trade USD size threshold")
+    parser.add_argument(
+        "--symbols",
+        type=str,
+        help="Comma-separated list of trading symbols (overrides config)",
+    )
+    parser.add_argument(
+        "--confirm-live",
+        action="store_true",
+        help="Explicitly confirm launching in --mode live (OR set CONFIRM_LIVE=YES)",
+    )
+    parser.add_argument(
+        "--force-execution",
+        action="store_true",
+        help="Force execution even if confidence below config threshold",
+    )
+    parser.add_argument(
+        "--min-confidence",
+        type=float,
+        default=0.0,
+        help="Override minimum confidence required to execute a trade",
+    )
+    parser.add_argument(
+        "--min-trade-usd",
+        type=float,
+        default=0.0,
+        help="Override minimum trade USD size threshold",
+    )
     return parser.parse_args()
 
 

@@ -205,7 +205,9 @@ def build_table(
         act = t.get("action", "-")
         price = t.get("price", 0.0)
         act_style = "green" if (act or "").upper() == "BUY" else "red"
-        trades_panel.add_row(Text(f"{ts}  {sym:8}  {act:4}  @ ${price}", style=act_style))
+        trades_panel.add_row(
+            Text(f"{ts}  {sym:8}  {act:4}  @ ${price}", style=act_style)
+        )
 
     # Compose layout
     table.add_row(header)
@@ -220,14 +222,18 @@ def main():
     p.add_argument("--interval", type=float, default=1.0)
     p.add_argument("--cycles", type=int, default=0)
     p.add_argument("--big", action="store_true", help="Emphasize P&L and header")
-    p.add_argument("--delta-up", type=float, default=0.5, help="Percent threshold for 'up' status")
+    p.add_argument(
+        "--delta-up", type=float, default=0.5, help="Percent threshold for 'up' status"
+    )
     p.add_argument(
         "--delta-down",
         type=float,
         default=0.5,
         help="Percent threshold for 'down' status",
     )
-    p.add_argument("--show-arrows", action="store_true", help="Show ▲/▼ next to Current")
+    p.add_argument(
+        "--show-arrows", action="store_true", help="Show ▲/▼ next to Current"
+    )
     p.add_argument(
         "--gradient",
         action="store_true",

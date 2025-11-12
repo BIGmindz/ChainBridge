@@ -38,7 +38,9 @@ def build_exchange() -> "object":
 
     exchange_id = os.getenv("EXCHANGE", "kraken").lower()
     if not hasattr(ccxt, exchange_id):
-        raise SystemExit(f"Unknown exchange id '{exchange_id}' – set EXCHANGE env or .env")
+        raise SystemExit(
+            f"Unknown exchange id '{exchange_id}' – set EXCHANGE env or .env"
+        )
     exchange_cls = getattr(ccxt, exchange_id)
     return exchange_cls({"enableRateLimit": True})
 
@@ -72,11 +74,15 @@ def main() -> None:
     for sym in symbols:
         entry: Dict[str, Any] = {}
         try:
-            entry["buy"] = adapter.preflight_order(sym, "buy", quote_amount, price=None, order_type="market")
+            entry["buy"] = adapter.preflight_order(
+                sym, "buy", quote_amount, price=None, order_type="market"
+            )
         except Exception as e:
             entry["buy_error"] = str(e)
         try:
-            entry["sell"] = adapter.preflight_order(sym, "sell", quote_amount, price=None, order_type="market")
+            entry["sell"] = adapter.preflight_order(
+                sym, "sell", quote_amount, price=None, order_type="market"
+            )
         except Exception as e:
             entry["sell_error"] = str(e)
         report[sym] = entry
