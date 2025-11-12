@@ -362,7 +362,9 @@ class NewListingsRadar:
             print(f"   Position Size: {signal['position_size'] * 100:.1f}%")
             print(f"   Entry: {signal['entry_strategy']['type']}")
             print(f"   Stop Loss: {signal['exit_strategy']['stop_loss'] * 100:.0f}%")
-            print(f"   Take Profit: {signal['exit_strategy']['take_profit_1']['target'] * 100:.0f}%")
+            print(
+                f"   Take Profit: {signal['exit_strategy']['take_profit_1']['target'] * 100:.0f}%"
+            )
             print(f"   Risk Level: {signal['risk_level']}")
 
         return signals
@@ -382,7 +384,9 @@ class NewListingsRadar:
             if np.random.random() > 0.7:
                 # Simulate Kraken listing performance
                 return_pct = np.random.normal(0.30, 0.15)  # 30% avg, 15% std
-                simulated_returns.append(max(return_pct, -0.10))  # Stop loss at -10%  # type: ignore
+                simulated_returns.append(
+                    max(return_pct, -0.10)
+                )  # Stop loss at -10%  # type: ignore
 
             # Coinbase effect (1 per week)
             if np.random.random() > 0.85:
@@ -392,7 +396,9 @@ class NewListingsRadar:
         if simulated_returns:
             total_return = np.sum(simulated_returns)  # type: ignore
             avg_return = np.mean(simulated_returns)
-            win_rate = len([r for r in simulated_returns if r > 0]) / len(simulated_returns)
+            win_rate = len([r for r in simulated_returns if r > 0]) / len(
+                simulated_returns
+            )
 
             print(f"Total Listings Caught: {len(simulated_returns)}")
             print(f"Total Return: {total_return * 100:.1f}%")

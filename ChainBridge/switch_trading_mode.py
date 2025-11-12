@@ -31,7 +31,9 @@ def stop_all_trading_processes():
     for proc_name in processes_to_kill:
         try:
             # Use pkill to kill processes matching the pattern
-            result = subprocess.run(["pkill", "-f", proc_name], capture_output=True, text=True)
+            result = subprocess.run(
+                ["pkill", "-f", proc_name], capture_output=True, text=True
+            )
             if result.returncode == 0:
                 print(f"   ✅ Stopped processes matching: {proc_name}")
                 killed_count += 1

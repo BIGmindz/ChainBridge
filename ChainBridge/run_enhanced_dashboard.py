@@ -21,12 +21,18 @@ def load_config(config_path: str) -> dict:
         return yaml.safe_load(f)
 
 
-def fetch_market_data(exchange_id: str, symbol: str = "BTC/USD", timeframe: str = "1m", limit: int = 100):
+def fetch_market_data(
+    exchange_id: str, symbol: str = "BTC/USD", timeframe: str = "1m", limit: int = 100
+):
     """Fetch real-time market data from exchange."""
     try:
         exchange_class = getattr(ccxt, exchange_id)
         exchange = exchange_class(
-            {"apiKey": os.getenv("API_KEY", "1234"), "secret": os.getenv("API_SECRET", "dummy"), "enableRateLimit": True}
+            {
+                "apiKey": os.getenv("API_KEY", "1234"),
+                "secret": os.getenv("API_SECRET", "dummy"),
+                "enableRateLimit": True,
+            }
         )
 
         # Fetch OHLCV data
@@ -36,7 +42,9 @@ def fetch_market_data(exchange_id: str, symbol: str = "BTC/USD", timeframe: str 
             return pd.DataFrame()
 
         # Convert to DataFrame
-        df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
+        df = pd.DataFrame(
+            ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"]
+        )
         df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")  # type: ignore
         df.set_index("timestamp", inplace=True)
 
@@ -67,21 +75,35 @@ def main():
     dashboard = AnimatedTradingDashboard()
 
     # Set up data callbacks
-    @dashboard.app.callback(Output("main-chart", "figure"), Input("chart-interval", "n_intervals"))
+    @dashboard.app.callback(
+        Output("main-chart", "figure"), Input("chart-interval", "n_intervals")
+    )
     def update_main_chart(n):
-        df = fetch_market_data(os.getenv("EXCHANGE", "kraken"), config["trading"]["symbol"], config["trading"]["timeframe"])
+        df = fetch_market_data(
+            os.getenv("EXCHANGE", "kraken"),
+            config["trading"]["symbol"],
+            config["trading"]["timeframe"],
+        )
         if df is not None:
             return dashboard.update_main_chart(df)
         return {}
 
-    @dashboard.app.callback(Output("indicator-grid", "figure"), Input("indicator-interval", "n_intervals"))
+    @dashboard.app.callback(
+        Output("indicator-grid", "figure"), Input("indicator-interval", "n_intervals")
+    )
     def update_indicators(n):
-        df = fetch_market_data(os.getenv("EXCHANGE", "kraken"), config["trading"]["symbol"], config["trading"]["timeframe"])
+        df = fetch_market_data(
+            os.getenv("EXCHANGE", "kraken"),
+            config["trading"]["symbol"],
+            config["trading"]["timeframe"],
+        )
         if df is not None:
             return dashboard.update_indicator_grid(df)
         return {}
 
-    @dashboard.app.callback(Output("live-clock", "children"), Input("interval-component", "n_intervals"))
+    @dashboard.app.callback(
+        Output("live-clock", "children"), Input("interval-component", "n_intervals")
+    )
     def update_clock(n):
         return f"🕒 {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}"
 

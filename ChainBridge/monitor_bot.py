@@ -44,7 +44,11 @@ def start_bot_if_needed():
             os.chdir(bot_dir)
 
             # Start the bot in background
-            subprocess.Popen([sys.executable, "live_trading_bot.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            subprocess.Popen(
+                [sys.executable, "live_trading_bot.py"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
             time.sleep(3)  # Give it time to start
 
             if check_bot_status():
@@ -68,7 +72,11 @@ def monitor_bot():
 
         # Follow the bot output in real-time
         process = subprocess.Popen(
-            [sys.executable, "live_trading_bot.py"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, bufsize=1
+            [sys.executable, "live_trading_bot.py"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
+            bufsize=1,
         )
 
         # Print output line by line as it comes

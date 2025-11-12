@@ -13,7 +13,12 @@ Tests cover:
 import pytest
 import numpy as np
 import pandas as pd
-from ml_pipeline.ev_thresholding import EVThresholdOptimizer, TradingCosts, ThresholdResult, find_multiple_thresholds
+from ml_pipeline.ev_thresholding import (
+    EVThresholdOptimizer,
+    TradingCosts,
+    ThresholdResult,
+    find_multiple_thresholds,
+)
 
 
 class TestEVThresholdOptimizer:
@@ -53,7 +58,12 @@ class TestEVThresholdOptimizer:
 
     def test_trading_costs(self):
         """Test TradingCosts class."""
-        costs = TradingCosts(commission_pct=0.001, slippage_pct=0.0005, spread_pct=0.0002, market_impact_pct=0.0001)
+        costs = TradingCosts(
+            commission_pct=0.001,
+            slippage_pct=0.0005,
+            spread_pct=0.0002,
+            market_impact_pct=0.0001,
+        )
 
         expected_total = 0.001 + 0.0005 + 0.0002 + 0.0001
         assert costs.total_cost_pct == expected_total
@@ -62,7 +72,9 @@ class TestEVThresholdOptimizer:
         """Test basic threshold optimization."""
         optimizer = EVThresholdOptimizer(min_trades=1)  # Lower threshold for test
 
-        result, curve = optimizer.optimize_threshold(self.y_true, self.y_prob, return_curve=True)
+        result, curve = optimizer.optimize_threshold(
+            self.y_true, self.y_prob, return_curve=True
+        )
 
         assert isinstance(result, ThresholdResult)
         assert 0.1 <= result.threshold <= 0.9
@@ -122,7 +134,9 @@ class TestEVThresholdOptimizer:
         cost_per_trade = optimizer.trading_costs.total_cost_pct * position_size
 
         expected_return_1 = position_size * 0.01 * 1 - cost_per_trade  # Long 1%
-        expected_return_2 = position_size * (-0.005) * (-1) - cost_per_trade  # Short -0.5% (becomes positive)
+        expected_return_2 = (
+            position_size * (-0.005) * (-1) - cost_per_trade
+        )  # Short -0.5% (becomes positive)
         expected_return_3 = position_size * 0.02 * 1 - cost_per_trade  # Long 2%
 
         # Allow small tolerance for floating point
@@ -169,7 +183,9 @@ class TestMultipleThresholds:
 
     def test_find_multiple_thresholds(self):
         """Test finding multiple thresholds."""
-        results = find_multiple_thresholds(self.y_true, self.y_prob, n_thresholds=3, min_trades=1)
+        results = find_multiple_thresholds(
+            self.y_true, self.y_prob, n_thresholds=3, min_trades=1
+        )
 
         assert len(results) <= 3  # May find fewer if some ranges fail
 
@@ -188,7 +204,9 @@ class TestMultipleThresholds:
         small_y_true = pd.Series([0.01, -0.01])
         small_y_prob = pd.Series([0.6, 0.4])
 
-        results = find_multiple_thresholds(small_y_true, small_y_prob, n_thresholds=3, min_trades=1)
+        results = find_multiple_thresholds(
+            small_y_true, small_y_prob, n_thresholds=3, min_trades=1
+        )
 
         # Should still work with small data
         assert len(results) >= 0
@@ -230,11 +248,15 @@ class TestEdgeCases:
         optimizer = EVThresholdOptimizer(min_trades=1)
 
         # Test very high threshold
-        result, _ = optimizer.optimize_threshold(y_true, y_prob, thresholds=np.array([0.95]))
+        result, _ = optimizer.optimize_threshold(
+            y_true, y_prob, thresholds=np.array([0.95])
+        )
         assert result.threshold == 0.95
 
         # Test very low threshold
-        result, _ = optimizer.optimize_threshold(y_true, y_prob, thresholds=np.array([0.05]))
+        result, _ = optimizer.optimize_threshold(
+            y_true, y_prob, thresholds=np.array([0.05])
+        )
         assert result.threshold == 0.05
 
     def test_zero_returns(self):

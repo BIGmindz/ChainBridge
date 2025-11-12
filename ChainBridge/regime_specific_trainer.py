@@ -10,7 +10,9 @@ from utils.feature_hygiene import robust_clip
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, PROJECT_ROOT)
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
+)
 
 
 def get_trading_symbols():
@@ -31,12 +33,18 @@ def get_trading_symbols():
 
 def consolidate_data(data_directory: str, trading_symbols: list) -> pd.DataFrame:
     """Finds and consolidates all valid trade logs into a single DataFrame."""
-    all_files = [os.path.join(data_directory, f) for f in os.listdir(data_directory) if f.endswith(".csv")]
+    all_files = [
+        os.path.join(data_directory, f)
+        for f in os.listdir(data_directory)
+        if f.endswith(".csv")
+    ]
     if not all_files:
         logging.error(f"No historical data files found in '{data_directory}'.")
         return pd.DataFrame()
 
-    logging.info(f"Consolidating {len(all_files)} data files for trading symbols: {trading_symbols}...")
+    logging.info(
+        f"Consolidating {len(all_files)} data files for trading symbols: {trading_symbols}..."
+    )
     # More flexible column requirements - we'll handle missing columns
     df_list = []
 
@@ -44,21 +52,34 @@ def consolidate_data(data_directory: str, trading_symbols: list) -> pd.DataFrame
         try:
             df = pd.read_csv(file)  # type: ignore
             # Standardize column names
-            column_mapping = {"rsi": "rsi_value", "timestamp": "timestamp", "ts_utc": "timestamp", "time": "timestamp"}
+            column_mapping = {
+                "rsi": "rsi_value",
+                "timestamp": "timestamp",
+                "ts_utc": "timestamp",
+                "time": "timestamp",
+            }
             df = df.rename(columns=column_mapping)
 
             # Ensure we have the basic required columns
-            if "timestamp" in df.columns and "symbol" in df.columns and "price" in df.columns:
+            if (
+                "timestamp" in df.columns
+                and "symbol" in df.columns
+                and "price" in df.columns
+            ):
                 # Filter to only include trading symbols
                 df_filtered = df[df["symbol"].isin(trading_symbols)]
                 if not df_filtered.empty:
                     df_list.append(df_filtered)  # type: ignore
-                    logging.info(f"Loaded {len(df_filtered)} rows from {os.path.basename(file)} for trading symbols")
+                    logging.info(
+                        f"Loaded {len(df_filtered)} rows from {os.path.basename(file)} for trading symbols"
+                    )
         except Exception as e:
             logging.warning(f"Could not load {file}: {e}")
 
     if not df_list:
-        logging.error("No valid trade logs could be loaded for the configured trading symbols.")
+        logging.error(
+            "No valid trade logs could be loaded for the configured trading symbols."
+        )
         return pd.DataFrame()
 
     df = pd.concat(df_list, ignore_index=True)  # type: ignore
@@ -71,13 +92,17 @@ def consolidate_data(data_directory: str, trading_symbols: list) -> pd.DataFrame
     return df
 
 
-def train_and_save_model(data: pd.DataFrame, regime_name: str, symbol_name: str, model_dir: str):
+def train_and_save_model(
+    data: pd.DataFrame, regime_name: str, symbol_name: str, model_dir: str
+):
     """Trains a trading model for a specific symbol-regime combination and saves it."""
     model_name = f"{symbol_name}_{regime_name}"
     logging.info(f"--- Training model for '{model_name.upper()}' ---")
 
     if len(data) < 30:  # Reduced minimum samples for symbol-specific models
-        logging.warning(f"Skipping '{model_name}' model: only {len(data)} samples available.")
+        logging.warning(
+            f"Skipping '{model_name}' model: only {len(data)} samples available."
+        )
         return
 
     # Feature Engineering
@@ -86,7 +111,12 @@ def train_and_save_model(data: pd.DataFrame, regime_name: str, symbol_name: str,
     df = df.dropna()
 
     # Use only available features
-    available_features = ["rsi_value", "ob_imbalance", "vol_imbalance", "price_change_pct"]
+    available_features = [
+        "rsi_value",
+        "ob_imbalance",
+        "vol_imbalance",
+        "price_change_pct",
+    ]
     features = [f for f in available_features if f in df.columns]
 
     if not features:
@@ -104,11 +134,15 @@ def train_and_save_model(data: pd.DataFrame, regime_name: str, symbol_name: str,
     # Scale features using robust clipping instead of StandardScaler
     X_scaled = robust_clip(pd.DataFrame(X)).values
 
-    model = LGBMClassifier(random_state=42, n_estimators=50)  # Smaller model for symbol-specific
+    model = LGBMClassifier(
+        random_state=42, n_estimators=50
+    )  # Smaller model for symbol-specific
     model.fit(X_scaled, y)
 
     accuracy = model.score(X_scaled, y)
-    logging.info(f"'{model_name.upper()}' model trained on {len(df)} samples. Accuracy: {accuracy:.2%}")
+    logging.info(
+        f"'{model_name.upper()}' model trained on {len(df)} samples. Accuracy: {accuracy:.2%}"
+    )
 
     # Save the trained model (no scaler needed with robust_clip)
     model_path = os.path.join(model_dir, f"model_{model_name}.pkl")
@@ -126,9 +160,13 @@ def main():
 
     # 1. Load the master regime detection model
     try:
-        regime_model_dict = joblib.load(os.path.join(model_dir, "regime_detection_model.pkl"))
+        regime_model_dict = joblib.load(
+            os.path.join(model_dir, "regime_detection_model.pkl")
+        )
         regime_model = regime_model_dict["model"]  # Extract the actual model
-        label_encoder = regime_model_dict.get("label_encoder")  # Get label encoder if available
+        label_encoder = regime_model_dict.get(
+            "label_encoder"
+        )  # Get label encoder if available
         logging.info("✅ Loaded regime detection model")
     except FileNotFoundError:
         logging.error("FATAL: Regime detection model not found. Please train it first.")
@@ -176,7 +214,10 @@ def main():
     for feature in regime_features:
         if feature in historical_df.columns:
             regime_df[feature] = historical_df[feature]
-        elif feature in column_mapping and column_mapping[feature] in historical_df.columns:
+        elif (
+            feature in column_mapping
+            and column_mapping[feature] in historical_df.columns
+        ):
             regime_df[feature] = historical_df[column_mapping[feature]]
         else:
             # Fill missing features with reasonable defaults
@@ -210,11 +251,15 @@ def main():
 
         # Decode numeric predictions back to string labels if encoder is available
         if label_encoder is not None:
-            predicted_regimes = label_encoder.inverse_transform(predicted_regimes_numeric)
+            predicted_regimes = label_encoder.inverse_transform(
+                predicted_regimes_numeric
+            )
         else:
             # Fallback: map numeric predictions to string labels
             regime_map = {0: "bear", 1: "bull", 2: "sideways"}
-            predicted_regimes = [regime_map.get(int(p), "sideways") for p in predicted_regimes_numeric]
+            predicted_regimes = [
+                regime_map.get(int(p), "sideways") for p in predicted_regimes_numeric
+            ]
 
         historical_df["regime"] = predicted_regimes
         logging.info("✅ Successfully predicted market regimes")
@@ -241,10 +286,16 @@ def main():
                 train_and_save_model(regime_symbol_data, regime_name, symbol, model_dir)
                 trained_models += 1
 
-    logging.info(f"✅ Training complete! Created {trained_models} symbol-specific models")
+    logging.info(
+        f"✅ Training complete! Created {trained_models} symbol-specific models"
+    )
 
     # Create a summary of available models
-    model_files = [f for f in os.listdir(model_dir) if f.startswith("model_") and f.endswith(".pkl")]
+    model_files = [
+        f
+        for f in os.listdir(model_dir)
+        if f.startswith("model_") and f.endswith(".pkl")
+    ]
     logging.info(f"Available models: {len(model_files)}")
     for model_file in sorted(model_files):
         model_name = model_file.replace("model_", "").replace(".pkl", "")

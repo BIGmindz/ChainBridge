@@ -46,8 +46,12 @@ class SentimentAnalysisModule(Module):
                 "btc_exchange_netflow": 0.25,
             }
         )
-        self.sentiment_threshold_strong = config.get("sentiment_threshold_strong", 0.7) if config else 0.7
-        self.sentiment_threshold_moderate = config.get("sentiment_threshold_moderate", 0.4) if config else 0.4
+        self.sentiment_threshold_strong = (
+            config.get("sentiment_threshold_strong", 0.7) if config else 0.7
+        )
+        self.sentiment_threshold_moderate = (
+            config.get("sentiment_threshold_moderate", 0.4) if config else 0.4
+        )
 
     def get_schema(self) -> Dict[str, Any]:
         return {
@@ -130,15 +134,25 @@ class SentimentAnalysisModule(Module):
 
                 # Normalize based on data type
                 if "fear_greed_index" in source:
-                    normalized_score = self.normalize_sentiment_score(raw_value, "fear_greed_index")
+                    normalized_score = self.normalize_sentiment_score(
+                        raw_value, "fear_greed_index"
+                    )
                 elif "regulatory" in source:
-                    normalized_score = self.normalize_sentiment_score(raw_value, "regulatory_score")
+                    normalized_score = self.normalize_sentiment_score(
+                        raw_value, "regulatory_score"
+                    )
                 elif "netflow" in source:
-                    normalized_score = self.normalize_sentiment_score(raw_value, "exchange_netflow")
+                    normalized_score = self.normalize_sentiment_score(
+                        raw_value, "exchange_netflow"
+                    )
                 elif "sentiment" in source:
-                    normalized_score = self.normalize_sentiment_score(raw_value, "social_sentiment")
+                    normalized_score = self.normalize_sentiment_score(
+                        raw_value, "social_sentiment"
+                    )
                 else:
-                    normalized_score = self.normalize_sentiment_score(raw_value, "default")
+                    normalized_score = self.normalize_sentiment_score(
+                        raw_value, "default"
+                    )
 
                 individual_scores[source] = normalized_score
                 weighted_sum += normalized_score * weight
@@ -149,7 +163,9 @@ class SentimentAnalysisModule(Module):
 
         return composite_score, individual_scores
 
-    def categorize_sentiment_factors(self, individual_scores: Dict[str, float]) -> Dict[str, List]:
+    def categorize_sentiment_factors(
+        self, individual_scores: Dict[str, float]
+    ) -> Dict[str, List]:
         """
         Categorize sentiment factors into bullish, bearish, and neutral.
 
@@ -189,7 +205,9 @@ class SentimentAnalysisModule(Module):
             "neutral_factors": neutral_factors,
         }
 
-    def identify_dominant_factors(self, individual_scores: Dict[str, float], top_n: int = 3) -> List[Dict]:
+    def identify_dominant_factors(
+        self, individual_scores: Dict[str, float], top_n: int = 3
+    ) -> List[Dict]:
         """
         Identify the most influential sentiment factors.
 
@@ -197,12 +215,16 @@ class SentimentAnalysisModule(Module):
             List of dominant factors sorted by absolute impact
         """
         # Sort by absolute score value
-        sorted_factors = sorted(individual_scores.items(), key=lambda x: abs(x[1]), reverse=True)
+        sorted_factors = sorted(
+            individual_scores.items(), key=lambda x: abs(x[1]), reverse=True
+        )
 
         dominant_factors = []
         for source, score in sorted_factors[:top_n]:
             display_name = source.replace("_", " ").title()
-            impact_direction = "BULLISH" if score > 0 else "BEARISH" if score < 0 else "NEUTRAL"
+            impact_direction = (
+                "BULLISH" if score > 0 else "BEARISH" if score < 0 else "NEUTRAL"
+            )
 
             dominant_factors.append(  # type: ignore
                 {
@@ -253,14 +275,17 @@ class SentimentAnalysisModule(Module):
             [
                 score
                 for score in individual_scores.values()
-                if (score > 0.2 and composite_score > 0) or (score < -0.2 and composite_score < 0)
+                if (score > 0.2 and composite_score > 0)
+                or (score < -0.2 and composite_score < 0)
             ]
         )
         total_factors = len(individual_scores)
 
         if total_factors > 0:
             consensus_ratio = consensus_factors / total_factors
-            confidence *= 0.5 + (consensus_ratio * 0.5)  # Boost confidence with consensus
+            confidence *= 0.5 + (
+                consensus_ratio * 0.5
+            )  # Boost confidence with consensus
 
         # Price-sentiment divergence analysis (if price data provided)
         if current_price is not None and price_trend is not None:
@@ -322,7 +347,9 @@ class SentimentAnalysisModule(Module):
             price_trend = data.get("price_trend")
 
             # Calculate composite sentiment
-            composite_score, individual_scores = self.calculate_composite_sentiment(alternative_data, sentiment_weights)
+            composite_score, individual_scores = self.calculate_composite_sentiment(
+                alternative_data, sentiment_weights
+            )
 
             # Categorize sentiment factors
             sentiment_factors = self.categorize_sentiment_factors(individual_scores)
@@ -331,7 +358,9 @@ class SentimentAnalysisModule(Module):
             dominant_factors = self.identify_dominant_factors(individual_scores)
 
             # Generate signal
-            signal, confidence, sentiment_strength = self.generate_signal(composite_score, individual_scores, current_price, price_trend)
+            signal, confidence, sentiment_strength = self.generate_signal(
+                composite_score, individual_scores, current_price, price_trend
+            )
 
             result = {
                 "composite_sentiment_score": composite_score,
@@ -343,11 +372,19 @@ class SentimentAnalysisModule(Module):
                 "sentiment_analysis": sentiment_factors,
                 "raw_data": alternative_data,
                 "sentiment_interpretation": {
-                    "overall_sentiment": ("BULLISH" if composite_score > 0.1 else "BEARISH" if composite_score < -0.1 else "NEUTRAL"),
+                    "overall_sentiment": (
+                        "BULLISH"
+                        if composite_score > 0.1
+                        else "BEARISH" if composite_score < -0.1 else "NEUTRAL"
+                    ),
                     "sentiment_magnitude": abs(composite_score),
-                    "market_conditions": self._interpret_market_conditions(individual_scores),
+                    "market_conditions": self._interpret_market_conditions(
+                        individual_scores
+                    ),
                     "risk_factors": self._identify_risk_factors(individual_scores),
-                    "opportunity_factors": self._identify_opportunity_factors(individual_scores),
+                    "opportunity_factors": self._identify_opportunity_factors(
+                        individual_scores
+                    ),
                 },
                 "metadata": {
                     "data_sources_used": len(individual_scores),
@@ -369,7 +406,10 @@ class SentimentAnalysisModule(Module):
     def _interpret_market_conditions(self, individual_scores: Dict[str, float]) -> str:
         """Interpret overall market conditions from individual sentiment scores."""
         fear_greed = individual_scores.get("market_fear_greed_index", 0)
-        regulatory_avg = (individual_scores.get("brazil_regulatory_score", 0) + individual_scores.get("india_regulatory_score", 0)) / 2
+        regulatory_avg = (
+            individual_scores.get("brazil_regulatory_score", 0)
+            + individual_scores.get("india_regulatory_score", 0)
+        ) / 2
 
         if fear_greed > 0.5 and regulatory_avg > 0:
             return "OPTIMISTIC"
@@ -400,7 +440,9 @@ class SentimentAnalysisModule(Module):
 
         return risk_factors
 
-    def _identify_opportunity_factors(self, individual_scores: Dict[str, float]) -> List[str]:
+    def _identify_opportunity_factors(
+        self, individual_scores: Dict[str, float]
+    ) -> List[str]:
         """Identify current opportunity factors from sentiment data."""
         opportunity_factors = []
 
@@ -414,7 +456,8 @@ class SentimentAnalysisModule(Module):
             opportunity_factors.append("BTC accumulation - reduced selling pressure")  # type: ignore
 
         regulatory_sentiment = (
-            individual_scores.get("brazil_regulatory_score", 0) + individual_scores.get("india_regulatory_score", 0)
+            individual_scores.get("brazil_regulatory_score", 0)
+            + individual_scores.get("india_regulatory_score", 0)
         ) / 2
 
         if regulatory_sentiment > 0.3:
@@ -443,9 +486,13 @@ class SentimentAnalysisModule(Module):
 
         # Generate mock sentiment data if not provided
         if sentiment_data_history is None:
-            sentiment_data_history = self._generate_mock_sentiment_history(len(historical_data))
+            sentiment_data_history = self._generate_mock_sentiment_history(
+                len(historical_data)
+            )
 
-        for i, (price_data, sentiment_data) in enumerate(zip(historical_data, sentiment_data_history)):
+        for i, (price_data, sentiment_data) in enumerate(
+            zip(historical_data, sentiment_data_history)
+        ):
             if i == 0:
                 continue  # Skip first entry
 
@@ -496,18 +543,27 @@ class SentimentAnalysisModule(Module):
                     position = 0
 
         # Calculate final portfolio value
-        final_price = historical_data[-1]["close"] if "close" in historical_data[-1] else historical_data[-1]["price"]
+        final_price = (
+            historical_data[-1]["close"]
+            if "close" in historical_data[-1]
+            else historical_data[-1]["price"]
+        )
         final_value = balance + (position * final_price)
 
         return {
             "initial_balance": initial_balance,
             "final_value": final_value,
             "total_return": final_value - initial_balance,
-            "return_percentage": ((final_value - initial_balance) / initial_balance) * 100,
+            "return_percentage": ((final_value - initial_balance) / initial_balance)
+            * 100,
             "total_trades": len(trades),
             "total_signals": len(signals_history),
-            "sentiment_driven_trades": len([t for t in trades if abs(t.get("sentiment_score", 0)) > 0.3]),
-            "high_confidence_trades": len([t for t in trades if t.get("confidence", 0) > 0.7]),
+            "sentiment_driven_trades": len(
+                [t for t in trades if abs(t.get("sentiment_score", 0)) > 0.3]
+            ),
+            "high_confidence_trades": len(
+                [t for t in trades if t.get("confidence", 0) > 0.7]
+            ),
             "signal_accuracy": self._calculate_signal_accuracy(
                 signals_history,
                 [p["close"] if "close" in p else p["price"] for p in historical_data],
@@ -528,16 +584,24 @@ class SentimentAnalysisModule(Module):
 
             sentiment_data = {
                 "trump_sentiment_score": max(-1, min(1, base_sentiment + noise)),
-                "market_fear_greed_index": max(0, min(100, 50 + (base_sentiment + noise) * 30)),
-                "brazil_regulatory_score": max(-1, min(1, base_sentiment * 0.5 + random.uniform(-0.2, 0.2))),
-                "india_regulatory_score": max(-1, min(1, base_sentiment * 0.3 + random.uniform(-0.2, 0.2))),
+                "market_fear_greed_index": max(
+                    0, min(100, 50 + (base_sentiment + noise) * 30)
+                ),
+                "brazil_regulatory_score": max(
+                    -1, min(1, base_sentiment * 0.5 + random.uniform(-0.2, 0.2))
+                ),
+                "india_regulatory_score": max(
+                    -1, min(1, base_sentiment * 0.3 + random.uniform(-0.2, 0.2))
+                ),
                 "btc_exchange_netflow": random.uniform(-5000, 5000),
             }
             sentiment_history.append(sentiment_data)  # type: ignore
 
         return sentiment_history
 
-    def _calculate_signal_accuracy(self, signals_history: List[Dict], prices: List[float]) -> float:
+    def _calculate_signal_accuracy(
+        self, signals_history: List[Dict], prices: List[float]
+    ) -> float:
         """Calculate the accuracy of signals based on price movement after signal."""
         if len(signals_history) < 2:
             return 0.0
@@ -552,7 +616,9 @@ class SentimentAnalysisModule(Module):
             if signal_data["signal"] in ["BUY", "SELL"]:
                 total_actionable_signals += 1
                 current_price = prices[i]
-                future_price = prices[min(i + 5, len(prices) - 1)]  # Look 5 periods ahead
+                future_price = prices[
+                    min(i + 5, len(prices) - 1)
+                ]  # Look 5 periods ahead
                 price_change = future_price - current_price
 
                 if signal_data["signal"] == "BUY" and price_change > 0:
@@ -560,4 +626,8 @@ class SentimentAnalysisModule(Module):
                 elif signal_data["signal"] == "SELL" and price_change < 0:
                     correct_signals += 1
 
-        return correct_signals / total_actionable_signals if total_actionable_signals > 0 else 0.0
+        return (
+            correct_signals / total_actionable_signals
+            if total_actionable_signals > 0
+            else 0.0
+        )

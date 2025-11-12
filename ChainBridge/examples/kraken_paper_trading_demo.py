@@ -148,12 +148,16 @@ async def demo_basic_paper_trading():
     print("\n📊 Updated Performance Dashboard:")
     dashboard = bot.get_performance_dashboard()
     print(f"   Portfolio Value: ${dashboard['account']['portfolio_value']:,.2f}")
-    print(f"   Total Return: ${dashboard['account']['total_return']:,.2f} ({dashboard['account']['total_return_pct']:+.2f}%)")
+    print(
+        f"   Total Return: ${dashboard['account']['total_return']:,.2f} ({dashboard['account']['total_return_pct']:+.2f}%)"
+    )
 
     # Show position details
     print("\n💼 Position Details:")
     for pos_info in dashboard["positions"]["active_positions"]:
-        print(f"   {pos_info['symbol']} {pos_info['side']}: P&L ${pos_info['pnl']:+,.2f} ({pos_info['pnl_pct']:+.2f}%)")
+        print(
+            f"   {pos_info['symbol']} {pos_info['side']}: P&L ${pos_info['pnl']:+,.2f} ({pos_info['pnl_pct']:+.2f}%)"
+        )
 
     # Close positions
     print("\n🔄 Closing positions...")
@@ -161,7 +165,9 @@ async def demo_basic_paper_trading():
         close_result = bot.close_position(position_id, "DEMO_END")
         if close_result["success"]:
             position = close_result["position"]
-            print(f"✅ Closed {position.symbol}: P&L ${position.pnl:+.2f} ({position.pnl_pct * 100:+.2f}%)")
+            print(
+                f"✅ Closed {position.symbol}: P&L ${position.pnl:+.2f} ({position.pnl_pct * 100:+.2f}%)"
+            )
 
     # Export trade journal
     journal_path = bot.export_trade_journal()
@@ -208,7 +214,9 @@ async def demo_ml_integration():
 
         print("✅ ML Trading System initialized")
         print(f"💰 Capital: ${bot.budget_manager.initial_capital:,.2f}")
-        print(f"🤖 ML Confidence Threshold: {config['ml_integration']['confidence_threshold']}")
+        print(
+            f"🤖 ML Confidence Threshold: {config['ml_integration']['confidence_threshold']}"
+        )
 
         # Set up mock price data
         symbols = config["symbols"]
@@ -244,10 +252,14 @@ async def demo_ml_integration():
             for symbol, result in results.items():
                 if "decision" in result:
                     decision = result["decision"]
-                    print(f"{symbol}: {decision['action']} (confidence: {decision['confidence']:.2f})")
+                    print(
+                        f"{symbol}: {decision['action']} (confidence: {decision['confidence']:.2f})"
+                    )
 
                     if "execution" in result and result["execution"].get("success"):
-                        print(f"  ✅ Trade executed: Position {result['execution']['position_id']}")
+                        print(
+                            f"  ✅ Trade executed: Position {result['execution']['position_id']}"
+                        )
                 elif "error" in result:
                     print(f"{symbol}: ❌ Error - {result['error']}")
 
@@ -271,7 +283,9 @@ async def demo_ml_integration():
                 bot._update_positions_pnl(symbol, new_price)
 
                 if abs(change_pct) > 0.01:  # Only log significant moves
-                    print(f"  📈 {symbol}: ${old_price:,.2f} → ${new_price:,.2f} ({change_pct * 100:+.1f}%)")
+                    print(
+                        f"  📈 {symbol}: ${old_price:,.2f} → ${new_price:,.2f} ({change_pct * 100:+.1f}%)"
+                    )
 
         # Final performance report
         print("\n📈 FINAL PERFORMANCE REPORT")
@@ -283,7 +297,9 @@ async def demo_ml_integration():
 
         print(f"Initial Capital: ${account['initial_capital']:,.2f}")
         print(f"Final Portfolio: ${account['portfolio_value']:,.2f}")
-        print(f"Total Return: ${account['total_return']:+,.2f} ({account['total_return_pct']:+.2f}%)")
+        print(
+            f"Total Return: ${account['total_return']:+,.2f} ({account['total_return_pct']:+.2f}%)"
+        )
         print(f"Total Trades: {performance['total_trades']}")
         print(f"Win Rate: {performance['win_rate']:.1f}%")
 
@@ -395,8 +411,12 @@ async def demo_risk_management():
 
     print("✅ Risk Management Demo initialized")
     print(f"💰 Capital: ${bot.budget_manager.initial_capital:,.2f}")
-    print(f"⚠️  Max Drawdown Limit: {config['risk_management']['max_drawdown_limit'] * 100}%")
-    print(f"📏 Max Position Size: {config['risk_management']['max_position_size'] * 100}%")
+    print(
+        f"⚠️  Max Drawdown Limit: {config['risk_management']['max_drawdown_limit'] * 100}%"
+    )
+    print(
+        f"📏 Max Position Size: {config['risk_management']['max_position_size'] * 100}%"
+    )
 
     # Set initial prices
     bot.price_data["BTC/USD"] = type(
@@ -434,28 +454,44 @@ async def demo_risk_management():
     print("\n🔄 Testing correlation-based position sizing...")
 
     # Open first BTC position (should get full size)
-    btc1_result = bot.open_position("BTC/USD", "BUY", 0.8, 0.04, tags=["risk_demo", "first_btc"])
+    btc1_result = bot.open_position(
+        "BTC/USD", "BUY", 0.8, 0.04, tags=["risk_demo", "first_btc"]
+    )
     if btc1_result["success"]:
         position1 = btc1_result["position"]
-        print(f"✅ First BTC position: ${position1.entry_price * position1.quantity:,.2f}")
+        print(
+            f"✅ First BTC position: ${position1.entry_price * position1.quantity:,.2f}"
+        )
 
     # Try to open second BTC position (should get reduced size due to correlation)
-    btc2_result = bot.open_position("BTC/USD", "BUY", 0.8, 0.04, tags=["risk_demo", "second_btc"])
+    btc2_result = bot.open_position(
+        "BTC/USD", "BUY", 0.8, 0.04, tags=["risk_demo", "second_btc"]
+    )
     if btc2_result["success"]:
         position2 = btc2_result["position"]
-        print(f"✅ Second BTC position: ${position2.entry_price * position2.quantity:,.2f} (correlation-adjusted)")
+        print(
+            f"✅ Second BTC position: ${position2.entry_price * position2.quantity:,.2f} (correlation-adjusted)"
+        )
     else:
-        print(f"❌ Second BTC position rejected: {btc2_result.get('error', 'Unknown error')}")
+        print(
+            f"❌ Second BTC position rejected: {btc2_result.get('error', 'Unknown error')}"
+        )
 
     # Open ETH position (different asset class)
-    eth_result = bot.open_position("ETH/USD", "BUY", 0.75, 0.05, tags=["risk_demo", "eth"])
+    eth_result = bot.open_position(
+        "ETH/USD", "BUY", 0.75, 0.05, tags=["risk_demo", "eth"]
+    )
     if eth_result["success"]:
         position_eth = eth_result["position"]
-        print(f"✅ ETH position: ${position_eth.entry_price * position_eth.quantity:,.2f}")
+        print(
+            f"✅ ETH position: ${position_eth.entry_price * position_eth.quantity:,.2f}"
+        )
 
     # Show diversification score
     dashboard = bot.get_performance_dashboard()
-    print(f"📊 Diversification Score: {dashboard['risk_metrics']['diversification_score']:.2f}")
+    print(
+        f"📊 Diversification Score: {dashboard['risk_metrics']['diversification_score']:.2f}"
+    )
 
     # Simulate market crash to test drawdown limits
     print("\n💥 Simulating market crash...")
@@ -478,7 +514,9 @@ async def demo_risk_management():
     current_drawdown = dashboard["account"]["total_return_pct"] / 100
 
     print(f"⚠️  Current Drawdown: {current_drawdown:.2%}")
-    print(f"🛑 Max Drawdown Limit: {config['risk_management']['max_drawdown_limit']:.2%}")
+    print(
+        f"🛑 Max Drawdown Limit: {config['risk_management']['max_drawdown_limit']:.2%}"
+    )
 
     if abs(current_drawdown) > config["risk_management"]["max_drawdown_limit"]:
         print("🚨 DRAWDOWN LIMIT EXCEEDED - EMERGENCY STOP TRIGGERED")
@@ -491,7 +529,9 @@ async def demo_risk_management():
     print(f"   Portfolio Value: ${dashboard['account']['portfolio_value']:,.2f}")
     print(f"   Total Return: {dashboard['account']['total_return_pct']:+.2f}%")
     print(f"   Max Drawdown: {dashboard['performance']['max_drawdown']:.2%}")
-    print(f"   Risk Exposure: ${dashboard['risk_metrics']['current_risk_exposure']:,.2f}")
+    print(
+        f"   Risk Exposure: ${dashboard['risk_metrics']['current_risk_exposure']:,.2f}"
+    )
 
     return bot
 
@@ -507,7 +547,9 @@ async def main():
         default="all",
         help="Which demo to run",
     )
-    parser.add_argument("--duration", type=int, default=5, help="Demo duration in minutes")
+    parser.add_argument(
+        "--duration", type=int, default=5, help="Demo duration in minutes"
+    )
 
     args = parser.parse_args()
 

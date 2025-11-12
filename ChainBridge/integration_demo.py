@@ -50,7 +50,9 @@ class EnhancedRegimeIntegration:
                     logger.info("✅ Enhanced regime model loaded and available")
                     return True
                 else:
-                    logger.warning("⚠️  Failed to load enhanced model, falling back to original")
+                    logger.warning(
+                        "⚠️  Failed to load enhanced model, falling back to original"
+                    )
                     return False
             else:
                 logger.info("ℹ️  Enhanced model not found, using original controller")
@@ -80,7 +82,9 @@ class EnhancedRegimeIntegration:
         if self.enhanced_available:
             # Try enhanced model first
             try:
-                enhanced_result = self.enhanced_loader.predict_regime(market_features, "enhanced")
+                enhanced_result = self.enhanced_loader.predict_regime(
+                    market_features, "enhanced"
+                )
                 result.update(
                     {
                         "regime": enhanced_result["regime"],
@@ -98,7 +102,9 @@ class EnhancedRegimeIntegration:
                 if len(self.regime_history) > 100:
                     self.regime_history = self.regime_history[-100:]
 
-                logger.info(f"🎯 Enhanced regime: {result['regime']} (confidence: {result['confidence']:.3f})")
+                logger.info(
+                    f"🎯 Enhanced regime: {result['regime']} (confidence: {result['confidence']:.3f})"
+                )
                 return result
 
             except Exception as e:
@@ -120,14 +126,26 @@ class EnhancedRegimeIntegration:
             else:
                 # Final fallback
                 fallback_regime = self._fallback_regime_detection(market_features)
-                result.update({"regime": fallback_regime, "confidence": 0.3, "source": "fallback_rules"})
+                result.update(
+                    {
+                        "regime": fallback_regime,
+                        "confidence": 0.3,
+                        "source": "fallback_rules",
+                    }
+                )
                 logger.info(f"🔄 Fallback regime: {fallback_regime}")
 
         except Exception as e:
             logger.error(f"Original controller failed: {e}")
             # Use simple fallback
             fallback_regime = self._fallback_regime_detection(market_features)
-            result.update({"regime": fallback_regime, "confidence": 0.3, "source": "fallback_rules"})
+            result.update(
+                {
+                    "regime": fallback_regime,
+                    "confidence": 0.3,
+                    "source": "fallback_rules",
+                }
+            )
 
         return result
 
@@ -256,7 +274,9 @@ class EnhancedRegimeIntegration:
             "current_regime": self.current_regime,
             "regime_strength": self.get_regime_strength(),
             "history_length": len(self.regime_history),
-            "last_update": self.regime_history[-1]["timestamp"] if self.regime_history else None,
+            "last_update": (
+                self.regime_history[-1]["timestamp"] if self.regime_history else None
+            ),
         }
 
 
@@ -298,7 +318,9 @@ def demonstrate_integration():
         print(f"   Source: {regime_result['source']}")
 
         # Get strategy adjustments
-        strategy_params = integration.adapt_strategy_for_regime(regime_result["regime"], regime_result["confidence"])
+        strategy_params = integration.adapt_strategy_for_regime(
+            regime_result["regime"], regime_result["confidence"]
+        )
 
         print("   Strategy Adjustments:")
         print(f"     Position Size: {strategy_params['position_size_multiplier']:.2f}x")

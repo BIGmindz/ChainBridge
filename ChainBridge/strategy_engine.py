@@ -10,7 +10,9 @@ import argparse
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, PROJECT_ROOT)
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
+)
 
 
 def detect_market_regime():
@@ -70,7 +72,9 @@ def get_strategy_for_regime_and_symbol(regime: str, symbol: str) -> dict:
     Selects the appropriate model and configuration for the detected regime and symbol.
     Now supports ensemble strategies that combine multiple models.
     """
-    logging.info(f"Selecting strategy for '{regime.upper()}' regime and '{symbol}' symbol...")
+    logging.info(
+        f"Selecting strategy for '{regime.upper()}' regime and '{symbol}' symbol..."
+    )
 
     # Check if ensemble_voting strategy exists and is configured
     ensemble_config_path = "strategies/ensemble_voting/config.yaml"
@@ -80,7 +84,9 @@ def get_strategy_for_regime_and_symbol(regime: str, symbol: str) -> dict:
                 ensemble_config = yaml.safe_load(f)
 
             if ensemble_config.get("ensemble"):
-                logging.info("🎯 Ensemble strategy detected! Loading multiple models for voting...")
+                logging.info(
+                    "🎯 Ensemble strategy detected! Loading multiple models for voting..."
+                )
                 return prepare_ensemble_strategy(ensemble_config, regime, symbol)
         except Exception as e:
             logging.warning(f"Failed to load ensemble config: {e}")
@@ -120,7 +126,9 @@ def prepare_ensemble_strategy(ensemble_config: dict, regime: str, symbol: str) -
             logging.warning(f"   ⚠️  Model not found for: {strategy_name}")
 
     if not model_paths:
-        logging.error("❌ No models found for ensemble! Falling back to standard strategy.")
+        logging.error(
+            "❌ No models found for ensemble! Falling back to standard strategy."
+        )
         return get_standard_strategy(regime, symbol)
 
     # Return ensemble configuration
@@ -185,7 +193,12 @@ def main():
     The master controller for the trading bot.
     """
     parser = argparse.ArgumentParser(description="Trading Strategy Engine")
-    parser.add_argument("--symbol", type=str, default="BTC/USD", help="Trading symbol to use for strategy selection (default: BTC/USD)")
+    parser.add_argument(
+        "--symbol",
+        type=str,
+        default="BTC/USD",
+        help="Trading symbol to use for strategy selection (default: BTC/USD)",
+    )
     args = parser.parse_args()
 
     regime = detect_market_regime()
@@ -220,7 +233,11 @@ def main():
         env["BENSON_IS_ENSEMBLE"] = "false"
 
     # Try different possible main bot scripts
-    possible_scripts = ["apps/hypertrader/kraken_hypertrade_test.py", "multi_signal_bot.py", "benson_rsi_bot.py"]
+    possible_scripts = [
+        "apps/hypertrader/kraken_hypertrade_test.py",
+        "multi_signal_bot.py",
+        "benson_rsi_bot.py",
+    ]
 
     main_bot_script = None
     for script in possible_scripts:
@@ -238,9 +255,13 @@ def main():
         try:
             subprocess.run([sys.executable, main_bot_script], check=True, env=env)
         except FileNotFoundError:
-            logging.error(f"FATAL: The main trading script was not found at '{main_bot_script}'.")
+            logging.error(
+                f"FATAL: The main trading script was not found at '{main_bot_script}'."
+            )
         except subprocess.CalledProcessError as e:
-            logging.error(f"The trading bot exited with an error (code {e.returncode}).")
+            logging.error(
+                f"The trading bot exited with an error (code {e.returncode})."
+            )
     else:
         logging.error("No suitable trading bot script found!")
         logging.info("Available scripts to check:")

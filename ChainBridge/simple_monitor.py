@@ -100,7 +100,12 @@ def main():
             rsi = 45.0  # Mock RSI - would need real calculation
 
             # Calculate P&L
-            pnl, pnl_pct = calculate_pnl(position["entry_price"], current_price, position["quantity"], position["side"])
+            pnl, pnl_pct = calculate_pnl(
+                position["entry_price"],
+                current_price,
+                position["quantity"],
+                position["side"],
+            )
 
             print(f"📊 SYMBOL: {symbol}")
             print(f"💰 CURRENT PRICE: ${current_price:.4f}")

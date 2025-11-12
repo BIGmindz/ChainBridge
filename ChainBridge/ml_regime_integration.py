@@ -125,7 +125,9 @@ class MLRegimeIntegration:
             logger.info(f"✅ Loaded adaptive config for {detected_regime} regime")
             return adaptive_config
         else:
-            logger.warning(f"No specific config for {detected_regime}, using base config")
+            logger.warning(
+                f"No specific config for {detected_regime}, using base config"
+            )
             return self.base_config
 
     def _merge_configs(self, base_config, regime_config):
@@ -135,7 +137,11 @@ class MLRegimeIntegration:
         # Deep merge regime config into base config
         def deep_merge(base, update):
             for key, value in update.items():
-                if isinstance(value, dict) and key in base and isinstance(base[key], dict):
+                if (
+                    isinstance(value, dict)
+                    and key in base
+                    and isinstance(base[key], dict)
+                ):
                     deep_merge(base[key], value)
                 else:
                     base[key] = value
@@ -156,7 +162,9 @@ class MLRegimeIntegration:
         """Get current regime detection status"""
         return {
             "current_regime": self.current_regime,
-            "last_check": self.last_regime_check.isoformat() if self.last_regime_check else None,
+            "last_check": (
+                self.last_regime_check.isoformat() if self.last_regime_check else None
+            ),
             "should_recheck": self.should_recheck_regime(),
         }
 
@@ -203,7 +211,9 @@ def demo_integration():
     # Show regime-specific settings
     if "rsi" in config:
         print(f"📈 RSI Buy Threshold: {config['rsi'].get('buy_threshold', 'default')}")
-        print(f"📉 RSI Sell Threshold: {config['rsi'].get('sell_threshold', 'default')}")
+        print(
+            f"📉 RSI Sell Threshold: {config['rsi'].get('sell_threshold', 'default')}"
+        )
 
     # Show status
     status = integration.get_regime_status()

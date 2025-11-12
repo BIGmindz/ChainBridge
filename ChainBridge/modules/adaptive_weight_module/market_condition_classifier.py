@@ -27,7 +27,9 @@ try:
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
-    print("scikit-learn not available. Market condition classifier will use fallback methods.")
+    print(
+        "scikit-learn not available. Market condition classifier will use fallback methods."
+    )
 
 
 class MarketConditionClassifier:
@@ -75,7 +77,9 @@ class MarketConditionClassifier:
         self.trend_thresh = self.config.get("trend_threshold", 0.005)
 
         # Model storage
-        self.model_dir = os.path.join(self.config.get("model_dir", "models"), "market_regime_classifier")
+        self.model_dir = os.path.join(
+            self.config.get("model_dir", "models"), "market_regime_classifier"
+        )
         os.makedirs(self.model_dir, exist_ok=True)
 
         # Initialize models
@@ -105,7 +109,9 @@ class MarketConditionClassifier:
 
     def _build_new_model(self) -> None:
         """Build a new K-means clustering model for market regimes"""
-        self.kmeans_model = KMeans(n_clusters=self.n_regimes, random_state=42, n_init=10)
+        self.kmeans_model = KMeans(
+            n_clusters=self.n_regimes, random_state=42, n_init=10
+        )
 
         # Default cluster-to-regime mapping
         # Will be refined during training/calibration
@@ -132,7 +138,9 @@ class MarketConditionClassifier:
         )
 
         # Set cluster centers directly
-        self.kmeans_model.cluster_centers_ = np.array(model_data.get("cluster_centers", []))
+        self.kmeans_model.cluster_centers_ = np.array(
+            model_data.get("cluster_centers", [])
+        )
         self.kmeans_model._n_threads = None
 
         # Load regime mapping
@@ -143,7 +151,9 @@ class MarketConditionClassifier:
 
     def save_model(self) -> None:
         """Save the current model to disk"""
-        if self.kmeans_model is None or not hasattr(self.kmeans_model, "cluster_centers_"):
+        if self.kmeans_model is None or not hasattr(
+            self.kmeans_model, "cluster_centers_"
+        ):
             print("Cannot save market regime model: Model not trained")
             return
 
@@ -159,7 +169,9 @@ class MarketConditionClassifier:
         with open(model_path, "w") as f:
             json.dump(model_data, f, indent=2)
 
-    def extract_features(self, price_data: List[float], volume_data: List[float] = None) -> Dict[str, float]:
+    def extract_features(
+        self, price_data: List[float], volume_data: List[float] = None
+    ) -> Dict[str, float]:
         """
         Extract features for regime detection from price and volume data
 
@@ -212,7 +224,9 @@ class MarketConditionClassifier:
         # Volume features (if available)
         if volumes is not None and len(volumes) > 7:
             features["volume_change_1d"] = volumes[-1] / np.mean(volumes[-7:-1])
-            features["volume_change_7d"] = np.mean(volumes[-7:]) / np.mean(volumes[-30:-7])
+            features["volume_change_7d"] = np.mean(volumes[-7:]) / np.mean(
+                volumes[-30:-7]
+            )
         else:
             features["volume_change_1d"] = 1.0
             features["volume_change_7d"] = 1.0
@@ -293,7 +307,9 @@ class MarketConditionClassifier:
 
         return regime, confidence
 
-    def detect_regime(self, price_data: List[float], volume_data: List[float] = None) -> Dict[str, Any]:
+    def detect_regime(
+        self, price_data: List[float], volume_data: List[float] = None
+    ) -> Dict[str, Any]:
         """
         Detect market regime using both rule-based and ML approaches
 
@@ -365,7 +381,9 @@ class MarketConditionClassifier:
         volume_history = historical_data.get("volume_history", [])
 
         if len(price_history) < self.min_samples:
-            print(f"Not enough data to train market regime model: {len(price_history)} samples < {self.min_samples}")
+            print(
+                f"Not enough data to train market regime model: {len(price_history)} samples < {self.min_samples}"
+            )
             return False
 
         # Prepare feature vectors
@@ -389,7 +407,9 @@ class MarketConditionClassifier:
             feature_vectors.append(feature_vector)  # type: ignore
 
         if len(feature_vectors) < self.min_samples:
-            print(f"Not enough feature vectors extracted: {len(feature_vectors)} < {self.min_samples}")
+            print(
+                f"Not enough feature vectors extracted: {len(feature_vectors)} < {self.min_samples}"
+            )
             return False
 
         # Convert to numpy array
@@ -415,7 +435,9 @@ class MarketConditionClassifier:
 
         return True
 
-    def _map_clusters_to_regimes(self, feature_matrix: np.ndarray, labels: np.ndarray) -> None:
+    def _map_clusters_to_regimes(
+        self, feature_matrix: np.ndarray, labels: np.ndarray
+    ) -> None:
         """
         Map cluster numbers to meaningful market regimes
         by analyzing the characteristics of each cluster
@@ -425,8 +447,14 @@ class MarketConditionClassifier:
             labels: Cluster labels for each feature vector
         """
         # Extract the indices of each feature in the matrix
-        trend_idx = self.features.index("trend_30d") if "trend_30d" in self.features else -1
-        vol_idx = self.features.index("volatility_30d") if "volatility_30d" in self.features else -1
+        trend_idx = (
+            self.features.index("trend_30d") if "trend_30d" in self.features else -1
+        )
+        vol_idx = (
+            self.features.index("volatility_30d")
+            if "volatility_30d" in self.features
+            else -1
+        )
 
         if trend_idx == -1 or vol_idx == -1:
             # Default mapping if we can't find the indices
@@ -469,7 +497,10 @@ class MarketConditionClassifier:
 
         # Lowest volatility and trend near zero = SIDEWAYS
         for cluster, stats in cluster_stats.items():
-            if abs(stats["avg_trend"]) < self.trend_thresh and stats["avg_vol"] < self.volatility_thresh:
+            if (
+                abs(stats["avg_trend"]) < self.trend_thresh
+                and stats["avg_vol"] < self.volatility_thresh
+            ):
                 self.regime_mapping[cluster] = self.SIDEWAYS_MARKET
                 break
 
@@ -490,7 +521,9 @@ class MarketConditionClassifier:
         unique_regimes = set(regime_sequence)
 
         # Initialize transition matrix
-        transition_matrix = pd.DataFrame(0, index=unique_regimes, columns=unique_regimes)
+        transition_matrix = pd.DataFrame(
+            0, index=unique_regimes, columns=unique_regimes
+        )
 
         # Count transitions
         for i in range(1, len(regime_sequence)):

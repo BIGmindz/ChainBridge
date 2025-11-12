@@ -31,7 +31,9 @@ class LogisticsSignalModule:
         self.correlation_to_technical = 0.05  # ULTRA LOW!
         self.lead_time_days = 30  # Predicts 30 days ahead
 
-        print(f"✅ {self.name} module initialized - Ultra-low correlation: {self.correlation_to_technical:.2f}")
+        print(
+            f"✅ {self.name} module initialized - Ultra-low correlation: {self.correlation_to_technical:.2f}"
+        )
 
     def process(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -129,9 +131,13 @@ class LogisticsSignalModule:
 
                     # Look for specific congestion metrics
                     if "high congestion" in html_content:
-                        congestion_level = np.random.uniform(1.3, 1.8)  # High congestion
+                        congestion_level = np.random.uniform(
+                            1.3, 1.8
+                        )  # High congestion
                     elif "moderate congestion" in html_content:
-                        congestion_level = np.random.uniform(1.1, 1.3)  # Moderate congestion
+                        congestion_level = np.random.uniform(
+                            1.1, 1.3
+                        )  # Moderate congestion
                     elif "low congestion" in html_content:
                         congestion_level = np.random.uniform(0.8, 1.1)  # Low congestion
                     else:
@@ -186,7 +192,9 @@ class LogisticsSignalModule:
                             dwell_days = float(dwell_pattern.group(1))  # type: ignore
                             # Normal dwell time is ~3.5 days
                             congestion_level = dwell_days / 3.5
-                            print(f"Found dwell time: {dwell_days} days, congestion level: {congestion_level:.2f}x")
+                            print(
+                                f"Found dwell time: {dwell_days} days, congestion level: {congestion_level:.2f}x"
+                            )
 
                         # If no dwell time, look for vessel count
                         if not congestion_level:
@@ -197,8 +205,14 @@ class LogisticsSignalModule:
                             if vessel_pattern:
                                 vessel_count = int(vessel_pattern.group(1))
                                 # Each vessel over baseline (1-2) adds congestion
-                                congestion_level = 1.0 + ((vessel_count - 2) / 10) if vessel_count > 2 else 0.9
-                                print(f"Found vessel count: {vessel_count}, congestion level: {congestion_level:.2f}x")
+                                congestion_level = (
+                                    1.0 + ((vessel_count - 2) / 10)
+                                    if vessel_count > 2
+                                    else 0.9
+                                )
+                                print(
+                                    f"Found vessel count: {vessel_count}, congestion level: {congestion_level:.2f}x"
+                                )
                     else:
                         print(f"Port of LA returned status {response.status_code}")
 
@@ -250,7 +264,9 @@ class LogisticsSignalModule:
 
                     # Final congestion level
                     congestion_level = max(0.5, min(1.5, seasonal_factor + variation))
-                    print(f"Using seasonal model for month {month}, congestion level: {congestion_level:.2f}x")
+                    print(
+                        f"Using seasonal model for month {month}, congestion level: {congestion_level:.2f}x"
+                    )
 
                 except Exception as ex_error:
                     print(f"Error with Marine Exchange approximation: {ex_error}")
@@ -264,8 +280,12 @@ class LogisticsSignalModule:
 
             # More nuanced signal calculation based on congestion level
             if congestion_level > 1.3:  # Significantly above normal
-                strength = min(0.9, 0.6 + (congestion_level - 1.3) * 0.5)  # Scale with severity
-                confidence = min(0.95, 0.80 + (congestion_level - 1.3) * 0.25)  # Higher confidence with higher congestion
+                strength = min(
+                    0.9, 0.6 + (congestion_level - 1.3) * 0.5
+                )  # Scale with severity
+                confidence = min(
+                    0.95, 0.80 + (congestion_level - 1.3) * 0.25
+                )  # Higher confidence with higher congestion
 
                 if congestion_level > 1.5:
                     interpretation = "Extreme congestion → severe inflation pressure → STRONG BUY crypto as hedge"
@@ -273,28 +293,48 @@ class LogisticsSignalModule:
                     interpretation = "High congestion → inflation coming → BUY crypto"
 
             elif congestion_level > 1.1:  # Moderately above normal
-                strength = 0.3 + (congestion_level - 1.1) * 2.5  # Scaled between 0.3-0.8
-                confidence = 0.7 + (congestion_level - 1.1) * 0.75  # Scaled between 0.7-0.85
+                strength = (
+                    0.3 + (congestion_level - 1.1) * 2.5
+                )  # Scaled between 0.3-0.8
+                confidence = (
+                    0.7 + (congestion_level - 1.1) * 0.75
+                )  # Scaled between 0.7-0.85
                 interpretation = "Elevated congestion → mild inflation pressure → Moderate BUY signal"
 
             elif congestion_level < 0.7:  # Significantly below normal
-                strength = max(-0.9, -0.4 - (0.7 - congestion_level) * 1.0)  # Scale with severity
-                confidence = min(0.9, 0.65 + (0.7 - congestion_level) * 0.5)  # Higher confidence with lower congestion
+                strength = max(
+                    -0.9, -0.4 - (0.7 - congestion_level) * 1.0
+                )  # Scale with severity
+                confidence = min(
+                    0.9, 0.65 + (0.7 - congestion_level) * 0.5
+                )  # Higher confidence with lower congestion
                 interpretation = "Low congestion → deflation risk → SELL crypto"
 
             elif congestion_level < 0.9:  # Moderately below normal
-                strength = -0.1 - (0.9 - congestion_level) * 1.5  # Scaled between -0.1 and -0.4
+                strength = (
+                    -0.1 - (0.9 - congestion_level) * 1.5
+                )  # Scaled between -0.1 and -0.4
                 confidence = 0.6  # Moderate confidence
-                interpretation = "Below-normal congestion → slight deflation risk → Weak SELL signal"
+                interpretation = (
+                    "Below-normal congestion → slight deflation risk → Weak SELL signal"
+                )
 
             else:  # Normal range (0.9-1.1)
                 # Even within "normal" range, we can detect slight trends
                 if congestion_level > 1.0:
-                    strength = (congestion_level - 1.0) * 1.5  # Small positive (0 to 0.15)
-                    interpretation = "Normal congestion, slight uptrend → HOLD with bullish bias"
+                    strength = (
+                        congestion_level - 1.0
+                    ) * 1.5  # Small positive (0 to 0.15)
+                    interpretation = (
+                        "Normal congestion, slight uptrend → HOLD with bullish bias"
+                    )
                 elif congestion_level < 1.0:
-                    strength = (congestion_level - 1.0) * 1.5  # Small negative (0 to -0.15)
-                    interpretation = "Normal congestion, slight downtrend → HOLD with bearish bias"
+                    strength = (
+                        congestion_level - 1.0
+                    ) * 1.5  # Small negative (0 to -0.15)
+                    interpretation = (
+                        "Normal congestion, slight downtrend → HOLD with bearish bias"
+                    )
                 else:
                     strength = 0.0
                     interpretation = "Normal congestion → HOLD"
@@ -346,7 +386,9 @@ class LogisticsSignalModule:
             try:
                 # API endpoints for EIA diesel price data
                 # EIA API v2 requires API key and structured parameters
-                api_key = self.config.get("eia_api_key", "DEMO_KEY")  # Use DEMO_KEY as fallback
+                api_key = self.config.get(
+                    "eia_api_key", "DEMO_KEY"
+                )  # Use DEMO_KEY as fallback
 
                 # API parameters for Weekly U.S. No 2 Diesel Retail Prices
                 base_url = "https://api.eia.gov/v2/petroleum/pri/gnd/data/"
@@ -375,13 +417,17 @@ class LogisticsSignalModule:
                             # Extract the weekly price data
                             price_data = data["response"]["data"]
 
-                            if len(price_data) >= 2:  # Need at least current and previous week
+                            if (
+                                len(price_data) >= 2
+                            ):  # Need at least current and previous week
                                 # Most recent price is first in the list (sorted desc)
                                 diesel_price_current = float(price_data[0]["value"])  # type: ignore
                                 diesel_price_previous = float(price_data[1]["value"])  # type: ignore
 
                                 # Calculate weekly percentage change
-                                diesel_change = (diesel_price_current - diesel_price_previous) / diesel_price_previous
+                                diesel_change = (
+                                    diesel_price_current - diesel_price_previous
+                                ) / diesel_price_previous
                                 print(
                                     f"EIA diesel prices: Current ${diesel_price_current:.2f}/gal, Previous ${diesel_price_previous:.2f}/gal, Change: {diesel_change * 100:+.2f}%"
                                 )
@@ -392,7 +438,9 @@ class LogisticsSignalModule:
 
                     # For demo key errors, show informative message
                     if response.status_code == 403:
-                        print("EIA API access denied - you may need a valid API key: https://www.eia.gov/opendata/register.php")
+                        print(
+                            "EIA API access denied - you may need a valid API key: https://www.eia.gov/opendata/register.php"
+                        )
 
             except Exception as e:
                 print(f"Error fetching EIA diesel prices: {e}")
@@ -427,12 +475,18 @@ class LogisticsSignalModule:
                 diesel_change = base_change + np.random.uniform(-0.03, 0.03)
                 source = "Seasonal Approximation"
                 data_quality = "fallback"
-                print(f"Using seasonal diesel price model for month {month}: {diesel_change * 100:+.2f}% change")
+                print(
+                    f"Using seasonal diesel price model for month {month}: {diesel_change * 100:+.2f}% change"
+                )
 
                 # Also create realistic current and previous prices based on 2023-2025 projections
                 # Average diesel price in 2023: ~$4.00/gal with expected decline in 2024-2025
-                diesel_price_current = 3.75 + np.random.uniform(-0.5, 0.5)  # Around $3.75/gal in 2025
-                diesel_price_previous = diesel_price_current / (1 + diesel_change)  # Calculate previous price based on the change
+                diesel_price_current = 3.75 + np.random.uniform(
+                    -0.5, 0.5
+                )  # Around $3.75/gal in 2025
+                diesel_price_previous = diesel_price_current / (
+                    1 + diesel_change
+                )  # Calculate previous price based on the change
 
             # Calculate signal strength and confidence based on the price change
             # More nuanced thresholds based on real-world diesel price volatility
@@ -447,7 +501,9 @@ class LogisticsSignalModule:
             elif diesel_change > 0.02:  # Moderate increase (2-4%)
                 strength = 0.3
                 confidence = 0.65
-                interpretation = "Diesel trending up → slight mining cost pressure → mild BUY bias"
+                interpretation = (
+                    "Diesel trending up → slight mining cost pressure → mild BUY bias"
+                )
             elif diesel_change < -0.07:  # Major decrease (>7%)
                 strength = -0.7
                 confidence = 0.85
@@ -459,11 +515,15 @@ class LogisticsSignalModule:
             elif diesel_change < -0.02:  # Moderate decrease (2-4%)
                 strength = -0.3
                 confidence = 0.65
-                interpretation = "Diesel trending down → increasing miner margins → mild SELL bias"
+                interpretation = (
+                    "Diesel trending down → increasing miner margins → mild SELL bias"
+                )
             else:  # Stable (-2% to +2%)
                 strength = 0.0
                 confidence = 0.5
-                interpretation = "Stable diesel prices → neutral mining economics → HOLD"
+                interpretation = (
+                    "Stable diesel prices → neutral mining economics → HOLD"
+                )
 
             # Adjust confidence based on data quality
             if data_quality == "production":
@@ -485,7 +545,8 @@ class LogisticsSignalModule:
                 "strength": strength,
                 "confidence": confidence,
                 "interpretation": interpretation,
-                "metric": f"Diesel: {diesel_change * 100:+.1f}% weekly" + (f" - {price_info}" if price_info else ""),
+                "metric": f"Diesel: {diesel_change * 100:+.1f}% weekly"
+                + (f" - {price_info}" if price_info else ""),
                 "source": source or "Diesel price model",
                 "data_quality": data_quality,
                 "timestamp": datetime.now().isoformat(),
@@ -530,7 +591,9 @@ class LogisticsSignalModule:
                         if not df.empty:
                             gscpi = float(df["GSCPI"].iloc[0])  # type: ignore
                             latest_date = df["Date"].iloc[0].strftime("%Y-%m-%d")
-                            print(f"Found cached GSCPI data. Latest value: {gscpi} ({latest_date})")
+                            print(
+                                f"Found cached GSCPI data. Latest value: {gscpi} ({latest_date})"
+                            )
 
                             if len(df) >= 2:
                                 gscpi_previous = float(df["GSCPI"].iloc[1])  # type: ignore
@@ -546,7 +609,9 @@ class LogisticsSignalModule:
                             days_old = (today - latest_date_dt).days
 
                             if days_old > 30:
-                                print("Cached data is more than 30 days old. Attempting to fetch updates...")
+                                print(
+                                    "Cached data is more than 30 days old. Attempting to fetch updates..."
+                                )
                             else:
                                 print("Using cached GSCPI data...")
                                 # Skip fetching if cache is fresh enough
@@ -602,9 +667,13 @@ class LogisticsSignalModule:
                                 source = f"NY Fed GSCPI ({latest_date})"
                                 data_quality = "production"
 
-                                print(f"GSCPI: Current {gscpi:.2f}, Previous {gscpi_previous:.2f}, Change: {gscpi_trend:+.2f}")
+                                print(
+                                    f"GSCPI: Current {gscpi:.2f}, Previous {gscpi_previous:.2f}, Change: {gscpi_trend:+.2f}"
+                                )
                     else:
-                        print(f"NY Fed data fetch failed with status code {response.status_code}")
+                        print(
+                            f"NY Fed data fetch failed with status code {response.status_code}"
+                        )
 
                 except Exception as e:
                     print(f"Error fetching GSCPI data: {e}")
@@ -616,7 +685,9 @@ class LogisticsSignalModule:
                             alt_url = "https://raw.githubusercontent.com/FRED-STLOUISFED/gscpi-data/main/data.csv"
 
                             print("Using alternative GSCPI source...")
-                            alt_response = requests.get(alt_url, headers=headers, timeout=15)
+                            alt_response = requests.get(
+                                alt_url, headers=headers, timeout=15
+                            )
 
                             if alt_response.status_code == 200:
                                 # Save to cache file
@@ -637,14 +708,20 @@ class LogisticsSignalModule:
                                         gscpi_previous = float(df["GSCPI"].iloc[1])  # type: ignore
                                         gscpi_trend = gscpi - gscpi_previous
 
-                                        latest_date = df["Date"].iloc[0].strftime("%b %Y")
+                                        latest_date = (
+                                            df["Date"].iloc[0].strftime("%b %Y")
+                                        )
                                         source = f"GSCPI Alt Source ({latest_date})"
                                         data_quality = "semi-production"
 
-                                        print(f"Alt GSCPI: Current {gscpi:.2f}, Previous {gscpi_previous:.2f}, Change: {gscpi_trend:+.2f}")
+                                        print(
+                                            f"Alt GSCPI: Current {gscpi:.2f}, Previous {gscpi_previous:.2f}, Change: {gscpi_trend:+.2f}"
+                                        )
 
                         except Exception as alt_error:
-                            print(f"Error fetching alternative GSCPI source: {alt_error}")
+                            print(
+                                f"Error fetching alternative GSCPI source: {alt_error}"
+                            )
                             # Will fall back to seasonal approximation below
 
             # If we still don't have data, use cached data again (even if it was old)
@@ -670,7 +747,9 @@ class LogisticsSignalModule:
                             source = f"NY Fed GSCPI (cached {latest_date})"
                             data_quality = "semi-production"
 
-                            print(f"Latest GSCPI: {gscpi} ({latest_date}), indicating elevated supply chain pressure")
+                            print(
+                                f"Latest GSCPI: {gscpi} ({latest_date}), indicating elevated supply chain pressure"
+                            )
 
                 except Exception as e:
                     print(f"Error with cached data: {e}")
@@ -710,7 +789,9 @@ class LogisticsSignalModule:
 
                 source = "GSCPI Seasonal Approximation"
                 data_quality = "fallback"
-                print(f"Using seasonal model for month {month}, GSCPI: {gscpi:.2f} std dev")
+                print(
+                    f"Using seasonal model for month {month}, GSCPI: {gscpi:.2f} std dev"
+                )
 
             # Now analyze the GSCPI data and generate signal
             # More nuanced interpretation based on actual GSCPI levels and trends
@@ -757,33 +838,47 @@ class LogisticsSignalModule:
             elif gscpi < -0.5:  # Moderate ease
                 strength = -0.4
                 confidence = 0.7
-                interpretation = "Moderate supply ease → mild deflation → slight SELL bias"
+                interpretation = (
+                    "Moderate supply ease → mild deflation → slight SELL bias"
+                )
 
             else:  # Normal range (-0.5 to 0.5)
                 # Within normal range, use trend direction
                 if gscpi_trend > 0.2:  # Significantly increasing
                     strength = 0.3
                     confidence = 0.6
-                    interpretation = "Supply pressure building → inflation risk → slight BUY bias"
+                    interpretation = (
+                        "Supply pressure building → inflation risk → slight BUY bias"
+                    )
                 elif gscpi_trend < -0.2:  # Significantly decreasing
                     strength = -0.3
                     confidence = 0.6
-                    interpretation = "Supply pressure easing → deflation risk → slight SELL bias"
+                    interpretation = (
+                        "Supply pressure easing → deflation risk → slight SELL bias"
+                    )
                 else:  # Stable
                     strength = gscpi * 0.4  # Proportional but dampened
                     confidence = 0.5
-                    interpretation = "Moderate supply chain conditions → neutral outlook"
+                    interpretation = (
+                        "Moderate supply chain conditions → neutral outlook"
+                    )
 
             # Adjust confidence based on data quality
             if data_quality == "production":
-                confidence = min(0.95, confidence * 1.1)  # Boost confidence for real data
+                confidence = min(
+                    0.95, confidence * 1.1
+                )  # Boost confidence for real data
             elif data_quality == "semi-production":
                 confidence = min(0.9, confidence * 1.05)  # Slight boost for cached data
             else:  # fallback
-                confidence = max(0.3, confidence * 0.8)  # Reduce confidence for approximated data
+                confidence = max(
+                    0.3, confidence * 0.8
+                )  # Reduce confidence for approximated data
 
             # Create trend indicator for display
-            trend_indicator = "↗️" if gscpi_trend > 0.1 else "↘️" if gscpi_trend < -0.1 else "→"
+            trend_indicator = (
+                "↗️" if gscpi_trend > 0.1 else "↘️" if gscpi_trend < -0.1 else "→"
+            )
 
             return {
                 "strength": strength,
@@ -875,4 +970,6 @@ if __name__ == "__main__":
     else:
         print("Logistics data suggests NEUTRAL conditions.")
 
-    print(f"This signal typically leads price action by {result['lead_time_days']} days.")
+    print(
+        f"This signal typically leads price action by {result['lead_time_days']} days."
+    )

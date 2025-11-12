@@ -50,7 +50,12 @@ class SecretsProvider(ABC):
 class VaultSecretsProvider(SecretsProvider):
     """HashiCorp Vault secrets provider"""
 
-    def __init__(self, vault_addr: str, role_id: Optional[str] = None, token: Optional[str] = None):
+    def __init__(
+        self,
+        vault_addr: str,
+        role_id: Optional[str] = None,
+        token: Optional[str] = None,
+    ):
         self.vault_addr = vault_addr
         self.role_id = role_id
         self.token = token
@@ -71,7 +76,9 @@ class VaultSecretsProvider(SecretsProvider):
                 if not secret_id:
                     raise ValueError("VAULT_SECRET_ID required for AppRole auth")
 
-                response = self.client.auth.approle.login(role_id=self.role_id, secret_id=secret_id)
+                response = self.client.auth.approle.login(
+                    role_id=self.role_id, secret_id=secret_id
+                )
                 self.client.token = response["auth"]["client_token"]
             else:
                 raise ValueError("Either token or role_id must be provided")
@@ -100,7 +107,8 @@ class VaultSecretsProvider(SecretsProvider):
         try:
             secret_path = f"trading/data/{key}"
             self.client.secrets.kv.v2.create_or_update_secret(
-                path=secret_path, secret={"value": new_value, "rotated_at": datetime.now().isoformat()}
+                path=secret_path,
+                secret={"value": new_value, "rotated_at": datetime.now().isoformat()},
             )
             logger.info(f"Rotated secret: {key}")
             return True
@@ -153,7 +161,9 @@ class AWSSecretsProvider(SecretsProvider):
     def rotate_secret(self, key: str, new_value: str) -> bool:
         """Rotate secret in AWS"""
         try:
-            self.client.put_secret_value(SecretId=f"trading/{key}", SecretString=new_value)
+            self.client.put_secret_value(
+                SecretId=f"trading/{key}", SecretString=new_value
+            )
             logger.info(f"Rotated secret: {key}")
             return True
         except Exception as e:
@@ -164,7 +174,11 @@ class AWSSecretsProvider(SecretsProvider):
         """List all secrets"""
         try:
             response = self.client.list_secrets()
-            return [s["Name"] for s in response["Secrets"] if s["Name"].startswith("trading/")]
+            return [
+                s["Name"]
+                for s in response["Secrets"]
+                if s["Name"].startswith("trading/")
+            ]
         except Exception as e:
             logger.error(f"Failed to list secrets: {e}")
             return []
@@ -174,7 +188,9 @@ class EnvironmentSecretsProvider(SecretsProvider):
     """Environment variables secrets provider (fallback)"""
 
     def __init__(self):
-        logger.warning("Using environment variables for secrets (not recommended for production)")
+        logger.warning(
+            "Using environment variables for secrets (not recommended for production)"
+        )
 
     def get_secret(self, key: str) -> Optional[str]:
         """Get secret from environment"""
@@ -199,7 +215,11 @@ class SecretsManager:
     - Secret access monitoring
     """
 
-    def __init__(self, provider: Optional[SecretsProvider] = None, audit_log_path: Optional[Path] = None):
+    def __init__(
+        self,
+        provider: Optional[SecretsProvider] = None,
+        audit_log_path: Optional[Path] = None,
+    ):
         self.provider = provider or self._auto_detect_provider()
         self.audit_log_path = audit_log_path or Path("logs/audit/secrets_audit.jsonl")
         self.audit_log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -214,7 +234,9 @@ class SecretsManager:
             try:
                 vault_token = os.getenv("VAULT_TOKEN")
                 vault_role = os.getenv("VAULT_ROLE_ID")
-                return VaultSecretsProvider(vault_addr, role_id=vault_role, token=vault_token)
+                return VaultSecretsProvider(
+                    vault_addr, role_id=vault_role, token=vault_token
+                )
             except Exception as e:
                 logger.warning(f"Failed to initialize Vault: {e}")
 
@@ -261,8 +283,12 @@ class SecretsManager:
 
     def get_exchange_credentials(self, exchange: str) -> Dict[str, str]:
         """Get exchange API credentials"""
-        api_key = self.get_secret(f"{exchange.upper()}_API_KEY") or self.get_secret("API_KEY")
-        api_secret = self.get_secret(f"{exchange.upper()}_SECRET") or self.get_secret("API_SECRET")
+        api_key = self.get_secret(f"{exchange.upper()}_API_KEY") or self.get_secret(
+            "API_KEY"
+        )
+        api_secret = self.get_secret(f"{exchange.upper()}_SECRET") or self.get_secret(
+            "API_SECRET"
+        )
 
         if not api_key or not api_secret:
             raise ValueError(f"Missing credentials for exchange: {exchange}")
@@ -307,13 +333,21 @@ class SecretsManager:
     def _update_metadata(self, key: str):
         """Update secret access metadata"""
         if key not in self.metadata_cache:
-            self.metadata_cache[key] = SecretMetadata(name=key, last_accessed=datetime.now(), last_rotated=None, access_count=1, version=1)
+            self.metadata_cache[key] = SecretMetadata(
+                name=key,
+                last_accessed=datetime.now(),
+                last_rotated=None,
+                access_count=1,
+                version=1,
+            )
         else:
             metadata = self.metadata_cache[key]
             metadata.last_accessed = datetime.now()
             metadata.access_count += 1
 
-    def _audit_log(self, action: str, key: str, success: bool, error: Optional[str] = None):
+    def _audit_log(
+        self, action: str, key: str, success: bool, error: Optional[str] = None
+    ):
         """Write to audit log"""
         try:
             audit_entry = {

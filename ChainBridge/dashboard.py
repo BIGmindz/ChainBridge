@@ -76,7 +76,11 @@ def create_price_chart(df, symbol):
     fig.add_trace(
         go.Scatter(
             x=symbol_data["timestamp"],
-            y=symbol_data["price"] if "price" in symbol_data.columns else symbol_data.iloc[:, 1],
+            y=(
+                symbol_data["price"]
+                if "price" in symbol_data.columns
+                else symbol_data.iloc[:, 1]
+            ),
             mode="lines",
             name=f"{symbol} Price",
             line=dict(color=COLORS["primary"], width=2),
@@ -167,11 +171,21 @@ def create_signal_strength_chart(df):
     fig = go.Figure()
 
     # If we have signal columns, plot them
-    signal_cols = [col for col in df.columns if "signal" in col.lower() or "rsi" in col.lower()]
+    signal_cols = [
+        col for col in df.columns if "signal" in col.lower() or "rsi" in col.lower()
+    ]
 
     for i, col in enumerate(signal_cols[:5]):  # Limit to 5 signals for readability
         if col in df.columns:
-            fig.add_trace(go.Scatter(x=df["timestamp"], y=df[col], mode="lines", name=col.replace("_", " ").title(), line=dict(width=2)))
+            fig.add_trace(
+                go.Scatter(
+                    x=df["timestamp"],
+                    y=df[col],
+                    mode="lines",
+                    name=col.replace("_", " ").title(),
+                    line=dict(width=2),
+                )
+            )
 
     fig.update_layout(
         title="Multi-Signal Analysis",
@@ -188,7 +202,12 @@ def create_signal_strength_chart(df):
 
 
 def main():
-    st.set_page_config(page_title="BensonBot Live Dashboard", page_icon="🤖", layout="wide", initial_sidebar_state="expanded")
+    st.set_page_config(
+        page_title="BensonBot Live Dashboard",
+        page_icon="🤖",
+        layout="wide",
+        initial_sidebar_state="expanded",
+    )
 
     st.title("🤖 BensonBot Live Trading Dashboard")
     st.markdown("---")
@@ -210,7 +229,9 @@ def main():
     df = load_trading_data()
 
     if df is None or df.empty:
-        st.error("🚫 No trading data found. Make sure the live trading bot is running and generating data.")
+        st.error(
+            "🚫 No trading data found. Make sure the live trading bot is running and generating data."
+        )
         st.info("Expected files: benson_signals.csv or CSV files in data/ directory")
         return
 
@@ -218,7 +239,9 @@ def main():
     st.sidebar.title("📊 Dashboard Controls")
 
     # Symbol selection
-    available_symbols = df["symbol"].unique().tolist() if "symbol" in df.columns else ["ALL"]
+    available_symbols = (
+        df["symbol"].unique().tolist() if "symbol" in df.columns else ["ALL"]
+    )
     selected_symbol = st.sidebar.selectbox("Select Trading Symbol", available_symbols)
 
     # Time range
@@ -245,7 +268,10 @@ def main():
             st.metric("Total P&L", "N/A")
 
     with col3:
-        if "portfolio_value" in recent_df.columns and not recent_df["portfolio_value"].empty:
+        if (
+            "portfolio_value" in recent_df.columns
+            and not recent_df["portfolio_value"].empty
+        ):
             current_value = recent_df["portfolio_value"].iloc[-1]
             st.metric("Portfolio Value", f"${current_value:.2f}")
         else:
@@ -255,7 +281,11 @@ def main():
         if "action" in recent_df.columns:
             buy_count = recent_df["action"].str.contains("BUY", na=False).sum()
             sell_count = recent_df["action"].str.contains("SELL", na=False).sum()
-            win_rate = (buy_count / (buy_count + sell_count) * 100) if (buy_count + sell_count) > 0 else 0
+            win_rate = (
+                (buy_count / (buy_count + sell_count) * 100)
+                if (buy_count + sell_count) > 0
+                else 0
+            )
             st.metric("Win Rate", f"{win_rate:.1f}%")
         else:
             st.metric("Win Rate", "N/A")
@@ -266,7 +296,9 @@ def main():
     col1, col2 = st.columns(2)
 
     with col1:
-        st.plotly_chart(create_price_chart(recent_df, selected_symbol), use_container_width=True)
+        st.plotly_chart(
+            create_price_chart(recent_df, selected_symbol), use_container_width=True
+        )
 
     with col2:
         st.plotly_chart(create_pnl_chart(recent_df), use_container_width=True)

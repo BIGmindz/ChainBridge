@@ -11,7 +11,9 @@ from datetime import datetime, timedelta
 import random
 
 # Setup logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -41,7 +43,9 @@ class MarketRegimeDataCollector:
 
         if all_features:
             df = pd.DataFrame(all_features)
-            logger.info(f"✅ Collected {len(df)} data points from {len(self.symbols)} assets")
+            logger.info(
+                f"✅ Collected {len(df)} data points from {len(self.symbols)} assets"
+            )
             return df
         else:
             logger.warning("No data collected")
@@ -97,9 +101,14 @@ class MarketRegimeDataCollector:
                 "bb_position": random.uniform(-0.5, 0.5),
                 "volume_ratio": random.uniform(0.5, 2.0),
                 "price_change_1h": random.uniform(-0.05, 0.05),
-                "price_change_24h": momentum + random.uniform(-0.02, 0.02),  # Momentum-based
+                "price_change_24h": momentum
+                + random.uniform(-0.02, 0.02),  # Momentum-based
                 "volatility_24h": volatility + random.uniform(-0.005, 0.005),
-                "trend_strength": random.uniform(0.1, 0.9) if regime_type != "sideways" else random.uniform(0.1, 0.3),
+                "trend_strength": (
+                    random.uniform(0.1, 0.9)
+                    if regime_type != "sideways"
+                    else random.uniform(0.1, 0.3)
+                ),
             }
 
             features.append(feature_row)  # type: ignore
@@ -124,12 +133,18 @@ class MarketRegimeDataCollector:
         df["rsi_14"] = self._calculate_rsi(df["price"])
 
         # MACD
-        df["macd"], df["macd_signal"], df["macd_hist"] = self._calculate_macd(df["price"])
+        df["macd"], df["macd_signal"], df["macd_hist"] = self._calculate_macd(
+            df["price"]
+        )
 
         # Bollinger Bands
-        df["bb_upper"], df["bb_middle"], df["bb_lower"] = self._calculate_bollinger_bands(df["price"])
+        df["bb_upper"], df["bb_middle"], df["bb_lower"] = (
+            self._calculate_bollinger_bands(df["price"])
+        )
         df["bb_width"] = (df["bb_upper"] - df["bb_lower"]) / df["bb_middle"]
-        df["bb_position"] = (df["price"] - df["bb_lower"]) / (df["bb_upper"] - df["bb_lower"]) - 0.5
+        df["bb_position"] = (df["price"] - df["bb_lower"]) / (
+            df["bb_upper"] - df["bb_lower"]
+        ) - 0.5
 
         # Volume ratio
         df["volume_ratio"] = df["volume"] / df["volume"].rolling(20).mean()
@@ -177,13 +192,30 @@ class MarketRegimeDataCollector:
         logger.info("🏷️  Labeling market regimes...")
 
         # Drop rows with NaN values that can't be calculated (due to rolling windows)
-        df_clean = df.dropna(subset=["rsi_14", "trend_strength", "price_change_24h", "volatility_24h", "bb_position"])
+        df_clean = df.dropna(
+            subset=[
+                "rsi_14",
+                "trend_strength",
+                "price_change_24h",
+                "volatility_24h",
+                "bb_position",
+            ]
+        )
 
         # More robust regime detection based on actual data patterns
         conditions = [
-            (df_clean["rsi_14"] < 45) & (df_clean["price_change_24h"] > 0.005),  # Bull: oversold + positive momentum (relaxed)
-            (df_clean["rsi_14"] > 55) & (df_clean["price_change_24h"] < -0.005),  # Bear: overbought + negative momentum (relaxed)
-            (df_clean["volatility_24h"] < 0.5) & (abs(df_clean["bb_position"]) < 0.4),  # Sideways: moderate vol + price not too extreme
+            (df_clean["rsi_14"] < 45)
+            & (
+                df_clean["price_change_24h"] > 0.005
+            ),  # Bull: oversold + positive momentum (relaxed)
+            (df_clean["rsi_14"] > 55)
+            & (
+                df_clean["price_change_24h"] < -0.005
+            ),  # Bear: overbought + negative momentum (relaxed)
+            (df_clean["volatility_24h"] < 0.5)
+            & (
+                abs(df_clean["bb_position"]) < 0.4
+            ),  # Sideways: moderate vol + price not too extreme
         ]
 
         choices = ["bull", "bear", "sideways"]

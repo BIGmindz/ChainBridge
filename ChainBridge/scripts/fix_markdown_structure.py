@@ -40,12 +40,19 @@ RE_SETEXT_H2 = re.compile(r"^-+$")
 RE_FENCED_START = re.compile(r"^```")
 RE_HEADING = re.compile(r"^(#{1,6})\s+(.*)$")
 RE_TRAIL_PUNCT = re.compile(r"[?!,:;.]$")
-RE_REVERSED_LINK = re.compile(r"\[\('([^']+)'\)\['([^']+)'\]\]")  # rare pattern placeholder
+RE_REVERSED_LINK = re.compile(
+    r"\[\('([^']+)'\)\['([^']+)'\]\]"
+)  # rare pattern placeholder
 RE_REVERSED_LINK_SIMPLE = re.compile(r"\(\['([^']+)'\]\)\['([^']+)'\]")
 
 ROOT = Path(__file__).resolve().parent.parent
 
-SKIP_DIR_SUBSTR = {".github", "ml_models", "reports", "strategies"}  # reduce risk on binary-ish or model dirs
+SKIP_DIR_SUBSTR = {
+    ".github",
+    "ml_models",
+    "reports",
+    "strategies",
+}  # reduce risk on binary-ish or model dirs
 
 
 def is_markdown_file(p: Path) -> bool:
@@ -148,11 +155,19 @@ def convert_setext_headings(lines: List[str]) -> List[str]:
         line = lines[i]
         if i + 1 < len(lines):
             next_line = lines[i + 1]
-            if RE_SETEXT_H1.match(next_line.strip()) and line.strip() and not line.startswith("#"):
+            if (
+                RE_SETEXT_H1.match(next_line.strip())
+                and line.strip()
+                and not line.startswith("#")
+            ):
                 out.append(f"# {line.strip()}")
                 i += 2
                 continue
-            if RE_SETEXT_H2.match(next_line.strip()) and line.strip() and not line.startswith("#"):
+            if (
+                RE_SETEXT_H2.match(next_line.strip())
+                and line.strip()
+                and not line.startswith("#")
+            ):
                 out.append(f"## {line.strip()}")
                 i += 2
                 continue
@@ -277,7 +292,9 @@ def main():
                 changed += 1
         except Exception as e:
             print(f"[WARN] Failed to process {path}: {e}")
-    print(f"Markdown structural cleanup complete. Examined={examined} Changed={changed}")
+    print(
+        f"Markdown structural cleanup complete. Examined={examined} Changed={changed}"
+    )
 
 
 if __name__ == "__main__":

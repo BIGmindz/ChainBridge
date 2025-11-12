@@ -33,7 +33,9 @@ def test_gscpi_data():
             df = df.sort_values("Date")  # type: ignore
 
             # Display date range
-            print(f"Date range: {df['Date'].min().strftime('%Y-%m-%d')} to {df['Date'].max().strftime('%Y-%m-%d')}")
+            print(
+                f"Date range: {df['Date'].min().strftime('%Y-%m-%d')} to {df['Date'].max().strftime('%Y-%m-%d')}"
+            )
 
             # Show recent values
             print("\nMost recent GSCPI values:")
@@ -43,21 +45,31 @@ def test_gscpi_data():
 
             # Get latest value
             latest = df.iloc[-1]
-            print(f"\nLatest GSCPI value: {latest['GSCPI']:.2f} (from {latest['Date'].strftime('%Y-%m')})")
+            print(
+                f"\nLatest GSCPI value: {latest['GSCPI']:.2f} (from {latest['Date'].strftime('%Y-%m')})"
+            )
 
             # Interpretation
             if latest["GSCPI"] > 2.0:
-                print("INTERPRETATION: Severe supply chain stress - Strong inflation hedge signal")
+                print(
+                    "INTERPRETATION: Severe supply chain stress - Strong inflation hedge signal"
+                )
             elif latest["GSCPI"] > 1.0:
-                print("INTERPRETATION: High supply chain stress - Inflation hedge signal")
+                print(
+                    "INTERPRETATION: High supply chain stress - Inflation hedge signal"
+                )
             elif latest["GSCPI"] > 0.5:
-                print("INTERPRETATION: Moderate supply chain stress - Mild inflation hedge signal")
+                print(
+                    "INTERPRETATION: Moderate supply chain stress - Mild inflation hedge signal"
+                )
             elif latest["GSCPI"] > -0.5:
                 print("INTERPRETATION: Normal supply chain conditions - Neutral signal")
             elif latest["GSCPI"] > -1.0:
                 print("INTERPRETATION: Supply chain ease - Mild deflationary signal")
             else:
-                print("INTERPRETATION: Significant supply chain ease - Deflationary signal")
+                print(
+                    "INTERPRETATION: Significant supply chain ease - Deflationary signal"
+                )
 
             # Try to create a simple plot
             try:

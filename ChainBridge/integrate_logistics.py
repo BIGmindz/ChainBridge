@@ -70,7 +70,9 @@ def integrate_logistics():
     print("=" * 50)
     print("3Commas: 2-3 signals, 0.70 correlation")
     print("Cryptohopper: 3-4 signals, 0.65 correlation")
-    print(f"YOUR BOT: {len(config['signals'])} signals, {avg_correlation:.3f} correlation")
+    print(
+        f"YOUR BOT: {len(config['signals'])} signals, {avg_correlation:.3f} correlation"
+    )
     print("Forward Looking: 30-45 days (vs 0 for others)")
 
     # Save configuration

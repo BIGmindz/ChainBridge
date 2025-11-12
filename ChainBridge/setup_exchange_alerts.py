@@ -24,7 +24,12 @@ ALERTS_FILE = Path("exchange_alerts_active.json")
 LISTINGS_FILE = Path("diagnostic_listings.json")
 
 
-for directory in {LOG_FILE.parent, CONFIG_FILE.parent, ALERTS_FILE.parent, LISTINGS_FILE.parent}:
+for directory in {
+    LOG_FILE.parent,
+    CONFIG_FILE.parent,
+    ALERTS_FILE.parent,
+    LISTINGS_FILE.parent,
+}:
     directory.mkdir(parents=True, exist_ok=True)
 
 
@@ -69,7 +74,9 @@ class ExchangeAlertConfig:
             raise ValueError(f"'max_risk_level' must be one of {sorted(RISK_LEVELS)}")
         self.max_risk_level = max_risk
 
-        if isinstance(self.notification_method, str) or not isinstance(self.notification_method, Iterable):
+        if isinstance(self.notification_method, str) or not isinstance(
+            self.notification_method, Iterable
+        ):
             raise ValueError("'notification_method' must be an iterable of strings")
 
         notifications = []
@@ -128,9 +135,13 @@ def load_exchange_alerts():
             for exchange, config in loaded_config.items():
                 exchange_key = exchange.upper()
                 try:
-                    EXCHANGE_ALERTS[exchange_key] = ExchangeAlertConfig.from_dict(config)
+                    EXCHANGE_ALERTS[exchange_key] = ExchangeAlertConfig.from_dict(
+                        config
+                    )
                 except Exception as e:
-                    logging.error("Invalid configuration for %s skipped: %s", exchange_key, e)
+                    logging.error(
+                        "Invalid configuration for %s skipped: %s", exchange_key, e
+                    )
 
             logging.info("Loaded exchange alert configurations from %s", CONFIG_FILE)
         except Exception as e:
@@ -187,7 +198,8 @@ def check_exchange_listings():
                 if (
                     confidence >= config.min_confidence
                     and expected_return >= config.min_expected_return
-                    and risk_level_to_numeric(risk_level) <= risk_level_to_numeric(config.max_risk_level)
+                    and risk_level_to_numeric(risk_level)
+                    <= risk_level_to_numeric(config.max_risk_level)
                 ):
                     filtered_listings.append(listing)  # type: ignore
 
@@ -271,7 +283,9 @@ def save_alerts(alerts):
 def print_alert_status():
     """Print the current alert status"""
     print("\n" + "=" * 70)
-    print(f"🔔 EXCHANGE ALERT SYSTEM - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(
+        f"🔔 EXCHANGE ALERT SYSTEM - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    )
     print("=" * 70)
 
     print("\n📊 EXCHANGE ALERT CONFIGURATIONS:")
@@ -327,12 +341,22 @@ def alert_loop(interval=300):
         logging.error("Error in alert loop: %s", e)
 
 
-def prompt_for_config(exchange: str, existing: ExchangeAlertConfig) -> ExchangeAlertConfig:
+def prompt_for_config(
+    exchange: str, existing: ExchangeAlertConfig
+) -> ExchangeAlertConfig:
     """Interactively prompt the user to update or create a configuration."""
 
     print(f"\nConfiguring {exchange}:")
-    enabled_input = input(f"Enable alerts for {exchange}? (y/n) [{'y' if existing.enabled else 'n'}]: ").strip().lower()
-    enabled = existing.enabled if enabled_input not in {"y", "n"} else enabled_input == "y"
+    enabled_input = (
+        input(
+            f"Enable alerts for {exchange}? (y/n) [{'y' if existing.enabled else 'n'}]: "
+        )
+        .strip()
+        .lower()
+    )
+    enabled = (
+        existing.enabled if enabled_input not in {"y", "n"} else enabled_input == "y"
+    )
 
     def prompt_float(prompt_text: str, current: float) -> float:  # type: ignore
         raw = input(prompt_text).strip()
@@ -359,14 +383,20 @@ def prompt_for_config(exchange: str, existing: ExchangeAlertConfig) -> ExchangeA
         existing.min_expected_return,
     )
 
-    risk = input(f"Maximum risk level (LOW/MEDIUM/HIGH) [{existing.max_risk_level}]: ").strip().upper()
+    risk = (
+        input(f"Maximum risk level (LOW/MEDIUM/HIGH) [{existing.max_risk_level}]: ")
+        .strip()
+        .upper()
+    )
     max_risk = existing.max_risk_level if risk not in RISK_LEVELS else risk
 
     methods = input(
         f"Notification methods (comma separated: {', '.join(sorted(ALLOWED_NOTIFICATIONS))}) [{', '.join(existing.notification_method)}]: "
     ).strip()
     if methods:
-        notification_method = [m.strip().lower() for m in methods.split(",") if m.strip()]
+        notification_method = [
+            m.strip().lower() for m in methods.split(",") if m.strip()
+        ]
     else:
         notification_method = existing.notification_method
 
@@ -419,12 +449,22 @@ def remove_exchange(exchange: str) -> None:
 
 def main():
     """Main execution function"""
-    parser = argparse.ArgumentParser(description="Exchange Alert System for New Listings Radar")
-    parser.add_argument("--interval", type=int, default=300, help="Alert check interval in seconds")
-    parser.add_argument("--configure", action="store_true", help="Configure alert settings")
+    parser = argparse.ArgumentParser(
+        description="Exchange Alert System for New Listings Radar"
+    )
+    parser.add_argument(
+        "--interval", type=int, default=300, help="Alert check interval in seconds"
+    )
+    parser.add_argument(
+        "--configure", action="store_true", help="Configure alert settings"
+    )
     parser.add_argument("--status", action="store_true", help="Show alert status")
-    parser.add_argument("--add-exchange", metavar="EXCHANGE", help="Add a new exchange configuration")
-    parser.add_argument("--remove-exchange", metavar="EXCHANGE", help="Remove an exchange configuration")
+    parser.add_argument(
+        "--add-exchange", metavar="EXCHANGE", help="Add a new exchange configuration"
+    )
+    parser.add_argument(
+        "--remove-exchange", metavar="EXCHANGE", help="Remove an exchange configuration"
+    )
 
     args = parser.parse_args()
 
@@ -441,7 +481,9 @@ def main():
         print("-" * 70)
 
         for exchange in sorted(EXCHANGE_ALERTS):
-            EXCHANGE_ALERTS[exchange] = prompt_for_config(exchange, EXCHANGE_ALERTS[exchange])
+            EXCHANGE_ALERTS[exchange] = prompt_for_config(
+                exchange, EXCHANGE_ALERTS[exchange]
+            )
 
         # Save the updated configuration
         save_exchange_alerts()

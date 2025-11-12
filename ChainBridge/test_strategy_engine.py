@@ -13,7 +13,9 @@ sys.path.insert(0, PROJECT_ROOT)
 
 from strategy_engine import get_strategy_for_regime_and_symbol
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
+)
 
 
 def test_strategy_selection():
@@ -43,7 +45,9 @@ def test_strategy_selection():
 
         # Check if files exist
         model_exists = os.path.exists(strategy["model_path"])
-        scaler_exists = strategy["scaler_path"] and os.path.exists(strategy["scaler_path"])
+        scaler_exists = strategy["scaler_path"] and os.path.exists(
+            strategy["scaler_path"]
+        )
         config_exists = os.path.exists(strategy["config_path"])
 
         print(f"   Model exists: {'✅' if model_exists else '❌'}")

@@ -111,7 +111,9 @@ def build_plan(ex, assets: List[Dict], target: float):
 def execute(ex, plan):
     for step in plan:
         try:
-            order = ex.create_order(symbol=step["pair"], type="market", side="sell", amount=step["qty"])
+            order = ex.create_order(
+                symbol=step["pair"], type="market", side="sell", amount=step["qty"]
+            )
             status = order.get("status") or order.get("info", {}).get("status")
             print(f"✅ Sold {step['qty']:.6f} {step['pair']} (status {status})")
             time.sleep(1.1)
@@ -121,7 +123,9 @@ def execute(ex, plan):
 
 def main():
     ap = argparse.ArgumentParser(description="Immediate USD target liquidation")
-    ap.add_argument("--amount", type=float, required=True, help="Target USD value to liquidate")
+    ap.add_argument(
+        "--amount", type=float, required=True, help="Target USD value to liquidate"
+    )
     args = ap.parse_args()
     target = args.amount
     if target <= 0:
@@ -141,7 +145,9 @@ def main():
         return 1
     print("\n📋 Liquidation Plan:")
     for step in plan:
-        print(f" - {step['pair']}: sell ~${step['sell_value']:.2f} ({step['qty']:.6f} units) @ ~${step['price']:.4f}")
+        print(
+            f" - {step['pair']}: sell ~${step['sell_value']:.2f} ({step['qty']:.6f} units) @ ~${step['price']:.4f}"
+        )
     print(f"Total planned: ${planned:.2f} (target ${target:.2f})")
     if skipped:
         print("⚠️ Skipped (no USD/USDT/USDC market):", ", ".join(sorted(set(skipped))))

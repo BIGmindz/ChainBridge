@@ -36,7 +36,9 @@ def test_rsi_no_losses_near_max():
     """Test RSI calculation for continuous uptrend (near 100)."""
     s = pd.Series(range(1, 60), dtype=float)
     rsi = wilder_rsi(s, 14)
-    assert rsi >= 95 or math.isclose(rsi, 100.0, rel_tol=0.01), f"Expected RSI near 100, got {rsi}"
+    assert rsi >= 95 or math.isclose(
+        rsi, 100.0, rel_tol=0.01
+    ), f"Expected RSI near 100, got {rsi}"
 
 
 def test_insufficient_ohlcv_returns_nan():
