@@ -35,10 +35,15 @@ def main() -> int:
             AdaptiveWeightIntegrator,
         )
     except Exception as e:  # pragma: no cover - smoke output
-        print(json.dumps({
-            "ok": False,
-            "error": f"Failed to import AdaptiveWeightIntegrator: {e}",
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "ok": False,
+                    "error": f"Failed to import AdaptiveWeightIntegrator: {e}",
+                },
+                indent=2,
+            )
+        )
         return 1
 
     config = {"data_dir": "data", "logs_dir": "logs", "model_dir": "models"}

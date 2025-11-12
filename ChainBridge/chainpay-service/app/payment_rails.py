@@ -11,34 +11,16 @@ Smart Settlements feature:
 - Enables future integrations without changing core logic
 """
 
-import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+import logging
+from typing import Optional
 
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
-
-
-def _safe_get(obj: Any, key: str, default: Any = 0.0) -> Any:
-    """
-    Return obj[key] if obj is a dict-like, otherwise if obj is numeric return it
-    (useful when upstream sometimes returns a raw float). Otherwise return default.
-    """
-    from numbers import Number
-
-    if isinstance(obj, dict):
-        return obj.get(key, default)
-    if isinstance(obj, Number):
-        # treat the numeric as the desired value
-        try:
-            return obj if isinstance(obj, (int, float)) else float(str(obj))
-        except (ValueError, TypeError):
-            return default
-    return default
 
 
 class SettlementProvider(str, Enum):

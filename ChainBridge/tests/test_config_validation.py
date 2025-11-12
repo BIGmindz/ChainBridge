@@ -4,6 +4,7 @@ import os
 import yaml
 from typing import Dict, Any
 
+
 def load_config(path: str) -> Dict[str, Any]:
     """Load and validate configuration file."""
     if not os.path.exists(path):
@@ -20,15 +21,11 @@ def load_config(path: str) -> Dict[str, Any]:
 
     return config
 
+
 def validate_config(config: Dict[str, Any]) -> None:
     """Validate configuration structure and values."""
     # Required top-level keys
-    required_keys = [
-        "exchange",
-        "symbols",
-        "poll_seconds",
-        "initial_capital"
-    ]
+    required_keys = ["exchange", "symbols", "poll_seconds", "initial_capital"]
 
     for key in required_keys:
         if key not in config:
@@ -60,6 +57,7 @@ def validate_config(config: Dict[str, Any]) -> None:
     if config["initial_capital"] <= 0:
         raise ValueError("initial_capital must be positive")
 
+
 def test_config_loading():
     """Test configuration file loading."""
     config_paths = ["config.yaml", "config/config.yaml"]
@@ -73,6 +71,7 @@ def test_config_loading():
             break
 
     assert loaded, "No valid config file found"
+
 
 def test_env_substitution():
     """Test environment variable substitution."""
@@ -100,6 +99,7 @@ def test_env_substitution():
         # Cleanup
         if os.path.exists(test_path):
             os.remove(test_path)
+
 
 def test_market_validation():
     """Test market configuration validation."""

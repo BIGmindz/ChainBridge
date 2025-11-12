@@ -23,7 +23,7 @@ class TestLowRiskScheduleBuilding:
         """LOW-risk schedule should be 20% PICKUP / 70% POD / 10% CLAIM."""
         items = build_default_schedule(RiskTierSchedule.LOW)
         item_dict = {item["event_type"]: item["percentage"] for item in items}
-        
+
         assert item_dict["PICKUP_CONFIRMED"] == 0.20
         assert item_dict["POD_CONFIRMED"] == 0.70
         assert item_dict["CLAIM_WINDOW_CLOSED"] == 0.10
@@ -60,7 +60,7 @@ class TestMediumRiskScheduleBuilding:
         """MEDIUM-risk schedule should be 10% PICKUP / 70% POD / 20% CLAIM."""
         items = build_default_schedule(RiskTierSchedule.MEDIUM)
         item_dict = {item["event_type"]: item["percentage"] for item in items}
-        
+
         assert item_dict["PICKUP_CONFIRMED"] == 0.10
         assert item_dict["POD_CONFIRMED"] == 0.70
         assert item_dict["CLAIM_WINDOW_CLOSED"] == 0.20
@@ -90,7 +90,7 @@ class TestHighRiskScheduleBuilding:
         """HIGH-risk schedule should be 0% PICKUP / 80% POD / 20% CLAIM."""
         items = build_default_schedule(RiskTierSchedule.HIGH)
         item_dict = {item["event_type"]: item["percentage"] for item in items}
-        
+
         assert item_dict["PICKUP_CONFIRMED"] == 0.0
         assert item_dict["POD_CONFIRMED"] == 0.80
         assert item_dict["CLAIM_WINDOW_CLOSED"] == 0.20
@@ -121,30 +121,30 @@ class TestScheduleDifferentiationByRiskTier:
         """LOW and MEDIUM risk schedules should differ."""
         low = build_default_schedule(RiskTierSchedule.LOW)
         medium = build_default_schedule(RiskTierSchedule.MEDIUM)
-        
+
         low_dict = {item["event_type"]: item["percentage"] for item in low}
         medium_dict = {item["event_type"]: item["percentage"] for item in medium}
-        
+
         assert low_dict != medium_dict
 
     def test_medium_vs_high_risk_different_schedules(self):
         """MEDIUM and HIGH risk schedules should differ."""
         medium = build_default_schedule(RiskTierSchedule.MEDIUM)
         high = build_default_schedule(RiskTierSchedule.HIGH)
-        
+
         medium_dict = {item["event_type"]: item["percentage"] for item in medium}
         high_dict = {item["event_type"]: item["percentage"] for item in high}
-        
+
         assert medium_dict != high_dict
 
     def test_low_vs_high_risk_most_different(self):
         """LOW and HIGH risk schedules should be most different."""
         low = build_default_schedule(RiskTierSchedule.LOW)
         high = build_default_schedule(RiskTierSchedule.HIGH)
-        
+
         low_dict = {item["event_type"]: item["percentage"] for item in low}
         high_dict = {item["event_type"]: item["percentage"] for item in high}
-        
+
         # Compare by calculating total difference
         low_pickup = low_dict["PICKUP_CONFIRMED"]
         high_pickup = high_dict["PICKUP_CONFIRMED"]
@@ -158,14 +158,14 @@ class TestScheduleStructureValidation:
         """Each schedule item should have required keys."""
         items = build_default_schedule(RiskTierSchedule.LOW)
         required_keys = {"event_type", "percentage", "order"}
-        
+
         for item in items:
             assert required_keys.issubset(item.keys()), f"Item missing keys: {item}"
 
     def test_schedule_item_types_correct(self):
         """Schedule item values should have correct types."""
         items = build_default_schedule(RiskTierSchedule.MEDIUM)
-        
+
         for item in items:
             assert isinstance(item["event_type"], str)
             assert isinstance(item["percentage"], (int, float))
@@ -206,4 +206,3 @@ class TestScheduleConsistency:
         items1 = build_default_schedule(RiskTierSchedule.HIGH)
         items2 = build_default_schedule(RiskTierSchedule.HIGH)
         assert items1 == items2
-

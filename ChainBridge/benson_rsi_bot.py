@@ -15,7 +15,7 @@ except Exception:  # pragma: no cover - optional dependency in test environments
         def __init__(self, data: Any, *args: Any, **kwargs: Any) -> None:
             super().__init__(data)
 
-        def astype(self, *_args: Any, **_kwargs: Any) -> '_SeriesFallback':
+        def astype(self, *_args: Any, **_kwargs: Any) -> "_SeriesFallback":
             return self
 
         def tolist(self) -> List[float]:  # type: ignore
@@ -93,14 +93,15 @@ def wilder_rsi(close: Any, length: int = 14) -> float:
         ValueError: If input data is invalid or insufficient
     """
     import math
+
     # Validate period
     if length < 1:
         raise ValueError("Period must be positive")
 
     # Normalize input to a list of floats
     try:
-        if 'has_pandas' in globals() and has_pandas and isinstance(close, pd.Series):
-            vals = close.astype('float64').tolist()  # type: ignore
+        if "has_pandas" in globals() and has_pandas and isinstance(close, pd.Series):
+            vals = close.astype("float64").tolist()  # type: ignore
         else:
             vals = [float(x) for x in list(close)]  # type: ignore
     except (ValueError, TypeError):
@@ -120,7 +121,7 @@ def wilder_rsi(close: Any, length: int = 14) -> float:
     losses = [(-d) if d < 0 else 0.0 for d in deltas]
 
     if len(gains) < length:
-        return float('nan')  # type: ignore
+        return float("nan")  # type: ignore
 
     # Initial average gains/losses (simple average of first 'period' values)
     avg_gain = sum(gains[:length]) / length  # type: ignore
@@ -141,6 +142,8 @@ def wilder_rsi(close: Any, length: int = 14) -> float:
 
     rs = avg_gain / avg_loss
     return float(100 - (100 / (1 + rs)))  # type: ignore
+
+
 def calculate_rsi_from_ohlcv(ohlcv: List[List[float]], period: int) -> float:
     """OHLCV rows: [ts, open, high, low, close, volume]."""
     if not ohlcv:
@@ -168,9 +171,7 @@ def _ema(series: List[float], period: int) -> float:
     return float(ema_val)  # type: ignore
 
 
-def calculate_macd_from_ohlcv(
-    ohlcv: List[List[float]], fast: int = 12, slow: int = 26, signal: int = 9
-) -> Tuple[float, float, float]:
+def calculate_macd_from_ohlcv(ohlcv: List[List[float]], fast: int = 12, slow: int = 26, signal: int = 9) -> Tuple[float, float, float]:
     """Return (macd_line, signal_line, histogram). NaNs (float('nan')) when insufficient data.  # type: ignore
 
     Uses EMA with standard smoothing. Requires at least slow+signal values for stability.
@@ -229,9 +230,7 @@ def calculate_macd_from_ohlcv(
     return float(macd_line), float(signal_line), float(hist)  # type: ignore
 
 
-def calculate_bollinger_from_ohlcv(
-    ohlcv: List[List[float]], period: int = 20, stddev: float = 2.0
-) -> Tuple[float, float, float]:
+def calculate_bollinger_from_ohlcv(ohlcv: List[List[float]], period: int = 20, stddev: float = 2.0) -> Tuple[float, float, float]:
     """Return (lower, middle, upper) Bollinger Band values for the latest close.
 
     Returns NaNs when insufficient data.
@@ -283,6 +282,7 @@ def run_bot(once: bool = False) -> None:
     # Load .env (repo root or home) so EXCHANGE, PAPER, API_KEY, API_SECRET are available
     try:
         from dotenv import load_dotenv  # type: ignore
+
         loaded_env = False
         env_path = Path(".env")
         if env_path.exists():
@@ -397,12 +397,8 @@ def run_bot(once: bool = False) -> None:
                 rsi_val = calculate_rsi_from_ohlcv(ohlcv, rsi_period)
                 # Calculate MACD indicators
 
-                macd_line, macd_sig, macd_hist = calculate_macd_from_ohlcv(
-                    ohlcv, fast=macd_fast, slow=macd_slow, signal=macd_signal_p
-                )
-                bb_lower, bb_mid, bb_upper = calculate_bollinger_from_ohlcv(
-                    ohlcv, period=bb_period, stddev=bb_std
-                )
+                macd_line, macd_sig, macd_hist = calculate_macd_from_ohlcv(ohlcv, fast=macd_fast, slow=macd_slow, signal=macd_signal_p)
+                bb_lower, bb_mid, bb_upper = calculate_bollinger_from_ohlcv(ohlcv, period=bb_period, stddev=bb_std)
 
                 # Individual signals
                 ind_signals: Dict[str, str] = {}
@@ -465,11 +461,7 @@ def run_bot(once: bool = False) -> None:
 
                 # Status line
                 rsi_txt = f"RSI {rsi_val:5.2f}" if isinstance(rsi_val, float) and not math.isnan(rsi_val) else "RSI  n/a"  # type: ignore
-                macd_txt = (
-                    f"MACD {macd_hist:5.2f}"
-                    if not (math.isnan(macd_hist))  # type: ignore
-                    else "MACD  n/a"
-                )
+                macd_txt = f"MACD {macd_hist:5.2f}" if not (math.isnan(macd_hist)) else "MACD  n/a"  # type: ignore
                 bb_txt = (
                     f"BB [{bb_lower:.2f},{bb_mid:.2f},{bb_upper:.2f}]"
                     if not (math.isnan(bb_lower) or math.isnan(bb_mid) or math.isnan(bb_upper))  # type: ignore
@@ -493,9 +485,7 @@ def run_bot(once: bool = False) -> None:
                     if not (math.isnan(bb_lower) or math.isnan(bb_upper)) and (bb_upper - bb_lower) > 0:  # type: ignore
                         bbpos_val = (price - bb_lower) / (bb_upper - bb_lower)
                         bbpos = f"{bbpos_val:.4f}"
-                    f.write(
-                        f"{utc_now_str()},{exchange_id},{symbol},{price},{rsi_str},{macd_str},{bbpos},{signal_out},{timeframe}\n"
-                    )
+                    f.write(f"{utc_now_str()},{exchange_id},{symbol},{price},{rsi_str},{macd_str},{bbpos},{signal_out},{timeframe}\n")
 
                 last_signal[symbol] = signal_out
 

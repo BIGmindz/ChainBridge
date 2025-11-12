@@ -22,12 +22,13 @@ os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "false"  # Prevent GPU memory allocati
 
 # Level 2: Suppress stderr output from C++ mutex messages
 import warnings
+
 warnings.filterwarnings("ignore")
 
 # Level 3: Redirect stderr temporarily during TensorFlow imports
 
 _original_stderr = sys.stderr
-_null_device = open(os.devnull, 'w')
+_null_device = open(os.devnull, "w")
 
 # Suppress all stderr during critical import phase
 sys.stderr = _null_device
@@ -38,7 +39,7 @@ try:
 finally:
     # Restore stderr after import phase
     sys.stderr = _original_stderr
-    
+
 # ========================================
 # END ENTERPRISE TENSORFLOW SUPPRESSION
 # ========================================
@@ -327,8 +328,6 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
     # Override with environment variables if available (for live trading)
     env_api_key = os.getenv("API_KEY", "").strip()
     env_api_secret = os.getenv("API_SECRET", "").strip()
-
-
 
     if env_api_key and env_api_secret:
         api_config = {"key": env_api_key, "secret": env_api_secret}

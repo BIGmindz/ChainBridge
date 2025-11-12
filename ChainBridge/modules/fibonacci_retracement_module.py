@@ -35,9 +35,7 @@ class FibonacciRetracementModule(Module):
 
     def get_schema(self) -> Dict[str, Any]:
         return {
-            "input": {
-                "ohlcv_data": "List of OHLCV candles [ts, open, high, low, close, volume]"
-            },
+            "input": {"ohlcv_data": "List of OHLCV candles [ts, open, high, low, close, volume]"},
             "output": {
                 "trend": "UPTREND/DOWNTREND/NEUTRAL",
                 "levels": "Dict of retracement levels and prices",

@@ -52,34 +52,29 @@ async def create_driver(
 ) -> DriverResponse:
     """
     Create a new driver record.
-    
+
     Args:
         driver: Driver information to create
         db: Database session
-        
+
     Returns:
         Created driver record
-        
+
     Raises:
         HTTPException: If email already exists
     """
     # Check if driver with this email already exists
-    existing = db.query(DriverModel).filter(
-        DriverModel.email == driver.email
-    ).first()
-    
+    existing = db.query(DriverModel).filter(DriverModel.email == driver.email).first()
+
     if existing:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Driver with email {driver.email} already exists"
-        )
-    
+        raise HTTPException(status_code=400, detail=f"Driver with email {driver.email} already exists")
+
     # Create new driver
     db_driver = DriverModel(**driver.model_dump())
     db.add(db_driver)
     db.commit()
     db.refresh(db_driver)
-    
+
     return db_driver
 
 
@@ -92,25 +87,25 @@ async def list_drivers(
 ) -> DriverListResponse:
     """
     List drivers with optional filtering.
-    
+
     Args:
         skip: Number of records to skip (pagination)
         limit: Maximum number of records to return
         is_active: Filter by active status (optional)
         db: Database session
-        
+
     Returns:
         List of drivers with total count
     """
     query = db.query(DriverModel)
-    
+
     # Apply status filter if provided
     if is_active is not None:
         query = query.filter(DriverModel.is_active == is_active)
-    
+
     total = query.count()
     drivers = query.offset(skip).limit(limit).all()
-    
+
     return DriverListResponse(total=total, drivers=drivers)
 
 
@@ -121,22 +116,22 @@ async def get_driver(
 ) -> DriverResponse:
     """
     Retrieve a specific driver by ID.
-    
+
     Args:
         driver_id: ID of the driver to retrieve
         db: Database session
-        
+
     Returns:
         Driver record
-        
+
     Raises:
         HTTPException: If driver not found
     """
     driver = db.query(DriverModel).filter(DriverModel.id == driver_id).first()
-    
+
     if not driver:
         raise HTTPException(status_code=404, detail="Driver not found")
-    
+
     return driver
 
 
@@ -148,32 +143,32 @@ async def update_driver(
 ) -> DriverResponse:
     """
     Update a driver's information.
-    
+
     Args:
         driver_id: ID of the driver to update
         driver_update: Fields to update
         db: Database session
-        
+
     Returns:
         Updated driver record
-        
+
     Raises:
         HTTPException: If driver not found
     """
     driver = db.query(DriverModel).filter(DriverModel.id == driver_id).first()
-    
+
     if not driver:
         raise HTTPException(status_code=404, detail="Driver not found")
-    
+
     # Update only provided fields
     update_data = driver_update.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(driver, field, value)
-    
+
     db.add(driver)
     db.commit()
     db.refresh(driver)
-    
+
     return driver
 
 
@@ -184,19 +179,19 @@ async def delete_driver(
 ):
     """
     Soft-delete a driver (mark as inactive).
-    
+
     Args:
         driver_id: ID of the driver to delete
         db: Database session
-        
+
     Raises:
         HTTPException: If driver not found
     """
     driver = db.query(DriverModel).filter(DriverModel.id == driver_id).first()
-    
+
     if not driver:
         raise HTTPException(status_code=404, detail="Driver not found")
-    
+
     driver.is_active = False
     db.add(driver)
     db.commit()
@@ -210,40 +205,38 @@ async def search_drivers(
 ) -> DriverListResponse:
     """
     Search for drivers by email or DOT number.
-    
+
     Args:
         email: Email to search for (optional)
         dot_number: DOT number to search for (optional)
         db: Database session
-        
+
     Returns:
         List of matching drivers
-        
+
     Raises:
         HTTPException: If no search criteria provided
     """
     if not email and not dot_number:
-        raise HTTPException(
-            status_code=400,
-            detail="At least one search parameter (email or dot_number) is required"
-        )
-    
+        raise HTTPException(status_code=400, detail="At least one search parameter (email or dot_number) is required")
+
     query = db.query(DriverModel).filter(DriverModel.is_active)
-    
+
     filters = []
     if email:
         filters.append(DriverModel.email == email)
     if dot_number:
         filters.append(DriverModel.dot_number == dot_number)
-    
+
     if filters:
         query = query.filter(*[f for f in filters])
-    
+
     drivers = query.all()
-    
+
     return DriverListResponse(total=len(drivers), drivers=drivers)
 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
