@@ -5,32 +5,35 @@ Mutex-Free, Scalable, ML-Powered Trading System
 Built for both Paper and Live Trading
 """
 
-import os
-import json
 import asyncio
-import threading
+import json
+import logging
 import multiprocessing as mp
+import os
+import pickle
+import signal as sig_module
+import threading
+import uuid
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 import yaml
-import signal as sig_module
 from dotenv import load_dotenv
-import logging
-import pickle
-import uuid
+
 try:
-    import numpy as np
     from typing import TYPE_CHECKING
+
+    import numpy as np
+
     if TYPE_CHECKING:
-        from numpy.typing import NDArray
+        pass
 except Exception:
     # Lightweight fallback for environments without numpy installed.
     # Implements only the small subset of numpy functionality used by this file.
     import random
     import statistics
-    from typing import Iterable, List, Any
+    from typing import Any, Iterable, List
 
     class _NDArray:
         def __init__(self, data: Iterable[float]):
@@ -67,18 +70,13 @@ except Exception:
 
         def __rtruediv__(self, other):
             # scalar / array not used in this code but implement defensively
-            return _NDArray([(other / a) if a != 0 else float('inf') for a in self._data])
+            return _NDArray([(other / a) if a != 0 else float("inf") for a in self._data])
 
         def __neg__(self):
             return _NDArray([-a for a in self._data])
 
         def tolist(self):
             return list(self._data)
-
-        def __getitem__(self, idx):
-            if isinstance(idx, slice):
-                return _NDArray(self._data[idx])
-            return self._data[idx]
 
     class _Random:
         @staticmethod
@@ -102,7 +100,7 @@ except Exception:
             lst = list(arr)
             if len(lst) < 2:
                 return _NDArray([])
-            return _NDArray([lst[i+1] - lst[i] for i in range(len(lst)-1)])
+            return _NDArray([lst[i + 1] - lst[i] for i in range(len(lst) - 1)])
 
         @staticmethod
         def array(arr: Iterable[float]):
@@ -137,12 +135,12 @@ except Exception:
             return int(max(range(len(lst)), key=lambda i: lst[i]))
 
     np = _np_fallback()
-import pandas as pd
-from collections import defaultdict
-import uuid
 import warnings
+from collections import defaultdict
 
-warnings.filterwarnings('ignore')
+import pandas as pd
+
+warnings.filterwarnings("ignore")
 
 # Load environment
 load_dotenv()
@@ -151,8 +149,10 @@ load_dotenv()
 # ENTERPRISE LOGGING SYSTEM
 # ==========================
 
+
 class EnterpriseLogger:
     """Thread-safe, process-safe enterprise logger"""
+
     _instance = None
     _lock = threading.Lock()
 
@@ -168,20 +168,21 @@ class EnterpriseLogger:
         if getattr(self, "_initialized", False):
             return
 
-        self.logger = logging.getLogger('BIGmindz')
+        self.logger = logging.getLogger("BIGmindz")
         self.logger.setLevel(logging.DEBUG)
 
         # Console handler
         console = logging.StreamHandler()
         console.setLevel(logging.INFO)
-        console_format = logging.Formatter('%(asctime)s | %(levelname)s | %(message)s', datefmt='%H:%M:%S')
+        console_format = logging.Formatter("%(asctime)s | %(levelname)s | %(message)s", datefmt="%H:%M:%S")
         console.setFormatter(console_format)
 
         # File handler
         from logging.handlers import RotatingFileHandler
-        file_handler = RotatingFileHandler('bigmindz_trading.log', maxBytes=50 * 1024 * 1024, backupCount=10)
+
+        file_handler = RotatingFileHandler("bigmindz_trading.log", maxBytes=50 * 1024 * 1024, backupCount=10)
         file_handler.setLevel(logging.DEBUG)
-        file_format = logging.Formatter('%(asctime)s | %(processName)s-%(process)d | %(threadName)s | %(levelname)s | %(message)s')
+        file_format = logging.Formatter("%(asctime)s | %(processName)s-%(process)d | %(threadName)s | %(levelname)s | %(message)s")
         file_handler.setFormatter(file_format)
 
         self.logger.addHandler(console)
@@ -226,14 +227,14 @@ class SignalAggregation:
 
     def to_dict(self) -> Dict:
         return {
-            'symbol': self.symbol,
-            'timestamp': self.timestamp.isoformat(),
-            'direction': self.aggregated_direction,
-            'confidence': self.aggregated_confidence,
-            'ml_prediction': self.ml_prediction,
-            'risk_score': self.risk_score,
-            'position_size': self.position_size,
-            'signal_count': len(self.signals),
+            "symbol": self.symbol,
+            "timestamp": self.timestamp.isoformat(),
+            "direction": self.aggregated_direction,
+            "confidence": self.aggregated_confidence,
+            "ml_prediction": self.ml_prediction,
+            "risk_score": self.risk_score,
+            "position_size": self.position_size,
+            "signal_count": len(self.signals),
         }
 
 
@@ -250,7 +251,7 @@ class AsyncSignalProcessor:
         try:
             await asyncio.sleep(0)
             if len(price_data) < period + 1:
-                return self._create_signal('RSI', 50.0, 0.0, 'HOLD')
+                return self._create_signal("RSI", 50.0, 0.0, "HOLD")
 
             deltas = np.diff(price_data)
             seed = deltas[: period + 1]
@@ -266,25 +267,25 @@ class AsyncSignalProcessor:
             rsi = 100 if down == 0 else 100 - (100 / (1 + (up / down)))
 
             if rsi > 70:
-                direction = 'SELL'
+                direction = "SELL"
                 confidence = min((rsi - 70) / 30, 1.0)
             elif rsi < 30:
-                direction = 'BUY'
+                direction = "BUY"
                 confidence = min((30 - rsi) / 30, 1.0)
             else:
-                direction = 'HOLD'
+                direction = "HOLD"
                 confidence = 1 - abs(50 - rsi) / 20
 
-            return self._create_signal('RSI', float(rsi), float(confidence), direction)
+            return self._create_signal("RSI", float(rsi), float(confidence), direction)
         except Exception as e:
-            logger.log('ERROR', f"RSI calculation failed: {e}")
-            return self._create_signal('RSI', 50.0, 0.0, 'HOLD')
+            logger.log("ERROR", f"RSI calculation failed: {e}")
+            return self._create_signal("RSI", 50.0, 0.0, "HOLD")
 
     async def process_macd(self, price_data: List[float]) -> ImmutableSignal:
         try:
             await asyncio.sleep(0)
             if len(price_data) < 26:
-                return self._create_signal('MACD', 0.0, 0.0, 'HOLD')
+                return self._create_signal("MACD", 0.0, 0.0, "HOLD")
             prices = pd.Series(price_data)
             exp1 = prices.ewm(span=12, adjust=False).mean()
             exp2 = prices.ewm(span=26, adjust=False).mean()
@@ -294,24 +295,24 @@ class AsyncSignalProcessor:
             current_hist = float(histogram.iloc[-1])
             prev_hist = float(histogram.iloc[-2])
             if current_hist > 0 and prev_hist <= 0:
-                direction = 'BUY'
+                direction = "BUY"
                 confidence = min(abs(current_hist) / 2, 1.0)
             elif current_hist < 0 and prev_hist >= 0:
-                direction = 'SELL'
+                direction = "SELL"
                 confidence = min(abs(current_hist) / 2, 1.0)
             else:
-                direction = 'HOLD'
+                direction = "HOLD"
                 confidence = 0.3
-            return self._create_signal('MACD', current_hist, float(confidence), direction)
+            return self._create_signal("MACD", current_hist, float(confidence), direction)
         except Exception as e:
-            logger.log('ERROR', f"MACD calculation failed: {e}")
-            return self._create_signal('MACD', 0.0, 0.0, 'HOLD')
+            logger.log("ERROR", f"MACD calculation failed: {e}")
+            return self._create_signal("MACD", 0.0, 0.0, "HOLD")
 
     async def process_bollinger(self, price_data: List[float], period: int = 20) -> ImmutableSignal:
         try:
             await asyncio.sleep(0)
             if len(price_data) < period:
-                return self._create_signal('BOLLINGER', 0.0, 0.0, 'HOLD')
+                return self._create_signal("BOLLINGER", 0.0, 0.0, "HOLD")
             prices = pd.Series(price_data)
             sma = prices.rolling(window=period).mean()
             std = prices.rolling(window=period).std()
@@ -323,69 +324,69 @@ class AsyncSignalProcessor:
             denom = (current_upper - current_lower) or 1e-8
             band_position = (current_price - current_lower) / denom
             if band_position > 0.95:
-                direction = 'SELL'
+                direction = "SELL"
                 confidence = 0.8
             elif band_position < 0.05:
-                direction = 'BUY'
+                direction = "BUY"
                 confidence = 0.8
             else:
-                direction = 'HOLD'
+                direction = "HOLD"
                 confidence = 0.3
-            return self._create_signal('BOLLINGER', float(band_position), float(confidence), direction)
+            return self._create_signal("BOLLINGER", float(band_position), float(confidence), direction)
         except Exception as e:
-            logger.log('ERROR', f"Bollinger calculation failed: {e}")
-            return self._create_signal('BOLLINGER', 0.5, 0.0, 'HOLD')
+            logger.log("ERROR", f"Bollinger calculation failed: {e}")
+            return self._create_signal("BOLLINGER", 0.5, 0.0, "HOLD")
 
     async def process_volume_profile(self, volume_data: List[float]) -> ImmutableSignal:
         try:
             await asyncio.sleep(0)
             if len(volume_data) < 20:
-                return self._create_signal('VOLUME', 1.0, 0.0, 'HOLD')
+                return self._create_signal("VOLUME", 1.0, 0.0, "HOLD")
             recent_volume = float(np.mean(volume_data[-5:]))
             avg_volume = float(np.mean(volume_data))
             ratio = recent_volume / (avg_volume + 1e-8)
             if ratio > 2.0:
-                direction = 'BUY'
+                direction = "BUY"
                 confidence = min((ratio - 1) / 2, 1.0)
             elif ratio < 0.5:
-                direction = 'SELL'
+                direction = "SELL"
                 confidence = min((1 - ratio) / 0.5, 1.0)
             else:
-                direction = 'HOLD'
+                direction = "HOLD"
                 confidence = 0.3
-            return self._create_signal('VOLUME', float(ratio), float(confidence), direction)
+            return self._create_signal("VOLUME", float(ratio), float(confidence), direction)
         except Exception as e:
-            logger.log('ERROR', f"Volume analysis failed: {e}")
-            return self._create_signal('VOLUME', 1.0, 0.0, 'HOLD')
+            logger.log("ERROR", f"Volume analysis failed: {e}")
+            return self._create_signal("VOLUME", 1.0, 0.0, "HOLD")
 
     async def process_logistics_signal(self, symbol: str) -> ImmutableSignal:
         try:
             await asyncio.sleep(0)
             logistics_score = float(np.random.random())
             if logistics_score > 0.7:
-                direction = 'BUY'
+                direction = "BUY"
                 confidence = logistics_score
             elif logistics_score < 0.3:
-                direction = 'SELL'
+                direction = "SELL"
                 confidence = 1 - logistics_score
             else:
-                direction = 'HOLD'
+                direction = "HOLD"
                 confidence = 0.5
-            return self._create_signal('LOGISTICS', logistics_score, float(confidence), direction)
+            return self._create_signal("LOGISTICS", logistics_score, float(confidence), direction)
         except Exception as e:
-            logger.log('ERROR', f"Logistics signal failed: {e}")
-            return self._create_signal('LOGISTICS', 0.5, 0.0, 'HOLD')
+            logger.log("ERROR", f"Logistics signal failed: {e}")
+            return self._create_signal("LOGISTICS", 0.5, 0.0, "HOLD")
 
     def _create_signal(self, signal_type: str, value: float, confidence: float, direction: str) -> ImmutableSignal:
         return ImmutableSignal(
             id=str(uuid.uuid4()),
             timestamp=datetime.now(timezone.utc),
-            symbol=self.processor_id.split('_')[0] if '_' in self.processor_id else 'UNKNOWN',
+            symbol=self.processor_id.split("_")[0] if "_" in self.processor_id else "UNKNOWN",
             signal_type=signal_type,
             value=float(value),
             confidence=float(confidence),
             direction=direction,
-            metadata={'processor': self.processor_id},
+            metadata={"processor": self.processor_id},
         )
 
 
@@ -401,19 +402,19 @@ class MLEngine:
 
     def _load_models(self):
         model_paths = {
-            'xgboost': 'models/xgboost_predictor.pkl',
-            'lstm': 'models/lstm_predictor.pkl',
-            'random_forest': 'models/rf_predictor.pkl',
-            'ensemble': 'models/ensemble_predictor.pkl',
+            "xgboost": "models/xgboost_predictor.pkl",
+            "lstm": "models/lstm_predictor.pkl",
+            "random_forest": "models/rf_predictor.pkl",
+            "ensemble": "models/ensemble_predictor.pkl",
         }
         for name, path in model_paths.items():
             if os.path.exists(path):
                 try:
-                    with open(path, 'rb') as f:
+                    with open(path, "rb") as f:
                         self.models[name] = pickle.load(f)
-                    logger.log('INFO', f"Loaded ML model: {name}")
+                    logger.log("INFO", f"Loaded ML model: {name}")
                 except Exception as e:
-                    logger.log('WARNING', f"Could not load {name}: {e}")
+                    logger.log("WARNING", f"Could not load {name}: {e}")
 
     def extract_features(self, signals: List[ImmutableSignal], price_data: List[float]) -> Any:
         features: List[float] = []
@@ -422,18 +423,20 @@ class MLEngine:
         for s in signals:
             values[s.signal_type] = s.value
             confs[s.signal_type] = s.confidence
-        for key in ['RSI', 'MACD', 'BOLLINGER', 'VOLUME', 'LOGISTICS']:
+        for key in ["RSI", "MACD", "BOLLINGER", "VOLUME", "LOGISTICS"]:
             features.append(values.get(key, 0.0))
             features.append(confs.get(key, 0.0))
         if len(price_data) >= 50:
             returns = np.diff(price_data[-50:]) / (np.array(price_data[-50:-1]) + 1e-8)
-            features.extend([
-                float(np.mean(returns)),
-                float(np.std(returns)),
-                float(np.min(returns)),
-                float(np.max(returns)),
-                # Safe conversion of last return value\n                last_return = 0.0\n                try:\n                    if len(returns) > 0:\n                        last_val = returns[-1]\n                        last_return = float(last_val) if isinstance(last_val, (int, float)) else float(str(last_val))\n                except (ValueError, TypeError, IndexError):\n                    last_return = 0.0\n                last_return,
-            ])
+            features.extend(
+                [
+                    float(np.mean(returns)),
+                    float(np.std(returns)),
+                    float(np.min(returns)),
+                    float(np.max(returns)),
+                    # Safe conversion of last return value\n                last_return = 0.0\n                try:\n                    if len(returns) > 0:\n                        last_val = returns[-1]\n                        last_return = float(last_val) if isinstance(last_val, (int, float)) else float(str(last_val))\n                except (ValueError, TypeError, IndexError):\n                    last_return = 0.0\n                last_return,
+                ]
+            )
         else:
             features.extend([0.0, 0.0, 0.0, 0.0, 0.0])
         if len(price_data) >= 20:
@@ -442,15 +445,21 @@ class MLEngine:
             features.append((curr - sma20) / (sma20 + 1e-8))
         else:
             features.append(0.0)
-        try:\n            if hasattr(np, 'array') and hasattr(np, 'float64'):\n                return np.array(features, dtype=np.float64)\n            else:\n                return np.array(features)\n        except Exception:\n            return features  # Return as list if numpy fails
+        try:
+            if hasattr(np, "array") and hasattr(np, "float64"):
+                return np.array(features, dtype=np.float64)
+            else:
+                return np.array(features)
+        except Exception:
+            return features  # Return as list if numpy fails
 
     def predict(self, features: Any) -> Dict[str, Any]:
         result: Dict[str, Any] = {
-            'direction': 'HOLD',
-            'confidence': 0.5,
-            'risk_score': 0.5,
-            'expected_return': 0.0,
-            'models_agree': False,
+            "direction": "HOLD",
+            "confidence": 0.5,
+            "risk_score": 0.5,
+            "expected_return": 0.0,
+            "models_agree": False,
         }
         if not self.models:
             return result
@@ -458,23 +467,24 @@ class MLEngine:
             preds = []
             for name, model in self.models.items():
                 try:
-                    if hasattr(model, 'predict_proba'):
+                    if hasattr(model, "predict_proba"):
                         p = model.predict_proba([features])[0]
                         preds.append(int(np.argmax(p)))
                     else:
                         p = model.predict([features])[0]
                         preds.append(int(p))
                 except Exception as e:
-                    logger.log('DEBUG', f"Model {name} failed: {e}")
+                    logger.log("DEBUG", f"Model {name} failed: {e}")
             if preds:
                 from collections import Counter
+
                 vote, count = Counter(preds).most_common(1)[0]
-                result['direction'] = ['SELL', 'HOLD', 'BUY'][int(vote)] if 0 <= vote <= 2 else 'HOLD'
-                result['confidence'] = count / len(preds)
-                result['models_agree'] = count >= len(preds) * 0.7
-                result['risk_score'] = 1.0 - result['confidence']
+                result["direction"] = ["SELL", "HOLD", "BUY"][int(vote)] if 0 <= vote <= 2 else "HOLD"
+                result["confidence"] = count / len(preds)
+                result["models_agree"] = count >= len(preds) * 0.7
+                result["risk_score"] = 1.0 - result["confidence"]
         except Exception as e:
-            logger.log('ERROR', f"ML prediction failed: {e}")
+            logger.log("ERROR", f"ML prediction failed: {e}")
         return result
 
 
@@ -487,12 +497,12 @@ class ParallelSignalAggregator:
     def __init__(self, ml_engine: Optional[MLEngine] = None):
         self.ml_engine = ml_engine or MLEngine()
         self.weights = {
-            'RSI': 0.15,
-            'MACD': 0.20,
-            'BOLLINGER': 0.15,
-            'VOLUME': 0.10,
-            'LOGISTICS': 0.25,
-            'ML': 0.15,
+            "RSI": 0.15,
+            "MACD": 0.20,
+            "BOLLINGER": 0.15,
+            "VOLUME": 0.10,
+            "LOGISTICS": 0.25,
+            "ML": 0.15,
         }
 
     async def aggregate_signals(self, signals: List[ImmutableSignal], price_data: List[float]) -> SignalAggregation:
@@ -501,9 +511,9 @@ class ParallelSignalAggregator:
         for s in signals:
             w = self.weights.get(s.signal_type, 0.1)
             val = s.confidence * w
-            if s.direction == 'BUY':
+            if s.direction == "BUY":
                 buy_score += val
-            elif s.direction == 'SELL':
+            elif s.direction == "SELL":
                 sell_score += val
             else:
                 hold_score += val
@@ -511,21 +521,21 @@ class ParallelSignalAggregator:
         if self.ml_engine and price_data:
             feats = self.ml_engine.extract_features(signals, price_data)
             ml_pred = self.ml_engine.predict(feats)
-            w = self.weights.get('ML', 0.15)
-            if ml_pred['direction'] == 'BUY':
-                buy_score += ml_pred['confidence'] * w
-            elif ml_pred['direction'] == 'SELL':
-                sell_score += ml_pred['confidence'] * w
+            w = self.weights.get("ML", 0.15)
+            if ml_pred["direction"] == "BUY":
+                buy_score += ml_pred["confidence"] * w
+            elif ml_pred["direction"] == "SELL":
+                sell_score += ml_pred["confidence"] * w
         total = buy_score + sell_score + hold_score
         if total == 0:
-            direction, confidence = 'HOLD', 0.0
+            direction, confidence = "HOLD", 0.0
         elif buy_score > sell_score and buy_score > hold_score:
-            direction, confidence = 'BUY', buy_score / total
+            direction, confidence = "BUY", buy_score / total
         elif sell_score > buy_score and sell_score > hold_score:
-            direction, confidence = 'SELL', sell_score / total
+            direction, confidence = "SELL", sell_score / total
         else:
-            direction, confidence = 'HOLD', hold_score / total
-        risk = ml_pred['risk_score'] if ml_pred else 0.5
+            direction, confidence = "HOLD", hold_score / total
+        risk = ml_pred["risk_score"] if ml_pred else 0.5
         position = self._position_size(confidence, risk)
         return SignalAggregation(
             symbol=symbol,
@@ -555,33 +565,33 @@ class MutexFreeTradingEngine:
         self.mode = mode
         self.once = once
         self.config = self._load_config(config_path)
-        self.symbols = self.config.get('symbols', ['BTC/USD', 'ETH/USD'])
+        self.symbols = self.config.get("symbols", ["BTC/USD", "ETH/USD"])
         self.running = False
 
         self.manager = mp.Manager()
         self.shared_state = self.manager.dict()
-        self.shared_state['trades'] = self.manager.list()
-        self.shared_state['positions'] = self.manager.dict()
-        self.shared_state['metrics'] = self.manager.dict()
+        self.shared_state["trades"] = self.manager.list()
+        self.shared_state["positions"] = self.manager.dict()
+        self.shared_state["metrics"] = self.manager.dict()
 
         self._initialize_components()
-        logger.log('INFO', f"🚀 BIGmindz Trading Engine initialized in {mode} mode")
+        logger.log("INFO", f"🚀 BIGmindz Trading Engine initialized in {mode} mode")
 
     def _load_config(self, path: str) -> Dict:
         try:
-            with open(path, 'r') as f:
+            with open(path, "r") as f:
                 return yaml.safe_load(f) or {}
         except Exception as e:
-            logger.log('WARNING', f"Using default config: {e}")
+            logger.log("WARNING", f"Using default config: {e}")
             return {
-                'symbols': ['BTC/USD', 'ETH/USD', 'SOL/USD'],
-                'timeframe': '5m',
-                'poll_seconds': 60,
-                'initial_capital': 10000.0,
-                'max_position_size': 1000.0,
-                'max_daily_trades': 50,
-                'stop_loss_percent': 2.0,
-                'take_profit_percent': 3.0,
+                "symbols": ["BTC/USD", "ETH/USD", "SOL/USD"],
+                "timeframe": "5m",
+                "poll_seconds": 60,
+                "initial_capital": 10000.0,
+                "max_position_size": 1000.0,
+                "max_daily_trades": 50,
+                "stop_loss_percent": 2.0,
+                "take_profit_percent": 3.0,
             }
 
     def _initialize_components(self):
@@ -595,34 +605,37 @@ class MutexFreeTradingEngine:
     def _setup_exchange(self):
         try:
             import ccxt
-            exchange_name = self.config.get('exchange', 'binance')
-            if self.mode == 'live':
-                self.exchange = getattr(ccxt, exchange_name)({
-                    'apiKey': os.getenv('API_KEY'),
-                    'secret': os.getenv('API_SECRET'),
-                    'enableRateLimit': True,
-                })
+
+            exchange_name = self.config.get("exchange", "binance")
+            if self.mode == "live":
+                self.exchange = getattr(ccxt, exchange_name)(
+                    {
+                        "apiKey": os.getenv("API_KEY"),
+                        "secret": os.getenv("API_SECRET"),
+                        "enableRateLimit": True,
+                    }
+                )
             else:
                 self.exchange = MockExchange(self.symbols)
-            logger.log('INFO', f"Exchange configured: {exchange_name} ({self.mode})")
+            logger.log("INFO", f"Exchange configured: {exchange_name} ({self.mode})")
         except Exception as e:
-            logger.log('ERROR', f"Exchange setup failed: {e}")
+            logger.log("ERROR", f"Exchange setup failed: {e}")
             self.exchange = MockExchange(self.symbols)
 
     async def fetch_market_data(self, symbol: str) -> Optional[Dict]:
         try:
             loop = asyncio.get_event_loop()
             ticker = await loop.run_in_executor(self.io_pool, self.exchange.fetch_ticker, symbol)
-            ohlcv = await loop.run_in_executor(self.io_pool, self.exchange.fetch_ohlcv, symbol, self.config.get('timeframe', '5m'), 100)
+            ohlcv = await loop.run_in_executor(self.io_pool, self.exchange.fetch_ohlcv, symbol, self.config.get("timeframe", "5m"), 100)
             return {
-                'symbol': symbol,
-                'price': ticker.get('last', 0),
-                'volume': ticker.get('volume', 0),
-                'ohlcv': ohlcv,
-                'timestamp': datetime.now(timezone.utc),
+                "symbol": symbol,
+                "price": ticker.get("last", 0),
+                "volume": ticker.get("volume", 0),
+                "ohlcv": ohlcv,
+                "timestamp": datetime.now(timezone.utc),
             }
         except Exception as e:
-            logger.log('ERROR', f"Failed to fetch data for {symbol}: {e}")
+            logger.log("ERROR", f"Failed to fetch data for {symbol}: {e}")
             return None
 
     async def process_symbol(self, symbol: str) -> Optional[SignalAggregation]:
@@ -630,7 +643,7 @@ class MutexFreeTradingEngine:
             data = await self.fetch_market_data(symbol)
             if not data:
                 return None
-            ohlcv = data['ohlcv']
+            ohlcv = data["ohlcv"]
             prices = [float(c[4]) for c in ohlcv]
             volumes = [float(c[5]) for c in ohlcv]
             p = self.processors[symbol]
@@ -643,45 +656,53 @@ class MutexFreeTradingEngine:
             ]
             signals = await asyncio.gather(*tasks)
             agg = await self.aggregator.aggregate_signals(signals, prices)
-            logger.log('INFO', f"{symbol}: ${data['price']:.2f} | Signal: {agg.aggregated_direction} (Conf: {agg.aggregated_confidence:.2f})")
+            logger.log(
+                "INFO", f"{symbol}: ${data['price']:.2f} | Signal: {agg.aggregated_direction} (Conf: {agg.aggregated_confidence:.2f})"
+            )
             return agg
         except Exception as e:
-            logger.log('ERROR', f"Failed to process {symbol}: {e}")
+            logger.log("ERROR", f"Failed to process {symbol}: {e}")
             return None
 
     async def execute_trade(self, aggregation: SignalAggregation) -> bool:
-        if aggregation.aggregated_direction == 'HOLD' or aggregation.aggregated_confidence < 0.6:
+        if aggregation.aggregated_direction == "HOLD" or aggregation.aggregated_confidence < 0.6:
             return False
         try:
             symbol = aggregation.symbol
             direction = aggregation.aggregated_direction
             size = aggregation.position_size
             ticker = self.exchange.fetch_ticker(symbol)
-            price = float(ticker['last'])
-            side = 'buy' if direction == 'BUY' else 'sell'
-            if self.mode == 'live':
-                order = self.exchange.create_order(symbol=symbol, type='market', side=side, amount=size / price)
+            price = float(ticker["last"])
+            side = "buy" if direction == "BUY" else "sell"
+            if self.mode == "live":
+                order = self.exchange.create_order(symbol=symbol, type="market", side=side, amount=size / price)
             else:
                 order = {
-                    'id': str(uuid.uuid4()),
-                    'symbol': symbol,
-                    'side': side,
-                    'price': price,
-                    'amount': size / price,
-                    'cost': size,
-                    'timestamp': datetime.now(timezone.utc).isoformat(),
+                    "id": str(uuid.uuid4()),
+                    "symbol": symbol,
+                    "side": side,
+                    "price": price,
+                    "amount": size / price,
+                    "cost": size,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
             trade_record = {
-                'id': order['id'], 'timestamp': datetime.now(timezone.utc).isoformat(), 'symbol': symbol,
-                'side': side, 'price': price, 'amount': size / price, 'cost': size,
-                'confidence': aggregation.aggregated_confidence, 'ml_prediction': aggregation.ml_prediction,
+                "id": order["id"],
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "symbol": symbol,
+                "side": side,
+                "price": price,
+                "amount": size / price,
+                "cost": size,
+                "confidence": aggregation.aggregated_confidence,
+                "ml_prediction": aggregation.ml_prediction,
             }
-            self.shared_state['trades'].append(trade_record)
-            self.shared_state['positions'][symbol] = trade_record
-            logger.log('INFO', f"✅ Trade executed: {side.upper()} {size/price:.4f} {symbol} @ ${price:.2f}")
+            self.shared_state["trades"].append(trade_record)
+            self.shared_state["positions"][symbol] = trade_record
+            logger.log("INFO", f"✅ Trade executed: {side.upper()} {size/price:.4f} {symbol} @ ${price:.2f}")
             return True
         except Exception as e:
-            logger.log('ERROR', f"Trade execution failed: {e}")
+            logger.log("ERROR", f"Trade execution failed: {e}")
             return False
 
     async def run_once(self):
@@ -694,68 +715,70 @@ class MutexFreeTradingEngine:
         self._save_state()
 
     async def run_async(self):
-        logger.log('INFO', "Starting async trading loop...")
+        logger.log("INFO", "Starting async trading loop...")
         while self.running:
             try:
                 await self.run_once()
                 if self.once:
                     break
-                await asyncio.sleep(self.config.get('poll_seconds', 60))
+                await asyncio.sleep(self.config.get("poll_seconds", 60))
             except Exception as e:
-                logger.log('ERROR', f"Main loop error: {e}")
+                logger.log("ERROR", f"Main loop error: {e}")
                 await asyncio.sleep(5)
 
     def _update_metrics(self):
         try:
-            trades = list(self.shared_state['trades'])
+            trades = list(self.shared_state["trades"])
             if not trades:
                 return
             total = len(trades)
-            wins = len([t for t in trades if t.get('side') == 'buy'])
-            self.shared_state['metrics'] = {
-                'total_trades': total,
-                'win_rate': wins / total if total else 0,
-                'profitable_trades': wins,
-                'last_update': datetime.now(timezone.utc).isoformat(),
+            wins = len([t for t in trades if t.get("side") == "buy"])
+            self.shared_state["metrics"] = {
+                "total_trades": total,
+                "win_rate": wins / total if total else 0,
+                "profitable_trades": wins,
+                "last_update": datetime.now(timezone.utc).isoformat(),
             }
         except Exception as e:
-            logger.log('ERROR', f"Metrics update failed: {e}")
+            logger.log("ERROR", f"Metrics update failed: {e}")
 
     def _save_state(self):
         try:
             state = {
-                'mode': self.mode,
-                'trades': list(self.shared_state['trades']),
-                'positions': dict(self.shared_state['positions']),
-                'metrics': dict(self.shared_state['metrics']),
-                'timestamp': datetime.now(timezone.utc).isoformat(),
+                "mode": self.mode,
+                "trades": list(self.shared_state["trades"]),
+                "positions": dict(self.shared_state["positions"]),
+                "metrics": dict(self.shared_state["metrics"]),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
-            with open('trading_state.json', 'w') as f:
+            with open("trading_state.json", "w") as f:
                 json.dump(state, f, indent=2)
         except Exception as e:
-            logger.log('ERROR', f"State save failed: {e}")
+            logger.log("ERROR", f"State save failed: {e}")
 
     def run(self):
         self.running = True
+
         def handler(signum, frame):
-            logger.log('INFO', "Shutdown signal received")
+            logger.log("INFO", "Shutdown signal received")
             self.running = False
+
         sig_module.signal(sig_module.SIGINT, handler)
         sig_module.signal(sig_module.SIGTERM, handler)
         try:
             asyncio.run(self.run_async())
         except KeyboardInterrupt:
-            logger.log('INFO', "Interrupted by user")
+            logger.log("INFO", "Interrupted by user")
         finally:
             self.shutdown()
 
     def shutdown(self):
-        logger.log('INFO', "Shutting down trading engine...")
+        logger.log("INFO", "Shutting down trading engine...")
         self.running = False
         self.io_pool.shutdown(wait=True)
         self.cpu_pool.shutdown(wait=True)
         self._save_state()
-        logger.log('INFO', "✅ Shutdown complete")
+        logger.log("INFO", "✅ Shutdown complete")
 
 
 # ==============================
@@ -770,9 +793,15 @@ class MockExchange:
 
     def fetch_ticker(self, symbol: str) -> Dict:
         price = float(self.prices.get(symbol, 50000))
-        price *= (1 + np.random.randn() * 0.001)
+        price *= 1 + np.random.randn() * 0.001
         self.prices[symbol] = price
-        return {'symbol': symbol, 'last': price, 'bid': price * 0.999, 'ask': price * 1.001, 'volume': float(np.random.uniform(1000, 10000))}
+        return {
+            "symbol": symbol,
+            "last": price,
+            "bid": price * 0.999,
+            "ask": price * 1.001,
+            "volume": float(np.random.uniform(1000, 10000)),
+        }
 
     def fetch_ohlcv(self, symbol: str, timeframe: str, limit: int = 100) -> List:
         base = float(self.prices.get(symbol, 50000))
@@ -788,16 +817,16 @@ class MockExchange:
         return list(reversed(ohlcv))
 
     def create_order(self, **kwargs) -> Dict:
-        symbol = kwargs.get('symbol', '')
+        symbol = kwargs.get("symbol", "")
         return {
-            'id': str(uuid.uuid4()), 
-            'symbol': symbol, 
-            'side': kwargs.get('side'), 
-            'type': kwargs.get('type'), 
-            'amount': kwargs.get('amount'), 
-            'price': self.prices.get(symbol, 50000), 
-            'timestamp': datetime.now(timezone.utc).isoformat(), 
-            'status': 'closed'
+            "id": str(uuid.uuid4()),
+            "symbol": symbol,
+            "side": kwargs.get("side"),
+            "type": kwargs.get("type"),
+            "amount": kwargs.get("amount"),
+            "price": self.prices.get(symbol, 50000),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "status": "closed",
         }
 
 
@@ -808,36 +837,37 @@ class MockExchange:
 
 def deploy():
     import argparse
+
     parser = argparse.ArgumentParser(description="BIGmindz Trading Platform")
-    parser.add_argument('--mode', choices=['paper', 'live'], default='paper', help='Trading mode (default: paper)')
-    parser.add_argument('--config', default='config.yaml', help='Configuration file path')
-    parser.add_argument('--symbols', nargs='+', help='Override symbols to trade')
-    parser.add_argument('--once', action='store_true', help='Run a single cycle and exit')
+    parser.add_argument("--mode", choices=["paper", "live"], default="paper", help="Trading mode (default: paper)")
+    parser.add_argument("--config", default="config.yaml", help="Configuration file path")
+    parser.add_argument("--symbols", nargs="+", help="Override symbols to trade")
+    parser.add_argument("--once", action="store_true", help="Run a single cycle and exit")
     args = parser.parse_args()
 
-    if args.mode == 'live':
+    if args.mode == "live":
         print("⚠️  WARNING: Live trading mode selected! This will trade with REAL money.")
-        resp = os.environ.get('BIGMINDZ_LIVE_CONFIRM') or input("Type 'CONFIRM' to proceed: ")
-        if resp != 'CONFIRM':
+        resp = os.environ.get("BIGMINDZ_LIVE_CONFIRM") or input("Type 'CONFIRM' to proceed: ")
+        if resp != "CONFIRM":
             print("Live trading cancelled.")
             return
 
     # Create config if missing
     if not os.path.exists(args.config):
         cfg = {
-            'symbols': args.symbols or ['BTC/USD', 'ETH/USD', 'SOL/USD'],
-            'mode': args.mode,
-            'exchange': 'binance',
-            'timeframe': '5m',
-            'poll_seconds': 60,
-            'initial_capital': 10000,
-            'max_position_size': 1000,
-            'stop_loss_percent': 2.0,
-            'take_profit_percent': 3.0,
+            "symbols": args.symbols or ["BTC/USD", "ETH/USD", "SOL/USD"],
+            "mode": args.mode,
+            "exchange": "binance",
+            "timeframe": "5m",
+            "poll_seconds": 60,
+            "initial_capital": 10000,
+            "max_position_size": 1000,
+            "stop_loss_percent": 2.0,
+            "take_profit_percent": 3.0,
         }
-        with open(args.config, 'w') as f:
+        with open(args.config, "w") as f:
             yaml.dump(cfg, f)
-        logger.log('INFO', f"Created config file: {args.config}")
+        logger.log("INFO", f"Created config file: {args.config}")
 
     engine = MutexFreeTradingEngine(args.config, args.mode, once=args.once)
     if args.once:
@@ -848,9 +878,9 @@ def deploy():
         try:
             engine.run()
         except KeyboardInterrupt:
-            logger.log('INFO', "Stopped by user")
+            logger.log("INFO", "Stopped by user")
         except Exception as e:
-            logger.log('CRITICAL', f"Fatal error: {e}")
+            logger.log("CRITICAL", f"Fatal error: {e}")
         finally:
             engine.shutdown()
 
