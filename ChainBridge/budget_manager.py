@@ -35,7 +35,7 @@ class BudgetManager:
             self.initial_capital = initial_capital
         self.available_capital = self.initial_capital
 
-                # Updated risk per trade to 6% and max positions to 20
+        # Updated risk per trade to 6% and max positions to 20
         self.risk_per_trade = 6.0  # increased risk tolerance
         self.max_positions = 20  # increased position capacity
 

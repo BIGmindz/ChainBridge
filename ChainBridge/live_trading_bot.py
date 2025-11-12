@@ -108,6 +108,7 @@ class LiveTradingBot:
             # Some configs may have accidental trailing text (e.g. '426.60loaded from env')
             if isinstance(raw_initial_capital, str):
                 import re
+
                 match = re.search(r"[-+]?[0-9]*\.?[0-9]+", raw_initial_capital)
                 if match:
                     initial_capital = float(match.group(0))
@@ -117,9 +118,7 @@ class LiveTradingBot:
                 initial_capital = float(raw_initial_capital)
         except Exception as parse_exc:
             print(f"⚠️  Warning: Failed to parse initial_capital '{raw_initial_capital}' ({parse_exc}); using default {initial_capital}.")
-        self.budget_manager = BudgetManager(
-            initial_capital=initial_capital, exchange=self.exchange, live_mode=True
-        )
+        self.budget_manager = BudgetManager(initial_capital=initial_capital, exchange=self.exchange, live_mode=True)
 
         # Initialize exchange adapter
         self.exchange_adapter = ExchangeAdapter(exchange=self.exchange, config={})
@@ -258,19 +257,18 @@ class LiveTradingBot:
 
                 # Append UI snapshot element
                 try:
-                    per_symbol_snapshots.append({
-                        "symbol": symbol,
-                        "price": price,
-                        "aggregated_signal": signal,
-                        "aggregated_confidence": confidence,
-                        "modules": {
-                            m: {
-                                "signal": d.get("signal"),
-                                "confidence": d.get("confidence"),
-                                "value": d.get("value")
-                            } for m, d in signal_result.get("modules", {}).items()
+                    per_symbol_snapshots.append(
+                        {
+                            "symbol": symbol,
+                            "price": price,
+                            "aggregated_signal": signal,
+                            "aggregated_confidence": confidence,
+                            "modules": {
+                                m: {"signal": d.get("signal"), "confidence": d.get("confidence"), "value": d.get("value")}
+                                for m, d in signal_result.get("modules", {}).items()
+                            },
                         }
-                    })
+                    )
                 except Exception as snap_exc:
                     print(f"⚠️  Failed to record snapshot for {symbol}: {snap_exc}")
 
@@ -284,10 +282,8 @@ class LiveTradingBot:
                         print("⚡ Force-execution override: converting HOLD -> BUY for demonstration")
                     # else keep existing non-HOLD actionable signal
                 # Decide if we trade
-                if (
-                    effective_signal != "HOLD" and (
-                        self.force_execution and not self._forced_trade_done or effective_conf >= self.min_confidence
-                    )
+                if effective_signal != "HOLD" and (
+                    self.force_execution and not self._forced_trade_done or effective_conf >= self.min_confidence
                 ):
                     self._execute_trade(symbol, effective_signal, price, effective_conf)
                     if self.force_execution and not self._forced_trade_done:
@@ -351,29 +347,33 @@ class LiveTradingBot:
 
             if not order:
                 print(f"❌ Failed to place {signal} order for {symbol}")
-                self._log_trade_event({
-                    "ts": self._utc_now(),
-                    "symbol": symbol,
-                    "side": signal,
-                    "price": price,
-                    "status": "submit_failed",
-                    "confidence": confidence,
-                    "position_size": position_size,
-                })
+                self._log_trade_event(
+                    {
+                        "ts": self._utc_now(),
+                        "symbol": symbol,
+                        "side": signal,
+                        "price": price,
+                        "status": "submit_failed",
+                        "confidence": confidence,
+                        "position_size": position_size,
+                    }
+                )
                 return
 
             order_id = order.get("id") or order.get("orderId") or order.get("clientOrderId")
             print(f"📝 Submitted {signal} order id={order_id} for {symbol} @ {price}")
-            self._log_trade_event({
-                "ts": self._utc_now(),
-                "symbol": symbol,
-                "side": signal,
-                "price": price,
-                "status": "submitted",
-                "confidence": confidence,
-                "position_size": position_size,
-                "order_id": order_id,
-            })
+            self._log_trade_event(
+                {
+                    "ts": self._utc_now(),
+                    "symbol": symbol,
+                    "side": signal,
+                    "price": price,
+                    "status": "submitted",
+                    "confidence": confidence,
+                    "position_size": position_size,
+                    "order_id": order_id,
+                }
+            )
 
             # Poll for fill
             final_status, fill_price = self._poll_order_fill(order_id, symbol, signal.lower(), price)
@@ -389,52 +389,60 @@ class LiveTradingBot:
                     take_profit=entry_price * 1.06,
                 )
                 print(f"✅ {signal} FILLED for {symbol} at ${entry_price}")
-                self._log_trade_event({
-                    "ts": self._utc_now(),
-                    "symbol": symbol,
-                    "side": signal,
-                    "price": entry_price,
-                    "status": "filled",
-                    "confidence": confidence,
-                    "position_size": position_size,
-                    "order_id": order_id,
-                })
+                self._log_trade_event(
+                    {
+                        "ts": self._utc_now(),
+                        "symbol": symbol,
+                        "side": signal,
+                        "price": entry_price,
+                        "status": "filled",
+                        "confidence": confidence,
+                        "position_size": position_size,
+                        "order_id": order_id,
+                    }
+                )
             elif final_status == "canceled":
                 print(f"⚠️  {signal} order {order_id} canceled / not filled; releasing capital")
-                self._log_trade_event({
-                    "ts": self._utc_now(),
-                    "symbol": symbol,
-                    "side": signal,
-                    "price": price,
-                    "status": "canceled",
-                    "confidence": confidence,
-                    "position_size": position_size,
-                    "order_id": order_id,
-                })
+                self._log_trade_event(
+                    {
+                        "ts": self._utc_now(),
+                        "symbol": symbol,
+                        "side": signal,
+                        "price": price,
+                        "status": "canceled",
+                        "confidence": confidence,
+                        "position_size": position_size,
+                        "order_id": order_id,
+                    }
+                )
             else:
                 print(f"⚠️  {signal} order {order_id} unfilled after timeout; marking as expired")
-                self._log_trade_event({
-                    "ts": self._utc_now(),
-                    "symbol": symbol,
-                    "side": signal,
-                    "price": price,
-                    "status": "expired",
-                    "confidence": confidence,
-                    "position_size": position_size,
-                    "order_id": order_id,
-                })
+                self._log_trade_event(
+                    {
+                        "ts": self._utc_now(),
+                        "symbol": symbol,
+                        "side": signal,
+                        "price": price,
+                        "status": "expired",
+                        "confidence": confidence,
+                        "position_size": position_size,
+                        "order_id": order_id,
+                    }
+                )
 
         except Exception as e:
             print(f"❌ Trade execution error: {e}")
-            self._log_trade_event({
-                "ts": self._utc_now(),
-                "symbol": symbol,
-                "side": signal,
-                "price": price,
-                "status": "error",
-                "error": str(e),
-                "confidence": confidence,
-            })
+            self._log_trade_event(
+                {
+                    "ts": self._utc_now(),
+                    "symbol": symbol,
+                    "side": signal,
+                    "price": price,
+                    "status": "error",
+                    "error": str(e),
+                    "confidence": confidence,
+                }
+            )
 
     def _calculate_rsi(self, ohlcv, period=14):
         """Calculate RSI using Wilder's smoothing method"""
@@ -523,7 +531,7 @@ class LiveTradingBot:
 
             # New Listings Radar
             try:
-                listing_signal = self.new_listings_radar.get_signal() if hasattr(self.new_listings_radar, 'get_signal') else None  # type: ignore
+                listing_signal = self.new_listings_radar.get_signal() if hasattr(self.new_listings_radar, "get_signal") else None  # type: ignore
                 if listing_signal and listing_signal.get("coin", "").upper() in symbol:  # type: ignore
                     module_signals["NewListingsRadar"] = {
                         "signal": listing_signal.get("action", "HOLD"),  # type: ignore
@@ -628,11 +636,10 @@ class LiveTradingBot:
         while time.time() - start < timeout_seconds:
             try:
                 # Attempt to fetch order status via ccxt if available
-                if hasattr(self.exchange, 'fetch_order'):
+                if hasattr(self.exchange, "fetch_order"):
                     info = self.exchange.fetch_order(order_id, symbol)  # type: ignore
-                    status = (info.get('status') or '').lower()
-                    filled = info.get('filled')
-                    price = info.get('price') or submitted_price
+                    status = (info.get("status") or "").lower()
+                    price = info.get("price") or submitted_price
                     if status in {"closed", "filled"}:
                         return ("filled", price)
                     if status in {"canceled", "cancelled"}:
@@ -696,11 +703,13 @@ class LiveTradingBot:
                     if size_usd:
                         pct = (unrealized / size_usd) * 100.0
                 enriched = dict(pos)
-                enriched.update({
-                    "last_price": last_price,
-                    "unrealized_pnl": unrealized,
-                    "unrealized_pnl_pct": pct,
-                })
+                enriched.update(
+                    {
+                        "last_price": last_price,
+                        "unrealized_pnl": unrealized,
+                        "unrealized_pnl_pct": pct,
+                    }
+                )
                 enriched_positions.append(enriched)
         except Exception as exc:
             print(f"⚠️  P&L enrichment failed: {exc}")

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+
 """
 Adaptive Signal Weight Module
 
@@ -573,7 +574,7 @@ class AdaptiveWeightModule(Module):
                 return False
 
             # Check file extension
-            if not path.endswith(('.h5', '.joblib', '.json')):
+            if not path.endswith((".h5", ".joblib", ".json")):
                 print(f"Security warning: Invalid file extension for {path}")
                 return False
 
@@ -582,7 +583,7 @@ class AdaptiveWeightModule(Module):
             print(f"Path validation error: {str(e)}")
             return False
 
-    def _validate_model_structure(self, model: 'keras.Model') -> bool:
+    def _validate_model_structure(self, model: "keras.Model") -> bool:
         """
         Validate loaded model structure and architecture
         """
@@ -638,7 +639,7 @@ class AdaptiveWeightModule(Module):
                 self.weight_model = keras.models.load_model(
                     weight_model_path,
                     custom_objects=None,  # Prevent arbitrary code execution
-                    compile=False  # Load only architecture and weights
+                    compile=False,  # Load only architecture and weights
                 )
 
                 # Validate model structure
@@ -646,10 +647,7 @@ class AdaptiveWeightModule(Module):
                     raise ValueError("Model structure validation failed")
 
                 # Recompile model with known optimizer and loss
-                self.weight_model.compile(
-                    optimizer=Adam(learning_rate=1e-3),
-                    loss='mse'
-                )
+                self.weight_model.compile(optimizer=Adam(learning_rate=1e-3), loss="mse")
 
                 print(f"Loaded and validated weight model from {weight_model_path}")
             except Exception as e:

@@ -41,7 +41,7 @@ def infer_language(code_block_lines: list[str]) -> str:
     Returns a short language token accepted by common highlighters.
     """
     SAMPLE_LINES = 12
-    lines = [l.rstrip() for l in code_block_lines if l.strip()][:SAMPLE_LINES]
+    lines = [line.rstrip() for line in code_block_lines if line.strip()][:SAMPLE_LINES]
     if not lines:
         return "text"
 
@@ -54,15 +54,15 @@ def infer_language(code_block_lines: list[str]) -> str:
     yaml_keys = {"version:", "services:", "apiVersion:", "kind:", "metadata:", "spec:", "name:"}
 
     # Bash / shell
-    if first.startswith(shell_indicators) or any(l.startswith("$") for l in lines):
+    if first.startswith(shell_indicators) or any(line.startswith("$") for line in lines):
         return "bash"
-    if sum(any(tok in l for tok in shell_cmds) for l in lines) >= 2 and not any(l.strip().startswith("def ") for l in lines):
+    if sum(any(tok in line for tok in shell_cmds) for line in lines) >= 2 and not any(line.strip().startswith("def ") for line in lines):
         return "bash"
 
     # Python
-    if first.startswith("#!/usr/bin/env python") or any(l.startswith(k) for k in py_keywords for l in lines):
+    if first.startswith("#!/usr/bin/env python") or any(line.startswith(k) for k in py_keywords for line in lines):
         return "python"
-    if any(l.endswith(":") and l.split()[0] in {"class", "def"} for l in lines):
+    if any(line.endswith(":") and line.split()[0] in {"class", "def"} for line in lines):
         return "python"
 
     # JSON (quick heuristic: starts with { or [ and json.loads succeeds on a trimmed subset)
@@ -76,16 +76,21 @@ def infer_language(code_block_lines: list[str]) -> str:
             pass
 
     # YAML (contains multiple key: value patterns and yaml-like top keys)
-    yaml_like = sum(1 for l in lines if re.match(r"^[A-Za-z0-9_-]+:\s*", l))
-    if yaml_like >= 2 and any(any(k in l for k in yaml_keys) for l in lines):
+    yaml_like = sum(1 for line in lines if re.match(r"^[A-Za-z0-9_-]+:\s*", line))
+    if yaml_like >= 2 and any(any(k in line for k in yaml_keys) for line in lines):
         return "yaml"
 
     # TOML
-    if sum(1 for l in lines if re.match(r"^[A-Za-z0-9_.-]+\s*=\s*.+", l)) >= 2 and any(l.startswith("[") and l.endswith("]") for l in lines):
+    if sum(1 for line in lines if re.match(r"^[A-Za-z0-9_.-]+\s*=\s*.+", line)) >= 2 and any(
+        line.startswith("[") and line.endswith("]") for line in lines
+    ):
         return "toml"
 
     # INI
-    if any(l.startswith("[") and l.endswith("]") for l in lines) and sum(1 for l in lines if re.match(r"^[A-Za-z0-9_.-]+\s*=\s*.+", l)) >= 1:
+    if (
+        any(line.startswith("[") and line.endswith("]") for line in lines)
+        and sum(1 for line in lines if re.match(r"^[A-Za-z0-9_.-]+\s*=\s*.+", line)) >= 1
+    ):
         return "ini"
 
     return "text"
@@ -132,11 +137,11 @@ def normalize_file(path: Path) -> tuple[bool, int]:
                 if current_marker and marker.startswith(current_marker[0]):
                     # Perform inference if the opening fence we wrote was 'text'
                     if buffer and out_lines:
-                        open_line = out_lines[-(len(buffer)+1)] if len(out_lines) >= (len(buffer)+1) else out_lines[-1]
+                        open_line = out_lines[-(len(buffer) + 1)] if len(out_lines) >= (len(buffer) + 1) else out_lines[-1]
                         if open_line.strip().startswith(marker) and open_line.strip().endswith(" text"):
                             inferred = infer_language(buffer)
                             if inferred != "text":
-                                out_lines[-(len(buffer)+1)] = open_line.replace(" text", f" {inferred}")
+                                out_lines[-(len(buffer) + 1)] = open_line.replace(" text", f" {inferred}")
                     buffer = []
                     in_fence = False
                     current_marker = None

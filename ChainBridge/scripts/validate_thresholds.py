@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+
 """RSI Threshold Consistency Validator (canonical BUY=35 SELL=64)
 
 Authoritative cleaned implementation replacing prior corrupted mixed content.
@@ -26,8 +27,21 @@ REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 THIS_FILE = os.path.basename(__file__)
 
 EXCLUDE_SUBSTRINGS = [
-    '.venv', '__pycache__', '.git', 'archive', 'backup', '.bak', '.old', '.orig',
-    'experimental', 'experiments', 'legacy', 'regime', 'strategy', 'notebooks', 'docs/generated'
+    ".venv",
+    "__pycache__",
+    ".git",
+    "archive",
+    "backup",
+    ".bak",
+    ".old",
+    ".orig",
+    "experimental",
+    "experiments",
+    "legacy",
+    "regime",
+    "strategy",
+    "notebooks",
+    "docs/generated",
 ]
 
 PY_PATTERNS = [
@@ -45,12 +59,15 @@ OVERRIDE_MARKER = "RSI_OVERRIDE_JUSTIFIED"
 
 CONTEXT_WINDOW = 60
 
+
 def plausible_rsi(val: int) -> bool:
     return 10 <= val <= 90
+
 
 def is_excluded(rel: str) -> bool:
     lo = rel.lower()
     return any(s in lo for s in EXCLUDE_SUBSTRINGS)
+
 
 def scan_file(path: str) -> List[str]:
     rel = os.path.relpath(path, REPO_ROOT)
@@ -59,12 +76,12 @@ def scan_file(path: str) -> List[str]:
     if os.path.basename(path) == THIS_FILE:
         return []
     try:
-        with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
             text = f.read()
     except Exception as e:
         return [f"{rel}: ERROR reading file: {e}"]
 
-    pats = PY_PATTERNS if path.endswith('.py') else YAML_PATTERNS if path.endswith(('.yaml', '.yml')) else []
+    pats = PY_PATTERNS if path.endswith(".py") else YAML_PATTERNS if path.endswith((".yaml", ".yml")) else []
     if not pats:
         return []
 
@@ -73,8 +90,8 @@ def scan_file(path: str) -> List[str]:
     for pat in pats:
         for m in pat.finditer(text):
             # Skip if override marker appears on the same line
-            line_start = text.rfind('\n', 0, m.start()) + 1
-            line_end = text.find('\n', m.end())
+            line_start = text.rfind("\n", 0, m.start()) + 1
+            line_end = text.find("\n", m.end())
             if line_end == -1:
                 line_end = len(text)
             line = text[line_start:line_end]
@@ -88,39 +105,42 @@ def scan_file(path: str) -> List[str]:
                 continue
             if val in (CANON_BUY, CANON_SELL):
                 continue
-            snippet = lower_text[max(0, m.start()-CONTEXT_WINDOW):m.end()+CONTEXT_WINDOW]
-            if 'rsi' in snippet:
+            snippet = lower_text[max(0, m.start() - CONTEXT_WINDOW) : m.end() + CONTEXT_WINDOW]
+            if "rsi" in snippet:
                 issues.append(f"{rel}: RSI threshold {val} != canonical {CANON_BUY}/{CANON_SELL}")
     return issues
+
 
 def collect_divergences() -> List[str]:
     divergences: List[str] = []
     for root, _, files in os.walk(REPO_ROOT):
         for fname in files:
-            if not fname.endswith(('.py', '.yaml', '.yml')):
+            if not fname.endswith((".py", ".yaml", ".yml")):
                 continue
             full = os.path.join(root, fname)
             divergences.extend(scan_file(full))
     return divergences
 
+
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument('--warn-only', action='store_true', help='Do not exit non-zero on divergences')
+    parser.add_argument("--warn-only", action="store_true", help="Do not exit non-zero on divergences")
     args = parser.parse_args()
 
     print(f"Canonical RSI thresholds (fixed) BUY={CANON_BUY} SELL={CANON_SELL}")
     divergences = collect_divergences()
     if divergences:
-        print('\nDivergences detected:')
+        print("\nDivergences detected:")
         for d in sorted(divergences):
-            print(' -', d)
+            print(" -", d)
         if args.warn_only:
-            print('\nWARN-ONLY: Divergences present')
+            print("\nWARN-ONLY: Divergences present")
             return 0
-        print('\nFAIL: Non-canonical RSI thresholds present (update or justify).')
+        print("\nFAIL: Non-canonical RSI thresholds present (update or justify).")
         return 1
-    print('\nPASS: All RSI thresholds match canonical values.')
+    print("\nPASS: All RSI thresholds match canonical values.")
     return 0
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main())

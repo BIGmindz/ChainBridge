@@ -294,8 +294,6 @@ def run_multi_signal_bot(once: bool = False, dry_preflight: bool = False, market
     env_api_key = os.getenv("API_KEY", "").strip()
     env_api_secret = os.getenv("API_SECRET", "").strip()
 
-
-
     if env_api_key and env_api_secret:
         api_config = {"key": env_api_key, "secret": env_api_secret}
         print("🔑 Using API credentials from environment variables")
