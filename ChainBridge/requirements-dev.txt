@@ -4,6 +4,20 @@
 # Base dependencies from requirements.txt
 -r requirements.txt
 
+# Code Quality & Formatting (PINNED for CI consistency)
+black==24.10.0
+ruff==0.8.0
+pre-commit==3.5.0
+
+# Testing
+pytest>=7.4.3
+pytest-cov>=4.1.0
+pytest-asyncio>=0.23.0
+coverage>=7.3.2
+
+# Type Checking
+mypy>=1.7.1
+
 # Machine Learning dependencies
 tensorflow>=2.8.0
 scikit-learn>=1.0.0
