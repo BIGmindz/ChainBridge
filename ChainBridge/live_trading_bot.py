@@ -614,7 +614,7 @@ class LiveTradingBot:
                         "confidence": 0.0,
                         "value": 0,
                     }
-            except:
+            except Exception:
                 module_signals["NewListingsRadar"] = {
                     "signal": "HOLD",
                     "confidence": 0.0,
