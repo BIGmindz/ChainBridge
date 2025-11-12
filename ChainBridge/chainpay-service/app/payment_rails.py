@@ -11,20 +11,39 @@ Smart Settlements feature:
 - Enables future integrations without changing core logic
 """
 
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-import logging
-from typing import Optional
+from typing import Any, Optional
 
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
 
+def _safe_get(obj: Any, key: str, default: Any = 0.0) -> Any:
+    """
+    Return obj[key] if obj is a dict-like, otherwise if obj is numeric return it
+    (useful when upstream sometimes returns a raw float). Otherwise return default.
+    """
+    from numbers import Number
+
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+    if isinstance(obj, Number):
+        # treat the numeric as the desired value
+        try:
+            return obj if isinstance(obj, (int, float)) else float(str(obj))
+        except (ValueError, TypeError):
+            return default
+    return default
+
+
 class SettlementProvider(str, Enum):
     """Supported payment settlement providers."""
+
     INTERNAL_LEDGER = "internal_ledger"
     STRIPE = "stripe"
     ACH = "ach"
@@ -33,6 +52,7 @@ class SettlementProvider(str, Enum):
 
 class ReleaseStrategy(str, Enum):
     """Payment release timing strategy."""
+
     IMMEDIATE = "immediate"
     DELAYED = "delayed"
     MANUAL_REVIEW = "manual_review"
@@ -42,6 +62,7 @@ class ReleaseStrategy(str, Enum):
 @dataclass
 class SettlementResult:
     """Result of a settlement processing attempt."""
+
     success: bool
     provider: SettlementProvider
     reference_id: Optional[str] = None
@@ -139,11 +160,7 @@ class InternalLedgerRail(PaymentRail):
         from .models import MilestoneSettlement as MilestoneSettlementModel
 
         try:
-            milestone = (
-                self.db.query(MilestoneSettlementModel)
-                .filter(MilestoneSettlementModel.id == milestone_id)
-                .first()
-            )
+            milestone = self.db.query(MilestoneSettlementModel).filter(MilestoneSettlementModel.id == milestone_id).first()
 
             if not milestone:
                 return SettlementResult(
@@ -154,12 +171,11 @@ class InternalLedgerRail(PaymentRail):
                 )
 
             # Generate reference ID (INTERNAL_LEDGER:timestamp:milestone_id)
-            reference_id = (
-                f"INTERNAL_LEDGER:{datetime.utcnow().isoformat()}:{milestone_id}"
-            )
+            reference_id = f"INTERNAL_LEDGER:{datetime.utcnow().isoformat()}:{milestone_id}"
 
             # Mark milestone as APPROVED (v2: will be marked SETTLED when funds actually transfer)
             from .models import PaymentStatus
+
             milestone.status = PaymentStatus.APPROVED
             milestone.reference = reference_id
 
@@ -181,9 +197,7 @@ class InternalLedgerRail(PaymentRail):
             )
 
         except Exception as e:
-            logger.error(
-                f"Internal ledger settlement failed: milestone_id={milestone_id}, error={str(e)}"
-            )
+            logger.error(f"Internal ledger settlement failed: milestone_id={milestone_id}, error={str(e)}")
             return SettlementResult(
                 success=False,
                 provider=SettlementProvider.INTERNAL_LEDGER,
@@ -243,9 +257,7 @@ def should_release_now(risk_score: float, event_type: str) -> ReleaseStrategy:
             return ReleaseStrategy.MANUAL_REVIEW
 
 
-def get_release_delay_hours(
-    risk_score: float, event_type: str, release_strategy: ReleaseStrategy
-) -> Optional[int]:
+def get_release_delay_hours(risk_score: float, event_type: str, release_strategy: ReleaseStrategy) -> Optional[int]:
     """
     Get the number of hours to delay a payment based on strategy.
 
