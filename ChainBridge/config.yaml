@@ -1,0 +1,96 @@
+adaptive_weights:
+  data_dir: data
+  enabled: true
+  logs_dir: logs
+  lookback_days: 7
+  model_dir: models
+  retrain_frequency_hours: 24
+  signal_layers:
+    LAYER_1_TECHNICAL:
+    - RSI
+    - MACD
+    - BollingerBands
+    - VolumeProfile
+    - Sentiment
+    LAYER_2_LOGISTICS:
+    - LogisticsSignal
+    LAYER_3_GLOBAL_MACRO:
+    - GlobalMacro
+    - AdoptionTracker
+    - RegionCryptoMapper
+    LAYER_4_ADOPTION:
+    - NewListingsRadar
+api:
+  key: ${API_KEY}
+  secret: ${API_SECRET}
+budget_management:
+  compound_profits: true
+  max_positions: 20
+  max_risk_per_trade: 0.06
+  position_size_method: kelly
+  reduce_on_drawdown: true
+cooldown_minutes: 1
+csv_log: benson_signals.csv
+exchange: kraken
+initial_capital: 107.41
+logging_level: INFO
+market:
+  base: ETH
+  quote: USD
+  symbol: ETH/USD
+model_params:
+  bagging_fraction: 0.8
+  bagging_freq: 5
+  boosting_type: gbdt
+  feature_fraction: 0.9
+  learning_rate: 0.05
+  metric: binary_logloss
+  num_leaves: 31
+  objective: binary
+  verbose: -1
+poll_seconds: 30
+preprocessing:
+  clip_percentiles:
+  - 1.0
+  - 99.0
+  handle_missing: median
+  remove_constants: true
+risk:
+  cooldown_minutes: 5
+  initial_capital: 107.41
+  max_risk_per_trade: 0.06
+rsi:
+  buy_threshold: 35
+  period: 14
+  sell_threshold: 64
+symbols:
+- BTC/USD
+- ETH/USD
+- SOL/USD
+- DOGE/USD
+- XRP/USD
+- ADA/USD
+- AVAX/USD
+- ATOM/USD
+- LINK/USD
+- LTC/USD
+- DOT/USD
+- BCH/USD
+- SHIB/USD
+- UNI/USD
+- XLM/USD
+- ETC/USD
+- POL/USD
+- NEAR/USD
+- PEPE/USD
+- SEI/USD
+timeframe: 5m
+trading:
+  max_open_trades: 1
+  position_size_usd: 50
+  slippage_bps: 5
+training_params:
+  early_stopping_rounds: 50
+  num_boost_round: 1000
+  random_state: 42
+  test_size: 0.2

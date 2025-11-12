@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Multiple-Signal Trading Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+ :root {
+   --bg: #ffffff;
+   --bg-alt: #f5f7fa;
+   --bg-card: #ffffff;
+   --border: #d0d7de;
+   --text: #24292f;
+   --text-muted: #57606a;
+   --accent-green: #238636;
+   --accent-red: #da3633;
+   --accent-blue: #0969da;
+   --pnl-pos: #1a7f37;
+   --pnl-neg: #b62324;
+   --table-head: #eef1f4;
+ }
+ .theme-dark {
+   --bg: #0d1117;
+   --bg-alt: #0d1117;
+   --bg-card: #161b22;
+   --border: #30363d;
+   --text: #e6edf3;
+   --text-muted: #8b949e;
+   --accent-green: #238636;
+   --accent-red: #f85149;
+   --accent-blue: #4493f8;
+   --pnl-pos: #2ea043;
+   --pnl-neg: #f85149;
+   --table-head: #1f242c;
+ }
+ body { font-family: system-ui, Arial, sans-serif; margin: 0; background:var(--bg); color:var(--text); transition: background .25s, color .25s; }
+ header { background:var(--bg-card); padding:12px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); }
+ h1 { font-size:1.1rem; margin:0; letter-spacing:0.5px; }
+ .status { font-size:0.8rem; opacity:0.8; }
+ main { padding:16px 24px 60px; }
+ section { margin-bottom:28px; }
+ h2 { font-size:0.95rem; margin:0 0 12px; border-left:4px solid var(--accent-green); padding-left:8px; } 
+ .grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); }
+ .card { background:var(--bg-card); border:1px solid var(--border); border-radius:6px; padding:10px 12px; position:relative; }
+ .card h3 { margin:0 0 6px; font-size:0.8rem; font-weight:600; letter-spacing:0.5px; }
+ .muted { opacity:0.75; font-size:0.65rem; color:var(--text-muted); }
+ table { width:100%; border-collapse:collapse; font-size:0.65rem; }
+ th, td { text-align:right; padding:4px 6px; border-bottom:1px solid #30363d; }
+ th { background:var(--table-head); position:sticky; top:0; color:var(--text); }
+ .pill { display:inline-block; padding:2px 6px; border-radius:12px; font-size:0.55rem; font-weight:600; letter-spacing:0.5px; }
+ .pill.BUY { background:var(--accent-green); color:#fff; }
+ .pill.SELL { background:var(--accent-red); color:#fff; }
+ .pill.HOLD { background:#6e7681; color:#fff; }
+ .flex { display:flex; gap:12px; flex-wrap:wrap; }
+ .metric { background:var(--bg-card); border:1px solid var(--border); border-radius:6px; padding:8px 10px; min-width:140px; }
+ .metric h4 { margin:0 0 4px; font-size:0.6rem; font-weight:500; letter-spacing:0.5px; text-transform:uppercase; opacity:0.7; color:var(--text-muted); }
+ .metric .val { font-size:0.9rem; font-weight:600; }
+ .pnl-pos { color:var(--pnl-pos); }
+ .pnl-neg { color:var(--pnl-neg); }
+ footer { position:fixed; bottom:0; left:0; right:0; background:var(--bg-card); border-top:1px solid var(--border); padding:6px 14px; font-size:0.6rem; display:flex; justify-content:space-between; }
+ a { color:var(--accent-blue); text-decoration:none; }
+ a:hover { text-decoration:underline; }
+ .trades-table-wrapper { max-height:240px; overflow:auto; }
+ .fade { animation: fadein .6s ease; }
+ @keyframes fadein { from { opacity:0; transform:translateY(4px);} to { opacity:1; transform:translateY(0);} }
+</style>
+</head>
+<body>
+<header>
+  <h1>Multiple-Signal Trading Dashboard</h1>
+  <div style="display:flex; align-items:center; gap:14px;">
+    <button id="themeToggle" style="background:var(--bg-card); color:var(--text); border:1px solid var(--border); font-size:0.65rem; padding:6px 10px; border-radius:4px; cursor:pointer;">🌙 Dark</button>
+    <div class="status" id="connStatus">Connecting...</div>
+  </div>
+</header>
+<main>
+  <section id="portfolioSection" class="fade">
+    <h2>Portfolio</h2>
+    <div class="flex" id="portfolioMetrics"></div>
+  </section>
+  <section id="positionsSection" class="fade">
+    <h2>Open Positions</h2>
+    <div class="grid" id="positionsGrid"></div>
+  </section>
+  <section id="signalsSection" class="fade">
+    <h2>Latest Snapshot Signals</h2>
+    <div class="grid" id="signalsGrid"></div>
+  </section>
+  <section id="tradesSection" class="fade">
+    <h2>Recent Trades</h2>
+    <div class="trades-table-wrapper">
+      <table id="tradesTable">
+        <thead><tr><th style="text-align:left">Time (UTC)</th><th style="text-align:left">Symbol</th><th>Side</th><th>Price</th><th>Size USD</th><th>Confidence</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<footer>
+  <div>Data auto-refresh via SSE (/stream)</div>
+  <div><a href="/snapshot" target="_blank">raw snapshot</a> · <a href="/metrics" target="_blank">metrics</a> · <a href="/trades" target="_blank">trades json</a></div>
+</footer>
+<script>
+const els = {
+  status: document.getElementById('connStatus'),
+  positionsGrid: document.getElementById('positionsGrid'),
+  signalsGrid: document.getElementById('signalsGrid'),
+  tradesTableBody: document.querySelector('#tradesTable tbody'),
+  portfolioMetrics: document.getElementById('portfolioMetrics'),
+  themeToggle: document.getElementById('themeToggle')
+};
+
+function fmt(n, d=2){ if(n===undefined||n===null||isNaN(n)) return '-'; return Number(n).toFixed(d);} 
+function esc(s){ return (s+'').replace(/[&<>]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;' }[c])); }
+
+async function fetchTrades(){
+  try{ const r = await fetch('/trades'); const j = await r.json(); return j.trades||[]; }catch(e){ return []; }
+}
+
+function renderPortfolio(snap){
+  const p = snap.portfolio || {}; const items = [];
+  const pnlCls = (p.unrealized_pnl||0) >= 0 ? 'pnl-pos' : 'pnl-neg';
+  items.push(metric('Capital', '$'+fmt(p.capital ?? p.current_capital,2)));
+  items.push(metric('Available', '$'+fmt(p.available_capital,2)));
+  items.push(metric('Open Positions', fmt(((p.open_positions_enriched||p.open_positions)||[]).length,0)));
+  items.push(metric('Unrealized P&L', `<span class="${pnlCls}">$${fmt(p.unrealized_pnl,2)} (${fmt(p.unrealized_pnl_pct,2)}%)</span>`));
+  items.push(metric('Win Rate', fmt(p.win_rate||0,1)+'%'));
+  els.portfolioMetrics.innerHTML = items.join('');
+}
+function metric(label,val){ return `<div class="metric"><h4>${esc(label)}</h4><div class="val">${esc(val)}</div></div>` }
+
+function renderPositions(snap){
+  const pos = (snap.portfolio && (snap.portfolio.open_positions_enriched || snap.portfolio.open_positions)) || [];
+  if(!pos.length){ els.positionsGrid.innerHTML = '<div class="muted">No open positions</div>'; return; }
+  els.positionsGrid.innerHTML = pos.map(p=>{
+    const upnl = p.unrealized_pnl || 0; const cls = upnl>=0? 'pnl-pos':'pnl-neg';
+    return `<div class="card"><h3>${esc(p.symbol)}</h3>
+      <div class="muted">${esc(p.side)} @ ${fmt(p.entry_price)}</div>
+      <div style="font-size:0.65rem; margin-top:4px;">Size: $${fmt(p.position_size_usd)}</div>
+      <div style="font-size:0.65rem;">UPnL: <span class="${cls}">$${fmt(upnl,2)} (${fmt(p.unrealized_pnl_pct,2)}%)</span></div>
+      <div style="font-size:0.65rem;">SL: ${fmt(p.stop_loss)} TP: ${fmt(p.take_profit)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderSignals(snap){
+  const sigs = snap.signals || []; if(!sigs.length){ els.signalsGrid.innerHTML='<div class="muted">No signals yet</div>'; return; }
+  els.signalsGrid.innerHTML = sigs.slice(0,30).map(s=>`<div class="card"><h3>${esc(s.symbol)}</h3>
+    <div><span class="pill ${esc(s.action)}">${esc(s.action)}</span> <span class="muted">Conf ${fmt(s.confidence,2)}</span></div>
+    <div class="muted" style="margin-top:4px;">RSI ${fmt(s.indicators?.rsi)}</div>
+  </div>`).join('');
+}
+
+function renderTrades(trades){
+  els.tradesTableBody.innerHTML = trades.slice().reverse().map(t=>`<tr>
+    <td style="text-align:left">${esc(t.ts||'')}</td>
+    <td style="text-align:left">${esc(t.symbol||'')}</td>
+    <td><span class="pill ${esc(t.side||'')}">${esc(t.side||'')}</span></td>
+    <td>${fmt(t.price, t.price>100?2:6)}</td>
+    <td>${fmt(t.position_size,2)}</td>
+    <td>${fmt(t.confidence,2)}</td>
+    <td>${esc(t.status||'')}</td>
+  </tr>`).join('');
+}
+
+function connectSSE(){
+  try{
+    const ev = new EventSource('/stream');
+    ev.onopen = ()=> els.status.textContent = 'Live';
+    ev.onerror = ()=> els.status.textContent = 'Stream error';
+    ev.addEventListener('snapshot', async (e)=>{
+      const snap = JSON.parse(e.data);
+      renderPortfolio(snap);
+      renderPositions(snap);
+      renderSignals(snap);
+      const trades = await fetchTrades();
+      renderTrades(trades);
+    });
+  }catch(e){ els.status.textContent='SSE unsupported'; }
+}
+
+async function boot(){
+  // THEME INIT
+  const savedTheme = localStorage.getItem('msdb_theme') || 'dark';
+  applyTheme(savedTheme);
+  els.themeToggle.addEventListener('click', ()=>{
+    const current = document.body.classList.contains('theme-dark') ? 'dark' : 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    localStorage.setItem('msdb_theme', next);
+  });
+  // Initial load without waiting for SSE in case stream delayed
+  try{ const rs = await fetch('/snapshot'); const snap = await rs.json(); renderPortfolio(snap); renderPositions(snap); renderSignals(snap);}catch(e){}
+  renderTrades(await fetchTrades());
+  connectSSE();
+}
+boot();
+
+function applyTheme(mode){
+  if(mode === 'dark'){
+    document.body.classList.add('theme-dark');
+    document.body.classList.remove('theme-light');
+    els.themeToggle.textContent = '☀️ Light';
+  } else {
+    document.body.classList.add('theme-light');
+    document.body.classList.remove('theme-dark');
+    els.themeToggle.textContent = '🌙 Dark';
+  }
+}
+</script>
+</body>
+</html>
