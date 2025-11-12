@@ -8,7 +8,7 @@ on:
 
 env:
   PYTHON_VERSION: 3.11
-  
+
 jobs:
   security-scan:
     name: Security & Vulnerability Assessment (CodeQL)
@@ -41,12 +41,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pylint black flake8 mypy safety bandit
+          pip install -r requirements-dev.txt
+          pip install pylint flake8 mypy safety bandit
 
       - name: Normalize markdown fences (dry-run)
         run: |
@@ -56,16 +56,24 @@ jobs:
           else \
             echo 'Normalization script not found'; \
           fi
-      
-      - name: Code formatting check
-        run: black --check --diff .
-      
+
+      - name: Black code formatting check (verbose)
+        run: |
+          python -m black --check --verbose .
+
+      - name: Show Black diff on failure
+        if: failure()
+        run: python -m black --diff .
+
+      - name: Ruff linting
+        run: ruff check . || true
+
       - name: Linting
         run: pylint --rcfile=.pylintrc *.py || true
-      
+
       - name: Type checking
         run: mypy --config-file=pyproject.toml . || true
-      
+
       - name: Security audit
         run: |
           safety check || true
@@ -80,12 +88,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      
+
       - name: Validate configuration files
         run: |
           python -c "import yaml; yaml.safe_load(open('config/config.yaml'))"
           python -c "import os,yaml; p='config.yaml'; print('root config exists' if os.path.exists(p) else 'no root config'); (yaml.safe_load(open(p)) if os.path.exists(p) else None); print('YAML root config validated if present')"
-      
+
       - name: Schema validation
         run: |
           if [ -f scripts/validate_config_schema.py ]; then python scripts/validate_config_schema.py; else echo "No schema validator"; fi
@@ -99,18 +107,17 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-cov pytest-mock
-      
+          pip install -r requirements-dev.txt
+
       - name: Run tests
         run: |
           if [ -f benson_rsi_bot.py ]; then python benson_rsi_bot.py --test; fi
           if [ -d tests ]; then pytest tests/ -v --cov=. --cov-report=xml; else echo "No tests directory"; fi
-      
+
       - name: Upload coverage
         if: ${{ hashFiles('coverage.xml') != '' }}
         uses: codecov/codecov-action@v3
