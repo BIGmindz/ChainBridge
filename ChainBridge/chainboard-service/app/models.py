@@ -13,10 +13,11 @@ Base = declarative_base()
 class Driver(Base):
     """
     Driver model for managing transportation and logistics drivers.
-    
+
     This model tracks driver information including personal details,
     contact information, regulatory identifiers, and onboarding status.
     """
+
     __tablename__ = "drivers"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -26,10 +27,10 @@ class Driver(Base):
     phone = Column(String, nullable=True)
     dot_number = Column(String, nullable=True, comment="Department of Transportation number")
     cdl_number = Column(String, nullable=True, comment="Commercial Driver's License number")
-    
+
     # Status tracking
     is_active = Column(Boolean, default=True, nullable=False, index=True)
-    
+
     # Timestamps
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)

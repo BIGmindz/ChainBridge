@@ -11,19 +11,19 @@ from typing import Dict, Any
 def score_shipment(shipment_id: str, features: Dict[str, Any]) -> float:
     """
     Score a shipment based on extracted features.
-    
+
     This function will:
     - Accept a shipment_id and a dict of features
     - Perform inference using trained ML models
     - Return a risk score between 0.0 (low risk) and 1.0 (high risk)
-    
+
     Args:
         shipment_id: Unique identifier for the shipment
         features: Dictionary of feature values for the shipment
-        
+
     Returns:
         Risk score between 0.0 and 1.0
-        
+
     Note:
         Currently a placeholder. Will integrate with:
         - Adaptive weighting system

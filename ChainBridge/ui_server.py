@@ -138,7 +138,7 @@ class UIServerHandler(BaseHTTPRequestHandler):
             return self._serve_static("dashboard.html")
         # Static files under /static/*
         if self.path.startswith("/static/"):
-            rel = self.path[len("/static/"):]
+            rel = self.path[len("/static/") :]
             return self._serve_static(rel)
         # Default 404
         self._send_json({"error": "not_found"}, status=HTTPStatus.NOT_FOUND)
@@ -161,7 +161,7 @@ class UIServerHandler(BaseHTTPRequestHandler):
                     snap = load_snapshot()
                 if snap and snap != last_sent:
                     data = json.dumps(snap)
-                    self.wfile.write(f"event: snapshot\n".encode())
+                    self.wfile.write("event: snapshot\n".encode())
                     self.wfile.write(f"data: {data}\n\n".encode())
                     self.wfile.flush()
                     last_sent = snap

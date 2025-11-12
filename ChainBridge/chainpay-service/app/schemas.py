@@ -12,6 +12,7 @@ from enum import Enum
 
 class PaymentStatusEnum(str, Enum):
     """Payment status options."""
+
     PENDING = "pending"
     APPROVED = "approved"
     SETTLED = "settled"
@@ -22,6 +23,7 @@ class PaymentStatusEnum(str, Enum):
 
 class RiskTierEnum(str, Enum):
     """Risk tier options."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -29,8 +31,10 @@ class RiskTierEnum(str, Enum):
 
 # --- Payment Intent Schemas ---
 
+
 class PaymentIntentBase(BaseModel):
     """Base payment intent schema with common fields."""
+
     freight_token_id: int = Field(..., gt=0)
     amount: float = Field(..., gt=0)
     currency: str = Field(default="USD", max_length=10)
@@ -39,17 +43,20 @@ class PaymentIntentBase(BaseModel):
 
 class PaymentIntentCreate(PaymentIntentBase):
     """Schema for creating a new payment intent."""
+
     pass
 
 
 class PaymentIntentUpdate(BaseModel):
     """Schema for updating payment intent."""
+
     status: Optional[PaymentStatusEnum] = None
     settlement_notes: Optional[str] = None
 
 
 class PaymentIntentResponse(PaymentIntentBase):
     """Schema for payment intent API responses."""
+
     id: int
     risk_score: Optional[float] = Field(None, ge=0.0, le=1.0)
     risk_category: Optional[str] = None
@@ -69,23 +76,24 @@ class PaymentIntentResponse(PaymentIntentBase):
 
 class PaymentIntentListResponse(BaseModel):
     """Schema for listing payment intents."""
+
     total: int
     payment_intents: list[PaymentIntentResponse]
 
 
 # --- Settlement Request/Response ---
 
+
 class SettlementRequest(BaseModel):
     """Request to settle a payment intent."""
+
     settlement_notes: Optional[str] = Field(None, max_length=500)
-    force_approval: bool = Field(
-        default=False,
-        description="Override risk checks (requires special permission)"
-    )
+    force_approval: bool = Field(default=False, description="Override risk checks (requires special permission)")
 
 
 class SettlementResponse(BaseModel):
     """Response from settlement operation."""
+
     payment_intent_id: int
     status: PaymentStatusEnum
     action_taken: str  # "approved", "delayed", "rejected"
@@ -100,6 +108,7 @@ class SettlementResponse(BaseModel):
 
 class RiskAssessmentResponse(BaseModel):
     """Risk assessment for a payment intent."""
+
     payment_intent_id: int
     freight_token_id: int
     risk_score: Optional[float] = Field(None, ge=0.0, le=1.0)
@@ -112,6 +121,7 @@ class RiskAssessmentResponse(BaseModel):
 
 class SettlementLogResponse(BaseModel):
     """Schema for settlement audit logs."""
+
     id: int
     payment_intent_id: int
     action: str
@@ -126,6 +136,7 @@ class SettlementLogResponse(BaseModel):
 
 class SettlementHistoryResponse(BaseModel):
     """Settlement history for a payment intent."""
+
     payment_intent_id: int
     logs: list[SettlementLogResponse]
     total_actions: int
@@ -133,8 +144,10 @@ class SettlementHistoryResponse(BaseModel):
 
 # --- Payment Schedule & Milestone Schemas ---
 
+
 class PaymentScheduleItemCreate(BaseModel):
     """Schema for creating a payment schedule item."""
+
     event_type: str = Field(..., max_length=50, description="Shipment event type")
     percentage: float = Field(..., ge=0.0, le=1.0, description="Percentage of total payment (0.0-1.0)")
     order: int = Field(..., ge=1, description="Sequence order in schedule")
@@ -142,6 +155,7 @@ class PaymentScheduleItemCreate(BaseModel):
 
 class PaymentScheduleItemResponse(BaseModel):
     """Schema for payment schedule item API response."""
+
     id: int
     schedule_id: int
     event_type: str
@@ -155,6 +169,7 @@ class PaymentScheduleItemResponse(BaseModel):
 
 class PaymentScheduleResponse(BaseModel):
     """Schema for payment schedule API response."""
+
     id: int
     payment_intent_id: int
     risk_tier: RiskTierEnum
@@ -167,6 +182,7 @@ class PaymentScheduleResponse(BaseModel):
 
 class MilestoneSettlementCreate(BaseModel):
     """Schema for creating a milestone settlement (internal use via webhook)."""
+
     payment_intent_id: int = Field(..., gt=0)
     event_type: str = Field(..., max_length=50)
     settlement_amount: float = Field(..., gt=0)
@@ -175,6 +191,7 @@ class MilestoneSettlementCreate(BaseModel):
 
 class MilestoneSettlementResponse(BaseModel):
     """Schema for milestone settlement API response."""
+
     id: int
     payment_intent_id: int
     event_type: str
@@ -191,6 +208,7 @@ class MilestoneSettlementResponse(BaseModel):
 
 class ShipmentEventWebhookRequest(BaseModel):
     """Request body from ChainFreight webhook for shipment event."""
+
     shipment_id: int = Field(..., gt=0)
     event_type: str = Field(..., max_length=50)
     occurred_at: datetime
@@ -199,6 +217,7 @@ class ShipmentEventWebhookRequest(BaseModel):
 
 class ShipmentEventWebhookResponse(BaseModel):
     """Response from shipment event webhook processing."""
+
     shipment_id: int
     event_type: str
     processed_at: datetime
