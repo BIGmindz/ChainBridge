@@ -1,0 +1,32 @@
+# BIGmindz Trading Platform Configuration (mutex-free)
+mode: paper
+exchange: kraken
+symbols:
+  - BTC/USD
+  - ETH/USD
+  - SOL/USD
+  - DOGE/USD
+  - XRP/USD
+  - ADA/USD
+  - AVAX/USD
+  - ATOM/USD
+  - LINK/USD
+  - LTC/USD
+  - DOT/USD
+  - BCH/USD
+  - SHIB/USD
+  - UNI/USD
+  - XLM/USD
+  - ETC/USD
+  - POL/USD
+  - NEAR/USD
+  - PEPE/USD
+  - SEI/USD
+
+timeframe: 5m
+poll_seconds: 60
+initial_capital: 10000.0
+max_position_size: 1000.0
+max_daily_trades: 50
+stop_loss_percent: 2.0
+take_profit_percent: 3.0

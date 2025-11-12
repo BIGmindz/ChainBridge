@@ -1,0 +1,97 @@
+exchange: kraken
+
+api:
+  # API credentials loaded from environment variables
+  # Set API_KEY and API_SECRET in your .env file for live trading
+  # Leave these blank - they will be populated from environment variables
+  key: ${API_KEY}
+  secret: ${API_SECRET}
+
+symbols:
+  - BTC/USD
+  - ETH/USD
+  - SOL/USD
+  - DOGE/USD
+  - XRP/USD
+  - ADA/USD
+  - AVAX/USD
+  - ATOM/USD
+  - LINK/USD
+  - LTC/USD
+  - DOT/USD
+  - BCH/USD
+  - SHIB/USD
+  - UNI/USD
+  - XLM/USD
+  - ETC/USD
+  - POL/USD
+
+market:
+  base: ETH
+  quote: USD
+  symbol: ETH/USD
+
+trading:
+  position_size_usd: 50
+  max_open_trades: 20
+  slippage_bps: 5   # 5 bps = 0.05%
+  min_confidence: 0.40  # Lowered threshold for more trade opportunities
+  cooldown_minutes: 5
+  initial_capital: 426.60
+
+risk:
+  max_risk_per_trade: 0.06
+
+rsi:
+  period: 14
+  buy_threshold: 35
+  sell_threshold: 64
+
+macd:
+  fast: 12
+  slow: 26
+  signal: 9
+  hist_threshold: 0.0  # require positive/negative histogram to act; increase for stricter
+
+bollinger:
+  period: 20
+  stddev: 2.0
+
+signals:
+  use_rsi: true
+  use_macd: true
+  use_bollinger: true
+
+decision:
+  mode: consensus     # consensus | any
+  consensus_min: 2    # require at least N BUY/SELL votes when mode=consensus
+
+timeframe: 5m
+cooldown_minutes: 5
+poll_seconds: 30
+csv_log: benson_signals.csv
+
+# ML Model Configuration for Strategy Trainer v2
+model_params:
+  objective: 'binary'
+  metric: 'binary_logloss'
+  boosting_type: 'gbdt'
+  num_leaves: 31
+  learning_rate: 0.05
+  feature_fraction: 0.9
+  bagging_fraction: 0.8
+  bagging_freq: 5
+  verbose: -1
+
+training_params:
+  test_size: 0.2
+  random_state: 42
+  early_stopping_rounds: 50
+  num_boost_round: 1000
+
+preprocessing:
+  clip_percentiles: [1.0, 99.0]
+  remove_constants: true
+  handle_missing: 'median'
+
+logging_level: 'INFO'
