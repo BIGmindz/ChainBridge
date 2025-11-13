@@ -19,7 +19,9 @@ from app.models import MilestoneSettlement, PaymentStatus
 class TestInternalLedgerRailBasicExecution:
     """Test basic execution of InternalLedgerRail.process_settlement()."""
 
-    def test_process_settlement_returns_settlement_result(self, db_session: Session) -> None:
+    def test_process_settlement_returns_settlement_result(
+        self, db_session: Session
+    ) -> None:
         """process_settlement() should return a SettlementResult object."""
         rail = InternalLedgerRail(db_session)
 
@@ -45,7 +47,9 @@ class TestInternalLedgerRailBasicExecution:
 
         assert result.success is True
 
-    def test_process_settlement_provider_internal_ledger(self, db_session: Session) -> None:
+    def test_process_settlement_provider_internal_ledger(
+        self, db_session: Session
+    ) -> None:
         """process_settlement() should set provider to INTERNAL_LEDGER."""
         rail = InternalLedgerRail(db_session)
 
@@ -111,7 +115,9 @@ class TestSettlementResultStructure:
         assert hasattr(result, "provider")
         assert isinstance(result.provider, SettlementProvider)
 
-    def test_settlement_result_has_reference_id_field(self, db_session: Session) -> None:
+    def test_settlement_result_has_reference_id_field(
+        self, db_session: Session
+    ) -> None:
         """SettlementResult should have reference_id field."""
         rail = InternalLedgerRail(db_session)
         result = rail.process_settlement(1, 100.0, "USD")
@@ -237,7 +243,9 @@ class TestSettlementCurrencyHandling:
 class TestSettlementWithMilestoneDatabase:
     """Test process_settlement() with actual MilestoneSettlement records."""
 
-    def test_process_settlement_updates_milestone_status(self, db_session: Session) -> None:
+    def test_process_settlement_updates_milestone_status(
+        self, db_session: Session
+    ) -> None:
         """process_settlement() should update milestone status to APPROVED."""
         # Create a milestone
         milestone = MilestoneSettlement(
@@ -264,7 +272,9 @@ class TestSettlementWithMilestoneDatabase:
         db_session.refresh(milestone)
         assert milestone.status == PaymentStatus.APPROVED
 
-    def test_process_settlement_sets_reference_on_milestone(self, db_session: Session) -> None:
+    def test_process_settlement_sets_reference_on_milestone(
+        self, db_session: Session
+    ) -> None:
         """process_settlement() should set reference on milestone."""
         milestone = MilestoneSettlement(
             payment_intent_id=1,
@@ -286,7 +296,9 @@ class TestSettlementWithMilestoneDatabase:
         db_session.refresh(milestone)
         assert milestone.reference == result.reference_id
 
-    def test_process_settlement_sets_provider_on_milestone(self, db_session: Session) -> None:
+    def test_process_settlement_sets_provider_on_milestone(
+        self, db_session: Session
+    ) -> None:
         """process_settlement() should set provider on milestone."""
         milestone = MilestoneSettlement(
             payment_intent_id=1,
@@ -374,7 +386,9 @@ class TestMultipleSettlements:
         ref_ids = [r.reference_id for r in results]
         assert len(set(ref_ids)) == len(ref_ids)  # All unique
 
-    def test_multiple_settlements_different_currencies(self, db_session: Session) -> None:
+    def test_multiple_settlements_different_currencies(
+        self, db_session: Session
+    ) -> None:
         """Multiple settlements with different currencies should work."""
         rail = InternalLedgerRail(db_session)
         currencies = ["USD", "EUR", "GBP", "JPY", "CHF"]
