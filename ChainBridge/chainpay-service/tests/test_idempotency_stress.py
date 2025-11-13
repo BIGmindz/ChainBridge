@@ -18,7 +18,9 @@ from app.models import PaymentIntent, MilestoneSettlement, PaymentStatus, RiskTi
 class TestIdempotencyUniqueConstraint:
     """Test idempotency via unique constraint on (payment_intent_id, event_type)."""
 
-    def test_duplicate_event_type_creates_single_settlement(self, db_session: Session) -> None:
+    def test_duplicate_event_type_creates_single_settlement(
+        self, db_session: Session
+    ) -> None:
         """Sending same event twice should create only one settlement."""
         # Create payment intent
         intent = PaymentIntent(
@@ -111,7 +113,9 @@ class TestIdempotencyUniqueConstraint:
         )
         assert len(settlements) == 3
 
-    def test_duplicate_event_different_intent_allowed(self, db_session: Session) -> None:
+    def test_duplicate_event_different_intent_allowed(
+        self, db_session: Session
+    ) -> None:
         """Same event type can exist in different payment intents."""
         # Create two intents
         intent1 = PaymentIntent(
@@ -165,7 +169,9 @@ class TestIdempotencyUniqueConstraint:
 class TestIdempotencyStatusUpdates:
     """Test that status updates are handled safely with duplicates."""
 
-    def test_duplicate_event_with_different_status_fails(self, db_session: Session) -> None:
+    def test_duplicate_event_with_different_status_fails(
+        self, db_session: Session
+    ) -> None:
         """Cannot create duplicate event with different status (unique constraint)."""
         intent = PaymentIntent(
             freight_token_id=505,
@@ -223,7 +229,9 @@ class TestIdempotencyStatusUpdates:
 class TestStressMultipleMilestones:
     """Stress tests with many milestones."""
 
-    def test_create_many_milestones_for_single_intent(self, db_session: Session) -> None:
+    def test_create_many_milestones_for_single_intent(
+        self, db_session: Session
+    ) -> None:
         """Should handle creating many different milestones for single intent."""
         intent = PaymentIntent(
             freight_token_id=506,
@@ -257,7 +265,9 @@ class TestStressMultipleMilestones:
         )
         assert len(settlements) == 100
 
-    def test_create_many_intents_with_same_event_type(self, db_session: Session) -> None:
+    def test_create_many_intents_with_same_event_type(
+        self, db_session: Session
+    ) -> None:
         """Should handle many intents each with same event type."""
         # Create 50 payment intents
         intents = []
@@ -347,7 +357,9 @@ class TestIdempotencyDataIntegrity:
         db_session.refresh(intent)
         assert intent.amount == original_amount
 
-    def test_multiple_settlements_amounts_sum_correctly(self, db_session: Session) -> None:
+    def test_multiple_settlements_amounts_sum_correctly(
+        self, db_session: Session
+    ) -> None:
         """Multiple settlements for same intent should track individual amounts."""
         total_intent_amount = 1000.0
         intent = PaymentIntent(
