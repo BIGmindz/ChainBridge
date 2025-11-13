@@ -38,7 +38,7 @@ class TestEnhancedRegimeModel(unittest.TestCase):
         """Clean up test fixtures"""
         shutil.rmtree(self.temp_dir)
 
-    def test_sample_data_generation(self):
+    def test_sample_data_generation(self) -> None:
         """Test sample data generation"""
         # Generate sample data
         data = self.model.generate_sample_data(n_samples=100)
@@ -86,7 +86,7 @@ class TestEnhancedRegimeModel(unittest.TestCase):
         self.assertTrue((data["volume_ratio"] > 0).all())
         self.assertTrue((data["volatility_24h"] > 0).all())
 
-    def test_model_training(self):
+    def test_model_training(self) -> None:
         """Test model training functionality"""
         # Generate sample data
         data = self.model.generate_sample_data(n_samples=200)
@@ -114,7 +114,7 @@ class TestEnhancedRegimeModel(unittest.TestCase):
         expected_classes = ["bear", "bull", "sideways"]
         self.assertEqual(set(self.model.label_encoder.classes_), set(expected_classes))
 
-    def test_prediction(self):
+    def test_prediction(self) -> None:
         """Test prediction functionality"""
         # Generate and train
         data = self.model.generate_sample_data(n_samples=200)
@@ -155,7 +155,7 @@ class TestEnhancedRegimeModel(unittest.TestCase):
         self.assertEqual(probas.shape, (1, 3))
         self.assertAlmostEqual(probas[0].sum(), 1.0, places=6)  # type: ignore
 
-    def test_single_prediction(self):
+    def test_single_prediction(self) -> None:
         """Test single prediction functionality"""
         # Generate and train
         data = self.model.generate_sample_data(n_samples=200)
@@ -195,7 +195,7 @@ class TestEnhancedRegimeModel(unittest.TestCase):
         self.assertGreaterEqual(result["confidence"], 0.0)
         self.assertLessEqual(result["confidence"], 1.0)
 
-    def test_model_save_load(self):
+    def test_model_save_load(self) -> None:
         """Test model saving and loading"""
         # Generate and train
         data = self.model.generate_sample_data(n_samples=200)
@@ -238,7 +238,7 @@ class TestEnhancedRegimeModel(unittest.TestCase):
         result = new_model.predict_single(feature_dict)
         self.assertIn(result["regime"], ["bull", "bear", "sideways"])
 
-    def test_feature_importance(self):
+    def test_feature_importance(self) -> None:
         """Test feature importance functionality"""
         # Generate and train
         data = self.model.generate_sample_data(n_samples=200)
@@ -280,12 +280,12 @@ class TestRegimeModelUtils(unittest.TestCase):
         """Clean up test fixtures"""
         shutil.rmtree(self.temp_dir)
 
-    def test_model_discovery(self):
+    def test_model_discovery(self) -> None:
         """Test model discovery functionality"""
         available = self.loader.list_available_models()
         self.assertIn("enhanced", available)
 
-    def test_model_loading(self):
+    def test_model_loading(self) -> None:
         """Test model loading functionality"""
         success = self.loader.load_model("enhanced")
         self.assertTrue(success)
@@ -298,7 +298,7 @@ class TestRegimeModelUtils(unittest.TestCase):
         self.assertEqual(info["model_name"], "enhanced")
         self.assertEqual(len(info["feature_columns"]), 18)
 
-    def test_prediction(self):
+    def test_prediction(self) -> None:
         """Test prediction functionality"""
         # Load model
         self.loader.load_model("enhanced")
@@ -316,7 +316,7 @@ class TestRegimeModelUtils(unittest.TestCase):
         self.assertIn(result["regime"], ["bull", "bear", "sideways"])
         self.assertEqual(result["model_used"], "enhanced")
 
-    def test_sample_features_creation(self):
+    def test_sample_features_creation(self) -> None:
         """Test sample features creation"""
         for regime_type in ["bull", "bear", "sideways"]:
             features = create_sample_features(regime_type)
@@ -354,7 +354,7 @@ class TestRegimeModelUtils(unittest.TestCase):
             self.assertGreater(features["volume_ratio"], 0)
             self.assertGreater(features["volatility_24h"], 0)
 
-    def test_quick_predict(self):
+    def test_quick_predict(self) -> None:
         """Test quick predict functionality"""
         # Move model to default location for quick_predict
         default_dir = "ml_models"
@@ -380,7 +380,7 @@ class TestRegimeModelUtils(unittest.TestCase):
 class TestIntegration(unittest.TestCase):
     """Integration tests"""
 
-    def test_end_to_end_workflow(self):
+    def test_end_to_end_workflow(self) -> None:
         """Test complete workflow from training to prediction"""
         with tempfile.TemporaryDirectory() as temp_dir:
             # 1. Create and train model

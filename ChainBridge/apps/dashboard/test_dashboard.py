@@ -15,7 +15,7 @@ sys.path.insert(
 )
 
 
-def test_dashboard_import():
+def test_dashboard_import() -> None:
     """Test that the dashboard can be imported successfully"""
     try:
         # Test basic imports that the dashboard uses
@@ -64,7 +64,7 @@ def create_mock_report():
     return strategy_path
 
 
-def test_regex_parsing():
+def test_regex_parsing() -> None:
     """Test the regex parsing directly"""
 
     content = """# Backtest Report: TEST_STRATEGY
@@ -100,7 +100,7 @@ def test_regex_parsing():
     return True
 
 
-def test_dashboard_structure():
+def test_dashboard_structure() -> None:
     """Test that the dashboard has the expected structure"""
     dashboard_dir = "apps/dashboard"
 

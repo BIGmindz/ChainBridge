@@ -52,7 +52,7 @@ class TestKrakenPaperTrading(unittest.TestCase):
             "api": {"rate_limit": 60},
         }
 
-    def test_config_validation(self):
+    def test_config_validation(self) -> None:
         """Test configuration validation"""
         print("✅ Testing configuration validation...")
 
@@ -67,7 +67,7 @@ class TestKrakenPaperTrading(unittest.TestCase):
 
         print("   ✓ Configuration validation passed")
 
-    def test_trading_position_structure(self):
+    def test_trading_position_structure(self) -> None:
         """Test TradingPosition data structure"""
         print("✅ Testing TradingPosition structure...")
 
@@ -99,7 +99,7 @@ class TestKrakenPaperTrading(unittest.TestCase):
             print(f"   ❌ TradingPosition test failed: {e}")
             # Continue with other tests
 
-    def test_price_data_structure(self):
+    def test_price_data_structure(self) -> None:
         """Test PriceData structure"""
         print("✅ Testing PriceData structure...")
 
@@ -129,7 +129,7 @@ class TestKrakenPaperTrading(unittest.TestCase):
         except Exception as e:
             print(f"   ❌ PriceData test failed: {e}")
 
-    def test_performance_metrics(self):
+    def test_performance_metrics(self) -> None:
         """Test PerformanceMetrics calculations"""
         print("✅ Testing PerformanceMetrics...")
 
@@ -159,7 +159,7 @@ class TestKrakenPaperTrading(unittest.TestCase):
         except Exception as e:
             print(f"   ❌ PerformanceMetrics test failed: {e}")
 
-    def test_risk_calculations(self):
+    def test_risk_calculations(self) -> None:
         """Test risk management calculations"""
         print("✅ Testing risk calculations...")
 
@@ -184,7 +184,7 @@ class TestKrakenPaperTrading(unittest.TestCase):
         )
         print(f"   ✓ Max drawdown limit: {max_drawdown_limit:.1%}")
 
-    def test_bot_creation(self):
+    def test_bot_creation(self) -> None:
         """Test bot creation with factory function"""
         print("✅ Testing bot creation...")
 
@@ -210,7 +210,7 @@ class TestKrakenPaperTrading(unittest.TestCase):
             print(f"   ❌ Bot creation failed: {e}")
             print("   ℹ️  This is expected if full implementation is not available")
 
-    def test_configuration_file_format(self):
+    def test_configuration_file_format(self) -> None:
         """Test configuration file format"""
         print("✅ Testing configuration file format...")
 
@@ -240,7 +240,7 @@ class TestKrakenPaperTrading(unittest.TestCase):
         else:
             print(f"   ⚠️  Configuration file not found: {config_path}")
 
-    def test_json_serialization(self):
+    def test_json_serialization(self) -> None:
         """Test JSON serialization for trade journal"""
         print("✅ Testing JSON serialization...")
 
