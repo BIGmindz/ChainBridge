@@ -68,15 +68,16 @@ except ImportError:
 
 
 class EnterpriseBot:
-    """
-    Enterprise-grade bot orchestrator
+    """Enterprise-grade bot orchestrator for trading and risk management.
 
     Responsibilities:
-    - Lifecycle management
-    - Secrets rotation monitoring
-    - Health checks
-    - Metrics publication
-    - Graceful shutdown
+    - Lifecycle management (startup, shutdown, signal handling)
+    - Secrets rotation monitoring via Vault/AWS/Env
+    - Health checks for external data sources
+    - Metrics publication to Prometheus
+    - Graceful shutdown with signal handling
+    - Integration with ChainFreight (shipment tokens), ChainPay (settlements),
+      and ChainIQ (risk scoring)
     """
 
     def __init__(
@@ -86,7 +87,7 @@ class EnterpriseBot:
         once: bool = False,
         min_confidence: float = 0.25,
         metrics_port: int = 9090,
-    ):
+    ) -> None:
         self.mode = mode
         self.confirm_live = confirm_live
         self.once = once
@@ -109,8 +110,8 @@ class EnterpriseBot:
 
         self._print_banner()
 
-    def _print_banner(self):
-        """Print enterprise banner"""
+    def _print_banner(self) -> None:
+        """Print enterprise banner with configuration summary."""
         mode_indicator = (
             "📝 PAPER TRADING" if self.mode == "paper" else "⚠️  LIVE TRADING"
         )
@@ -136,8 +137,13 @@ class EnterpriseBot:
             print("⚠️  Ensure you have reviewed configuration and tested in paper mode")
             print("⚠️  Press Ctrl+C to stop at any time\n")
 
-    def _signal_handler(self, signum, frame):
-        """Handle shutdown signals gracefully"""
+    def _signal_handler(self, signum: int, frame) -> None:
+        """Handle shutdown signals gracefully.
+
+        Args:
+            signum: Signal number (SIGINT, SIGTERM)
+            frame: Current stack frame
+        """
         self.observability.logger.warning(
             f"Received signal {signum}, initiating graceful shutdown"
         )
@@ -145,7 +151,17 @@ class EnterpriseBot:
         self.should_stop = True
 
     def validate_environment(self) -> bool:
-        """Validate environment and dependencies"""
+        """Validate environment and dependencies.
+
+        Checks:
+        - Python version >= 3.9
+        - Required module availability
+        - Exchange credentials via secrets manager
+        - Data source health (sentiment, macro indicators)
+
+        Returns:
+            True if all validations pass, False otherwise
+        """
         print("🔍 Validating environment...")
 
         with self.observability.measure_operation("environment_validation"):
@@ -181,8 +197,14 @@ class EnterpriseBot:
 
             return True
 
-    def _check_data_sources(self):
-        """Check health of external data sources"""
+    def _check_data_sources(self) -> None:
+        """Check health of external data sources.
+
+        Monitors data source availability with circuit breaker protection:
+        - Fear & Greed Index
+        - Reddit sentiment data
+        - Other macro indicators
+        """
         sources = [
             ("Fear & Greed Index", "https://api.alternative.me/fng/"),
             ("Reddit Sentiment", "https://www.reddit.com/r/cryptocurrency/hot.json"),
@@ -215,8 +237,12 @@ class EnterpriseBot:
                     source_name, "down"
                 )
 
-    def check_secrets_rotation(self):
-        """Check if any secrets need rotation"""
+    def check_secrets_rotation(self) -> None:
+        """Check if any secrets need rotation.
+
+        Verifies that secrets (API keys, credentials) haven't exceeded
+        max age and logs rotation recommendations.
+        """
         print("\n🔑 Checking secrets rotation status...")
 
         secrets_to_check = ["API_KEY", "API_SECRET", "KRAKEN_API_KEY", "KRAKEN_SECRET"]
@@ -235,7 +261,17 @@ class EnterpriseBot:
                     )
 
     def initialize_bot(self) -> bool:
-        """Initialize trading bot with enterprise configuration"""
+        """Initialize trading bot with enterprise configuration.
+
+        Sets up:
+        - Exchange credentials from secrets manager
+        - Trading mode (live/paper)
+        - Budget management
+        - Signal modules
+
+        Returns:
+            True if initialization succeeds, False otherwise
+        """
         print("\n🚀 Initializing trading bot...")
 
         try:
@@ -264,7 +300,17 @@ class EnterpriseBot:
             return False
 
     def run_trading_cycle(self) -> bool:
-        """Execute single trading cycle"""
+        """Execute single trading cycle.
+
+        Steps:
+        1. Generate signals from all modules
+        2. Aggregate and validate signals
+        3. Execute trades if conditions met
+        4. Publish portfolio metrics to Prometheus
+
+        Returns:
+            True if cycle completes successfully, False on error
+        """
         if not self.bot:
             return False
 
@@ -291,7 +337,17 @@ class EnterpriseBot:
             return False
 
     def run(self) -> int:
-        """Main execution loop"""
+        """Main execution loop.
+
+        Orchestrates the full bot lifecycle:
+        - Environment validation
+        - Secrets checking
+        - Bot initialization
+        - Trading cycle loop or single execution
+
+        Returns:
+            Exit code (0=success, 1-4=various failures)
+        """
         # Validate environment
         if not self.validate_environment():
             return 1
@@ -349,7 +405,21 @@ class EnterpriseBot:
 
 
 def main() -> int:
-    """Entry point"""
+    """Entry point for enterprise trading bot.
+
+    Parses CLI arguments and launches EnterpriseBot orchestrator.
+
+    Args (via CLI):
+        --mode: 'live' or 'paper' (default: paper)
+        --confirm-live: Required flag for live trading mode
+        --once: Run single cycle then exit
+        --min-confidence: Minimum signal confidence (0.0-1.0)
+        --metrics-port: Prometheus metrics port
+        --preflight: Run validation checks only
+
+    Returns:
+        Exit code (0=success)
+    """
     parser = argparse.ArgumentParser(
         description="Enterprise Trading Bot v2.0",
         formatter_class=argparse.RawDescriptionHelpFormatter,
