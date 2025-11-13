@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { TrendingUp, AlertTriangle, Clock, Zap } from "lucide-react";
+import { useState, useEffect } from "react";
+import { AlertTriangle } from "lucide-react";
 import { NetworkVitals } from "../types";
 import { apiClient } from "../services/api";
 import ExceptionsPanel from "../components/ExceptionsPanel";

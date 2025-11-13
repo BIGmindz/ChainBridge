@@ -38,10 +38,6 @@ function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function randomFloat(min: number, max: number): number {
-  return Math.random() * (max - min) + min;
-}
-
 function generateShipmentId(): string {
   return `ship_${Math.random().toString(36).substr(2, 9)}`;
 }
@@ -147,7 +143,7 @@ function generateShipment(overrides?: Partial<Shipment>): Shipment {
     destination: getRandomItem(DESTINATIONS),
     current_status: ["pickup", "in_transit", "delivery", "delayed"][
       randomInt(0, 3)
-    ] as any,
+    ] as ShipmentStatus,
     current_event: "in_transit",
     last_update_timestamp: new Date(Date.now() - hoursAgo * 3600000).toISOString(),
     created_at: new Date(Date.now() - (hoursAgo + 24) * 3600000).toISOString(),
@@ -155,7 +151,7 @@ function generateShipment(overrides?: Partial<Shipment>): Shipment {
     risk: generateRiskAssessment(riskScore),
     payment_state: ["not_started", "in_progress", "partially_paid", "completed"][
       randomInt(0, 3)
-    ] as any,
+    ] as ShipmentStatus,
     payment_schedule: generatePaymentSchedule(),
     total_value_usd: randomInt(5000, 50000),
     proofpack: generateProofPack(),
