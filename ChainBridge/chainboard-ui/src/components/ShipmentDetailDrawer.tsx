@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
-import { Shipment } from "../types";
+import { Shipment, ShipmentProofSummary } from "../types";
 import { apiClient } from "../services/api";
 import {
   formatRiskScore,
@@ -22,7 +22,9 @@ export default function ShipmentDetailDrawer({
   onClose,
 }: ShipmentDetailDrawerProps): JSX.Element {
   const [shipment, setShipment] = useState<Shipment | null>(null);
+  const [proofData, setProofData] = useState<ShipmentProofSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [proofLoading, setProofLoading] = useState(false);
   const [showProof, setShowProof] = useState(false);
 
   useEffect(() => {
@@ -30,6 +32,32 @@ export default function ShipmentDetailDrawer({
       try {
         const data = await apiClient.getShipmentDetail(shipmentId);
         setShipment(data);
+
+        // Fetch proof pack data if pack_id exists
+        if (data && data.proofpack?.pack_id) {
+          setProofLoading(true);
+          try {
+            const proofResponse = await apiClient.getProofPack(
+              data.proofpack.pack_id
+            );
+            // Transform backend response to UI format
+            setProofData({
+              packId: proofResponse.pack_id,
+              shipmentId: proofResponse.shipment_id,
+              manifestHash: proofResponse.manifest_hash,
+              generatedAt: proofResponse.generated_at,
+              status: proofResponse.status,
+              message: proofResponse.message,
+              signatureStatus: proofResponse.signature_status,
+              events: proofResponse.events,
+            });
+          } catch (error) {
+            console.error("Failed to load proof pack:", error);
+            // Fall back to mock data from shipment
+          } finally {
+            setProofLoading(false);
+          }
+        }
       } catch (error) {
         console.error("Failed to load shipment:", error);
       } finally {
@@ -190,42 +218,126 @@ export default function ShipmentDetailDrawer({
         <div>
           <h4 className="font-semibold text-gray-900 mb-3">Governance & Audit</h4>
           <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-600">ProofPack ID</span>
-              <span className="font-mono text-gray-900">{shipment.proofpack.pack_id}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Signature</span>
-              <span
-                className={`font-semibold ${
-                  shipment.proofpack.signature_status === "VERIFIED"
-                    ? "text-success-600"
-                    : "text-danger-600"
-                }`}
-              >
-                {shipment.proofpack.signature_status}
-              </span>
-            </div>
-            <button
-              onClick={() => setShowProof(!showProof)}
-              className="mt-2 text-primary-600 hover:text-primary-700 font-medium text-sm"
-            >
-              {showProof ? "Hide" : "View"} Manifest
-            </button>
-
-            {showProof && (
-              <pre className="mt-3 p-3 bg-gray-50 rounded text-xs overflow-auto max-h-48 text-gray-700">
-                {JSON.stringify(
-                  {
-                    shipment_id: shipment.shipment_id,
-                    events: shipment.events,
-                    risk: shipment.risk,
-                    payment_schedule: shipment.payment_schedule,
-                  },
-                  null,
-                  2
+            {proofLoading ? (
+              <div className="text-center py-4">
+                <div className="inline-block w-4 h-4 border-2 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+              </div>
+            ) : proofData ? (
+              <>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">ProofPack ID</span>
+                  <span className="font-mono text-gray-900">{proofData.packId}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Status</span>
+                  <span
+                    className={`font-semibold text-sm px-2 py-1 rounded ${
+                      proofData.status === "SUCCESS"
+                        ? "bg-success-100 text-success-700"
+                        : proofData.status === "ERROR"
+                          ? "bg-danger-100 text-danger-700"
+                          : "bg-warning-100 text-warning-700"
+                    }`}
+                  >
+                    {proofData.status}
+                  </span>
+                </div>
+                {proofData.message && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Message</span>
+                    <span className="text-gray-900">{proofData.message}</span>
+                  </div>
                 )}
-              </pre>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Generated</span>
+                  <span className="text-gray-900">
+                    {new Date(proofData.generatedAt).toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Signature</span>
+                  <span
+                    className={`font-semibold ${
+                      proofData.signatureStatus === "VERIFIED"
+                        ? "text-success-600"
+                        : proofData.signatureStatus === "FAILED"
+                          ? "text-danger-600"
+                          : "text-gray-600"
+                    }`}
+                  >
+                    {proofData.signatureStatus || "PENDING"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Manifest Hash</span>
+                  <span className="font-mono text-xs text-gray-900">
+                    {proofData.manifestHash.substring(0, 12)}...
+                  </span>
+                </div>
+                {proofData.events && proofData.events.length > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Events Recorded</span>
+                    <span className="font-medium text-gray-900">
+                      {proofData.events.length}
+                    </span>
+                  </div>
+                )}
+                <button
+                  onClick={() => setShowProof(!showProof)}
+                  className="mt-2 text-primary-600 hover:text-primary-700 font-medium text-sm"
+                >
+                  {showProof ? "Hide" : "View"} Full Proof
+                </button>
+                {showProof && (
+                  <pre className="mt-3 p-3 bg-gray-50 rounded text-xs overflow-auto max-h-48 text-gray-700">
+                    {JSON.stringify(proofData, null, 2)}
+                  </pre>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">ProofPack ID</span>
+                  <span className="font-mono text-gray-900">
+                    {shipment.proofpack.pack_id}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Signature</span>
+                  <span
+                    className={`font-semibold ${
+                      shipment.proofpack.signature_status === "VERIFIED"
+                        ? "text-success-600"
+                        : "text-danger-600"
+                    }`}
+                  >
+                    {shipment.proofpack.signature_status}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  (Mock data - connect to backend for real proof data)
+                </p>
+                <button
+                  onClick={() => setShowProof(!showProof)}
+                  className="mt-2 text-primary-600 hover:text-primary-700 font-medium text-sm"
+                >
+                  {showProof ? "Hide" : "View"} Manifest
+                </button>
+                {showProof && (
+                  <pre className="mt-3 p-3 bg-gray-50 rounded text-xs overflow-auto max-h-48 text-gray-700">
+                    {JSON.stringify(
+                      {
+                        shipment_id: shipment.shipment_id,
+                        events: shipment.events,
+                        risk: shipment.risk,
+                        payment_schedule: shipment.payment_schedule,
+                      },
+                      null,
+                      2
+                    )}
+                  </pre>
+                )}
+              </>
             )}
           </div>
         </div>
