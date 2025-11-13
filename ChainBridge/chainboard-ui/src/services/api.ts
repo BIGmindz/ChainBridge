@@ -15,13 +15,18 @@ import {
   Shipment,
   ShipmentStatus,
   ExceptionRow,
+
   NetworkVitals,
   ShipmentEvent,
   RiskAssessment,
   PaymentMilestone,
   PaymentState,
   ProofPackSummary,
+  ProofPackResponse,
+  CreateProofPackPayload,
 } from "../types";
+import { realApiClient } from "./realApiClient";
+import { config } from "../config/env";
 
 // ============================================================================
 // MOCK DATA GENERATORS
@@ -327,6 +332,70 @@ class MockApiClient {
   }
 
   /**
+   * POST /proofpacks/run - Create a new proof pack
+   */
+  async createProofPack(payload: {
+    shipment_id: string;
+    events: ShipmentEvent[];
+    risk_score?: number;
+    policy_version?: string;
+  }): Promise<ProofPackResponse> {
+    await this.delay(300);
+
+    const mockProofPack: ProofPackResponse = {
+      pack_id: `pp_${Math.random().toString(36).substr(2, 9)}`,
+      shipment_id: payload.shipment_id,
+      generated_at: new Date().toISOString(),
+      manifest_hash: `0x${Math.random().toString(16).substr(2, 64)}`,
+      status: "SUCCESS",
+      message: "Proof pack generated successfully",
+      signature_status: "VERIFIED",
+      events: payload.events,
+    };
+
+    console.log(`✅ Mock: Created proof pack ${mockProofPack.pack_id}`);
+    return mockProofPack;
+  }
+
+  /**
+   * GET /proofpacks/{pack_id} - Get a proof pack by ID
+   */
+  async getProofPack(packId: string): Promise<ProofPackResponse> {
+    await this.delay(200);
+
+    // Return a realistic mock proof pack
+    const mockProofPack: ProofPackResponse = {
+      pack_id: packId,
+      shipment_id: `ship_${Math.random().toString(36).substr(2, 9)}`,
+      generated_at: new Date(Date.now() - Math.random() * 86400000).toISOString(),
+      manifest_hash: `0x${Math.random().toString(16).substr(2, 64)}`,
+      status: Math.random() > 0.1 ? "SUCCESS" : "PENDING",
+      message:
+        Math.random() > 0.1
+          ? "Proof pack verified"
+          : "Awaiting blockchain confirmation",
+      signature_status: Math.random() > 0.05 ? "VERIFIED" : "PENDING",
+      events: [
+        {
+          event_type: "pickup",
+          timestamp: new Date(Date.now() - 86400000).toISOString(),
+        },
+        {
+          event_type: "in_transit",
+          timestamp: new Date(Date.now() - 43200000).toISOString(),
+        },
+        {
+          event_type: "delivery",
+          timestamp: new Date(Date.now() - 3600000).toISOString(),
+        },
+      ],
+    };
+
+    console.log(`✅ Mock: Retrieved proof pack ${packId}`);
+    return mockProofPack;
+  }
+
+  /**
    * Simulate network delay
    */
   private delay(ms: number): Promise<void> {
@@ -335,4 +404,83 @@ class MockApiClient {
 }
 
 // Export singleton instance
-export const apiClient = new MockApiClient();
+
+
+// Export singleton instances
+export const mockApiClient = new MockApiClient();
+
+// ============================================================================
+// API CLIENT INTERFACE - DEFINES ALL AVAILABLE METHODS
+// ============================================================================
+
+/**
+ * Common interface for all API clients (Mock and Real)
+ * Ensures type safety when switching between implementations
+ */
+export interface IApiClient {
+  // Network vitals (KPI data)
+  getNetworkVitals(): Promise<NetworkVitals>;
+
+  // Exceptions with filtering
+  getExceptions(filters?: {
+    risk_min?: number;
+    risk_max?: number;
+    issue_types?: string[];
+    time_window?: "2h" | "24h" | "7d";
+  }): Promise<ExceptionRow[]>;
+
+  // Shipments with filtering
+  getShipments(filters?: {
+    carrier?: string;
+    customer?: string;
+    status?: string;
+    risk_min?: number;
+    risk_max?: number;
+  }): Promise<Shipment[]>;
+
+  // Single shipment detail
+  getShipmentDetail(shipmentId: string): Promise<Shipment | null>;
+
+  // Proof pack operations
+  getProofPack(packId: string): Promise<ProofPackResponse>;
+  createProofPack(payload: CreateProofPackPayload): Promise<ProofPackResponse>;
+}
+
+// ============================================================================
+// API CLIENT FACTORY - SWITCHES BETWEEN MOCK AND REAL
+// ============================================================================
+
+
+
+/**
+ * API Client Type - unified interface for both Mock and Real clients
+ */
+export type ApiClientType = IApiClient;
+
+/**
+ * Get the appropriate API client based on configuration
+ *
+ * Priority:
+ * 1. If VITE_USE_MOCKS = "true" → always use MockApiClient
+ * 2. Otherwise → use RealApiClient (requires backend at VITE_API_BASE_URL)
+ *
+ * Usage:
+ *   const client = getApiClient();
+ *   const proofPack = await client.getProofPack('pp_abc123');
+ */
+export function getApiClient(): ApiClientType {
+  if (config.useMocks) {
+    if (import.meta.env.DEV) {
+      console.log("🎭 Using mock API client (VITE_USE_MOCKS=true)");
+    }
+    return mockApiClient;
+  }
+
+  if (import.meta.env.DEV) {
+    console.log(`🔌 Using real API client (${config.apiBaseUrl})`);
+  }
+  return realApiClient as unknown as ApiClientType;
+}
+
+// Default export: prefer real API, fallback to mocks if it fails
+export const apiClient: ApiClientType = getApiClient();
