@@ -45,7 +45,7 @@ class TestTripleBarrierLabeling(unittest.TestCase):
 
         self.price_series = pd.Series(prices, index=dates)
 
-    def test_profit_taking_barrier_long(self):
+    def test_profit_taking_barrier_long(self) -> None:
         """Test profit-taking barrier hit for long position."""
         labeler = TripleBarrierLabeler(pt=0.05, sl=-0.02, max_h=10)
 
@@ -57,7 +57,7 @@ class TestTripleBarrierLabeling(unittest.TestCase):
         self.assertEqual(label, 1)  # Profit-taking
         self.assertEqual(exit_idx, 5)  # Index where PT was hit
 
-    def test_stop_loss_barrier_long(self):
+    def test_stop_loss_barrier_long(self) -> None:
         """Test stop-loss barrier hit for long position."""
         labeler = TripleBarrierLabeler(pt=0.05, sl=-0.02, max_h=10)
 
@@ -69,7 +69,7 @@ class TestTripleBarrierLabeling(unittest.TestCase):
         self.assertEqual(label, -1)  # Stop-loss
         self.assertEqual(exit_idx, 3)  # Index where SL was hit
 
-    def test_max_holding_barrier(self):
+    def test_max_holding_barrier(self) -> None:
         """Test max holding period barrier."""
         labeler = TripleBarrierLabeler(pt=0.10, sl=-0.10, max_h=3, min_h=1)
 
@@ -81,7 +81,7 @@ class TestTripleBarrierLabeling(unittest.TestCase):
         self.assertEqual(label, 0)  # Max holding
         self.assertEqual(exit_idx, 3)  # max_h periods later
 
-    def test_short_position_profit_taking(self):
+    def test_short_position_profit_taking(self) -> None:
         """Test profit-taking for short position."""
         labeler = TripleBarrierLabeler(pt=0.03, sl=-0.02, max_h=10)
 
@@ -93,7 +93,7 @@ class TestTripleBarrierLabeling(unittest.TestCase):
         self.assertEqual(label, 1)  # Profit-taking for short
         self.assertEqual(exit_idx, 3)  # Index where PT was hit
 
-    def test_short_position_stop_loss(self):
+    def test_short_position_stop_loss(self) -> None:
         """Test stop-loss for short position."""
         labeler = TripleBarrierLabeler(pt=0.05, sl=-0.02, max_h=10)
 
@@ -105,7 +105,7 @@ class TestTripleBarrierLabeling(unittest.TestCase):
         self.assertEqual(label, -1)  # Stop-loss for short
         self.assertEqual(exit_idx, 2)  # Index where SL was hit
 
-    def test_insufficient_data(self):
+    def test_insufficient_data(self) -> None:
         """Test handling of insufficient data for labeling."""
         labeler = TripleBarrierLabeler(pt=0.05, sl=-0.02, max_h=10, min_h=2)
 
@@ -117,7 +117,7 @@ class TestTripleBarrierLabeling(unittest.TestCase):
         self.assertEqual(label, 0)  # No valid label
         self.assertIsNone(exit_idx)
 
-    def test_synthetic_labels_creation(self):
+    def test_synthetic_labels_creation(self) -> None:
         """Test creation of synthetic labels."""
         labels_df = create_synthetic_labels(
             self.price_series, entry_probability=0.2, seed=42
@@ -134,7 +134,7 @@ class TestTripleBarrierLabeling(unittest.TestCase):
         valid_sides = labels_df["side"].isin([-1, 1]).all()
         self.assertTrue(valid_sides)
 
-    def test_label_distribution_analysis(self):
+    def test_label_distribution_analysis(self) -> None:
         """Test analysis of label distribution."""
         # Create synthetic labels
         labels_df = create_synthetic_labels(
@@ -167,7 +167,7 @@ class TestTripleBarrierLabeling(unittest.TestCase):
 
         self.assertAlmostEqual(pct_sum, 100.0, places=1)
 
-    def test_apply_labels_multiple_entries(self):
+    def test_apply_labels_multiple_entries(self) -> None:
         """Test applying labels to multiple entry points."""
         labeler = TripleBarrierLabeler(pt=0.03, sl=-0.02, max_h=5)
 

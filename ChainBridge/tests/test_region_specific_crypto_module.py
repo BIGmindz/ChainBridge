@@ -17,7 +17,7 @@ class TestRegionSpecificCryptoModule(unittest.TestCase):
             "el_salvador_btc_news": False,
         }
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test that the module initializes correctly"""
         self.assertEqual(self.region_module.name, "region_crypto_mapper")
         self.assertTrue(isinstance(self.region_module.region_crypto_map, dict))
@@ -25,7 +25,7 @@ class TestRegionSpecificCryptoModule(unittest.TestCase):
         self.assertIn("INDIA", self.region_module.region_crypto_map)
         self.assertIn("JAPAN", self.region_module.region_crypto_map)
 
-    def test_region_analysis(self):
+    def test_region_analysis(self) -> None:
         """Test the region analysis functionality"""
         # Test Brazil analysis
         brazil_confidence = self.region_module._analyze_region(
@@ -45,7 +45,7 @@ class TestRegionSpecificCryptoModule(unittest.TestCase):
         )
         self.assertGreater(logistics_confidence, 0.3)
 
-    def test_crypto_selection(self):
+    def test_crypto_selection(self) -> None:
         """Test crypto selection based on confidence levels"""
         # High confidence should return all primary cryptos
         high_confidence_cryptos = self.region_module._select_cryptos("BRAZIL", 0.8)
@@ -59,7 +59,7 @@ class TestRegionSpecificCryptoModule(unittest.TestCase):
         low_confidence_cryptos = self.region_module._select_cryptos("BRAZIL", 0.4)
         self.assertEqual(len(low_confidence_cryptos), 0)
 
-    def test_position_sizing(self):
+    def test_position_sizing(self) -> None:
         """Test position sizing based on confidence"""
         high_confidence = self.region_module._calculate_position_size(0.9)
         medium_confidence = self.region_module._calculate_position_size(0.7)
@@ -71,7 +71,7 @@ class TestRegionSpecificCryptoModule(unittest.TestCase):
         self.assertGreater(medium_confidence, low_confidence)
         self.assertGreater(low_confidence, very_low_confidence)
 
-    def test_holding_period(self):
+    def test_holding_period(self) -> None:
         """Test holding period estimation"""
         logistics_period = self.region_module._estimate_holding_period(["LOGISTICS"])
         japan_period = self.region_module._estimate_holding_period(["JAPAN"])
@@ -84,7 +84,7 @@ class TestRegionSpecificCryptoModule(unittest.TestCase):
         self.assertIn("7-14", india_period)  # India should be shorter
         self.assertIn("3-7", other_period)  # Others should be shortest
 
-    def test_process_regional_signals(self):
+    def test_process_regional_signals(self) -> None:
         """Test the main processing function"""
         result = self.region_module.process_regional_signals(self.test_signals)
 

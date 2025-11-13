@@ -33,7 +33,7 @@ class TestPurgedKFold:
             index=dates,
         )
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test PurgedKFold initialization."""
         pkf = PurgedKFold(n_splits=5, purge_pct=0.01, embargo_pct=0.01)
 
@@ -42,7 +42,7 @@ class TestPurgedKFold:
         assert pkf.embargo_pct == 0.01
         assert not pkf.shuffle
 
-    def test_split_basic(self):
+    def test_split_basic(self) -> None:
         """Test basic split functionality."""
         pkf = PurgedKFold(n_splits=5)
         splits = pkf.split(self.X)
@@ -59,7 +59,7 @@ class TestPurgedKFold:
             # Train indices are consecutive
             assert np.all(train_idx[:-1] <= train_idx[1:])
 
-    def test_purging_effectiveness(self):
+    def test_purging_effectiveness(self) -> None:
         """Test that purging prevents data leakage."""
         pkf = PurgedKFold(n_splits=5, purge_pct=0.05)  # 5% purge
         splits = pkf.split(self.X)
@@ -79,7 +79,7 @@ class TestPurgedKFold:
             # Test should be clearly after train (with purge buffer)
             assert test_start >= train_end - tolerance
 
-    def test_embargo_effectiveness(self):
+    def test_embargo_effectiveness(self) -> None:
         """Test that embargo prevents training on data too close to test periods."""
         pkf = PurgedKFold(n_splits=5, embargo_pct=0.03)  # 3% embargo
         splits = pkf.split(self.X)
@@ -103,7 +103,7 @@ class TestPurgedKFold:
                     gap >= expected_embargo * 0.8
                 ), f"Fold {i}: gap {gap} < expected {expected_embargo * 0.8}"
 
-    def test_no_datetime_index_error(self):
+    def test_no_datetime_index_error(self) -> None:
         """Test error when X doesn't have DatetimeIndex."""
         X_no_dt = pd.DataFrame({"a": [1, 2, 3]})  # No datetime index
 
@@ -111,7 +111,7 @@ class TestPurgedKFold:
         with pytest.raises(ValueError, match="must have a DatetimeIndex"):
             pkf.split(X_no_dt)
 
-    def test_edge_case_small_dataset(self):
+    def test_edge_case_small_dataset(self) -> None:
         """Test behavior with small datasets."""
         small_dates = pd.date_range("2020-01-01", periods=20, freq="H")
         small_X = pd.DataFrame({"a": np.random.randn(20)}, index=small_dates)
@@ -124,7 +124,7 @@ class TestPurgedKFold:
         for train_idx, test_idx in splits:
             assert len(np.intersect1d(train_idx, test_idx)) == 0
 
-    def test_purge_embargo_sizes(self):
+    def test_purge_embargo_sizes(self) -> None:
         """Test that purge and embargo sizes are calculated correctly."""
         pkf = PurgedKFold(purge_pct=0.02, embargo_pct=0.03)
 
@@ -151,7 +151,7 @@ class TestLeakageDetection:
         dates = pd.date_range("2020-01-01", periods=100, freq="H")
         self.timestamps = dates
 
-    def test_detect_leakage_no_leakage(self):
+    def test_detect_leakage_no_leakage(self) -> None:
         """Test leakage detection with clean splits."""
         # Clean split: train before test with gap
         train_idx = np.arange(0, 40)
@@ -164,7 +164,7 @@ class TestLeakageDetection:
         assert not result["embargo_violation"]
         assert result["is_leakage_free"]
 
-    def test_detect_leakage_index_overlap(self):
+    def test_detect_leakage_index_overlap(self) -> None:
         """Test detection of index overlap."""
         # Overlapping indices
         train_idx = np.arange(0, 50)
@@ -176,7 +176,7 @@ class TestLeakageDetection:
         assert not result["is_leakage_free"]
         assert len(result["overlap_indices"]) > 0
 
-    def test_detect_leakage_temporal_leakage(self):
+    def test_detect_leakage_temporal_leakage(self) -> None:
         """Test detection of temporal leakage."""
         # Train ends after test starts
         train_idx = np.arange(0, 70)
@@ -187,7 +187,7 @@ class TestLeakageDetection:
         assert result["has_temporal_leakage"]
         assert not result["is_leakage_free"]
 
-    def test_detect_leakage_embargo_violation(self):
+    def test_detect_leakage_embargo_violation(self) -> None:
         """Test detection of embargo violations."""
         # Train too close to test (less than 1 hour gap)
         # Create timestamps with 30-minute frequency for finer control
@@ -212,7 +212,7 @@ class TestLeakageReport:
         dates = pd.date_range("2020-01-01", periods=200, freq="H")
         self.timestamps = dates
 
-    def test_generate_leakage_report_clean(self):
+    def test_generate_leakage_report_clean(self) -> None:
         """Test report generation with no leakage."""
         # Create clean splits
         splits = [
@@ -231,7 +231,7 @@ class TestLeakageReport:
         for fold in report["leakage_details"]:
             assert fold["status"] == "PASS"
 
-    def test_generate_leakage_report_with_leakage(self):
+    def test_generate_leakage_report_with_leakage(self) -> None:
         """Test report generation with leakage."""
         # Create splits with leakage
         splits = [
@@ -259,7 +259,7 @@ class TestWalkForwardSplit:
         dates = pd.date_range("2020-01-01", periods=1000, freq="H")
         self.X = pd.DataFrame({"a": np.random.randn(1000)}, index=dates)
 
-    def test_walk_forward_split_sizes(self):
+    def test_walk_forward_split_sizes(self) -> None:
         """Test that walk-forward split creates correct sizes."""
         train_idx, val_idx, test_idx = walk_forward_split(self.X)
 
@@ -278,7 +278,7 @@ class TestWalkForwardSplit:
         # Test should be ~15%
         assert 0.10 <= test_size / total_samples <= 0.20
 
-    def test_walk_forward_split_temporal_order(self):
+    def test_walk_forward_split_temporal_order(self) -> None:
         """Test that walk-forward split maintains temporal order."""
         train_idx, val_idx, test_idx = walk_forward_split(self.X)
 
@@ -291,7 +291,7 @@ class TestWalkForwardSplit:
         assert len(np.intersect1d(val_idx, test_idx)) == 0
         assert len(np.intersect1d(train_idx, test_idx)) == 0
 
-    def test_walk_forward_split_embargo(self):
+    def test_walk_forward_split_embargo(self) -> None:
         """Test that embargo is applied correctly."""
         train_idx, val_idx, test_idx = walk_forward_split(self.X, embargo_pct=0.02)
 

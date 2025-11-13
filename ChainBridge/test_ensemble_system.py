@@ -23,7 +23,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def test_ensemble_discovery():
+def test_ensemble_discovery() -> None:
     """Test that ensemble strategy is discovered correctly"""
     logger.info("🔍 Testing ensemble strategy discovery...")
 
@@ -46,7 +46,7 @@ def test_ensemble_discovery():
         return False
 
 
-def test_ensemble_module_loading():
+def test_ensemble_module_loading() -> None:
     """Test that the ensemble voting module loads correctly"""
     logger.info("🔧 Testing ensemble module loading...")
 
@@ -78,7 +78,7 @@ def test_ensemble_module_loading():
         return False
 
 
-def test_sample_prediction():
+def test_sample_prediction() -> None:
     """Test a sample prediction with the ensemble"""
     logger.info("🎯 Testing sample ensemble prediction...")
 

@@ -8,7 +8,7 @@ import os
 import traceback
 
 
-def test_logistics():
+def test_logistics() -> None:
     print("\n🧪 TESTING LOGISTICS MODULE DIRECTLY")
     print("=" * 60)
 

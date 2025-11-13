@@ -5,7 +5,7 @@ poll_seconds: ""
 """
 
 
-def test_poll_seconds():
+def test_poll_seconds() -> None:
     config = yaml.safe_load(content) or {}
     raw_poll_seconds = config.get("poll_seconds", "60")
     print(f"[DEBUG] Raw poll_seconds value: {raw_poll_seconds}")

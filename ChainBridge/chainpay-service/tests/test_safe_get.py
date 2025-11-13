@@ -6,7 +6,7 @@ from app.chainfreight_client import _safe_get, _safe_extract_risk_data
 from app.payment_rails import _safe_get as payment_safe_get
 
 
-def test_safe_get_with_dict():
+def test_safe_get_with_dict() -> None:
     """Test _safe_get with dictionary input."""
     data = {"risk_score": 0.45, "risk_category": "medium", "status": "active"}
 
@@ -17,14 +17,14 @@ def test_safe_get_with_dict():
     assert _safe_get(data, "missing_key", "custom") == "custom"
 
 
-def test_safe_get_with_numeric():
+def test_safe_get_with_numeric() -> None:
     """Test _safe_get with numeric input (handles upstream raw floats)."""
     assert _safe_get(0.75, "any_key") == 0.75
     assert _safe_get(42, "any_key") == 42
     assert _safe_get(3.14, "any_key") == 3.14
 
 
-def test_safe_get_with_none_or_invalid():
+def test_safe_get_with_none_or_invalid() -> None:
     """Test _safe_get with None or invalid input."""
     assert _safe_get(None, "key") == 0.0
     assert _safe_get("string", "key") == 0.0
@@ -32,7 +32,7 @@ def test_safe_get_with_none_or_invalid():
     assert _safe_get({}, "missing", "fallback") == "fallback"
 
 
-def test_safe_extract_risk_data():
+def test_safe_extract_risk_data() -> None:
     """Test the safe risk data extraction function."""
     # Normal API response
     data = {"id": 1, "risk_score": 0.35, "risk_category": "medium", "status": "active"}
@@ -56,7 +56,7 @@ def test_safe_extract_risk_data():
     assert risk_category == "123"  # converted to string
 
 
-def test_safe_get_consistency_across_modules():
+def test_safe_get_consistency_across_modules() -> None:
     """Ensure _safe_get works consistently across different modules."""
     test_data = {"value": 42.5, "text": "hello"}
 
@@ -68,7 +68,7 @@ def test_safe_get_consistency_across_modules():
     )
 
 
-def test_real_world_api_scenarios():
+def test_real_world_api_scenarios() -> None:
     """Test scenarios that might occur with real API responses."""
     # ChainIQ returns varying response formats
     chainiq_response_1 = {
@@ -102,7 +102,7 @@ def test_real_world_api_scenarios():
     assert score_from_raw == 0.23
 
 
-def test_payment_provider_response_handling():
+def test_payment_provider_response_handling() -> None:
     """Test safe handling of payment provider responses."""
     # Stripe response format
     stripe_response = {

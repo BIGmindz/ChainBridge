@@ -13,7 +13,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))  # type: ignore
 from src.backtesting.regime_backtester import RegimeBacktester
 
 
-def test_backtester():
+def test_backtester() -> None:
     """Run basic tests for the RegimeBacktester"""
     # Create test data with 100 points
     print("Creating test data...")
