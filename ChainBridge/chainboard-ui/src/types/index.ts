@@ -142,3 +142,43 @@ export interface SavedView {
   filters: ExceptionFilters;
   created_at: string;
 }
+
+/**
+ * ProofPack Response - from FastAPI backend
+ * Represents cryptographic proof of shipment with manifest and verification data
+ */
+export interface ProofPackResponse {
+  pack_id: string;
+  shipment_id: string;
+  generated_at: string;
+  manifest_hash: string;
+  status: "SUCCESS" | "ERROR" | "PENDING";
+  message?: string;
+  signature_status?: ProofSignatureStatus;
+  events?: ShipmentEvent[];
+}
+
+/**
+ * Shipment Proof Summary - normalized for UI display
+ * Derived from ProofPackResponse for the detail drawer
+ */
+export interface ShipmentProofSummary {
+  packId: string;
+  shipmentId: string;
+  manifestHash: string;
+  generatedAt: string;
+  status: "SUCCESS" | "ERROR" | "PENDING";
+  message?: string;
+  signatureStatus?: ProofSignatureStatus;
+  events?: ShipmentEvent[];
+}
+
+/**
+ * Create ProofPack Payload - request body for POST /proofpacks/run
+ */
+export interface CreateProofPackPayload {
+  shipment_id: string;
+  events: ShipmentEvent[];
+  risk_score?: number;
+  policy_version?: string;
+}
