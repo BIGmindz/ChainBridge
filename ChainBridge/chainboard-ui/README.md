@@ -161,61 +161,146 @@ colors: {
 
 ## 🔌 API Integration
 
-### Current: Mock Data Service
+### Current: Dual-Layer API Architecture
 
-The application ships with a `MockApiClient` in `src/services/api.ts` that generates 50 realistic shipments with proper distributions.
+The application implements a **factory pattern** that automatically switches between mock and real API clients based on configuration:
 
-**API Methods:**
+#### Architecture
+
+```
+┌─────────────────────────────────────────────┐
+│  React Components                            │
+│  (ShipmentDetailDrawer, etc.)               │
+└────────────────┬────────────────────────────┘
+                 │ imports apiClient
+                 ▼
+┌─────────────────────────────────────────────┐
+│  API Factory (getApiClient())               │
+│  - Checks VITE_USE_MOCKS env var           │
+│  - Returns IApiClient implementation        │
+└────────────────┬────────────────────────────┘
+                 │
+         ┌───────┴───────┐
+         │               │
+         ▼               ▼
+    MockApiClient   RealApiClient
+    (offline)       (FastAPI backend)
+```
+
+#### API Methods
+
+Both clients implement the `IApiClient` interface with these methods:
+
 ```typescript
-const apiClient = new MockApiClient();
+interface IApiClient {
+  // Vitals and monitoring
+  getNetworkVitals(): Promise<NetworkVitals>;
 
-// Get network-level vitals (4 KPI metrics)
-const vitals = await apiClient.getNetworkVitals();
+  // Shipment data
+  getShipments(filters?: ShipmentFilters): Promise<Shipment[]>;
+  getShipmentDetail(shipmentId: string): Promise<Shipment | null>;
 
-// Get exceptions with optional filters
-const exceptions = await apiClient.getExceptions({
-  riskMin: 50,
-  riskMax: 100
-});
+  // Exception tracking
+  getExceptions(filters?: ExceptionFilters): Promise<ExceptionRow[]>;
 
-// Get all shipments with optional filters
-const shipments = await apiClient.getShipments();
+  // Proof packs (blockchain governance)
+  getProofPack(packId: string): Promise<ProofPackResponse>;
+  createProofPack(payload: CreateProofPackPayload): Promise<ProofPackResponse>;
+}
+```
 
-// Get detail for a single shipment
+#### Mock Data Service
+
+The `MockApiClient` generates 50 realistic shipments with proper distributions:
+
+```typescript
+// src/services/api.ts
+const apiClient = await apiClient.getShipments();
 const detail = await apiClient.getShipmentDetail('ship_abc123');
+const proof = await apiClient.getProofPack('pp_123');
 ```
 
-### Future: Real Backend Integration
+#### Real Backend Integration (FastAPI)
 
-To integrate with real FastAPI endpoints:
+The `RealApiClient` in `src/services/realApiClient.ts` makes HTTP calls to your backend:
 
-1. **Replace** `src/services/api.ts` with an HTTP client (fetch or axios)
-2. **Point** to your backend API: `VITE_API_BASE_URL=http://your-api.com/api`
-3. **Components need NO changes**—they import `apiClient` from the service layer
-
-**Example integration:**
 ```typescript
-// src/services/api.ts (after backend is ready)
-export const apiClient = {
-  async getNetworkVitals() {
-    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/vitals`);
-    return res.json();
-  },
+// Automatically activated when VITE_USE_MOCKS=false
+class RealApiClient implements IApiClient {
+  async getProofPack(packId: string): Promise<ProofPackResponse> {
+    return await fetchJson<ProofPackResponse>(`/proofpacks/${packId}`);
+  }
+
+  async createProofPack(payload: CreateProofPackPayload): Promise<ProofPackResponse> {
+    return await fetchJson<ProofPackResponse>("/proofpacks/run", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
   // ... other methods
-};
+}
 ```
+
+#### Switching Between Mock and Real
+
+Configure in `.env.local`:
+
+```bash
+# Use real backend (default in production)
+VITE_USE_MOCKS=false
+VITE_API_BASE_URL=http://127.0.0.1:8000
+
+# Use mock data (default for demos)
+VITE_USE_MOCKS=true
+```
+
+No component changes needed—the factory handles it automatically.
 
 ## ⚙️ Environment Configuration
 
-Create a `.env` file (copy from `.env.example`):
+The application uses a centralized configuration system (`src/config/env.ts`) for environment-based behavior:
+
+#### Environment Variables
+
+Create a `.env.local` file in the project root:
 
 ```bash
-# API Configuration
-VITE_API_BASE_URL=http://localhost:8000       # Your FastAPI backend endpoint
-VITE_ENVIRONMENT=sandbox                       # "sandbox" | "staging" | "production"
+# Backend API Configuration
+VITE_API_BASE_URL=http://127.0.0.1:8000    # FastAPI backend URL
+VITE_USE_MOCKS=false                        # true = offline mock data, false = real API
+
+# Environment Label (optional)
+VITE_ENVIRONMENT_LABEL=sandbox              # "sandbox", "staging", or "production"
 ```
 
-These are injected at build time and accessible in components via `import.meta.env`.
+#### Environment Label Auto-Detection
+
+If `VITE_ENVIRONMENT_LABEL` is not set, the system auto-detects from the URL:
+
+```typescript
+// src/config/env.ts
+if (url.includes('localhost')) return 'Sandbox';
+if (url.includes('staging')) return 'Staging';
+if (url.includes('prod')) return 'Production';
+return 'Custom';
+```
+
+The label displays in the top navigation bar to prevent accidental API calls to the wrong environment.
+
+#### Configuration Object
+
+Access environment config from any component:
+
+```typescript
+import { config } from "../config/env";
+
+console.log(config.apiBaseUrl);     // "http://127.0.0.1:8000"
+console.log(config.useMocks);       // false
+console.log(config.environmentLabel); // "Sandbox"
+console.log(config.isDevelopment);  // true (in dev server)
+console.log(config.isProduction);   // false
+```
 
 ## 🧪 Testing
 
