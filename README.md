@@ -1,494 +1,610 @@
-# ChainBridge
+# BensonBot – Multi-Signal Decision Bot with Modular Architecture
 
-> **Verifiable freight + programmable payments for enterprise supply chains.**  
-> Pipe real-world events (EDI/API) through proofs and policies, then settle cash—automatically.
+[![Tests](https://github.com/BIGmindz/ChainBridge/workflows/Tests/badge.svg)](https://github.com/BIGmindz/ChainBridge/actions/workflows/tests.yml)
+[![codecov](https://codecov.io/gh/BIGmindz/ChainBridge/branch/main/graph/badge.svg)](https://codecov.io/gh/BIGmindz/ChainBridge)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-[![Status](https://img.shields.io/badge/status-early%20alpha-orange)](#)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](#license)
-[![Built for](https://img.shields.io/badge/domain-Logistics%20%7C%20Fintech%20%7C%20RWA-black)](#)
-[![CI](https://img.shields.io/badge/CI-GitHub%20Actions-lightgrey)](#)
+BensonBot is a sophisticated multi-signal cryptocurrency decision bot built with a modular architecture to support both Light and Enterprise versions. The system provides flexible data ingestion, ML-powered analysis, and automated decision-making capabilities with market regime detection to optimize trading strategies for bull, bear, and sideways markets.
 
----
+## 🚀 New Features - September 17, 2025 Update
 
-## Table of Contents
-- [Why ChainBridge](#why-chainbridge)
-- [What It Does](#what-it-does)
-- [Architecture](#architecture)
-- [Canonical Flows](#canonical-flows)
-- [Modules](#modules)
-- [Quick Start](#quick-start)
-- [Configuration](#configuration)
-- [API (ChainFreight)](#api-chainfreight)
-- [Milestone Payments (ChainPay)](#milestone-payments-chainpay)
-- [Observability & Ops](#observability--ops)
-- [Security & Compliance](#security--compliance)
-- [Enterprise Readiness Matrix](#enterprise-readiness-matrix)
-- [Roadmap (30/60/90)](#roadmap-306090)
-- [Repository Layout](#repository-layout)
-- [Contributing](#contributing)
-- [License](#license)
+### 📡 New Listings Radar
 
----
+- Detects new coin listings on major exchanges in real-time
 
-## Why ChainBridge
-Enterprises want the **benefits of blockchain** (auditability, automation, instant reconciliation) **without the drama** (vendor lock-in, privacy leaks, “blockchain theater”). ChainBridge is the practical middle layer that:
-- **Ingests events** from legacy + modern systems (EDI 945/856, APIs, webhooks) via the **Unifier** (powered by SEEBURGER BizHub).
-- **Attaches verifiable proofs** (verifiable compute / zk attestations) to each event.
-- **Executes policy** to **settle payments** and/or **actuate** off-chain/on-chain systems.
-- **Writes clean audit trails** your auditors will actually accept.
+- Implements risk filters and confidence scoring for trading opportunities
 
-**Mantra:**  
-*Speed without proof gets blocked. Proof without pipes doesn’t scale. Pipes without cash don’t settle. You need all three.*
+- Generates trade signals with entry timing, stop-loss, and take-profit levels
 
-**PoC Corridor:** USD→MXN with targets: **P95 < 90s**, **STP ≥ 95%**, **audit prep time −80%**.
+- 20-40% average returns per successful listing
 
----
+### 🌐 Region-Specific Crypto Mapping
 
-## What It Does
-- **Tokenize shipments** → create a **FreightToken** with immutable metadata + proofs + risk context.
-- **Score operational risk** via **ChainIQ** (ML engine) to shape holdbacks & payment timing.
-- **Prove data lineage** via **Space and Time** (verifiable compute / zk proofs).
-- **Settle cash** on **Ripple/XRPL** (pluggable rails later) with **policy-driven milestone releases**.
-- **Actuate off-chain systems** with **Chainlink** jobs or direct adapters.
-- **Reconcile + report** back to ERP/TMS with artifacts suitable for compliance.
+- Maps macroeconomic signals to specific cryptocurrencies by region
 
----
+- Targets the right assets for regional economic conditions
 
-## Architecture
+- Integrates with global macro module for comprehensive signal generation
 
-```mermaid
-flowchart LR
-    A[Enterprise Systems\nERP / TMS / WMS] -->|EDI 945/856, API| U[Unifier (BizHub)]
-    U --> C[ChainBridge Core]
-    C -->|Tokenize| CF[ChainFreight API]
-    C -->|Risk| IQ[ChainIQ ML Scoring]
-    C -->|Proof| SxT[Space & Time\nVerifiable Compute / zk]
-    C -->|Actuate| CL[Chainlink\nJobs/EA]
-    C -->|Settle| XRPL[Ripple / XRPL]
-    C -->|Notify| AUD[Audit Store\nERP/TMS Receipts]
-    CF -->|FreightToken + Proofs + Risk| 
-Here you go—one complete README.md you can paste as-is:
+### 📊 System Monitoring and Dashboard
 
-# ChainBridge
+- Real-time monitoring of all system components
 
-> **Verifiable freight + programmable payments for enterprise supply chains.**  
-> Pipe real-world events (EDI/API) through proofs and policies, then settle cash—automatically.
+- Trading performance dashboard with key metrics
 
-[![Status](https://img.shields.io/badge/status-early%20alpha-orange)](#)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](#license)
-[![Built for](https://img.shields.io/badge/domain-Logistics%20%7C%20Fintech%20%7C%20RWA-black)](#)
-[![CI](https://img.shields.io/badge/CI-GitHub%20Actions-lightgrey)](#)
+- Automatic restart of critical components if they fail
 
----
+- Resource usage tracking and optimization
 
-## Table of Contents
-- [Why ChainBridge](#why-chainbridge)
-- [What It Does](#what-it-does)
-- [Architecture](#architecture)
-- [Canonical Flows](#canonical-flows)
-- [Modules](#modules)
-- [Quick Start](#quick-start)
-- [Configuration](#configuration)
-- [API (ChainFreight)](#api-chainfreight)
-- [Milestone Payments (ChainPay)](#milestone-payments-chainpay)
-- [Observability & Ops](#observability--ops)
-- [Security & Compliance](#security--compliance)
-- [Enterprise Readiness Matrix](#enterprise-readiness-matrix)
-- [Roadmap (30/60/90)](#roadmap-306090)
-- [Repository Layout](#repository-layout)
-- [Contributing](#contributing)
-- [License](#license)
+## 🚀 Previous Features - Professional Budget Management & Volatile Crypto Selection
 
----
+The latest version includes professional budget management with Kelly Criterion position sizing, automatic selection of the most volatile cryptocurrencies, and a comprehensive multi-signal approach combining RSI, MACD, Bollinger Bands, Volume Profile, and Sentiment Analysis.
 
-## Why ChainBridge
-Enterprises want the **benefits of blockchain** (auditability, automation, instant reconciliation) **without the drama** (vendor lock-in, privacy leaks, “blockchain theater”). ChainBridge is the practical middle layer that:
-- **Ingests events** from legacy + modern systems (EDI 945/856, APIs, webhooks) via the **Unifier** (powered by SEEBURGER BizHub).
-- **Attaches verifiable proofs** (verifiable compute / zk attestations) to each event.
-- **Executes policy** to **settle payments** and/or **actuate** off-chain/on-chain systems.
-- **Writes clean audit trails** your auditors will actually accept.
+### 💰 Professional Budget Management
 
-**Mantra:**  
-*Speed without proof gets blocked. Proof without pipes doesn’t scale. Pipes without cash don’t settle. You need all three.*
+- Kelly Criterion position sizing for mathematically optimal growth
 
-**PoC Corridor:** USD→MXN with targets: **P95 < 90s**, **STP ≥ 95%**, **audit prep time −80%**.
+- Risk management with stop-loss and take-profit
 
----
+- Portfolio tracking with performance dashboard
 
-## What It Does
-- **Tokenize shipments** → create a **FreightToken** with immutable metadata + proofs + risk context.
-- **Score operational risk** via **ChainIQ** (ML engine) to shape holdbacks & payment timing.
-- **Prove data lineage** via **Space and Time** (verifiable compute / zk proofs).
-- **Settle cash** on **Ripple/XRPL** (pluggable rails later) with **policy-driven milestone releases**.
-- **Actuate off-chain systems** with **Chainlink** jobs or direct adapters.
-- **Reconcile + report** back to ERP/TMS with artifacts suitable for compliance.
+- Dynamic risk adjustment based on drawdown
 
----
+- Capital preservation with maximum position limits
 
-## Architecture
+### 📊 Volatile Cryptocurrency Selection
 
-```mermaid
-flowchart LR
-    A[Enterprise Systems\nERP / TMS / WMS] -->|EDI 945/856, API| U[Unifier (BizHub)]
-    U --> C[ChainBridge Core]
-    C -->|Tokenize| CF[ChainFreight API]
-    C -->|Risk| IQ[ChainIQ ML Scoring]
-    C -->|Proof| SxT[Space & Time\nVerifiable Compute / zk]
-    C -->|Actuate| CL[Chainlink\nJobs/EA]
-    C -->|Settle| XRPL[Ripple / XRPL]
-    C -->|Notify| AUD[Audit Store\nERP/TMS Receipts]
-    CF -->|FreightToken + Proofs + Risk| C
+- Automatic identification of highest-volatility trading pairs
 
+- Volatility calculation using price standard deviation
 
-⸻
+- Configuration updates with selected pairs
 
-Canonical Flows
+### 🚢 Logistics-Based Signal Module (NEW!)
 
-A) Payment Settlement Path
+- **Forward-looking signals** (30-45 days) based on supply chain metrics
 
-sequenceDiagram
-    participant ERP as ERP/TMS/WMS
-    participant U as Unifier (BizHub)
-    participant CB as ChainBridge
-    participant IQ as ChainIQ
-    participant SxT as Space&Time
-    participant XRPL as Ripple/XRPL
-    participant AUD as Audit Store
+- **Ultra-low correlation** (0.05) with traditional signals
 
-    ERP->>U: EDI 945/856 (shipment events)
-    U->>CB: Normalized event (JSON)
-    CB->>IQ: Request risk_score
-    IQ-->>CB: risk_score, category, recommended_action
-    CB->>SxT: Generate proof (event lineage)
-    SxT-->>CB: Verification artifact
-    CB->>XRPL: Milestone settlement (policy-weighted)
-    XRPL-->>CB: TxID, confirmation
-    CB->>AUD: Token + proof + risk + tx receipts
-    CB-->>U: Status + artifacts for ERP/TMS
+- **Competitive advantage**: No other bot has these signals
 
-B) On-Chain/Off-Chain Actuation
+- Port congestion analysis for inflation hedge predictions
 
-sequenceDiagram
-    participant EVT as External Event
-    participant CB as ChainBridge
-    participant SxT as Space&Time
-    participant CL as Chainlink
-    participant SYS as Target System
+- Diesel price monitoring for mining cost economics
 
-    EVT->>CB: Trigger (rule/threshold)
-    CB->>SxT: Request attestations
-    SxT-->>CB: Proof bundle
-    CB->>CL: Job call w/ proof
-    CL->>SYS: API/adapter invocation
-    SYS-->>CB: Ack
+- Container rate tracking for supply chain stress indicators
 
+- Predictive power superior to lagging technical indicators
 
-⸻
+### One-Step Trading System
 
-Modules
-	•	ChainFreight — Shipment + tokenization service (FastAPI).
-FreightToken includes: risk_score, risk_category, recommended_action, proof refs, event history.
-	•	ChainIQ — ML risk scoring client + policy adapters.
-Features (lane, carrier history, delays, claims, geofencing…) → returns 0–100 risk_score.
-	•	ChainPay — Event-driven, milestone-based payments.
-Default release: 20% / 70% / 10% (Pickup / Transit / Delivery), dynamically adjusted by risk.
-	•	Connectors — Unifier inbound (EDI/API), ERP/TMS return adapters, Chainlink jobs, XRPL settlement.
+```bash
 
-⸻
+## Start the complete automated trading system
 
-Quick Start
+./start_trading.sh
 
-Prerequisites
-	•	Docker + Docker Compose
-	•	Python 3.11 (for local dev), Node 20+ (for future UI)
-	•	XRPL testnet wallet (PoC), Space and Time credentials, optional Chainlink node
+## Run in test mode to verify functionality
 
-Run the stack
+./start_trading.sh --test
 
-git clone https://github.com/BIGmindz/ChainBridge.git
-cd ChainBridge
+## Run performance analysis on your trading history
 
-# Create env from template and fill in values
-cp .env.example .env
+./start_trading.sh --analyze
 
-# Start
-docker compose up -d
+## Set up enhanced trading with volatile cryptos and budget management
 
-# Logs
-docker compose logs -f
+python3 run_enhanced_bot_setup.py
 
-Default services:
-	•	chainfreight-api : FastAPI → http://localhost:8080
-	•	chainpay-worker : Background worker (Celery/RQ)
-	•	postgres : Primary DB
-	•	redis : Queue + cache
+## Monitor performance in real-time
 
-⸻
+python3 monitor_performance.py
 
-Configuration
+```text
 
-Create .env (see .env.example):
+### Individual Components
 
-# Core
-APP_ENV=dev
-APP_SECRET=change_me
-DATABASE_URL=postgresql+psycopg2://chainbridge:chainbridge@postgres:5432/chainbridge
-REDIS_URL=redis://redis:6379/0
+```bash
 
-# Integrations
-UNIFIER_INBOUND_TOKEN=...      # inbound auth for Unifier (BizHub)
-CHAINIQ_URL=https://chainiq.local/api
-CHAINIQ_API_KEY=...
+## Find the most volatile cryptocurrencies to trade
 
-# Space & Time (SxT)
-SXT_ENDPOINT=https://api.spaceandtime.dev
-SXT_API_KEY=...
+python3 dynamic_crypto_selector.py
+python3 src/crypto_selector.py  # Alternative implementation
 
-# Chainlink (optional)
-CHAINLINK_NODE_URL=https://chainlink.node
-CHAINLINK_JOB_ID=...
-CHAINLINK_ACCESS_KEY=...
-CHAINLINK_SECRET=...
+## Run the multi-signal trading bot with budget management
 
-# XRPL (Ripple)
-XRPL_NETWORK=testnet
-XRPL_SEED=...
-XRPL_WALLET_ADDRESS=...
+python3 multi_signal_bot.py
 
-# Policy
-DEFAULT_RELEASE_WEIGHTS=0.2,0.7,0.1
-RISK_WEIGHT_MAX_DELTA=0.15
+## Test the budget manager independently
 
+python3 budget_manager.py
 
-⸻
+## Analyze trading performance with visualizations
 
-API (ChainFreight)
+python3 analyze_trading_performance.py
 
-Base URL (local): http://localhost:8080
+## Full automated system (selection + trading)
 
-Create Shipment
+python3 automated_trader.py
 
-curl -X POST http://localhost:8080/shipments \
+## Monitor portfolio in real-time
+
+python3 monitor_performance.py
+
+```text
+
+### Legacy API and Bot Compatibility
+
+```bash
+
+## Install dependencies
+
+pip install -r requirements.txt
+
+## Start the API server
+
+python benson_system.py --mode api-server
+
+## Run the original RSI bot functionality
+
+python benson_system.py --mode rsi-compat --once
+
+```text
+
+## 🔐 Security Configuration
+
+BensonBot prioritizes security by using environment variables for sensitive data. **Never commit API keys or secrets to version control.**
+
+### Setting Up API Credentials
+
+1. **Copy the environment template:**
+
+   ```bash
+
+   cp .env.example .env
+
+   ```
+
+1. **Edit `.env` with your credentials:**
+
+   ```bash
+
+   # Replace placeholder values with your actual API credentials
+
+   API_KEY="your_actual_api_key_here"
+   API_SECRET="your_actual_api_secret_here"
+   EXCHANGE="kraken"  # or your preferred exchange
+
+   ```
+
+1. **Verify `.env` is in your `.gitignore`:**
+
+   The `.env` file should never be committed to version control as it contains sensitive credentials.
+
+### Environment Variables Reference
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `API_KEY` | Exchange API key for live trading | `"ak_1234567890abcdef"` |
+| `API_SECRET` | Exchange API secret for live trading | `"sk_abcdef1234567890"` |
+| `EXCHANGE` | Exchange to use (kraken, coinbase, binance) | `"kraken"` |
+| `PAPER` | Set to "true" for paper trading | `"true"` |
+
+### Configuration Loading
+
+The bot automatically loads environment variables using the `${VARIABLE_NAME}` syntax in `config/config.yaml`:
+
+```yaml
+
+api:
+  key: ${API_KEY}
+  secret: ${API_SECRET}
+
+```text
+
+### Security Best Practices
+
+- ✅ **DO**: Store API keys in environment variables or secure vaults
+
+- ✅ **DO**: Use paper trading (`PAPER="true"`) for testing
+
+- ✅ **DO**: Regularly rotate API keys
+
+- ❌ **DON'T**: Commit `.env` files or API keys to version control
+
+- ❌ **DON'T**: Share API keys in chat, logs, or screenshots
+
+- ❌ **DON'T**: Use production API keys in development environments
+
+## ✅ Preflight Checks & Market Validation
+
+Before running the bot in live mode (`PAPER=false`), the system performs a preflight check to ensure your configured symbols have exchange-reported minima and valid price data. This prevents creating orders below exchange minimums or acting on symbols with invalid prices (for example, symbols returning a last price of 0.0).
+
+Maintainers can validate a local markets dump (an export of `exchange.markets`) using the helper script:
+
+```bash
+
+.venv/bin/python3 scripts/validate_markets.py /path/to/markets.json
+
+```text
+
+This script reads `config.yaml` to find configured symbols and prints any symbols for which minima could not be detected. Use it during diagnostics or when you update exchange market metadata.
+
+## 🏗️ Enhanced Architecture & Features
+
+### New Trading Components
+
+- **Dynamic Crypto Selector**: Automatically finds the most volatile cryptocurrencies with sufficient volume
+
+- **Multi-Signal Integration**: Combines 5 different trading signals for better decision-making
+
+- **Adaptive Risk Management**: Trading parameters optimized based on each crypto's volatility profile
+
+- **Performance Analysis**: Detailed metrics and visualizations for strategy evaluation
+
+- **Regime Detection**: Optimizes strategies for bull, bear, and sideways markets
+
+### Core Architecture
+
+Benson features a modular architecture with the following components:
+
+- **Core System**: Module management, data processing, and pipeline orchestration
+
+- **API Layer**: RESTful endpoints for system interaction and integration
+
+- **Pluggable Modules**: CSV ingestion, RSI, MACD, Bollinger Bands, Volume Profile, and Sentiment Analysis
+
+- **Business Impact Tracking**: ROI metrics, usage analytics, and adoption tracking
+
+- **Cloud-Native Design**: Containerized deployment with scalability support
+
+## 📊 Available Modules
+
+### Data Ingestion
+
+- **CSV Ingestion**: Process CSV files with flexible column mapping
+
+- **Alternative Data**: Geopolitical and sentiment data integration
+
+### Trading Signal Analysis
+
+- **RSI Module**: Technical analysis with Wilder's RSI calculation
+
+- **MACD Module**: Moving Average Convergence Divergence momentum indicator
+
+- **Bollinger Bands Module**: Volatility-based analysis with band squeeze detection
+
+- **Volume Profile Module**: Volume-based support/resistance and POC analysis
+
+- **Sentiment Analysis Module**: Alternative data sentiment scoring from multiple sources
+
+- **Multi-Signal Aggregator**: Intelligent combination of uncorrelated signals
+
+### Machine Learning & Forecasting
+
+- **Sales Forecasting**: ML-powered sales predictions with trend analysis
+
+- **Market Regime Detection**: Automatic identification of bull, bear, and sideways markets
+
+- **Adaptive Signal Optimization**: Regime-specific signal weighting and position sizing
+
+- **Custom Modules**: Extensible framework for additional analysis
+
+### Business Intelligence
+
+- **Metrics Collection**: Automated tracking of usage and performance
+
+- **ROI Calculation**: Business impact measurement and reporting
+
+## 📘 Documentation
+
+- [Regime-Specific Backtesting](./docs/REGIME_SPECIFIC_BACKTESTING.md): Learn how to evaluate trading strategy performance across different market regimes
+
+- [Market Regime Detection](./docs/MARKET_REGIME_DETECTION.md): Understand how the system identifies bull, bear, and sideways markets
+
+## 🔧 API Examples
+
+### Multi-Signal Analysis
+
+```bash
+
+curl -X POST http://localhost:8000/analysis/multi-signal \
   -H "Content-Type: application/json" \
   -d '{
-    "reference_id": "XPO-12345",
-    "origin": "Erie, PA",
-    "destination": "Monterrey, MX",
-    "carrier": "CarrierXYZ",
-    "value_usd": 125000
+    "price_data": [
+      {"close": 45000, "high": 45200, "low": 44800, "volume": 1000},
+      {"close": 45100, "high": 45300, "low": 44900, "volume": 1200}
+    ],
+    "include_individual_signals": true
   }'
 
-Tokenize Shipment (auto-scores risk + attaches proof)
+```text
 
-curl -X POST http://localhost:8080/shipments/{shipment_id}/tokenize
+### Individual Signal Analysis
 
-Response (abridged):
+#### Execute RSI Analysis
+
+```bash
+
+curl -X POST http://localhost:8000/modules/RSIModule/execute \
+  -H "Content-Type: application/json" \
+  -d '{
+    "module_name": "RSIModule",
+    "input_data": {
+      "price_data": [{"close": 45000}, {"close": 45100}]
+    }
+  }'
+
+```text
+
+#### Execute MACD Analysis
+
+```bash
+
+curl -X POST http://localhost:8000/modules/MACDModule/execute \
+  -H "Content-Type: application/json" \
+  -d '{
+    "module_name": "MACDModule",
+    "input_data": {
+      "price_data": [{"close": 45000}, {"close": 45100}]
+    }
+  }'
+
+```text
+
+### Available Signal Modules
+
+```bash
+
+curl http://localhost:8000/signals/available
+
+```text
+
+### Multi-Signal Backtesting
+
+```bash
+
+curl -X POST http://localhost:8000/analysis/multi-signal/backtest \
+  -H "Content-Type: application/json" \
+  -d '{
+    "historical_data": [
+      {"close": 45000, "high": 45200, "low": 44800, "volume": 1000},
+      {"close": 45100, "high": 45300, "low": 44900, "volume": 1200}
+    ],
+    "initial_balance": 10000
+  }'
+
+```text
+
+### Process CSV Data
+
+```bash
+
+curl -X POST http://localhost:8000/modules/CSVIngestionModule/execute \
+  -H "Content-Type: application/json" \
+  -d '{
+    "module_name": "CSVIngestionModule",
+    "input_data": {
+      "file_path": "sample_data/btc_price_data.csv"
+    }
+  }'
+
+```text
+
+### Sales Forecasting
+
+```bash
+
+curl -X POST http://localhost:8000/modules/SalesForecastingModule/execute \
+  -H "Content-Type: application/json" \
+  -d '{
+    "module_name": "SalesForecastingModule",
+    "input_data": {
+      "historical_sales": [
+        {"date": "2024-01-01", "amount": 15000}
+      ],
+      "forecast_periods": 5
+    }
+  }'
+
+```text
+
+## 🧪 Testing
+
+```bash
+
+## Run comprehensive system tests (includes all signal modules)
+
+python benson_system.py --mode test
+
+## Run multi-signal demonstration across market scenarios
+
+python benson_system.py --mode multi-signal-demo
+
+## Run comprehensive integration demo
+
+python multi_signal_demo.py
+
+## Test original RSI functionality
+
+python benson_rsi_bot.py --test
+
+```text
+
+### Developer quick checks (lean path)
+
+See README-QUICK-CHECKS.md for a fast, TensorFlow-free validation path and pre-commit setup.
+
+## 📈 Business Impact Features
+
+- **Automation Savings**: Tracks time saved through automated processes
+
+- **Usage Analytics**: Module execution patterns and adoption metrics
+
+- **ROI Reporting**: Cost-benefit analysis of system usage
+
+- **Performance Monitoring**: Error rates, execution times, and reliability metrics
+
+View metrics:
+
+```bash
+
+curl http://localhost:8000/metrics
+
+```text
+
+## 🔌 Extensibility
+
+Create custom modules by extending the base `Module` class:
+
+```python
+
+from core.module_manager import Module
+
+class CustomAnalyzer(Module):
+    def process(self, data):
+
+## Your custom logic here
+
+        return {"result": "processed"}
+
+```text
+
+Register and use:
+
+```bash
+
+curl -X POST http://localhost:8000/modules/register \
+  -d '{"module_name": "CustomAnalyzer", "module_path": "path.to.module"}'
+
+```text
+
+## 📋 Configuration
+
+### Environment Variables
+
+- `PORT`: API server port (default: 8000)
+
+- `HOST`: API server host (default: 0.0.0.0)
+
+- `BENSON_CONFIG`: Configuration file path
+
+### Module Configuration
+
+Configure modules with custom parameters:
+
+```python
 
 {
-  "freight_token_id": "ftok_01HF...",
-  "risk_score": 18,
-  "risk_category": "LOW",
-  "recommended_action": "PROCEED",
-  "proof_ref": "sxt://proof/0xabc...",
-  "status": "TOKENIZED"
+  "rsi": {
+    "period": 14,
+    "buy_threshold": 30,
+    "sell_threshold": 70
+  }
 }
 
-List Tokens
+```text
 
-curl http://localhost:8080/tokens
+## 🐳 Docker Support
 
-Retrieve Token
+Multiple deployment options:
 
-curl http://localhost:8080/tokens/{freight_token_id}
+```bash
 
+## API server mode
 
-⸻
+docker-compose up benson-api
 
-Milestone Payments (ChainPay)
+## Legacy RSI bot mode
 
-Default policy: Pickup 20%, Transit 70%, Delivery 10%.
-Weights adjust with risk_score (0 = safest, 100 = riskiest):
-	•	Let W = [0.2, 0.7, 0.1] and Δ = min(RISK_WEIGHT_MAX_DELTA, risk_score/100 * RISK_WEIGHT_MAX_DELTA).
-	•	We pull weight from earlier milestones toward final delivery as risk increases.
+docker-compose --profile legacy up benson-legacy
 
-Example: risk_score = 40, RISK_WEIGHT_MAX_DELTA = 0.15 → Δ = 0.06
-Adjusted: Pickup 0.14, Transit 0.64, Delivery 0.22.
+## One-time RSI analysis
 
-Settlement produces XRPL tx receipts stored with the token + proof bundle for audit.
+docker-compose --profile rsi-only up benson-rsi
 
-⸻
+```text
 
-Observability & Ops
-	•	Structured logs with correlation IDs per shipment/token.
-	•	Metrics: STP rate, P50/P95 settlement time, risk-adjusted release deltas, proof latency.
-	•	Dashboards: /ops/health, /ops/metrics (Prometheus); Grafana in /infra/observability/.
-	•	Retries & Idempotency: all external calls are idempotent; payments guarded by once-only locks.
-	•	Backpressure: queue depth thresholds auto-throttle ingestion.
+## 📚 Additional Documentation
 
-⸻
+- [Modular Architecture Guide](MODULAR_ARCHITECTURE.md)
 
-Security & Compliance
-	•	Data minimization: tokenize only what’s required; PII stays in source systems.
-	•	Proof-first posture: verifiable artifacts attached to every settlement decision.
-	•	Secrets: 12-factor env, vault-ready; key rotation; KMS/HSM recommended in prod.
-	•	Tenant isolation: per-tenant namespaces and DB schemas; audited RBAC.
-	•	Standards: SOC 2, ISO 27001, GDPR-aware logging and export.
-	•	Kill-switch: policy-enforced safe holds on anomalies (carrier bans, lane alerts, claims spikes).
+- [API Documentation](http://localhost:8000/docs) (when running)
 
-⸻
+- [Module Development Guide](MODULAR_ARCHITECTURE.md#creating-custom-modules)
 
-Enterprise Readiness Matrix
+## 🛠️ Development
 
-Concern (Typical Blocker)	ChainBridge Answer
-Scalability / Throughput	Event-driven, horizontally scalable workers; queue-backed; P95 < 90s target in PoC.
-Privacy / Data Leakage	Proofs, not raw data; selective hashing; minimal on-chain footprint; private connectors.
-Interoperability	Unifier covers EDI/APIs; Chainlink bridges on/off-chain; pluggable rails (XRPL first).
-Governance & Control	Enterprise-owned policy; approvals/holds; RBAC with full audit trails.
-Vendor Lock-in	Interface-driven adapters; swap rails (XRPL/ACH/SEPA), proof providers, risk models.
-Auditability	Proof bundle + tx receipts + normalized event history; export packs for auditors.
-Cost & ROI	STP ↑, dispute time ↓, DSO ↓, audit prep −80%; risk-weighted holds reduce loss severity.
-Change Mgmt	Non-disruptive: sits beside ERP/TMS; cutover by lane/carrier; feature flags + rollback.
+### Project Structure
 
+```plaintext
 
-⸻
+├── core/                   # Core system components
+├── modules/               # Pluggable analysis modules
+├── api/                   # REST API server
+├── tracking/              # Business impact tracking
+├── sample_data/           # Example data files
+├── config/                # Configuration files
+└── benson_system.py       # Main entry point
 
-Roadmap (30/60/90)
+```text
 
-Day 0–30
-	•	ChainFreight v1 (tokenize/list/get) ✅
-	•	ChainIQ client integration ✅
-	•	SxT proof stub + artifact storage
-	•	XRPL testnet settlement path (Pickup/Transit/Delivery)
-	•	Ops: health checks, Prometheus metrics
+### Running Tests
 
-Day 31–60
-	•	Dynamic risk-weighted release policy (Δ) ✅ + config
-	•	Chainlink job for external actuation
-	•	ERP/TMS adapters for receipts + artifacts
-	•	Audit bundle export (zip of proofs/tx/logs)
-	•	Hardening: idempotent tx & double-spend guards
+```bash
 
-Day 61–90
-	•	Multi-corridor support (USD→MXN→EUR)
-	•	SLA guardrails (auto-hold, human-in-loop review)
-	•	Tenant isolation & RBAC
-	•	DR/BCP playbooks + chaos drills
-	•	Performance: load tests toward >100 TPS equivalent event throughput
+make test                  # Run all tests
+python benson_system.py --mode test  # System tests
 
-⸻
+```text
 
-Repository Layout
+## 🌟 Features
 
-.
-├─ apps/
-│  ├─ chainfreight-api/        # FastAPI service (shipments, tokenization)
-│  ├─ chainpay-worker/         # Milestone settlement, XRPL integration
-│  └─ chainiq-client/          # Risk scoring client + adapters
-├─ connectors/                 # Unifier/ERP adapters, Chainlink EA, etc.
-├─ contracts/                  # On-chain job specs / interfaces (if used)
-├─ infra/
-│  ├─ docker/                  # Dockerfiles, compose, dev containers
-│  ├─ k8s/                     # Helm charts, manifests
-│  └─ observability/           # Prometheus, Grafana, alerts
-├─ docs/                       # ADRs, diagrams, runbooks
-├─ tests/                      # Unit + integration tests
-├─ .env.example
-├─ docker-compose.yml
-├─ Makefile
-└─ README.md
+- ✅ **Multi-Signal Architecture**: 6 uncorrelated trading signal modules
 
+- ✅ **Intelligent Signal Aggregation**: Consensus-based decision making
 
-⸻
+- ✅ **Risk-Aware Trading**: Automatic risk assessment and position sizing
 
-Contributing
+- ✅ **Market Regime Detection**: Automatic optimization for bull, bear, and sideways markets ([learn more](docs/MARKET_REGIME_DETECTION.md))
 
-We use a standard trunk-based flow:
+- ✅ **Signal Independence**: Verified uncorrelated indicators (diversification score: 0.90)
 
-# Create a feature branch
-git checkout -b feat/risk-weighting
+- ✅ **Enhanced Machine Learning**: Faster adaptation to changing market conditions
 
-# Run checks
-make lint test
+- ✅ Modular, extensible architecture
 
-# Commit
-git commit -m "feat(chainpay): dynamic risk-weighting on milestones"
+- ✅ REST API with OpenAPI documentation
 
-# Push & PR
-git push origin feat/risk-weighting
+- ✅ Multiple data ingestion formats
 
-	•	Style: Python (ruff + black), Typescript (eslint + prettier)
-	•	Tests: pytest -q (unit), docker compose -f compose.test.yml up (integration)
-	•	Security: run make sec (bandit/trivy) before opening a PR
-	•	Docs: update /docs and this README when behavior changes
+- ✅ Advanced RSI analysis with Wilder's smoothing
 
-⸻
+- ✅ ML-powered sales forecasting
 
-License
+- ✅ Business impact tracking and ROI metrics
 
-Apache-2.0 (see LICENSE). For partner deployments that require different terms, open an issue to discuss.
+- ✅ Docker containerization support
 
-⸻
+- ✅ Cloud-native deployment ready
 
-Notes for Maintainers
-	•	Default corridor is USD→MXN; override via env.
-	•	Risk policy is configurable per lane/carrier.
-	•	If ChainIQ is unavailable, tokenization degrades gracefully: risk_score=null, policy falls back to conservative releases.
-	•	External calls are idempotent; settlement includes double-spend guardrails.
+- ✅ Backward compatibility with existing RSI bot
 
-⸻
+## 🤝 Contributing
 
-Contact / Maintainers:
-ChainBridge Team — BIGmindz / Benson CTO
-Issues → GitHub Issues • Security disclosures → security@yourdomain.tld (PGP preferred)
+1. Create custom modules following the `Module` interface
 
-⸻
+1. Add new API endpoints for additional functionality
 
-No blockchain theater. Real pipes. Real proof. Real cash.
+1. Extend business impact tracking for new metrics
 
-## Market & Go-To-Market (US ↔ MX Beachhead)
+1. Improve ML models and forecasting accuracy
 
-### The Real Addressable Market
-- **TAM (narrative, goods flow):** U.S.–Mexico total goods trade in **2024 = $839.6B**.  
-  Sources: [USTR](https://ustr.gov/countries-regions/americas/mexico), [U.S. Census](https://www.census.gov/foreign-trade/statistics/highlights/top/top2412yr.html)
+## 📄 License
 
-- **Mode reality (why we start with trucking):** Trucks carry the **majority** of transborder freight by value (e.g., **$87.6B of $134.4B** in Jan 2025 across Canada+Mexico).  
-  Source: [U.S. DOT BTS – Transborder Monthly](https://www.bts.gov/newsroom/north-american-transborder-freight-rose-82-january-2025-january-2024)
-
-- **SAM (monetizable today):** **U.S.–Mexico Cross-Border FTL** freight transport market = **$73.25B (2025)**.  
-  Source: [Mordor Intelligence – US-MX Cross-Border FTL](https://www.mordorintelligence.com/industry-reports/us-mexico-cross-border-ftl-freight-transport-market)
-
-- **Beachhead concentration (Laredo):** Port Laredo handled **>3M incoming trucks** in 2024 and **~50%** of southern-border truck volume.  
-  Source: [BTS – Border Crossing Data (2023–2024)](https://www.bts.gov/newsroom/border-crossing-data-annual-release-2023-2024)
-
-> **Working SAM for the beachhead (Laredo proxy):**  
-> `Beachhead SAM ≈ 50% × $73.25B = **$36.6B**`  
-> *(Border-crossing share is a proxy for FTL spend concentration; actual revenue mix varies by lane and carrier.)*
+This project is part of the BIGmindz Multiple Signal Decision Bot system.
 
 ---
 
-### Share We Intend To Take (SOM Targets)
-- **Year 1 (prove it fast):** **0.25%–0.5% of Beachhead SAM** → **$91.5M–$183M** Payment Volume Managed (PVM).  
-  _Tactics:_ 2–3 carrier groups + 3–5 mid-market shippers; milestone (20/70/10) + sub-cent rails + audit packs.
-
-- **Year 2 (port expansion):** **~1% of Beachhead SAM** → **~$366M PVM** (Laredo slice alone) + pilots at Otay, Ysleta, Hidalgo.
-
-- **Year 3 (corridor play):** **1%–2% of total US–MX FTL** → **$732.5M–$1.465B PVM**.
-
-**Operational Targets we publish:**
-- **STP ≥ 95%**  •  **P95 settlement < 90s**  •  **Audit prep time −80%**  
-- **Network fees target < $0.01** on supported programmable rails; fall back to SWIFT/RTP/ACH/SEPA when economics or coverage demand it.
-
----
-
-### Why We Win (even if SWIFT/others are present)
-- **Proof-native control plane:** Every settlement ships with a **proof bundle** (lineage + policy hash + tx receipts).  
-- **Rail-agnostic arbitrage:** Choose XRPL/RTP/ACH/SEPA/SWIFT **per event** for cost/latency/risk.  
-- **Event-driven cash:** **Risk-weighted milestones** (20/70/10 ±Δ) tied to real shipment events.  
-- **Integration moat:** ISO 20022 + EDI/API via the **Unifier** → shorter cycles, cleaner cutovers.
-
----
-
-### Notes & Assumptions
-- Laredo “~50%” figure reflects **share of incoming truck crossings** (proxy for activity density), not unique trucks.  
-- The **$73.25B** FTL figure is an **independent industry estimate (2025)**; we treat it as SAM for monetization.  
-- Figures will be refreshed quarterly as BTS/Census/USTR updates land; our SOM targets are **volume-based**, not dependent on rate inflation.
+## Get started with the modular Benson system today and unlock scalable, automated decision-making capabilities
