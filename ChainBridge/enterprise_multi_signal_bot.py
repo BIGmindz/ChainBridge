@@ -217,6 +217,8 @@ from dataclasses import dataclass, field
 
 @dataclass(frozen=True)
 class ImmutableSignal:
+    """Immutable signal data structure holding a single trading signal."""
+
     id: str
     timestamp: datetime
     symbol: str
@@ -229,6 +231,8 @@ class ImmutableSignal:
 
 @dataclass
 class SignalAggregation:
+    """Aggregated signal result combining multiple individual signals."""
+
     symbol: str
     timestamp: datetime
     signals: List[ImmutableSignal]
@@ -251,13 +255,14 @@ class SignalAggregation:
         }
 
 
-# ==============================
-# ASYNC SIGNAL PROCESSOR
-# ==============================
-
-
 class AsyncSignalProcessor:
-    def __init__(self, processor_id: str):
+    """Async processor for generating trading signals from price data.
+
+    Implements multiple technical analysis algorithms (RSI, MACD, etc.)
+    that can be run concurrently for faster signal generation.
+    """
+
+    def __init__(self, processor_id: str) -> None:
         self.processor_id = processor_id
 
     async def process_rsi(
@@ -427,7 +432,13 @@ class AsyncSignalProcessor:
 
 
 class MLEngine:
-    def __init__(self):
+    """Machine learning engine for signal prediction and risk scoring.
+
+    Loads and manages pre-trained ML models (XGBoost, LSTM, Random Forest)
+    for enhanced trading signal prediction and confidence scoring.
+    """
+
+    def __init__(self) -> None:
         self.models: Dict[str, Any] = {}
         self._load_models()
 
@@ -479,10 +490,7 @@ class MLEngine:
         else:
             features.append(0.0)
         try:
-            if hasattr(np, "array") and hasattr(np, "float64"):
-                return np.array(features, dtype=np.float64)
-            else:
-                return np.array(features)
+            return np.array(features)
         except Exception:
             return features  # Return as list if numpy fails
 
@@ -529,7 +537,13 @@ class MLEngine:
 
 
 class ParallelSignalAggregator:
-    def __init__(self, ml_engine: Optional[MLEngine] = None):
+    """Aggregates signals from multiple modules using weighted algorithm.
+
+    Combines individual technical analysis signals into a consensus trading
+    signal with ML-based confidence scoring and risk assessment.
+    """
+
+    def __init__(self, ml_engine: Optional[MLEngine] = None) -> None:
         self.ml_engine = ml_engine or MLEngine()
         self.weights = {
             "RSI": 0.15,
@@ -598,9 +612,16 @@ class ParallelSignalAggregator:
 
 
 class MutexFreeTradingEngine:
+    """Mutex-free, scalable trading engine for paper and live trading.
+
+    Main orchestrator that coordinates signal generation, aggregation,
+    trade execution, and risk management without using mutexes for
+    maximum performance and concurrency.
+    """
+
     def __init__(
         self, config_path: str = "config.yaml", mode: str = "paper", once: bool = False
-    ):
+    ) -> None:
         self.mode = mode
         self.once = once
         self.config = self._load_config(config_path)
@@ -848,6 +869,12 @@ class MutexFreeTradingEngine:
 
 
 class MockExchange:
+    """Mock exchange for paper trading without real capital risk.
+
+    Simulates exchange API responses and order fills for backtesting
+    and paper trading strategies without accessing real exchange APIs.
+    """
+
     def __init__(self, symbols: List[str]):
         self.symbols = symbols
         self.prices: Dict[str, float] = {
@@ -901,7 +928,8 @@ class MockExchange:
 # ==============================
 
 
-def deploy():
+def deploy() -> None:
+    """Deploy the trading engine with CLI argument parsing."""
     import argparse
 
     parser = argparse.ArgumentParser(description="BIGmindz Trading Platform")

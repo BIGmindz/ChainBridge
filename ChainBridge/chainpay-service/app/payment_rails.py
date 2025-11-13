@@ -103,8 +103,7 @@ class PaymentRail(ABC):
         pass
 
     def get_provider(self) -> SettlementProvider:
-        """
-        Return the provider this rail handles.
+        """Return the provider this rail handles.
 
         Returns:
             SettlementProvider enum value
