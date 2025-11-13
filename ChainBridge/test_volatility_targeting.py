@@ -10,7 +10,7 @@ from risk_management_utils import vol_target_position_size
 from budget_manager import BudgetManager
 
 
-def test_volatility_targeting():
+def test_volatility_targeting() -> None:
     """Test the volatility targeting functionality"""
     print("🧪 TESTING VOLATILITY TARGETING INTEGRATION")
     print("=" * 50)

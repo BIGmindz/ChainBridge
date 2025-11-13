@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 
-def test_run_preflight_json(tmp_path):
+def test_run_preflight_json(tmp_path) -> None:
     out = tmp_path / "report.json"
     repo_root = Path(__file__).resolve().parents[1]
     script_path = repo_root / "scripts" / "run_preflight_local.py"

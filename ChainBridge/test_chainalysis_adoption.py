@@ -20,7 +20,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # 
 from modules.adoption_tracker_module import AdoptionTrackerModule
 
 
-def test_adoption_tracker():
+def test_adoption_tracker() -> None:
     """Test the Chainalysis Adoption Tracker Module"""
 
     print("\n" + "=" * 70)

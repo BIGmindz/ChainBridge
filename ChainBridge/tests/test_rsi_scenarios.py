@@ -27,7 +27,7 @@ def raises(
     raise AssertionError(f"Expected {exc_type.__name__} to be raised")
 
 
-def test_rsi_flatline():
+def test_rsi_flatline() -> None:
     """Test RSI calculation with flatline prices."""
     from benson_rsi_bot import wilder_rsi
 
@@ -36,7 +36,7 @@ def test_rsi_flatline():
     assert 40 <= rsi <= 60, "Flatline prices should give neutral RSI"
 
 
-def test_rsi_uptrend():
+def test_rsi_uptrend() -> None:
     """Test RSI calculation with clear uptrend."""
     from benson_rsi_bot import wilder_rsi
 
@@ -45,7 +45,7 @@ def test_rsi_uptrend():
     assert rsi > 70, "Uptrend should give overbought RSI"
 
 
-def test_rsi_downtrend():
+def test_rsi_downtrend() -> None:
     """Test RSI calculation with clear downtrend."""
     from benson_rsi_bot import wilder_rsi
 
@@ -54,7 +54,7 @@ def test_rsi_downtrend():
     assert rsi < 30, "Downtrend should give oversold RSI"
 
 
-def test_rsi_insufficient_data():
+def test_rsi_insufficient_data() -> None:
     """Test RSI calculation with insufficient data."""
     from benson_rsi_bot import wilder_rsi
 
@@ -62,7 +62,7 @@ def test_rsi_insufficient_data():
     raises(ValueError, wilder_rsi, prices)
 
 
-def test_rsi_edge_cases():
+def test_rsi_edge_cases() -> None:
     """Test RSI calculation with edge cases."""
     from benson_rsi_bot import wilder_rsi
 

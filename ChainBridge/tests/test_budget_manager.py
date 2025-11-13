@@ -9,7 +9,7 @@ class DummyExchange:
         return self._markets
 
 
-def test_ensure_minimum_from_markets():
+def test_ensure_minimum_from_markets() -> None:
     # Market with cost.min and amount.min
     markets = {
         "TEST/USD": {
@@ -29,13 +29,13 @@ def test_ensure_minimum_from_markets():
     assert size2 >= 7.5
 
 
-def test_fallback_defaults_when_no_markets():
+def test_fallback_defaults_when_no_markets() -> None:
     bm = BudgetManager(initial_capital=100.0, exchange=None)
     size = bm._ensure_minimum_order_size("UNKNOWN/USD", 1.0, price=1.0)
     assert size >= 5.0
 
 
-def test_update_and_close_position():
+def test_update_and_close_position() -> None:
     bm = BudgetManager(initial_capital=100.0)
     # open a position at price 10, size 10 => quantity 1
     res = bm.open_position("FOO/USD", "BUY", entry_price=10.0, position_size=10.0)

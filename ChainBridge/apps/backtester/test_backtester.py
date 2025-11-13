@@ -16,7 +16,7 @@ sys.path.insert(
 )
 
 
-def test_backtester_import():
+def test_backtester_import() -> None:
     """Test that the backtester can be imported successfully"""
     try:
         from apps.backtester.backtester import run_backtest, generate_performance_report
@@ -79,7 +79,7 @@ def create_mock_strategy():
     return config
 
 
-def test_backtester_structure():
+def test_backtester_structure() -> None:
     """Test that the backtester has the expected structure"""
     backtester_dir = "apps/backtester"
 

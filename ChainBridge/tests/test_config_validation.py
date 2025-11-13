@@ -58,7 +58,7 @@ def validate_config(config: Dict[str, Any]) -> None:
         raise ValueError("initial_capital must be positive")
 
 
-def test_config_loading():
+def test_config_loading() -> None:
     """Test configuration file loading."""
     config_paths = ["config.yaml", "config/config.yaml"]
     loaded = False
@@ -73,7 +73,7 @@ def test_config_loading():
     assert loaded, "No valid config file found"
 
 
-def test_env_substitution():
+def test_env_substitution() -> None:
     """Test environment variable substitution."""
     # Set test environment variables
     os.environ["TEST_API_KEY"] = "test_key"
@@ -101,7 +101,7 @@ def test_env_substitution():
             os.remove(test_path)
 
 
-def test_market_validation():
+def test_market_validation() -> None:
     """Test market configuration validation."""
     config = load_config("config.yaml")
 

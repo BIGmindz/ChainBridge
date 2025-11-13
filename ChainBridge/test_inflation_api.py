@@ -8,7 +8,7 @@ and generating a crypto hedge signal when any country exceeds 20% annual inflati
 from modules.global_macro_module import GlobalMacroModule
 
 
-def test_inflation_api():
+def test_inflation_api() -> None:
     """Test the inflation API and hedge signal generation"""
     print("\n🌎 WORLD BANK INFLATION API TEST")
     print("===============================")

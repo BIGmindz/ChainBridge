@@ -6,7 +6,7 @@ See the power of uncorrelated, forward-looking signals
 from modules.logistics_signal_module import LogisticsSignalModule
 
 
-def test_logistics():
+def test_logistics() -> None:
     print("\n🧪 TESTING LOGISTICS SIGNALS")
     print("=" * 60)
 
