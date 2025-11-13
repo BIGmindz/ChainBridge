@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 
-def test_gscpi_data():
+def test_gscpi_data() -> None:
     """Validate the GSCPI data format and plot it"""
     cache_file = "cache/gscpi_data.csv"
 

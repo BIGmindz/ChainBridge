@@ -18,7 +18,7 @@ logging.basicConfig(
 )
 
 
-def test_strategy_selection():
+def test_strategy_selection() -> None:
     """Test the symbol-specific strategy selection logic."""
 
     print("🧪 Testing Symbol-Specific Strategy Selection")

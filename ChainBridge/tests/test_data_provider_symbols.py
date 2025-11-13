@@ -11,12 +11,12 @@ class DummyExchange:
         self.id = "dummy"
 
 
-def test_validate_symbols_success():
+def test_validate_symbols_success() -> None:
     ex = DummyExchange(["BTC/USD", "ETH/USD"])  # minimal symbol list
     assert validate_symbols(ex, ["BTC/USD"]) == ["BTC/USD"]
 
 
-def test_validate_symbols_failure():
+def test_validate_symbols_failure() -> None:
     ex = DummyExchange(["BTC/USD"])  # only one symbol supported
     with pytest.raises(ValueError):
         validate_symbols(ex, ["ETH/USD"])  # not available

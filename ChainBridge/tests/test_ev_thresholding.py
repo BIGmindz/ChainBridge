@@ -48,7 +48,7 @@ class TestEVThresholdOptimizer:
         self.y_true = pd.Series(true_returns, index=dates, name="returns")
         self.y_prob = pd.Series(predictions, index=dates, name="predictions")
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test EVThresholdOptimizer initialization."""
         optimizer = EVThresholdOptimizer()
 
@@ -56,7 +56,7 @@ class TestEVThresholdOptimizer:
         assert optimizer.position_size_pct == 0.02
         assert optimizer.min_trades == 10
 
-    def test_trading_costs(self):
+    def test_trading_costs(self) -> None:
         """Test TradingCosts class."""
         costs = TradingCosts(
             commission_pct=0.001,
@@ -68,7 +68,7 @@ class TestEVThresholdOptimizer:
         expected_total = 0.001 + 0.0005 + 0.0002 + 0.0001
         assert costs.total_cost_pct == expected_total
 
-    def test_optimize_threshold_basic(self):
+    def test_optimize_threshold_basic(self) -> None:
         """Test basic threshold optimization."""
         optimizer = EVThresholdOptimizer(min_trades=1)  # Lower threshold for test
 
@@ -88,7 +88,7 @@ class TestEVThresholdOptimizer:
         assert "threshold" in curve.columns
         assert "expected_value" in curve.columns
 
-    def test_optimize_threshold_with_costs(self):
+    def test_optimize_threshold_with_costs(self) -> None:
         """Test threshold optimization with trading costs."""
         high_costs = TradingCosts(
             commission_pct=0.005,  # 0.5% commission
@@ -102,7 +102,7 @@ class TestEVThresholdOptimizer:
         # With higher costs, optimal threshold should be higher (more selective)
         assert result.threshold > 0.5  # Should be conservative
 
-    def test_evaluate_threshold_insufficient_trades(self):
+    def test_evaluate_threshold_insufficient_trades(self) -> None:
         """Test handling of insufficient trades."""
         # Create data that will result in very few trades
         dates = pd.date_range("2020-01-01", periods=10, freq="H")
@@ -115,7 +115,7 @@ class TestEVThresholdOptimizer:
         with pytest.raises(ValueError, match="No valid thresholds found"):
             optimizer.optimize_threshold(y_true, y_prob)
 
-    def test_calculate_returns_with_costs(self):
+    def test_calculate_returns_with_costs(self) -> None:
         """Test returns calculation with trading costs."""
         optimizer = EVThresholdOptimizer(min_trades=1)
 
@@ -144,7 +144,7 @@ class TestEVThresholdOptimizer:
         assert abs(returns.iloc[1] - expected_return_2) < 1e-6
         assert abs(returns.iloc[2] - expected_return_3) < 1e-6
 
-    def test_threshold_result_structure(self):
+    def test_threshold_result_structure(self) -> None:
         """Test ThresholdResult data structure."""
         result = ThresholdResult(
             threshold=0.6,
@@ -181,7 +181,7 @@ class TestMultipleThresholds:
         self.y_true = pd.Series(true_returns, index=dates)
         self.y_prob = pd.Series(predictions, index=dates)
 
-    def test_find_multiple_thresholds(self):
+    def test_find_multiple_thresholds(self) -> None:
         """Test finding multiple thresholds."""
         results = find_multiple_thresholds(
             self.y_true, self.y_prob, n_thresholds=3, min_trades=1
@@ -198,7 +198,7 @@ class TestMultipleThresholds:
             thresholds = [r.threshold for r in results]
             assert len(set(thresholds)) == len(thresholds)  # All unique
 
-    def test_find_multiple_thresholds_insufficient_data(self):
+    def test_find_multiple_thresholds_insufficient_data(self) -> None:
         """Test multiple thresholds with insufficient data."""
         # Very small dataset
         small_y_true = pd.Series([0.01, -0.01])
@@ -215,7 +215,7 @@ class TestMultipleThresholds:
 class TestEdgeCases:
     """Test edge cases and error conditions."""
 
-    def test_all_positive_predictions(self):
+    def test_all_positive_predictions(self) -> None:
         """Test with all positive predictions."""
         dates = pd.date_range("2020-01-01", periods=100, freq="H")
         y_true = pd.Series(np.random.randn(100) * 0.02, index=dates)
@@ -227,7 +227,7 @@ class TestEdgeCases:
         assert result.total_trades > 0
         assert result.threshold <= 0.9  # Should be able to find optimal
 
-    def test_all_negative_predictions(self):
+    def test_all_negative_predictions(self) -> None:
         """Test with all negative predictions."""
         dates = pd.date_range("2020-01-01", periods=100, freq="H")
         y_true = pd.Series(np.random.randn(100) * 0.02, index=dates)
@@ -239,7 +239,7 @@ class TestEdgeCases:
         assert result.total_trades > 0
         assert result.threshold >= 0.1  # Should be able to find optimal
 
-    def test_extreme_thresholds(self):
+    def test_extreme_thresholds(self) -> None:
         """Test optimization with extreme threshold ranges."""
         dates = pd.date_range("2020-01-01", periods=100, freq="H")
         y_true = pd.Series(np.random.randn(100) * 0.02, index=dates)
@@ -259,7 +259,7 @@ class TestEdgeCases:
         )
         assert result.threshold == 0.05
 
-    def test_zero_returns(self):
+    def test_zero_returns(self) -> None:
         """Test with zero returns (no market movement)."""
         dates = pd.date_range("2020-01-01", periods=100, freq="H")
         y_true = pd.Series([0.0] * 100, index=dates)  # No returns
@@ -278,7 +278,7 @@ class TestEdgeCases:
 class TestPerformanceMetrics:
     """Test performance metric calculations."""
 
-    def test_profit_factor_calculation(self):
+    def test_profit_factor_calculation(self) -> None:
         """Test profit factor calculation."""
         optimizer = EVThresholdOptimizer(min_trades=1)
 

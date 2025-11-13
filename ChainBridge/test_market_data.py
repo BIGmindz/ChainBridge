@@ -2,7 +2,7 @@ import ccxt
 import pandas as pd
 
 
-def test_market_data():
+def test_market_data() -> None:
     try:
         # Initialize exchange
         print("Initializing Kraken exchange...")

@@ -6,7 +6,7 @@ Run this to verify everything is working
 from modules.region_specific_crypto_module import RegionSpecificCryptoModule
 
 
-def test_region_module():
+def test_region_module() -> None:
     print("Testing Region-Specific Crypto Module...")
 
     # Initialize
