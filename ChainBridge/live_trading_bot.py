@@ -63,7 +63,7 @@ from modules.new_listings_radar import ListingsMonitor
 from modules.multi_signal_aggregator_module import MultiSignalAggregatorModule
 
 
-def load_bot_config():
+def load_bot_config() -> dict:
     """Load YAML configuration, falling back to defaults when missing."""
     for path in CONFIG_PATHS:
         if os.path.exists(path):
@@ -84,7 +84,8 @@ def load_bot_config():
 
 
 # Preflight check to ensure API keys are loaded
-def preflight_check():
+def preflight_check() -> None:
+    """Verify that API keys are loaded in environment before trading."""
     api_key = os.environ.get("API_KEY")
     api_secret = os.environ.get("API_SECRET")
     if not api_key or not api_secret:
@@ -97,7 +98,13 @@ def preflight_check():
 
 
 class LiveTradingBot:
-    def __init__(self, config=None):
+    """Live trading bot with multi-signal aggregation and auto-liquidation.
+
+    Coordinates multiple technical analysis modules to generate trading signals,
+    manages positions, and automatically liquidates when capital runs low.
+    """
+
+    def __init__(self, config: dict | None = None) -> None:
         print("🚀 INITIALIZING LIVE TRADING BOT WITH MULTI-SIGNAL AGGREGATION")
 
         self.config = config or load_bot_config()
@@ -201,8 +208,8 @@ class LiveTradingBot:
         self.recent_trades = []  # in-memory ring buffer for snapshot (last 25)
         self._forced_trade_done = False
 
-    def _initialize_signal_modules(self):
-        """Initialize all signal modules and aggregator"""
+    def _initialize_signal_modules(self) -> None:
+        """Initialize all signal modules and register with manager."""
         print("🔧 Initializing multi-signal modules...")
 
         # Create module manager
@@ -236,7 +243,8 @@ class LiveTradingBot:
 
         print("✅ All signal modules initialized and registered")
 
-    def run_trading_cycle(self):
+    def run_trading_cycle(self) -> None:
+        """Execute one complete trading cycle with signal generation and execution."""
         print(f"\n[{datetime.now().strftime('%H:%M:%S')}] === TRADING CYCLE ===")
 
         # Check if we need to liquidate due to low capital
@@ -335,8 +343,8 @@ class LiveTradingBot:
 
         print("✅ Cycle completed")
 
-    def _check_and_liquidate_if_needed(self):
-        """Check capital levels and liquidate if needed"""
+    def _check_and_liquidate_if_needed(self) -> None:
+        """Check capital levels and liquidate positions if capital is low."""
         try:
             # Check if capital is below threshold
             threshold = 100.0  # $100 minimum
@@ -360,7 +368,10 @@ class LiveTradingBot:
         except Exception as e:
             print(f"❌ Error checking liquidation: {e}")
 
-    def _execute_trade(self, symbol, signal, price, confidence):
+    def _execute_trade(
+        self, symbol: str, signal: str, price: float, confidence: float
+    ) -> None:
+        """Execute a trade order for the given symbol and signal."""
         try:
             # Calculate position size using budget manager
             position_info = self.budget_manager.calculate_position_size(
@@ -494,8 +505,8 @@ class LiveTradingBot:
                 }
             )
 
-    def _calculate_rsi(self, ohlcv, period=14):
-        """Calculate RSI using Wilder's smoothing method"""
+    def _calculate_rsi(self, ohlcv: list, period: int = 14) -> float:
+        """Calculate RSI using Wilder's smoothing method."""
         if len(ohlcv) < period + 1:
             return 50.0  # Default neutral RSI
 
@@ -531,8 +542,8 @@ class LiveTradingBot:
 
         return rsi
 
-    def _generate_multi_signal(self, symbol, ohlcv, price):
-        """Generate aggregated signal from all modules"""
+    def _generate_multi_signal(self, symbol: str, ohlcv: list, price: float) -> dict:
+        """Generate aggregated signal from all modules."""
         try:
             # Prepare price data for modules
             price_data = self._prepare_price_data(ohlcv, symbol)
@@ -642,8 +653,8 @@ class LiveTradingBot:
             print(f"❌ Error in multi-signal generation: {e}")
             return {"signal": "HOLD", "confidence": 0.0, "modules": {}}
 
-    def _process_module(self, module, name, data):
-        """Process individual signal module with error handling"""
+    def _process_module(self, module: object, name: str, data: dict) -> dict:
+        """Process individual signal module with error handling."""
         try:
             result = module.process(data)
             if not isinstance(result, dict):
@@ -657,8 +668,8 @@ class LiveTradingBot:
             print(f"❌ Error processing {name} module: {e}")
             return {"signal": "HOLD", "confidence": 0.5, "value": 0}
 
-    def _prepare_price_data(self, ohlcv, symbol):
-        """Prepare OHLCV data in format expected by signal modules"""
+    def _prepare_price_data(self, ohlcv: list, symbol: str) -> list:
+        """Prepare OHLCV data in format expected by signal modules."""
         if not ohlcv:
             return []
 
@@ -677,8 +688,8 @@ class LiveTradingBot:
             )
         return price_data
 
-    def _display_module_signals(self, module_signals):
-        """Display individual module signals"""
+    def _display_module_signals(self, module_signals: dict) -> None:
+        """Display individual module signals."""
         indicators = []
         for mod_name, data in module_signals.items():
             if data["signal"] == "BUY":
@@ -691,10 +702,11 @@ class LiveTradingBot:
         print(f"            Signals: {' | '.join(indicators)}")
 
     # ---------------- Trade Logging & Order Polling -----------------
-    def _utc_now(self):
+    def _utc_now(self) -> str:
         return datetime.utcnow().isoformat() + "Z"
 
-    def _log_trade_event(self, event: dict):
+    def _log_trade_event(self, event: dict) -> None:
+        """Log a trade event to JSONL file and memory buffer."""
         try:
             line = json.dumps(event)
             with self.trade_log_path.open("a", encoding="utf-8") as fh:
@@ -706,8 +718,13 @@ class LiveTradingBot:
             print(f"⚠️  Failed to log trade event: {exc}")
 
     def _poll_order_fill(
-        self, order_id, symbol, side, submitted_price, timeout_seconds=60
-    ):
+        self,
+        order_id: str,
+        symbol: str,
+        side: str,
+        submitted_price: float,
+        timeout_seconds: int = 60,
+    ) -> tuple[str, float | None]:
         """Poll exchange for order fill status.
 
         Returns: (status, fill_price)
@@ -737,13 +754,8 @@ class LiveTradingBot:
     # ---------------------------------------------------------------
     # UI Snapshot Support
     # ---------------------------------------------------------------
-    def _write_ui_snapshot(self, per_symbol_snapshots):
-        """Write latest cycle snapshot for external UI consumption.
-
-        Produces:
-        - ui_snapshot.json (atomically replaced)
-        - ui_history.jsonl (append-only, rolling history)
-        """
+    def _write_ui_snapshot(self, per_symbol_snapshots: list) -> None:
+        """Write latest cycle snapshot for external UI consumption."""
         snapshot_dir = Path(".")
         snapshot_path = snapshot_dir / "ui_snapshot.json"
         history_path = snapshot_dir / "ui_history.jsonl"
@@ -843,8 +855,8 @@ class LiveTradingBot:
         except Exception:
             pass
 
-    def _show_portfolio_status(self):
-        """Show current portfolio status"""
+    def _show_portfolio_status(self) -> None:
+        """Show current portfolio status and metrics."""
         status = self.budget_manager.get_portfolio_status()
 
         print("\n💼 PORTFOLIO STATUS:")
@@ -858,7 +870,8 @@ class LiveTradingBot:
         print(f"   🎯 Total Trades: {status['total_trades']}")
 
 
-def main():
+def main() -> None:
+    """Start the live trading bot with auto-liquidation."""
     print("🔥 STARTING LIVE TRADING BOT WITH AUTO-LIQUIDATION")
     print("⚠️  PAPER=false - This will place REAL orders!")
     print("🔄 Auto-liquidation enabled for low capital situations")
