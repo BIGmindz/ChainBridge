@@ -13,11 +13,13 @@
 
 import {
   Shipment,
+  ShipmentStatus,
   ExceptionRow,
   NetworkVitals,
   ShipmentEvent,
   RiskAssessment,
   PaymentMilestone,
+  PaymentState,
   ProofPackSummary,
 } from "../types";
 
@@ -151,7 +153,7 @@ function generateShipment(overrides?: Partial<Shipment>): Shipment {
     risk: generateRiskAssessment(riskScore),
     payment_state: ["not_started", "in_progress", "partially_paid", "completed"][
       randomInt(0, 3)
-    ] as ShipmentStatus,
+    ] as PaymentState,
     payment_schedule: generatePaymentSchedule(),
     total_value_usd: randomInt(5000, 50000),
     proofpack: generateProofPack(),
