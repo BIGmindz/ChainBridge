@@ -2,13 +2,16 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional
-import uuid, hashlib, json, os, datetime
+import uuid, hashlib, json, os, datetime, logging
+from pathlib import Path
 
 from src.security.signing import (
     now_utc_iso,
     canonical_json_bytes,
     sign_response_headers,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/proofpacks", tags=["ProofPacks"])
 
@@ -84,11 +87,24 @@ async def run_proofpack(payload: ProofPackRequest):
 
 @router.get("/{pack_id}")
 async def get_proofpack(pack_id: str):
-    path = os.path.join(RUNTIME_DIR, f"{pack_id}.json")
-    if not os.path.exists(path):
+    # Secure path construction with path traversal protection
+    runtime_dir = Path(RUNTIME_DIR).resolve()
+    candidate = (runtime_dir / f"{pack_id}.json").resolve()
+    
+    # Enforce that candidate is inside runtime_dir
+    try:
+        candidate.relative_to(runtime_dir)
+    except ValueError:
+        logger.warning(f"Path traversal attempt detected: pack_id={pack_id}")
+        raise HTTPException(status_code=400, detail="Invalid pack_id")
+    
+    # Assign file_path after safety check passes
+    file_path = candidate
+    
+    if not file_path.exists():
         raise HTTPException(status_code=404, detail="ProofPack not found")
 
-    with open(path, "r") as f:
+    with open(file_path, "r") as f:
         manifest_data = json.load(f)
 
     manifest_hash = _sha256_hex(canonical_json_bytes(manifest_data))
