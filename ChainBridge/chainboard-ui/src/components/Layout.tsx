@@ -1,156 +1,195 @@
-import React, { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, SearchIcon, ShieldAlert } from "lucide-react";
+import { useState } from "react";
+import { NavLink, Outlet } from "react-router-dom";
+import {
+  LayoutDashboard,
+  PackageSearch,
+  AlertTriangle,
+  Search,
+  User,
+  Activity,
+  Menu,
+  X,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
+const navItems: { to: string; label: string; Icon: LucideIcon }[] = [
+  { to: "/", label: "Overview", Icon: LayoutDashboard },
+  { to: "/shipments", label: "Shipments", Icon: PackageSearch },
+  { to: "/exceptions", label: "Exceptions", Icon: AlertTriangle },
+];
 
-/**
- * Main Layout Component
- * Provides shell with top bar, navigation, and content area
- */
-export default function Layout({ children }: LayoutProps): JSX.Element {
-  const [navOpen, setNavOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const navigate = useNavigate();
-  const location = useLocation();
+export default function Layout(): JSX.Element {
+  const [searchValue, setSearchValue] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
-  const environment = import.meta.env.VITE_ENVIRONMENT || "sandbox";
-
-  const navItems = [
-    { label: "Overview", href: "/" },
-    { label: "Shipments", href: "/shipments" },
-    { label: "Exceptions", href: "/exceptions" },
-    { label: "Risk & Governance", href: "/risk", disabled: true },
-    { label: "Payments", href: "/payments", disabled: true },
-  ];
-
-  const handleSearch = (e: React.FormEvent): void => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    console.log("Search:", searchQuery);
-    setSearchQuery("");
+  const handleSearch = (event: React.FormEvent): void => {
+    event.preventDefault();
+    if (!searchValue.trim()) return;
+    console.debug("Global search", searchValue);
+    setSearchValue("");
   };
 
-  const isActive = (href: string): boolean => location.pathname === href;
-
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      {/* Top Bar */}
-      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
-        <div className="flex items-center justify-between px-6 py-4">
-          {/* Brand */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setNavOpen(!navOpen)}
-              className="md:hidden p-2 hover:bg-gray-100 rounded-lg"
-              aria-label="Toggle navigation"
-            >
-              {navOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">
-                ChainBridge Control Tower
-              </h1>
-              <p className="text-xs text-gray-500">
-                {apiBaseUrl.includes("localhost") ? "Development" : environment}
-              </p>
-            </div>
-          </div>
-
-          {/* Search Bar */}
-          <form
-            onSubmit={handleSearch}
-            className="hidden md:flex flex-1 mx-8 max-w-md"
-          >
-            <div className="relative w-full">
-              <input
-                type="text"
-                placeholder="Search shipment, token, or carrier..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-              <button
-                type="submit"
-                className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
-                aria-label="Search"
-              >
-                <SearchIcon size={18} />
-              </button>
-            </div>
-          </form>
-
-          {/* Environment Badge */}
-          <div className="flex items-center gap-2">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-primary-50 border border-primary-200 rounded-lg">
-              <ShieldAlert size={16} className="text-primary-600" />
-              <span className="text-xs font-semibold text-primary-700 uppercase">
-                {environment}
-              </span>
-            </div>
-          </div>
+    <div className="flex min-h-screen bg-slate-950 text-slate-100">
+      <aside className="hidden w-64 flex-col border-r border-slate-900/80 bg-slate-950/95 px-5 py-6 md:flex">
+        <div className="mb-8">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+            ChainBridge
+          </p>
+          <p className="mt-1 text-sm font-semibold text-slate-100">Control Tower</p>
         </div>
 
-        {/* Mobile Search */}
-        <form onSubmit={handleSearch} className="md:hidden px-6 pb-4">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
+        <nav className="flex flex-1 flex-col gap-1">
+          {navItems.map((item) => (
+            <NavItem key={item.to} {...item} />
+          ))}
+        </nav>
+
+        <div className="mt-6 border-t border-slate-900/70 pt-4 text-[11px] text-slate-500">
+          <p className="flex items-center gap-2">
+            <Activity className="h-3.5 w-3.5 text-emerald-400" />
+            Monitoring 24/7
+          </p>
+          <p className="mt-1 text-[10px] text-slate-600">Freight · Risk · Payments</p>
+        </div>
+      </aside>
+
+      <div className="relative flex flex-1 flex-col">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.07),_transparent_60%),radial-gradient(circle_at_bottom,_rgba(99,102,241,0.06),_transparent_55%)]"
+        />
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,_rgba(15,23,42,0.6)_25%,_transparent_25%),linear-gradient(225deg,_rgba(15,23,42,0.5)_25%,_transparent_25%)] bg-[length:40px_40px] opacity-10" />
+
+        <header className="relative z-10 flex items-center justify-between border-b border-slate-900/70 bg-slate-950/80 px-4 py-3 backdrop-blur">
+          <div className="flex items-center gap-3">
             <button
-              type="submit"
-              className="absolute right-3 top-2.5 text-gray-500"
-              aria-label="Search"
+              type="button"
+              className="inline-flex items-center justify-center rounded-lg border border-slate-800 p-2 text-slate-100 md:hidden"
+              aria-label="Open navigation"
+              onClick={() => setSidebarOpen(true)}
             >
-              <SearchIcon size={18} />
+              <Menu className="h-5 w-5" />
+            </button>
+            <form
+              onSubmit={handleSearch}
+              className="flex items-center gap-2 rounded-lg border border-slate-800/70 bg-slate-950/70 px-3 py-2 text-xs"
+            >
+              <Search className="h-4 w-4 text-slate-400" />
+              <input
+                type="search"
+                placeholder="Search shipments, events, references..."
+                value={searchValue}
+                onChange={(event) => setSearchValue(event.target.value)}
+                className="w-56 bg-transparent text-xs text-slate-100 placeholder-slate-500 outline-none"
+              />
+            </form>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <SystemStatusPill label="Data Plane" status="online" />
+            <SystemStatusPill label="Risk Engine" status="degraded" />
+            <SystemStatusPill label="Payments" status="online" />
+            <div className="hidden flex-col items-end text-[10px] text-slate-500 sm:flex">
+              <span>Last sync: &lt;30s</span>
+              <span>Environment: Sandbox</span>
+            </div>
+            <button
+              type="button"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-800/80 bg-slate-950/80 text-slate-200"
+              aria-label="User menu"
+            >
+              <User className="h-4 w-4" />
             </button>
           </div>
-        </form>
-      </header>
+        </header>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar Navigation */}
-        <aside
-          className={`${
-            navOpen ? "block" : "hidden"
-          } md:block w-64 bg-white border-r border-gray-200 overflow-y-auto`}
-        >
-          <nav className="px-4 py-6 space-y-2">
-            {navItems.map((item) => (
-              <button
-                key={item.href}
-                onClick={() => {
-                  navigate(item.href);
-                  setNavOpen(false);
-                }}
-                disabled={item.disabled}
-                className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors ${
-                  isActive(item.href)
-                    ? "bg-primary-50 text-primary-700 border-l-4 border-primary-600"
-                    : "text-gray-700 hover:bg-gray-50"
-                } ${item.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
-              >
-                {item.label}
-                {item.disabled && (
-                  <span className="ml-2 text-xs text-gray-500">(Coming soon)</span>
-                )}
-              </button>
-            ))}
-          </nav>
-        </aside>
+        {sidebarOpen && (
+          <div className="fixed inset-0 z-20 flex bg-black/60 md:hidden">
+            <aside className="w-64 bg-slate-950/95 px-5 py-6 shadow-2xl">
+              <div className="mb-8 flex items-center justify-between">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    ChainBridge
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-slate-100">Control Tower</p>
+                </div>
+                <button
+                  type="button"
+                  className="rounded-lg border border-slate-800 p-2 text-slate-200"
+                  onClick={() => setSidebarOpen(false)}
+                  aria-label="Close navigation"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <nav className="flex flex-col gap-1">
+                {navItems.map((item) => (
+                  <NavItem key={item.to} {...item} onNavigate={() => setSidebarOpen(false)} />
+                ))}
+              </nav>
+            </aside>
+            <div className="flex-1" onClick={() => setSidebarOpen(false)} />
+          </div>
+        )}
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto bg-gray-50">
-          <div className="p-4 md:p-8">{children}</div>
+        <main className="relative z-10 flex-1 px-4 py-4">
+          <div className="mx-auto h-full max-w-6xl">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>
+  );
+}
+
+interface NavItemProps {
+  to: string;
+  label: string;
+  Icon: LucideIcon;
+  onNavigate?: () => void;
+}
+
+function NavItem({ to, label, Icon, onNavigate }: NavItemProps): JSX.Element {
+  return (
+    <NavLink
+      to={to}
+      end={to === "/"}
+      className={({ isActive }) =>
+        [
+          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition border border-transparent",
+          "hover:border-slate-700 hover:bg-slate-900/70 hover:text-slate-50",
+          isActive
+            ? "bg-slate-900/90 text-slate-50 shadow-[0_0_0_1px_rgba(129,140,248,0.35)]"
+            : "text-slate-400",
+        ].join(" ")
+      }
+      onClick={onNavigate}
+    >
+      <Icon className="h-4 w-4" />
+      <span>{label}</span>
+    </NavLink>
+  );
+}
+
+interface SystemStatusPillProps {
+  label: string;
+  status: "online" | "degraded" | "offline";
+}
+
+function SystemStatusPill({ label, status }: SystemStatusPillProps): JSX.Element {
+  const base =
+    "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]";
+  const tones: Record<SystemStatusPillProps["status"], string> = {
+    online: "border-emerald-500/50 bg-emerald-500/10 text-emerald-300",
+    degraded: "border-amber-500/50 bg-amber-500/10 text-amber-300",
+    offline: "border-red-500/50 bg-red-500/10 text-red-300",
+  };
+
+  return (
+    <span className={`${base} ${tones[status]}`}>
+      <span className="h-1.5 w-1.5 rounded-full bg-current" />
+      {label}
+    </span>
   );
 }
