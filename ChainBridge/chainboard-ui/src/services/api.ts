@@ -25,6 +25,8 @@ import {
   ProofPackResponse,
   CreateProofPackPayload,
 } from "../types";
+import type { GlobalSummary, CorridorMetrics } from "../lib/metrics";
+import type { IoTHealthSummary, ShipmentIoTSnapshot } from "../lib/iot";
 import { realApiClient } from "./realApiClient";
 import { config } from "../config/env";
 
@@ -103,6 +105,15 @@ function generateRiskAssessment(riskScore?: number): RiskAssessment {
 function generatePaymentSchedule(): PaymentMilestone[] {
   const statuses = ["released", "pending", "pending"] as const;
   return [
+  import type { GlobalSummary, CorridorMetrics } from "../lib/metrics";
+  import type { IoTHealthSummary, ShipmentIoTSnapshot } from "../lib/iot";
+
+  export interface MetricsApi {
+    getGlobalSummary(): Promise<GlobalSummary>;
+    getCorridorMetrics(): Promise<CorridorMetrics[]>;
+    getIoTHealthSummary(): Promise<IoTHealthSummary>;
+    getShipmentIoTSnapshot(shipmentId: string): Promise<ShipmentIoTSnapshot | null>;
+  }
     {
       milestone: "Pickup confirmed",
       percentage: 20,
