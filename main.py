@@ -101,7 +101,11 @@ app.include_router(proofpacks_router)
 if __name__ == "__main__":
     import uvicorn
 
-    port = int(os.getenv("PORT", "8080"))
+    try:
+        port = int(os.getenv("PORT", "8080"))
+    except ValueError:
+        logger.error("Invalid PORT value, must be an integer")
+        sys.exit(1)
     host = os.getenv("HOST", "0.0.0.0")
 
     logger.info(f"Starting server on {host}:{port}")
