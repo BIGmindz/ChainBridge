@@ -2,7 +2,8 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional
-import uuid, hashlib, json, os, datetime
+import uuid, hashlib, json, os, datetime, logging
+from pathlib import Path
 
 from src.security.signing import (
     now_utc_iso,
@@ -10,9 +11,12 @@ from src.security.signing import (
     sign_response_headers,
 )
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/proofpacks", tags=["ProofPacks"])
 
-RUNTIME_DIR = "proofpacks/runtime"
+# Use pathlib for secure path handling
+RUNTIME_DIR = Path("proofpacks/runtime").resolve()
 
 # ---------- MODELS ----------
 class ProofEvent(BaseModel):
@@ -43,6 +47,50 @@ def _normalize_events(events: List[ProofEvent]) -> List[dict]:
 def _sha256_hex(b: bytes) -> str:
     return hashlib.sha256(b).hexdigest()
 
+def _validate_and_get_pack_path(pack_id: str) -> Path:
+    """
+    Validates pack_id and returns a secure resolved path.
+    
+    Security measures:
+    1. Validates pack_id is a valid UUID format to prevent injection
+    2. Uses pathlib.Path.resolve() to get absolute path
+    3. Uses .relative_to() to ensure path stays within RUNTIME_DIR
+    4. Prevents path traversal attacks (e.g., "../../../etc/passwd")
+    
+    Args:
+        pack_id: UUID string for the proof pack
+        
+    Returns:
+        Secure resolved Path object
+        
+    Raises:
+        HTTPException: If pack_id is invalid or path is unsafe
+    """
+    # Validate UUID format - this prevents path traversal attempts
+    try:
+        uuid.UUID(pack_id)
+    except ValueError:
+        logger.error(f"Invalid pack_id format: {pack_id}")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid pack_id: must be a valid UUID"
+        )
+    
+    # Construct and resolve the full path
+    pack_path = (RUNTIME_DIR / f"{pack_id}.json").resolve()
+    
+    # Ensure the resolved path is within RUNTIME_DIR (prevents path traversal)
+    try:
+        pack_path.relative_to(RUNTIME_DIR)
+    except ValueError:
+        logger.error(f"Path traversal attempt detected: {pack_id}")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid pack_id: path traversal not allowed"
+        )
+    
+    return pack_path
+
 # ---------- ENDPOINTS ----------
 @router.post("/run")
 async def run_proofpack(payload: ProofPackRequest):
@@ -61,8 +109,14 @@ async def run_proofpack(payload: ProofPackRequest):
         manifest_json = canonical_json_bytes(manifest_data)
         manifest_hash = _sha256_hex(manifest_json)
 
-        os.makedirs(RUNTIME_DIR, exist_ok=True)
-        with open(os.path.join(RUNTIME_DIR, f"{pack_id}.json"), "w") as f:
+        # Ensure runtime directory exists
+        RUNTIME_DIR.mkdir(parents=True, exist_ok=True)
+        
+        # Use secure path validation
+        pack_path = _validate_and_get_pack_path(pack_id)
+        
+        # Write manifest to file
+        with open(pack_path, "w") as f:
             json.dump(manifest_data, f, indent=2)
 
         envelope = {
@@ -79,17 +133,28 @@ async def run_proofpack(payload: ProofPackRequest):
         sign_response_headers(resp, body_bytes)
         return resp
 
+    except HTTPException:
+        # Re-raise HTTP exceptions from validation
+        raise
     except Exception as e:
+        logger.error(f"Error creating ProofPack: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/{pack_id}")
 async def get_proofpack(pack_id: str):
-    path = os.path.join(RUNTIME_DIR, f"{pack_id}.json")
-    if not os.path.exists(path):
+    # Validate pack_id and get secure path
+    pack_path = _validate_and_get_pack_path(pack_id)
+    
+    if not pack_path.exists():
+        logger.warning(f"ProofPack not found: {pack_id}")
         raise HTTPException(status_code=404, detail="ProofPack not found")
 
-    with open(path, "r") as f:
-        manifest_data = json.load(f)
+    try:
+        with open(pack_path, "r") as f:
+            manifest_data = json.load(f)
+    except (json.JSONDecodeError, IOError) as e:
+        logger.error(f"Error reading ProofPack {pack_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error reading ProofPack")
 
     manifest_hash = _sha256_hex(canonical_json_bytes(manifest_data))
 
