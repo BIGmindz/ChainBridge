@@ -510,7 +510,7 @@ make install-lean           # Install into .venv-lean
 
 ### Test Organization
 
-**Location:** `tests/` directory (13 test modules, 100+ test cases)
+**Location:** `tests/` directory (12 test modules, 100+ test cases)
 
 **Test Files by Category:**
 
