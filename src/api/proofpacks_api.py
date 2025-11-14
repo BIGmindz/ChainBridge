@@ -250,11 +250,18 @@ def read_manifest(pack_id: str) -> ProofPackManifest:
         HTTPException: If pack not found or read fails
     """
     pack_id = validate_pack_id(pack_id)
-    file_path = Path(RUNTIME_DIR) / f"{pack_id}.json"
+    runtime_dir = Path(RUNTIME_DIR).resolve()
+    file_path = (runtime_dir / f"{pack_id}.json").resolve(strict=False)
 
     # Ensure path is within runtime directory (extra safety)
-    if not file_path.resolve().is_relative_to(Path(RUNTIME_DIR).resolve()):
-        logger.error(f"Path traversal attempt detected: {pack_id}")
+    try:
+        # Python 3.9+
+        is_subpath = file_path.is_relative_to(runtime_dir)
+    except AttributeError:
+        # For Python < 3.9
+        is_subpath = str(file_path).startswith(str(runtime_dir) + os.sep)
+    if not is_subpath:
+        logger.error(f"Path traversal attempt detected: {pack_id} -> {file_path}")
         raise HTTPException(status_code=400, detail="Invalid pack_id")
 
     if not file_path.exists():
