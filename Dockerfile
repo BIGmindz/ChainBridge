@@ -36,7 +36,8 @@ ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 
 USER appuser
 
-EXPOSE 8000
+EXPOSE 8080
 
 # Default command; allow override
-CMD ["python", "benson_system.py", "--mode", "api-server", "--port", "8000"]
+# Runs the ChainBridge ProofPacks API by default
+CMD ["python", "main.py"]
