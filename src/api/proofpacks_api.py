@@ -27,8 +27,12 @@ router = APIRouter(prefix="/v1/proofpacks", tags=["ProofPacks v1"])
 
 # Configuration
 RUNTIME_DIR = os.getenv("PROOFPACK_RUNTIME_DIR", "proofpacks/runtime")
-MAX_EVENTS_PER_PACK = int(os.getenv("MAX_EVENTS_PER_PACK", "100"))
-MAX_EVENT_DETAIL_DEPTH = int(os.getenv("MAX_EVENT_DETAIL_DEPTH", "10"))
+try:
+    MAX_EVENTS_PER_PACK = int(os.getenv("MAX_EVENTS_PER_PACK", "100"))
+    MAX_EVENT_DETAIL_DEPTH = int(os.getenv("MAX_EVENT_DETAIL_DEPTH", "10"))
+except ValueError as e:
+    logger.error(f"Invalid configuration value for MAX_EVENTS_PER_PACK or MAX_EVENT_DETAIL_DEPTH: {e}")
+    raise RuntimeError("Configuration error: MAX_EVENTS_PER_PACK and MAX_EVENT_DETAIL_DEPTH must be integers")
 
 # Ensure runtime directory exists
 os.makedirs(RUNTIME_DIR, exist_ok=True)
