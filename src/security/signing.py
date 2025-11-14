@@ -21,6 +21,13 @@ if not _secret_str:
             "SIGNING_SECRET environment variable must be set in production. "
             "Generate a secure secret with: python -c 'import secrets; print(secrets.token_hex(32))'"
         )
+elif _secret_str in ["your_signing_secret_here_CHANGE_IN_PRODUCTION", "dev-secret"]:
+    if os.getenv("APP_ENV", "").lower() != "dev":
+        raise RuntimeError(
+            "SIGNING_SECRET is set to a placeholder value. "
+            "Generate a secure secret with: python -c 'import secrets; print(secrets.token_hex(32))'"
+        )
+    logger.warning("Using placeholder SIGNING_SECRET. DO NOT USE IN PRODUCTION!")
 
 SIGNING_SECRET = _secret_str.encode("utf-8")
 ALLOWED_SKEW = datetime.timedelta(minutes=5)
