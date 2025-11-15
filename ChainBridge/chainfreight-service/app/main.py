@@ -435,7 +435,11 @@ async def create_shipment_event(
         )
     except Exception as e:
         # Log but don't fail the request - ChainPay can retry via other means
-        logger.warning(f"Failed to call ChainPay webhook for event {db_event.id}: {e}")
+        logger.warning(
+            "Failed to call ChainPay webhook for event %s: %s",
+            db_event.id,
+            e,
+        )
 
     return db_event
 
@@ -515,20 +519,34 @@ async def call_chainpay_webhook(
         "event_id": event_id,
     }
 
-    logger.info(f"Calling ChainPay webhook: {webhook_url} with payload={payload}")
+    logger.info(
+        "Calling ChainPay webhook: %s with payload=%s",
+        webhook_url,
+        payload,
+    )
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.post(webhook_url, json=payload)
             response.raise_for_status()
             logger.info(
-                f"ChainPay webhook succeeded for event {event_id}: {response.status_code}"
+                "ChainPay webhook succeeded for event %s: %s",
+                event_id,
+                response.status_code,
             )
     except httpx.TimeoutException as e:
-        logger.warning(f"ChainPay webhook timeout for event {event_id}: {e}")
+        logger.warning(
+            "ChainPay webhook timeout for event %s: %s",
+            event_id,
+            e,
+        )
         raise
     except httpx.ConnectError as e:
-        logger.warning(f"ChainPay webhook connection error for event {event_id}: {e}")
+        logger.warning(
+            "ChainPay webhook connection error for event %s: %s",
+            event_id,
+            e,
+        )
         raise
     except httpx.HTTPStatusError as e:
         logger.warning(
