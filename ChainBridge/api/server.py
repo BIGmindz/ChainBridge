@@ -6,8 +6,15 @@ Provides endpoints for module interaction, pipeline execution, and system manage
 """
 
 import os
+import sys
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+# Add project root to Python path for imports
+project_root = Path(__file__).parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
 
 import uvicorn
 from fastapi import FastAPI, HTTPException

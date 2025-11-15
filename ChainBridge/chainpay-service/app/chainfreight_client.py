@@ -116,23 +116,34 @@ async def fetch_freight_token(token_id: int) -> Optional[FreightTokenResponse]:
         return token
 
     except httpx.TimeoutException:
-        logger.warning(f"ChainFreight service timeout while fetching token {token_id}")
+        logger.warning(
+            "ChainFreight service timeout while fetching token %s",
+            token_id,
+        )
         return None
     except httpx.ConnectError:
         logger.warning(
-            f"ChainFreight service unavailable while fetching token {token_id}"
+            "ChainFreight service unavailable while fetching token %s",
+            token_id,
         )
         return None
     except httpx.HTTPStatusError as e:
         if e.response.status_code == 404:
-            logger.error(f"Freight token {token_id} not found")
+            logger.error("Freight token %s not found", token_id)
         else:
             logger.error(
-                f"HTTP error {e.response.status_code} fetching token {token_id}: {e}"
+                "HTTP error %s fetching token %s: %s",
+                e.response.status_code,
+                token_id,
+                e,
             )
         return None
     except Exception as e:
-        logger.error(f"Error fetching freight token {token_id}: {str(e)}")
+        logger.error(
+            "Error fetching freight token %s: %s",
+            token_id,
+            str(e),
+        )
         return None
 
 
