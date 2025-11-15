@@ -19,7 +19,7 @@ from collections import defaultdict
 class MetricsCollector:
     """
     Lightweight metrics collection for API operations.
-    
+
     Tracks:
     - Module registrations and executions
     - Pipeline creations and executions
