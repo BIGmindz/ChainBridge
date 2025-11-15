@@ -188,7 +188,10 @@ def process_milestone_for_intent(
     )
 
     if not schedule:
-        logger.warning(f"No payment schedule for payment intent {payment_intent.id}")
+        logger.warning(
+            "No payment schedule for payment intent %s",
+            payment_intent.id,
+        )
         return None, f"No payment schedule for payment intent {payment_intent.id}"
 
     # Find PaymentScheduleItem for this event_type
@@ -203,7 +206,9 @@ def process_milestone_for_intent(
 
     if not schedule_item:
         logger.warning(
-            f"No schedule item for event_type={event_payload.event_type} in schedule {schedule.id}"
+            "No schedule item for event_type=%s in schedule %s",
+            event_payload.event_type,
+            schedule.id,
         )
         return None, f"Event type {event_payload.event_type} not in payment schedule"
 
@@ -219,8 +224,9 @@ def process_milestone_for_intent(
 
     if existing_milestone:
         logger.info(
-            f"Milestone already exists for payment_intent={payment_intent.id}, "
-            f"event_type={event_payload.event_type} (idempotent)"
+            "Milestone already exists for payment_intent=%s, event_type=%s (idempotent)",
+            payment_intent.id,
+            event_payload.event_type,
         )
         return existing_milestone, "Milestone already created (idempotent)"
 
@@ -264,9 +270,14 @@ def process_milestone_for_intent(
     db.refresh(milestone)
 
     logger.info(
-        f"Created milestone settlement {milestone.id}: payment_intent={payment_intent.id}, "
-        f"event_type={event_payload.event_type}, amount={milestone_amount} {payment_intent.currency}, "
-        f"status={initial_status}, strategy={release_strategy}"
+        "Created milestone settlement %s: payment_intent=%s, event_type=%s, amount=%s %s, status=%s, strategy=%s",
+        milestone.id,
+        payment_intent.id,
+        event_payload.event_type,
+        milestone_amount,
+        payment_intent.currency,
+        initial_status,
+        release_strategy,
     )
 
     # If immediate release, route through payment rail
@@ -282,13 +293,16 @@ def process_milestone_for_intent(
 
             if result.success:
                 logger.info(
-                    f"Payment rail processing succeeded: milestone={milestone.id}, "
-                    f"reference={result.reference_id}"
+                    "Payment rail processing succeeded: milestone=%s, reference=%s",
+                    milestone.id,
+                    result.reference_id,
                 )
                 return milestone, f"Milestone created and released: {result.message}"
             else:
                 logger.error(
-                    f"Payment rail processing failed: milestone={milestone.id}, error={result.error}"
+                    "Payment rail processing failed: milestone=%s, error=%s",
+                    milestone.id,
+                    result.error,
                 )
                 return (
                     milestone,
@@ -297,7 +311,9 @@ def process_milestone_for_intent(
 
         except Exception as e:
             logger.error(
-                f"Error routing to payment rail: milestone={milestone.id}, error={str(e)}"
+                "Error routing to payment rail: milestone=%s, error=%s",
+                milestone.id,
+                str(e),
             )
             return milestone, f"Milestone created but rail processing errored: {str(e)}"
 
@@ -386,13 +402,18 @@ async def create_payment_intent(
         build_default_schedule_for_risk(db, payment_intent)
     except Exception as e:
         logger.error(
-            f"Failed to build payment schedule for intent {payment_intent.id}: {e}"
+            "Failed to build payment schedule for intent %s: %s",
+            payment_intent.id,
+            e,
         )
         # Continue without schedule - not a fatal error
 
     logger.info(
-        f"Payment intent {payment_intent.id} created for token {payload.freight_token_id}: "
-        f"amount={payload.amount}, risk_tier={risk_tier}"
+        "Payment intent %s created for token %s: amount=%s, risk_tier=%s",
+        payment_intent.id,
+        payload.freight_token_id,
+        payload.amount,
+        risk_tier,
     )
 
     return payment_intent
@@ -603,8 +624,9 @@ async def settle_payment(
             action_taken = "approved"
             settlement_reason = "High risk - manual override approved"
             logger.warning(
-                f"High-risk payment {payment_id} force-approved "
-                f"for token {payment_intent.freight_token_id}"
+                "High-risk payment %s force-approved for token %s",
+                payment_id,
+                payment_intent.freight_token_id,
             )
         else:
             payment_intent.status = PaymentStatus.REJECTED
@@ -631,8 +653,11 @@ async def settle_payment(
     db.refresh(payment_intent)
 
     logger.info(
-        f"Payment {payment_id} settlement action: {action_taken} "
-        f"(risk_tier={payment_intent.risk_tier}, reason={settlement_reason})"
+        "Payment %s settlement action: %s (risk_tier=%s, reason=%s)",
+        payment_id,
+        action_taken,
+        payment_intent.risk_tier,
+        settlement_reason,
     )
 
     return SettlementResponse(
@@ -695,7 +720,7 @@ async def complete_settlement(
     db.commit()
     db.refresh(payment_intent)
 
-    logger.info(f"Payment {payment_id} marked as settled")
+    logger.info("Payment %s marked as settled", payment_id)
 
     return payment_intent
 
@@ -774,8 +799,10 @@ async def process_shipment_event(
         Webhook response with count of milestone settlements created
     """
     logger.info(
-        f"Received shipment event webhook: shipment_id={event.shipment_id}, "
-        f"event_type={event.event_type}, occurred_at={event.occurred_at}"
+        "Received shipment event webhook: shipment_id=%s, event_type=%s, occurred_at=%s",
+        event.shipment_id,
+        event.event_type,
+        event.occurred_at,
     )
 
     # Find all payment intents for this shipment
@@ -794,7 +821,9 @@ async def process_shipment_event(
                 milestone_count += 1
         except Exception as e:
             logger.error(
-                f"Error processing milestone for payment_intent {payment_intent.id}: {e}"
+                "Error processing milestone for payment_intent %s: %s",
+                payment_intent.id,
+                e,
             )
             db.rollback()
             continue
@@ -876,8 +905,10 @@ async def build_and_attach_schedule(
     db.refresh(schedule)
 
     logger.info(
-        f"Built and attached payment schedule: id={schedule.id}, "
-        f"payment_intent={payment_id}, risk_tier={payment_intent.risk_tier}"
+        "Built and attached payment schedule: id=%s, payment_intent=%s, risk_tier=%s",
+        schedule.id,
+        payment_id,
+        payment_intent.risk_tier,
     )
 
     return {
