@@ -47,7 +47,7 @@ export function useEventStream(options: UseEventStreamOptions): void {
       return;
     }
 
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8001";
 
     // Create EventSource
     eventSourceRef.current = createEventStreamClient(baseUrl, {

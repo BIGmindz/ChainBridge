@@ -156,19 +156,19 @@ Quick reference for all files created in this implementation.
 
 # ===== PREVIOUS DOCUMENTATION (M02 SPRINT) =====
 
-# File: PROJECT_CHECKLIST.md (547 lines)
+# File: docs/product/PROJECT_CHECKLIST.md (547 lines)
 # Purpose: Master reference for M01-M04, ownership matrix, success criteria
 # Created: Earlier in session
 #
-# File: PROJECT_STATUS_SUMMARY.md (150 lines)
+# File: docs/product/PROJECT_STATUS_SUMMARY.md (150 lines)
 # Purpose: Executive overview, M02 priorities
 # Created: Earlier in session
 #
-# File: M02_QUICK_REFERENCE.md (200 lines)
+# File: docs/product/M02_QUICK_REFERENCE.md (200 lines)
 # Purpose: Sprint playbook, quick commands
 # Created: Earlier in session
 #
-# File: M02_SPRINT_LAUNCH.md (400 lines)
+# File: docs/product/M02_SPRINT_LAUNCH.md (400 lines)
 # Purpose: Tactical launch kit with Sonny and Cody briefs
 # Created: Earlier in session
 #
@@ -243,11 +243,11 @@ Quick reference for all files created in this implementation.
 # ===== KEY CONTACTS =====
 
 # FRONTEND LEAD: Sonny
-#   File: M02_SPRINT_LAUNCH.md (Sonny's brief)
+#   File: docs/product/M02_SPRINT_LAUNCH.md (Sonny's brief)
 #   Deliverable: OperatorConsolePage.tsx
 #
 # BACKEND LEAD: Cody
-#   File: M02_SPRINT_LAUNCH.md (Cody's brief)
+#   File: docs/product/M02_SPRINT_LAUNCH.md (Cody's brief)
 #   Deliverable: chainiq_operator.py + tests
 
 
