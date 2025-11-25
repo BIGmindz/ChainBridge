@@ -47,6 +47,25 @@ export function classifyCorridor(subject: CorridorSubject): CorridorClassificati
   return { id: "other", label: CORRIDOR_LABELS.other };
 }
 
+export function classifyCorridorFromString(corridorStr: string): CorridorClassification {
+  const lower = corridorStr.toLowerCase();
+
+  if (lower.includes("shanghai") && lower.includes("los angeles")) {
+    return { id: "asia-us-west", label: CORRIDOR_LABELS["asia-us-west"] };
+  }
+  if (lower.includes("singapore") && lower.includes("long beach")) {
+    return { id: "asia-us-west", label: CORRIDOR_LABELS["asia-us-west"] };
+  }
+  if (lower.includes("rotterdam") && lower.includes("new york")) {
+    return { id: "eu-us-east", label: CORRIDOR_LABELS["eu-us-east"] };
+  }
+  if (lower.includes("hamburg") && (lower.includes("new york") || lower.includes("houston"))) {
+    return { id: "eu-us-east", label: CORRIDOR_LABELS["eu-us-east"] };
+  }
+
+  return { id: "other", label: CORRIDOR_LABELS.other };
+}
+
 export function getCorridorLabel(id: CorridorId): string {
   return CORRIDOR_LABELS[id];
 }

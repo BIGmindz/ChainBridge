@@ -25,6 +25,11 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 import logging
 
+from core.payments.identity import (
+    canonical_milestone_id,
+    canonical_shipment_reference,
+)
+
 from .database import get_db, init_db
 from .models import (
     PaymentIntent as PaymentIntentModel,
@@ -254,6 +259,13 @@ def process_milestone_for_intent(
         initial_status = PaymentStatus.PENDING
         log_note = "Smart Settlement: pending (event not yet eligible for release)"
 
+    shipment_reference = canonical_shipment_reference(
+        shipment_reference=getattr(payment_intent, "shipment_reference", None),
+        freight_token_id=payment_intent.freight_token_id,
+    )
+    milestone_index = schedule_item.sequence or 1
+    canonical_identifier = canonical_milestone_id(shipment_reference, milestone_index)
+
     milestone = MilestoneSettlementModel(
         payment_intent_id=payment_intent.id,
         schedule_item_id=schedule_item.id,
@@ -263,6 +275,9 @@ def process_milestone_for_intent(
         status=initial_status,
         occurred_at=event_payload.occurred_at,
         provider="INTERNAL_LEDGER",
+        milestone_identifier=canonical_identifier,
+        shipment_reference=shipment_reference,
+        freight_token_id=payment_intent.freight_token_id,
     )
 
     db.add(milestone)

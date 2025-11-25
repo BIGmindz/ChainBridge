@@ -84,6 +84,15 @@ export const config = {
 } as const;
 
 /**
+ * Feature flags for progressive rollout.
+ */
+export const FEATURES = {
+  insightsFeed: true, // ChainIQ risk stories feed
+  shipmentIntelligence: true, // Unified shipment detail intelligence
+  notifications: true, // Toast notification system
+} as const;
+
+/**
  * Log configuration status (dev only).
  */
 if (import.meta.env.DEV) {

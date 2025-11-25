@@ -21,9 +21,11 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import List, Optional
+from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from core.payments.identity import is_valid_milestone_id
 
 
 # ============================================================================
@@ -111,6 +113,44 @@ class CorridorTrend(str, Enum):
     IMPROVING = "improving"
 
 
+class AlertSeverity(str, Enum):
+    """Control Tower alert severity level"""
+
+    INFO = "info"
+    WARNING = "warning"
+    CRITICAL = "critical"
+
+
+class AlertSource(str, Enum):
+    """Alert origination source"""
+
+    RISK = "risk"
+    IOT = "iot"
+    PAYMENT = "payment"
+    CUSTOMS = "customs"
+
+
+class AlertStatus(str, Enum):
+    """Alert lifecycle status"""
+
+    OPEN = "open"
+    ACKNOWLEDGED = "acknowledged"
+    RESOLVED = "resolved"
+
+
+class AlertActionType(str, Enum):
+    """Alert action types for triage workflow"""
+
+    ASSIGN = "assign"
+    ACKNOWLEDGE = "acknowledge"
+    RESOLVE = "resolve"
+    COMMENT = "comment"
+    ESCALATE = "escalate"
+    HOLD_PAYMENT = "hold_payment"
+    RELEASE_PAYMENT = "release_payment"
+    CUSTOMS_EXPEDITE = "customs_expedite"
+
+
 class IoTSensorType(str, Enum):
     """Sensor hardware type"""
 
@@ -136,6 +176,16 @@ class MilestoneState(str, Enum):
     PENDING = "pending"
     RELEASED = "released"
     BLOCKED = "blocked"
+
+
+class SettlementState(str, Enum):
+    """Settlement lifecycle derived from ChainPay transactions."""
+
+    NOT_STARTED = "not_started"
+    IN_PROGRESS = "in_progress"
+    PARTIALLY_PAID = "partially_paid"
+    BLOCKED = "blocked"
+    COMPLETED = "completed"
 
 
 # ============================================================================
@@ -229,10 +279,22 @@ class RiskProfile(BaseModel):
 class PaymentMilestone(BaseModel):
     """ChainPay payment milestone with release tracking"""
 
+    milestone_id: str = Field(..., description="Canonical milestone identifier '<shipment_reference>-M<index>'")
     label: str = Field(..., description="Milestone name (e.g., 'Pickup', 'Delivery')")
     percentage: int = Field(..., ge=0, le=100, description="% of total payment value")
     state: MilestoneState = Field(..., description="Release state")
     released_at: Optional[datetime] = Field(None, description="Release timestamp if released")
+    freight_token_id: Optional[int] = Field(None, description="Freight token correlation identifier")
+
+    @field_validator("milestone_id")
+    @classmethod
+    def validate_milestone_id(cls, value: str) -> str:
+        if not is_valid_milestone_id(value):
+            raise ValueError(
+                "milestone_id must match '<shipment_reference>-M<index>' "
+                "(e.g., 'SHP-2025-042-M1')"
+            )
+        return value
 
     @field_validator("percentage")
     @classmethod
@@ -244,10 +306,12 @@ class PaymentMilestone(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
+                "milestone_id": "SHP-1001-M1",
                 "label": "Pickup",
                 "percentage": 20,
                 "state": "released",
                 "released_at": "2025-11-10T09:00:00Z",
+                "freight_token_id": 1001,
             }
         }
 
@@ -257,6 +321,7 @@ class PaymentProfile(BaseModel):
 
     state: PaymentState = Field(..., description="Current payment state")
     total_value_usd: Decimal = Field(..., ge=0, description="Total payment value in USD")
+    released_usd: Decimal = Field(..., ge=0, description="Amount released to date in USD")
     released_percentage: int = Field(..., ge=0, le=100, description="% of payment released so far")
     holds_usd: Decimal = Field(..., ge=0, description="Amount currently held/blocked in USD")
     milestones: List[PaymentMilestone] = Field(
@@ -276,6 +341,7 @@ class PaymentProfile(BaseModel):
             "example": {
                 "state": "partially_paid",
                 "total_value_usd": "420000.00",
+                "released_usd": "252000.00",
                 "released_percentage": 60,
                 "holds_usd": "75000.00",
                 "milestones": [
@@ -318,6 +384,7 @@ class Shipment(BaseModel):
     status: ShipmentStatus = Field(..., description="Current lifecycle status")
     origin: str = Field(..., description="Origin location (city, country)")
     destination: str = Field(..., description="Destination location (city, country)")
+    corridor: str = Field(..., description="Canonical corridor label (e.g., 'Shanghai → Los Angeles')")
     carrier: str = Field(..., description="Carrier name")
     customer: str = Field(..., description="Customer/shipper name")
     freight: FreightDetail = Field(..., description="Transportation and event details")
@@ -333,6 +400,7 @@ class Shipment(BaseModel):
                 "status": "in_transit",
                 "origin": "Shanghai, CN",
                 "destination": "Los Angeles, US",
+                "corridor": "Shanghai → Los Angeles",
                 "carrier": "Maersk",
                 "customer": "Acme Electronics",
                 "freight": {
@@ -355,6 +423,7 @@ class Shipment(BaseModel):
                 "payment": {
                     "state": "partially_paid",
                     "total_value_usd": "420000.00",
+                    "released_usd": "252000.00",
                     "released_percentage": 60,
                     "holds_usd": "75000.00",
                     "milestones": [],
@@ -378,7 +447,9 @@ class IoTSensorReading(BaseModel):
     """Individual sensor reading from ChainSense"""
 
     sensor_type: IoTSensorType = Field(..., description="Sensor hardware type")
-    value: float | str = Field(..., description="Reading value (numeric or string depending on sensor)")
+    value: Union[float, str] = Field(
+        ..., description="Reading value (numeric or string depending on sensor)"
+    )
     unit: Optional[str] = Field(None, description="Unit of measurement (e.g., 'C', '%', 'G')")
     timestamp: datetime = Field(..., description="Reading timestamp")
     status: IoTSeverity = Field(..., description="Alert severity level")
@@ -560,6 +631,68 @@ class GovernanceSummary(BaseModel):
         }
 
 
+class RiskFactor(str, Enum):
+    """ChainIQ risk factor classification - why a shipment is risky"""
+
+    ROUTE_VOLATILITY = "route_volatility"
+    CARRIER_HISTORY = "carrier_history"
+    DOCUMENT_ISSUES = "document_issues"
+    IOT_ANOMALIES = "iot_anomalies"
+    PAYMENT_BEHAVIOR = "payment_behavior"
+
+
+class RiskOverview(BaseModel):
+    """Aggregated ChainIQ risk snapshot backing the overview tile."""
+
+    total_shipments: int = Field(..., ge=0, description="Shipments evaluated in the risk window")
+    high_risk_shipments: int = Field(..., ge=0, description="Shipments in high risk category")
+    total_value_usd: Decimal = Field(..., ge=0, description="Aggregate shipment value at risk (USD)")
+    average_risk_score: float = Field(..., ge=0, le=100, description="Average ChainIQ risk score")
+    updated_at: datetime = Field(..., description="Timestamp of the most recent assessment")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "total_shipments": 48,
+                "high_risk_shipments": 6,
+                "total_value_usd": "1290000.00",
+                "average_risk_score": 57.4,
+                "updated_at": "2025-11-12T16:00:00Z",
+            }
+        }
+
+
+class RiskStory(BaseModel):
+    """ChainIQ narrative explanation of why a shipment is risky - human-readable intelligence"""
+
+    shipment_id: str = Field(..., description="Unique shipment identifier")
+    reference: str = Field(..., description="Human-readable shipment reference")
+    corridor: str = Field(..., description="Trade corridor (e.g., 'Asia → US West')")
+    risk_category: RiskCategory = Field(..., description="Risk classification band")
+    score: int = Field(..., ge=0, le=100, description="ChainIQ risk score (0-100)")
+    primary_factor: RiskFactor = Field(..., description="Primary driver of risk")
+    factors: List[RiskFactor] = Field(..., description="All contributing risk factors")
+    summary: str = Field(..., description="1-2 sentence narrative explanation")
+    recommended_action: str = Field(..., description="Suggested operator action")
+    last_updated: datetime = Field(..., description="Story generation timestamp")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "shipment_id": "SHP-89234",
+                "reference": "MAEU-4567890",
+                "corridor": "Asia → US West",
+                "risk_category": "high",
+                "score": 82,
+                "primary_factor": "route_volatility",
+                "factors": ["route_volatility", "payment_behavior"],
+                "summary": "Route through congested Pacific corridor with 3-day delay history. Customer has 2 overdue invoices totaling $45K.",
+                "recommended_action": "Escalate to operations and request prepayment for next milestone",
+                "last_updated": "2025-11-16T14:23:00Z",
+            }
+        }
+
+
 class CorridorMetrics(BaseModel):
     """Corridor-level intelligence metrics"""
 
@@ -719,6 +852,13 @@ class GlobalSummaryResponse(BaseModel):
     summary: GlobalSummary
     generated_at: datetime = Field(..., description="Summary generation timestamp")
 
+
+class RiskOverviewResponse(BaseModel):
+    """Response envelope for GET /risk/overview"""
+
+    overview: RiskOverview
+    generated_at: datetime = Field(..., description="Summary generation timestamp")
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -735,7 +875,229 @@ class GlobalSummaryResponse(BaseModel):
         }
 
 
+class RiskStoryResponse(BaseModel):
+    """Response envelope for GET /iq/risk-stories"""
+
+    stories: List[RiskStory] = Field(default_factory=list, description="Risk narratives")
+    total: int = Field(..., ge=0, description="Total stories available")
+    generated_at: datetime = Field(..., description="Response generation timestamp")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "stories": [
+                    {
+                        "shipment_id": "SHP-89234",
+                        "reference": "MAEU-4567890",
+                        "corridor": "Asia → US West",
+                        "risk_category": "high",
+                        "score": 82,
+                        "primary_factor": "route_volatility",
+                        "factors": ["route_volatility", "payment_behavior"],
+                        "summary": "Route through congested Pacific corridor with 3-day delay history.",
+                        "recommended_action": "Escalate to operations",
+                        "last_updated": "2025-11-16T14:23:00Z",
+                    }
+                ],
+                "total": 1,
+                "generated_at": "2025-11-16T14:23:00Z",
+            }
+        }
+
+
+class PaymentQueueItem(BaseModel):
+    """ChainPay payment hold queue item"""
+
+    shipment_id: str = Field(..., description="Shipment identifier")
+    reference: str = Field(..., description="Customer shipment reference")
+    corridor: str = Field(..., description="Trade lane")
+    customer: str = Field(..., description="Customer name")
+    total_value_usd: Decimal = Field(..., ge=0, description="Total shipment value")
+    holds_usd: Decimal = Field(..., ge=0, description="Payment amount on hold")
+    released_usd: Decimal = Field(..., ge=0, description="Payment amount already released")
+    aging_days: int = Field(..., ge=0, description="Days since shipment assessment")
+    risk_category: Optional[RiskCategory] = Field(None, description="Risk level if applicable")
+    milestone_id: str = Field(..., description="Canonical milestone identifier '<shipment_reference>-M<index>'")
+    freight_token_id: Optional[int] = Field(None, description="Freight token correlation identifier")
+
+    @field_validator("milestone_id")
+    @classmethod
+    def validate_milestone_id(cls, value: str) -> str:
+        if not is_valid_milestone_id(value):
+            raise ValueError(
+                "milestone_id must match '<shipment_reference>-M<index>' "
+                "(e.g., 'SHP-2025-042-M1')"
+            )
+        return value
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "shipment_id": "SHP-1001",
+                "reference": "MAEU-123456",
+                "corridor": "Shanghai → Los Angeles",
+                "customer": "Acme Electronics",
+                "total_value_usd": "420000.00",
+                "holds_usd": "75000.00",
+                "released_usd": "252000.00",
+                "aging_days": 10,
+                "risk_category": "high",
+                "milestone_id": "SHP-1001-M3",
+                "freight_token_id": 1001,
+            }
+        }
+
+
+class PaymentQueueResponse(BaseModel):
+    """Response envelope for GET /pay/queue"""
+
+    items: List[PaymentQueueItem] = Field(default_factory=list)
+    total_items: int = Field(..., ge=0, description="Total queue items")
+    total_holds_usd: Decimal = Field(..., ge=0, description="Total value of all holds")
+    generated_at: datetime = Field(..., description="Queue snapshot timestamp")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "items": [],
+                "total_items": 5,
+                "total_holds_usd": "185000.00",
+                "generated_at": "2025-11-15T10:30:00Z",
+        }
+    }
+
+
+# ============================================================================
+# Live positions and geo overlays
+# ============================================================================
+
+
+class LiveShipmentPosition(BaseModel):
+    shipment_id: str
+    corridor: str
+    mode: str
+    lat: float
+    lon: float
+    progress_pct: float
+    eta: str
+    cargo_value_usd: float
+    financed_amount_usd: float
+    paid_amount_usd: float
+    settlement_state: SettlementState
+    risk_score: Optional[float] = None
+    risk_level: Optional[str] = None
+    nearest_port: Optional[str] = None
+    distance_to_nearest_port_km: Optional[float] = None
+
+
+class LivePositionsResponse(BaseModel):
+    positions: List[LiveShipmentPosition]
+    generated_at: datetime
+
+
+class ProofPack(BaseModel):
+    """Structured ProofPack payload for settlement verification."""
+
+    milestone_id: str = Field(..., description="Canonical milestone identifier '<shipment_reference>-M<index>'")
+    shipment_reference: str = Field(..., description="Shipment reference used by canonical IDs")
+    corridor: str = Field(..., description="Shipment corridor (Origin → Destination)")
+    customer_name: str = Field(..., description="Customer or shipper name")
+    amount: float = Field(..., ge=0, description="Milestone value in currency units")
+    currency: str = Field(..., description="ISO 4217 currency code")
+    state: str = Field(..., description="Milestone state (blocked/released/settled/etc.)")
+    freight_token_id: Optional[int] = Field(None, description="Associated freight token ID if available")
+    last_updated: datetime = Field(..., description="When this ProofPack was last updated")
+    documents: List[Dict[str, Any]] = Field(default_factory=list, description="Document evidence (placeholder-friendly)")
+    iot_signals: List[Dict[str, Any]] = Field(default_factory=list, description="IoT signal evidence (placeholder-friendly)")
+    risk_assessment: Dict[str, Any] = Field(default_factory=dict, description="Risk assessment metadata (must note source)")
+    audit_trail: List[Dict[str, Any]] = Field(default_factory=list, description="Audit log entries for milestone lifecycle")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "milestone_id": "SHP-2025-042-M2",
+                "shipment_reference": "SHP-2025-042",
+                "corridor": "Shanghai → Los Angeles",
+                "customer_name": "Acme Electronics",
+                "amount": 70000.0,
+                "currency": "USD",
+                "state": "released",
+                "freight_token_id": 2025042,
+                "last_updated": "2025-11-18T10:00:00Z",
+                "documents": [{"type": "POD", "id": "pod-123", "status": "placeholder"}],
+                "iot_signals": [{"sensor": "temperature", "value": "22.5C", "source": "mock"}],
+                "risk_assessment": {
+                    "source": "mock",
+                    "score": 82,
+                    "category": "high",
+                    "notes": "Placeholder until ChainIQ linkage is wired",
+                },
+                "audit_trail": [{"event": "milestone_created", "actor": "system", "timestamp": "2025-11-18T10:00:00Z"}],
+            }
+        }
+
+
+class ShipmentEventType(str, Enum):
+    """Timeline event types for shipment lifecycle"""
+
+    CREATED = "created"
+    BOOKED = "booked"
+    PICKED_UP = "picked_up"
+    DEPARTED_PORT = "departed_port"
+    ARRIVED_PORT = "arrived_port"
+    CUSTOMS_HOLD = "customs_hold"
+    CUSTOMS_RELEASED = "customs_released"
+    DELIVERED = "delivered"
+    PAYMENT_RELEASE = "payment_release"
+    IOT_ALERT = "iot_alert"
+
+
+class TimelineEvent(BaseModel):
+    """Timeline event for shipment tracking - aggregates events from all systems"""
+
+    shipment_id: str = Field(..., description="Shipment identifier")
+    reference: str = Field(..., description="Shipment reference number")
+    corridor: str = Field(..., description="Trade corridor")
+    event_type: ShipmentEventType = Field(..., description="Event classification")
+    description: str = Field(..., description="Human-readable event description")
+    occurred_at: datetime = Field(..., description="Event timestamp")
+    source: str = Field(..., description="Event source system (TMS, IoT, Finance, etc.)")
+    severity: Optional[str] = Field(None, description="Event severity: info, warning, critical")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "shipment_id": "SHP-1001",
+                "reference": "MAEU-123456",
+                "corridor": "Shanghai → Los Angeles",
+                "event_type": "picked_up",
+                "description": "Container picked up at origin warehouse",
+                "occurred_at": "2025-11-15T08:30:00Z",
+                "source": "TMS",
+                "severity": "info",
+            }
+        }
+
+
+class TimelineEventResponse(BaseModel):
+    """Response envelope for event endpoints"""
+
+    events: List[TimelineEvent] = Field(default_factory=list)
+    total: int = Field(..., ge=0, description="Total matching events")
+    generated_at: datetime = Field(..., description="Response timestamp")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "events": [],
+                "total": 12,
+                "generated_at": "2025-11-15T10:30:00Z",
+            }
+        }
+
+
 class CorridorMetricsResponse(BaseModel):
+
     """Response envelope for GET /metrics/corridors"""
 
     corridors: List[CorridorMetrics] = Field(default_factory=list)
@@ -786,3 +1148,341 @@ class ShipmentIoTSnapshotResponse(BaseModel):
                 "retrieved_at": "2025-11-15T10:30:00Z",
             }
         }
+
+
+class ShipmentIoTSnapshotsResponse(BaseModel):
+    """Response envelope for GET /metrics/iot/shipments"""
+
+    snapshots: List[ShipmentIoTSnapshot] = Field(default_factory=list)
+    total: int = Field(..., ge=0, description="Snapshots returned after filtering")
+    available: int = Field(..., ge=0, description="Total snapshots available")
+    filtered: bool = Field(False, description="True if filters changed the result set")
+    generated_at: datetime = Field(..., description="Timestamp of snapshot aggregation")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "snapshots": [],
+                "total": 3,
+                "available": 3,
+                "filtered": False,
+                "generated_at": "2025-11-15T10:30:00Z",
+            }
+        }
+
+
+# ============================================================================
+# ALERT & TRIAGE MODELS
+# ============================================================================
+
+
+class ControlTowerAlert(BaseModel):
+    """Unified alert model across risk, IoT, payment, and customs domains"""
+
+    id: str = Field(..., description="Unique alert identifier (UUID)")
+    shipment_reference: str = Field(..., description="Associated shipment ID")
+    title: str = Field(..., description="Alert headline")
+    description: str = Field(..., description="Detailed alert context")
+    source: AlertSource = Field(..., description="Alert origination source")
+    severity: AlertSeverity = Field(..., description="Alert severity level")
+    status: AlertStatus = Field(..., description="Current triage status")
+    created_at: datetime = Field(..., description="Alert creation timestamp")
+    updated_at: datetime = Field(..., description="Last update timestamp")
+    tags: List[str] = Field(default_factory=list, description="Alert classification tags")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "id": "alert-550e8400-e29b-41d4-a716-446655440000",
+                "shipment_reference": "SHP-2025-027",
+                "title": "High risk corridor: Shanghai → Los Angeles",
+                "description": "Shipment operating in elevated-risk corridor with recent sanctions activity detected",
+                "source": "risk",
+                "severity": "critical",
+                "status": "open",
+                "created_at": "2025-11-16T08:15:00Z",
+                "updated_at": "2025-11-16T08:15:00Z",
+                "tags": ["risk", "sanctions", "corridor_alert"],
+            }
+        }
+
+
+class AlertsResponse(BaseModel):
+    """Response envelope for GET /alerts"""
+
+    alerts: List[ControlTowerAlert] = Field(default_factory=list)
+    total: int = Field(..., ge=0, description="Total matching alerts")
+    generated_at: datetime = Field(..., description="Response timestamp")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "alerts": [],
+                "total": 8,
+                "generated_at": "2025-11-16T10:30:00Z",
+            }
+        }
+
+
+class AlertDetailResponse(BaseModel):
+    """Response envelope for GET /alerts/{alert_id}"""
+
+    alert: ControlTowerAlert
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "alert": {
+                    "id": "alert-550e8400-e29b-41d4-a716-446655440000",
+                    "shipment_reference": "SHP-2025-027",
+                    "title": "High risk corridor",
+                    "description": "Elevated-risk corridor detected",
+                    "source": "risk",
+                    "severity": "critical",
+                    "status": "open",
+                    "created_at": "2025-11-16T08:15:00Z",
+                    "updated_at": "2025-11-16T08:15:00Z",
+                    "tags": ["risk"],
+                }
+            }
+        }
+
+
+# ============================================================================
+# ALERT TRIAGE MODELS - Work Queue & Operator Playbooks
+# ============================================================================
+
+
+class AlertOwner(BaseModel):
+    """Alert ownership and assignment tracking"""
+
+    id: str = Field(..., description="Owner/operator unique ID")
+    name: str = Field(..., description="Owner display name")
+    email: Optional[str] = Field(None, description="Owner email address")
+    team: Optional[str] = Field(None, description="Owner team/department")
+
+
+class AlertNote(BaseModel):
+    """Alert triage note for operator collaboration"""
+
+    id: str = Field(..., description="Note unique ID (UUID)")
+    alert_id: str = Field(..., description="Parent alert ID")
+    author: AlertOwner = Field(..., description="Note author")
+    message: str = Field(..., description="Note content")
+    created_at: datetime = Field(..., description="Note creation timestamp")
+
+
+class AlertActionRecord(BaseModel):
+    """Alert action audit trail for triage workflow"""
+
+    id: str = Field(..., description="Action record unique ID (UUID)")
+    alert_id: str = Field(..., description="Parent alert ID")
+    type: AlertActionType = Field(..., description="Action type")
+    actor: AlertOwner = Field(..., description="Action performer")
+    payload: dict = Field(default_factory=dict, description="Action-specific metadata")
+    created_at: datetime = Field(..., description="Action timestamp")
+
+
+class AlertWorkItem(BaseModel):
+    """Work queue item: alert + triage context (owner, notes, actions)"""
+
+    alert: ControlTowerAlert = Field(..., description="Base alert")
+    owner: Optional[AlertOwner] = Field(None, description="Assigned owner (null = unassigned)")
+    notes: List[AlertNote] = Field(default_factory=list, description="Triage notes")
+    actions: List[AlertActionRecord] = Field(default_factory=list, description="Action history")
+
+
+class AlertWorkQueueResponse(BaseModel):
+    """Response envelope for GET /alerts/work-queue"""
+
+    items: List[AlertWorkItem] = Field(default_factory=list)
+    total: int = Field(..., ge=0, description="Total matching items")
+
+
+class UpdateAlertAssignmentRequest(BaseModel):
+    """Request body for POST /alerts/{alert_id}/assign"""
+
+    owner_id: Optional[str] = Field(None, description="Owner ID (null to unassign)")
+    owner_name: Optional[str] = Field(None, description="Owner name")
+    owner_email: Optional[str] = Field(None, description="Owner email")
+    owner_team: Optional[str] = Field(None, description="Owner team")
+
+
+class AddAlertNoteRequest(BaseModel):
+    """Request body for POST /alerts/{alert_id}/notes"""
+
+    message: str = Field(..., description="Note content")
+    author_id: str = Field(..., description="Author ID")
+    author_name: str = Field(..., description="Author name")
+    author_email: Optional[str] = Field(None, description="Author email")
+    author_team: Optional[str] = Field(None, description="Author team")
+
+
+class UpdateAlertStatusRequest(BaseModel):
+    """Request body for POST /alerts/{alert_id}/status"""
+
+    status: AlertStatus = Field(..., description="New alert status")
+    actor_id: str = Field(..., description="Actor ID")
+    actor_name: str = Field(..., description="Actor name")
+    actor_email: Optional[str] = Field(None, description="Actor email")
+    actor_team: Optional[str] = Field(None, description="Actor team")
+
+
+# ============================================================================
+# REAL-TIME EVENTS - Server-Sent Events (SSE) Support
+# ============================================================================
+
+
+class ControlTowerEventType(str, Enum):
+    """Real-time event types for SSE streaming"""
+
+    ALERT_CREATED = "alert_created"
+    ALERT_UPDATED = "alert_updated"
+    ALERT_STATUS_CHANGED = "alert_status_changed"
+    ALERT_NOTE_ADDED = "alert_note_added"
+    IOT_READING = "iot_reading"
+    SHIPMENT_EVENT = "shipment_event"
+    PAYMENT_STATE_CHANGED = "payment_state_changed"
+
+
+class ControlTowerEvent(BaseModel):
+    """Generic event wrapper for real-time event bus"""
+
+    id: str = Field(..., description="Unique event ID")
+    type: ControlTowerEventType = Field(..., description="Event type")
+    timestamp: datetime = Field(..., description="When the event occurred")
+    source: str = Field(..., description="Subsystem emitting the event (e.g. 'alerts', 'iot', 'payments')")
+    key: str = Field(..., description="Primary entity key (e.g. shipment ID, alert ID)")
+    payload: dict = Field(default_factory=dict, description="Domain-specific payload")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "id": "evt-123",
+                "type": "alert_status_changed",
+                "timestamp": "2025-11-17T10:30:00Z",
+                "source": "alerts",
+                "key": "alert-001",
+                "payload": {
+                    "alert_id": "alert-001",
+                    "status": "acknowledged",
+                    "shipment_reference": "SHP-2025-027",
+                },
+            }
+        }
+
+
+# ==============================================================================
+# Smart Settlements / Payment Events
+# ==============================================================================
+
+
+class PaymentEventKind(str, Enum):
+    """
+    Payment milestone event kind for Smart Settlements.
+
+    Tracks the lifecycle of payment milestones from creation through settlement.
+    """
+    MILESTONE_BECAME_ELIGIBLE = "milestone_became_eligible"
+    MILESTONE_RELEASED = "milestone_released"
+    MILESTONE_SETTLED = "milestone_settled"
+    MILESTONE_BLOCKED = "milestone_blocked"
+    MILESTONE_UNBLOCKED = "milestone_unblocked"
+
+
+class ProofpackHint(BaseModel):
+    """Lightweight indicator that a ProofPack is available."""
+
+    milestone_id: str = Field(..., description="Canonical milestone identifier")
+    has_proofpack: bool = Field(..., description="True when backend can return ProofPack")
+    version: str = Field(..., description="Version label for ProofPack preview")
+
+    @field_validator("milestone_id")
+    @classmethod
+    def validate_milestone_id(cls, value: str) -> str:
+        if not is_valid_milestone_id(value):
+            raise ValueError(
+                "milestone_id must match '<shipment_reference>-M<index>' "
+                "(e.g., 'SHP-2025-042-M1')"
+            )
+        return value
+
+
+class PaymentSettlementEvent(BaseModel):
+    """
+    Payload for payment state change events.
+
+    Emitted when payment milestones transition between states.
+    Used with ControlTowerEvent where type=PAYMENT_STATE_CHANGED.
+    """
+    shipment_reference: str = Field(
+        ...,
+        description="Shipment reference ID (e.g., SHP-2025-027)"
+    )
+    milestone_id: str = Field(
+        ...,
+        description="Canonical milestone identifier '<shipment_reference>-M<index>'"
+    )
+    milestone_name: str = Field(
+        ...,
+        description="Human-readable milestone name (e.g., 'POD Confirmed', 'Pickup Complete')"
+    )
+    from_state: str = Field(
+        ...,
+        description="Previous payment status (pending/approved/delayed/etc.)"
+    )
+    to_state: str = Field(
+        ...,
+        description="New payment status"
+    )
+    amount: float = Field(
+        ...,
+        description="Settlement amount for this milestone"
+    )
+    currency: str = Field(
+        default="USD",
+        description="ISO 4217 currency code"
+    )
+    reason: Optional[str] = Field(
+        default=None,
+        description="Optional reason for the state change"
+    )
+    freight_token_id: Optional[int] = Field(
+        default=None,
+        description="Freight token correlation identifier"
+    )
+    proofpack_hint: Optional[ProofpackHint] = Field(
+        default=None,
+        description="Indicates ProofPack availability without fetching full payload"
+    )
+
+    @field_validator("milestone_id")
+    @classmethod
+    def validate_event_milestone_id(cls, value: str) -> str:
+        if not is_valid_milestone_id(value):
+            raise ValueError(
+                "milestone_id must match '<shipment_reference>-M<index>' "
+                "(e.g., 'SHP-2025-042-M1')"
+            )
+        return value
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "shipment_reference": "SHP-2025-027",
+                "milestone_id": "SHP-2025-027-M2",
+                "milestone_name": "POD Confirmed",
+                "from_state": "pending",
+                "to_state": "approved",
+                "amount": 700.0,
+                "currency": "USD",
+                "reason": "Low risk shipment - immediate release",
+                "freight_token_id": 2025027,
+                "proofpack_hint": {
+                    "milestone_id": "SHP-2025-027-M2",
+                    "has_proofpack": True,
+                    "version": "v1-alpha",
+                },
+            }
+        }
+    )
