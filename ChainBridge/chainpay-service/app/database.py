@@ -10,7 +10,10 @@ from sqlalchemy.orm import sessionmaker
 from .models import Base
 
 # Database URL - use SQLite by default, can be overridden via environment
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./chainpay.db")
+DATABASE_URL = os.getenv(
+    "CHAINPAY_DATABASE_URL",
+    os.getenv("DATABASE_URL", "sqlite:///./chainpay.db"),
+)
 
 # Create engine
 engine = create_engine(

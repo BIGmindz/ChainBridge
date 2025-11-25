@@ -298,6 +298,25 @@ class MilestoneSettlement(Base):
     )
 
     # Milestone identification
+    milestone_identifier = Column(
+        String(100),
+        nullable=True,
+        unique=True,
+        index=True,
+        comment="Canonical milestone identifier '<shipment_reference>-M<index>'",
+    )
+    shipment_reference = Column(
+        String(100),
+        nullable=True,
+        index=True,
+        comment="Canonical shipment reference derived from freight token",
+    )
+    freight_token_id = Column(
+        Integer,
+        nullable=True,
+        index=True,
+        comment="Freight token ID cached at milestone creation time",
+    )
     event_type = Column(
         String(50),
         nullable=False,

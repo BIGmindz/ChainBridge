@@ -1,75 +1,73 @@
-import type { GlobalSummary } from "../lib/metrics";
-import { config } from "../config/env";
+/**
+ * Metrics Client
+ *
+ * This module acts as a facade for fetching dashboard metrics. It determines
+ * whether to use the real API client or mock data based on the presence of
+ * the VITE_API_BASE_URL environment variable.
+ */
 
-const MOCK_GLOBAL_SUMMARY: GlobalSummary = {
-  threat_level: "elevated",
-  shipments: {
-    total_shipments: 148,
-    active_shipments: 92,
-    on_time_percent: 81,
-    exception_count: 7,
-    high_risk_count: 5,
-    delayed_or_blocked_count: 4,
+import { config } from "../config/env";
+import type { IoTHealthSummary } from "../lib/iot";
+import type { GlobalSummary, CorridorMetrics } from "../lib/metrics";
+
+import { mockApiClient } from "./api";
+import {
+  fetchGlobalSummary as realFetchGlobalSummary,
+  fetchCorridorMetrics as realFetchCorridorMetrics,
+  fetchIoTHealthSummary as realFetchIoTHealthSummary,
+} from "./realApiClient";
+
+const HAS_REAL_API = Boolean(config.apiBaseUrl);
+const USE_REAL_API = !config.useMocks && HAS_REAL_API;
+
+function withMetricsFallback<T>(action: () => Promise<T>, fallback: () => Promise<T>): Promise<T> {
+  if (!USE_REAL_API) {
+    return fallback();
+  }
+
+  return action().catch((error) => {
+    if (config.isDevelopment) {
+      console.warn("[metricsClient] Falling back to mock metrics:", error);
+    }
+    return fallback();
+  });
+}
+
+/**
+ * A unified client for fetching all dashboard-related metrics.
+ * It abstracts away the decision to use mock or real data sources.
+ */
+export const metricsClient = {
+  /**
+   * Fetches the global summary of all network metrics.
+   * @returns A promise that resolves to the GlobalSummary object.
+   */
+  getGlobalSummary(): Promise<GlobalSummary> {
+    return withMetricsFallback(
+      () => realFetchGlobalSummary(),
+      () => mockApiClient.getMockGlobalSummary()
+    );
   },
-  payments: {
-    blocked_payments: 3,
-    partially_paid: 14,
-    completed: 86,
-    not_started: 12,
-    in_progress: 33,
-    payment_health_score: 78,
-    capital_locked_hours: 420,
+
+  /**
+   * Fetches metrics for all major trade corridors.
+   * @returns A promise that resolves to an array of CorridorMetrics.
+   */
+  getCorridorMetrics(): Promise<CorridorMetrics[]> {
+    return withMetricsFallback(
+      () => realFetchCorridorMetrics(),
+      () => mockApiClient.getMockCorridorMetrics()
+    );
   },
-  governance: {
-    proofpack_ok_percent: 92,
-    open_audits: 3,
-    watchlisted_shipments: 5,
-  },
-  top_corridor: {
-    corridor_id: "asia-us-west",
-    label: "Asia → US West",
-    shipment_count: 42,
-    active_count: 28,
-    high_risk_count: 3,
-    blocked_payments: 1,
-    avg_risk_score: 63,
-    trend: "rising",
-  },
-  iot: {
-    shipments_with_iot: 58,
-    active_sensors: 247,
-    alerts_last_24h: 6,
-    critical_alerts_last_24h: 1,
-    coverage_percent: 72,
+
+  /**
+   * Fetches the health summary of the IoT sensor network.
+   * @returns A promise that resolves to the IoTHealthSummary object.
+   */
+  getIoTHealthSummary(): Promise<IoTHealthSummary> {
+    return withMetricsFallback(
+      () => realFetchIoTHealthSummary(),
+      () => mockApiClient.getMockIoTHealthSummary()
+    );
   },
 };
-
-async function fetchSummaryFromApi(): Promise<GlobalSummary> {
-  const response = await fetch(`${config.apiBaseUrl}/metrics/summary`, {
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to load /metrics/summary (${response.status})`);
-  }
-
-  return (await response.json()) as GlobalSummary;
-}
-
-export async function fetchGlobalSummary(): Promise<GlobalSummary> {
-  if (config.useMocks) {
-    return MOCK_GLOBAL_SUMMARY;
-  }
-
-  try {
-    return await fetchSummaryFromApi();
-  } catch (error) {
-    if (config.isDevelopment) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.warn(`[metrics] Falling back to mock summary: ${message}`);
-    }
-    return MOCK_GLOBAL_SUMMARY;
-  }
-}
