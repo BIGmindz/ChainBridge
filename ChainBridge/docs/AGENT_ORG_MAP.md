@@ -226,7 +226,9 @@ A role primarily human-driven, with AI providing research, analysis, and executi
 
 ### Agent Loader System
 
-All agents are loaded dynamically from `AGENTS/<ROLE_NAME>/`:
+Canonical prompts and checklists live under `AGENTS 2/<ROLE_NAME>/`.
+
+All agents are loaded dynamically from `AGENTS 2/<ROLE_NAME>/`:
 - `system_prompt.md` — Role identity
 - `onboarding_prompt.md` — Workflows
 - `knowledge_scope.md` — Expertise boundaries

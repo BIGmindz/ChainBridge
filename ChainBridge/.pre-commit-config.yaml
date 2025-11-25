@@ -19,3 +19,8 @@ repos:
         entry: bash -c 'cd "$(git rev-parse --show-toplevel)/ChainBridge" && make quick-checks'
         language: system
         pass_filenames: false
+      - id: check-docs-canonical
+        name: Check docs canonical locations
+        entry: bash -c 'cd "$(git rev-parse --show-toplevel)/ChainBridge" && python -m scripts.ci.check_docs_canonical'
+        language: system
+        pass_filenames: false

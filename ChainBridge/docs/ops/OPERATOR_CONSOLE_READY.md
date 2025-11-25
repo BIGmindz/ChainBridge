@@ -279,9 +279,9 @@ curl "http://localhost:8001/chainiq/operator/queue?needs_snapshot_only=true" | j
 ## 🔗 Related Files
 
 **Documentation**:
-- PROJECT_CHECKLIST.md – M01-M04 master reference
-- PROJECT_STATUS_SUMMARY.md – Executive overview
-- M02_SPRINT_LAUNCH.md – Tactical launch kit
+- docs/product/PROJECT_CHECKLIST.md – M01-M04 master reference
+- docs/product/PROJECT_STATUS_SUMMARY.md – Executive overview
+- docs/product/M02_SPRINT_LAUNCH.md – Tactical launch kit
 - START_HERE.md – Master index
 
 **Code**:
@@ -293,8 +293,8 @@ curl "http://localhost:8001/chainiq/operator/queue?needs_snapshot_only=true" | j
 
 ## 🤝 Support
 
-**Questions about frontend?** → See Sonny's brief in M02_SPRINT_LAUNCH.md
-**Questions about backend?** → See Cody's brief in M02_SPRINT_LAUNCH.md
+**Questions about frontend?** → See Sonny's brief in docs/product/M02_SPRINT_LAUNCH.md
+**Questions about backend?** → See Cody's brief in docs/product/M02_SPRINT_LAUNCH.md
 **Need implementation help?** → Read OPERATOR_BACKEND_INTEGRATION.md (Step 2)
 **Running tests?** → See "Testing" section above
 

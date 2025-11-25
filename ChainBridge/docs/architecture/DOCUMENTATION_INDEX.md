@@ -5,9 +5,32 @@
 
 ## 📚 Documentation Guide
 
+> Documentation files now live under `docs/product/` (playbooks, milestones) and `docs/ops/` (operator/runbooks). Key paths:
+> - `docs/product/PROJECT_CHECKLIST.md`
+> - `docs/product/PROJECT_STATUS_SUMMARY.md`
+> - `docs/product/M02_QUICK_REFERENCE.md`
+> - `AGENTS 2/LOGISTICS_OPS_SME/checklist.md` (unchanged)
+
+## Documentation Hubs
+
+- **Architecture Map:** `docs/architecture/REPO_STRUCTURE.md`
+- **Project Checklist (full details):** `docs/product/PROJECT_CHECKLIST.md`
+- **Project Status (exec snapshot):** `docs/product/PROJECT_STATUS_SUMMARY.md`
+- **Sprint Playbook (M02):** `docs/product/M02_QUICK_REFERENCE.md`
+- **Agent Framework:** `AGENT_FRAMEWORK_COMPLETE.md` + `AGENTS 2/`
+ - **Agent Governance / ALEX Gate:** `docs/ci/ALEX_GOVERNANCE_GATE.md`
+
+> ⚠️ Note: Root `PROJECT_CHECKLIST.md`, `PROJECT_STATUS_SUMMARY.md`, and
+> `M02_QUICK_REFERENCE.md` are stubs only. Always edit the docs under `docs/product/`.
+
+## Governance & Safety
+
+- **ALEX Governance Gate (CI):** `docs/ci/ALEX_GOVERNANCE_GATE.md`
+- **Agent Security & Framework:** `docs/SECURITY_AGENT_FRAMEWORK.md`
+
 Your project now has **4 comprehensive documentation files** to track progress:
 
-### 1. **PROJECT_CHECKLIST.md** ⭐ MASTER REFERENCE
+### 1. **docs/product/PROJECT_CHECKLIST.md** ⭐ MASTER REFERENCE
 **Length:** ~550 lines | **Audience:** All teams
 **Purpose:** Complete M01–M04 task breakdown with ownership, status, and acceptance criteria
 
@@ -26,7 +49,7 @@ Your project now has **4 comprehensive documentation files** to track progress:
 
 ---
 
-### 2. **PROJECT_STATUS_SUMMARY.md** 🎯 EXECUTIVE OVERVIEW
+### 2. **docs/product/PROJECT_STATUS_SUMMARY.md** 🎯 EXECUTIVE OVERVIEW
 **Length:** ~150 lines | **Audience:** Stakeholders, team leads, decision makers
 **Purpose:** At-a-glance status of all components and milestones
 
@@ -44,7 +67,7 @@ Your project now has **4 comprehensive documentation files** to track progress:
 
 ---
 
-### 3. **M02_QUICK_REFERENCE.md** 🚀 TEAM PLAYBOOK
+### 3. **docs/product/M02_QUICK_REFERENCE.md** 🚀 TEAM PLAYBOOK
 **Length:** ~200 lines | **Audience:** Developers, SMEs, QA
 **Purpose:** Tactical quick reference for M02 sprint execution
 
@@ -122,13 +145,13 @@ Your project now has **4 comprehensive documentation files** to track progress:
 ## 📖 Quick Navigation
 
 ### For Project Managers / Stakeholders
-1. Start: `PROJECT_STATUS_SUMMARY.md` (5 min read)
-2. Details: `PROJECT_CHECKLIST.md` Section 1 (Milestones)
-3. Risks: `PROJECT_CHECKLIST.md` Section 7 (Known Limitations)
+1. Start: `docs/product/PROJECT_STATUS_SUMMARY.md` (5 min read)
+2. Details: `docs/product/PROJECT_CHECKLIST.md` Section 1 (Milestones)
+3. Risks: `docs/product/PROJECT_CHECKLIST.md` Section 7 (Known Limitations)
 
 ### For Developers (Cody, Sonny)
-1. Start: `M02_QUICK_REFERENCE.md` (10 min read)
-2. Details: `PROJECT_CHECKLIST.md` (full section for your role)
+1. Start: `docs/product/M02_QUICK_REFERENCE.md` (10 min read)
+2. Details: `docs/product/PROJECT_CHECKLIST.md` (full section for your role)
 3. Hands-on: Copy commands from "Quick Reference" section
 
 ### For QA / Logistics SME
@@ -137,9 +160,9 @@ Your project now has **4 comprehensive documentation files** to track progress:
 3. Test: Run commands in "Commands You'll Use" section
 
 ### For Architecture / Technical Leadership
-1. Start: `PROJECT_CHECKLIST.md` Section 4 (Integration & E2E Flows)
+1. Start: `docs/product/PROJECT_CHECKLIST.md` Section 4 (Integration & E2E Flows)
 2. Reference: `architecture.md` (Mermaid diagram)
-3. Decision Points: `PROJECT_CHECKLIST.md` Section 11 (Notes & Decisions)
+3. Decision Points: `docs/product/PROJECT_CHECKLIST.md` Section 11 (Notes & Decisions)
 
 ---
 
@@ -147,12 +170,12 @@ Your project now has **4 comprehensive documentation files** to track progress:
 
 ### Step 1: Understand Current State (5 min)
 ```bash
-cat PROJECT_STATUS_SUMMARY.md | head -50
+cat docs/product/PROJECT_STATUS_SUMMARY.md | head -50
 ```
 
 ### Step 2: Pick Your Role & Read Relevant Section (10–15 min)
-- **Cody:** Read `M02_QUICK_REFERENCE.md` + `PROJECT_CHECKLIST.md` Section 2.2
-- **Sonny:** Read `M02_QUICK_REFERENCE.md` + `PROJECT_CHECKLIST.md` Section 3.2
+- **Cody:** Read `docs/product/M02_QUICK_REFERENCE.md` + `docs/product/PROJECT_CHECKLIST.md` Section 2.2
+- **Sonny:** Read `docs/product/M02_QUICK_REFERENCE.md` + `docs/product/PROJECT_CHECKLIST.md` Section 3.2
 - **SME:** Read `AGENTS 2/LOGISTICS_OPS_SME/checklist.md`
 
 ### Step 3: Execute (Per Your Task List)
@@ -163,8 +186,8 @@ cat PROJECT_STATUS_SUMMARY.md | head -50
 ### Step 4: Reference Commands
 ```bash
 # All commands in:
-# - M02_QUICK_REFERENCE.md (Quick Commands)
-# - PROJECT_CHECKLIST.md (Section 10 - Quick Reference Commands)
+# - docs/product/M02_QUICK_REFERENCE.md (Quick Commands)
+# - docs/product/PROJECT_CHECKLIST.md (Section 10 - Quick Reference Commands)
 # - AGENTS 2/LOGISTICS_OPS_SME/checklist.md (Commands You'll Use)
 ```
 
@@ -207,9 +230,9 @@ cat PROJECT_STATUS_SUMMARY.md | head -50
 
 ```
 Root Documentation:
-├─ PROJECT_CHECKLIST.md .................. ⭐ Master reference
-├─ PROJECT_STATUS_SUMMARY.md ............ 🎯 Executive overview
-├─ M02_QUICK_REFERENCE.md .............. 🚀 Team playbook
+├─ docs/product/PROJECT_CHECKLIST.md .................. ⭐ Master reference
+├─ docs/product/PROJECT_STATUS_SUMMARY.md ............ 🎯 Executive overview
+├─ docs/product/M02_QUICK_REFERENCE.md .............. 🚀 Team playbook
 ├─ MILESTONE_01_VERTICAL_SLICE.md ...... Completed work
 ├─ architecture.md ..................... System design
 
@@ -232,30 +255,30 @@ Implementation Files:
 ## 📞 Getting Help
 
 ### Question: "What do I work on next?"
-**Answer:** See `PROJECT_STATUS_SUMMARY.md` → "M02 Immediate Priorities"
+**Answer:** See `docs/product/PROJECT_STATUS_SUMMARY.md` → "M02 Immediate Priorities"
 
 ### Question: "How do I test this?"
 **Answer:** See `AGENTS 2/LOGISTICS_OPS_SME/checklist.md` → "Verification Test" for each component
 
 ### Question: "What commands do I run?"
-**Answer:** See `M02_QUICK_REFERENCE.md` → "Dev Environment Setup" or "Quick Commands"
+**Answer:** See `docs/product/M02_QUICK_REFERENCE.md` → "Dev Environment Setup" or "Quick Commands"
 
 ### Question: "When is M02 done?"
-**Answer:** See `PROJECT_CHECKLIST.md` → "Section 8 - Success Criteria"
+**Answer:** See `docs/product/PROJECT_CHECKLIST.md` → "Section 8 - Success Criteria"
 
 ### Question: "What's our architecture?"
-**Answer:** See `architecture.md` (Mermaid diagram) or `PROJECT_CHECKLIST.md` → "Section 4.1"
+**Answer:** See `architecture.md` (Mermaid diagram) or `docs/product/PROJECT_CHECKLIST.md` → "Section 4.1"
 
 ---
 
 ## 📈 Progress Tracking
 
 ### Daily Update Process
-1. Open `PROJECT_STATUS_SUMMARY.md`
+1. Open `docs/product/PROJECT_STATUS_SUMMARY.md`
 2. Update M02 task percentages (Cody, Sonny)
 3. Note any blockers or risks
 4. Share with team in standup
-5. Update `PROJECT_CHECKLIST.md` checkboxes in detail
+5. Update `docs/product/PROJECT_CHECKLIST.md` checkboxes in detail
 
 ### Weekly Sync
 1. Review all M02 tasks
@@ -269,9 +292,9 @@ Implementation Files:
 
 **These 4 documents are designed to work together:**
 
-1. **PROJECT_CHECKLIST.md** = The "what & why" (comprehensive reference)
-2. **PROJECT_STATUS_SUMMARY.md** = The "where are we" (status at a glance)
-3. **M02_QUICK_REFERENCE.md** = The "how do I do this" (tactical playbook)
+1. **docs/product/PROJECT_CHECKLIST.md** = The "what & why" (comprehensive reference)
+2. **docs/product/PROJECT_STATUS_SUMMARY.md** = The "where are we" (status at a glance)
+3. **docs/product/M02_QUICK_REFERENCE.md** = The "how do I do this" (tactical playbook)
 4. **AGENTS/checklist.md** = The "how do I verify this" (validation playbook)
 
 **Use them together for complete project transparency.**

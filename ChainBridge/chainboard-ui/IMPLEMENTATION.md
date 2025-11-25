@@ -39,7 +39,7 @@
 The `.env.local` file is already configured:
 
 ```bash
-VITE_API_BASE_URL=http://127.0.0.1:8000
+VITE_API_BASE_URL=http://127.0.0.1:8001
 ```
 
 ### Running the UI
@@ -72,7 +72,7 @@ npm run type-check
    cd ..  # Back to ChainBridge root
    python api/server.py
    ```
-   Backend runs on: http://127.0.0.1:8000
+   Backend runs on: http://127.0.0.1:8001
 
 2. **Start the frontend** (from chainboard-ui):
    ```bash

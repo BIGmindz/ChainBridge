@@ -7,7 +7,7 @@
 
 ### 1. Understand Status (2 min)
 ```bash
-cat PROJECT_STATUS_SUMMARY.md | head -60
+cat docs/product/PROJECT_STATUS_SUMMARY.md | head -60
 ```
 
 ### 2. Pick Your Role (Read Relevant Section Below)
@@ -18,8 +18,8 @@ cat PROJECT_STATUS_SUMMARY.md | head -60
 
 ### 3. Execute & Report Daily
 ```bash
-# Update: PROJECT_STATUS_SUMMARY.md task percentages
-# Reference: M02_QUICK_REFERENCE.md for commands
+# Update: docs/product/PROJECT_STATUS_SUMMARY.md task percentages
+# Reference: docs/product/M02_QUICK_REFERENCE.md for commands
 # Validate: AGENTS 2/LOGISTICS_OPS_SME/checklist.md for SME
 ```
 
@@ -336,7 +336,7 @@ tail -f /tmp/snapshot_worker.log
 - Sonny to review empty state UI
 ```
 
-### Update: `PROJECT_STATUS_SUMMARY.md`
+### Update: `docs/product/PROJECT_STATUS_SUMMARY.md`
 ```markdown
 | Task | % | Owner | Notes |
 |------|---|-------|-------|
@@ -372,7 +372,7 @@ tail -f /tmp/snapshot_worker.log
 | Question | Answer |
 |----------|--------|
 | What do I work on? | See your role section above |
-| What are commands? | `M02_QUICK_REFERENCE.md` |
+| What are commands? | `docs/product/M02_QUICK_REFERENCE.md` |
 | How do I test? | `AGENTS 2/LOGISTICS_OPS_SME/checklist.md` |
 | What's my priority? | Backend ← Cody. Frontend after backend complete. Ops in parallel. |
 | When is M02 done? | All quality gates passing + ops sign-off |
