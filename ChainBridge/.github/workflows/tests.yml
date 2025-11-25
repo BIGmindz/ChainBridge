@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [ main, local-backup-api ]
+    branches: [ main, develop, refactor/enterprise-monorepo, local-backup-api ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop, refactor/enterprise-monorepo, local-backup-api ]
 
 jobs:
   tests:
@@ -29,6 +29,11 @@ jobs:
 
     - name: Run quick-checks
       run: make quick-checks
+
+    - name: Run tools / guardrail tests
+      run: |
+        cd ChainBridge
+        python -m pytest -q tests/tools
 
     - name: Run full test suite
       run: python -m pytest tests/ -q
@@ -71,3 +76,28 @@ jobs:
 
     - name: Run API tests
       run: make api-tests
+
+  alex-governance:
+    name: ALEX Governance Gate
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      run: |
+        python -m venv .venv
+        source .venv/bin/activate
+        pip install --upgrade pip
+        pip install -r requirements-runtime.txt
+        pip install -r requirements-dev.txt
+
+    - name: Run ALEX governance tests (tests/agents)
+      run: |
+        source .venv/bin/activate
+        pytest -q tests/agents

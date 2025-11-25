@@ -14,11 +14,12 @@ Features:
 - Backtest simulation for threshold validation
 """
 
-import numpy as np
-import pandas as pd
-from typing import List, Tuple, Optional
 import logging
 from dataclasses import dataclass
+from typing import List, Optional, Tuple
+
+import numpy as np
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 

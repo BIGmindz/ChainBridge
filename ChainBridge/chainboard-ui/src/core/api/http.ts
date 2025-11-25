@@ -12,7 +12,7 @@
 import { config } from "../../config/env";
 
 const DEFAULT_TIMEOUT = 8000; // 8 seconds
-const BASE_URL = config.apiBaseUrl || "http://localhost:8000";
+const BASE_URL = config.apiBaseUrl || "http://localhost:8001";
 
 export class HttpError extends Error {
   constructor(

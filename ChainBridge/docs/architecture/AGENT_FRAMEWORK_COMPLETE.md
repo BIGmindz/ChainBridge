@@ -1,5 +1,8 @@
 # ChainBridge Agent Framework — Phases A–E Complete ✅
 
+> **Canonical location:** Active agent prompts live in `AGENTS 2/`.
+> `AGENTS/` is deprecated and retained only as a historical snapshot and must not be updated.
+
 ## Implementation Summary
 
 The enterprise-grade ChainBridge Agent Framework is now fully implemented with all five phases complete. This document provides an overview of the deliverables and how to use them.
@@ -265,6 +268,17 @@ ChainBridge/
 ├── COPILOT_SONNY_GUIDE.md       (B — Sonny guide) ✅ NEW
 └── COPILOT_AGENTS.md            (existing: framework overview)
 ```
+
+## Area-to-Folder Mapping
+
+| Area          | Folder              |
+|---------------|---------------------|
+| Backend API   | `api/`              |
+| ChainIQ       | `chainiq-service/`  |
+| ChainPay      | `chainpay-service/` |
+| OC / UI       | `chainboard-ui/`    |
+| Agents        | `AGENTS 2/`         |
+| Legacy        | `legacy/legacy-benson-bot/` |
 
 ---
 

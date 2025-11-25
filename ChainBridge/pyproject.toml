@@ -10,7 +10,7 @@ skip = [".venv", ".venv*"]
 
 [tool.ruff]
 line-length = 88
-exclude = [".venv", ".venv*", "__pycache__"]
+exclude = [".venv", ".venv*", "__pycache__", "legacy/legacy-benson-bot"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

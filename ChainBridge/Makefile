@@ -17,6 +17,7 @@ help:
 	@echo "  coverage               - Full coverage report (fail if <70%)"
 	@echo "  coverage-html          - Generate HTML coverage report"
 	@echo "  quick-checks           - Fast sanity checks (RSI + integrator)"
+	@echo "  alex-tests             - ALEX agent contract and mantra tests"
 	@echo ""
 	@echo "Development:"
 	@echo "  venv                   - Create Python virtual environment"
@@ -26,6 +27,7 @@ help:
 	@echo "  fmt                    - Format code"
 	@echo "  pre-commit-install     - Install pre-commit hooks"
 	@echo "  pre-commit-run         - Run pre-commit on all files"
+	@echo "  test-alex              - Run ALEX governance/agent tests"
 	@echo ""
 	@echo "Docker:"
 	@echo "  docker-build           - Build Docker images"
@@ -101,7 +103,7 @@ up-rsi:
 	$(COMPOSE) --profile rsi-only up --build benson-rsi
 
 # Lean runtime environment (isolated from heavy native ML stacks)
-.PHONY: venv-lean install-lean run-lean run-integrator-lean quick-checks pre-commit-install pre-commit-run
+.PHONY: venv-lean install-lean run-lean run-integrator-lean quick-checks alex-tests pre-commit-install pre-commit-run
 
 venv-lean:
 	@[ -d .venv-lean ] || python3 -m venv .venv-lean
@@ -124,7 +126,17 @@ quick-checks: install-lean
 	  python -m pip install -q pytest && \
 	  python -c "import yaml, os; print('PyYAML import OK')" && \
 	  pytest -q tests/test_rsi_scenarios.py && \
-	  python scripts/integrator_smoke_test.py
+	  python scripts/integrator_smoke_test.py && \
+	  python -m scripts.ci.check_docs_canonical && \
+	  python -m scripts.ci.check_no_legacy_imports && \
+	  ./scripts/ci/check_agents.sh
+
+alex-tests:
+	@. .venv/bin/activate && pytest -q tests/agents
+
+.PHONY: test-alex
+test-alex:
+	@. .venv/bin/activate && pytest -q tests/agents
 
 api-tests:
 	@. .venv/bin/activate && python -m pytest tests/test_api_health_and_echo.py -q

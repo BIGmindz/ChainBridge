@@ -13,10 +13,9 @@ ChainIQ is the intelligence layer that proves ChainBridge knows more about a shi
 
 ## Code Location
 
-- Service entrypoint: `services/chainiq-service/`
-- Shared data contracts: `platform/data-model/`
-- Intelligence utilities and analyzers: `platform/common-lib/iq/`
-- Proof packs & sample datasets: `platform/proofpack/chainiq/`
+- Backend service: `chainiq-service/`
+- Shared domain logic: `core/`
+- API gateway & routes: `api/`
 
 ## Service Interfaces
 
@@ -34,7 +33,14 @@ ChainIQ is the intelligence layer that proves ChainBridge knows more about a shi
    ```bash
    uvicorn services.chainiq_service.app.main:app --reload --port 8102
    ```
-3. Hit `http://localhost:8102/health` or exercise the gateway: `http://localhost:8001/chainiq/metrics`.
+3. Hit `http://localhost:8001/health` or exercise the ChainIQ routes under `/chainiq/*`.
+
+## Where to Go in the Repo
+
+- Backend services: `api/`, `chainiq-service/`, `chainpay-service/`
+- Frontend (ChainBoard / OC): `chainboard-ui/`
+- Agent framework: `AGENTS 2/`
+- Architecture diagrams: `docs/architecture/`
 
 ## Testing
 

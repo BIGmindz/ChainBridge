@@ -15,16 +15,16 @@
  *
  * Priority:
  * 1. VITE_API_BASE_URL env variable
- * 2. Default: http://127.0.0.1:8000 (local dev)
+ * 2. Default: http://127.0.0.1:8001 (local gateway)
  *
  * Logs warning in dev if unset.
  */
 export function getApiBaseUrl(): string {
-  const url = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+  const url = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8001";
 
   if (!import.meta.env.VITE_API_BASE_URL && import.meta.env.DEV) {
     console.warn(
-      "⚠️  VITE_API_BASE_URL not set. Using default: http://127.0.0.1:8000"
+      "⚠️  VITE_API_BASE_URL not set. Using default: http://127.0.0.1:8001"
     );
   }
 

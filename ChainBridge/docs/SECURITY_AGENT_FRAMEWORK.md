@@ -4,7 +4,7 @@
 
 In-scope components:
 
-- `AGENTS/` directory content and prompt files checked into repository.
+- `AGENTS/` and `AGENTS 2/` directory content and prompt files checked into repository.
 - Validation + runtime tools: `agent_runtime`, `agent_validate`, `agent_cli`.
 - Backend `GET /api/agents/status` endpoint and any caching layers.
 - CI workflow (`agent_ci.yml`) that exports `agents_export.json` and uploads the `agent-prompts-json` artifact.
@@ -38,7 +38,7 @@ Out-of-scope: downstream customer APIs, non-agent microservices, third-party LLM
 
 ### Integrity
 
-- Malicious change to files under `AGENTS/` introduces backdoors or poisoned prompts.
+- Malicious change to files under `AGENTS/` or `AGENTS 2/` introduces backdoors or poisoned prompts.
 - Compromised validation tooling (`agent_validate`) returns green despite missing files.
 - CI pipeline manipulated so that uploaded artifact does not match validated commit.
 
@@ -47,7 +47,7 @@ Out-of-scope: downstream customer APIs, non-agent microservices, third-party LLM
 ### MUST
 
 - Require auth (OIDC or session) for `/api/agents/status`; restrict to internal networks or VPN.
-- Enforce branch protection + code owners for `AGENTS/` and `tools/` directories; mandate two-person review.
+- Enforce branch protection + code owners for `AGENTS/`, `AGENTS 2/`, and `tools/` directories; mandate two-person review.
 - Configure CI artifact storage with scoped credentials, short TTL, and server-side encryption; disable public links.
 - Monitor and alert on validation pipeline failures; treat silent success with zero counts as incident.
 
@@ -83,4 +83,54 @@ Out-of-scope: downstream customer APIs, non-agent microservices, third-party LLM
 - Endpoint sits behind API gateway with authentication, network ACLs, and WAF rules.
 - Artifacts stored in restricted bucket, versioned, with automatic expiration (≤30 days) and access logging enabled.
 - Logging level set to warn/error; prompts never logged. Only aggregate counts emitted to monitoring systems.
-- Run periodic integrity scans on `AGENTS/` repo to detect unauthorized prompt changes (e.g., Git signing, checksum pipeline).
+- Run periodic integrity scans on `AGENTS/` and `AGENTS 2/` repo areas to detect unauthorized prompt changes (e.g., Git signing, checksum pipeline).
+
+## ALEX Governance Gate (Non-Negotiable)
+
+ChainBridge applies an immutable governance gate around ALEX.
+
+**Mantra Enforcement**
+
+> Speed without proof gets blocked.
+> Proof without pipes doesn’t scale.
+> Pipes without cash don’t settle.
+> You need all three.
+
+ALEX MUST block or fail any flow that violates this mandate.
+
+**Governance Requirements**
+
+ALEX is not allowed to approve flows unless:
+
+- Ricardian wrapper state is **ACTIVE** (not FROZEN / TERMINATED).
+- Digital Supremacy state is **COMPLIANT** or **NEEDS_PROOF** (never BLOCKED).
+- Kill-switch state is **SAFE** (never UNSAFE).
+
+**Test Pack**
+
+Enforced by the following tests:
+
+- `tests/agents/test_alex_mantra_enforcement.py`
+- `tests/agents/test_alex_response_structure.py`
+
+These cover:
+
+- ChainBridge mantra validation.
+- Wrapper / supremacy / kill-switch rules.
+- ALEX response sections (BLUF → Final Determination).
+
+**CI Integration**
+
+The CI job **`alex-governance`** (name: **“ALEX Governance Gate”**) runs on every PR.
+
+- Branch protection requires this job to pass before merging to `main`.
+- Any failure in the ALEX tests **blocks the merge**.
+- Agents and humans cannot bypass this gate without changing tests and docs under review.
+
+**Local DX**
+
+In VS Code, run the task:
+
+- `ALEX: Run Governance Tests`
+
+to execute the same test suite locally as CI uses.
