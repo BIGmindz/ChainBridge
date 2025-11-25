@@ -66,13 +66,13 @@ export type CorridorTrend = "rising" | "stable" | "improving";
  * Corridor-level metrics backing the Corridor Intel panel and drilldowns.
  */
 export interface CorridorMetrics {
-  corridor_id: string; // e.g. "asia-us-west"
+  corridorId: string; // e.g. "asia-us-west"
   label: string; // e.g. "Asia → US West"
   shipment_count: number;
   active_count: number;
   high_risk_count: number;
   blocked_payments: number;
-  avg_risk_score: number;
+  avg_riskScore: number;
   trend: CorridorTrend;
 }
 
