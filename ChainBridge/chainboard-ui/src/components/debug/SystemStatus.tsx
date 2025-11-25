@@ -9,9 +9,9 @@ export const SystemStatus = () => {
       const start = Date.now();
       try {
         // Attempt to hit the backend API root or health check
-        // Assuming backend is on port 8000 for local dev, or proxied via /api
+        // Local dev defaults to the API gateway on port 8001 (or proxy via /api)
         // Adjust URL as needed for the specific environment
-        const response = await fetch('http://localhost:8000/', {
+        const response = await fetch('http://localhost:8001/', {
           method: 'GET',
           signal: AbortSignal.timeout(2000),
         });

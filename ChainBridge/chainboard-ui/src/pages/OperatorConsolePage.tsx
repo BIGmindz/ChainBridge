@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
-import { SystemStatus } from '../components/debug/SystemStatus';
-import GlobalOpsMap from '../components/GlobalOpsMap';
+import GlobalOpsMap from '@/components/GlobalOpsMap';
+import { SystemStatus } from '@/components/debug/SystemStatus';
 
 export default function OperatorConsolePage() {
   const [isCinematic, setIsCinematic] = useState(false);

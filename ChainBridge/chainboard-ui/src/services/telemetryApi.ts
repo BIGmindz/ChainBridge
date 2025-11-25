@@ -6,7 +6,7 @@
 import type { LiveShipmentPosition } from '@/types/chainbridge';
 import type { GlobalMapState, PortTelemetry, RiskZone, VesselTelemetry } from '@/types/map';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8001";
 
 /**
  * Fetch complete global state for God View map

@@ -116,3 +116,17 @@ legacy/
 - **Upcoming Insights (ChainSense):** `services/chainsense-service`
 
 Everything outside these paths is either shared infrastructure (`platform/`, `infra/`) or legacy archive. Start here, build fast, and keep the platform story tight.
+
+## Agent Governance Gate
+
+- `tests/agents/test_alex_mantra_enforcement.py`
+- `tests/agents/test_alex_response_structure.py`
+
+These enforce:
+- ChainBridge mantra
+- Ricardian wrapper rules
+- Digital supremacy rules
+- Kill-switch rules
+- ALEX output structure rules
+
+ALEX cannot drift or become creative. CI blocks all violations.

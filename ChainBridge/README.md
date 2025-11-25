@@ -1,6 +1,26 @@
 # ChainBridge – Freight + Payments Intelligence Ecosystem
 
+![Tests](https://github.com/BIGmindz/ChainBridge/actions/workflows/tests.yml/badge.svg)
+![ALEX Governance Gate](https://github.com/BIGmindz/ChainBridge/actions/workflows/tests.yml/badge.svg?job=alex-governance)
+
 > **Mission-critical platform for global freight operations, milestone-based payments, and supply chain intelligence**
+
+> Documentation entry points now live in `docs/architecture/` (structure/index), `docs/product/` (milestones/playbooks), and `docs/ops/` (operator runbooks). See `docs/architecture/REPO_STRUCTURE.md` for the current layout.
+
+<!-- Copilot Hint: Add a Repository Navigation section that matches the canonical docs and folder rules; keep it short and skimmable. -->
+
+## Repository Navigation
+
+- **Architecture:** `docs/architecture/`
+- **Product & Milestones:** `docs/product/`
+- **Ops / Runbooks / Playbooks:** `docs/ops/`
+- **Agent Prompts:** `AGENTS 2/` (canonical)
+- **Legacy Trading Engine:** `legacy/legacy-benson-bot/` (read-only)
+
+For a guided walkthrough, start with:
+
+- `START_HERE.md`
+- `docs/architecture/REPO_STRUCTURE.md`
 
 ## 🌐 What is ChainBridge?
 
@@ -437,7 +457,30 @@ GitHub Actions workflow (`.github/workflows/tests.yml`) runs on every push:
 1. **Lint & Type Check**: Ruff linting, Python type validation
 2. **Unit Tests**: Full test suite with pytest
 3. **API Tests**: Dedicated job for health & echo endpoints
-4. **Coverage**: Tracked and reported (integration ready for Codecov)
+4. **ALEX Governance Gate**: `alex-governance` job runs `pytest -q tests/agents` and must pass before merging to `main`
+5. **Coverage**: Tracked and reported (integration ready for Codecov)
+
+### Agent Safety & Governance
+
+ALEX is the governance gate for legal, risk, and settlement-sensitive flows.
+
+- Canonical prompts and checklists live in `AGENTS 2/`.
+- Governance rules and tests live under `tests/agents/`.
+- CI runs the **ALEX Governance Gate** status check (`alex-governance`) on every PR into `main`.
+- Branch protection requires this job to pass before merging to `main`.
+
+**How to run ALEX locally**
+
+```bash
+source .venv/bin/activate
+pytest -q tests/agents
+
+# or
+
+make test-alex
+```
+
+See [ALEX Governance Gate](docs/ci/ALEX_GOVERNANCE_GATE.md) for details.
 
 ---
 

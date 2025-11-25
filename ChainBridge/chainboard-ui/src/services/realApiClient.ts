@@ -6,7 +6,7 @@ import { GlobalSummary, CorridorMetrics } from "../lib/metrics";
 import type { RiskOverviewSummary } from "../lib/risk";
 import { Shipment, RiskCategory, PaymentState, ExceptionRow } from "../lib/types";
 
-const RAW_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const RAW_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8001";
 
 function ensureChainboardBase(url: string): string {
   const normalized = url.endsWith("/") ? url.slice(0, -1) : url;

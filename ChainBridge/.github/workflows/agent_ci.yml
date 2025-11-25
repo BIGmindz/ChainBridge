@@ -5,11 +5,13 @@ on:
         branches:
             - main
             - develop
+            - refactor/enterprise-monorepo
             - local-backup-api
     pull_request:
         branches:
             - main
             - develop
+            - refactor/enterprise-monorepo
 
 jobs:
     agent-validate:
@@ -39,6 +41,18 @@ jobs:
 
             - name: Run agent runtime tests
               run: python -m pytest tests/test_agent_runtime.py -q
+              continue-on-error: false
+
+            - name: ALEX Governance Tests
+              run: |
+                  source .venv/bin/activate || true
+                  pytest -q tests/agents
+              continue-on-error: false
+
+            - name: ALEX Gateway Tests
+              run: |
+                  source .venv/bin/activate || true
+                  pytest -q tests/agents/test_alex_gateway.py
               continue-on-error: false
 
             - name: Export agent prompts JSON
@@ -71,3 +85,28 @@ jobs:
 
             - name: Check Python syntax
               run: python -m py_compile tools/agent_loader.py tools/agent_runtime.py tools/agent_validate.py
+
+    alex-governance:
+        name: ALEX Governance Gate
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.11"
+
+            - name: Install dependencies
+              run: |
+                  python -m venv .venv
+                  source .venv/bin/activate
+                  pip install --upgrade pip
+                  pip install -r requirements-runtime.txt
+                  pip install -r requirements-dev.txt
+
+            - name: Run ALEX governance tests (tests/agents)
+              run: |
+                  source .venv/bin/activate
+                  pytest -q tests/agents
