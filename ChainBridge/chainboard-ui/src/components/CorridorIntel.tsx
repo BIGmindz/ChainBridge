@@ -1,5 +1,3 @@
-import { useMemo } from "react";
-import type { KeyboardEvent } from "react";
 import {
   AlertTriangle,
   ArrowDownRight,
@@ -8,6 +6,9 @@ import {
   Shield,
   Ship,
 } from "lucide-react";
+import { useMemo } from "react";
+import type { KeyboardEvent } from "react";
+
 import { MOCK_SHIPMENTS } from "../lib/mockData";
 import type { Shipment } from "../lib/types";
 import type { CorridorId } from "../utils/corridors";

@@ -6,8 +6,15 @@ Provides endpoints for module interaction, pipeline execution, and system manage
 """
 
 import os
+import sys
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+# Add project root to Python path for imports
+project_root = Path(__file__).parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
@@ -20,6 +27,192 @@ from core.data_processor import DataProcessor
 from core.module_manager import ModuleManager
 from core.pipeline import Pipeline
 from tracking.metrics_collector import MetricsCollector
+
+# Import ChainIQ router
+try:
+    import sys
+
+    chainiq_path = str(project_root / "chainiq-service")
+    if chainiq_path not in sys.path:
+        sys.path.insert(0, chainiq_path)
+    from app.api import router as chainiq_router
+
+    CHAINIQ_AVAILABLE = True
+except Exception as e:
+    print(f"Warning: ChainIQ service not available: {e}")
+    CHAINIQ_AVAILABLE = False
+
+# Import ChainBoard router
+try:
+    from api.routes.chainboard import router as chainboard_router
+
+    CHAINBOARD_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: ChainBoard service not available: {e}")
+    CHAINBOARD_AVAILABLE = False
+
+# Import ChainBoard IoT router
+try:
+    from api.routes.chainboard_iot import router as chainboard_iot_router
+
+    CHAINBOARD_IOT_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: ChainBoard IoT service not available: {e}")
+    CHAINBOARD_IOT_AVAILABLE = False
+
+# Import ChainBoard Real-Time router
+try:
+    from api.routes.chainboard_realtime import router as chainboard_realtime_router
+
+    CHAINBOARD_REALTIME_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: ChainBoard Real-Time service not available: {e}")
+    CHAINBOARD_REALTIME_AVAILABLE = False
+
+# Import ChainBoard Payments router
+try:
+    from api.routes.chainboard_payments import router as chainboard_payments_router
+
+    CHAINBOARD_PAYMENTS_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: ChainBoard payments router not available: {e}")
+    CHAINBOARD_PAYMENTS_AVAILABLE = False
+
+# Import ChainBoard Settlements router
+try:
+    from api.routes.chainboard_settlements import router as chainboard_settlements_router
+
+    CHAINBOARD_SETTLEMENTS_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: ChainBoard Settlements service not available: {e}")
+    CHAINBOARD_SETTLEMENTS_AVAILABLE = False
+
+# Import ChainDocs router
+try:
+    from api.routes.chaindocs import router as chaindocs_router
+
+    CHAINDOCS_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: ChainDocs service not available: {e}")
+    CHAINDOCS_AVAILABLE = False
+
+# Import ChainPay router
+try:
+    from api.routes.chainpay import router as chainpay_router
+
+    CHAINPAY_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: ChainPay service not available: {e}")
+    CHAINPAY_AVAILABLE = False
+
+# Import ChainPay webhook router
+try:
+    from api.routes.chainpay_webhooks import router as chainpay_webhooks_router
+
+    CHAINPAY_WEBHOOKS_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: ChainPay webhook router not available: {e}")
+    CHAINPAY_WEBHOOKS_AVAILABLE = False
+try:
+    from api.routes.chain_audit import router as chain_audit_router
+
+    CHAIN_AUDIT_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: ChainAudit router not available: {e}")
+    CHAIN_AUDIT_AVAILABLE = False
+try:
+    from api.routes.chainstake import router as chainstake_router
+
+    CHAINSTAKE_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: ChainStake router not available: {e}")
+    CHAINSTAKE_AVAILABLE = False
+try:
+    from api.routes.events import router as events_router
+
+    EVENTS_ROUTER_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Events router not available: {e}")
+    EVENTS_ROUTER_AVAILABLE = False
+try:
+    from api.routes.operator_console import router as operator_console_router
+
+    OPERATOR_CONSOLE_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Operator Console router not available: {e}")
+    OPERATOR_CONSOLE_AVAILABLE = False
+try:
+    from api.routes.finance import router as finance_router
+
+    FINANCE_ROUTER_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Finance router not available: {e}")
+    FINANCE_ROUTER_AVAILABLE = False
+try:
+    from api.routes.legal import router as legal_router
+
+    LEGAL_ROUTER_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Legal router not available: {e}")
+    LEGAL_ROUTER_AVAILABLE = False
+try:
+    from api.routes.intel import router as intel_router
+
+    INTEL_ROUTER_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Intel router not available: {e}")
+    INTEL_ROUTER_AVAILABLE = False
+try:
+    from api.routes.shadow_pilot import router as shadow_pilot_router
+
+    SHADOW_PILOT_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Shadow Pilot router not available: {e}")
+    SHADOW_PILOT_AVAILABLE = False
+
+# Import Agent Framework router
+try:
+    from api.routes.agents import router as agents_router
+
+    AGENTS_FRAMEWORK_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Agent Framework router not available: {e}")
+    AGENTS_FRAMEWORK_AVAILABLE = False
+
+# Import ChainIQ Operator router
+try:
+    from api.routes import chainiq_operator
+
+    CHAINIQ_OPERATOR_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: ChainIQ Operator router not available: {e}")
+    CHAINIQ_OPERATOR_AVAILABLE = False
+
+# Import Debug router
+try:
+    from api.routes import debug as debug_router_module
+
+    DEBUG_ROUTER_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Debug router not available: {e}")
+    DEBUG_ROUTER_AVAILABLE = False
+
+try:
+    from api.chainiq_service.router import router as chainiq_health_router
+
+    CHAINIQ_HEALTH_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: ChainIQ health router not available: {e}")
+    CHAINIQ_HEALTH_AVAILABLE = False
+from api.database import init_db
+import api.events.audit_log  # noqa: F401
+try:
+    from api.routes.sla import router as sla_router
+
+    SLA_ROUTER_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: SLA router not available: {e}")
+    SLA_ROUTER_AVAILABLE = False
 
 
 # Default module configuration
@@ -50,30 +243,16 @@ class ModuleExecutionRequest(BaseModel):
 
 
 class MultiSignalAnalysisRequest(BaseModel):
-    price_data: List[Dict[str, Any]] = Field(
-        ..., description="Historical price data for analysis"
-    )
-    signal_modules: Optional[List[str]] = Field(
-        None, description="List of signal modules to use (default: all)"
-    )
-    signal_weights: Optional[Dict[str, float]] = Field(
-        None, description="Custom weights for each signal"
-    )
-    include_individual_signals: bool = Field(
-        True, description="Include individual signal results"
-    )
+    price_data: List[Dict[str, Any]] = Field(..., description="Historical price data for analysis")
+    signal_modules: Optional[List[str]] = Field(None, description="List of signal modules to use (default: all)")
+    signal_weights: Optional[Dict[str, float]] = Field(None, description="Custom weights for each signal")
+    include_individual_signals: bool = Field(True, description="Include individual signal results")
 
 
 class MultiSignalBacktestRequest(BaseModel):
-    historical_data: List[Dict[str, Any]] = Field(
-        ..., description="Historical price data for backtesting"
-    )
-    initial_balance: float = Field(
-        10000, description="Starting balance for backtesting"
-    )
-    signal_modules: Optional[List[str]] = Field(
-        None, description="List of signal modules to use"
-    )
+    historical_data: List[Dict[str, Any]] = Field(..., description="Historical price data for backtesting")
+    initial_balance: float = Field(10000, description="Starting balance for backtesting")
+    signal_modules: Optional[List[str]] = Field(None, description="List of signal modules to use")
 
 
 class PipelineExecutionRequest(BaseModel):
@@ -84,9 +263,7 @@ class PipelineExecutionRequest(BaseModel):
 class ModuleRegistrationRequest(BaseModel):
     module_name: str = Field(..., description="Name to register the module as")
     module_path: str = Field(..., description="Python import path to the module")
-    config: Optional[Dict[str, Any]] = Field(
-        None, description="Configuration for the module"
-    )
+    config: Optional[Dict[str, Any]] = Field(None, description="Configuration for the module")
 
 
 class PipelineCreationRequest(BaseModel):
@@ -96,9 +273,7 @@ class PipelineCreationRequest(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str = "healthy"
-    timestamp: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     version: str = "1.0.0"
     modules_loaded: int
     active_pipelines: int
@@ -131,24 +306,126 @@ def ensure_default_modules_loaded() -> List[str]:
 # Pre-load default modules when the API module is imported so that
 # endpoints that execute modules immediately have them available.
 ensure_default_modules_loaded()
+init_db()
 
 # Create FastAPI app
 app = FastAPI(
-    title="Benson API",
-    description="Multi-Signal Decision Bot Modular Architecture API",
+    title="ChainBridge API",
+    description="Freight + Payments Intelligence Platform - Unified Gateway",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
 )
 
 # Add CORS middleware
+frontend_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:4173",
+    "http://127.0.0.1:4173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://chainboard-ui",
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=frontend_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include ChainIQ router if available
+if CHAINIQ_AVAILABLE:
+    app.include_router(chainiq_router)
+    print("✅ ChainIQ service registered")
+
+# Include ChainBoard router for the new dashboard UI
+if CHAINBOARD_AVAILABLE:
+    app.include_router(chainboard_router, prefix="/api")
+    print("✅ ChainBoard service registered")
+
+if CHAINBOARD_IOT_AVAILABLE:
+    app.include_router(chainboard_iot_router, prefix="/api")
+    print("✅ ChainBoard IoT service registered")
+
+if CHAINBOARD_REALTIME_AVAILABLE:
+    app.include_router(chainboard_realtime_router)
+    print("✅ ChainBoard Real-Time service registered")
+
+if CHAINBOARD_PAYMENTS_AVAILABLE:
+    app.include_router(chainboard_payments_router, prefix="/api")
+    print("✅ ChainBoard payments service registered")
+
+if CHAINBOARD_SETTLEMENTS_AVAILABLE:
+    app.include_router(chainboard_settlements_router, prefix="/api/chainboard")
+    print("✅ ChainBoard Settlements service registered")
+
+if CHAINDOCS_AVAILABLE:
+    app.include_router(chaindocs_router)
+    print("✅ ChainDocs service registered")
+
+if CHAINPAY_AVAILABLE:
+    app.include_router(chainpay_router)
+    print("✅ ChainPay service registered")
+if CHAINPAY_WEBHOOKS_AVAILABLE:
+    app.include_router(chainpay_webhooks_router)
+    print("✅ ChainPay webhooks registered")
+if EVENTS_ROUTER_AVAILABLE:
+    app.include_router(events_router)
+    print("✅ Event feed registered")
+if CHAIN_AUDIT_AVAILABLE:
+    app.include_router(chain_audit_router)
+    print("✅ ChainAudit registered")
+if CHAINSTAKE_AVAILABLE:
+    app.include_router(chainstake_router)
+    print("✅ ChainStake registered")
+if OPERATOR_CONSOLE_AVAILABLE:
+    app.include_router(operator_console_router)
+    print("✅ Operator Console routes registered")
+if LEGAL_ROUTER_AVAILABLE:
+    app.include_router(legal_router)
+    print("✅ Legal routes registered")
+if FINANCE_ROUTER_AVAILABLE:
+    app.include_router(finance_router)
+    print("✅ Finance routes registered")
+if INTEL_ROUTER_AVAILABLE:
+    app.include_router(intel_router)
+    print("✅ Intel routes registered")
+if SHADOW_PILOT_AVAILABLE:
+    app.include_router(shadow_pilot_router)
+    print("✅ Shadow Pilot registered")
+try:
+    from api.routes.operator import router as operator_router
+    app.include_router(operator_router)
+    print("✅ Operator routes registered")
+except Exception as e:
+    print(f"Warning: Operator router not available: {e}")
+try:
+    from api.routes.webhooks import router as webhooks_router
+    app.include_router(webhooks_router)
+    print("✅ Settlement webhook orchestrator registered")
+except Exception as e:
+    print(f"Warning: Settlement webhook router not available: {e}")
+
+if CHAINIQ_OPERATOR_AVAILABLE:
+    app.include_router(chainiq_operator.router)
+    print("✅ ChainIQ operator service registered")
+
+if DEBUG_ROUTER_AVAILABLE:
+    app.include_router(debug_router_module.router)
+    print("✅ Debug routes registered")
+
+if CHAINIQ_HEALTH_AVAILABLE:
+    app.include_router(chainiq_health_router)
+    print("✅ ChainIQ health service registered")
+if SLA_ROUTER_AVAILABLE:
+    app.include_router(sla_router)
+    print("✅ SLA routes registered")
+
+if AGENTS_FRAMEWORK_AVAILABLE:
+    app.include_router(agents_router, prefix="/api")
+    print("✅ Agent Framework service registered")
 
 
 @app.get("/", response_model=Dict[str, str])
@@ -249,9 +526,7 @@ async def create_pipeline(request: PipelineCreationRequest):
 
         # Add steps to the pipeline
         for step in request.steps:
-            pipeline.add_step(
-                step.get("name"), step.get("module_name"), step.get("config", {})
-            )
+            pipeline.add_step(step.get("name"), step.get("module_name"), step.get("config", {}))
 
         # Validate the pipeline
         validation = pipeline.validate_pipeline()
@@ -262,9 +537,7 @@ async def create_pipeline(request: PipelineCreationRequest):
             )
 
         pipelines[request.pipeline_name] = pipeline
-        metrics_collector.track_pipeline_creation(
-            request.pipeline_name, len(request.steps)
-        )
+        metrics_collector.track_pipeline_creation(request.pipeline_name, len(request.steps))
 
         return {
             "message": f"Pipeline '{request.pipeline_name}' created successfully",
@@ -281,9 +554,7 @@ async def create_pipeline(request: PipelineCreationRequest):
 async def get_pipeline_info(pipeline_name: str):
     """Get information about a specific pipeline."""
     if pipeline_name not in pipelines:
-        raise HTTPException(
-            status_code=404, detail=f"Pipeline '{pipeline_name}' not found"
-        )
+        raise HTTPException(status_code=404, detail=f"Pipeline '{pipeline_name}' not found")
 
     pipeline = pipelines[pipeline_name]
     return {
@@ -297,9 +568,7 @@ async def get_pipeline_info(pipeline_name: str):
 async def execute_pipeline(pipeline_name: str, request: PipelineExecutionRequest):
     """Execute a specific pipeline."""
     if pipeline_name not in pipelines:
-        raise HTTPException(
-            status_code=404, detail=f"Pipeline '{pipeline_name}' not found"
-        )
+        raise HTTPException(status_code=404, detail=f"Pipeline '{pipeline_name}' not found")
 
     try:
         pipeline = pipelines[pipeline_name]
@@ -308,9 +577,7 @@ async def execute_pipeline(pipeline_name: str, request: PipelineExecutionRequest
         result = pipeline.execute(request.input_data)
 
         execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
-        metrics_collector.track_pipeline_execution(
-            pipeline_name, execution_time, len(pipeline.steps), True
-        )
+        metrics_collector.track_pipeline_execution(pipeline_name, execution_time, len(pipeline.steps), True)
 
         return {
             "result": result,
@@ -394,9 +661,7 @@ async def multi_signal_analysis(request: MultiSignalAnalysisRequest):
                     result = module_manager.execute_module(module_name, {})
                 else:
                     # Other modules need price data
-                    result = module_manager.execute_module(
-                        module_name, {"price_data": request.price_data}
-                    )
+                    result = module_manager.execute_module(module_name, {"price_data": request.price_data})
 
                 individual_signals[module_name.replace("Module", "")] = result
 
@@ -405,9 +670,7 @@ async def multi_signal_analysis(request: MultiSignalAnalysisRequest):
                 continue
 
         if not individual_signals:
-            raise HTTPException(
-                status_code=400, detail="No signal modules executed successfully"
-            )
+            raise HTTPException(status_code=400, detail="No signal modules executed successfully")
 
         # Execute multi-signal aggregation
         aggregation_input = {
@@ -418,9 +681,7 @@ async def multi_signal_analysis(request: MultiSignalAnalysisRequest):
         if request.signal_weights:
             aggregation_input["signal_weights"] = request.signal_weights
 
-        aggregated_result = module_manager.execute_module(
-            "MultiSignalAggregatorModule", aggregation_input
-        )
+        aggregated_result = module_manager.execute_module("MultiSignalAggregatorModule", aggregation_input)
 
         execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
 
@@ -475,15 +736,15 @@ async def multi_signal_backtest(request: MultiSignalBacktestRequest):
                         # Use mock sentiment data for backtesting
                         result = module_manager.execute_module(module_name, {})
                     else:
-                        result = module_manager.execute_module(
-                            module_name, {"price_data": window_data}
-                        )
+                        result = module_manager.execute_module(module_name, {"price_data": window_data})
 
                     signal_history[module_name.replace("Module", "")].append(result)  # type: ignore
 
                 except Exception as e:
                     # Use neutral signal if module fails
-                    signal_history[module_name.replace("Module", "")].append({"signal": "HOLD", "confidence": 0.0, "error": str(e)})  # type: ignore
+                    signal_history[module_name.replace("Module", "")].append(
+                        {"signal": "HOLD", "confidence": 0.0, "error": str(e)}
+                    )  # type: ignore
 
         # Execute backtesting using multi-signal aggregator
         aggregator = module_manager.get_module("MultiSignalAggregatorModule")
@@ -534,9 +795,7 @@ async def get_available_signals():
                             "module_name": module_name,
                             "display_name": module_name.replace("Module", ""),
                             "version": info.get("version", "1.0.0"),
-                            "signal_type": info.get("schema", {})
-                            .get("metadata", {})
-                            .get("signal_type", "unknown"),
+                            "signal_type": info.get("schema", {}).get("metadata", {}).get("signal_type", "unknown"),
                             "schema": info.get("schema", {}),
                             "available": True,
                         }
@@ -557,6 +816,22 @@ async def get_available_signals():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/events/echo", response_model=Dict[str, Any])
+async def echo_event(payload: Dict[str, Any]):
+    """
+    Echo endpoint for visual heartbeat testing.
+
+    Accepts any JSON payload and processes it through DataProcessor.
+    Currently DataProcessor.process() echoes the payload back.
+    """
+    try:
+        # Process the payload through DataProcessor
+        result = data_processor.process(payload)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to process payload: {str(e)}")
+
+
 # Load default modules on startup
 @app.on_event("startup")
 async def startup_event():
@@ -570,6 +845,25 @@ async def startup_event():
             print(f"Newly available modules: {', '.join(newly_loaded)}")
         print(f"Available modules: {', '.join(module_manager.list_modules())}")
 
+        # Initialize ChainIQ storage if available
+        if CHAINIQ_AVAILABLE:
+            try:
+                from chainiq_service.storage import init_db
+
+                init_db()
+                print("✅ ChainIQ storage initialized")
+            except Exception as storage_err:
+                print(f"⚠️  ChainIQ storage initialization failed: {storage_err}")
+
+        # Start real-time event simulator if available
+        if CHAINBOARD_REALTIME_AVAILABLE:
+            try:
+                from api.realtime.simulator import start_simulator
+
+                start_simulator()
+            except Exception as sim_err:
+                print(f"⚠️  Real-time simulator failed to start: {sim_err}")
+
     except Exception as e:
         print(f"Warning: Failed to load some modules during startup: {e}")
 
@@ -577,6 +871,6 @@ async def startup_event():
 if __name__ == "__main__":
     # Run the server
     port = int(os.getenv("PORT", 8000))
-    host = os.getenv("HOST", "0.0.0.0")
+    host = os.getenv("HOST", "0.0.0")
 
     uvicorn.run("api.server:app", host=host, port=port, reload=True, log_level="info")

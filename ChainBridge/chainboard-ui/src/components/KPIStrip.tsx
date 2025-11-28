@@ -1,5 +1,6 @@
-import { NetworkVitals } from "../types";
 import { TrendingUp, AlertTriangle, Clock, Zap } from "lucide-react";
+
+import type { NetworkVitals } from "../lib/types";
 
 interface KPIStripProps {
   vitals: NetworkVitals;

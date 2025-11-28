@@ -159,6 +159,20 @@ class DataProcessor:
 
         return quality_report
 
+    def process(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Process a single payload and return it (echo for now).
+
+        This is a simple wrapper for testing and visual heartbeat.
+        Future implementations will add real processing logic.
+        """
+        # For now, just echo back the payload with a timestamp
+        return {
+            "original": payload,
+            "processed_at": datetime.now(timezone.utc).isoformat(),
+            "processor_id": id(self),
+        }
+
     def process_batch(
         self, data_list: List[Dict[str, Any]], data_type: str = "generic"
     ) -> Dict[str, Any]:

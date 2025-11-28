@@ -43,29 +43,32 @@ export interface RiskProfile {
   score: number; // 0-100
   category: RiskCategory;
   drivers: string[];
-  assessedAt: ISODateString;
+  assessed_at: ISODateString;
   watchlisted?: boolean;
 }
 
 export interface PaymentMilestone {
+  milestone_id: string;
   label: string;
   percentage: number; // 0-100
   state: "pending" | "released" | "blocked";
-  releasedAt?: ISODateString;
+  released_at?: ISODateString;
+  freight_token_id?: number;
 }
 
 export interface PaymentProfile {
   state: PaymentState;
-  totalValueUsd: number;
-  releasedPercentage: number;
-  holdsUsd: number;
+  total_valueUsd: number;
+  released_usd: number;
+  released_percentage: number;
+  holds_usd: number;
   milestones: PaymentMilestone[];
   updatedAt: ISODateString;
 }
 
 export interface GovernanceSnapshot {
-  proofpackStatus: "VERIFIED" | "FAILED" | "PENDING";
-  lastAudit: ISODateString;
+  proofpack_status: "VERIFIED" | "FAILED" | "PENDING";
+  last_audit: ISODateString;
   exceptions: ExceptionCode[];
 }
 
@@ -86,6 +89,7 @@ export interface Shipment {
   status: ShipmentStatus;
   origin: string;
   destination: string;
+  corridor: string;
   carrier: string;
   customer: string;
   freight: FreightDetail;
@@ -127,9 +131,32 @@ export interface IoTHealthSummary {
   coverage_percent: number;
 }
 
+export interface IoTHealthSummaryResponse {
+  iot_health: IoTHealthSummary;
+  generatedAt: ISODateString;
+}
+
 export interface ShipmentIoTSnapshot {
-  shipment_id: string;
+  shipmentId: string;
   latest_readings: IoTSensorReading[];
   alert_count_24h: number;
   critical_alerts_24h: number;
+}
+
+export interface ExceptionRow {
+  shipmentId: string;
+  lane: string;
+  current_status: ShipmentStatus;
+  riskScore: number;
+  payment_state: PaymentState;
+  age_of_issue: string;
+  issue_types: ExceptionCode[];
+  last_update: string;
+}
+
+export interface NetworkVitals {
+  active_shipments: number;
+  on_time_percent: number;
+  at_risk_shipments: number;
+  open_payment_holds: number;
 }
