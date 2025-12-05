@@ -7,5 +7,6 @@ export type {
   Severity,
   IoTSensorReading,
   IoTHealthSummary,
+  IoTHealthSummaryResponse,
   ShipmentIoTSnapshot,
 } from "./types";

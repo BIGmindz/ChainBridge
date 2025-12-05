@@ -68,9 +68,7 @@ class DataProcessor:
             for variation in variations:
                 if variation in data:
                     if standard_field == "timestamp":
-                        normalized[standard_field] = self.normalize_timestamp(
-                            data[variation]
-                        )
+                        normalized[standard_field] = self.normalize_timestamp(data[variation])
                     elif standard_field in ["price", "volume"]:
                         normalized[standard_field] = float(data[variation]) if data[variation] is not None else None  # type: ignore
                     else:
@@ -135,11 +133,7 @@ class DataProcessor:
         non_null_fields = 0
 
         for key, value in data.items():
-            if (
-                value is None
-                or value == ""
-                or (isinstance(value, str) and value.strip() == "")
-            ):
+            if value is None or value == "" or (isinstance(value, str) and value.strip() == ""):
                 null_fields.append(key)  # type: ignore
             else:
                 non_null_fields += 1
@@ -148,9 +142,7 @@ class DataProcessor:
             quality_report["issues"].append(f"Null/empty fields: {null_fields}")  # type: ignore
 
         # Calculate completeness score
-        quality_report["completeness_score"] = (
-            non_null_fields / total_fields if total_fields > 0 else 0.0
-        )
+        quality_report["completeness_score"] = non_null_fields / total_fields if total_fields > 0 else 0.0
 
         # Mark as invalid if completeness is too low
         if quality_report["completeness_score"] < 0.5:
@@ -159,9 +151,21 @@ class DataProcessor:
 
         return quality_report
 
-    def process_batch(
-        self, data_list: List[Dict[str, Any]], data_type: str = "generic"
-    ) -> Dict[str, Any]:
+    def process(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Process a single payload and return it (echo for now).
+
+        This is a simple wrapper for testing and visual heartbeat.
+        Future implementations will add real processing logic.
+        """
+        # For now, just echo back the payload with a timestamp
+        return {
+            "original": payload,
+            "processed_at": datetime.now(timezone.utc).isoformat(),
+            "processor_id": id(self),
+        }
+
+    def process_batch(self, data_list: List[Dict[str, Any]], data_type: str = "generic") -> Dict[str, Any]:
         """Process a batch of data records."""
         results = {
             "processed": [],
@@ -206,6 +210,5 @@ class DataProcessor:
         return {
             "total_processed": self.processed_count,
             "total_errors": self.error_count,
-            "error_rate": self.error_count
-            / max(self.processed_count + self.error_count, 1),
+            "error_rate": self.error_count / max(self.processed_count + self.error_count, 1),
         }

@@ -1,26 +1,49 @@
+import type { LucideIcon } from "lucide-react";
+import {
+    Activity,
+    AlertTriangle,
+    Coins,
+    Command,
+    FlaskConical,
+    LayoutDashboard,
+    ListTodo,
+    Menu,
+    PackageSearch,
+    Radar,
+    Search,
+    TrendingUp,
+    User,
+    X,
+} from "lucide-react";
 import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import {
-  LayoutDashboard,
-  PackageSearch,
-  AlertTriangle,
-  Search,
-  User,
-  Activity,
-  Menu,
-  X,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+
+import { useDemo } from "../core/demo/DemoContext";
+
+import { AlertsBell } from "./AlertsBell";
+import { AlertsDrawer } from "./AlertsDrawer";
+import { DemoControllerBar } from "./DemoControllerBar";
+import { DemoSidebar } from "./DemoSidebar";
 
 const navItems: { to: string; label: string; Icon: LucideIcon }[] = [
-  { to: "/", label: "Overview", Icon: LayoutDashboard },
+  { to: "/", label: "Global Intelligence", Icon: Radar },
+  { to: "/overview", label: "Overview", Icon: LayoutDashboard },
   { to: "/shipments", label: "Shipments", Icon: PackageSearch },
+  { to: "/oc", label: "The OC", Icon: Command },
+  { to: "/chainpay", label: "ChainPay", Icon: Coins },
+  { to: "/settlements", label: "Settlements", Icon: Coins },
   { to: "/exceptions", label: "Exceptions", Icon: AlertTriangle },
+  { to: "/triage", label: "Triage", Icon: ListTodo },
+  { to: "/shadow-pilot", label: "Shadow Pilot", Icon: TrendingUp },
+  { to: "/sandbox", label: "Sandbox", Icon: FlaskConical },
 ];
 
 export default function Layout(): JSX.Element {
   const [searchValue, setSearchValue] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [alertsOpen, setAlertsOpen] = useState(false);
+  const { state: demoState } = useDemo();
+  const highlightAlertsBell = demoState.currentStep?.highlightKey === "alerts_bell";
 
   const handleSearch = (event: React.FormEvent): void => {
     event.preventDefault();
@@ -94,6 +117,10 @@ export default function Layout(): JSX.Element {
               <span>Last sync: &lt;30s</span>
               <span>Environment: Sandbox</span>
             </div>
+            <AlertsBell
+              onClick={() => setAlertsOpen(true)}
+              highlighted={highlightAlertsBell}
+            />
             <button
               type="button"
               className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-800/80 bg-slate-950/80 text-slate-200"
@@ -133,12 +160,15 @@ export default function Layout(): JSX.Element {
           </div>
         )}
 
-        <main className="relative z-10 flex-1 px-4 py-4">
-          <div className="mx-auto h-full max-w-6xl">
-            <Outlet />
-          </div>
+                <main className="relative z-0 flex-1 p-6">
+          <Outlet />
         </main>
       </div>
+
+      {/* Demo Mode Overlays */}
+      <DemoControllerBar />
+      <DemoSidebar />
+      <AlertsDrawer open={alertsOpen} onClose={() => setAlertsOpen(false)} />
     </div>
   );
 }

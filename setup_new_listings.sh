@@ -17,13 +17,21 @@ echo -e "${BOLD}${BLUE}   New Listings Radar Setup Script     ${RESET}"
 echo -e "${BOLD}${BLUE}=======================================${RESET}"
 echo
 
-# Check for Python 3
+# Check for Python 3.11+
 echo -e "${BOLD}Checking Python version...${RESET}"
 if command -v python3 &>/dev/null; then
     PYTHON_VERSION=$(python3 --version 2>&1)
     echo -e "${GREEN}✓ Python found: ${PYTHON_VERSION}${RESET}"
+    if ! python3 - <<'PY'
+import sys
+sys.exit(0 if sys.version_info >= (3, 11) else 1)
+PY
+    then
+        echo -e "${RED}✗ Python 3.11 or higher is required for this project.${RESET}"
+        exit 1
+    fi
 else
-    echo -e "${RED}✗ Python 3 not found. Please install Python 3.8 or higher.${RESET}"
+    echo -e "${RED}✗ Python 3 not found. Please install Python 3.11 or higher.${RESET}"
     exit 1
 fi
 

@@ -2,6 +2,6 @@
 Database models for ChainBridge application.
 """
 
-from .driver import Driver, Base
+from .driver import Base, Driver
 
 __all__ = ["Driver", "Base"]

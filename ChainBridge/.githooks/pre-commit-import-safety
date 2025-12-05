@@ -1,0 +1,8 @@
+#!/bin/bash
+source $(git rev-parse --show-toplevel)/.venv/bin/activate
+python scripts/validate_imports.py
+RESULT=$?
+if [ $RESULT -ne 0 ]; then
+  echo "[PRE-COMMIT] Import safety validation failed. Fix your environment before committing."
+  exit 1
+fi

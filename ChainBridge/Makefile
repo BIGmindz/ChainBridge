@@ -4,38 +4,44 @@ COMPOSE?=docker compose
 .PHONY: help venv install run test lint fmt docker-build up down logs shell api-server rsi-compat system-test
 
 help:
-	@echo "Benson Multi-Signal Decision Bot - Modular Architecture"
+	@echo "ChainBridge - Freight + Payments Intelligence Platform"
 	@echo ""
 	@echo "Available targets:"
-	@echo "  venv         - Create Python virtual environment"
-	@echo "  install      - Install dependencies" 
-	@echo "  run          - Run legacy RSI bot"
-	@echo "  run-live     - Run RSI bot continuously (PAPER=false) using lean env"
-	@echo "  api-server   - Start API server"
-	@echo "  rsi-compat   - Run RSI bot in compatibility mode"
-	@echo "  system-test  - Run comprehensive system tests"
-	@echo "  test         - Run pytest tests"
-	@echo "  lint         - Run code linting"
-	@echo "  fmt          - Format code"
-	@echo "  docker-build - Build Docker images"
-	@echo "  up           - Start API server with Docker"
-	@echo "  down         - Stop Docker containers"
-	@echo "  logs         - View container logs"
-	@echo "  shell        - Open shell in container"
-	@echo "  venv-lean    - Create lean runtime venv (no TF/grpc/absl)"
-	@echo "  install-lean - Install minimal runtime deps into .venv-lean"
-	@echo "  run-lean     - Run multi-signal test via lean env"
-	@echo "  run-integrator-lean - Run integrator smoke test via lean env"
-	@echo "  quick-checks - Run lean quick checks (tests + integrator)"
-	@echo "  pre-commit-install - Install pre-commit and register hooks"
-	@echo "  pre-commit-run     - Run pre-commit on all files"
-	@echo "  run-once-paper     - Run RSI bot once (PAPER=true) using lean env"
-	@echo "  run-once-live      - Run RSI bot once (PAPER=false) using lean env"
-	@echo "  preflight-order    - Preview normalized order params (no placement)"
-	@echo "  select-dynamic     - Select top volatile USD symbols and update config"
-	@echo "  refresh-and-preflight - Refresh symbols dynamically and preflight all"
-	@echo "  docs-lint    - Check markdown fences + markdownlint (non-fatal)"
-	@echo "  docs-fix     - Normalize fences and show pending changes"
+	@echo ""
+	@echo "Testing & Quality:"
+	@echo "  api-tests              - Run API health & echo tests"
+	@echo "  api-tests-coverage     - API tests with coverage report"
+	@echo "  iq-tests               - Run ChainIQ risk scoring + persistence tests"
+	@echo "  iq-demo-seed           - Seed database with demo ChainIQ data"
+	@echo "  pytest-all             - Run all tests"
+	@echo "  coverage               - Full coverage report (fail if <70%)"
+	@echo "  coverage-html          - Generate HTML coverage report"
+	@echo "  quick-checks           - Fast sanity checks (RSI + integrator)"
+	@echo "  alex-tests             - ALEX agent contract and mantra tests"
+	@echo ""
+	@echo "Development:"
+	@echo "  venv                   - Create Python virtual environment"
+	@echo "  install                - Install dependencies"
+	@echo "  api-server             - Start FastAPI server"
+	@echo "  lint                   - Run code linting"
+	@echo "  fmt                    - Format code"
+	@echo "  pre-commit-install     - Install pre-commit hooks"
+	@echo "  pre-commit-run         - Run pre-commit on all files"
+	@echo "  test-alex              - Run ALEX governance/agent tests"
+	@echo ""
+	@echo "Docker:"
+	@echo "  docker-build           - Build Docker images"
+	@echo "  up                     - Start API server with Docker"
+	@echo "  down                   - Stop Docker containers"
+	@echo "  logs                   - View container logs"
+	@echo "  shell                  - Open shell in container"
+	@echo ""
+	@echo "Legacy BensonBot (Archived):"
+	@echo "  run                    - Run legacy RSI bot"
+	@echo "  run-live               - Run RSI bot continuously"
+	@echo "  rsi-compat             - Run RSI bot in compatibility mode"
+	@echo "  run-once-paper         - Run RSI bot once (paper mode)"
+	@echo "  select-dynamic         - Select volatile USD symbols"
 
 venv:
 	@[ -d .venv ] || python3 -m venv .venv
@@ -97,7 +103,7 @@ up-rsi:
 	$(COMPOSE) --profile rsi-only up --build benson-rsi
 
 # Lean runtime environment (isolated from heavy native ML stacks)
-.PHONY: venv-lean install-lean run-lean run-integrator-lean quick-checks pre-commit-install pre-commit-run
+.PHONY: venv-lean install-lean run-lean run-integrator-lean quick-checks alex-tests pre-commit-install pre-commit-run
 
 venv-lean:
 	@[ -d .venv-lean ] || python3 -m venv .venv-lean
@@ -120,7 +126,52 @@ quick-checks: install-lean
 	  python -m pip install -q pytest && \
 	  python -c "import yaml, os; print('PyYAML import OK')" && \
 	  pytest -q tests/test_rsi_scenarios.py && \
-	  python scripts/integrator_smoke_test.py
+	  python scripts/integrator_smoke_test.py && \
+	  python -m scripts.ci.check_docs_canonical && \
+	  python -m scripts.ci.check_no_legacy_imports && \
+	  ./scripts/ci/check_agents.sh
+
+alex-tests:
+	@. .venv/bin/activate && pytest -q tests/agents
+
+.PHONY: test-alex
+test-alex:
+	@. .venv/bin/activate && pytest -q tests/agents
+
+api-tests:
+	@. .venv/bin/activate && python -m pytest tests/test_api_health_and_echo.py -q
+
+api-tests-coverage:
+	@. .venv/bin/activate && \
+	  python -m pytest tests/test_api_health_and_echo.py \
+	    --cov=api --cov=core \
+	    --cov-report=term-missing \
+	    --cov-report=html:htmlcov
+
+iq-tests:
+	@. .venv/bin/activate && \
+	  python -m pytest tests/test_iq_risk_scoring.py tests/test_iq_persistence.py -v
+
+iq-demo-seed:
+	@. .venv/bin/activate && python chainiq-service/demo_seed.py
+
+pytest-all:
+	@. .venv/bin/activate && python -m pytest tests/ -q
+
+coverage:
+	@. .venv/bin/activate && \
+	  python -m pytest tests/ \
+	    --cov=api --cov=core --cov=tracking \
+	    --cov-report=term-missing \
+	    --cov-report=html:htmlcov \
+	    --cov-fail-under=70
+
+coverage-html:
+	@. .venv/bin/activate && \
+	  python -m pytest tests/ \
+	    --cov=api --cov=core --cov=tracking \
+	    --cov-report=html:htmlcov && \
+	  echo "Coverage report: htmlcov/index.html"
 
 run-once-paper: install-lean
 	@. .venv-lean/bin/activate && export PAPER=true && export EXCHANGE=$${EXCHANGE:-kraken} && python benson_rsi_bot.py --once

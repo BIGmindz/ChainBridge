@@ -26,3 +26,44 @@ local_repo_snapshot.bundle
 Dockerfile.*.local
 docker-compose.override.yml
 .venv-lean/
+
+# UI build artifacts and code dumps
+*.zip
+*-source*.txt
+*-full-source.txt
+
+# Environments
+.env
+.env.local
+.env.*.local
+
+# Data & Logs
+data/
+logs/
+*.log
+
+# Python Artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+.pytest_cache/
+venv/
+.venv/
+
+# Node Artifacts
+node_modules/
+dist/
+build/
+
+# Testing / coverage
+.coverage
+.coverage.*
+htmlcov/
+coverage*/
+reports*/
+
+# OS junk
+.DS_Store
+Thumbs.db

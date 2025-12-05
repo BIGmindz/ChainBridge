@@ -1,8 +1,5 @@
 """
-Business Impact Tracking
-
-This package provides metrics collection and business impact tracking
-for the Benson modular architecture.
+Tracking package for ChainBridge metrics collection.
 """
 
-__all__ = []
+__all__ = ["MetricsCollector"]

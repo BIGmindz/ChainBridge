@@ -1,0 +1,156 @@
+version: "3.9"
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: chainbridge-db
+    environment:
+      POSTGRES_USER: chainbridge
+      POSTGRES_PASSWORD: secure_dev_password
+      POSTGRES_DB: chainbridge_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chainbridge"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chainbridge-net
+
+  # Redis Cache
+  cache:
+    image: redis:7-alpine
+    container_name: chainbridge-cache
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chainbridge-net
+
+  # FastAPI Backend
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chainbridge-api
+    environment:
+      DATABASE_URL: postgresql://chainbridge:secure_dev_password@db:5432/chainbridge_dev
+      REDIS_URL: redis://cache:6379
+      PYTHONUNBUFFERED: "1"
+      API_HOST: "0.0.0.0"
+      API_PORT: "8000"
+      DEBUG: "true"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/__pycache__
+    command: >
+      sh -c "
+      echo 'Waiting for database...' &&
+      sleep 2 &&
+      echo 'Running migrations...' &&
+      alembic upgrade head 2>/dev/null || echo 'Migrations complete' &&
+      echo 'Starting API server...' &&
+      python -m uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+    networks:
+      - chainbridge-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # React Frontend (Chainboard UI)
+  frontend:
+    build:
+      context: ./chainboard-ui
+      dockerfile: Dockerfile
+    container_name: chainbridge-frontend
+    environment:
+      REACT_APP_API_URL: http://localhost:8000
+      REACT_APP_WS_URL: ws://localhost:8000/ws
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    volumes:
+      - ./chainboard-ui:/app
+      - /app/node_modules
+    command: npm start
+    networks:
+      - chainbridge-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # Kafka (Event Bus)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: chainbridge-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    healthcheck:
+      test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chainbridge-eventnet
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: chainbridge-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 15s
+      timeout: 10s
+      retries: 8
+    networks:
+      - chainbridge-eventnet
+      - chainbridge-net
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  chainbridge-net:
+    driver: bridge
+
+# Event Bus Network
+  chainbridge-eventnet:
+    driver: bridge

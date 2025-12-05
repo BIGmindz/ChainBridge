@@ -5,25 +5,20 @@ Goal:
 - Provide an API for driver identity and onboarding.
 - Expose endpoints to create and fetch driver records.
 - Use SQLAlchemy and SQLite (for now) for persistence.
-- This is the MVP for the ChainBridge 'identity layer'.
-
-Tasks for Copilot:
-- Keep endpoints simple: POST /drivers, GET /drivers, GET /drivers/{id}.
 - Use Pydantic models for request/response schemas.
 - Use dependency-injected DB sessions.
-- Make the code clean, explicit, and easy to extend (we'll add compliance checks later).
-"""
-
-from fastapi import FastAPI, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+
+from core.import_safety import ensure_import_safety
+ensure_import_safety()
 
 from .database import get_db, init_db
 from .models import Driver as DriverModel
 from .schemas import (
     DriverCreate,
-    DriverUpdate,
-    DriverResponse,
     DriverListResponse,
+    DriverResponse,
+    DriverUpdate,
 )
 
 app = FastAPI(
@@ -67,9 +62,7 @@ async def create_driver(
     existing = db.query(DriverModel).filter(DriverModel.email == driver.email).first()
 
     if existing:
-        raise HTTPException(
-            status_code=400, detail=f"Driver with email {driver.email} already exists"
-        )
+        raise HTTPException(status_code=400, detail=f"Driver with email {driver.email} already exists")
 
     # Create new driver
     db_driver = DriverModel(**driver.model_dump())

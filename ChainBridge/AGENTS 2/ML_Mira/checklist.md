@@ -1,0 +1,4 @@
+- Read the task; identify affected ML/signal components.
+- Inspect relevant code/data paths and tests.
+- Validate feature and model assumptions; recommend tests/metrics.
+- Propose minimal, safe changes aligned with the ChainBridge mantra and ALEX governance.

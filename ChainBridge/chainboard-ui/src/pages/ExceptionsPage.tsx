@@ -1,5 +1,3 @@
-import { useMemo } from "react";
-import type { ReactNode } from "react";
 import {
   AlertTriangle,
   Clock,
@@ -7,6 +5,9 @@ import {
   ShieldAlert,
   Truck,
 } from "lucide-react";
+import { useMemo } from "react";
+import type { ReactNode } from "react";
+
 import { MOCK_SHIPMENTS } from "../lib/mockData";
 import type { Shipment } from "../lib/types";
 

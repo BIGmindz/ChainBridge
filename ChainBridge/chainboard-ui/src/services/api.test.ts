@@ -1,6 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { apiClient, getApiClient, mockApiClient } from "./api";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { config } from "../config/env";
+import { fetchMock, mockJsonResponse } from "../test/mockFetch";
+
+import { apiClient, getApiClient, mockApiClient } from "./api";
 
 /**
  * API Service Tests
@@ -46,39 +49,34 @@ describe("API Client Factory", () => {
 
       expect(Array.isArray(shipments)).toBe(true);
       expect(shipments.length).toBeGreaterThan(0);
-      expect(shipments[0]).toHaveProperty("shipment_id");
+      expect(shipments[0]).toHaveProperty("shipmentId");
       expect(shipments[0]).toHaveProperty("carrier");
       expect(shipments[0]).toHaveProperty("customer");
     });
 
     it("should return mock proof pack data from getProofPack()", async () => {
-      const proofPack = await mockApiClient.getProofPack("pp_test_001");
+      const proofPack = await mockApiClient.getProofPack("ship_test_001");
 
-      expect(proofPack).toHaveProperty("pack_id");
-      expect(proofPack).toHaveProperty("shipment_id");
-      expect(proofPack).toHaveProperty("generated_at");
-      expect(proofPack).toHaveProperty("manifest_hash");
-      expect(proofPack).toHaveProperty("status");
-      expect(
-        ["SUCCESS", "ERROR", "PENDING"].includes(proofPack.status)
-      ).toBe(true);
+      expect(proofPack).toHaveProperty("shipmentId");
+      expect(proofPack).toHaveProperty("generatedAt");
+      expect(proofPack).toHaveProperty("version");
+      expect(proofPack.risk_snapshot).toBeTruthy();
     });
 
     it("should generate unique proof pack IDs", async () => {
-      const pack1 = await mockApiClient.getProofPack("pp_001");
-      const pack2 = await mockApiClient.getProofPack("pp_002");
+      const pack1 = await mockApiClient.getProofPack("ship_alpha");
+      const pack2 = await mockApiClient.getProofPack("ship_beta");
 
-      expect(pack1.pack_id).not.toBe(pack2.pack_id);
+      expect(pack1.shipmentId).not.toBe(pack2.shipmentId);
     });
 
     it("should return mock vitals data from getNetworkVitals()", async () => {
       const vitals = await mockApiClient.getNetworkVitals();
 
-      expect(vitals).toHaveProperty("total_shipments");
-      expect(vitals).toHaveProperty("in_transit");
-      expect(vitals).toHaveProperty("delayed");
-      expect(vitals).toHaveProperty("delivered");
-      expect(vitals).toHaveProperty("flagged_for_review");
+      expect(vitals).toHaveProperty("active_shipments");
+      expect(vitals).toHaveProperty("on_time_percent");
+      expect(vitals).toHaveProperty("at_risk_shipments");
+      expect(vitals).toHaveProperty("open_payment_holds");
     });
   });
 
@@ -103,20 +101,28 @@ describe("API Client Factory", () => {
 
   describe("apiClient (default export)", () => {
     it("should be a valid API client instance", async () => {
-      // Get a shipment via the default client
+      const mockShipments = await mockApiClient.getShipments();
+      const responsePayload = mockShipments.slice(0, 1);
+
+      fetchMock.mockImplementationOnce(() => mockJsonResponse(responsePayload));
+
       const shipments = await apiClient.getShipments();
 
       expect(Array.isArray(shipments)).toBe(true);
-      expect(shipments.length).toBeGreaterThan(0);
+      expect(shipments).toHaveLength(1);
+      expect(shipments[0]).toMatchObject({ shipmentId: responsePayload[0].shipmentId });
+      expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining("/shipments"), expect.anything());
     });
 
     it("should have ProofPack methods", async () => {
-      // Test that proof pack methods exist and work
-      const proofPack = await apiClient.getProofPack("pp_test_123");
+      const mockProofPack = await mockApiClient.getProofPack("ship_test_123");
 
-      expect(proofPack).toHaveProperty("pack_id");
-      expect(proofPack).toHaveProperty("manifest_hash");
-      expect(proofPack.status).toBeDefined();
+      fetchMock.mockImplementationOnce(() => mockJsonResponse(mockProofPack));
+
+      const proofPack = await apiClient.getProofPack("ship_test_123");
+
+      expect(proofPack).toEqual(mockProofPack);
+      expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining("/proofpacks/"), expect.anything());
     });
   });
 });

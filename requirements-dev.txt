@@ -1,21 +1,15 @@
-# Development dependencies with ML support
-# Install with: pip install -r requirements-dev.txt
-
-# Base dependencies from requirements.txt
--r requirements.txt
-
-# Machine Learning dependencies
-tensorflow>=2.8.0
-scikit-learn>=1.0.0
-joblib>=1.1.0
-
-# Visualization dependencies
-seaborn>=0.11.0
-matplotlib>=3.5.0
-
-# Scheduling
-schedule>=1.1.0
-
-# Other utilities
-pandas>=1.3.0
-numpy>=1.21.0
+pytest
+pytest-asyncio
+pytest-cov
+pygments
+markupsafe
+werkzeug
+fastapi
+uvicorn
+pydantic
+jinja2
+httpx
+requests
+typing-extensions
+black
+ruff
