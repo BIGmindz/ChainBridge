@@ -12,10 +12,6 @@ class RicardianInstrumentStatus(str, Enum):
     TERMINATED = "TERMINATED"
 
 
-class RicardianInstrumentStatus(str, Enum):
-    ACTIVE = "ACTIVE"
-    FROZEN = "FROZEN"
-    TERMINATED = "TERMINATED"
 
 
 class OperatorQueueItem(BaseModel):
