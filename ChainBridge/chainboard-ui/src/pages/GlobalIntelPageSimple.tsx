@@ -16,6 +16,14 @@ const formatCurrency = (value: number) =>
 
 type RiskFilter = 'ALL' | RiskLevel;
 
+const normalizeStatus = (status: string): IntelShipmentPoint["status"] => {
+  const normalized = (status ?? "").toUpperCase();
+  if (normalized === 'DELAYED') return 'DELAYED';
+  if (normalized === 'AT_RISK' || normalized === 'AT RISK') return 'AT_RISK';
+  if (normalized === 'ON_TIME' || normalized === 'ON TIME') return 'ON_TIME';
+  return undefined;
+};
+
 function filterIntelPositions(
   positions: IntelShipmentPoint[],
   filters: {
@@ -63,7 +71,7 @@ export default function GlobalIntelPageSimple() {
         valueUsd: shipment.cargoValueUsd,
         riskScore: Math.min(100, Math.max(0, (shipment.riskScore ?? 0) * 100)),
         riskCategory: shipment.riskCategory,
-        status: shipment.status,
+        status: normalizeStatus(shipment.status),
         stakeApr: shipment.stakeApr ?? 0,
         stakeCapacityUsd: shipment.stakeCapacityUsd ?? 0,
       })),

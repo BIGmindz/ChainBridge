@@ -9,12 +9,12 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import { fetchIoTHealth } from "../services/operatorApi";
+import { iotClient } from "../services/iotClient";
 
 export function useIoTHealth() {
   return useQuery({
-    queryKey: ["iotHealth"],
-    queryFn: fetchIoTHealth,
+    queryKey: ["iotHealthSummary"],
+    queryFn: () => iotClient.getHealthSummary(),
     refetchInterval: 30_000, // Poll every 30s (same as SLA)
     staleTime: 25_000, // Consider stale after 25s
     retry: 2,

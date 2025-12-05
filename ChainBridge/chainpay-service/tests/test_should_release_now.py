@@ -7,7 +7,7 @@ Tests the risk-based payment release strategy:
 - HIGH risk (0.67-1.0): MANUAL_REVIEW for POD/CLAIM, PENDING for PICKUP
 """
 
-from app.payment_rails import should_release_now, ReleaseStrategy
+from app.payment_rails import ReleaseStrategy, should_release_now
 
 
 class TestLowRiskReleaseBehavior:
@@ -145,9 +145,7 @@ class TestEventTypeConsistency:
         """Test uppercase event type names."""
         assert should_release_now(0.15, "PICKUP_CONFIRMED") == ReleaseStrategy.IMMEDIATE
         assert should_release_now(0.15, "POD_CONFIRMED") == ReleaseStrategy.IMMEDIATE
-        assert (
-            should_release_now(0.15, "CLAIM_WINDOW_CLOSED") == ReleaseStrategy.IMMEDIATE
-        )
+        assert should_release_now(0.15, "CLAIM_WINDOW_CLOSED") == ReleaseStrategy.IMMEDIATE
 
     def test_medium_risk_pod_uppercase(self) -> None:
         """Test MEDIUM-risk with uppercase POD_CONFIRMED."""
@@ -157,13 +155,8 @@ class TestEventTypeConsistency:
     def test_high_risk_events_uppercase(self) -> None:
         """Test HIGH-risk with uppercase event types."""
         assert should_release_now(0.85, "PICKUP_CONFIRMED") == ReleaseStrategy.PENDING
-        assert (
-            should_release_now(0.85, "POD_CONFIRMED") == ReleaseStrategy.MANUAL_REVIEW
-        )
-        assert (
-            should_release_now(0.85, "CLAIM_WINDOW_CLOSED")
-            == ReleaseStrategy.MANUAL_REVIEW
-        )
+        assert should_release_now(0.85, "POD_CONFIRMED") == ReleaseStrategy.MANUAL_REVIEW
+        assert should_release_now(0.85, "CLAIM_WINDOW_CLOSED") == ReleaseStrategy.MANUAL_REVIEW
 
 
 class TestRegressionAndCrossScenarios:

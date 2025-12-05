@@ -417,20 +417,36 @@ class MockApiClient {
 
   async getMockIoTHealthSummary(): Promise<IoTHealthSummary> {
     await this.delay(150);
+
     const shipments = Array.from(this.mockShipments.values());
-    const shipmentsWithIoT = Math.round(shipments.length * 0.65);
-    const alertsLastDay = randomInt(15, 45);
-    const criticalAlerts = Math.round(alertsLastDay * 0.2);
+    const deviceCount = Math.max(10, shipments.length * randomInt(3, 6));
+    const offline = Math.max(0, Math.round(deviceCount * 0.05));
+    const degraded = Math.max(0, Math.round(deviceCount * 0.08));
+    const online = Math.max(deviceCount - offline - degraded, 0);
+
+    const anomalies: IoTHealthSummary["anomalies"] = Array.from({ length: randomInt(2, 6) }).map((_, idx) => {
+      const shipment = shipments[idx % shipments.length];
+      return {
+        deviceId: `CB-IOT-${1000 + idx}`,
+        severity: ["LOW", "MEDIUM", "HIGH", "CRITICAL"][idx % 4] as IoTHealthSummary["anomalies"][number]["severity"],
+        label: shipment
+          ? `${shipment.shipmentId} sensor deviation`
+          : `Sensor ${idx + 1} anomaly`,
+        lastSeen: new Date(Date.now() - idx * 60_000).toISOString(),
+        shipmentReference: shipment?.shipmentId,
+        lane: shipment ? `${shipment.origin} → ${shipment.destination}` : undefined,
+      };
+    });
 
     return {
-      shipments_with_iot: shipmentsWithIoT,
-      active_sensors: shipmentsWithIoT * randomInt(4, 8),
-      alerts_last_24h: alertsLastDay,
-      critical_alerts_last_24h: criticalAlerts,
-      coverage_percent:
-        shipments.length > 0
-          ? Math.min(100, Math.round((shipmentsWithIoT / shipments.length) * 100))
-          : 0,
+      fleetId: "CHAINBOARD-DEMO-FLEET",
+      asOf: new Date().toISOString(),
+      deviceCount,
+      online,
+      offline,
+      degraded,
+      anomalies,
+      latencySeconds: randomInt(8, 32),
     };
   }
 

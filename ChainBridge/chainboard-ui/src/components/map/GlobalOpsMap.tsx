@@ -1,14 +1,13 @@
-// @ts-expect-error - react-map-gl types are missing in this environment
 import { HexagonLayer } from '@deck.gl/aggregation-layers';
 import { AmbientLight, LightingEffect, PointLight } from '@deck.gl/core';
-import { ScatterplotLayer } from '@deck.gl/layers';
+import { ScatterplotLayer, LineLayer, IconLayer } from '@deck.gl/layers';
 import DeckGL from '@deck.gl/react';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Map } from 'react-map-gl/mapbox';
 
 import { fetchGlobalMapState } from '../../services/telemetryApi';
-import type { GlobalMapState, VesselTelemetry } from '../../types/map';
+import type { GlobalMapState, VesselTelemetry, GhostShip } from '../../types/map';
 
 // --- CONFIGURATION ---
 // ✅ SATELLITE UPLINK ESTABLISHED
@@ -37,6 +36,16 @@ export const GlobalOpsMap = () => {
 
   const [time, setTime] = useState(0);
   const [mapData, setMapData] = useState<GlobalMapState | null>(null);
+
+  const ghostShips: GhostShip[] = useMemo(() => {
+    if (!mapData?.vessels) return [];
+    return mapData.vessels.map((v) => ({
+      shipmentId: v.id,
+      plannedCoordinates: [v.origin.longitude, v.origin.latitude],
+      actualCoordinates: [v.coordinates.longitude, v.coordinates.latitude],
+      gapDistanceKm: 0,
+    }));
+  }, [mapData?.vessels]);
 
   // Fetch Data
   useEffect(() => {
@@ -97,6 +106,72 @@ export const GlobalOpsMap = () => {
 
     // 2. RISK BEACONS (Pulsing Red Circles)
     // Highlights critical failures
+    // GHOST FLEET: Planned EDI positions
+    new ScatterplotLayer({
+      id: 'ghost-fleet',
+      data: ghostShips,
+      getPosition: (d: GhostShip) => d.plannedCoordinates,
+      getRadius: 5000,
+      getFillColor: [100, 116, 139, 100],
+      stroked: true,
+      getLineColor: [100, 116, 139, 180],
+      getLineWidth: 2000,
+      filled: false,
+      pickable: true,
+      onHover: ({ object, x, y }) => {
+        if (object) {
+          const tooltip = document.getElementById('ghost-tooltip');
+          if (tooltip) {
+            tooltip.style.display = 'block';
+            tooltip.style.left = `${x + 12}px`;
+            tooltip.style.top = `${y - 12}px`;
+            tooltip.innerHTML = `LATENCY GAP: <b>${object.gapDistanceKm.toFixed(1)} km</b><br/><span style='font-size:11px'>EDI Plan vs IoT Reality</span>`;
+          }
+        }
+      },
+      onLeave: () => {
+        const tooltip = document.getElementById('ghost-tooltip');
+        if (tooltip) tooltip.style.display = 'none';
+      },
+    }),
+
+    // TETHER: Line from planned to actual
+    new LineLayer({
+      id: 'reality-gap-tether',
+      data: ghostShips,
+      getSourcePosition: (d: GhostShip) => d.plannedCoordinates,
+      getTargetPosition: (d: GhostShip) => d.actualCoordinates,
+      getColor: (d: GhostShip) => (d.gapDistanceKm > 50 ? [220, 38, 38, 180] : [34, 197, 94, 180]),
+      getWidth: 2000,
+      opacity: 0.9,
+      pickable: true,
+      onHover: ({ object, x, y }) => {
+        if (object) {
+          const tooltip = document.getElementById('ghost-tooltip');
+          if (tooltip) {
+            tooltip.style.display = 'block';
+            tooltip.style.left = `${x + 12}px`;
+            tooltip.style.top = `${y - 12}px`;
+            tooltip.innerHTML = `LATENCY GAP: <b>${object.gapDistanceKm.toFixed(1)} km</b><br/><span style='font-size:11px'>EDI Plan vs IoT Reality</span>`;
+          }
+        }
+      },
+      onLeave: () => {
+        const tooltip = document.getElementById('ghost-tooltip');
+        if (tooltip) tooltip.style.display = 'none';
+      },
+    }),
+
+    // REAL FLEET: Actual IoT positions
+    new IconLayer({
+      id: 'real-fleet',
+      data: ghostShips,
+      getPosition: (d: GhostShip) => d.actualCoordinates,
+      getIcon: () => 'marker',
+      getSize: 4,
+      getColor: [59, 130, 246, 255],
+      pickable: true,
+    }),
     new ScatterplotLayer({
       id: 'risk-beacons',
       data: mapData?.vessels || [],
@@ -144,12 +219,32 @@ export const GlobalOpsMap = () => {
             }}
           />
         ) : (
-          /* FAILSAFE: Tactical Grid if Token is Invalid */
-          <div className="w-full h-full bg-[linear-gradient(rgba(0,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,255,0.03)_1px,transparent_1px)] bg-[size:100px_100px]">
-            <div className="absolute bottom-10 left-10 text-slate-600 font-mono text-xs">
-              [WARN] SATELLITE LINK OFFLINE // WIREFRAME MODE ACTIVE
+          <>
+            {/* Reality Gap Tooltip */}
+            <div
+              id="ghost-tooltip"
+              style={{
+                position: 'absolute',
+                pointerEvents: 'none',
+                background: 'rgba(30,41,59,0.95)',
+                color: '#fff',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '13px',
+                fontFamily: 'monospace',
+                zIndex: 100,
+                display: 'none',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              }}
+            />
+
+            {/* FAILSAFE: Tactical Grid if Token is Invalid */}
+            <div className="w-full h-full bg-[linear-gradient(rgba(0,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,255,0.03)_1px,transparent_1px)] bg-[size:100px_100px]">
+              <div className="absolute bottom-10 left-10 text-slate-600 font-mono text-xs">
+                [WARN] SATELLITE LINK OFFLINE // WIREFRAME MODE ACTIVE
+              </div>
             </div>
-          </div>
+          </>
         )}
       </DeckGL>
 
