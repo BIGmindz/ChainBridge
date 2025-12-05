@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from typing import Iterator, List, Optional
 
 from sqlalchemy import Column, DateTime, Integer, String, Text, create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker, Session
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 DATABASE_URL = os.getenv(
     "SETTLEMENT_ACTION_DB_URL",
@@ -23,7 +23,7 @@ DATABASE_URL = os.getenv(
 
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
+    connect_args=({"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}),
 )
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 Base = declarative_base()
@@ -76,9 +76,7 @@ def _session_scope() -> Iterator[Session]:
         session.close()
 
 
-def log_action(
-    *, milestone_id: str, action: str, reason: str | None, requested_by: str | None
-) -> ActionRecord:
+def log_action(*, milestone_id: str, action: str, reason: str | None, requested_by: str | None) -> ActionRecord:
     """Persist an operator action."""
     with _session_scope() as session:
         record = SettlementAction(
@@ -102,12 +100,7 @@ def log_action(
 def list_recent_actions(limit: int) -> List[ActionRecord]:
     """Return the most recent actions ordered by created_at DESC."""
     with SessionLocal() as session:
-        rows = (
-            session.query(SettlementAction)
-            .order_by(SettlementAction.created_at.desc())
-            .limit(limit)
-            .all()
-        )
+        rows = session.query(SettlementAction).order_by(SettlementAction.created_at.desc()).limit(limit).all()
         return [
             ActionRecord(
                 milestone_id=row.milestone_id,

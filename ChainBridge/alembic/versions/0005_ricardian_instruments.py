@@ -1,8 +1,10 @@
 """Create ricardian_instruments table."""
+
 from __future__ import annotations
 
-from alembic import op
 import sqlalchemy as sa
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "0005_ricardian_instruments"
@@ -20,7 +22,12 @@ def upgrade() -> None:
         sa.Column("pdf_uri", sa.String(), nullable=False),
         sa.Column("pdf_ipfs_uri", sa.String(), nullable=True),
         sa.Column("pdf_hash", sa.String(), nullable=False),
-        sa.Column("ricardian_version", sa.String(), nullable=False, server_default="Ricardian_v1"),
+        sa.Column(
+            "ricardian_version",
+            sa.String(),
+            nullable=False,
+            server_default="Ricardian_v1",
+        ),
         sa.Column("governing_law", sa.String(), nullable=False),
         sa.Column("smart_contract_chain", sa.String(), nullable=True),
         sa.Column("smart_contract_address", sa.String(), nullable=True),
@@ -33,8 +40,16 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), onupdate=sa.func.now()),
     )
     op.create_index("ix_ricardian_instrument_type", "ricardian_instruments", ["instrument_type"])
-    op.create_index("ix_ricardian_physical_reference", "ricardian_instruments", ["physical_reference"])
-    op.create_index("ix_ricardian_chain_address", "ricardian_instruments", ["smart_contract_chain", "smart_contract_address"])
+    op.create_index(
+        "ix_ricardian_physical_reference",
+        "ricardian_instruments",
+        ["physical_reference"],
+    )
+    op.create_index(
+        "ix_ricardian_chain_address",
+        "ricardian_instruments",
+        ["smart_contract_chain", "smart_contract_address"],
+    )
     op.create_index("ix_ricardian_status", "ricardian_instruments", ["status"])
 
 

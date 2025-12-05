@@ -12,7 +12,8 @@ from fastapi import APIRouter, HTTPException
 
 from api.mock.chainboard_fixtures import mock_shipments
 from api.schemas.chainboard import ProofPack
-from chainpay_service.app.database import SessionLocal as ChainpaySession, init_db as chainpay_init_db
+from chainpay_service.app.database import SessionLocal as ChainpaySession
+from chainpay_service.app.database import init_db as chainpay_init_db
 from chainpay_service.app.proofpack_helper import (
     MilestoneSnapshot,
     get_milestone_snapshot,

@@ -1,5 +1,5 @@
-from typing import Any, Tuple
 from datetime import datetime, timedelta
+from typing import Any, Tuple
 
 import pytest
 from fastapi.testclient import TestClient
@@ -91,7 +91,9 @@ def _seed(session):
     return intent.id
 
 
-def test_operator_queue_endpoint(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_operator_queue_endpoint(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         _seed(session)
@@ -104,7 +106,9 @@ def test_operator_queue_endpoint(client_with_db: Tuple[TestClient, Any, sessionm
     assert "recon_state" in data["items"][0]
 
 
-def test_risk_snapshot_endpoint(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_risk_snapshot_endpoint(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed(session)
@@ -115,7 +119,9 @@ def test_risk_snapshot_endpoint(client_with_db: Tuple[TestClient, Any, sessionma
     assert data["risk_band"] in {"LOW", "MEDIUM", "HIGH", "CRITICAL"}
 
 
-def test_settlement_events_timeline(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_settlement_events_timeline(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed(session)
@@ -126,7 +132,9 @@ def test_settlement_events_timeline(client_with_db: Tuple[TestClient, Any, sessi
     assert items[0]["event_type"] == "CREATED"
 
 
-def test_iot_health_summary(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_iot_health_summary(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, _ = client_with_db
     resp = client.get("/operator/iot/health/summary")
     assert resp.status_code == 200
@@ -134,7 +142,9 @@ def test_iot_health_summary(client_with_db: Tuple[TestClient, Any, sessionmaker]
     assert "device_count_active" in body
 
 
-def test_operator_events_stream_since(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_operator_events_stream_since(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed(session)
@@ -145,7 +155,9 @@ def test_operator_events_stream_since(client_with_db: Tuple[TestClient, Any, ses
     assert data["items"]
 
 
-def test_reconciliation_summary_endpoint(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_reconciliation_summary_endpoint(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed(session)
@@ -156,13 +168,18 @@ def test_reconciliation_summary_endpoint(client_with_db: Tuple[TestClient, Any, 
     assert body["approved_amount"] > 0
     assert body["policy_id"]
 
-def test_auditpack_missing_returns_404(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+
+def test_auditpack_missing_returns_404(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, _ = client_with_db
     resp = client.get("/operator/settlements/NOPE/auditpack")
     assert resp.status_code == 404
 
 
-def test_auditpack_returns_data(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_auditpack_returns_data(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed(session)

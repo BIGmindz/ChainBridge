@@ -245,7 +245,11 @@ class AgentRuntime:
             "metadata": task.metadata or {},
         }
 
-        logger.debug("Prepared prompt for %s: %d chars in instruction", task.role_name, len(task.instruction))
+        logger.debug(
+            "Prepared prompt for %s: %d chars in instruction",
+            task.role_name,
+            len(task.instruction),
+        )
         return prompt_data
 
     def validate_all_agents(self) -> Dict[str, bool]:

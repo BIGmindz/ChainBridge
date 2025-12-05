@@ -5,8 +5,10 @@ Handles SQLAlchemy session creation and lifecycle.
 """
 
 import os
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from .models import Base
 
 # Database URL - use SQLite by default, can be overridden via environment

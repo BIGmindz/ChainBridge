@@ -100,7 +100,9 @@ def _chaindocs_stub(proof_id: str) -> ChainDocsDocument:
     )
 
 
-def test_get_settlement_plan_bootstraps_default(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_get_settlement_plan_bootstraps_default(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, _ = client_with_db
 
     response = client.get("/chainpay/shipments/SHIP-555/settlement_plan")
@@ -115,7 +117,9 @@ def test_get_settlement_plan_bootstraps_default(client_with_db: Tuple[TestClient
     assert "missing_blocking_docs" in data["doc_risk"]
 
 
-def test_post_settlement_plan_persists_data(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_post_settlement_plan_persists_data(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, _ = client_with_db
 
     payload = {
@@ -123,8 +127,18 @@ def test_post_settlement_plan_persists_data(client_with_db: Tuple[TestClient, An
         "total_value": 250000.0,
         "float_reduction_estimate": 0.95,
         "milestones": [
-            {"event": "BOL_ISSUED", "payout_pct": 0.5, "status": "PAID", "paid_at": "2025-01-01T00:00:00Z"},
-            {"event": "DELIVERED", "payout_pct": 0.5, "status": "PENDING", "paid_at": None},
+            {
+                "event": "BOL_ISSUED",
+                "payout_pct": 0.5,
+                "status": "PAID",
+                "paid_at": "2025-01-01T00:00:00Z",
+            },
+            {
+                "event": "DELIVERED",
+                "payout_pct": 0.5,
+                "status": "PENDING",
+                "paid_at": None,
+            },
         ],
     }
 
@@ -147,7 +161,9 @@ def test_post_settlement_plan_persists_data(client_with_db: Tuple[TestClient, An
     assert "missing_blocking_docs" in get_data["doc_risk"]
 
 
-def test_create_payment_intent_from_shipment(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_create_payment_intent_from_shipment(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         _seed_shipment_with_risk(session, "SHIP-PAY-1", risk_score=72, risk_level="HIGH")
@@ -173,7 +189,7 @@ def test_create_payment_intent_from_shipment(client_with_db: Tuple[TestClient, A
 
 
 def test_create_payment_intent_requires_existing_shipment_and_risk(
-    client_with_db: Tuple[TestClient, Any, sessionmaker]
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
 ) -> None:
     client, _, SessionLocal = client_with_db
     payload = {
@@ -191,7 +207,10 @@ def test_create_payment_intent_requires_existing_shipment_and_risk(
         session.add(Shipment(id="SHIP-NO-RISK"))
         session.commit()
 
-    bad_risk = client.post("/chainpay/payment_intents/from_shipment", json={**payload, "shipment_id": "SHIP-NO-RISK"})
+    bad_risk = client.post(
+        "/chainpay/payment_intents/from_shipment",
+        json={**payload, "shipment_id": "SHIP-NO-RISK"},
+    )
     assert bad_risk.status_code == 400
     assert "risk snapshot" in bad_risk.json()["detail"].lower()
 
@@ -327,8 +346,20 @@ def test_list_payment_intents_filters_and_flags(
         lambda proof_id, db=None: _chaindocs_stub(proof_id),
     )
     with SessionLocal() as session:
-        _seed_shipment_with_risk(session, "SHIP-LIST-1", corridor_code="CN-US", mode="OCEAN", risk_level="LOW")
-        _seed_shipment_with_risk(session, "SHIP-LIST-2", corridor_code="DE-UK", mode="AIR", risk_level="MEDIUM")
+        _seed_shipment_with_risk(
+            session,
+            "SHIP-LIST-1",
+            corridor_code="CN-US",
+            mode="OCEAN",
+            risk_level="LOW",
+        )
+        _seed_shipment_with_risk(
+            session,
+            "SHIP-LIST-2",
+            corridor_code="DE-UK",
+            mode="AIR",
+            risk_level="MEDIUM",
+        )
 
     def create_intent(shipment_id: str, proof: bool = False, status: str = "PENDING") -> str:
         resp = client.post(
@@ -380,7 +411,9 @@ def test_list_payment_intents_filters_and_flags(
     assert all(item["ready_for_payment"] is True for item in ready_filtered.json())
 
 
-def test_intent_hash_changes_on_amount(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_intent_hash_changes_on_amount(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         _seed_shipment_with_risk(session, "SHIP-HASH", risk_score=60, risk_level="LOW")

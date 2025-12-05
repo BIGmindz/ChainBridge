@@ -12,6 +12,7 @@ REQUIRED_SECTIONS = [
     "Final Determination",
 ]
 
+
 @pytest.mark.parametrize("section", REQUIRED_SECTIONS)
 def test_alex_response_sections_present(section):
     """

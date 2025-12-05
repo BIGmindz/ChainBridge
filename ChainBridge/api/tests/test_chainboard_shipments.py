@@ -105,5 +105,87 @@ def test_get_shipments_supports_corridor_filter():
 
     # All returned shipments should contain the search term
     for shipment in payload["shipments"]:
-        assert search_term.lower() in shipment["corridor"].lower(), \
-            f"Expected '{search_term}' in corridor '{shipment['corridor']}'"
+        assert search_term.lower() in shipment["corridor"].lower(), f"Expected '{search_term}' in corridor '{shipment['corridor']}'"
+
+
+def test_live_positions_returns_payload_in_demo_mode():
+    """Ensure live positions stay deterministic and non-empty in demo mode."""
+    from api.services import live_positions as live_positions_service
+
+    live_positions_service._live_cache.clear()
+    response = client.get("/api/chainboard/live-positions")
+    assert response.status_code == 200
+
+    payload = response.json()
+    assert payload["positions"], "Demo mode should return positions"
+    for required in [
+        "shipment_id",
+        "lat",
+        "lon",
+        "risk_level",
+        "settlement_state",
+        "nearest_port",
+    ]:
+        assert required in payload["positions"][0], f"Missing field {required}"
+    assert "generated_at" in payload
+
+
+def test_live_positions_returns_safe_error(monkeypatch):
+    """Simulate service failure and ensure safe 503 response."""
+    from api.routes import chainboard
+
+    def _boom(db):
+        raise RuntimeError("fail live positions")
+
+    monkeypatch.setattr(chainboard, "live_positions", _boom)
+    response = client.get("/api/chainboard/live-positions")
+    assert response.status_code == 503
+    detail = response.json().get("detail", {})
+    assert detail.get("code") == "LIVE_POSITIONS_ERROR"
+    assert "load live positions" in detail.get("message", "").lower()
+
+
+def test_intel_snapshot_and_feed_are_deterministic():
+    """Global snapshot + feed should return structured payloads in demo mode."""
+    from api.services import live_positions as live_positions_service
+
+    live_positions_service._intel_cache.clear()
+    live_positions_service._live_cache.clear()
+    snapshot_resp = client.get("/intel/global-snapshot")
+    assert snapshot_resp.status_code == 200
+    snapshot = snapshot_resp.json()
+    assert "corridor_kpis" in snapshot
+    assert "mode_kpis" in snapshot
+    assert "global_totals" in snapshot
+
+    feed_resp = client.get("/intel/oc-feed")
+    assert feed_resp.status_code == 200
+    feed = feed_resp.json()
+    assert "queue_cards" in feed
+    assert "global_snapshot" in feed
+    assert "live_positions_meta" in feed
+
+
+def test_intel_snapshot_failure_is_safe(monkeypatch):
+    """Ensure intel snapshot exposes a bounded error surface."""
+    from api.routes import intel as intel_routes
+
+    def _boom(db):
+        raise RuntimeError("intel failure")
+
+    monkeypatch.setattr(intel_routes, "intel_positions", _boom)
+    snapshot_resp = client.get("/intel/global-snapshot")
+    assert snapshot_resp.status_code == 503
+    detail = snapshot_resp.json().get("detail", {})
+    assert detail.get("code") == "INTEL_SNAPSHOT_ERROR"
+    assert "snapshot" in detail.get("message", "").lower()
+
+
+def test_health_check_ready_flag():
+    """Health check returns fast readiness signal."""
+    resp = client.get("/health")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body.get("status") in {"healthy", "degraded"}
+    assert body.get("modules_loaded") is not None
+    assert body.get("active_pipelines") is not None

@@ -1,5 +1,7 @@
 """Demo fuel surcharge calculator."""
+
 from decimal import Decimal
+
 
 def calculate_fuel_multiplier(diesel_index: float) -> Decimal:
     base = Decimal(str(diesel_index or 0))

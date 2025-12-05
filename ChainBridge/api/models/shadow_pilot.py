@@ -1,10 +1,22 @@
 """ORM models for Shadow Pilot runs and shipments."""
+
 from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, Numeric, String, Text, UniqueConstraint, Index
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import relationship
 
 from api.database import Base

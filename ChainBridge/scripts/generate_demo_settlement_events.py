@@ -53,7 +53,11 @@ def _build_events(intent: PaymentIntent, path: List[tuple]) -> List[SettlementEv
     return events
 
 
-def generate(rewrite: bool = False, session: Optional[SessionLocal] = None, skip_init: bool = False) -> None:
+def generate(
+    rewrite: bool = False,
+    session: Optional[SessionLocal] = None,
+    skip_init: bool = False,
+) -> None:
     managed_session = session is None
     if managed_session:
         if not skip_init:
@@ -62,11 +66,7 @@ def generate(rewrite: bool = False, session: Optional[SessionLocal] = None, skip
     try:
         intents = session.query(PaymentIntent).all()
         for intent in intents:
-            existing = (
-                session.query(SettlementEvent)
-                .filter(SettlementEvent.payment_intent_id == intent.id)
-                .count()
-            )
+            existing = session.query(SettlementEvent).filter(SettlementEvent.payment_intent_id == intent.id).count()
             if existing and not rewrite:
                 continue
             if existing:
@@ -78,7 +78,10 @@ def generate(rewrite: bool = False, session: Optional[SessionLocal] = None, skip
             session.commit()
             logger.info(
                 "chainpay_demo_settlement_generated",
-                extra={"payment_intent_id": intent.id, "path": "BLOCKED" if is_blocked else "HAPPY"},
+                extra={
+                    "payment_intent_id": intent.id,
+                    "path": "BLOCKED" if is_blocked else "HAPPY",
+                },
             )
     finally:
         if managed_session and session is not None:

@@ -1,4 +1,5 @@
 """ChainAudit service wrapper for running payout audits."""
+
 from __future__ import annotations
 
 import logging

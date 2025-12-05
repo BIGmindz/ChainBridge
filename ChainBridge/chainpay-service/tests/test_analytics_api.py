@@ -88,3 +88,6 @@ def test_analytics_with_data(db_session, client):
     assert sla_entry["total_reviews"] == 1  # had_claim=True counted
     assert sla_entry["claim_review_sla_breach_rate"] == 0.0
     assert sla_entry["manual_review_sla_breach_rate"] == 0.0
+    assert sla_entry["cash_breach_count"] == 1
+    assert sla_entry["sample_size"] == 2
+    assert abs(sla_entry["cash_breach_rate"] - 0.5) < 1e-6

@@ -7,10 +7,11 @@ Designed to work with tree-based models like LightGBM that don't need
 standardization but benefit from outlier handling.
 """
 
+import logging
+from typing import Tuple, Union
+
 import numpy as np
 import pandas as pd
-from typing import Union, Tuple
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -37,26 +38,20 @@ def robust_clip(
         Clipped features with same type as input
     """
     if isinstance(X, pd.DataFrame):
-        return _robust_clip_dataframe(
-            X, lower_percentile, upper_percentile, clip_method
-        )
+        return _robust_clip_dataframe(X, lower_percentile, upper_percentile, clip_method)
     elif isinstance(X, np.ndarray):
         return _robust_clip_array(X, lower_percentile, upper_percentile, clip_method)
     else:
         raise ValueError("Input must be numpy array or pandas DataFrame")
 
 
-def _robust_clip_dataframe(
-    df: pd.DataFrame, lower_percentile: float, upper_percentile: float, clip_method: str
-) -> pd.DataFrame:
+def _robust_clip_dataframe(df: pd.DataFrame, lower_percentile: float, upper_percentile: float, clip_method: str) -> pd.DataFrame:
     """Robust clipping for pandas DataFrame."""
     df_clipped = df.copy()
 
     for col in df.columns:
         if df[col].dtype in ["float64", "float32", "int64", "int32"]:
-            lower_bound, upper_bound = _get_clip_bounds(
-                df[col].values, lower_percentile, upper_percentile, clip_method
-            )
+            lower_bound, upper_bound = _get_clip_bounds(df[col].values, lower_percentile, upper_percentile, clip_method)
 
             # Count outliers before clipping
             n_outliers_lower = (df[col] < lower_bound).sum()  # type: ignore
@@ -74,24 +69,18 @@ def _robust_clip_dataframe(
     return df_clipped
 
 
-def _robust_clip_array(
-    arr: np.ndarray, lower_percentile: float, upper_percentile: float, clip_method: str
-) -> np.ndarray:
+def _robust_clip_array(arr: np.ndarray, lower_percentile: float, upper_percentile: float, clip_method: str) -> np.ndarray:
     """Robust clipping for numpy array."""
     arr_clipped = arr.copy()
 
     # Handle multi-dimensional arrays
     if arr.ndim == 1:
-        lower_bound, upper_bound = _get_clip_bounds(
-            arr, lower_percentile, upper_percentile, clip_method
-        )
+        lower_bound, upper_bound = _get_clip_bounds(arr, lower_percentile, upper_percentile, clip_method)
         arr_clipped = np.clip(arr, lower_bound, upper_bound)
     else:
         # Apply clipping to each column
         for col_idx in range(arr.shape[1]):
-            lower_bound, upper_bound = _get_clip_bounds(
-                arr[:, col_idx], lower_percentile, upper_percentile, clip_method
-            )
+            lower_bound, upper_bound = _get_clip_bounds(arr[:, col_idx], lower_percentile, upper_percentile, clip_method)
             arr_clipped[:, col_idx] = np.clip(arr[:, col_idx], lower_bound, upper_bound)
 
     return arr_clipped
@@ -128,9 +117,7 @@ def _get_clip_bounds(
     return lower_bound, upper_bound
 
 
-def winsorize_features(
-    X: Union[np.ndarray, pd.DataFrame], limits: Tuple[float, float] = (0.05, 0.05)
-) -> Union[np.ndarray, pd.DataFrame]:
+def winsorize_features(X: Union[np.ndarray, pd.DataFrame], limits: Tuple[float, float] = (0.05, 0.05)) -> Union[np.ndarray, pd.DataFrame]:
     """
     Winsorize features by limiting extreme values to percentiles.
 
@@ -149,16 +136,12 @@ def winsorize_features(
         if X.ndim == 1:
             return _winsorize_array(X, lower_limit, upper_limit)
         else:
-            return np.apply_along_axis(
-                lambda x: _winsorize_array(x, lower_limit, upper_limit), axis=0, arr=X
-            )
+            return np.apply_along_axis(lambda x: _winsorize_array(x, lower_limit, upper_limit), axis=0, arr=X)
     else:
         raise ValueError("Input must be numpy array or pandas DataFrame")
 
 
-def _winsorize_series(
-    series: pd.Series, lower_limit: float, upper_limit: float
-) -> pd.Series:
+def _winsorize_series(series: pd.Series, lower_limit: float, upper_limit: float) -> pd.Series:
     """Winsorize a pandas Series."""
     lower_percentile = lower_limit * 100
     upper_percentile = (1 - upper_limit) * 100
@@ -169,9 +152,7 @@ def _winsorize_series(
     return np.clip(series, lower_bound, upper_bound)
 
 
-def _winsorize_array(
-    arr: np.ndarray, lower_limit: float, upper_limit: float
-) -> np.ndarray:
+def _winsorize_array(arr: np.ndarray, lower_limit: float, upper_limit: float) -> np.ndarray:
     """Winsorize a numpy array."""
     lower_percentile = lower_limit * 100
     upper_percentile = (1 - upper_limit) * 100
@@ -182,9 +163,7 @@ def _winsorize_array(
     return np.clip(arr, lower_bound, upper_bound)
 
 
-def remove_constant_features(
-    X: Union[np.ndarray, pd.DataFrame], threshold: float = 1e-10
-) -> Union[np.ndarray, pd.DataFrame]:
+def remove_constant_features(X: Union[np.ndarray, pd.DataFrame], threshold: float = 1e-10) -> Union[np.ndarray, pd.DataFrame]:
     """
     Remove features with constant or near-constant values.
 
@@ -225,9 +204,7 @@ def remove_constant_features(
         raise ValueError("Input must be numpy array or pandas DataFrame")
 
 
-def handle_missing_values(
-    X: Union[np.ndarray, pd.DataFrame], strategy: str = "median"
-) -> Union[np.ndarray, pd.DataFrame]:
+def handle_missing_values(X: Union[np.ndarray, pd.DataFrame], strategy: str = "median") -> Union[np.ndarray, pd.DataFrame]:
     """
     Handle missing values in features.
 

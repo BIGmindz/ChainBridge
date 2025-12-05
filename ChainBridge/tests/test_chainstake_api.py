@@ -91,7 +91,9 @@ def _seed_shipment(session) -> str:
     return shipment.id
 
 
-def test_create_and_complete_stake_job(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_create_and_complete_stake_job(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         shipment_id = _seed_shipment(session)
@@ -101,7 +103,10 @@ def test_create_and_complete_stake_job(client_with_db: Tuple[TestClient, Any, se
     event_bus.subscribe(EventType.STAKE_CREATED, lambda payload: events.append({"created": payload}))
     event_bus.subscribe(EventType.STAKE_COMPLETED, lambda payload: events.append({"completed": payload}))
 
-    resp = client.post(f"/stake/shipments/{shipment_id}", json={"requested_amount": 50.0, "payment_intent_id": intent_id})
+    resp = client.post(
+        f"/stake/shipments/{shipment_id}",
+        json={"requested_amount": 50.0, "payment_intent_id": intent_id},
+    )
     assert resp.status_code == 200
     data = resp.json()
     assert data["status"] == "COMPLETED"
@@ -112,11 +117,16 @@ def test_create_and_complete_stake_job(client_with_db: Tuple[TestClient, Any, se
     assert any(evt["event_type"] == "STAKE_COMPLETED" for evt in events_resp.json())
 
 
-def test_list_and_get_jobs(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_list_and_get_jobs(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         shipment_id = _seed_shipment(session)
-    resp = client.post(f"/stake/shipments/{shipment_id}", json={"requested_amount": 75.0, "auto_execute": False})
+    resp = client.post(
+        f"/stake/shipments/{shipment_id}",
+        json={"requested_amount": 75.0, "auto_execute": False},
+    )
     assert resp.status_code == 200
     job_id = resp.json()["id"]
 
@@ -129,7 +139,9 @@ def test_list_and_get_jobs(client_with_db: Tuple[TestClient, Any, sessionmaker])
     assert detail.json()["id"] == job_id
 
 
-def test_chainstake_analytics_endpoints(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_chainstake_analytics_endpoints(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         now = datetime.utcnow()

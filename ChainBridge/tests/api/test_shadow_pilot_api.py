@@ -107,8 +107,20 @@ def test_list_and_get_summaries(client_with_db) -> None:
     with SessionLocal() as session:
         session.add_all(
             [
-                ShadowPilotRun(run_id="run_a", prospect_name="A", period_months=3, shipments_evaluated=1, shipments_financeable=0),
-                ShadowPilotRun(run_id="run_b", prospect_name="B", period_months=6, shipments_evaluated=2, shipments_financeable=1),
+                ShadowPilotRun(
+                    run_id="run_a",
+                    prospect_name="A",
+                    period_months=3,
+                    shipments_evaluated=1,
+                    shipments_financeable=0,
+                ),
+                ShadowPilotRun(
+                    run_id="run_b",
+                    prospect_name="B",
+                    period_months=6,
+                    shipments_evaluated=2,
+                    shipments_financeable=1,
+                ),
             ]
         )
         session.commit()
@@ -129,13 +141,61 @@ def test_list_and_get_summaries(client_with_db) -> None:
 def test_paginated_shipments(client_with_db) -> None:
     client, _, SessionLocal, _ = client_with_db
     with SessionLocal() as session:
-        run = ShadowPilotRun(run_id="run_ship", prospect_name="ShipCo", period_months=12, shipments_evaluated=3, shipments_financeable=2)
+        run = ShadowPilotRun(
+            run_id="run_ship",
+            prospect_name="ShipCo",
+            period_months=12,
+            shipments_evaluated=3,
+            shipments_financeable=2,
+        )
         session.add(run)
         session.add_all(
             [
-                ShadowPilotShipment(run_id="run_ship", shipment_id="S1", cargo_value_usd=1000, event_truth_score=0.8, eligible_for_finance=True, financed_amount_usd=700, days_pulled_forward=45, wc_saved_usd=1, protocol_revenue_usd=2, avoided_loss_usd=0, salvage_revenue_usd=0, exception_flag=False, loss_flag=False),
-                ShadowPilotShipment(run_id="run_ship", shipment_id="S2", cargo_value_usd=2000, event_truth_score=0.5, eligible_for_finance=False, financed_amount_usd=0, days_pulled_forward=30, wc_saved_usd=0, protocol_revenue_usd=0, avoided_loss_usd=0, salvage_revenue_usd=0, exception_flag=True, loss_flag=False),
-                ShadowPilotShipment(run_id="run_ship", shipment_id="S3", cargo_value_usd=3000, event_truth_score=0.9, eligible_for_finance=True, financed_amount_usd=2100, days_pulled_forward=60, wc_saved_usd=5, protocol_revenue_usd=6, avoided_loss_usd=0, salvage_revenue_usd=0, exception_flag=False, loss_flag=False),
+                ShadowPilotShipment(
+                    run_id="run_ship",
+                    shipment_id="S1",
+                    cargo_value_usd=1000,
+                    event_truth_score=0.8,
+                    eligible_for_finance=True,
+                    financed_amount_usd=700,
+                    days_pulled_forward=45,
+                    wc_saved_usd=1,
+                    protocol_revenue_usd=2,
+                    avoided_loss_usd=0,
+                    salvage_revenue_usd=0,
+                    exception_flag=False,
+                    loss_flag=False,
+                ),
+                ShadowPilotShipment(
+                    run_id="run_ship",
+                    shipment_id="S2",
+                    cargo_value_usd=2000,
+                    event_truth_score=0.5,
+                    eligible_for_finance=False,
+                    financed_amount_usd=0,
+                    days_pulled_forward=30,
+                    wc_saved_usd=0,
+                    protocol_revenue_usd=0,
+                    avoided_loss_usd=0,
+                    salvage_revenue_usd=0,
+                    exception_flag=True,
+                    loss_flag=False,
+                ),
+                ShadowPilotShipment(
+                    run_id="run_ship",
+                    shipment_id="S3",
+                    cargo_value_usd=3000,
+                    event_truth_score=0.9,
+                    eligible_for_finance=True,
+                    financed_amount_usd=2100,
+                    days_pulled_forward=60,
+                    wc_saved_usd=5,
+                    protocol_revenue_usd=6,
+                    avoided_loss_usd=0,
+                    salvage_revenue_usd=0,
+                    exception_flag=False,
+                    loss_flag=False,
+                ),
             ]
         )
         session.commit()

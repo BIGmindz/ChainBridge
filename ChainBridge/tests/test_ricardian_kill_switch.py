@@ -40,7 +40,9 @@ def clean_db(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
     Base.metadata.create_all(bind=engine)
 
 
-def test_kill_switch_sets_override(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_kill_switch_sets_override(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, _ = client_with_db
     create_resp = client.post(
         "/legal/ricardian/instruments",
@@ -54,7 +56,10 @@ def test_kill_switch_sets_override(client_with_db: Tuple[TestClient, Any, sessio
         },
     )
     inst_id = create_resp.json()["id"]
-    kill_resp = client.post(f"/legal/ricardian/instruments/{inst_id}/kill_switch", params={"event": "contract_hacked"})
+    kill_resp = client.post(
+        f"/legal/ricardian/instruments/{inst_id}/kill_switch",
+        params={"event": "contract_hacked"},
+    )
     assert kill_resp.status_code == 200
     body = kill_resp.json()
     assert body["status"] == "FROZEN"

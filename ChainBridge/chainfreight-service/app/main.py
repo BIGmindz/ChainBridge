@@ -19,35 +19,36 @@ Tasks for Copilot:
 - Structure tokenization logic for future blockchain integration.
 """
 
-import os
 import logging
+import os
 from datetime import datetime
-from fastapi import FastAPI, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
-import httpx
 
-from .database import get_db, init_db
-from .models import (
-    Shipment as ShipmentModel,
-    FreightToken as FreightTokenModel,
-    FreightTokenStatus,
-    ShipmentEvent as ShipmentEventModel,
-)
-from .schemas import (
-    ShipmentCreate,
-    ShipmentUpdate,
-    ShipmentResponse,
-    ShipmentListResponse,
-    ShipmentStatusEnum,
-    FreightTokenResponse,
-    FreightTokenListResponse,
-    TokenizeShipmentRequest,
-    ShipmentEventCreate,
-    ShipmentEventResponse,
-    ShipmentEventListResponse,
-    ShipmentEventTypeEnum,
-)
+import httpx
+from fastapi import Depends, FastAPI, HTTPException, Query
+from sqlalchemy.orm import Session
+
 from .chainiq_client import score_shipment as call_chainiq
+from .database import get_db, init_db
+from .models import FreightToken as FreightTokenModel
+from .models import (
+    FreightTokenStatus,
+)
+from .models import Shipment as ShipmentModel
+from .models import ShipmentEvent as ShipmentEventModel
+from .schemas import (
+    FreightTokenListResponse,
+    FreightTokenResponse,
+    ShipmentCreate,
+    ShipmentEventCreate,
+    ShipmentEventListResponse,
+    ShipmentEventResponse,
+    ShipmentEventTypeEnum,
+    ShipmentListResponse,
+    ShipmentResponse,
+    ShipmentStatusEnum,
+    ShipmentUpdate,
+    TokenizeShipmentRequest,
+)
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -160,22 +161,12 @@ async def get_shipment(
         HTTPException: If shipment not found
     """
     shipment = db.query(ShipmentModel).filter(ShipmentModel.id == shipment_id).first()
-
-    if not shipment:
-        raise HTTPException(status_code=404, detail="Shipment not found")
-
-    return shipment
-
-
-@app.put("/shipments/{shipment_id}", response_model=ShipmentResponse)
 async def update_shipment(
     shipment_id: int,
-    shipment_update: ShipmentUpdate,
-    db: Session = Depends(get_db),
-) -> ShipmentResponse:
-    """
-    Update a shipment's information.
 
+
+    from core.import_safety import ensure_import_safety
+    ensure_import_safety()
     Args:
         shipment_id: ID of the shipment to update
         shipment_update: Fields to update
@@ -244,11 +235,7 @@ async def tokenize_shipment(
         raise HTTPException(status_code=404, detail="Shipment not found")
 
     # Check if token already exists for this shipment
-    existing_token = (
-        db.query(FreightTokenModel)
-        .filter(FreightTokenModel.shipment_id == shipment_id)
-        .first()
-    )
+    existing_token = db.query(FreightTokenModel).filter(FreightTokenModel.shipment_id == shipment_id).first()
     if existing_token:
         raise HTTPException(
             status_code=400,
@@ -260,11 +247,7 @@ async def tokenize_shipment(
         shipment_id=shipment_id,
         origin=shipment.origin,
         destination=shipment.destination,
-        planned_delivery_date=(
-            shipment.planned_delivery_date.isoformat()
-            if shipment.planned_delivery_date
-            else None
-        ),
+        planned_delivery_date=(shipment.planned_delivery_date.isoformat() if shipment.planned_delivery_date else None),
     )
 
     # Create new token with ChainIQ scoring
@@ -313,15 +296,9 @@ async def get_shipment_token(
         raise HTTPException(status_code=404, detail="Shipment not found")
 
     # Get token
-    token = (
-        db.query(FreightTokenModel)
-        .filter(FreightTokenModel.shipment_id == shipment_id)
-        .first()
-    )
+    token = db.query(FreightTokenModel).filter(FreightTokenModel.shipment_id == shipment_id).first()
     if not token:
-        raise HTTPException(
-            status_code=404, detail="No freight token for this shipment"
-        )
+        raise HTTPException(status_code=404, detail="No freight token for this shipment")
 
     return token
 
@@ -424,15 +401,11 @@ async def create_shipment_event(
     db.commit()
     db.refresh(db_event)
 
-    logger.info(
-        f"Event recorded: shipment_id={shipment_id}, event_type={event_data.event_type}, id={db_event.id}"
-    )
+    logger.info(f"Event recorded: shipment_id={shipment_id}, event_type={event_data.event_type}, id={db_event.id}")
 
     # Call ChainPay webhook asynchronously (fire and forget)
     try:
-        await call_chainpay_webhook(
-            shipment_id, event_data.event_type, occurred_at, db_event.id
-        )
+        await call_chainpay_webhook(shipment_id, event_data.event_type, occurred_at, db_event.id)
     except Exception as e:
         # Log but don't fail the request - ChainPay can retry via other means
         logger.warning(
@@ -472,16 +445,9 @@ async def list_shipment_events(
         raise HTTPException(status_code=404, detail="Shipment not found")
 
     # Query events ordered by occurred_at (descending)
-    query = db.query(ShipmentEventModel).filter(
-        ShipmentEventModel.shipment_id == shipment_id
-    )
+    query = db.query(ShipmentEventModel).filter(ShipmentEventModel.shipment_id == shipment_id)
     total = query.count()
-    events = (
-        query.order_by(ShipmentEventModel.occurred_at.desc())
-        .offset(skip)
-        .limit(limit)
-        .all()
-    )
+    events = query.order_by(ShipmentEventModel.occurred_at.desc()).offset(skip).limit(limit).all()
 
     return ShipmentEventListResponse(total=total, events=events)
 
@@ -549,9 +515,7 @@ async def call_chainpay_webhook(
         )
         raise
     except httpx.HTTPStatusError as e:
-        logger.warning(
-            f"ChainPay webhook HTTP error for event {event_id}: {e.response.status_code}"
-        )
+        logger.warning(f"ChainPay webhook HTTP error for event {event_id}: {e.response.status_code}")
         raise
 
 

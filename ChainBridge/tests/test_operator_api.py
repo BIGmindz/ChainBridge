@@ -1,5 +1,5 @@
-from typing import Any, Tuple
 from datetime import datetime
+from typing import Any, Tuple
 
 import pytest
 from fastapi.testclient import TestClient
@@ -92,7 +92,9 @@ def test_operator_queue(client_with_db: Tuple[TestClient, Any, sessionmaker]) ->
     assert data["items"][0]["state"] in {"READY", "WAITING_PROOF", "BLOCKED"}
 
 
-def test_risk_snapshot_endpoint(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_risk_snapshot_endpoint(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed(session)
@@ -103,7 +105,9 @@ def test_risk_snapshot_endpoint(client_with_db: Tuple[TestClient, Any, sessionma
     assert data["risk_score"] == 70
 
 
-def test_settlement_events_endpoint(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_settlement_events_endpoint(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed(session)

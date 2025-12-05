@@ -11,9 +11,9 @@ Future enhancements:
 - Time-series analysis
 """
 
-from typing import Any, Dict, List
-from datetime import datetime, timezone
 from collections import defaultdict
+from datetime import datetime, timezone
+from typing import Any, Dict, List
 
 
 class MetricsCollector:
@@ -29,18 +29,22 @@ class MetricsCollector:
 
     def __init__(self) -> None:
         """Initialize empty metrics storage."""
-        self.module_metrics: Dict[str, Any] = defaultdict(lambda: {
-            "registrations": 0,
-            "executions": 0,
-            "errors": 0,
-            "last_execution": None
-        })
-        self.pipeline_metrics: Dict[str, Any] = defaultdict(lambda: {
-            "creations": 0,
-            "executions": 0,
-            "errors": 0,
-            "last_execution": None
-        })
+        self.module_metrics: Dict[str, Any] = defaultdict(
+            lambda: {
+                "registrations": 0,
+                "executions": 0,
+                "errors": 0,
+                "last_execution": None,
+            }
+        )
+        self.pipeline_metrics: Dict[str, Any] = defaultdict(
+            lambda: {
+                "creations": 0,
+                "executions": 0,
+                "errors": 0,
+                "last_execution": None,
+            }
+        )
         self.error_log: List[Dict[str, Any]] = []
         self.business_impact: Dict[str, float] = defaultdict(float)
 
@@ -49,33 +53,23 @@ class MetricsCollector:
         self.module_metrics[module_name]["registrations"] += 1
         self.module_metrics[module_name]["path"] = module_path
 
-    def track_module_execution(
-        self, module_name: str, execution_time: float, success: bool = True
-    ) -> None:
+    def track_module_execution(self, module_name: str, execution_time: float, success: bool = True) -> None:
         """Record a module execution."""
         self.module_metrics[module_name]["executions"] += 1
-        self.module_metrics[module_name]["last_execution"] = datetime.now(
-            timezone.utc
-        ).isoformat()
+        self.module_metrics[module_name]["last_execution"] = datetime.now(timezone.utc).isoformat()
         self.module_metrics[module_name]["last_execution_time"] = execution_time
         if not success:
             self.module_metrics[module_name]["errors"] += 1
 
-    def track_pipeline_creation(
-        self, pipeline_name: str, module_sequence: List[str]
-    ) -> None:
+    def track_pipeline_creation(self, pipeline_name: str, module_sequence: List[str]) -> None:
         """Record a pipeline creation."""
         self.pipeline_metrics[pipeline_name]["creations"] += 1
         self.pipeline_metrics[pipeline_name]["modules"] = module_sequence
 
-    def track_pipeline_execution(
-        self, pipeline_name: str, execution_time: float, success: bool = True
-    ) -> None:
+    def track_pipeline_execution(self, pipeline_name: str, execution_time: float, success: bool = True) -> None:
         """Record a pipeline execution."""
         self.pipeline_metrics[pipeline_name]["executions"] += 1
-        self.pipeline_metrics[pipeline_name]["last_execution"] = datetime.now(
-            timezone.utc
-        ).isoformat()
+        self.pipeline_metrics[pipeline_name]["last_execution"] = datetime.now(timezone.utc).isoformat()
         self.pipeline_metrics[pipeline_name]["last_execution_time"] = execution_time
         if not success:
             self.pipeline_metrics[pipeline_name]["errors"] += 1

@@ -1,7 +1,9 @@
 """Helpers for live shipment positions, risk, and finance overlays."""
+
 from __future__ import annotations
 
 import copy
+import logging
 import random
 import time
 from collections import OrderedDict
@@ -15,11 +17,12 @@ from api.core.config import settings
 from api.models.chaindocs import Shipment
 from api.models.chainiq import RiskDecision
 from api.models.chainpay import PaymentIntent, SettlementEvent
-from api.services.ports import PORTS, nearest_port
 from api.schemas.chainboard import SettlementState
+from api.services.ports import PORTS, nearest_port
 from core.payments.identity import canonical_shipment_reference
 
 DEMO_MODE = bool(settings.DEMO_MODE)
+logger = logging.getLogger(__name__)
 
 
 _live_cache: OrderedDict[str, tuple[float, List[Dict]]] = OrderedDict()
@@ -42,8 +45,40 @@ CORRIDOR_COORDS: Dict[str, CorridorEndpoints] = {
     "ASIA-US": CorridorEndpoints(31.2304, 121.4737, 33.7406, -118.2760),
 }
 
-SHIPPER_POOL = ["Atlas Manufacturing", "Nova Apparel", "BlueOrbit Pharma", "Helix Parts Co."]
+SHIPPER_POOL = [
+    "Atlas Manufacturing",
+    "Nova Apparel",
+    "BlueOrbit Pharma",
+    "Helix Parts Co.",
+]
 CARRIER_POOL = ["Maersk", "Flexport", "Hapag-Lloyd", "Evergreen", "UPS Freight"]
+
+
+def _demo_shipments() -> list[Shipment]:
+    """Deterministic fallback shipments for demo mode."""
+    return [
+        Shipment(
+            id="DEMO-SHIP-1",
+            corridor_code="US-MX",
+            mode="ocean",
+            collateral_value=180000.0,
+            loan_amount=126000.0,
+        ),
+        Shipment(
+            id="DEMO-SHIP-2",
+            corridor_code="US-EU",
+            mode="ocean",
+            collateral_value=220000.0,
+            loan_amount=154000.0,
+        ),
+        Shipment(
+            id="DEMO-SHIP-3",
+            corridor_code="ASIA-US",
+            mode="air",
+            collateral_value=95000.0,
+            loan_amount=66500.0,
+        ),
+    ]
 
 
 def _cache_get(cache: OrderedDict, key: str, ttl_seconds: int):
@@ -71,7 +106,9 @@ def _progress_for_shipment(shipment_id: str) -> float:
     return min(0.98, max(0.02, rnd.random()))
 
 
-def _position_for_shipment(shipment: Shipment) -> tuple[float, float, float, float, float]:
+def _position_for_shipment(
+    shipment: Shipment,
+) -> tuple[float, float, float, float, float]:
     coords = CORRIDOR_COORDS.get(shipment.corridor_code or "", CorridorEndpoints(0.0, 0.0, 0.0, 0.0))
     progress = _progress_for_shipment(shipment.id)
     lat = coords.origin_lat + (coords.dest_lat - coords.origin_lat) * progress
@@ -95,21 +132,11 @@ def _settlement_state(intent: Optional[PaymentIntent], paid_amount: float) -> Se
 
 
 def _latest_risk(db: Session, shipment_id: str) -> Optional[RiskDecision]:
-    return (
-        db.query(RiskDecision)
-        .filter(RiskDecision.shipment_id == shipment_id)
-        .order_by(RiskDecision.decided_at.desc())
-        .first()
-    )
+    return db.query(RiskDecision).filter(RiskDecision.shipment_id == shipment_id).order_by(RiskDecision.decided_at.desc()).first()
 
 
 def _payment_intent(db: Session, shipment_id: str) -> Optional[PaymentIntent]:
-    return (
-        db.query(PaymentIntent)
-        .filter(PaymentIntent.shipment_id == shipment_id)
-        .order_by(PaymentIntent.created_at.desc())
-        .first()
-    )
+    return db.query(PaymentIntent).filter(PaymentIntent.shipment_id == shipment_id).order_by(PaymentIntent.created_at.desc()).first()
 
 
 def _paid_amount(db: Session, intent_id: str | None) -> float:
@@ -117,7 +144,10 @@ def _paid_amount(db: Session, intent_id: str | None) -> float:
         return 0.0
     events = (
         db.query(SettlementEvent)
-        .filter(SettlementEvent.payment_intent_id == intent_id, SettlementEvent.status == "SUCCESS")
+        .filter(
+            SettlementEvent.payment_intent_id == intent_id,
+            SettlementEvent.status == "SUCCESS",
+        )
         .all()
     )
     return float(sum(e.amount or 0.0 for e in events))
@@ -142,7 +172,7 @@ def _eta_band(hours_remaining: float) -> str:
 
 
 def _eta_confidence(shipment_id: str) -> str:
-    cadence = hash(shipment_id) % 7
+    cadence = random.Random(f"eta-conf-{shipment_id}").randint(0, 6)
     if cadence >= 5:
         return "high"
     if cadence >= 3:
@@ -171,18 +201,20 @@ def live_positions(db: Session, cache_ttl_seconds: int = 10) -> List[Dict]:
     if cached is not None:
         return cached
 
-    shipments = sorted(db.query(Shipment).all(), key=lambda s: s.id)
-    if not shipments:
-        # fallback synthetic shipment
-        shipments = [
-            Shipment(
-                id="SYNTH-1",
-                corridor_code="US-MX",
-                mode="ocean",
-                collateral_value=180000.0,
-                loan_amount=126000.0,
+    try:
+        shipments = sorted(db.query(Shipment).all(), key=lambda s: s.id)
+    except Exception:
+        if DEMO_MODE:
+            logger.exception(
+                "live_positions_db_error_demo_mode",
+                extra={"endpoint": "/chainboard/live-positions"},
             )
-        ]
+            shipments = []
+        else:
+            raise
+
+    if not shipments:
+        shipments = _demo_shipments() if DEMO_MODE else []
 
     positions: List[Dict] = []
     for shipment in shipments:
@@ -194,7 +226,9 @@ def live_positions(db: Session, cache_ttl_seconds: int = 10) -> List[Dict]:
         intent = _payment_intent(db, shipment.id)
         paid_amount = _paid_amount(db, intent.id if intent else None)
         cargo_value = float(shipment.collateral_value or shipment.loan_amount or 0.0)
-        financed_amount = float(intent.approved_amount or intent.held_amount or intent.amount) if intent else float(shipment.loan_amount or 0.0)
+        financed_amount = (
+            float(intent.approved_amount or intent.held_amount or intent.amount) if intent else float(shipment.loan_amount or 0.0)
+        )
         state = _settlement_state(intent, paid_amount)
         port, distance_km = nearest_port(lat, lon, PORTS)
         corridor_code = (shipment.corridor_code or "UNKNOWN").upper()
@@ -209,7 +243,8 @@ def live_positions(db: Session, cache_ttl_seconds: int = 10) -> List[Dict]:
         dest_port, _ = nearest_port(origin_coords.dest_lat, origin_coords.dest_lon, PORTS)
 
         eta_hours_remaining = max((eta_dt - datetime.utcnow()).total_seconds() / 3600, 0.0)
-        eta_delta_hours = round(((hash(shipment.id) % 6) - 2) * 0.5, 2)
+        eta_delta_hours_seed = random.Random(f"eta-delta-{shipment.id}")
+        eta_delta_hours = round(((eta_delta_hours_seed.randint(0, 5)) - 2) * 0.5, 2)
 
         positions.append(
             {
@@ -287,7 +322,9 @@ def global_snapshot(db: Session, cache_ttl_seconds: int = 20) -> Dict:
         by_mode_map[mode]["financed_usd"] += p["financed_amount_usd"]
 
         port_name = p.get("nearest_port") or "Unknown"
-        port_risk[port_name] = port_risk.get(port_name, 0.0) + (p["cargo_value_usd"] if (p.get("risk_level") or "").lower() == "high" else 0.0)
+        port_risk[port_name] = port_risk.get(port_name, 0.0) + (
+            p["cargo_value_usd"] if (p.get("risk_level") or "").lower() == "high" else 0.0
+        )
 
     snapshot = {
         "total_value_in_transit_usd": total_value,
@@ -345,7 +382,16 @@ def intel_positions(db: Session, cache_ttl_seconds: int = 10) -> List[Dict]:
     if cached is not None:
         return cached
 
-    base_positions = live_positions(db, cache_ttl_seconds=cache_ttl_seconds)
+    try:
+        base_positions = live_positions(db, cache_ttl_seconds=cache_ttl_seconds)
+    except Exception:
+        if not DEMO_MODE:
+            raise
+        logger.exception(
+            "intel_positions_live_positions_error_demo_mode",
+            extra={"endpoint": "/intel/live-positions"},
+        )
+        base_positions = []
     now_iso = datetime.utcnow().isoformat()
 
     intel_list: List[Dict] = []
@@ -357,14 +403,13 @@ def intel_positions(db: Session, cache_ttl_seconds: int = 10) -> List[Dict]:
             risk_score_norm = risk_score_norm / 100.0 if risk_score_norm > 1 else risk_score_norm
         else:
             # deterministic pseudo-random based on shipment id for demo stability
-            risk_score_norm = (hash(pos["shipment_id"]) % 30) / 100.0
+            risk_score_norm = random.Random(f"risk-norm-{pos['shipment_id']}").randint(0, 30) / 100.0
 
         risk_category = _risk_category(pos, risk_score_norm)
         status = "AT_RISK" if risk_category in {"HIGH", "CRITICAL"} else ("DELAYED" if pos.get("progress_pct", 100) < 30 else "ON_TIME")
 
         nearest_code = pos.get("nearest_port_code") or pos.get("origin_port_code") or "UNKNOWN"
         nearest_name = pos.get("nearest_port") or pos.get("origin_port_name") or "Nearest Port"
-        nearest_country = pos.get("nearest_port_country")
 
         corridor_value = pos.get("corridor") or pos.get("corridor_normalized") or "UNKNOWN"
         eta_value = pos.get("eta") or datetime.utcnow().isoformat()

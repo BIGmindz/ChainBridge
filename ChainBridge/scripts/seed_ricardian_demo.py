@@ -1,4 +1,5 @@
 """Seed demo Ricardian instruments for QA."""
+
 from __future__ import annotations
 
 from api.database import SessionLocal, init_db

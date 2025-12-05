@@ -1,4 +1,5 @@
 """Pluggable, structured event bus."""
+
 from __future__ import annotations
 
 import asyncio
@@ -24,6 +25,8 @@ class EventType(str, Enum):
     SETTLEMENT_EVENT_APPENDED = "settlement_event.appended"
     WEBHOOK_RECEIVED = "webhook.received"
     WORKER_HEARTBEAT = "worker.heartbeat"
+    SHIPMENT_INGESTED = "shipment.ingested"
+    SHIPMENT_RISK_FLAGGED = "shipment.risk_flagged"
 
 
 @dataclass
@@ -41,8 +44,7 @@ Handler = Union[Callable[[dict], Awaitable[None]], Callable[[dict], None]]
 
 class BaseEventSink(ABC):
     @abstractmethod
-    def publish(self, event: Event) -> None:
-        ...
+    def publish(self, event: Event) -> None: ...
 
 
 class InProcessHandlerSink(BaseEventSink):

@@ -1,5 +1,5 @@
-from typing import Any, Tuple
 from datetime import datetime
+from typing import Any, Tuple
 
 import pytest
 from fastapi.testclient import TestClient
@@ -68,7 +68,9 @@ def _seed_env(session) -> str:
     return shipment.id
 
 
-def test_payment_intent_creation_blocked_by_frozen_instrument(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_payment_intent_creation_blocked_by_frozen_instrument(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         shipment_id = _seed_env(session)
@@ -88,7 +90,13 @@ def test_payment_intent_creation_blocked_by_frozen_instrument(client_with_db: Tu
         session.commit()
     resp = client.post(
         "/chainpay/payment_intents/from_shipment",
-        json={"shipment_id": "SHIP-FRZ", "amount": 1000, "currency": "USD", "counterparty": "ACME", "notes": None},
+        json={
+            "shipment_id": "SHIP-FRZ",
+            "amount": 1000,
+            "currency": "USD",
+            "counterparty": "ACME",
+            "notes": None,
+        },
     )
     assert resp.status_code == 201
     data = resp.json()

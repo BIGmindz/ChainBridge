@@ -28,8 +28,8 @@ from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from api.storage.settlement_actions import (
-    log_action,
     list_recent_actions,
+    log_action,
 )
 from core.payments.identity import is_valid_milestone_id
 
@@ -42,10 +42,12 @@ router = APIRouter()
 # Request/Response Models
 # ============================================================================
 
+
 class SettlementActionRequest(BaseModel):
     """
     Request body for settlement operator actions.
     """
+
     reason: Optional[str] = Field(None, description="Reason for the action")
     requested_by: Optional[str] = Field(None, description="Operator who requested the action")
 
@@ -54,6 +56,7 @@ class SettlementActionResponse(BaseModel):
     """
     Response for settlement operator actions.
     """
+
     status: str = Field(..., description="Action status (accepted/rejected)")
     milestone_id: str = Field(..., description="The milestone ID acted upon")
     action: str = Field(..., description="The action type performed")
@@ -76,6 +79,7 @@ class LoggedSettlementAction(BaseModel):
 # Helper Functions
 # ============================================================================
 
+
 def validate_milestone_id(milestone_id: str) -> None:
     """
     Validate milestone ID format.
@@ -83,21 +87,19 @@ def validate_milestone_id(milestone_id: str) -> None:
     Expected format: SHP-YYYY-NNN-N or similar shipment-milestone pattern.
     """
     if not milestone_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="milestone_id is required"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="milestone_id is required")
 
     if not is_valid_milestone_id(milestone_id):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid milestone_id format: {milestone_id}"
+            detail=f"Invalid milestone_id format: {milestone_id}",
         )
 
 
 # ============================================================================
 # Settlement Action Endpoints (Stubs)
 # ============================================================================
+
 
 @router.post(
     "/settlements/{milestone_id}/actions/escalate",

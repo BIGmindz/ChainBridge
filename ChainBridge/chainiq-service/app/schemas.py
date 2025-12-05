@@ -3,10 +3,38 @@ ChainIQ Pydantic Schemas
 
 Request/response models for the ChainIQ service API.
 """
+from __future__ import annotations
 
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
+
+
+class IoTSignals(BaseModel):
+    """IoT-derived features used to adjust risk in a glass-box way."""
+
+    critical_count_24h: int = Field(
+        0,
+        ge=0,
+        description="Number of critical IoT alerts in the last 24 hours",
+    )
+    silence_hours: float = Field(
+        0.0,
+        ge=0,
+        description="Hours since last IoT signal was received for this shipment",
+    )
+    corridor_instability_index: float = Field(
+        0.0,
+        ge=0.0,
+        le=1.0,
+        description="Normalized instability index (0-1) for the shipment's corridor",
+    )
+    battery_health_score: Optional[float] = Field(
+        None,
+        ge=0.0,
+        le=1.0,
+        description="Optional normalized battery health score (0-1, lower=worse)",
+    )
 
 
 class ShipmentRiskRequest(BaseModel):
@@ -20,7 +48,11 @@ class ShipmentRiskRequest(BaseModel):
 
     shipment_id: str = Field(..., description="Unique shipment identifier", examples=["SHP-1001"])
 
-    route: str = Field(..., description="Origin-destination route code (e.g., CN-US, DE-UK)", examples=["CN-US"])
+    route: str = Field(
+        ...,
+        description="Origin-destination route code (e.g., CN-US, DE-UK)",
+        examples=["CN-US"],
+    )
 
     carrier_id: str = Field(..., description="Carrier identifier", examples=["CARRIER-001"])
 
@@ -33,7 +65,16 @@ class ShipmentRiskRequest(BaseModel):
     documents_complete: bool = Field(..., description="Whether all required documents are complete", examples=[True])
 
     shipper_payment_score: int = Field(
-        ..., ge=0, le=100, description="Shipper's payment reliability score (0-100, higher is better)", examples=[85]
+        ...,
+        ge=0,
+        le=100,
+        description="Shipper's payment reliability score (0-100, higher is better)",
+        examples=[85],
+    )
+
+    iot_signals: Optional[IoTSignals] = Field(
+        default=None,
+        description="Optional IoT-derived features used to adjust risk score",
     )
 
     class Config:
@@ -64,14 +105,26 @@ class ShipmentRiskResponse(BaseModel):
 
     risk_score: int = Field(..., ge=0, le=100, description="Risk score (0-100, higher is riskier)")
 
-    severity: str = Field(..., description="Risk severity level", examples=["LOW", "MEDIUM", "HIGH", "CRITICAL"])
+    severity: str = Field(
+        ...,
+        description="Risk severity level",
+        examples=["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+    )
 
-    reason_codes: List[str] = Field(default_factory=list, description="List of reason codes explaining the risk score")
+    reason_codes: List[str] = Field(
+        default_factory=list,
+        description="List of reason codes explaining the risk score",
+    )
 
     recommended_action: str = Field(
         ...,
         description="Recommended action for operator",
-        examples=["RELEASE_PAYMENT", "MANUAL_REVIEW", "HOLD_PAYMENT", "ESCALATE_COMPLIANCE"],
+        examples=[
+            "RELEASE_PAYMENT",
+            "MANUAL_REVIEW",
+            "HOLD_PAYMENT",
+            "ESCALATE_COMPLIANCE",
+        ],
     )
 
     class Config:
@@ -223,7 +276,8 @@ class EntityHistoryResponse(BaseModel):
     entity_id: str = Field(..., description="Entity identifier (shipment_id)")
     total_records: int = Field(..., description="Total number of historical records")
     history: List[EntityHistoryRecord] = Field(
-        default_factory=list, description="Historical scoring records in reverse chronological order"
+        default_factory=list,
+        description="Historical scoring records in reverse chronological order",
     )
 
     class Config:
@@ -264,7 +318,7 @@ class RouteOption(BaseModel):
 
     option_id: str = Field(..., description="Unique identifier for this option")
     route: str = Field(..., description="Route code (e.g., IR-TR-EU)")
-    carrier_id: str | None = Field(None, description="Carrier identifier for this route")
+    carrier_id: Optional[str] = Field(None, description="Carrier identifier for this route")
     risk_score: int = Field(..., ge=0, le=100, description="Risk score for this option")
     risk_delta: int = Field(..., description="Risk improvement vs current (positive = safer)")
     eta_delta_days: int = Field(..., description="ETA change vs current (+2 = 2 days slower, -1 = 1 day faster)")
@@ -302,16 +356,15 @@ class OptionsAdvisorResponse(BaseModel):
 
     shipment_id: str = Field(..., description="Shipment identifier")
     current_risk_score: int = Field(..., ge=0, le=100, description="Current risk score")
-    current_route: str | None = Field(None, description="Current route")
-    current_carrier_id: str | None = Field(None, description="Current carrier ID")
-    current_payment_rail: str | None = Field(None, description="Current payment rail")
+    current_route: Optional[str] = Field(None, description="Current route")
+    current_carrier_id: Optional[str] = Field(None, description="Current carrier ID")
+    current_payment_rail: Optional[str] = Field(None, description="Current payment rail")
     risk_appetite: Literal["conservative", "balanced", "aggressive"] = Field(
-        default="balanced", description="Risk appetite setting for option recommendations"
+        default="balanced",
+        description="Risk appetite setting for option recommendations",
     )
     route_options: list[RouteOption] = Field(default_factory=list, description="Alternative route options")
-    payment_options: list[PaymentRailOption] = Field(
-        default_factory=list, description="Alternative payment rail options"
-    )
+    payment_options: list[PaymentRailOption] = Field(default_factory=list, description="Alternative payment rail options")
 
 
 # Sunny: define the Pydantic models for the Better Options Advisor.
@@ -355,10 +408,10 @@ class ProofPackResponse(BaseModel):
     shipment_id: str = Field(..., description="Shipment identifier")
     version: str = Field(default="proofpack-v1", description="ProofPack schema version")
     generated_at: str = Field(..., description="When this ProofPack was generated (ISO-8601 UTC)")
-    risk_snapshot: RiskSnapshot | None = Field(None, description="Latest risk assessment")
-    history: EntityHistoryResponse | None = Field(None, description="Complete risk scoring history")
-    payment_queue_entry: PaymentQueueItem | None = Field(None, description="Current payment queue entry if pending")
-    options_advisor: OptionsAdvisorResponse | None = Field(None, description="Safer route/payment alternatives")
+    risk_snapshot: Optional[RiskSnapshot] = Field(None, description="Latest risk assessment")
+    history: Optional[EntityHistoryResponse] = Field(None, description="Complete risk scoring history")
+    payment_queue_entry: Optional[PaymentQueueItem] = Field(None, description="Current payment queue entry if pending")
+    options_advisor: Optional[OptionsAdvisorResponse] = Field(None, description="Safer route/payment alternatives")
 
 
 class SimulationRequest(BaseModel):

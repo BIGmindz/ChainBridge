@@ -18,7 +18,6 @@ from core.payments.identity import (
     infer_freight_token_id,
 )
 
-
 _SIMULATOR_TASK: Optional[asyncio.Task] = None
 
 
@@ -45,18 +44,25 @@ async def _simulate_events():
 
             # Pick random event type - weight payment events higher for demo
             event_type = random.choices(
-                ["iot_reading", "shipment_event", "alert_updated", "payment_state_changed"],
+                [
+                    "iot_reading",
+                    "shipment_event",
+                    "alert_updated",
+                    "payment_state_changed",
+                ],
                 weights=[3, 2, 2, 4],  # Favor payment events for demo visibility
-                k=1
+                k=1,
             )[0]
 
             if event_type == "iot_reading":
                 # Simulate IoT reading from random shipment
-                shipment_id = random.choice([
-                    "shp-4a2e8f3b-temp-excursion",
-                    "shp-7b3c9d4e-route-delay",
-                    "shp-1c5d6e2f-normal",
-                ])
+                shipment_id = random.choice(
+                    [
+                        "shp-4a2e8f3b-temp-excursion",
+                        "shp-7b3c9d4e-route-delay",
+                        "shp-1c5d6e2f-normal",
+                    ]
+                )
                 await publish_event(
                     type="iot_reading",
                     source="iot",
@@ -70,11 +76,13 @@ async def _simulate_events():
 
             elif event_type == "shipment_event":
                 # Simulate shipment location update
-                shipment_id = random.choice([
-                    "shp-4a2e8f3b-temp-excursion",
-                    "shp-7b3c9d4e-route-delay",
-                    "shp-1c5d6e2f-normal",
-                ])
+                shipment_id = random.choice(
+                    [
+                        "shp-4a2e8f3b-temp-excursion",
+                        "shp-7b3c9d4e-route-delay",
+                        "shp-1c5d6e2f-normal",
+                    ]
+                )
                 await publish_event(
                     type="shipment_event",
                     source="shipments",
@@ -88,11 +96,13 @@ async def _simulate_events():
 
             elif event_type == "alert_updated":
                 # Simulate alert being updated by background process
-                alert_id = random.choice([
-                    "alert-temp-001",
-                    "alert-route-002",
-                    "alert-tamper-003",
-                ])
+                alert_id = random.choice(
+                    [
+                        "alert-temp-001",
+                        "alert-route-002",
+                        "alert-tamper-003",
+                    ]
+                )
                 await publish_event(
                     type="alert_updated",
                     source="alerts",
@@ -137,9 +147,7 @@ async def _simulate_events():
                 payment_cycle_state[shipment_ref] = new_state
 
                 freight_token_id = infer_freight_token_id(shipment_ref)
-                milestone_identifier = canonical_milestone_id(
-                    shipment_ref, payment_cycle_state["cycle_count"]
-                )
+                milestone_identifier = canonical_milestone_id(shipment_ref, payment_cycle_state["cycle_count"])
 
                 await publish_event(
                     type="payment_state_changed",

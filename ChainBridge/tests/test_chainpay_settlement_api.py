@@ -62,7 +62,9 @@ def _seed_intent(session: Session, risk_level: str = "LOW") -> str:
     return intent.id
 
 
-def test_list_settlement_events_empty(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_list_settlement_events_empty(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed_intent(session)
@@ -71,13 +73,17 @@ def test_list_settlement_events_empty(client_with_db: Tuple[TestClient, Any, ses
     assert resp.json() == []
 
 
-def test_list_settlement_events_not_found(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_list_settlement_events_not_found(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, _ = client_with_db
     resp = client.get("/chainpay/payment_intents/DOES-NOT-EXIST/settlement_events")
     assert resp.status_code == 404
 
 
-def test_list_settlement_events_sorted(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_list_settlement_events_sorted(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed_intent(session)
@@ -109,7 +115,9 @@ def test_list_settlement_events_sorted(client_with_db: Tuple[TestClient, Any, se
     assert [e["sequence"] for e in events] == [1, 2]
 
 
-def test_demo_generator_paths(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_demo_generator_paths(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         low_id = _seed_intent(session, risk_level="LOW")
@@ -122,7 +130,9 @@ def test_demo_generator_paths(client_with_db: Tuple[TestClient, Any, sessionmake
     assert [e["event_type"] for e in high_events][-1] == "FAILED"
 
 
-def test_append_settlement_event_and_idempotent(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_append_settlement_event_and_idempotent(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed_intent(session)
@@ -141,7 +151,9 @@ def test_append_settlement_event_and_idempotent(client_with_db: Tuple[TestClient
     assert second.json()["id"] == event_id
 
 
-def test_append_settlement_event_regression_rejected(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_append_settlement_event_regression_rejected(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed_intent(session)
@@ -169,7 +181,9 @@ def test_append_settlement_event_regression_rejected(client_with_db: Tuple[TestC
     assert resp.status_code == 400
 
 
-def test_double_terminal_event_rejected(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_double_terminal_event_rejected(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed_intent(session)
@@ -197,7 +211,9 @@ def test_double_terminal_event_rejected(client_with_db: Tuple[TestClient, Any, s
     assert resp.status_code in (400, 409)
 
 
-def test_replace_and_delete_event(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_replace_and_delete_event(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed_intent(session)

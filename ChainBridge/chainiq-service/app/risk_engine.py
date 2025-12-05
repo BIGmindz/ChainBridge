@@ -26,9 +26,12 @@ Design Principles:
 - Transparent: Clear reason codes for every score
 - Testable: All logic unit-testable
 """
+from __future__ import annotations
 
 import logging
-from typing import List, Tuple
+from typing import List, Optional, Tuple
+
+from .schemas import IoTSignals, ShipmentRiskRequest
 
 logger = logging.getLogger(__name__)
 
@@ -45,10 +48,59 @@ RISK_WEIGHTS = {
 
 class RiskLevel:
     """Risk level classifications"""
+
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
     CRITICAL = "CRITICAL"
+
+
+def _apply_iot_rules(
+    base_score: int,
+    reason_codes: List[str],
+    iot_signals: Optional[IoTSignals],
+) -> Tuple[int, List[str]]:
+    """Apply IoT-derived risk adjustments in a transparent, glass-box way.
+
+    This function encodes Maggie's initial IoT rules so that
+    ChainSense signals can deterministically move the final risk score.
+    """
+
+    if iot_signals is None:
+        return base_score, reason_codes
+
+    score = float(base_score)
+
+    # 1) Fresh Damage: any critical alert in last 24h → strong uplift
+    if iot_signals.critical_count_24h > 0:
+        score += 40
+        reason_codes.append("IOT_FRESH_DAMAGE")
+
+    # 2) Ghosting: no telemetry for a prolonged period
+    #    >24h = critical, >4h = warning
+    if iot_signals.silence_hours is not None:
+        if iot_signals.silence_hours >= 24:
+            score += 50
+            reason_codes.append("IOT_GHOSTING_CRITICAL")
+        elif iot_signals.silence_hours >= 4:
+            score += 20
+            reason_codes.append("IOT_GHOSTING_WARN")
+
+    # 3) Corridor Chaos: systemic instability on the shipment's lane
+    if iot_signals.corridor_instability_index is not None:
+        if iot_signals.corridor_instability_index >= 0.7:
+            score += 10
+            reason_codes.append("IOT_CORRIDOR_CHAOS")
+
+    # 4) Dying Battery: poor battery health increases risk of going dark
+    if getattr(iot_signals, "battery_health_score", None) is not None:
+        if iot_signals.battery_health_score < 0.3:
+            score += 20
+            reason_codes.append("IOT_DYING_BATTERY")
+
+    # Clamp to sane bounds (0–100)
+    score_clamped = max(0.0, min(score, 100.0))
+    return int(score_clamped), reason_codes
 
 
 def calculate_risk_score(
@@ -59,6 +111,8 @@ def calculate_risk_score(
     expected_days: int,
     documents_complete: bool,
     shipper_payment_score: int,  # 0-100, higher is better
+    *,
+    request: Optional[ShipmentRiskRequest] = None,
 ) -> Tuple[int, str, List[str], str]:
     """
     Calculate risk score for a shipment.
@@ -169,8 +223,9 @@ def calculate_risk_score(
 
     risk_score += payment_points
 
-    # Cap at 100
-    risk_score = min(risk_score, 100)
+    # 7. IoT-derived adjustments (if IoT signals provided)
+    iot_signals = request.iot_signals if request is not None else None
+    risk_score, reason_codes = _apply_iot_rules(risk_score, reason_codes, iot_signals)
 
     # Determine severity
     if risk_score < 30:

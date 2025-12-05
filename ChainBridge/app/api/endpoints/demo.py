@@ -1,4 +1,5 @@
 """Demo/God Mode endpoints for rapid state changes."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -8,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from api.database import SessionLocal
 from api.models.chaindocs import Shipment
-from app.models.marketplace import Listing, Bid
+from app.models.marketplace import Bid, Listing
 from app.worker.functions import liquidate_asset_task
 
 router = APIRouter(prefix="/demo", tags=["demo"])

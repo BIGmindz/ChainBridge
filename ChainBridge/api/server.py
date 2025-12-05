@@ -20,6 +20,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from sqlalchemy import text
 
 from core.data_processor import DataProcessor
 
@@ -28,19 +29,31 @@ from core.module_manager import ModuleManager
 from core.pipeline import Pipeline
 from tracking.metrics_collector import MetricsCollector
 
-# Import ChainIQ router
-try:
-    import sys
+from chainbridge.runtime import startup as runtime_startup
 
-    chainiq_path = str(project_root / "chainiq-service")
-    if chainiq_path not in sys.path:
-        sys.path.insert(0, chainiq_path)
+# Import ChainIQ routers
+chainiq_router = None
+chainiq_iot_router = None
+chainiq_path = str(project_root / "chainiq-service")
+if chainiq_path not in sys.path:
+    sys.path.insert(0, chainiq_path)
+
+try:
     from app.api import router as chainiq_router
 
     CHAINIQ_AVAILABLE = True
 except Exception as e:
     print(f"Warning: ChainIQ service not available: {e}")
     CHAINIQ_AVAILABLE = False
+
+try:
+    from app.api_iot import router as chainiq_iot_router
+
+    CHAINIQ_IOT_AVAILABLE = True
+except Exception as e:
+    print(f"Warning: ChainIQ IoT service not available: {e}")
+    CHAINIQ_IOT_AVAILABLE = False
+    chainiq_iot_router = None
 
 # Import ChainBoard router
 try:
@@ -80,7 +93,9 @@ except ImportError as e:
 
 # Import ChainBoard Settlements router
 try:
-    from api.routes.chainboard_settlements import router as chainboard_settlements_router
+    from api.routes.chainboard_settlements import (
+        router as chainboard_settlements_router,
+    )
 
     CHAINBOARD_SETTLEMENTS_AVAILABLE = True
 except ImportError as e:
@@ -96,6 +111,15 @@ except ImportError as e:
     print(f"Warning: ChainDocs service not available: {e}")
     CHAINDOCS_AVAILABLE = False
 
+# Import ChainFreight router
+try:
+    from api.routes.chainfreight import router as chainfreight_router
+
+    CHAINFREIGHT_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: ChainFreight service not available: {e}")
+    CHAINFREIGHT_AVAILABLE = False
+
 # Import ChainPay router
 try:
     from api.routes.chainpay import router as chainpay_router
@@ -104,6 +128,22 @@ try:
 except ImportError as e:
     print(f"Warning: ChainPay service not available: {e}")
     CHAINPAY_AVAILABLE = False
+
+try:
+    from api.routes.chainpay_context_risk import router as chainpay_context_risk_router
+
+    CHAINPAY_CONTEXT_RISK_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: ChainPay context risk router not available: {e}")
+    CHAINPAY_CONTEXT_RISK_AVAILABLE = False
+
+try:
+    from api.routes.chainpay_settlement import router as chainpay_settlement_router
+
+    CHAINPAY_SETTLEMENT_ROUTER_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: ChainPay settlement router not available: {e}")
+    CHAINPAY_SETTLEMENT_ROUTER_AVAILABLE = False
 
 # Import ChainPay webhook router
 try:
@@ -204,8 +244,10 @@ try:
 except ImportError as e:
     print(f"Warning: ChainIQ health router not available: {e}")
     CHAINIQ_HEALTH_AVAILABLE = False
-from api.database import init_db
 import api.events.audit_log  # noqa: F401
+from api.database import init_db
+from api.database import SessionLocal
+
 try:
     from api.routes.sla import router as sla_router
 
@@ -336,9 +378,14 @@ app.add_middleware(
 )
 
 # Include ChainIQ router if available
-if CHAINIQ_AVAILABLE:
-    app.include_router(chainiq_router)
+if CHAINIQ_AVAILABLE and chainiq_router is not None:
+    # Expose ChainIQ scoring API under /api/iq/...
+    app.include_router(chainiq_router, prefix="/api")
     print("✅ ChainIQ service registered")
+
+if CHAINIQ_IOT_AVAILABLE and chainiq_iot_router is not None:
+    app.include_router(chainiq_iot_router, prefix="/api")
+    print("✅ ChainIQ IoT health registered")
 
 # Include ChainBoard router for the new dashboard UI
 if CHAINBOARD_AVAILABLE:
@@ -365,9 +412,20 @@ if CHAINDOCS_AVAILABLE:
     app.include_router(chaindocs_router)
     print("✅ ChainDocs service registered")
 
+if CHAINFREIGHT_AVAILABLE:
+    app.include_router(chainfreight_router, prefix="/api")
+    print("✅ ChainFreight service registered")
+
 if CHAINPAY_AVAILABLE:
     app.include_router(chainpay_router)
     print("✅ ChainPay service registered")
+
+if CHAINPAY_CONTEXT_RISK_AVAILABLE:
+    app.include_router(chainpay_context_risk_router, prefix="/api")
+    print("✅ ChainPay context risk feed registered")
+if CHAINPAY_SETTLEMENT_ROUTER_AVAILABLE:
+    app.include_router(chainpay_settlement_router, prefix="/api")
+    print("✅ ChainPay settlement API registered")
 if CHAINPAY_WEBHOOKS_AVAILABLE:
     app.include_router(chainpay_webhooks_router)
     print("✅ ChainPay webhooks registered")
@@ -397,12 +455,14 @@ if SHADOW_PILOT_AVAILABLE:
     print("✅ Shadow Pilot registered")
 try:
     from api.routes.operator import router as operator_router
+
     app.include_router(operator_router)
     print("✅ Operator routes registered")
 except Exception as e:
     print(f"Warning: Operator router not available: {e}")
 try:
     from api.routes.webhooks import router as webhooks_router
+
     app.include_router(webhooks_router)
     print("✅ Settlement webhook orchestrator registered")
 except Exception as e:
@@ -442,10 +502,41 @@ async def root():
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
     """Health check endpoint."""
+    db_ready = True
+    try:
+        with SessionLocal() as session:
+            session.execute(text("SELECT 1"))
+    except Exception:
+        db_ready = False
+
+    status_value = "healthy" if db_ready else "degraded"
+
     return HealthResponse(
+        status=status_value,
         modules_loaded=len(module_manager.list_modules()),
         active_pipelines=len(pipelines),
     )
+
+
+@app.get("/health/router")
+async def router_health():
+    """Expose queue + router telemetry."""
+
+    context = await runtime_startup.ensure_runtime()
+    orchestrator_metrics = context.router.orchestrator.get_metrics()
+    snapshot = context.metrics.snapshot()
+
+    def _iso(value):
+        return value.isoformat() if value else None
+
+    return {
+        "queue_depth": orchestrator_metrics.queue_depth,
+        "router_status": orchestrator_metrics.status.value,
+        "dlq_size": orchestrator_metrics.dlq_count,
+        "last_event_timestamp": _iso(snapshot.last_event_timestamp),
+        "last_settlement_trigger": _iso(snapshot.last_settlement_trigger),
+        "last_proof_request": _iso(snapshot.last_proof_request),
+    }
 
 
 @app.get("/modules", response_model=List[str])
@@ -488,9 +579,7 @@ async def execute_module(module_name: str, request: ModuleExecutionRequest):
 
         # Track metrics
         execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
-        metrics_collector.track_module_execution(
-            module_name, execution_time, len(str(request.input_data)), len(str(result))
-        )
+        metrics_collector.track_module_execution(module_name, execution_time, len(str(request.input_data)), len(str(result)))
 
         return {
             "result": result,

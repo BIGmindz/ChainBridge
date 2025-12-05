@@ -1,8 +1,8 @@
 """Tests for ChainIQ shipment health intelligence endpoint."""
 
+import threading
 from datetime import datetime, timedelta
 from pathlib import Path
-import threading
 from typing import Any, List, Optional, Tuple
 
 import pytest
@@ -13,9 +13,19 @@ from sqlalchemy.pool import StaticPool
 
 from api.chainiq_service import export_worker
 from api.database import Base, get_db
-from api.models.chaindocs import Document, DocumentType, Shipment, ShipmentDocRequirement
 from api.models.canonical import RiskLevel, ShipmentEventType
-from api.models.chainiq import DocumentHealthSnapshot, RiskDecision, ShipmentEvent, SnapshotExportEvent
+from api.models.chaindocs import (
+    Document,
+    DocumentType,
+    Shipment,
+    ShipmentDocRequirement,
+)
+from api.models.chainiq import (
+    DocumentHealthSnapshot,
+    RiskDecision,
+    SnapshotExportEvent,
+)
+from api.models.chainfreight import ShipmentEvent
 from api.models.chainpay import SettlementMilestone, SettlementPlan
 from api.server import app
 
@@ -174,7 +184,9 @@ def _get_shipment_events(session: Session, shipment_id: str) -> List[ShipmentEve
     )
 
 
-def test_health_empty_shipment_returns_valid_shape(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_health_empty_shipment_returns_valid_shape(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, _ = client_with_db
 
     response = client.get("/chainiq/shipments/SHIP-EMPTY/health")
@@ -190,7 +202,7 @@ def test_health_empty_shipment_returns_valid_shape(client_with_db: Tuple[TestCli
 
 
 def test_health_seeded_shipment_matches_docs_and_plan(
-    client_with_db: Tuple[TestClient, Any, sessionmaker]
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
 ) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
@@ -206,7 +218,11 @@ def test_health_seeded_shipment_matches_docs_and_plan(
     assert health["settlement_health"]["milestones_total"] == 3
     assert health["settlement_health"]["milestones_paid"] == 1
     assert health["settlement_health"]["milestones_held"] == 1
-    assert health["risk"]["level"] in {RiskLevel.MEDIUM.value, RiskLevel.HIGH.value, RiskLevel.CRITICAL.value}
+    assert health["risk"]["level"] in {
+        RiskLevel.MEDIUM.value,
+        RiskLevel.HIGH.value,
+        RiskLevel.CRITICAL.value,
+    }
 
     plan_response = client.get("/chainpay/shipments/SHIP-RDY/settlement_plan")
     assert plan_response.status_code == 200
@@ -215,7 +231,9 @@ def test_health_seeded_shipment_matches_docs_and_plan(
     assert plan["doc_risk"]["missing_blocking_docs"] == health["document_health"]["blocking_documents"]
 
 
-def test_health_persists_snapshot(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_health_persists_snapshot(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
 
     response = client.get("/chainiq/shipments/SHIP-SNAP/health")
@@ -228,7 +246,9 @@ def test_health_persists_snapshot(client_with_db: Tuple[TestClient, Any, session
         assert snapshots[0].completeness_pct == response.json()["document_health"]["completeness_pct"]
 
 
-def test_health_snapshot_uses_latest_values(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_health_snapshot_uses_latest_values(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
 
     # First snapshot with no documents
@@ -252,10 +272,7 @@ def test_health_snapshot_uses_latest_values(client_with_db: Tuple[TestClient, An
 
     with SessionLocal() as session:
         snapshots = (
-            session.query(DocumentHealthSnapshot)
-            .filter_by(shipment_id="SHIP-VSN")
-            .order_by(DocumentHealthSnapshot.created_at.asc())
-            .all()
+            session.query(DocumentHealthSnapshot).filter_by(shipment_id="SHIP-VSN").order_by(DocumentHealthSnapshot.created_at.asc()).all()
         )
         assert len(snapshots) == 2
         latest = snapshots[-1]
@@ -265,7 +282,7 @@ def test_health_snapshot_uses_latest_values(client_with_db: Tuple[TestClient, An
 
 
 def test_health_uses_template_defaults_when_no_templates_exist(
-    client_with_db: Tuple[TestClient, Any, sessionmaker]
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
 ) -> None:
     client, _, _ = client_with_db
 
@@ -279,7 +296,7 @@ def test_health_uses_template_defaults_when_no_templates_exist(
 
 
 def test_health_counts_blocking_vs_non_blocking_docs(
-    client_with_db: Tuple[TestClient, Any, sessionmaker]
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
 ) -> None:
     client, _, SessionLocal = client_with_db
 
@@ -365,7 +382,7 @@ def test_health_counts_blocking_vs_non_blocking_docs(
 
 
 def test_at_risk_shipments_filters_by_score_and_blocking_gaps(
-    client_with_db: Tuple[TestClient, Any, sessionmaker]
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
 ) -> None:
     client, _, SessionLocal = client_with_db
 
@@ -470,7 +487,7 @@ def test_at_risk_shipments_filters_by_score_and_blocking_gaps(
 
 
 def test_at_risk_shipments_respects_max_results(
-    client_with_db: Tuple[TestClient, Any, sessionmaker]
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
 ) -> None:
     client, _, SessionLocal = client_with_db
 
@@ -504,7 +521,7 @@ def test_at_risk_shipments_respects_max_results(
 
 
 def test_at_risk_shipments_supports_filters_and_pagination(
-    client_with_db: Tuple[TestClient, Any, sessionmaker]
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
 ) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
@@ -587,7 +604,7 @@ def test_at_risk_shipments_supports_filters_and_pagination(
 
 
 def test_at_risk_shipments_includes_latest_snapshot_status(
-    client_with_db: Tuple[TestClient, Any, sessionmaker]
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
 ) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
@@ -655,7 +672,7 @@ def test_at_risk_shipments_includes_latest_snapshot_status(
 
 
 def test_snapshot_export_events_created_on_health_call(
-    client_with_db: Tuple[TestClient, Any, sessionmaker]
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
 ) -> None:
     client, _, SessionLocal = client_with_db
 
@@ -676,15 +693,13 @@ def test_snapshot_export_events_created_on_health_call(
         assert targets == {"BIS", "SXT", "ML_PIPELINE"}
 
         shipment_events = _get_shipment_events(session, "SHIP-EXPORT")
-        requested_events = [
-            event for event in shipment_events if event.event_type == ShipmentEventType.SNAPSHOT_REQUESTED.value
-        ]
+        requested_events = [event for event in shipment_events if event.event_type == ShipmentEventType.SNAPSHOT_REQUESTED.value]
         assert len(requested_events) == len(events)
         assert {evt.payload["target_system"] for evt in requested_events} == targets
 
 
 def test_admin_snapshot_exports_endpoint_filters(
-    client_with_db: Tuple[TestClient, Any, sessionmaker]
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
 ) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
@@ -862,7 +877,9 @@ def test_create_snapshot_export_allows_multiple_events(
     assert resp_one.json()["id"] != resp_two.json()["id"]
 
 
-def test_export_worker_lifecycle(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_export_worker_lifecycle(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     _, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         snapshot = _create_snapshot(session, "SHIP-WORKER")
@@ -963,7 +980,7 @@ def test_claim_next_pending_event_unique_to_workers(
 
 
 def test_mark_event_invalid_transition_rejected(
-    client_with_db: Tuple[TestClient, Any, sessionmaker]
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
 ) -> None:
     _, _, SessionLocal = client_with_db
     with SessionLocal() as session:
@@ -979,7 +996,9 @@ def test_mark_event_invalid_transition_rejected(
             export_worker.mark_event_failed(session, event.id, reason="boom")
 
 
-def test_retry_count_increments_and_caps(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_retry_count_increments_and_caps(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     _, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         snapshot = _create_snapshot(session, "SHIP-RETRY")
@@ -1052,7 +1071,7 @@ def test_update_snapshot_export_event_status_endpoint(
 
 
 def test_risk_decision_and_event_logged(
-    client_with_db: Tuple[TestClient, Any, sessionmaker]
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
 ) -> None:
     client, _, SessionLocal = client_with_db
     shipment_id = "SHIP-RISK-DECISION"
@@ -1074,7 +1093,7 @@ def test_risk_decision_and_event_logged(
 
 
 def test_debug_shipment_events_endpoint_returns_events(
-    client_with_db: Tuple[TestClient, Any, sessionmaker]
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
 ) -> None:
     client, _, _ = client_with_db
     shipment_id = "SHIP-RISK-EVENTS"

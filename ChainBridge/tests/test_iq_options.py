@@ -12,10 +12,11 @@ Coverage:
 - Invalid risk_appetite defaults to balanced
 """
 
+import tempfile
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
-from pathlib import Path
-import tempfile
 
 # Import the main app
 from api.server import app
@@ -38,8 +39,8 @@ def setup_test_db(monkeypatch):
         chainiq_path = Path(__file__).parent.parent / "chainiq-service"
         sys.path.insert(0, str(chainiq_path))
 
-        from storage import DB_PATH as original_path
         import storage
+        from storage import DB_PATH as original_path
 
         monkeypatch.setattr(storage, "DB_PATH", TEST_DB_PATH)
 
@@ -72,7 +73,7 @@ def _seed_high_risk_shipment(shipment_id: str) -> None:
         "days_in_transit": 8,
         "expected_days": 7,
         "documents_complete": False,
-        "shipper_payment_score": 45
+        "shipper_payment_score": 45,
     }
 
     response = client.post("/iq/score-shipment", json=payload)

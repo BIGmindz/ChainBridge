@@ -138,7 +138,10 @@ def test_risk_approval_creates_payment_intent(
         snapshot = (
             session.query(DocumentHealthSnapshot)
             .filter_by(shipment_id="SHIP-AUTO-OK")
-            .order_by(DocumentHealthSnapshot.created_at.desc(), DocumentHealthSnapshot.id.desc())
+            .order_by(
+                DocumentHealthSnapshot.created_at.desc(),
+                DocumentHealthSnapshot.id.desc(),
+            )
             .first()
         )
 

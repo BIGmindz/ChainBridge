@@ -1,7 +1,9 @@
 """Ricardian legal wrapper schema."""
+
 from __future__ import annotations
 
 from enum import Enum
+
 from pydantic import BaseModel, Field, HttpUrl, validator
 
 
@@ -14,6 +16,7 @@ class RicardianAsset(BaseModel):
     """
     The Legal Wrapper. Maps 1:1 to the IPFS JSON.
     """
+
     name: str = Field(..., description="Shipment ID")
     legal_document_uri: HttpUrl = Field(..., description="IPFS Link to PDF")
     legal_document_hash: str = Field(..., min_length=64, max_length=64, description="SHA-256 Hash of the PDF")

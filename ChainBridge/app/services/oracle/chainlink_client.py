@@ -1,4 +1,5 @@
 """Chainlink Functions client wrapper for off-chain verification."""
+
 from __future__ import annotations
 
 import hashlib
@@ -14,7 +15,10 @@ logger = logging.getLogger(__name__)
 def estimate_gas_cost(network: str | None = None) -> float:
     """Rudimentary gas estimate (USD) for Chainlink Functions calls."""
     # TODO: swap with on-chain estimator per network
-    return round(0.12 if (network or settings.HEDERA_NETWORK or "testnet") == "testnet" else 0.45, 4)
+    return round(
+        (0.12 if (network or settings.HEDERA_NETWORK or "testnet") == "testnet" else 0.45),
+        4,
+    )
 
 
 def request_verification(shipment_id: str, payload: Dict[str, Any] | None = None) -> Dict[str, Any]:

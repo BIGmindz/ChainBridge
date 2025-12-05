@@ -70,9 +70,7 @@ def build_oc_feed(db: Session, cache_ttl_seconds: int = FEED_CACHE_TTL_SECONDS) 
     snapshot = compute_global_intel_from_positions(positions)
     queue_cards = _build_queue_cards(positions)
     corridors_covered = len({p.corridor or p.corridor_normalized for p in positions})
-    ports_covered = len(
-        {p.dest_port_code or p.origin_port_code for p in positions if (p.dest_port_code or p.origin_port_code)}
-    )
+    ports_covered = len({p.dest_port_code or p.origin_port_code for p in positions if (p.dest_port_code or p.origin_port_code)})
     meta = LivePositionsMeta(
         active_shipments=len(positions),
         corridors_covered=corridors_covered,

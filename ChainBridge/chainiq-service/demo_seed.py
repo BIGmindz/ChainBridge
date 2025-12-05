@@ -13,18 +13,18 @@ This script creates 3-5 demo shipments with varying risk levels, complete with:
 - ProofPack data
 """
 
-import sys
-import sqlite3
 import json
-from pathlib import Path
+import sqlite3
+import sys
 from datetime import datetime, timedelta
+from pathlib import Path
 
 # Add chainiq-service to path for imports
 chainiq_path = Path(__file__).parent
 if str(chainiq_path) not in sys.path:
     sys.path.insert(0, str(chainiq_path))
 
-from storage import init_db, DB_PATH  # noqa: E402
+from storage import DB_PATH, init_db  # noqa: E402
 
 
 def seed_demo_shipments():
@@ -46,7 +46,7 @@ def seed_demo_shipments():
             "expected_days": 3,
             "documents_complete": True,
             "shipper_payment_score": 95,
-            "description": "Low-risk baseline shipment (safe route, documents complete)"
+            "description": "Low-risk baseline shipment (safe route, documents complete)",
         },
         {
             "shipment_id": "DEMO-MEDIUM-001",
@@ -57,7 +57,7 @@ def seed_demo_shipments():
             "expected_days": 14,
             "documents_complete": True,
             "shipper_payment_score": 70,
-            "description": "Medium-risk shipment (minor delay, decent carrier)"
+            "description": "Medium-risk shipment (minor delay, decent carrier)",
         },
         {
             "shipment_id": "DEMO-HIGH-001",
@@ -68,7 +68,7 @@ def seed_demo_shipments():
             "expected_days": 8,
             "documents_complete": False,
             "shipper_payment_score": 55,
-            "description": "High-risk shipment (significant delay, docs incomplete)"
+            "description": "High-risk shipment (significant delay, docs incomplete)",
         },
         {
             "shipment_id": "DEMO-CRITICAL-001",
@@ -79,7 +79,7 @@ def seed_demo_shipments():
             "expected_days": 10,
             "documents_complete": False,
             "shipper_payment_score": 35,
-            "description": "Critical-risk shipment (high-risk route, massive delay, poor docs)"
+            "description": "Critical-risk shipment (high-risk route, massive delay, poor docs)",
         },
         {
             "shipment_id": "DEMO-HIGH-002",
@@ -90,7 +90,7 @@ def seed_demo_shipments():
             "expected_days": 12,
             "documents_complete": True,
             "shipper_payment_score": 48,
-            "description": "High-risk shipment (unreliable carrier, delay, low shipper score)"
+            "description": "High-risk shipment (unreliable carrier, delay, low shipper score)",
         },
     ]
 
@@ -101,10 +101,7 @@ def seed_demo_shipments():
         shipment_id = shipment["shipment_id"]
 
         # Check if shipment already exists
-        cursor.execute(
-            "SELECT COUNT(*) FROM risk_decisions WHERE shipment_id = ?",
-            (shipment_id,)
-        )
+        cursor.execute("SELECT COUNT(*) FROM risk_decisions WHERE shipment_id = ?", (shipment_id,))
         exists = cursor.fetchone()[0] > 0
 
         if exists:
@@ -163,7 +160,7 @@ def seed_demo_shipments():
                     scored_at.isoformat(),
                     json.dumps(request_payload),
                     json.dumps(response_payload),
-                )
+                ),
             )
 
         # Note: payment_hold_queue table doesn't exist yet in schema

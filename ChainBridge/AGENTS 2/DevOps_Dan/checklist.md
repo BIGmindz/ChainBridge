@@ -1,0 +1,5 @@
+- Read the task and identify affected paths.
+- Inspect relevant workflows/manifests/scripts.
+- Propose minimal, reversible changes.
+- Run or recommend appropriate CI/linters/tests.
+- Ensure outputs respect ChainBridge mantra and ALEX gate.

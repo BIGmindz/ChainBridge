@@ -1,4 +1,5 @@
 """Pydantic schemas for ChainStake analytics."""
+
 from __future__ import annotations
 
 from datetime import datetime

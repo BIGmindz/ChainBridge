@@ -1,8 +1,8 @@
-from typing import Any, Tuple
-from datetime import datetime
 import hashlib
 import hmac
 import json
+from datetime import datetime
+from typing import Any, Tuple
 
 import pytest
 from fastapi.testclient import TestClient
@@ -95,65 +95,100 @@ def _signed_headers(payload: dict, secret: str) -> dict:
     }
 
 
-def test_payment_status_webhook_creates_events(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_payment_status_webhook_creates_events(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed_intent(session)
 
     resp = client.post(
         "/webhooks/settlement/payment_status",
-        json={"payment_intent_id": intent_id, "external_status": "AUTHORIZED", "provider": "demo", "raw_payload": {}},
+        json={
+            "payment_intent_id": intent_id,
+            "external_status": "AUTHORIZED",
+            "provider": "demo",
+            "raw_payload": {},
+        },
     )
     assert resp.status_code == 200
     events = client.get(f"/chainpay/payment_intents/{intent_id}/settlement_events").json()
     assert any(evt["event_type"] == "AUTHORIZED" for evt in events)
 
 
-def test_payment_status_failed_path(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_payment_status_failed_path(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed_intent(session, risk="HIGH")
 
     resp = client.post(
         "/webhooks/settlement/payment_status",
-        json={"payment_intent_id": intent_id, "external_status": "FAILED", "provider": "demo", "raw_payload": {}},
+        json={
+            "payment_intent_id": intent_id,
+            "external_status": "FAILED",
+            "provider": "demo",
+            "raw_payload": {},
+        },
     )
     assert resp.status_code == 200
     events = client.get(f"/chainpay/payment_intents/{intent_id}/settlement_events").json()
     assert events[-1]["event_type"] == "FAILED"
 
 
-def test_proof_attached_webhook(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_proof_attached_webhook(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed_intent(session)
 
     resp = client.post(
         "/webhooks/settlement/proof_attached",
-        json={"payment_intent_id": intent_id, "proof_id": "PROOF-1", "provider": "demo"},
+        json={
+            "payment_intent_id": intent_id,
+            "proof_id": "PROOF-1",
+            "provider": "demo",
+        },
     )
     assert resp.status_code == 200
     events = client.get(f"/chainpay/payment_intents/{intent_id}/settlement_events").json()
     assert events[-1]["event_type"] == "PROOF_ATTACHED"
 
 
-def test_webhook_missing_intent_returns_404(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_webhook_missing_intent_returns_404(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, _ = client_with_db
     resp = client.post(
         "/webhooks/settlement/payment_status",
-        json={"payment_intent_id": "NOPE", "external_status": "AUTHORIZED", "provider": "demo", "raw_payload": {}},
+        json={
+            "payment_intent_id": "NOPE",
+            "external_status": "AUTHORIZED",
+            "provider": "demo",
+            "raw_payload": {},
+        },
     )
     assert resp.status_code == 404
 
 
-def test_webhook_signature_enforced_when_secret(client_with_db: Tuple[TestClient, Any, sessionmaker], monkeypatch: pytest.MonkeyPatch) -> None:
+def test_webhook_signature_enforced_when_secret(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed_intent(session)
 
     secret = "supersecret"
     monkeypatch.setenv("CHAINBRIDGE_WEBHOOK_SECRET", secret)
-    payload = {"payment_intent_id": intent_id, "external_status": "AUTHORIZED", "provider": "demo", "raw_payload": {}}
+    payload = {
+        "payment_intent_id": intent_id,
+        "external_status": "AUTHORIZED",
+        "provider": "demo",
+        "raw_payload": {},
+    }
     headers = _signed_headers(payload, secret)
 
     ok = client.post("/webhooks/settlement/payment_status", data=json.dumps(payload), headers=headers)
@@ -164,7 +199,10 @@ def test_webhook_signature_enforced_when_secret(client_with_db: Tuple[TestClient
     monkeypatch.delenv("CHAINBRIDGE_WEBHOOK_SECRET", raising=False)
 
 
-def test_webhook_rate_limit_blocks_repeats(client_with_db: Tuple[TestClient, Any, sessionmaker], monkeypatch: pytest.MonkeyPatch) -> None:
+def test_webhook_rate_limit_blocks_repeats(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed_intent(session)
@@ -172,7 +210,12 @@ def test_webhook_rate_limit_blocks_repeats(client_with_db: Tuple[TestClient, Any
     monkeypatch.setattr(security, "RATE_LIMIT_COUNT", 2)
     monkeypatch.setattr(security, "RATE_LIMIT_WINDOW", 60)
     reset_rate_limits()
-    payload = {"payment_intent_id": intent_id, "external_status": "AUTHORIZED", "provider": "demo", "raw_payload": {}}
+    payload = {
+        "payment_intent_id": intent_id,
+        "external_status": "AUTHORIZED",
+        "provider": "demo",
+        "raw_payload": {},
+    }
 
     assert client.post("/webhooks/settlement/payment_status", json=payload).status_code == 200
     assert client.post("/webhooks/settlement/payment_status", json=payload).status_code == 200

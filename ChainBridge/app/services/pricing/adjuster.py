@@ -1,4 +1,5 @@
 """Financial adjuster applying fuzzy scores to payouts."""
+
 from __future__ import annotations
 
 import logging
@@ -28,7 +29,10 @@ def calculate_final_settlement(invoice_amount: float, telemetry: Dict[str, float
         status = "PARTIAL_SETTLEMENT"
         reason = f"Penalty {penalty_pct:.1f}% applied"
         if penalty_pct > 5:
-            logger.warning("fuzzy_adjustment_large", extra={"penalty_pct": penalty_pct, "score": score})
+            logger.warning(
+                "fuzzy_adjustment_large",
+                extra={"penalty_pct": penalty_pct, "score": score},
+            )
 
     return {
         "confidence_score": score,

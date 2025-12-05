@@ -1,5 +1,5 @@
-from typing import Any, Tuple
 from datetime import datetime
+from typing import Any, Tuple
 
 import pytest
 from fastapi.testclient import TestClient
@@ -52,7 +52,9 @@ def _create_payload() -> dict:
     }
 
 
-def test_create_and_get_instrument(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_create_and_get_instrument(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, _ = client_with_db
     resp = client.post("/legal/ricardian/instruments", json=_create_payload())
     assert resp.status_code == 201
@@ -67,7 +69,9 @@ def test_create_and_get_instrument(client_with_db: Tuple[TestClient, Any, sessio
     assert by_physical.json()["id"] == instrument_id
 
 
-def test_update_and_freeze_flow(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_update_and_freeze_flow(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, _ = client_with_db
     create_resp = client.post("/legal/ricardian/instruments", json=_create_payload())
     instrument_id = create_resp.json()["id"]
@@ -80,7 +84,10 @@ def test_update_and_freeze_flow(client_with_db: Tuple[TestClient, Any, sessionma
     assert patch_resp.json()["smart_contract_address"] == "0xabc"
     assert patch_resp.json()["status"] == "TERMINATED"
 
-    freeze_resp = client.post(f"/legal/ricardian/instruments/{instrument_id}/freeze", params={"reason": "Court order"})
+    freeze_resp = client.post(
+        f"/legal/ricardian/instruments/{instrument_id}/freeze",
+        params={"reason": "Court order"},
+    )
     assert freeze_resp.status_code == 200
     assert freeze_resp.json()["status"] == "FROZEN"
     assert freeze_resp.json()["freeze_reason"] == "Court order"

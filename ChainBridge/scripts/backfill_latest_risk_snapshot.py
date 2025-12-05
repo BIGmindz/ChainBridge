@@ -1,4 +1,5 @@
 """Backfill latest_risk_snapshot_id for payment intents."""
+
 from __future__ import annotations
 
 import logging

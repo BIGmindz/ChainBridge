@@ -6,8 +6,8 @@ Tests for Settlement Operator Action Endpoints
 Validates settlement operator actions with audit logging.
 """
 
-from fastapi.testclient import TestClient
 import pytest
+from fastapi.testclient import TestClient
 
 from api.server import app
 from api.storage.settlement_actions import clear_actions, list_recent_actions

@@ -8,8 +8,9 @@ This script demonstrates:
 3. Analyzing risk score evolution over time
 """
 
-import requests
 from datetime import datetime
+
+import requests
 
 API_BASE = "http://localhost:8000"
 TIMEOUT = 10  # seconds
@@ -24,11 +25,7 @@ def score_shipment(payload: dict) -> dict:
 
 def get_entity_history(entity_id: str, limit: int = 100) -> dict:
     """Get scoring history for an entity."""
-    response = requests.get(
-        f"{API_BASE}/iq/history/{entity_id}",
-        params={"limit": limit},
-        timeout=TIMEOUT
-    )
+    response = requests.get(f"{API_BASE}/iq/history/{entity_id}", params={"limit": limit}, timeout=TIMEOUT)
     response.raise_for_status()
     return response.json()
 
@@ -53,8 +50,8 @@ def main():
                 "days_in_transit": 2,
                 "expected_days": 5,
                 "documents_complete": True,
-                "shipper_payment_score": 90
-            }
+                "shipper_payment_score": 90,
+            },
         },
         {
             "name": "Day 5: Slight delay",
@@ -66,8 +63,8 @@ def main():
                 "days_in_transit": 6,
                 "expected_days": 5,
                 "documents_complete": True,
-                "shipper_payment_score": 90
-            }
+                "shipper_payment_score": 90,
+            },
         },
         {
             "name": "Day 10: Significant delay + docs missing",
@@ -79,9 +76,9 @@ def main():
                 "days_in_transit": 12,
                 "expected_days": 5,
                 "documents_complete": False,
-                "shipper_payment_score": 90
-            }
-        }
+                "shipper_payment_score": 90,
+            },
+        },
     ]
 
     # Score the shipment 3 times
@@ -89,7 +86,7 @@ def main():
     print("-" * 70)
     for scenario in scenarios:
         print(f"\n{scenario['name']}:")
-        result = score_shipment(scenario['payload'])
+        result = score_shipment(scenario["payload"])
         print(f"  Risk Score: {result['risk_score']}")
         print(f"  Severity: {result['severity']}")
         print(f"  Action: {result['recommended_action']}")
@@ -109,8 +106,8 @@ def main():
     # Display history (reverse chronological - most recent first)
     print("History (most recent first):")
     print("-" * 70)
-    for i, record in enumerate(history['history'], 1):
-        timestamp = datetime.fromisoformat(record['timestamp'].replace('Z', '+00:00'))
+    for i, record in enumerate(history["history"], 1):
+        timestamp = datetime.fromisoformat(record["timestamp"].replace("Z", "+00:00"))
         print(f"\n#{i} - {timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
         print(f"  Score: {record['score']}")
         print(f"  Severity: {record['severity']}")
@@ -123,7 +120,7 @@ def main():
     print()
 
     # Analyze trend
-    scores = [r['score'] for r in history['history']]
+    scores = [r["score"] for r in history["history"]]
     scores_chronological = list(reversed(scores))  # Reverse to get oldest -> newest
 
     print("Step 3: Risk Trend Analysis")
@@ -153,4 +150,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"❌ Error: {e}")
         import traceback
+
         traceback.print_exc()

@@ -20,6 +20,12 @@ from app.services.payment_rails_engine import PaymentRailsEngine
 USD_MXN_CORRIDOR_ID = "USD_MXN"
 DEFAULT_POLICY = "CHAINPAY_V1_USD_MXN_P0"
 DEFAULT_ANALYTICS_VERSION = "v1"
+_CASH_SLA_TARGET_D2_P95 = {
+    "LOW": 5.0,
+    "MEDIUM": 7.0,
+    "HIGH": 10.0,
+    "CRITICAL": 10.0,
+}
 
 
 def _median(values: List[float]) -> float:
@@ -125,6 +131,7 @@ def compute_chainpay_analytics_snapshot(
         # Days-to-cash metrics
         first_cash_days: list[float] = []
         final_cash_days: list[float] = []
+        d2_days: list[float] = []
         for r in tier_rows:
             first = _days_between(r.delivered_timestamp, r.first_payment_timestamp)
             final = _days_between(r.delivered_timestamp, r.final_payment_timestamp)
@@ -132,6 +139,7 @@ def compute_chainpay_analytics_snapshot(
                 first_cash_days.append(first)
             if final is not None:
                 final_cash_days.append(final)
+                d2_days.append(final)
 
         days_to_cash.append(
             DaysToCashMetric(
@@ -147,12 +155,20 @@ def compute_chainpay_analytics_snapshot(
 
         # SLA metrics – placeholder until richer timestamps are logged
         total_reviews = sum(1 for r in tier_rows if (r.had_claim or r.had_dispute))
+
+        target_d2 = _CASH_SLA_TARGET_D2_P95.get(tier, 10.0)
+        cash_breach_count = sum(1 for v in d2_days if v > target_d2)
+        sample_size = len(d2_days)
+        cash_breach_rate = (cash_breach_count / sample_size) if sample_size else 0.0
         sla_metrics.append(
             SlaMetric(
                 corridor_id=corridor_id,
                 tier=tier,  # type: ignore[arg-type]
                 claim_review_sla_breach_rate=0.0,  # TODO: derive when timestamps available
                 manual_review_sla_breach_rate=0.0,  # TODO: derive when timestamps available
+                cash_breach_rate=cash_breach_rate,
+                cash_breach_count=cash_breach_count,
+                sample_size=sample_size,
                 total_reviews=total_reviews,
             )
         )

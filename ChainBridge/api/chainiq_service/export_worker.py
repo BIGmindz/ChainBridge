@@ -6,7 +6,8 @@ from typing import Dict, List, Optional, Sequence
 from sqlalchemy.orm import Session
 
 from api.models.canonical import ShipmentEventType
-from api.models.chainiq import DocumentHealthSnapshot, ShipmentEvent, SnapshotExportEvent
+from api.models.chainfreight import ShipmentEvent
+from api.models.chainiq import DocumentHealthSnapshot, SnapshotExportEvent
 
 MAX_RETRIES = 5
 _MAX_TEXT_LENGTH = 500
@@ -26,11 +27,7 @@ def _truncate(value: Optional[str]) -> Optional[str]:
 
 
 def _get_shipment_id(db: Session, snapshot_id: int) -> Optional[str]:
-    return (
-        db.query(DocumentHealthSnapshot.shipment_id)
-        .filter(DocumentHealthSnapshot.id == snapshot_id)
-        .scalar()
-    )
+    return db.query(DocumentHealthSnapshot.shipment_id).filter(DocumentHealthSnapshot.id == snapshot_id).scalar()
 
 
 def _record_shipment_event(
@@ -124,18 +121,12 @@ def fetch_pending_events(
 ) -> List[SnapshotExportEvent]:
     """Return pending export events ordered FIFO."""
     query = (
-        db.query(SnapshotExportEvent)
-        .filter(SnapshotExportEvent.status == "PENDING")
-        .filter(SnapshotExportEvent.retry_count < MAX_RETRIES)
+        db.query(SnapshotExportEvent).filter(SnapshotExportEvent.status == "PENDING").filter(SnapshotExportEvent.retry_count < MAX_RETRIES)
     )
     if target_system:
         query = query.filter(SnapshotExportEvent.target_system == target_system)
 
-    return (
-        query.order_by(SnapshotExportEvent.created_at.asc(), SnapshotExportEvent.id.asc())
-        .limit(limit)
-        .all()
-    )
+    return query.order_by(SnapshotExportEvent.created_at.asc(), SnapshotExportEvent.id.asc()).limit(limit).all()
 
 
 def claim_next_pending_event(
@@ -184,11 +175,7 @@ def claim_next_pending_event(
             )
             if updated:
                 db.commit()
-                claimed = (
-                    db.query(SnapshotExportEvent)
-                    .filter(SnapshotExportEvent.id == candidate.id)
-                    .first()
-                )
+                claimed = db.query(SnapshotExportEvent).filter(SnapshotExportEvent.id == candidate.id).first()
                 if claimed:
                     _record_snapshot_event(
                         db,
@@ -211,12 +198,7 @@ def claim_next_pending_event(
 
 
 def _get_event_for_update(db: Session, event_id: int) -> SnapshotExportEvent:
-    event = (
-        db.query(SnapshotExportEvent)
-        .filter(SnapshotExportEvent.id == event_id)
-        .with_for_update()
-        .first()
-    )
+    event = db.query(SnapshotExportEvent).filter(SnapshotExportEvent.id == event_id).with_for_update().first()
     if not event:
         raise SnapshotExportEventNotFound(f"SnapshotExportEvent {event_id} not found")
     return event
@@ -324,11 +306,7 @@ def get_snapshot_payload(
     event: SnapshotExportEvent,
 ) -> Dict[str, object]:
     """Return a neutral payload for downstream adapters."""
-    snapshot = (
-        db.query(DocumentHealthSnapshot)
-        .filter(DocumentHealthSnapshot.id == event.snapshot_id)
-        .first()
-    )
+    snapshot = db.query(DocumentHealthSnapshot).filter(DocumentHealthSnapshot.id == event.snapshot_id).first()
     if not snapshot:
         raise ValueError(f"Snapshot {event.snapshot_id} not found")
 

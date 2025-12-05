@@ -1,4 +1,5 @@
 """Operator-focused endpoints for OC queue and timelines."""
+
 from __future__ import annotations
 
 import logging
@@ -9,20 +10,20 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from api.chainsense.client import IoTDataProvider, MockIoTDataProvider
 from api.database import get_db
+from api.models.chainiq import DocumentHealthSnapshot, RiskDecision
 from api.models.chainpay import PaymentIntent, SettlementEvent
-from api.models.chainiq import RiskDecision, DocumentHealthSnapshot
 from api.schemas.operator import (
+    IoTHealthSummaryResponse,
+    OperatorEvent,
+    OperatorEventKind,
+    OperatorEventSeverity,
+    OperatorEventsResponse,
     OperatorQueueItem,
     OperatorQueueResponse,
     RiskSnapshotResponse,
-    OperatorEvent,
-    OperatorEventsResponse,
-    OperatorEventKind,
-    OperatorEventSeverity,
-    IoTHealthSummaryResponse,
 )
-from api.chainsense.client import MockIoTDataProvider, IoTDataProvider
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/operator", tags=["operator"])
@@ -93,10 +94,7 @@ def get_risk_snapshot(intent_id: str, db: Session = Depends(get_db)) -> RiskSnap
         raise HTTPException(status_code=404, detail="PaymentIntent not found")
 
     decision = (
-        db.query(RiskDecision)
-        .filter(RiskDecision.shipment_id == intent.shipment_id)
-        .order_by(RiskDecision.decided_at.desc())
-        .first()
+        db.query(RiskDecision).filter(RiskDecision.shipment_id == intent.shipment_id).order_by(RiskDecision.decided_at.desc()).first()
     )
     if not decision:
         decision = (
@@ -114,7 +112,13 @@ def get_risk_snapshot(intent_id: str, db: Session = Depends(get_db)) -> RiskSnap
                 decided_at=decision.created_at,
             )
     if not decision:
-        return RiskSnapshotResponse(intent_id=intent_id, risk_score=None, risk_level=None, features=None, decided_at=None)
+        return RiskSnapshotResponse(
+            intent_id=intent_id,
+            risk_score=None,
+            risk_level=None,
+            features=None,
+            decided_at=None,
+        )
     return RiskSnapshotResponse(
         intent_id=intent_id,
         risk_score=decision.risk_score,
@@ -129,7 +133,7 @@ def get_iot_health_summary() -> IoTHealthSummaryResponse:
     provider: IoTDataProvider = MockIoTDataProvider()
     health = provider.get_global_health()
     return IoTHealthSummaryResponse(
-        device_count_active=health.active_sensors if hasattr(health, "active_sensors") else 0,
+        device_count_active=(health.active_sensors if hasattr(health, "active_sensors") else 0),
         device_count_offline=0,
         stale_gps_count=0,
         stale_env_count=0,

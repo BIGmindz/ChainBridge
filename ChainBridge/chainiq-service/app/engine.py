@@ -5,7 +5,7 @@ This module will contain the ML logic for scoring shipments, drivers, and lanes.
 Currently a placeholder for future integration of the multi-signal engine.
 """
 
-from typing import Dict, Any
+from typing import Any, Dict
 
 
 def score_shipment(shipment_id: str, features: Dict[str, Any]) -> float:

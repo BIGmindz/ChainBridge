@@ -1,8 +1,10 @@
 """Add hashing fields to documents and payment intents."""
+
 from __future__ import annotations
 
-from alembic import op
 import sqlalchemy as sa
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "0012_chaindocs_hashing_and_proof"

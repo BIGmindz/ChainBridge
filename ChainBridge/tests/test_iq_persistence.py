@@ -11,11 +11,12 @@ Coverage:
 - Deterministic replay validation
 """
 
+import os
+import tempfile
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
-from pathlib import Path
-import tempfile
-import os
 
 # Import the main app
 from api.server import app
@@ -38,8 +39,8 @@ def setup_test_db(monkeypatch):
         chainiq_path = Path(__file__).parent.parent / "chainiq-service"
         sys.path.insert(0, str(chainiq_path))
 
-        from storage import DB_PATH as original_path
         import storage
+        from storage import DB_PATH as original_path
 
         monkeypatch.setattr(storage, "DB_PATH", TEST_DB_PATH)
 
@@ -72,10 +73,10 @@ def test_persistence_insert_and_retrieve() -> None:
         "days_in_transit": 5,
         "expected_days": 7,
         "documents_complete": True,
-        "shipper_payment_score": 85
+        "shipper_payment_score": 85,
     }
 
-    response = client.post("/iq/score-shipment", json=payload)
+    response = client.post("/api/iq/score-shipment", json=payload)
     assert response.status_code == 200
 
     score_data = response.json()
@@ -83,7 +84,7 @@ def test_persistence_insert_and_retrieve() -> None:
     original_severity = score_data["severity"]
 
     # Retrieve from history
-    history_response = client.get("/iq/risk-history/SHP-PERSIST-001")
+    history_response = client.get("/api/iq/risk-history/SHP-PERSIST-001")
     assert history_response.status_code == 200
 
     history_data = history_response.json()
@@ -101,7 +102,7 @@ def test_risk_history_not_found() -> None:
     """
     Test that 404 is returned for non-existent shipments.
     """
-    response = client.get("/iq/risk-history/SHP-NONEXISTENT")
+    response = client.get("/api/iq/risk-history/SHP-NONEXISTENT")
     assert response.status_code == 404
     assert "No risk scores found" in response.json()["detail"]
 
@@ -125,13 +126,13 @@ def test_risk_recent_returns_scores() -> None:
             "days_in_transit": 5,
             "expected_days": 7,
             "documents_complete": True,
-            "shipper_payment_score": 90
+            "shipper_payment_score": 90,
         }
-        response = client.post("/iq/score-shipment", json=payload)
+        response = client.post("/api/iq/score-shipment", json=payload)
         assert response.status_code == 200
 
     # Get recent scores
-    response = client.get("/iq/risk-recent?limit=10")
+    response = client.get("/api/iq/risk-recent?limit=10")
     assert response.status_code == 200
 
     data = response.json()
@@ -157,13 +158,13 @@ def test_risk_recent_pagination() -> None:
             "days_in_transit": 3,
             "expected_days": 4,
             "documents_complete": True,
-            "shipper_payment_score": 95
+            "shipper_payment_score": 95,
         }
-        response = client.post("/iq/score-shipment", json=payload)
+        response = client.post("/api/iq/score-shipment", json=payload)
         assert response.status_code == 200
 
     # Request only 2
-    response = client.get("/iq/risk-recent?limit=2")
+    response = client.get("/api/iq/risk-recent?limit=2")
     assert response.status_code == 200
 
     data = response.json()
@@ -188,16 +189,16 @@ def test_replay_matches_original_score() -> None:
         "days_in_transit": 4,
         "expected_days": 5,
         "documents_complete": True,
-        "shipper_payment_score": 80
+        "shipper_payment_score": 80,
     }
 
-    original_response = client.post("/iq/score-shipment", json=payload)
+    original_response = client.post("/api/iq/score-shipment", json=payload)
     assert original_response.status_code == 200
 
     original_data = original_response.json()
 
     # Replay the score
-    replay_response = client.post("/iq/risk-replay/SHP-REPLAY-001")
+    replay_response = client.post("/api/iq/risk-replay/SHP-REPLAY-001")
     assert replay_response.status_code == 200
 
     replay_data = replay_response.json()
@@ -215,7 +216,7 @@ def test_replay_error_missing_data() -> None:
     """
     Test that replay returns 404 for non-existent shipment.
     """
-    response = client.post("/iq/risk-replay/SHP-NONEXISTENT")
+    response = client.post("/api/iq/risk-replay/SHP-NONEXISTENT")
     assert response.status_code == 404
     assert "No original score found" in response.json()["detail"]
 
@@ -234,16 +235,16 @@ def test_replay_high_risk_shipment() -> None:
         "days_in_transit": 5,
         "expected_days": 7,
         "documents_complete": False,
-        "shipper_payment_score": 40
+        "shipper_payment_score": 40,
     }
 
     # Score
-    score_response = client.post("/iq/score-shipment", json=payload)
+    score_response = client.post("/api/iq/score-shipment", json=payload)
     assert score_response.status_code == 200
     score_data = score_response.json()
 
     # Replay
-    replay_response = client.post("/iq/risk-replay/SHP-REPLAY-HIGHRISK")
+    replay_response = client.post("/api/iq/risk-replay/SHP-REPLAY-HIGHRISK")
     assert replay_response.status_code == 200
     replay_data = replay_response.json()
 
@@ -269,11 +270,11 @@ def test_multiple_scores_same_shipment() -> None:
         "days_in_transit": 3,
         "expected_days": 7,
         "documents_complete": False,
-        "shipper_payment_score": 70
+        "shipper_payment_score": 70,
     }
 
     # First score
-    response_v1 = client.post("/iq/score-shipment", json=payload_v1)
+    response_v1 = client.post("/api/iq/score-shipment", json=payload_v1)
     assert response_v1.status_code == 200
 
     # Re-score with updated conditions
@@ -281,7 +282,7 @@ def test_multiple_scores_same_shipment() -> None:
     payload_v2["days_in_transit"] = 8  # Now delayed
     payload_v2["documents_complete"] = True  # Docs now complete
 
-    response_v2 = client.post("/iq/score-shipment", json=payload_v2)
+    response_v2 = client.post("/api/iq/score-shipment", json=payload_v2)
     assert response_v2.status_code == 200
 
     # Both scores should be returned properly
@@ -315,11 +316,11 @@ def test_storage_failure_doesnt_break_scoring() -> None:
         "days_in_transit": 4,
         "expected_days": 5,
         "documents_complete": True,
-        "shipper_payment_score": 85
+        "shipper_payment_score": 85,
     }
 
     # This should succeed even if storage has issues
-    response = client.post("/iq/score-shipment", json=payload)
+    response = client.post("/api/iq/score-shipment", json=payload)
     assert response.status_code == 200
 
     data = response.json()
@@ -331,6 +332,7 @@ def test_storage_failure_doesnt_break_scoring() -> None:
 # ============================================================================
 # ChainPay Payment Queue Tests
 # ============================================================================
+
 
 def test_pay_queue_returns_only_high_risk_or_hold_actions() -> None:
     """
@@ -354,7 +356,7 @@ def test_pay_queue_returns_only_high_risk_or_hold_actions() -> None:
             "days_in_transit": 3,
             "expected_days": 4,
             "documents_complete": True,
-            "shipper_payment_score": 95
+            "shipper_payment_score": 95,
         },
         # HIGH risk - SHOULD appear in queue
         {
@@ -365,7 +367,7 @@ def test_pay_queue_returns_only_high_risk_or_hold_actions() -> None:
             "days_in_transit": 5,
             "expected_days": 7,
             "documents_complete": False,
-            "shipper_payment_score": 40
+            "shipper_payment_score": 40,
         },
         # MEDIUM but might have MANUAL_REVIEW - check actual response
         {
@@ -376,16 +378,16 @@ def test_pay_queue_returns_only_high_risk_or_hold_actions() -> None:
             "days_in_transit": 5,
             "expected_days": 7,
             "documents_complete": True,
-            "shipper_payment_score": 75
-        }
+            "shipper_payment_score": 75,
+        },
     ]
 
     for payload in shipments:
-        response = client.post("/iq/score-shipment", json=payload)
+        response = client.post("/api/iq/score-shipment", json=payload)
         assert response.status_code == 200
 
     # Get payment queue
-    queue_response = client.get("/iq/pay/queue")
+    queue_response = client.get("/api/iq/pay/queue")
     assert queue_response.status_code == 200
 
     queue_data = queue_response.json()
@@ -396,7 +398,11 @@ def test_pay_queue_returns_only_high_risk_or_hold_actions() -> None:
     for item in queue_data["items"]:
         # Each item must meet at least one criterion
         is_high_severity = item["severity"] in ["HIGH", "CRITICAL"]
-        is_hold_action = item["recommended_action"] in ["MANUAL_REVIEW", "HOLD_PAYMENT", "ESCALATE_COMPLIANCE"]
+        is_hold_action = item["recommended_action"] in [
+            "MANUAL_REVIEW",
+            "HOLD_PAYMENT",
+            "ESCALATE_COMPLIANCE",
+        ]
 
         assert is_high_severity or is_hold_action, (
             f"Item {item['shipment_id']} with severity={item['severity']} "
@@ -425,13 +431,13 @@ def test_pay_queue_respects_limit() -> None:
             "days_in_transit": 5,
             "expected_days": 7,
             "documents_complete": False,
-            "shipper_payment_score": 40
+            "shipper_payment_score": 40,
         }
-        response = client.post("/iq/score-shipment", json=payload)
+        response = client.post("/api/iq/score-shipment", json=payload)
         assert response.status_code == 200
 
     # Request only 10
-    queue_response = client.get("/iq/pay/queue?limit=10")
+    queue_response = client.get("/api/iq/pay/queue?limit=10")
     assert queue_response.status_code == 200
 
     queue_data = queue_response.json()
@@ -448,7 +454,7 @@ def test_pay_queue_handles_empty_state() -> None:
     # Don't create any shipments in this test
     # (Fresh DB from fixture)
 
-    response = client.get("/iq/pay/queue")
+    response = client.get("/api/iq/pay/queue")
     assert response.status_code == 200
 
     data = response.json()
@@ -463,7 +469,7 @@ def test_pay_queue_storage_failure() -> None:
     # Try to get queue when storage might not be initialized
     # (This test depends on fixture state)
 
-    response = client.get("/iq/pay/queue")
+    response = client.get("/api/iq/pay/queue")
 
     # Should either succeed (if storage available) or return 503
     assert response.status_code in [200, 503]
@@ -495,7 +501,7 @@ def test_entity_history_returns_all_scores() -> None:
             "days_in_transit": 3,
             "expected_days": 5,
             "documents_complete": True,
-            "shipper_payment_score": 90
+            "shipper_payment_score": 90,
         },
         {
             "shipment_id": shipment_id,
@@ -505,7 +511,7 @@ def test_entity_history_returns_all_scores() -> None:
             "days_in_transit": 8,  # Now delayed
             "expected_days": 5,
             "documents_complete": True,
-            "shipper_payment_score": 90
+            "shipper_payment_score": 90,
         },
         {
             "shipment_id": shipment_id,
@@ -515,17 +521,17 @@ def test_entity_history_returns_all_scores() -> None:
             "days_in_transit": 15,  # Severely delayed
             "expected_days": 5,
             "documents_complete": False,
-            "shipper_payment_score": 90
-        }
+            "shipper_payment_score": 90,
+        },
     ]
 
     # Score the shipment 3 times
     for payload in payloads:
-        response = client.post("/iq/score-shipment", json=payload)
+        response = client.post("/api/iq/score-shipment", json=payload)
         assert response.status_code == 200
 
     # Get history
-    history_response = client.get(f"/iq/history/{shipment_id}")
+    history_response = client.get(f"/api/iq/history/{shipment_id}")
     assert history_response.status_code == 200
 
     history_data = history_response.json()
@@ -567,7 +573,7 @@ def test_entity_history_not_found() -> None:
     """
     Test GET /iq/history/{entity_id} returns 404 for non-existent entity.
     """
-    response = client.get("/iq/history/NONEXISTENT-999")
+    response = client.get("/api/iq/history/NONEXISTENT-999")
     assert response.status_code == 404
 
     error_data = response.json()
@@ -591,13 +597,13 @@ def test_entity_history_respects_limit() -> None:
             "days_in_transit": 3 + i,
             "expected_days": 5,
             "documents_complete": True,
-            "shipper_payment_score": 85
+            "shipper_payment_score": 85,
         }
-        response = client.post("/iq/score-shipment", json=payload)
+        response = client.post("/api/iq/score-shipment", json=payload)
         assert response.status_code == 200
 
     # Request with limit=5
-    history_response = client.get(f"/iq/history/{shipment_id}?limit=5")
+    history_response = client.get(f"/api/iq/history/{shipment_id}?limit=5")
     assert history_response.status_code == 200
 
     history_data = history_response.json()
@@ -620,14 +626,14 @@ def test_entity_history_includes_reason_codes() -> None:
         "days_in_transit": 20,  # Delayed
         "expected_days": 5,
         "documents_complete": False,  # Incomplete docs
-        "shipper_payment_score": 30  # Low payment score
+        "shipper_payment_score": 30,  # Low payment score
     }
 
-    response = client.post("/iq/score-shipment", json=payload)
+    response = client.post("/api/iq/score-shipment", json=payload)
     assert response.status_code == 200
 
     # Get history
-    history_response = client.get(f"/iq/history/{shipment_id}")
+    history_response = client.get(f"/api/iq/history/{shipment_id}")
     assert history_response.status_code == 200
 
     history_data = history_response.json()
@@ -654,7 +660,7 @@ def test_entity_history_storage_unavailable() -> None:
     """
     # This test will succeed if storage is available (200)
     # or return 503 if storage initialization failed
-    response = client.get("/iq/history/TEST-001")
+    response = client.get("/api/iq/history/TEST-001")
 
     # Should either work (200) or return 503/404
     assert response.status_code in [200, 404, 503]

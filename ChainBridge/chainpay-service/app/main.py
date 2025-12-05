@@ -85,6 +85,7 @@ app = FastAPI()
 
 from app.api_settlement import router as settlement_router
 from app import api_analytics
+from app.api_guardrails import router as guardrails_router
 
 from .services.context_ledger_feed import serialize_feed
 from .services.context_ledger_service import ContextLedgerService
@@ -104,6 +105,7 @@ xrpl_adapter = XRPLSettlementAdapter()
 
 app.include_router(settlement_router)
 app.include_router(api_analytics.router)
+app.include_router(guardrails_router)
 
 @app.on_event("startup")
 async def start_event_consumer():

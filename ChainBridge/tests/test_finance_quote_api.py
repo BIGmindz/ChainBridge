@@ -41,13 +41,24 @@ def clean_db(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
     Base.metadata.create_all(bind=engine)
 
 
-def test_financing_quote_not_found_without_instrument(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_financing_quote_not_found_without_instrument(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, _ = client_with_db
-    resp = client.post("/finance/quote", json={"physical_reference": "SHIP-NO", "notional_value": "1000", "currency": "USD"})
+    resp = client.post(
+        "/finance/quote",
+        json={
+            "physical_reference": "SHIP-NO",
+            "notional_value": "1000",
+            "currency": "USD",
+        },
+    )
     assert resp.status_code == 404
 
 
-def test_financing_quote_active_instrument(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_financing_quote_active_instrument(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         session.add(
@@ -64,7 +75,14 @@ def test_financing_quote_active_instrument(client_with_db: Tuple[TestClient, Any
             )
         )
         session.commit()
-    resp = client.post("/finance/quote", json={"physical_reference": "SHIP-YES", "notional_value": "1000", "currency": "USD"})
+    resp = client.post(
+        "/finance/quote",
+        json={
+            "physical_reference": "SHIP-YES",
+            "notional_value": "1000",
+            "currency": "USD",
+        },
+    )
     assert resp.status_code == 200
     body = resp.json()
     assert body["instrument_id"] == "RIC-FIN"
@@ -73,7 +91,9 @@ def test_financing_quote_active_instrument(client_with_db: Tuple[TestClient, Any
     assert "RICARDIAN_ACTIVE" in body["reason_codes"]
 
 
-def test_financing_quote_low_band(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_financing_quote_low_band(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         session.add(
@@ -92,7 +112,12 @@ def test_financing_quote_low_band(client_with_db: Tuple[TestClient, Any, session
         session.commit()
     resp = client.post(
         "/finance/quote",
-        json={"physical_reference": "SHIP-LOW", "notional_value": "1000", "currency": "USD", "risk_band": "LOW"},
+        json={
+            "physical_reference": "SHIP-LOW",
+            "notional_value": "1000",
+            "currency": "USD",
+            "risk_band": "LOW",
+        },
     )
     assert resp.status_code == 200
     body = resp.json()
@@ -100,7 +125,9 @@ def test_financing_quote_low_band(client_with_db: Tuple[TestClient, Any, session
     assert body["base_apr"] == 12
 
 
-def test_financing_quote_high_band(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_financing_quote_high_band(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         session.add(
@@ -119,7 +146,12 @@ def test_financing_quote_high_band(client_with_db: Tuple[TestClient, Any, sessio
         session.commit()
     resp = client.post(
         "/finance/quote",
-        json={"physical_reference": "SHIP-HIGH", "notional_value": "1000", "currency": "USD", "risk_band": "HIGH"},
+        json={
+            "physical_reference": "SHIP-HIGH",
+            "notional_value": "1000",
+            "currency": "USD",
+            "risk_band": "HIGH",
+        },
     )
     assert resp.status_code == 200
     body = resp.json()

@@ -1,6 +1,9 @@
 """ARQ worker hooks for Dutch auction settlements."""
+
 from __future__ import annotations
 
+# Ensure an event loop exists for synchronous test runners invoking async tasks.
+import asyncio
 import json
 import logging
 from datetime import datetime, timezone
@@ -11,17 +14,15 @@ from sqlalchemy.orm import Session, selectinload
 
 from api.database import SessionLocal
 from api.eventbus.dispatcher import publish
+from app.core.config import settings
+from app.core.metrics import increment_counter
 from app.models.marketplace import BuyIntent, SettlementRecord
 from app.schemas.marketplace import BuyIntentStatus
 from app.services.marketplace.settlement_client import (
     SettlementIntentData,
     get_web3_client,
 )
-from app.core.metrics import increment_counter
-from app.core.config import settings
 
-# Ensure an event loop exists for synchronous test runners invoking async tasks.
-import asyncio
 try:  # pragma: no cover - defensive compatibility
     asyncio.get_event_loop()
 except RuntimeError:
@@ -53,16 +54,14 @@ async def execute_dutch_settlement(ctx: Dict[str, Any]) -> Dict[str, Any]:
         return {"status": "error", "error": "missing_intent_id"}
     db = SessionLocal()
     try:
-        intent = (
-            db.query(BuyIntent)
-            .options(selectinload(BuyIntent.listing))
-            .filter(BuyIntent.id == intent_id)
-            .first()
-        )
+        intent = db.query(BuyIntent).options(selectinload(BuyIntent.listing)).filter(BuyIntent.id == intent_id).first()
         if intent is None:
             return {"status": "not_found"}
 
-        if intent.status in {BuyIntentStatus.CONFIRMED.value, BuyIntentStatus.FAILED.value}:
+        if intent.status in {
+            BuyIntentStatus.CONFIRMED.value,
+            BuyIntentStatus.FAILED.value,
+        }:
             record = _ensure_settlement_record(db, intent)
             logger.info(
                 "settlement.idempotent.skip",
@@ -73,7 +72,12 @@ async def execute_dutch_settlement(ctx: Dict[str, Any]) -> Dict[str, Any]:
                     "listing_id": intent.listing_id,
                 },
             )
-            _emit_settlement_event(intent, record, status=intent.status, failure_reason=intent.error_message)
+            _emit_settlement_event(
+                intent,
+                record,
+                status=intent.status,
+                failure_reason=intent.error_message,
+            )
             return {"status": intent.status, "tx": intent.external_tx_id}
 
         if intent.expires_at and intent.expires_at.replace(tzinfo=timezone.utc) <= _now():
@@ -84,7 +88,12 @@ async def execute_dutch_settlement(ctx: Dict[str, Any]) -> Dict[str, Any]:
             db.commit()
             record = _persist_settlement(db, intent, tx_hash="expired")
             increment_counter("marketplace.settlement_failed", 1)
-            _emit_settlement_event(intent, record, status=BuyIntentStatus.FAILED.value, failure_reason="intent_expired")
+            _emit_settlement_event(
+                intent,
+                record,
+                status=BuyIntentStatus.FAILED.value,
+                failure_reason="intent_expired",
+            )
             logger.warning(
                 "settlement.failed",
                 extra={
@@ -106,7 +115,12 @@ async def execute_dutch_settlement(ctx: Dict[str, Any]) -> Dict[str, Any]:
             db.commit()
             record = _persist_settlement(db, intent, tx_hash="failed")
             increment_counter("marketplace.settlement_failed", 1)
-            _emit_settlement_event(intent, record, status=BuyIntentStatus.FAILED.value, failure_reason=str(exc))
+            _emit_settlement_event(
+                intent,
+                record,
+                status=BuyIntentStatus.FAILED.value,
+                failure_reason=str(exc),
+            )
             logger.warning(
                 "settlement.failed",
                 extra={
@@ -156,9 +170,17 @@ async def execute_dutch_settlement(ctx: Dict[str, Any]) -> Dict[str, Any]:
                         "error": result.failure_reason or "unknown",
                     },
                 )
-                return {"status": intent.status, "error": result.failure_reason or "unknown"}
+                return {
+                    "status": intent.status,
+                    "error": result.failure_reason or "unknown",
+                }
             increment_counter("marketplace.settlement_confirmed", 1)
-            _emit_settlement_event(intent, record, status=BuyIntentStatus.CONFIRMED.value, failure_reason=None)
+            _emit_settlement_event(
+                intent,
+                record,
+                status=BuyIntentStatus.CONFIRMED.value,
+                failure_reason=None,
+            )
             publish(
                 EVENT_SETTLEMENT_CONFIRMED,
                 {
@@ -190,7 +212,12 @@ async def execute_dutch_settlement(ctx: Dict[str, Any]) -> Dict[str, Any]:
             db.commit()
             record = _persist_settlement(db, intent, tx_hash="failed")
             increment_counter("marketplace.settlement_failed", 1)
-            _emit_settlement_event(intent, record, status=BuyIntentStatus.FAILED.value, failure_reason=str(exc))
+            _emit_settlement_event(
+                intent,
+                record,
+                status=BuyIntentStatus.FAILED.value,
+                failure_reason=str(exc),
+            )
             logger.warning(
                 "settlement.failed",
                 extra={
@@ -206,11 +233,7 @@ async def execute_dutch_settlement(ctx: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _persist_settlement(db: Session, intent: BuyIntent, tx_hash: str) -> SettlementRecord:
-    existing = (
-        db.query(SettlementRecord)
-        .filter(SettlementRecord.intent_id == intent.id)
-        .first()
-    )
+    existing = db.query(SettlementRecord).filter(SettlementRecord.intent_id == intent.id).first()
     if existing:
         return existing
     record = SettlementRecord(
@@ -229,11 +252,7 @@ def _persist_settlement(db: Session, intent: BuyIntent, tx_hash: str) -> Settlem
 
 
 def _ensure_settlement_record(db: Session, intent: BuyIntent) -> SettlementRecord:
-    existing = (
-        db.query(SettlementRecord)
-        .filter(SettlementRecord.intent_id == intent.id)
-        .first()
-    )
+    existing = db.query(SettlementRecord).filter(SettlementRecord.intent_id == intent.id).first()
     if existing:
         return existing
     record = SettlementRecord(
@@ -262,7 +281,13 @@ def _publish_redis_event(intent_id: str, payload: dict) -> None:
         logger.debug("settlement.redis.publish_failed", extra={"intent_id": intent_id})
 
 
-def _emit_settlement_event(intent: BuyIntent, record: SettlementRecord, *, status: str, failure_reason: Optional[str]) -> None:
+def _emit_settlement_event(
+    intent: BuyIntent,
+    record: SettlementRecord,
+    *,
+    status: str,
+    failure_reason: Optional[str],
+) -> None:
     status_map = {
         BuyIntentStatus.CONFIRMED.value: "SETTLED",
         BuyIntentStatus.FAILED.value: "FAILED",

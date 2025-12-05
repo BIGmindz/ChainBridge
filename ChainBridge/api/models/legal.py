@@ -1,9 +1,10 @@
 """Ricardian legal instrument model binding documents to on-chain control."""
+
 from __future__ import annotations
 
 from uuid import uuid4
 
-from sqlalchemy import Boolean, Column, DateTime, String, JSON, Index, func
+from sqlalchemy import JSON, Boolean, Column, DateTime, Index, String, func
 
 from api.database import Base
 
@@ -13,7 +14,11 @@ class RicardianInstrument(Base):
     __table_args__ = (
         Index("ix_ricardian_instrument_type", "instrument_type"),
         Index("ix_ricardian_physical_reference", "physical_reference"),
-        Index("ix_ricardian_chain_address", "smart_contract_chain", "smart_contract_address"),
+        Index(
+            "ix_ricardian_chain_address",
+            "smart_contract_chain",
+            "smart_contract_address",
+        ),
         Index("ix_ricardian_status", "status"),
     )
 

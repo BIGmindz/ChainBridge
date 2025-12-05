@@ -49,9 +49,7 @@ class WorkerRunner:
 
     def _claim_once(self) -> Optional[export_worker.SnapshotExportEvent]:
         with SessionLocal() as session:
-            return export_worker.claim_next_pending_event(
-                session, self.worker_id, target_system=TARGET_SYSTEM
-            )
+            return export_worker.claim_next_pending_event(session, self.worker_id, target_system=TARGET_SYSTEM)
 
     def _mark_success(self, event_id: int) -> None:
         with SessionLocal() as session:

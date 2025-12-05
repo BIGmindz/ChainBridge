@@ -1,4 +1,5 @@
 """Event feed endpoints for operator activity."""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -60,7 +61,10 @@ def _apply_cursor(query, occurred_at: datetime, row_id: int):
     return query.filter(
         or_(
             SettlementEventAudit.occurred_at < marker,
-            and_(SettlementEventAudit.occurred_at == marker, SettlementEventAudit.id < row_id),
+            and_(
+                SettlementEventAudit.occurred_at == marker,
+                SettlementEventAudit.id < row_id,
+            ),
         )
     )
 
@@ -86,9 +90,7 @@ def settlement_feed(
     shipment_id: Optional[str] = None,
     db: Session = Depends(get_db),
 ) -> EventFeedResponse:
-    query = db.query(SettlementEventAudit).filter(
-        SettlementEventAudit.event_type != EventType.WORKER_HEARTBEAT.value
-    )
+    query = db.query(SettlementEventAudit).filter(SettlementEventAudit.event_type != EventType.WORKER_HEARTBEAT.value)
     if payment_intent_id:
         query = query.filter(SettlementEventAudit.payment_intent_id == payment_intent_id)
     if shipment_id:
@@ -97,11 +99,7 @@ def settlement_feed(
         occurred_at, row_id = _decode_cursor(cursor)
         query = _apply_cursor(query, occurred_at, row_id)
 
-    rows = (
-        query.order_by(SettlementEventAudit.occurred_at.desc(), SettlementEventAudit.id.desc())
-        .limit(limit + 1)
-        .all()
-    )
+    rows = query.order_by(SettlementEventAudit.occurred_at.desc(), SettlementEventAudit.id.desc()).limit(limit + 1).all()
     items = [_serialize_item(row) for row in rows[:limit]]
     next_cursor = None
     if len(rows) > limit and items:
@@ -126,5 +124,5 @@ def heartbeat(db: Session = Depends(get_db)) -> HeartbeatResponse:
     )
     return HeartbeatResponse(
         last_event_at=_as_utc(latest_event.occurred_at) if latest_event else None,
-        last_worker_heartbeat_at=_as_utc(last_worker.occurred_at) if last_worker else None,
+        last_worker_heartbeat_at=(_as_utc(last_worker.occurred_at) if last_worker else None),
     )

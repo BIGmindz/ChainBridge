@@ -9,7 +9,6 @@ This enforces:
 
 from typing import Any, Dict
 
-
 REQUIRED_SECTIONS = [
     "BLUF",
     "Issues",
@@ -36,9 +35,7 @@ def enforce_chainbridge_mantra(proof: bool, pipes: bool, cash: bool):
     You need all three.
     """
     if not proof or not pipes or not cash:
-        raise AlexGovernanceError(
-            f"Mantra violation: proof={proof}, pipes={pipes}, cash={cash}"
-        )
+        raise AlexGovernanceError(f"Mantra violation: proof={proof}, pipes={pipes}, cash={cash}")
 
 
 def enforce_governance_states(wrapper: str, supremacy: str, kill_state: str):
@@ -65,9 +62,7 @@ def enforce_response_structure(response_text: str):
     """
     missing = [sec for sec in REQUIRED_SECTIONS if sec not in response_text]
     if missing:
-        raise AlexGovernanceError(
-            f"ALEX output missing sections: {', '.join(missing)}"
-        )
+        raise AlexGovernanceError(f"ALEX output missing sections: {', '.join(missing)}")
 
 
 def alex_gateway(input_payload: Dict[str, Any], response_text: str):

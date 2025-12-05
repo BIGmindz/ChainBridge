@@ -12,6 +12,7 @@ ALEX_REQUIRED_SECTIONS = [
     "Final Determination",
 ]
 
+
 def alex_output_sections(text: str):
     return [section for section in ALEX_REQUIRED_SECTIONS if section.lower() in text.lower()]
 
@@ -20,6 +21,7 @@ def alex_output_sections(text: str):
 # 1. ALEX must block flows that violate the ChainBridge mantra
 # ---------------------------------------------------------
 
+
 @pytest.mark.parametrize(
     "scenario,proof,pipes,cash,expected",
     [
@@ -27,7 +29,7 @@ def alex_output_sections(text: str):
         ("missing pipes", True, False, True, "BLOCKED"),
         ("missing cash", True, True, False, "BLOCKED"),
         ("everything present", True, True, True, "APPROVED"),
-    ]
+    ],
 )
 def test_mantra_enforcement(scenario, proof, pipes, cash, expected):
     """
@@ -52,6 +54,7 @@ def test_mantra_enforcement(scenario, proof, pipes, cash, expected):
 # 2. ALEX MUST require wrapper + supremacy + kill-switch states
 # ---------------------------------------------------------
 
+
 @pytest.mark.parametrize(
     "wrapper,supremacy,kill,expected",
     [
@@ -61,7 +64,7 @@ def test_mantra_enforcement(scenario, proof, pipes, cash, expected):
         ("FROZEN", "COMPLIANT", "SAFE", False),
         ("TERMINATED", "COMPLIANT", "SAFE", False),
         ("ACTIVE", "COMPLIANT", "UNSAFE", False),
-    ]
+    ],
 )
 def test_governance_gates(wrapper, supremacy, kill, expected):
     """

@@ -1,10 +1,14 @@
 """Dutch auction endpoints."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, status
 
-from app.schemas.marketplace import DutchAuctionState, BuyNowRequest
-from app.services.marketplace.dutch_engine import get_live_price, execute_atomic_purchase
+from app.schemas.marketplace import BuyNowRequest, DutchAuctionState
+from app.services.marketplace.dutch_engine import (
+    execute_atomic_purchase,
+    get_live_price,
+)
 
 router = APIRouter(prefix="/dutch", tags=["dutch-auctions"])
 

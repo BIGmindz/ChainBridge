@@ -1,0 +1,5 @@
+- Read the task and identify security impact.
+- Inspect relevant auth/secret/compliance files.
+- Flag violations and propose least-privilege fixes.
+- Recommend scans/tests where appropriate.
+- Ensure recommendations align with ChainBridge mantra and ALEX governance.

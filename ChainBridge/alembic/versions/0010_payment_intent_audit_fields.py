@@ -1,8 +1,10 @@
 """Add reconciliation fields to payment_intents."""
+
 from __future__ import annotations
 
-from alembic import op
 import sqlalchemy as sa
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "0010_payment_intent_audit_fields"
@@ -14,7 +16,10 @@ depends_on = None
 def upgrade() -> None:
     op.add_column("payment_intents", sa.Column("payout_confidence", sa.Float(), nullable=True))
     op.add_column("payment_intents", sa.Column("auto_adjusted_amount", sa.Float(), nullable=True))
-    op.add_column("payment_intents", sa.Column("reconciliation_explanation", sa.JSON(), nullable=True))
+    op.add_column(
+        "payment_intents",
+        sa.Column("reconciliation_explanation", sa.JSON(), nullable=True),
+    )
 
 
 def downgrade() -> None:

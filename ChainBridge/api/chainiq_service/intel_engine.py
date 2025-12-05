@@ -8,23 +8,22 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import Session, aliased
 
 from api.chainiq_service.export_worker import enqueue_snapshot_export_events
-from api.chainiq_service.template_resolver import resolve_required_docs_for_shipment
 from api.chainiq_service.schemas import (
     DocumentHealth,
     RiskSummary,
     SettlementHealth,
     ShipmentHealthResponse,
 )
+from api.chainiq_service.template_resolver import resolve_required_docs_for_shipment
 from api.models.canonical import RiskLevel, ShipmentEventType
 from api.models.chaindocs import Document, Shipment, ShipmentDocRequirement
-from api.models.chainiq import (
-    DocumentHealthSnapshot,
-    RiskDecision,
-    ShipmentEvent,
-    SnapshotExportEvent,
-)
+from api.models.chainfreight import ShipmentEvent
+from api.models.chainiq import DocumentHealthSnapshot, RiskDecision, SnapshotExportEvent
 from api.models.chainpay import SettlementMilestone, SettlementPlan
-from api.services.payment_intents import ensure_payment_intent_for_snapshot, is_payment_approved
+from api.services.payment_intents import (
+    ensure_payment_intent_for_snapshot,
+    is_payment_approved,
+)
 
 logger = logging.getLogger(__name__)
 EXPORT_TARGET_SYSTEMS = ["BIS", "SXT", "ML_PIPELINE"]
@@ -42,13 +41,9 @@ def _compute_document_health(
     optional_docs = [req.doc_type_code for req in requirements if not req.required_flag]
     missing_required = [code for code in required_docs if code not in present_types]
     blocking_missing = [
-        req.doc_type_code
-        for req in requirements
-        if req.required_flag and req.blocking_flag and req.doc_type_code not in present_types
+        req.doc_type_code for req in requirements if req.required_flag and req.blocking_flag and req.doc_type_code not in present_types
     ]
-    present_count = sum(
-        1 for req in requirements if req.required_flag and req.doc_type_code in present_types
-    )
+    present_count = sum(1 for req in requirements if req.required_flag and req.doc_type_code in present_types)
     required_total = len(required_docs)
     optional_total = len(optional_docs)
     completeness_pct = int(round((present_count / required_total) * 100)) if required_total else 0
@@ -74,7 +69,10 @@ def _compute_settlement_health(plan: Optional[SettlementPlan]) -> SettlementHeal
     milestones_pending = sum(1 for milestone in milestones if milestone.status == "PENDING")
     milestones_held = sum(1 for milestone in milestones if milestone.status == "HELD")
     completion_pct = int(round((milestones_paid / milestones_total) * 100)) if milestones_total else 0
-    next_pending = next((milestone.event for milestone in milestones if milestone.status == "PENDING"), None)
+    next_pending = next(
+        (milestone.event for milestone in milestones if milestone.status == "PENDING"),
+        None,
+    )
 
     return SettlementHealth(
         milestones_total=milestones_total,
@@ -256,16 +254,8 @@ def compute_shipment_health(db: Session, shipment_id: str) -> ShipmentHealthResp
     """
     shipment = db.query(Shipment).filter(Shipment.id == shipment_id).first()
     requirements, template_name = resolve_required_docs_for_shipment(db, shipment)
-    documents = (
-        db.query(Document)
-        .filter(Document.shipment_id == shipment_id)
-        .all()
-    )
-    plan = (
-        db.query(SettlementPlan)
-        .filter(SettlementPlan.shipment_id == shipment_id)
-        .first()
-    )
+    documents = db.query(Document).filter(Document.shipment_id == shipment_id).all()
+    plan = db.query(SettlementPlan).filter(SettlementPlan.shipment_id == shipment_id).first()
 
     document_health, blocking_missing = _compute_document_health(documents, requirements)
     settlement_health = _compute_settlement_health(plan)
@@ -357,8 +347,7 @@ def get_at_risk_shipments(
         )
         .outerjoin(
             event_ranked,
-            (DocumentHealthSnapshot.shipment_id == event_ranked.c.shipment_id)
-            & (event_ranked.c.event_rank == 1),
+            (DocumentHealthSnapshot.shipment_id == event_ranked.c.shipment_id) & (event_ranked.c.event_rank == 1),
         )
         .filter(
             or_(

@@ -15,23 +15,24 @@ Design Principles:
 """
 
 import logging
-from typing import Literal, Dict, Any
+from typing import Any, Dict, Literal
 
 # These imports will work when simulation.py is in chainiq-service/
 # and imported as: from ..simulation import ...
 try:
-    from .storage import (
-        load_shipment_context_for_simulation,
-        get_latest_risk_for_shipment,
-    )
     from .app.risk_engine import calculate_risk_score
     from .app.schemas import SimulationResultResponse
+    from .storage import (
+        get_latest_risk_for_shipment,
+        load_shipment_context_for_simulation,
+    )
 except ImportError:
     # Fallback for direct execution or different import context
     from storage import (
-        load_shipment_context_for_simulation,
         get_latest_risk_for_shipment,
+        load_shipment_context_for_simulation,
     )
+
     from app.risk_engine import calculate_risk_score
     from app.schemas import SimulationResultResponse
 

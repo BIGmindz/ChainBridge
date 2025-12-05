@@ -46,6 +46,31 @@ All metrics sliced by corridor_id, risk_tier_initial, time window; optionally by
 
 Optional (future): Calibration bins and ECE/Brier per corridor once we store the full score distribution.
 
+### SLA Metrics (formulas and required fields)
+Fields available today in `SettlementOutcome` (R = present, F = future):
+- R: `delivered_timestamp`, `first_payment_timestamp`, `final_payment_timestamp`, `claim_window_close_timestamp`.
+- F (not yet in model_analytics): `claim_open_timestamp`, `claim_resolved_timestamp`, `manual_review_open_timestamp`, `manual_review_close_timestamp`, `claim_window_open_timestamp`.
+
+Formulas (when F fields exist, use them; otherwise count only timing we have):
+- Days to First Cash (D1): `D1 = (first_payment_timestamp - delivered_timestamp)` in days.
+- Days to Final Cash (D2): `D2 = (final_payment_timestamp - delivered_timestamp)` in days.
+- Cash SLA breach: `breach_cash = 1 if D2 > target_d2_p95_for_tier else 0`.
+- Claim window breach (future): `breach_claim_window = 1 if claim_open_timestamp > claim_window_close_timestamp else 0`.
+- Manual review SLA breach (future): `breach_manual_review = 1 if manual_review_close_timestamp > claim_window_close_timestamp else 0`.
+
+USD→MXN P0 SLA targets (proposed, conservative):
+
+| Tier | Target D2 p95 (days) | Max cash SLA breach % | Max claim window breach % |
+| --- | --- | --- | --- |
+| LOW | 5  | 2% | 1% |
+| MEDIUM | 7 | 3% | 2% |
+| HIGH | 10 | 5% | 3% |
+| CRITICAL | 14 | 7% | 5% |
+
+Notes:
+- Use D2 p95 computed per tier over rolling window (e.g., 30/90 days). Targets are entry-level for P0; tighten after pilot data.
+- Until claim timestamps exist, claim-window breach stays 0 by construction—Cody must add `claim_open_timestamp` (and optional `claim_resolved_timestamp`) to make this live.
+
 ## 4. Analytics Views & Dashboards (Operator & Benson)
 - Risk Tier Health (Benson/Pax): loss rate vs reserve utilization by tier; volume share and claim rate by tier; tail breach counts. Answers: “Are tiers priced/configured correctly?”
 - Days-to-Cash (Carriers/Brokers): median/P95 days_to_first_cash and days_to_final_cash by tier & corridor. Answers: “Are we delivering faster cash flow?”

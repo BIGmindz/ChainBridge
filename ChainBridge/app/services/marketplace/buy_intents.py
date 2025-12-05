@@ -1,4 +1,5 @@
 """Buy intent creation and validation for Dutch auctions."""
+
 from __future__ import annotations
 
 import hashlib
@@ -14,7 +15,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from api.database import SessionLocal
-from app.models.marketplace import Listing, BuyIntent
+from app.models.marketplace import BuyIntent, Listing
 from app.schemas.marketplace import BuyIntentStatus
 from app.services.marketplace.dutch_engine import canonical_price
 from app.services.marketplace.price_proof import PriceQuote, validate_nonce
@@ -116,7 +117,10 @@ def create_buy_intent(
             raise BuyIntentValidationError(
                 "QUOTE_MISMATCH",
                 "Client price does not match canonical price.",
-                details={"canonical_price": float(server_price), "client_price": float(client_price_dec)},
+                details={
+                    "canonical_price": float(server_price),
+                    "client_price": float(client_price_dec),
+                },
             )
 
         max_allowed = listing.buy_now_price or listing.start_price or server_price

@@ -11,7 +11,13 @@ def test_global_snapshot_aggregates_positions(client, path: str) -> None:
     assert resp.status_code == 200
     data = resp.json()
 
-    for key in ["corridorKpis", "modeKpis", "portHotspots", "globalTotals", "timestamp"]:
+    for key in [
+        "corridorKpis",
+        "modeKpis",
+        "portHotspots",
+        "globalTotals",
+        "timestamp",
+    ]:
         assert key in data
 
     assert isinstance(data["corridorKpis"], list)

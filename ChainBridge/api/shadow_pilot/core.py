@@ -1,4 +1,5 @@
 """Standalone Shadow Pilot engine for DataFrame inputs."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -157,7 +158,7 @@ def run_shadow_pilot_from_dataframe(
                 shipment_id=shipment_id,
                 corridor=str(corridor) if corridor is not None else None,
                 mode=str(mode) if mode is not None else None,
-                customer_segment=str(customer_segment) if customer_segment is not None else None,
+                customer_segment=(str(customer_segment) if customer_segment is not None else None),
                 cargo_value_usd=cargo_value,
                 event_truth_score=event_truth_score,
                 eligible_for_finance=eligible_for_finance,

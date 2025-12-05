@@ -7,7 +7,11 @@ from sqlalchemy.pool import StaticPool
 
 from api.database import Base
 from api.models.chaindocs import Shipment
-from app.services.marketplace.auctioneer import create_liquidation_listing, place_bid, execute_sale
+from app.services.marketplace.auctioneer import (
+    create_liquidation_listing,
+    execute_sale,
+    place_bid,
+)
 
 pytestmark = pytest.mark.phase2
 
@@ -43,6 +47,11 @@ def test_buy_now_execution():
     session.add(Shipment(id="SHIP-Y", corridor_code="EU-UK", mode="AIR", collateral_value=200.0))
     session.commit()
     listing = create_liquidation_listing("SHIP-Y", session=session)
-    sold = execute_sale(listing, "0x" + "f" * 40, listing.buy_now_price or listing.start_price, session=session)
+    sold = execute_sale(
+        listing,
+        "0x" + "f" * 40,
+        listing.buy_now_price or listing.start_price,
+        session=session,
+    )
     assert sold.status == "SOLD"
     session.close()

@@ -8,6 +8,7 @@ Contracts (v1.1, canonical):
 - POST /legal/ricardian/instruments/{id}/kill_switch sets status=FROZEN and material_adverse_override=True
 Future changes must be additive or versioned, not silent mutations.
 """
+
 from __future__ import annotations
 
 import logging
@@ -17,14 +18,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from api.database import get_db
+from api.legal.metadata import build_ricardian_metadata
 from api.models.legal import RicardianInstrument
 from api.schemas.legal import (
     RicardianInstrumentCreate,
     RicardianInstrumentResponse,
-    RicardianInstrumentUpdate,
     RicardianInstrumentStatus,
+    RicardianInstrumentUpdate,
 )
-from api.legal.metadata import build_ricardian_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,11 @@ def _get_instrument(db: Session, instrument_id: str) -> RicardianInstrument:
     return instrument
 
 
-@router.post("/ricardian/instruments", response_model=RicardianInstrumentResponse, status_code=201)
+@router.post(
+    "/ricardian/instruments",
+    response_model=RicardianInstrumentResponse,
+    status_code=201,
+)
 def create_instrument(payload: RicardianInstrumentCreate, db: Session = Depends(get_db)) -> RicardianInstrumentResponse:
     instrument = RicardianInstrument(
         id=str(uuid.uuid4()),
@@ -61,14 +66,19 @@ def create_instrument(payload: RicardianInstrumentCreate, db: Session = Depends(
     db.refresh(instrument)
     logger.info(
         "legal.ricardian.created",
-        extra={"instrument_id": instrument.id, "physical_reference": instrument.physical_reference},
+        extra={
+            "instrument_id": instrument.id,
+            "physical_reference": instrument.physical_reference,
+        },
     )
     return instrument
 
 
 @router.patch("/ricardian/instruments/{instrument_id}", response_model=RicardianInstrumentResponse)
 def update_instrument(
-    instrument_id: str, payload: RicardianInstrumentUpdate, db: Session = Depends(get_db)
+    instrument_id: str,
+    payload: RicardianInstrumentUpdate,
+    db: Session = Depends(get_db),
 ) -> RicardianInstrumentResponse:
     instrument = _get_instrument(db, instrument_id)
     for field in (
@@ -98,7 +108,10 @@ def get_instrument(instrument_id: str, db: Session = Depends(get_db)) -> Ricardi
     return _get_instrument(db, instrument_id)
 
 
-@router.get("/ricardian/instruments/by-physical/{physical_reference}", response_model=RicardianInstrumentResponse)
+@router.get(
+    "/ricardian/instruments/by-physical/{physical_reference}",
+    response_model=RicardianInstrumentResponse,
+)
 def get_instrument_by_physical(physical_reference: str, db: Session = Depends(get_db)) -> RicardianInstrumentResponse:
     instrument = (
         db.query(RicardianInstrument)
@@ -111,7 +124,10 @@ def get_instrument_by_physical(physical_reference: str, db: Session = Depends(ge
     return instrument
 
 
-@router.post("/ricardian/instruments/{instrument_id}/freeze", response_model=RicardianInstrumentResponse)
+@router.post(
+    "/ricardian/instruments/{instrument_id}/freeze",
+    response_model=RicardianInstrumentResponse,
+)
 def freeze_instrument(instrument_id: str, reason: str = None, db: Session = Depends(get_db)) -> RicardianInstrumentResponse:
     instrument = _get_instrument(db, instrument_id)
     instrument.status = RicardianInstrumentStatus.FROZEN.value
@@ -119,11 +135,17 @@ def freeze_instrument(instrument_id: str, reason: str = None, db: Session = Depe
     db.add(instrument)
     db.commit()
     db.refresh(instrument)
-    logger.info("legal.ricardian.frozen", extra={"instrument_id": instrument.id, "reason": reason})
+    logger.info(
+        "legal.ricardian.frozen",
+        extra={"instrument_id": instrument.id, "reason": reason},
+    )
     return instrument
 
 
-@router.post("/ricardian/instruments/{instrument_id}/unfreeze", response_model=RicardianInstrumentResponse)
+@router.post(
+    "/ricardian/instruments/{instrument_id}/unfreeze",
+    response_model=RicardianInstrumentResponse,
+)
 def unfreeze_instrument(instrument_id: str, db: Session = Depends(get_db)) -> RicardianInstrumentResponse:
     instrument = _get_instrument(db, instrument_id)
     instrument.status = RicardianInstrumentStatus.ACTIVE.value
@@ -150,7 +172,10 @@ def get_supremacy_info(instrument_id: str, db: Session = Depends(get_db)) -> dic
     }
 
 
-@router.post("/ricardian/instruments/{instrument_id}/kill_switch", response_model=RicardianInstrumentResponse)
+@router.post(
+    "/ricardian/instruments/{instrument_id}/kill_switch",
+    response_model=RicardianInstrumentResponse,
+)
 def invoke_kill_switch(instrument_id: str, event: str, db: Session = Depends(get_db)) -> RicardianInstrumentResponse:
     instrument = _get_instrument(db, instrument_id)
     instrument.material_adverse_override = True

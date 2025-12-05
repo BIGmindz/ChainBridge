@@ -7,6 +7,7 @@ Validates the /api/chainboard/events and /api/chainboard/shipments/{ref}/events 
 """
 
 from fastapi.testclient import TestClient
+
 from api.server import app
 
 client = TestClient(app)
@@ -61,8 +62,16 @@ def test_event_has_required_fields():
 
         # Validate enum values
         assert event["event_type"] in [
-            "created", "booked", "picked_up", "departed_port", "arrived_port",
-            "customs_hold", "customs_released", "delivered", "payment_release", "iot_alert"
+            "created",
+            "booked",
+            "picked_up",
+            "departed_port",
+            "arrived_port",
+            "customs_hold",
+            "customs_released",
+            "delivered",
+            "payment_release",
+            "iot_alert",
         ]
         assert event["source"] in ["TMS", "IoT", "Finance"]
         assert event["severity"] in ["info", "warning", "critical"]

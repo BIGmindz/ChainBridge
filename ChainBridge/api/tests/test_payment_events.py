@@ -120,7 +120,8 @@ async def test_milestone_id_canonical_format():
 async def test_payment_event_through_event_bus():
     """Test payment_state_changed events published through event bus contain milestone_id."""
     import asyncio
-    from api.realtime.bus import subscribe, unsubscribe, publish_event
+
+    from api.realtime.bus import publish_event, subscribe, unsubscribe
 
     # Subscribe to event bus
     queue = subscribe()

@@ -1,9 +1,10 @@
 """Price quote proof cache for Dutch auctions."""
+
 from __future__ import annotations
 
+import threading
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-import threading
 from typing import Dict, Optional
 from uuid import uuid4
 

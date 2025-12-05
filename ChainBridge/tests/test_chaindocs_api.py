@@ -50,7 +50,9 @@ def clean_database(client_with_db: Tuple[TestClient, Any]):
     Base.metadata.create_all(bind=engine)
 
 
-def test_get_dossier_returns_missing_when_no_shipment(client_with_db: Tuple[TestClient, Any]) -> None:
+def test_get_dossier_returns_missing_when_no_shipment(
+    client_with_db: Tuple[TestClient, Any],
+) -> None:
     client, _ = client_with_db
 
     response = client.get("/chaindocs/shipments/SHIP-123/dossier")
