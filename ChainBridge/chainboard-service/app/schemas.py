@@ -6,6 +6,7 @@ Request and response validation for driver API endpoints.
 
 from datetime import datetime
 from typing import Optional
+
 from pydantic import BaseModel, EmailStr, Field
 
 

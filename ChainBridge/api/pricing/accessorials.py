@@ -1,4 +1,5 @@
 """Demo accessorial charges."""
+
 from decimal import Decimal
 from typing import Any
 

@@ -27,7 +27,6 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from core.payments.identity import is_valid_milestone_id
 
-
 # ============================================================================
 # ENUMS - Explicit Domain Vocabularies
 # ============================================================================
@@ -252,7 +251,8 @@ class RiskProfile(BaseModel):
     score: int = Field(..., ge=0, le=100, description="Risk score (0-100, higher = riskier)")
     category: RiskCategory = Field(..., description="Risk classification band")
     drivers: List[str] = Field(
-        default_factory=list, description="Risk factors contributing to score (e.g., 'Port congestion')"
+        default_factory=list,
+        description="Risk factors contributing to score (e.g., 'Port congestion')",
     )
     assessed_at: datetime = Field(..., description="Risk assessment timestamp")
     watchlisted: Optional[bool] = Field(False, description="Flagged for manual review if true")
@@ -279,7 +279,10 @@ class RiskProfile(BaseModel):
 class PaymentMilestone(BaseModel):
     """ChainPay payment milestone with release tracking"""
 
-    milestone_id: str = Field(..., description="Canonical milestone identifier '<shipment_reference>-M<index>'")
+    milestone_id: str = Field(
+        ...,
+        description="Canonical milestone identifier '<shipment_reference>-M<index>'",
+    )
     label: str = Field(..., description="Milestone name (e.g., 'Pickup', 'Delivery')")
     percentage: int = Field(..., ge=0, le=100, description="% of total payment value")
     state: MilestoneState = Field(..., description="Release state")
@@ -290,10 +293,7 @@ class PaymentMilestone(BaseModel):
     @classmethod
     def validate_milestone_id(cls, value: str) -> str:
         if not is_valid_milestone_id(value):
-            raise ValueError(
-                "milestone_id must match '<shipment_reference>-M<index>' "
-                "(e.g., 'SHP-2025-042-M1')"
-            )
+            raise ValueError("milestone_id must match '<shipment_reference>-M<index>' " "(e.g., 'SHP-2025-042-M1')")
         return value
 
     @field_validator("percentage")
@@ -324,9 +324,7 @@ class PaymentProfile(BaseModel):
     released_usd: Decimal = Field(..., ge=0, description="Amount released to date in USD")
     released_percentage: int = Field(..., ge=0, le=100, description="% of payment released so far")
     holds_usd: Decimal = Field(..., ge=0, description="Amount currently held/blocked in USD")
-    milestones: List[PaymentMilestone] = Field(
-        default_factory=list, description="Milestone release schedule"
-    )
+    milestones: List[PaymentMilestone] = Field(default_factory=list, description="Milestone release schedule")
     updated_at: datetime = Field(..., description="Last payment state update timestamp")
 
     @field_validator("released_percentage")
@@ -358,9 +356,7 @@ class GovernanceSnapshot(BaseModel):
 
     proofpack_status: ProofpackStatus = Field(..., description="Cryptographic proof verification status")
     last_audit: datetime = Field(..., description="Most recent audit timestamp")
-    exceptions: List[ExceptionCode] = Field(
-        default_factory=list, description="Active exception codes for this shipment"
-    )
+    exceptions: List[ExceptionCode] = Field(default_factory=list, description="Active exception codes for this shipment")
 
     class Config:
         json_schema_extra = {
@@ -447,9 +443,7 @@ class IoTSensorReading(BaseModel):
     """Individual sensor reading from ChainSense"""
 
     sensor_type: IoTSensorType = Field(..., description="Sensor hardware type")
-    value: Union[float, str] = Field(
-        ..., description="Reading value (numeric or string depending on sensor)"
-    )
+    value: Union[float, str] = Field(..., description="Reading value (numeric or string depending on sensor)")
     unit: Optional[str] = Field(None, description="Unit of measurement (e.g., 'C', '%', 'G')")
     timestamp: datetime = Field(..., description="Reading timestamp")
     status: IoTSeverity = Field(..., description="Alert severity level")
@@ -470,9 +464,7 @@ class ShipmentIoTSnapshot(BaseModel):
     """IoT telemetry snapshot for a single shipment"""
 
     shipment_id: str = Field(..., description="Shipment identifier")
-    latest_readings: List[IoTSensorReading] = Field(
-        default_factory=list, description="Most recent reading per sensor type"
-    )
+    latest_readings: List[IoTSensorReading] = Field(default_factory=list, description="Most recent reading per sensor type")
     alert_count_24h: int = Field(..., ge=0, description="Total alerts in last 24 hours")
     critical_alerts_24h: int = Field(..., ge=0, description="Critical alerts in last 24 hours")
 
@@ -591,12 +583,8 @@ class PaymentSummary(BaseModel):
     completed: int = Field(..., ge=0, description="Fully completed payments")
     not_started: int = Field(..., ge=0, description="Payments not yet started")
     in_progress: int = Field(..., ge=0, description="Payments in progress")
-    payment_health_score: int = Field(
-        ..., ge=0, le=100, description="Overall payment health score (0-100)"
-    )
-    capital_locked_hours: float = Field(
-        ..., ge=0, description="Estimated hours of capital stuck in limbo"
-    )
+    payment_health_score: int = Field(..., ge=0, le=100, description="Overall payment health score (0-100)")
+    capital_locked_hours: float = Field(..., ge=0, description="Estimated hours of capital stuck in limbo")
 
     class Config:
         json_schema_extra = {
@@ -615,9 +603,7 @@ class PaymentSummary(BaseModel):
 class GovernanceSummary(BaseModel):
     """Governance and compliance aggregates for dashboard"""
 
-    proofpack_ok_percent: float = Field(
-        ..., ge=0, le=100, description="% of shipments with verified proofpacks"
-    )
+    proofpack_ok_percent: float = Field(..., ge=0, le=100, description="% of shipments with verified proofpacks")
     open_audits: int = Field(..., ge=0, description="Active audits/investigations")
     watchlisted_shipments: int = Field(..., ge=0, description="Shipments on governance watchlist")
 
@@ -795,9 +781,7 @@ class ExceptionRow(BaseModel):
     risk_score: int = Field(..., ge=0, le=100, description="ChainIQ risk score")
     payment_state: PaymentState = Field(..., description="ChainPay payment state")
     age_of_issue: str = Field(..., description="Human-readable age (e.g., '3h', '2d')")
-    issue_types: List[ExceptionCode] = Field(
-        default_factory=list, description="Active exception codes"
-    )
+    issue_types: List[ExceptionCode] = Field(default_factory=list, description="Active exception codes")
     last_update: str = Field(..., description="Last update timestamp (formatted)")
 
     class Config:
@@ -828,9 +812,7 @@ class ShipmentsResponse(BaseModel):
     filtered: bool = Field(False, description="True if filters were applied")
 
     class Config:
-        json_schema_extra = {
-            "example": {"shipments": [], "total": 148, "filtered": False}
-        }
+        json_schema_extra = {"example": {"shipments": [], "total": 148, "filtered": False}}
 
 
 class ExceptionsResponse(BaseModel):
@@ -841,9 +823,7 @@ class ExceptionsResponse(BaseModel):
     critical_count: int = Field(..., ge=0, description="High-priority exceptions")
 
     class Config:
-        json_schema_extra = {
-            "example": {"exceptions": [], "total": 7, "critical_count": 3}
-        }
+        json_schema_extra = {"example": {"exceptions": [], "total": 7, "critical_count": 3}}
 
 
 class GlobalSummaryResponse(BaseModel):
@@ -917,17 +897,17 @@ class PaymentQueueItem(BaseModel):
     released_usd: Decimal = Field(..., ge=0, description="Payment amount already released")
     aging_days: int = Field(..., ge=0, description="Days since shipment assessment")
     risk_category: Optional[RiskCategory] = Field(None, description="Risk level if applicable")
-    milestone_id: str = Field(..., description="Canonical milestone identifier '<shipment_reference>-M<index>'")
+    milestone_id: str = Field(
+        ...,
+        description="Canonical milestone identifier '<shipment_reference>-M<index>'",
+    )
     freight_token_id: Optional[int] = Field(None, description="Freight token correlation identifier")
 
     @field_validator("milestone_id")
     @classmethod
     def validate_milestone_id(cls, value: str) -> str:
         if not is_valid_milestone_id(value):
-            raise ValueError(
-                "milestone_id must match '<shipment_reference>-M<index>' "
-                "(e.g., 'SHP-2025-042-M1')"
-            )
+            raise ValueError("milestone_id must match '<shipment_reference>-M<index>' " "(e.g., 'SHP-2025-042-M1')")
         return value
 
     class Config:
@@ -963,8 +943,8 @@ class PaymentQueueResponse(BaseModel):
                 "total_items": 5,
                 "total_holds_usd": "185000.00",
                 "generated_at": "2025-11-15T10:30:00Z",
+            }
         }
-    }
 
 
 # ============================================================================
@@ -998,7 +978,10 @@ class LivePositionsResponse(BaseModel):
 class ProofPack(BaseModel):
     """Structured ProofPack payload for settlement verification."""
 
-    milestone_id: str = Field(..., description="Canonical milestone identifier '<shipment_reference>-M<index>'")
+    milestone_id: str = Field(
+        ...,
+        description="Canonical milestone identifier '<shipment_reference>-M<index>'",
+    )
     shipment_reference: str = Field(..., description="Shipment reference used by canonical IDs")
     corridor: str = Field(..., description="Shipment corridor (Origin → Destination)")
     customer_name: str = Field(..., description="Customer or shipper name")
@@ -1032,7 +1015,13 @@ class ProofPack(BaseModel):
                     "category": "high",
                     "notes": "Placeholder until ChainIQ linkage is wired",
                 },
-                "audit_trail": [{"event": "milestone_created", "actor": "system", "timestamp": "2025-11-18T10:00:00Z"}],
+                "audit_trail": [
+                    {
+                        "event": "milestone_created",
+                        "actor": "system",
+                        "timestamp": "2025-11-18T10:00:00Z",
+                    }
+                ],
             }
         }
 
@@ -1097,16 +1086,13 @@ class TimelineEventResponse(BaseModel):
 
 
 class CorridorMetricsResponse(BaseModel):
-
     """Response envelope for GET /metrics/corridors"""
 
     corridors: List[CorridorMetrics] = Field(default_factory=list)
     total: int = Field(..., ge=0, description="Total corridors")
 
     class Config:
-        json_schema_extra = {
-            "example": {"corridors": [], "total": 4}
-        }
+        json_schema_extra = {"example": {"corridors": [], "total": 4}}
 
 
 class IoTHealthSummaryResponse(BaseModel):
@@ -1351,7 +1337,10 @@ class ControlTowerEvent(BaseModel):
     id: str = Field(..., description="Unique event ID")
     type: ControlTowerEventType = Field(..., description="Event type")
     timestamp: datetime = Field(..., description="When the event occurred")
-    source: str = Field(..., description="Subsystem emitting the event (e.g. 'alerts', 'iot', 'payments')")
+    source: str = Field(
+        ...,
+        description="Subsystem emitting the event (e.g. 'alerts', 'iot', 'payments')",
+    )
     key: str = Field(..., description="Primary entity key (e.g. shipment ID, alert ID)")
     payload: dict = Field(default_factory=dict, description="Domain-specific payload")
 
@@ -1383,6 +1372,7 @@ class PaymentEventKind(str, Enum):
 
     Tracks the lifecycle of payment milestones from creation through settlement.
     """
+
     MILESTONE_BECAME_ELIGIBLE = "milestone_became_eligible"
     MILESTONE_RELEASED = "milestone_released"
     MILESTONE_SETTLED = "milestone_settled"
@@ -1401,10 +1391,7 @@ class ProofpackHint(BaseModel):
     @classmethod
     def validate_milestone_id(cls, value: str) -> str:
         if not is_valid_milestone_id(value):
-            raise ValueError(
-                "milestone_id must match '<shipment_reference>-M<index>' "
-                "(e.g., 'SHP-2025-042-M1')"
-            )
+            raise ValueError("milestone_id must match '<shipment_reference>-M<index>' " "(e.g., 'SHP-2025-042-M1')")
         return value
 
 
@@ -1415,55 +1402,32 @@ class PaymentSettlementEvent(BaseModel):
     Emitted when payment milestones transition between states.
     Used with ControlTowerEvent where type=PAYMENT_STATE_CHANGED.
     """
-    shipment_reference: str = Field(
-        ...,
-        description="Shipment reference ID (e.g., SHP-2025-027)"
-    )
+
+    shipment_reference: str = Field(..., description="Shipment reference ID (e.g., SHP-2025-027)")
     milestone_id: str = Field(
         ...,
-        description="Canonical milestone identifier '<shipment_reference>-M<index>'"
+        description="Canonical milestone identifier '<shipment_reference>-M<index>'",
     )
     milestone_name: str = Field(
         ...,
-        description="Human-readable milestone name (e.g., 'POD Confirmed', 'Pickup Complete')"
+        description="Human-readable milestone name (e.g., 'POD Confirmed', 'Pickup Complete')",
     )
-    from_state: str = Field(
-        ...,
-        description="Previous payment status (pending/approved/delayed/etc.)"
-    )
-    to_state: str = Field(
-        ...,
-        description="New payment status"
-    )
-    amount: float = Field(
-        ...,
-        description="Settlement amount for this milestone"
-    )
-    currency: str = Field(
-        default="USD",
-        description="ISO 4217 currency code"
-    )
-    reason: Optional[str] = Field(
-        default=None,
-        description="Optional reason for the state change"
-    )
-    freight_token_id: Optional[int] = Field(
-        default=None,
-        description="Freight token correlation identifier"
-    )
+    from_state: str = Field(..., description="Previous payment status (pending/approved/delayed/etc.)")
+    to_state: str = Field(..., description="New payment status")
+    amount: float = Field(..., description="Settlement amount for this milestone")
+    currency: str = Field(default="USD", description="ISO 4217 currency code")
+    reason: Optional[str] = Field(default=None, description="Optional reason for the state change")
+    freight_token_id: Optional[int] = Field(default=None, description="Freight token correlation identifier")
     proofpack_hint: Optional[ProofpackHint] = Field(
         default=None,
-        description="Indicates ProofPack availability without fetching full payload"
+        description="Indicates ProofPack availability without fetching full payload",
     )
 
     @field_validator("milestone_id")
     @classmethod
     def validate_event_milestone_id(cls, value: str) -> str:
         if not is_valid_milestone_id(value):
-            raise ValueError(
-                "milestone_id must match '<shipment_reference>-M<index>' "
-                "(e.g., 'SHP-2025-042-M1')"
-            )
+            raise ValueError("milestone_id must match '<shipment_reference>-M<index>' " "(e.g., 'SHP-2025-042-M1')")
         return value
 
     model_config = ConfigDict(

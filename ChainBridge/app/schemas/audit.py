@@ -1,4 +1,5 @@
 """Audit schemas for fuzzy reconciliation."""
+
 from __future__ import annotations
 
 from pydantic import BaseModel, Field

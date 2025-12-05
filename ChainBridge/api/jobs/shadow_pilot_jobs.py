@@ -1,9 +1,10 @@
 """ARQ job for running and persisting Shadow Pilot simulations."""
+
 from __future__ import annotations
 
 import logging
 from datetime import datetime
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from typing import Any, Dict
 

@@ -1,4 +1,5 @@
 """ARQ tasks for ChainStake staking pipeline."""
+
 from __future__ import annotations
 
 import asyncio

@@ -14,6 +14,7 @@ Version: 1.0.0 (Production-Ready)
 """
 
 from fastapi.testclient import TestClient
+
 from api.server import app
 
 client = TestClient(app)

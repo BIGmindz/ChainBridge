@@ -31,6 +31,9 @@ class SlaMetric(BaseModel):
     tier: RiskTier
     claim_review_sla_breach_rate: float
     manual_review_sla_breach_rate: float
+    cash_breach_rate: float
+    cash_breach_count: int
+    sample_size: int
     total_reviews: int
 
 

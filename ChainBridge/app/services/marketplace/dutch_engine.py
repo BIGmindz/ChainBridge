@@ -1,4 +1,5 @@
 """Dutch auction pricing and atomic buy logic."""
+
 from __future__ import annotations
 
 import threading
@@ -17,6 +18,7 @@ _locks: dict[str, threading.Lock] = {}
 
 # Ensure an event loop exists for synchronous test runners that call asyncio APIs directly.
 import asyncio
+
 try:  # pragma: no cover - defensive for legacy tests
     asyncio.get_event_loop()
 except RuntimeError:

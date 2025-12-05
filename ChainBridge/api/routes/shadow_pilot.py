@@ -1,4 +1,5 @@
 """Shadow Pilot ingestion and retrieval endpoints."""
+
 from __future__ import annotations
 
 import os
@@ -114,14 +115,8 @@ async def ingest_shadow_pilot(
 
 
 @router.get("/summaries", response_model=List[ShadowPilotSummaryResponse])
-def list_shadow_pilot_summaries(
-    db: Session = Depends(get_db), user=Depends(get_current_admin_user)
-) -> List[ShadowPilotSummaryResponse]:
-    runs = (
-        db.query(ShadowPilotRun)
-        .order_by(ShadowPilotRun.created_at.desc())
-        .all()
-    )
+def list_shadow_pilot_summaries(db: Session = Depends(get_db), user=Depends(get_current_admin_user)) -> List[ShadowPilotSummaryResponse]:
+    runs = db.query(ShadowPilotRun).order_by(ShadowPilotRun.created_at.desc()).all()
     return runs
 
 

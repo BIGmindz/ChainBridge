@@ -19,7 +19,9 @@ class AdminUser:
     roles: List[str] = field(default_factory=list)
 
 
-def get_current_admin_user(api_key: Optional[str] = Depends(api_key_header)) -> AdminUser:
+def get_current_admin_user(
+    api_key: Optional[str] = Depends(api_key_header),
+) -> AdminUser:
     """
     Temporary stub for admin auth.
 

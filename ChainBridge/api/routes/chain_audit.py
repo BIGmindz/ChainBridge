@@ -1,4 +1,5 @@
 """ChainAudit v1 reconciliation endpoints."""
+
 from __future__ import annotations
 
 import logging
@@ -36,11 +37,7 @@ class ReconcileResponse(BaseModel):
 
 
 def _get_intent(db: Session, payment_intent_id: str) -> PaymentIntent:
-    intent = (
-        db.query(PaymentIntent)
-        .filter(PaymentIntent.id == payment_intent_id)
-        .first()
-    )
+    intent = db.query(PaymentIntent).filter(PaymentIntent.id == payment_intent_id).first()
     if not intent:
         raise HTTPException(status_code=404, detail="PaymentIntent not found")
     return intent

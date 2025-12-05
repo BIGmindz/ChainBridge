@@ -10,8 +10,8 @@ from sqlalchemy.pool import StaticPool
 from api.database import Base, get_db
 from app.api.api import app
 from app.api.endpoints import marketplace as marketplace_api
-from app.models.marketplace import Listing, BuyIntent
-from app.services.marketplace import price_proof, buy_intents
+from app.models.marketplace import BuyIntent, Listing
+from app.services.marketplace import buy_intents, price_proof
 
 pytestmark = pytest.mark.phase2
 
@@ -65,7 +65,9 @@ def _listing(session, **kwargs) -> Listing:
     return listing.id
 
 
-def test_quote_mismatch_rejected(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_quote_mismatch_rejected(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         listing_id = _listing(session, id="LST-MISMATCH")
@@ -85,7 +87,9 @@ def test_quote_mismatch_rejected(client_with_db: Tuple[TestClient, Any, sessionm
     assert detail["code"] == "QUOTE_MISMATCH"
 
 
-def test_expired_nonce_rejected(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_expired_nonce_rejected(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         listing_id = _listing(session, id="LST-EXPIRED")
@@ -114,7 +118,9 @@ def test_expired_nonce_rejected(client_with_db: Tuple[TestClient, Any, sessionma
     assert detail["code"] == "NONCE_EXPIRED"
 
 
-def test_buy_intent_happy_path_enqueues_worker(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_buy_intent_happy_path_enqueues_worker(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     stub = marketplace_api._InMemoryArq()
     app.dependency_overrides[marketplace_api.get_arq_pool] = lambda: stub
@@ -148,7 +154,9 @@ def test_buy_intent_happy_path_enqueues_worker(client_with_db: Tuple[TestClient,
         assert intent.price_proof_hash
 
 
-def test_rate_limit_blocks_repeated_attempts(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_rate_limit_blocks_repeated_attempts(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         listing_id = _listing(session, id="LST-RATE")
@@ -169,7 +177,9 @@ def test_rate_limit_blocks_repeated_attempts(client_with_db: Tuple[TestClient, A
     assert detail["code"] == "RATE_LIMITED"
 
 
-def test_auction_expired_rejected(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_auction_expired_rejected(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     expired_time = datetime.now(timezone.utc) - timedelta(hours=1)
     with SessionLocal() as session:

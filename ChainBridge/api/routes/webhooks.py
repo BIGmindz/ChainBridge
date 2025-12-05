@@ -1,4 +1,5 @@
 """Settlement webhook orchestrator."""
+
 from __future__ import annotations
 
 import logging
@@ -9,11 +10,11 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from api.database import get_db
+from api.events.bus import EventType, event_bus
 from api.models.chainpay import PaymentIntent
-from api.services.settlement_events import append_settlement_event
-from api.services.payment_intents import evaluate_readiness, compute_intent_hash
-from api.events.bus import event_bus, EventType
 from api.routes.chainpay import _serialize_settlement_event
+from api.services.payment_intents import compute_intent_hash, evaluate_readiness
+from api.services.settlement_events import append_settlement_event
 from api.webhooks.security import enforce_rate_limit, verify_signature
 
 logger = logging.getLogger(__name__)
@@ -100,12 +101,7 @@ async def settlement_payment_status(payload: PaymentStatusPayload, request: Requ
         correlation_id=payload.payment_intent_id,
         actor=actor,
     )
-    events = (
-        db.query(PaymentIntent)
-        .filter(PaymentIntent.id == intent.id)
-        .first()
-        .settlement_events
-    )
+    events = db.query(PaymentIntent).filter(PaymentIntent.id == intent.id).first().settlement_events
     return [_serialize_settlement_event(evt).model_dump() for evt in events]
 
 
@@ -136,10 +132,5 @@ async def settlement_proof_attached(payload: ProofAttachedPayload, request: Requ
         correlation_id=payload.payment_intent_id,
         actor=actor,
     )
-    events = (
-        db.query(PaymentIntent)
-        .filter(PaymentIntent.id == intent.id)
-        .first()
-        .settlement_events
-    )
+    events = db.query(PaymentIntent).filter(PaymentIntent.id == intent.id).first().settlement_events
     return [_serialize_settlement_event(evt).model_dump() for evt in events]

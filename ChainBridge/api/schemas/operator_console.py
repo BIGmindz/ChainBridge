@@ -1,11 +1,13 @@
 """Schemas for Operator Console endpoints."""
+
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Literal
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel
 
 
+<<<<<<< Updated upstream
 class RicardianInstrumentStatus(str, Enum):
     ACTIVE = "ACTIVE"
     FROZEN = "FROZEN"
@@ -14,6 +16,8 @@ class RicardianInstrumentStatus(str, Enum):
 
 
 
+=======
+>>>>>>> Stashed changes
 class OperatorQueueItem(BaseModel):
     id: str
     state: Literal["READY", "BLOCKED", "WAITING_PROOF", "ERROR"]
@@ -29,7 +33,7 @@ class OperatorQueueItem(BaseModel):
     approved_amount: Optional[float] = None
     held_amount: Optional[float] = None
     has_ricardian_wrapper: bool = False
-    ricardian_status: Optional[RicardianInstrumentStatus] = None
+    ricardian_status: Optional[str] = None
 
 
 class OperatorQueueResponse(BaseModel):

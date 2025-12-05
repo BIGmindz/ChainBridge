@@ -1,8 +1,10 @@
 """Add settlement event audit table."""
+
 from __future__ import annotations
 
-from alembic import op
 import sqlalchemy as sa
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "0009_settlement_event_audit"
@@ -41,7 +43,10 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_index("ix_settlement_event_audit_occurred_at_desc", table_name="settlement_event_audit")
+    op.drop_index(
+        "ix_settlement_event_audit_occurred_at_desc",
+        table_name="settlement_event_audit",
+    )
     op.drop_index("ix_settlement_event_audit_shipment", table_name="settlement_event_audit")
     op.drop_index("ix_settlement_event_audit_payment_intent", table_name="settlement_event_audit")
     op.drop_table("settlement_event_audit")

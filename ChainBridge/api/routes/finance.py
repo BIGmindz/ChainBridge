@@ -10,6 +10,7 @@ Contracts (FINANCE-R01 canonical):
   {PENDING, ACTIVE, REPAID, LIQUIDATED, CANCELLED}
 Any future changes must be additive or versioned.
 """
+
 from __future__ import annotations
 
 import logging
@@ -52,9 +53,15 @@ def _risk_band_from_payload(payload: FinancingQuoteRequest) -> str:
 def compute_financing_quote(db: Session, payload: FinancingQuoteRequest) -> FinancingQuoteResponse:
     instrument = _latest_instrument(db, payload.physical_reference)
     if instrument is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ricardian instrument not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ricardian instrument not found",
+        )
     if instrument.status != "ACTIVE":
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Instrument {instrument.status}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Instrument {instrument.status}",
+        )
 
     band = _risk_band_from_payload(payload)
     if band == "LOW":
@@ -97,14 +104,24 @@ def create_financing_quote(payload: FinancingQuoteRequest, db: Session = Depends
     return quote
 
 
-@router.post("/stakes", response_model=InventoryStakeResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/stakes",
+    response_model=InventoryStakeResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_inventory_stake(payload: InventoryStakeCreate, db: Session = Depends(get_db)) -> InventoryStakeResponse:
     # ensure instrument exists and active
     instrument = _latest_instrument(db, payload.physical_reference)
     if instrument is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ricardian instrument not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ricardian instrument not found",
+        )
     if instrument.status != "ACTIVE":
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Instrument {instrument.status}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Instrument {instrument.status}",
+        )
 
     stake = InventoryStake(
         physical_reference=payload.physical_reference,
@@ -125,11 +142,17 @@ def create_inventory_stake(payload: InventoryStakeCreate, db: Session = Depends(
     db.add(stake)
     db.commit()
     db.refresh(stake)
-    logger.info("finance.stake.created", extra={"stake_id": stake.id, "physical_reference": stake.physical_reference})
+    logger.info(
+        "finance.stake.created",
+        extra={"stake_id": stake.id, "physical_reference": stake.physical_reference},
+    )
     return stake
 
 
-@router.get("/stakes/by-physical/{physical_reference}", response_model=List[InventoryStakeResponse])
+@router.get(
+    "/stakes/by-physical/{physical_reference}",
+    response_model=List[InventoryStakeResponse],
+)
 def list_stakes_by_physical(physical_reference: str, db: Session = Depends(get_db)) -> List[InventoryStakeResponse]:
     stakes = (
         db.query(InventoryStake)

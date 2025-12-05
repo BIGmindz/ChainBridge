@@ -1,4 +1,5 @@
 """Pydantic schemas for financing and inventory stakes."""
+
 from __future__ import annotations
 
 from datetime import datetime

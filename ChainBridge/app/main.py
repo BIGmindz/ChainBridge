@@ -1,5 +1,9 @@
 """FastAPI entrypoint wiring ChainBridge routers together."""
+
 from __future__ import annotations
+
+from core.import_safety import ensure_import_safety
+ensure_import_safety()
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -38,9 +42,7 @@ def build_app() -> FastAPI:
         return {"status": "ok"}
 
     @app.get("/marketplace/pricing/{listing_id}")
-    async def pricing_alias(
-        listing_id: str, request: Request, db: Session = Depends(get_db)
-    ):
+    async def pricing_alias(listing_id: str, request: Request, db: Session = Depends(get_db)):
         """Alias endpoint for deterministic Dutch price checks."""
         return await get_authoritative_price(listing_id, request, db)
 

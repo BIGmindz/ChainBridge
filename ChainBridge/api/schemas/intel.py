@@ -1,4 +1,5 @@
 """Intel and snapshot schemas aligned with front-end expectations."""
+
 from __future__ import annotations
 
 from datetime import datetime

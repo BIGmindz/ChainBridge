@@ -1,4 +1,5 @@
 """Web3 settlement adapter abstraction."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,7 +9,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Optional
 
-from app.core.config import MARKETPLACE_DEMO_MODE, DEMO_MODE
+from app.core.config import DEMO_MODE, MARKETPLACE_DEMO_MODE
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,12 @@ class DemoWeb3SettlementClient(Web3SettlementClient):
 
 
 class AsyncWeb3SettlementClient(Web3SettlementClient):  # pragma: no cover - placeholder for future real chain integration
-    def __init__(self, rpc_url: str, operator_wallet: Optional[str] = None, operator_key: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        rpc_url: str,
+        operator_wallet: Optional[str] = None,
+        operator_key: Optional[str] = None,
+    ) -> None:
         self.rpc_url = rpc_url
         self.operator_wallet = operator_wallet
         self.operator_key = operator_key
@@ -71,7 +77,10 @@ def get_web3_client() -> Web3SettlementClient:
     if (mode == "real" or not DEMO_MODE) and not rpc_url:
         if strict:
             raise RuntimeError("web3_not_configured")
-        logger.warning("web3.rpc.missing", extra={"event": "web3.rpc.missing", "demo_mode": DEMO_MODE})
+        logger.warning(
+            "web3.rpc.missing",
+            extra={"event": "web3.rpc.missing", "demo_mode": DEMO_MODE},
+        )
         return DemoWeb3SettlementClient()
     return AsyncWeb3SettlementClient(
         rpc_url,

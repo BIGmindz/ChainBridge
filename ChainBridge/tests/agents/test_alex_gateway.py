@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from api.agents.alex_gateway import alex_gateway, AlexGovernanceError
+from api.agents.alex_gateway import AlexGovernanceError, alex_gateway
 
 pytestmark = pytest.mark.core
 

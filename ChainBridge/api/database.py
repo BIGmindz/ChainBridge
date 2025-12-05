@@ -41,6 +41,7 @@ def init_db() -> None:
         "api.models.legal",
         "api.models.finance",
         "api.models.shadow_pilot",
+        "app.models.ingest",
         "app.models.marketplace",
     ]:
         try:

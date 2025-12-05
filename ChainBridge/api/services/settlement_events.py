@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
+from api.events.bus import EventType, event_bus
 from api.models.chainpay import PaymentIntent, SettlementEvent
-from api.events.bus import event_bus, EventType
 
 logger = logging.getLogger(__name__)
 
@@ -32,15 +32,40 @@ EVENT_SEQUENCE = [
     "STAKE_COMPLETED",
 ]
 EVENT_INDEX = {etype: idx for idx, etype in enumerate(EVENT_SEQUENCE)}
-TERMINAL_EVENTS = {"FAILED", "FAILED_COMPLIANCE_CHECK", "FAILED_CLEARINGHOUSE", "CASH_RELEASED", "SETTLEMENT_CLOSED", "REFUNDED", "CAPTURED"}
+TERMINAL_EVENTS = {
+    "FAILED",
+    "FAILED_COMPLIANCE_CHECK",
+    "FAILED_CLEARINGHOUSE",
+    "CASH_RELEASED",
+    "SETTLEMENT_CLOSED",
+    "REFUNDED",
+    "CAPTURED",
+}
 ALLOWED_TRANSITIONS = {
     "PAYMENT_INITIATED": {"CREATED", "AUTHORIZED", "FAILED"},
-    "CREATED": {"PROOF_ATTACHED", "PROOF_VALIDATED", "RISK_RECHECKED", "AUTHORIZED", "FAILED"},
+    "CREATED": {
+        "PROOF_ATTACHED",
+        "PROOF_VALIDATED",
+        "RISK_RECHECKED",
+        "AUTHORIZED",
+        "FAILED",
+    },
     "PROOF_ATTACHED": {"PROOF_VALIDATED", "RISK_RECHECKED", "AUTHORIZED", "FAILED"},
     "PROOF_VALIDATED": {"RISK_RECHECKED", "AUTHORIZED", "FAILED"},
     "RISK_RECHECKED": {"AUTHORIZED", "FAILED", "FAILED_COMPLIANCE_CHECK"},
-    "AUTHORIZED": {"RELEASE_REQUESTED", "CASH_RELEASED", "CAPTURED", "FAILED_CLEARINGHOUSE", "FAILED"},
-    "RELEASE_REQUESTED": {"CASH_RELEASED", "CAPTURED", "FAILED_CLEARINGHOUSE", "FAILED"},
+    "AUTHORIZED": {
+        "RELEASE_REQUESTED",
+        "CASH_RELEASED",
+        "CAPTURED",
+        "FAILED_CLEARINGHOUSE",
+        "FAILED",
+    },
+    "RELEASE_REQUESTED": {
+        "CASH_RELEASED",
+        "CAPTURED",
+        "FAILED_CLEARINGHOUSE",
+        "FAILED",
+    },
     "CASH_RELEASED": {"SETTLEMENT_CLOSED"},
     "CAPTURED": {"REFUNDED", "SETTLEMENT_CLOSED"},
     "REFUNDED": {"SETTLEMENT_CLOSED"},

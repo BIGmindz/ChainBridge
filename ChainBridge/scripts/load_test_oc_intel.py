@@ -38,8 +38,10 @@ async def run_load() -> None:
 
     async with httpx.AsyncClient(timeout=5.0) as client:
         for i in range(0, len(tasks), CONCURRENCY):
-            chunk = tasks[i : i + CONCURRENCY]
-            coros = [hammer_endpoint(client, PATHS[j // REQUESTS_PER_ENDPOINT]) for j in range(i, min(i + CONCURRENCY, len(tasks)))]
+            coros = [
+                hammer_endpoint(client, PATHS[j // REQUESTS_PER_ENDPOINT])
+                for j in range(i, min(i + CONCURRENCY * REQUESTS_PER_ENDPOINT, len(tasks)))
+            ]
             chunk_results = await asyncio.gather(*coros)
             for idx, (status, elapsed) in enumerate(chunk_results):
                 path = PATHS[(i + idx) // REQUESTS_PER_ENDPOINT]

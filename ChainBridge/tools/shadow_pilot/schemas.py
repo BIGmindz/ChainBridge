@@ -14,23 +14,15 @@ class ShipmentRow(BaseModel):
     shipment_id: str = Field(..., description="Unique shipment identifier")
     cargo_value_usd: float = Field(..., description="Declared cargo value in USD")
     delivery_timestamp: datetime = Field(..., description="Actual delivery datetime")
-    planned_delivery_timestamp: datetime = Field(
-        ..., description="Planned delivery datetime"
-    )
+    planned_delivery_timestamp: datetime = Field(..., description="Planned delivery datetime")
     corridor: Optional[str] = Field(None, description="Trade lane or corridor")
     mode: Optional[str] = Field(None, description="Transport mode (air/sea/truck)")
     customer_segment: Optional[str] = Field(None, description="Customer segment tag")
-    pickup_timestamp: Optional[datetime] = Field(
-        None, description="Pickup datetime if available"
-    )
+    pickup_timestamp: Optional[datetime] = Field(None, description="Pickup datetime if available")
     exception_flag: int = Field(..., description="1 if shipment had an exception")
     loss_flag: int = Field(..., description="1 if shipment resulted in loss")
-    loss_amount_usd: float = Field(
-        0.0, description="Loss amount in USD if the shipment was lost"
-    )
-    days_to_payment: Optional[float] = Field(
-        None, description="Days from delivery to payment receipt"
-    )
+    loss_amount_usd: float = Field(0.0, description="Loss amount in USD if the shipment was lost")
+    days_to_payment: Optional[float] = Field(None, description="Days from delivery to payment receipt")
 
     @field_validator("exception_flag", "loss_flag")
     @classmethod

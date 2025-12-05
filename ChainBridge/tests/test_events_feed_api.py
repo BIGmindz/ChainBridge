@@ -56,24 +56,42 @@ def _iso_to_dt(value: str) -> datetime:
     return datetime.fromisoformat(value)
 
 
-def test_settlement_feed_orders_and_paginates(client_with_db: Tuple[TestClient, sessionmaker]) -> None:
+def test_settlement_feed_orders_and_paginates(
+    client_with_db: Tuple[TestClient, sessionmaker],
+) -> None:
     client, _ = client_with_db
     now = datetime.now(timezone.utc)
     event_bus.publish(
         EventType.PAYMENT_INTENT_CREATED,
-        {"id": "PI-1", "shipment_id": "SHIP-1", "status": "PENDING", "risk_level": "LOW"},
+        {
+            "id": "PI-1",
+            "shipment_id": "SHIP-1",
+            "status": "PENDING",
+            "risk_level": "LOW",
+        },
         actor="api",
         occurred_at=now - timedelta(minutes=5),
     )
     event_bus.publish(
         EventType.SETTLEMENT_EVENT_APPENDED,
-        {"payment_intent_id": "PI-2", "shipment_id": "SHIP-2", "event_type": "AUTHORIZED", "status": "SUCCESS"},
+        {
+            "payment_intent_id": "PI-2",
+            "shipment_id": "SHIP-2",
+            "event_type": "AUTHORIZED",
+            "status": "SUCCESS",
+        },
         actor="worker:sync",
         occurred_at=now - timedelta(minutes=3),
     )
     event_bus.publish(
         EventType.PAYMENT_INTENT_UPDATED,
-        {"id": "PI-3", "shipment_id": "SHIP-3", "status": "PAID", "risk_level": "LOW", "ready_for_payment": True},
+        {
+            "id": "PI-3",
+            "shipment_id": "SHIP-3",
+            "status": "PAID",
+            "risk_level": "LOW",
+            "ready_for_payment": True,
+        },
         actor="worker:sync",
         occurred_at=now - timedelta(minutes=1),
     )
@@ -95,18 +113,30 @@ def test_settlement_feed_orders_and_paginates(client_with_db: Tuple[TestClient, 
     assert len(returned_ids) == 3
 
 
-def test_feed_filters_by_payment_intent_and_shipment(client_with_db: Tuple[TestClient, sessionmaker]) -> None:
+def test_feed_filters_by_payment_intent_and_shipment(
+    client_with_db: Tuple[TestClient, sessionmaker],
+) -> None:
     client, _ = client_with_db
     now = datetime.now(timezone.utc)
     event_bus.publish(
         EventType.PAYMENT_INTENT_CREATED,
-        {"id": "PI-1", "shipment_id": "SHIP-1", "status": "PENDING", "risk_level": "LOW"},
+        {
+            "id": "PI-1",
+            "shipment_id": "SHIP-1",
+            "status": "PENDING",
+            "risk_level": "LOW",
+        },
         actor="api",
         occurred_at=now - timedelta(minutes=5),
     )
     event_bus.publish(
         EventType.SETTLEMENT_EVENT_APPENDED,
-        {"payment_intent_id": "PI-2", "shipment_id": "SHIP-2", "event_type": "AUTHORIZED", "status": "SUCCESS"},
+        {
+            "payment_intent_id": "PI-2",
+            "shipment_id": "SHIP-2",
+            "event_type": "AUTHORIZED",
+            "status": "SUCCESS",
+        },
         actor="worker:sync",
         occurred_at=now - timedelta(minutes=4),
     )
@@ -128,19 +158,31 @@ def test_feed_filters_by_payment_intent_and_shipment(client_with_db: Tuple[TestC
     assert items_by_shipment and all(item["shipment_id"] == "SHIP-2" for item in items_by_shipment)
 
 
-def test_heartbeat_returns_latest_timestamps(client_with_db: Tuple[TestClient, sessionmaker]) -> None:
+def test_heartbeat_returns_latest_timestamps(
+    client_with_db: Tuple[TestClient, sessionmaker],
+) -> None:
     client, _ = client_with_db
     now = datetime.now(timezone.utc)
     event_bus.publish(
         EventType.PAYMENT_INTENT_CREATED,
-        {"id": "PI-4", "shipment_id": "SHIP-4", "status": "PENDING", "risk_level": "LOW"},
+        {
+            "id": "PI-4",
+            "shipment_id": "SHIP-4",
+            "status": "PENDING",
+            "risk_level": "LOW",
+        },
         actor="api",
         occurred_at=now - timedelta(minutes=10),
     )
     update_metric("worker_heartbeat", when=now - timedelta(minutes=5))
     event_bus.publish(
         EventType.SETTLEMENT_EVENT_APPENDED,
-        {"payment_intent_id": "PI-4", "shipment_id": "SHIP-4", "event_type": "CAPTURED", "status": "SUCCESS"},
+        {
+            "payment_intent_id": "PI-4",
+            "shipment_id": "SHIP-4",
+            "event_type": "CAPTURED",
+            "status": "SUCCESS",
+        },
         actor="worker:sync",
         occurred_at=now - timedelta(minutes=1),
     )

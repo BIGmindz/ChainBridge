@@ -1,4 +1,5 @@
 """SLA status endpoint."""
+
 import math
 from datetime import datetime, timedelta, timezone
 from typing import Optional
@@ -11,9 +12,9 @@ from api.database import get_db
 from api.events.bus import EventType
 from api.models.chainiq import SnapshotExportEvent
 from api.models.chainpay import PaymentIntent, SettlementEventAudit
-from app.models.marketplace import Listing, SettlementRecord, BuyIntent
 from api.models.chainstake import StakePosition
-from api.sla.metrics import get_sla_snapshot, get_metric
+from api.sla.metrics import get_metric, get_sla_snapshot
+from app.models.marketplace import BuyIntent, Listing, SettlementRecord
 
 router = APIRouter(prefix="/sla", tags=["sla"])
 
@@ -69,44 +70,23 @@ def sla_operator(db: Session = Depends(get_db)) -> dict:
             PaymentIntent.created_at >= window_start,
         )
     )
-    payment_intents_ready = (
-        recent_intents.filter(
-            (PaymentIntent.compliance_blocks.is_(None))
-            | (func.json_array_length(PaymentIntent.compliance_blocks) == 0)
-        ).count()
-    )
-    payment_intents_blocked = (
-        recent_intents.filter(
-            (PaymentIntent.compliance_blocks.isnot(None))
-            & (func.json_array_length(PaymentIntent.compliance_blocks) > 0)
-        ).count()
-    )
+    payment_intents_ready = recent_intents.filter(
+        (PaymentIntent.compliance_blocks.is_(None)) | (func.json_array_length(PaymentIntent.compliance_blocks) == 0)
+    ).count()
+    payment_intents_blocked = recent_intents.filter(
+        (PaymentIntent.compliance_blocks.isnot(None)) & (func.json_array_length(PaymentIntent.compliance_blocks) > 0)
+    ).count()
 
     chainstake_tvl = (
         db.query(func.coalesce(func.sum(StakePosition.notional_usd), 0.0))
         .filter(StakePosition.status.in_(ACTIVE_STATUSES | {"CLOSED"}))
         .scalar()
     )
-    chainstake_active = (
-        db.query(func.count(StakePosition.id))
-        .filter(~StakePosition.status.in_(["FAILED", "CLOSED"]))
-        .scalar()
-    )
-    marketplace_active = (
-        db.query(func.count(Listing.id))
-        .filter(Listing.status == "ACTIVE")
-        .scalar()
-    )
-    marketplace_settled = (
-        db.query(func.count(SettlementRecord.id))
-        .filter(SettlementRecord.created_at >= window_start)
-        .scalar()
-    )
+    chainstake_active = db.query(func.count(StakePosition.id)).filter(~StakePosition.status.in_(["FAILED", "CLOSED"])).scalar()
+    marketplace_active = db.query(func.count(Listing.id)).filter(Listing.status == "ACTIVE").scalar()
+    marketplace_settled = db.query(func.count(SettlementRecord.id)).filter(SettlementRecord.created_at >= window_start).scalar()
     marketplace_failed_intents = (
-        db.query(func.count(BuyIntent.id))
-        .filter(BuyIntent.created_at >= window_start)
-        .filter(BuyIntent.status == "FAILED")
-        .scalar()
+        db.query(func.count(BuyIntent.id)).filter(BuyIntent.created_at >= window_start).filter(BuyIntent.status == "FAILED").scalar()
     )
 
     worker_event = (

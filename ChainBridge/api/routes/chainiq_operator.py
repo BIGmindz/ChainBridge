@@ -25,7 +25,8 @@ from sqlalchemy.orm import Session, aliased
 
 from api.database import get_db
 from api.models.canonical import RiskLevel, TransportMode
-from api.models.chainiq import DocumentHealthSnapshot, ShipmentEvent, SnapshotExportEvent
+from api.models.chainiq import DocumentHealthSnapshot, SnapshotExportEvent
+from api.models.chainfreight import ShipmentEvent
 
 router = APIRouter(prefix="/chainiq/operator", tags=["operator-console"])
 
@@ -63,7 +64,10 @@ def _latest_events_subquery(db: Session):
             func.row_number()
             .over(
                 partition_by=snapshot_alias.shipment_id,
-                order_by=(SnapshotExportEvent.updated_at.desc(), SnapshotExportEvent.id.desc()),
+                order_by=(
+                    SnapshotExportEvent.updated_at.desc(),
+                    SnapshotExportEvent.id.desc(),
+                ),
             )
             .label("event_rank"),
         )
@@ -177,6 +181,7 @@ def _canonical_risk_value(value: Optional[str]) -> str:
             pass
     return RiskLevel.MEDIUM.value
 
+
 # ===== Pydantic Schemas =====
 
 
@@ -189,10 +194,12 @@ class OperatorSummaryResponse(BaseModel):
     medium_count: int = Field(..., description="Count of MEDIUM risk level shipments")
     low_count: int = Field(..., description="Count of LOW risk level shipments")
     needs_snapshot_count: int = Field(
-        ..., description="Count of shipments where latest_snapshot_status is NULL or not SUCCESS"
+        ...,
+        description="Count of shipments where latest_snapshot_status is NULL or not SUCCESS",
     )
     payment_holds_count: int = Field(
-        ..., description="Count of active ChainPay holds (stub=0 for now; TODO: wire ChainPay)"
+        ...,
+        description="Count of active ChainPay holds (stub=0 for now; TODO: wire ChainPay)",
     )
     last_updated_at: datetime = Field(..., description="UTC timestamp of last update")
 
@@ -242,9 +249,7 @@ class OperatorQueueItem(BaseModel):
         None,
         description="Last relevant event timestamp (used for sorting within same priority)",
     )
-    risk_last_updated_at: Optional[datetime] = Field(
-        None, description="Timestamp when risk was last recalculated for this shipment"
-    )
+    risk_last_updated_at: Optional[datetime] = Field(None, description="Timestamp when risk was last recalculated for this shipment")
     last_export_status: Optional[str] = Field(None, description="Most recent snapshot export status")
     iot_last_seen_at: Optional[datetime] = Field(None, description="Latest IoT heartbeat timestamp if available")
 
@@ -261,7 +266,7 @@ class OperatorQueueItem(BaseModel):
                 "blocking_gap_count": 3,
                 "template_name": "OCEAN_CIF",
                 "days_delayed": 12,
-                 "facility_id": "USLAX",
+                "facility_id": "USLAX",
                 "latest_snapshot_status": None,
                 "latest_snapshot_updated_at": None,
                 "needs_snapshot": True,
@@ -278,7 +283,9 @@ class OperatorQueueItem(BaseModel):
 
 
 @router.get("/summary", response_model=OperatorSummaryResponse)
-async def get_operator_summary(db: Session = Depends(get_db)) -> OperatorSummaryResponse:
+async def get_operator_summary(
+    db: Session = Depends(get_db),
+) -> OperatorSummaryResponse:
     """
     Get aggregate operator summary for header/dashboard.
 
@@ -477,14 +484,14 @@ async def get_operator_queue(
             OperatorQueueItem(
                 shipment_id=snapshot.shipment_id,
                 risk_level=canonical_risk,
-                risk_score=float(snapshot.risk_score) if snapshot.risk_score is not None else None,
+                risk_score=(float(snapshot.risk_score) if snapshot.risk_score is not None else None),
                 corridor_code=snapshot.corridor_code,
                 mode=_canon_mode(snapshot.mode),
                 incoterm=snapshot.incoterm,
                 completeness_pct=snapshot.completeness_pct,
                 blocking_gap_count=snapshot.blocking_gap_count,
                 template_name=snapshot.template_name,
-                days_delayed=int(days_delayed_value) if days_delayed_value is not None else None,
+                days_delayed=(int(days_delayed_value) if days_delayed_value is not None else None),
                 facility_id=None,
                 latest_snapshot_status=latest_status,
                 latest_snapshot_updated_at=latest_updated_at,

@@ -1,4 +1,5 @@
 """Pydantic schemas for Ricardian legal instruments."""
+
 from __future__ import annotations
 
 from datetime import datetime

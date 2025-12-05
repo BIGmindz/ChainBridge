@@ -18,6 +18,7 @@ Author: ChainBridge Platform Team
 Version: 1.0.0 (Production-Ready)
 """
 
+import logging
 from datetime import datetime
 from typing import List, Optional
 
@@ -25,34 +26,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from api.chainsense.client import IoTDataProvider, MockIoTDataProvider
-from api.realtime.bus import publish_event
-from api.schemas.chainboard import (
-    AddAlertNoteRequest,
-    AlertDetailResponse,
-    AlertsResponse,
-    AlertSeverity,
-    AlertSource,
-    AlertStatus,
-    AlertWorkQueueResponse,
-    CorridorMetricsResponse,
-    ExceptionsResponse,
-    GlobalSummaryResponse,
-    IoTHealthSummaryResponse,
-    PaymentQueueResponse,
-    RiskStoryResponse,
-    Shipment,
-    ShipmentIoTSnapshotResponse,
-    ShipmentIoTSnapshotsResponse,
-    ShipmentsResponse,
-    ShipmentStatus,
-    RiskCategory,
-    RiskOverviewResponse,
-    TimelineEventResponse,
-    UpdateAlertAssignmentRequest,
-    UpdateAlertStatusRequest,
-    LivePositionsResponse,
-)
-from api.schemas.chainboard import LiveShipmentPosition
+from api.database import get_db
 from api.mock.chainboard_fixtures import (
     build_mock_alerts,
     build_mock_risk_stories,
@@ -63,7 +37,34 @@ from api.mock.chainboard_fixtures import (
     mock_global_summary,
     mock_shipments,
 )
-from api.database import get_db
+from api.realtime.bus import publish_event
+from api.schemas.chainboard import (
+    AddAlertNoteRequest,
+    AlertDetailResponse,
+    AlertSeverity,
+    AlertSource,
+    AlertsResponse,
+    AlertStatus,
+    AlertWorkQueueResponse,
+    CorridorMetricsResponse,
+    ExceptionsResponse,
+    GlobalSummaryResponse,
+    IoTHealthSummaryResponse,
+    LivePositionsResponse,
+    LiveShipmentPosition,
+    PaymentQueueResponse,
+    RiskCategory,
+    RiskOverviewResponse,
+    RiskStoryResponse,
+    Shipment,
+    ShipmentIoTSnapshotResponse,
+    ShipmentIoTSnapshotsResponse,
+    ShipmentsResponse,
+    ShipmentStatus,
+    TimelineEventResponse,
+    UpdateAlertAssignmentRequest,
+    UpdateAlertStatusRequest,
+)
 from api.security import get_current_admin_user
 from api.services.live_positions import live_positions
 
@@ -71,6 +72,8 @@ router = APIRouter(
     prefix="/chainboard",
     tags=["ChainBoard"],
 )
+
+logger = logging.getLogger(__name__)
 
 # IoT data provider (singleton pattern)
 _iot_provider: Optional[IoTDataProvider] = None
@@ -130,17 +133,14 @@ async def get_iot_health_summary():
 
 @router.get("/metrics/iot/shipments", response_model=ShipmentIoTSnapshotsResponse)
 async def list_shipment_iot_snapshots(
-    shipment_ids: Optional[List[str]] = Query(
-        None, description="Optional list of shipment IDs to include"
-    ),
-    has_alerts: Optional[bool] = Query(
-        None, description="Filter shipments that have any alerts in the last 24h"
-    ),
+    shipment_ids: Optional[List[str]] = Query(None, description="Optional list of shipment IDs to include"),
+    has_alerts: Optional[bool] = Query(None, description="Filter shipments that have any alerts in the last 24h"),
     limit: int = Query(20, ge=1, le=50, description="Maximum number of snapshots to return"),
 ):
     """Retrieve aggregated IoT snapshots for shipments with optional filtering."""
     # Get all snapshots from provider's data source
     from api.mock.chainboard_fixtures import mock_iot_snapshots
+
     snapshots = list(mock_iot_snapshots.values())
 
     filtered = False
@@ -151,11 +151,7 @@ async def list_shipment_iot_snapshots(
 
     if has_alerts is not None:
         filtered = True
-        snapshots = [
-            s
-            for s in snapshots
-            if (s.alert_count_24h > 0 or s.critical_alerts_24h > 0) == has_alerts
-        ]
+        snapshots = [s for s in snapshots if (s.alert_count_24h > 0 or s.critical_alerts_24h > 0) == has_alerts]
 
     limited_snapshots = snapshots[:limit]
     limited_count = len(limited_snapshots)
@@ -178,7 +174,10 @@ async def get_shipment_iot_snapshot(shipment_id: str):
     snapshot = provider.get_shipment_snapshot(shipment_id)
 
     if not snapshot:
-        raise HTTPException(status_code=404, detail=f"IoT snapshot for shipment '{shipment_id}' not found.")
+        raise HTTPException(
+            status_code=404,
+            detail=f"IoT snapshot for shipment '{shipment_id}' not found.",
+        )
 
     return ShipmentIoTSnapshotResponse(
         snapshot=snapshot,
@@ -215,19 +214,15 @@ async def get_shipments(
     if corridor:
         is_filtered = True
         corridor_lower = corridor.lower()
-        filtered_shipments = [
-            s for s in filtered_shipments
-            if corridor_lower in s.corridor.lower()
-        ]
+        filtered_shipments = [s for s in filtered_shipments if corridor_lower in s.corridor.lower()]
 
     if search:
         is_filtered = True
         search_lower = search.lower()
         filtered_shipments = [
-            s for s in filtered_shipments
-            if search_lower in s.reference.lower()
-            or search_lower in s.customer.lower()
-            or search_lower in s.carrier.lower()
+            s
+            for s in filtered_shipments
+            if search_lower in s.reference.lower() or search_lower in s.customer.lower() or search_lower in s.carrier.lower()
         ]
 
     return ShipmentsResponse(
@@ -238,12 +233,23 @@ async def get_shipments(
 
 
 @router.get("/live-positions", response_model=LivePositionsResponse)
-async def get_live_positions(
-    db: Session = Depends(get_db), user=Depends(get_current_admin_user)
-) -> LivePositionsResponse:
+async def get_live_positions(db: Session = Depends(get_db), user=Depends(get_current_admin_user)) -> LivePositionsResponse:
     """Enriched live positions with finance, risk, and nearest-port overlays."""
 
-    positions = live_positions(db)
+    try:
+        positions = live_positions(db)
+    except Exception as exc:
+        logger.exception(
+            "chainboard_live_positions_failed",
+            extra={"endpoint": "/api/chainboard/live-positions"},
+        )
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "code": "LIVE_POSITIONS_ERROR",
+                "message": "Unable to load live positions. Please retry shortly.",
+            },
+        ) from exc
     enriched = [LiveShipmentPosition.model_validate(p) for p in positions]
     return LivePositionsResponse(positions=enriched, generated_at=datetime.utcnow())
 
@@ -269,7 +275,9 @@ async def get_exceptions():
     """
     Retrieve a list of all shipments with active exceptions for triage.
     """
-    critical_count = sum(1 for e in mock_exceptions if RiskCategory.HIGH in [s.risk.category for s in mock_shipments if s.id == e.shipment_id])
+    critical_count = sum(
+        1 for e in mock_exceptions if RiskCategory.HIGH in [s.risk.category for s in mock_shipments if s.id == e.shipment_id]
+    )
 
     return ExceptionsResponse(
         exceptions=mock_exceptions,
@@ -341,10 +349,7 @@ async def list_events(limit: int = Query(50, ge=1, le=200)):
 
 
 @router.get("/shipments/{reference}/events", response_model=TimelineEventResponse)
-async def get_shipment_events(
-    reference: str,
-    limit: int = Query(50, ge=1, le=200)
-):
+async def get_shipment_events(reference: str, limit: int = Query(50, ge=1, le=200)):
     """
     Get timeline events for a specific shipment by reference number.
     Shows the complete event history for a single shipment.
@@ -538,7 +543,11 @@ async def add_note_route(alert_id: str, body: AddAlertNoteRequest):
         type="alert_note_added",
         source="alerts",
         key=alert_id,
-        payload={"note_id": note.id, "author_id": body.author_id, "message": body.message},
+        payload={
+            "note_id": note.id,
+            "author_id": body.author_id,
+            "message": body.message,
+        },
     )
 
     # Return updated work item

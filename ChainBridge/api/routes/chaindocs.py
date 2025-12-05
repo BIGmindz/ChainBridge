@@ -6,8 +6,8 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from api.chainiq_service.constants import REQUIRED_DOCUMENT_TYPES
 from api.chaindocs_hashing import compute_sha256
+from api.chainiq_service.constants import REQUIRED_DOCUMENT_TYPES
 from api.database import get_db
 from api.events.bus import EventType, event_bus
 from api.models.chaindocs import Document, DocumentVersion, Shipment
@@ -42,9 +42,7 @@ def _determine_missing_documents(documents: List[Document]) -> List[str]:
 
 
 @router.get("/shipments/{shipment_id}/dossier", response_model=ChainDocsDossierResponse)
-async def get_shipment_dossier(
-    shipment_id: str, db: Session = Depends(get_db)
-) -> ChainDocsDossierResponse:
+async def get_shipment_dossier(shipment_id: str, db: Session = Depends(get_db)) -> ChainDocsDossierResponse:
     """
     Return the dossier for a shipment backed by SQLite.
 
@@ -160,14 +158,15 @@ async def verify_document(document_id: str, db: Session = Depends(get_db)) -> di
     current_hash = compute_sha256(path.read_bytes())
     stored_hash = document.sha256_hex or document.latest_hash or document.hash or ""
     valid = stored_hash == current_hash
-    linked_intents = (
-        db.query(PaymentIntent)
-        .filter(PaymentIntent.proof_hash == stored_hash)
-        .all()
-    )
+    linked_intents = db.query(PaymentIntent).filter(PaymentIntent.proof_hash == stored_hash).all()
     event_bus.publish(
         EventType.DOCUMENT_VERIFIED,
-        {"document_id": document_id, "valid": valid, "stored_hash": stored_hash, "current_hash": current_hash},
+        {
+            "document_id": document_id,
+            "valid": valid,
+            "stored_hash": stored_hash,
+            "current_hash": current_hash,
+        },
         correlation_id=document_id,
         actor="chaindocs",
     )

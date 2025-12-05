@@ -72,7 +72,12 @@ class TestAgentTask:
         """Test creating a task with context and metadata."""
         context = {"file": "index.tsx"}
         metadata = {"priority": "high"}
-        task = AgentTask(role_name="BACKEND_CODY", instruction="Fix bug", context=context, metadata=metadata)
+        task = AgentTask(
+            role_name="BACKEND_CODY",
+            instruction="Fix bug",
+            context=context,
+            metadata=metadata,
+        )
         assert task.context == context
         assert task.metadata == metadata
 
@@ -220,7 +225,12 @@ class TestAgentRuntime:
         context = {"file": "test.py", "line": 42}
         metadata = {"priority": "high", "trace_id": "abc123"}
 
-        task = AgentTask(role_name=one_valid_role, instruction="Fix this", context=context, metadata=metadata)
+        task = AgentTask(
+            role_name=one_valid_role,
+            instruction="Fix this",
+            context=context,
+            metadata=metadata,
+        )
 
         prompt_data = runtime.prepare_prompt(task)
 

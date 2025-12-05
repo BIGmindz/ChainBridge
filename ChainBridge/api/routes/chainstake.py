@@ -1,4 +1,5 @@
 """ChainStake v1 skeleton endpoints."""
+
 from __future__ import annotations
 
 from typing import List, Optional
@@ -7,15 +8,19 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from api.chainstake_service import create_stake_job, execute_stake_job
 from api.chainstake_analytics import (
     get_liquidity_overview,
     list_pool_positions,
     list_stake_pools,
 )
+from api.chainstake_service import create_stake_job, execute_stake_job
 from api.database import get_db
 from api.models.chainpay import StakeJob
-from api.schemas.chainstake import LiquidityOverview, StakePoolSummary, StakePositionRead
+from api.schemas.chainstake import (
+    LiquidityOverview,
+    StakePoolSummary,
+    StakePositionRead,
+)
 
 router = APIRouter(prefix="/stake", tags=["stake"])
 

@@ -1,4 +1,5 @@
 """ARQ worker functions for staking and liquidation."""
+
 from __future__ import annotations
 
 import asyncio
@@ -14,15 +15,21 @@ async def mint_and_stake_task(ctx: Dict[str, Any]) -> Dict[str, Any]:
     logger.info("worker.mint_and_stake.start", extra={"payload": payload})
 
     from app.services.data.sxt_client import archive_telemetry
-    from app.services.ledger.hedera_engine import log_audit_event_async, mint_rwa_token_async
-    from app.services.oracle.chainlink_client import request_verification, estimate_gas_cost
+    from app.services.ledger.hedera_engine import (
+        log_audit_event_async,
+        mint_rwa_token_async,
+    )
+    from app.services.oracle.chainlink_client import (
+        estimate_gas_cost,
+        request_verification,
+    )
 
     telemetry = payload.get("telemetry") if isinstance(payload, dict) else {}
     shipment_id = str(payload.get("shipment_id") or payload.get("id") or "UNKNOWN")
     metadata_hash = str(payload.get("metadata_hash") or payload.get("ricardian_hash") or shipment_id)
     supply = int(payload.get("token_supply") or 1)
 
-    archive_result = archive_telemetry(telemetry or {})
+    archive_telemetry(telemetry or {})
     token_id = await mint_rwa_token_async(metadata_hash=metadata_hash, amount=supply)
     audit_receipt = await log_audit_event_async(shipment_id, {"metadata_hash": metadata_hash, "telemetry": telemetry})
     oracle_req = request_verification(shipment_id, payload.get("oracle_payload"))

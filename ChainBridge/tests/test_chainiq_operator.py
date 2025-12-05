@@ -8,8 +8,8 @@ Validates:
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
 import time
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Sequence, Tuple
 
 import pytest
@@ -20,7 +20,11 @@ from sqlalchemy.pool import StaticPool
 
 from api.database import Base, get_db
 from api.models.canonical import RiskLevel
-from api.models.chainiq import DocumentHealthSnapshot, ShipmentEvent, SnapshotExportEvent
+from api.models.chainiq import (
+    DocumentHealthSnapshot,
+    SnapshotExportEvent,
+)
+from api.models.chainfreight import ShipmentEvent
 from api.server import app
 
 SAMPLE_SNAPSHOT_FIXTURES: List[Dict[str, Any]] = [
@@ -208,21 +212,11 @@ class TestOperatorSummary:
         data = response.json()
 
         assert data["total_at_risk"] == len(seeded_sample_data)
-        assert data["critical_count"] == sum(
-            1 for item in seeded_sample_data if item["risk_level"] == RiskLevel.CRITICAL.value
-        )
-        assert data["high_count"] == sum(
-            1 for item in seeded_sample_data if item["risk_level"] == RiskLevel.HIGH.value
-        )
-        assert data["medium_count"] == sum(
-            1 for item in seeded_sample_data if item["risk_level"] == RiskLevel.MEDIUM.value
-        )
-        assert data["low_count"] == sum(
-            1 for item in seeded_sample_data if item["risk_level"] == RiskLevel.LOW.value
-        )
-        expected_needs = sum(
-            1 for item in seeded_sample_data if item.get("latest_snapshot_status") != "SUCCESS"
-        )
+        assert data["critical_count"] == sum(1 for item in seeded_sample_data if item["risk_level"] == RiskLevel.CRITICAL.value)
+        assert data["high_count"] == sum(1 for item in seeded_sample_data if item["risk_level"] == RiskLevel.HIGH.value)
+        assert data["medium_count"] == sum(1 for item in seeded_sample_data if item["risk_level"] == RiskLevel.MEDIUM.value)
+        assert data["low_count"] == sum(1 for item in seeded_sample_data if item["risk_level"] == RiskLevel.LOW.value)
+        expected_needs = sum(1 for item in seeded_sample_data if item.get("latest_snapshot_status") != "SUCCESS")
         assert data["needs_snapshot_count"] == expected_needs
 
     def test_summary_payment_holds_count_stub(
@@ -420,9 +414,7 @@ class TestOperatorQueue:
         seeded_sample_data: List[Dict[str, Any]],
     ) -> None:
         client, _ = client_with_db
-        response = client.get(
-            "/chainiq/operator/queue?needs_snapshot_only=true&include_levels=CRITICAL,HIGH,MEDIUM"
-        )
+        response = client.get("/chainiq/operator/queue?needs_snapshot_only=true&include_levels=CRITICAL,HIGH,MEDIUM")
         data = response.json()
         assert len(data) >= 1
         assert all(item["needs_snapshot"] is True for item in data)
@@ -433,9 +425,7 @@ class TestOperatorQueue:
         seeded_sample_data: List[Dict[str, Any]],
     ) -> None:
         client, _ = client_with_db
-        response = client.get(
-            "/chainiq/operator/queue?include_levels=CRITICAL&needs_snapshot_only=true&max_results=10"
-        )
+        response = client.get("/chainiq/operator/queue?include_levels=CRITICAL&needs_snapshot_only=true&max_results=10")
         data = response.json()
         assert all(item["risk_level"] == RiskLevel.CRITICAL.value for item in data)
         assert all(item["needs_snapshot"] is True for item in data)

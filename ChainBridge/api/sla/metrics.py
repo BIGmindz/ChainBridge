@@ -1,4 +1,5 @@
 """Simple in-memory SLA metrics."""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -27,6 +28,7 @@ def get_metric(name: str) -> datetime | None:
 
 def get_sla_snapshot(now: datetime | None = None, window_seconds: int | None = None) -> dict:
     now = now or datetime.now(timezone.utc)
+
     def latency(name: str, threshold: int) -> tuple[float, bool]:
         ts = _METRICS.get(name)
         if not ts:

@@ -1,5 +1,7 @@
 """Volatility buffer calculator."""
+
 from decimal import Decimal
+
 
 def calculate_volatility_buffer(risk_score: int, base_rate: Decimal) -> Decimal:
     score = risk_score or 0

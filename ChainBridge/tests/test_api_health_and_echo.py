@@ -41,11 +41,7 @@ def test_health_has_service_metadata() -> None:
 
 def test_echo_round_trip() -> None:
     """Verify echo endpoint returns the payload back."""
-    payload = {
-        "shipment_id": "ABC123",
-        "amount": 100,
-        "status": "pending"
-    }
+    payload = {"shipment_id": "ABC123", "amount": 100, "status": "pending"}
 
     response = client.post("/events/echo", json=payload)
     assert response.status_code == 200
@@ -67,14 +63,11 @@ def test_echo_with_complex_payload() -> None:
             "id": "SHIP-001",
             "items": [
                 {"sku": "ITEM-1", "quantity": 5},
-                {"sku": "ITEM-2", "quantity": 3}
+                {"sku": "ITEM-2", "quantity": 3},
             ],
-            "metadata": {
-                "source": "warehouse-a",
-                "priority": "high"
-            }
+            "metadata": {"source": "warehouse-a", "priority": "high"},
         },
-        "timestamp": "2025-11-15T10:00:00Z"
+        "timestamp": "2025-11-15T10:00:00Z",
     }
 
     response = client.post("/events/echo", json=payload)
@@ -147,7 +140,7 @@ def test_echo_rejects_invalid_json() -> None:
     response = client.post(
         "/events/echo",
         data="{not: 'json'}",
-        headers={"Content-Type": "application/json"}
+        headers={"Content-Type": "application/json"},
     )
 
     # Accept either 400 or 422

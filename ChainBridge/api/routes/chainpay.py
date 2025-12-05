@@ -6,37 +6,47 @@ import time
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func, case
+from sqlalchemy import case, func
 from sqlalchemy.orm import Session, aliased
 
-from api.chaindocs_client import ChainDocsUnavailable, get_document as get_chaindocs_document
+from api.chaindocs_client import (
+    ChainDocsUnavailable,
+)
+from api.chaindocs_client import get_document as get_chaindocs_document
 from api.chainiq_service.intel_engine import compute_shipment_health
 from api.chainiq_service.schemas import ShipmentHealthResponse
+from api.chainpay_pricing import calculate_pricing_for_intent
 from api.database import get_db
+from api.events.bus import EventType, event_bus
 from api.models.chaindocs import Shipment
-from api.models.legal import RicardianInstrument
 from api.models.chainiq import DocumentHealthSnapshot
-from api.models.chainpay import PaymentIntent, SettlementMilestone, SettlementPlan, SettlementEvent
+from api.models.chainpay import (
+    PaymentIntent,
+    SettlementEvent,
+    SettlementMilestone,
+    SettlementPlan,
+)
+from api.models.legal import RicardianInstrument
 from api.schemas.chainpay import (
     ChainPayMilestone,
     ChainPaySettlementPlan,
     ChainPaySettlementPlanCreate,
     DocRiskSnapshot,
-    PaymentIntentShipmentSummary,
     PaymentIntentCreate,
     PaymentIntentListItem,
     PaymentIntentRead,
+    PaymentIntentShipmentSummary,
     PaymentIntentSummary,
-    SettlementEventListItem,
-    SettlementEventCreate,
-    SettlementEventUpdate,
     ProofAttachmentRequest,
+    SettlementEventCreate,
+    SettlementEventListItem,
+    SettlementEventUpdate,
 )
 from api.services.payment_intents import (
-    ensure_payment_intent_for_snapshot,
-    get_latest_risk_snapshot,
-    evaluate_readiness,
     compute_intent_hash,
+    ensure_payment_intent_for_snapshot,
+    evaluate_readiness,
+    get_latest_risk_snapshot,
 )
 from api.services.reconciliation import run_reconciliation_for_intent
 from api.services.settlement_events import (
@@ -45,8 +55,6 @@ from api.services.settlement_events import (
     delete_settlement_event,
     replace_settlement_event,
 )
-from api.chainpay_pricing import calculate_pricing_for_intent
-from api.events.bus import event_bus, EventType
 from api.sla.metrics import update_metric
 
 logger = logging.getLogger(__name__)
@@ -150,11 +158,7 @@ def _persist_plan(
     payload: ChainPaySettlementPlanCreate,
     db: Session,
 ) -> SettlementPlan:
-    plan = (
-        db.query(SettlementPlan)
-        .filter(SettlementPlan.shipment_id == shipment_id)
-        .first()
-    )
+    plan = db.query(SettlementPlan).filter(SettlementPlan.shipment_id == shipment_id).first()
 
     if plan:
         plan.template_id = payload.template_id
@@ -198,9 +202,7 @@ def _persist_plan(
     "/shipments/{shipment_id}/settlement_plan",
     response_model=ChainPaySettlementPlan,
 )
-async def get_settlement_plan(
-    shipment_id: str, db: Session = Depends(get_db)
-) -> ChainPaySettlementPlan:
+async def get_settlement_plan(shipment_id: str, db: Session = Depends(get_db)) -> ChainPaySettlementPlan:
     """
     Return the stored settlement plan or bootstrap a default one.
 
@@ -211,11 +213,7 @@ async def get_settlement_plan(
     if not shipment_id:
         raise HTTPException(status_code=400, detail="shipment_id is required")
 
-    plan = (
-        db.query(SettlementPlan)
-        .filter(SettlementPlan.shipment_id == shipment_id)
-        .first()
-    )
+    plan = db.query(SettlementPlan).filter(SettlementPlan.shipment_id == shipment_id).first()
     if not plan:
         payload = _create_default_plan_payload(shipment_id)
         plan = _persist_plan(shipment_id, payload, db)
@@ -544,7 +542,15 @@ def list_payment_intents(
 
     results = query.offset(offset).limit(limit).all()
     items: List[PaymentIntentListItem] = []
-    for intent, shipment_obj, stored_snapshot, resolved_risk_score, resolved_risk_level, proof_flag, ready_flag in results:
+    for (
+        intent,
+        shipment_obj,
+        stored_snapshot,
+        resolved_risk_score,
+        resolved_risk_level,
+        proof_flag,
+        ready_flag,
+    ) in results:
         shipment_summary = None
         if shipment_obj:
             shipment_summary = PaymentIntentShipmentSummary(
@@ -565,7 +571,7 @@ def list_payment_intents(
                 risk_score=resolved_risk_score,
                 risk_level=resolved_risk_level,
                 proof_attached=bool(proof_flag),
-                corridor_code=shipment_summary.corridor_code if shipment_summary else None,
+                corridor_code=(shipment_summary.corridor_code if shipment_summary else None),
                 mode=shipment_summary.mode if shipment_summary else None,
                 incoterm=shipment_summary.incoterm if shipment_summary else None,
                 counterparty=intent.counterparty,
@@ -663,7 +669,10 @@ def replace_settlement_event_route(
         raise HTTPException(status_code=404, detail="PaymentIntent not found")
     event = (
         db.query(SettlementEvent)
-        .filter(SettlementEvent.id == event_id, SettlementEvent.payment_intent_id == payment_intent_id)
+        .filter(
+            SettlementEvent.id == event_id,
+            SettlementEvent.payment_intent_id == payment_intent_id,
+        )
         .first()
     )
     if not event:
@@ -730,7 +739,10 @@ def delete_settlement_event_route(
         raise HTTPException(status_code=404, detail="PaymentIntent not found")
     event = (
         db.query(SettlementEvent)
-        .filter(SettlementEvent.id == event_id, SettlementEvent.payment_intent_id == payment_intent_id)
+        .filter(
+            SettlementEvent.id == event_id,
+            SettlementEvent.payment_intent_id == payment_intent_id,
+        )
         .first()
     )
     if not event:

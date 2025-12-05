@@ -1,5 +1,12 @@
 from api.reconciler.engine import run_reconciliation
-from api.reconciler.models import InvoiceLine, PoLine, ExecLine, ReconciliationBundle, ReconciliationLineStatus, ReconciliationDecision
+from api.reconciler.models import (
+    ExecLine,
+    InvoiceLine,
+    PoLine,
+    ReconciliationBundle,
+    ReconciliationDecision,
+    ReconciliationLineStatus,
+)
 from api.reconciler.policies import DEFAULT_POLICY
 
 
@@ -30,7 +37,10 @@ def test_reconciliation_perfect_match() -> None:
 def test_reconciliation_qty_outside_tolerance() -> None:
     result = run_reconciliation(_bundle(invoice_qty=15, po_qty=10, unit_price=100))
     assert result.decision == ReconciliationDecision.PARTIAL_APPROVE
-    assert result.lines[0].status in {ReconciliationLineStatus.OVER_DELIVERED, ReconciliationLineStatus.UNDER_DELIVERED}
+    assert result.lines[0].status in {
+        ReconciliationLineStatus.OVER_DELIVERED,
+        ReconciliationLineStatus.UNDER_DELIVERED,
+    }
     assert result.approved_amount == 1350
     assert result.held_amount == 150
 

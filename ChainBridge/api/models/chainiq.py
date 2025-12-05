@@ -70,20 +70,13 @@ class RiskDecision(Base):
     decided_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
 
-class ShipmentEvent(Base):
-    """Append-only log of shipment events across services."""
+"""ChainIQ persistence models.
 
-    __tablename__ = "shipment_events"
-    __table_args__ = (
-        Index("ix_shipment_events_shipment_occurred", "shipment_id", "occurred_at"),
-    )
-
-    event_id = Column(String, primary_key=True, default=lambda: str(uuid4()))
-    shipment_id = Column(String, index=True, nullable=False)
-    shipment_leg_id = Column(String, nullable=True)
-    actor = Column(String, nullable=True)
-    source_service = Column(String, nullable=True)
-    event_type = Column(String, nullable=False)
-    occurred_at = Column(DateTime, nullable=False)
-    recorded_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    payload = Column(JSON, nullable=True)
+The canonical `shipment_events` table is defined by the
+`ShipmentEvent` ORM model in `api.models.chainfreight`. To avoid
+defining the same table twice on the SQLAlchemy `MetaData` (which
+triggers an `InvalidRequestError`), ChainIQ models must not declare a
+second `ShipmentEvent` mapped class here. ChainIQ code that needs
+access to shipment events should import `ShipmentEvent` from
+`api.models.chainfreight` instead of re-declaring it.
+"""

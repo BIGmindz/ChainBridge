@@ -5,6 +5,7 @@ Usage:
 
 This is sqlite-focused for demo use. In production, replace with proper Alembic migrations.
 """
+
 from __future__ import annotations
 
 import logging
@@ -40,7 +41,10 @@ def migrate() -> None:
             "CREATE INDEX IF NOT EXISTS ix_settlement_events_type_occurred ON settlement_events (event_type, occurred_at);",
         )
         # PaymentIntents: latest_risk_snapshot_id nullable
-        _execute(conn, "ALTER TABLE payment_intents ADD COLUMN latest_risk_snapshot_id INTEGER;")
+        _execute(
+            conn,
+            "ALTER TABLE payment_intents ADD COLUMN latest_risk_snapshot_id INTEGER;",
+        )
         _execute(
             conn,
             "CREATE INDEX IF NOT EXISTS ix_payment_intents_shipment_latest_risk ON payment_intents (shipment_id, latest_risk_snapshot_id);",

@@ -62,7 +62,9 @@ def _seed(session) -> str:
     return inst.id
 
 
-def test_supremacy_endpoint(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_supremacy_endpoint(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         inst_id = _seed(session)

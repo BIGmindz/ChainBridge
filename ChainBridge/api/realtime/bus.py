@@ -8,12 +8,11 @@ Uses asyncio.Queue for simple, efficient event distribution to SSE clients.
 """
 
 import asyncio
-from typing import Set, AsyncIterator
-from uuid import uuid4
 from datetime import datetime
+from typing import AsyncIterator, Set
+from uuid import uuid4
 
 from api.schemas.chainboard import ControlTowerEvent, ControlTowerEventType
-
 
 # ============================================================================
 # GLOBAL STATE

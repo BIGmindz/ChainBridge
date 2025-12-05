@@ -1,5 +1,6 @@
 """Typed event payload stubs for the in-process bus."""
-from typing import TypedDict, Optional
+
+from typing import Optional, TypedDict
 
 
 class PaymentIntentEvent(TypedDict):

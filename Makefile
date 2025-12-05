@@ -8,7 +8,7 @@ help:
 	@echo ""
 	@echo "Available targets:"
 	@echo "  venv         - Create Python virtual environment"
-	@echo "  install      - Install dependencies" 
+	@echo "  install      - Install dependencies"
 	@echo "  run          - Run legacy RSI bot"
 	@echo "  run-live     - Run RSI bot continuously (PAPER=false) using lean env"
 	@echo "  api-server   - Start API server"

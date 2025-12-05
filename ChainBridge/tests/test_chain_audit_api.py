@@ -83,7 +83,9 @@ def _seed_intent(session, *, risk_level: str = "LOW", risk_score: int = 20, amou
     return intent.id
 
 
-def test_reconcile_low_risk_full_payout(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_reconcile_low_risk_full_payout(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed_intent(session, risk_level="LOW", amount=120.0)
@@ -104,14 +106,21 @@ def test_reconcile_low_risk_full_payout(client_with_db: Tuple[TestClient, Any, s
     assert get_resp.json()["payout_confidence"] >= 95
 
 
-def test_reconcile_high_risk_haircut(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_reconcile_high_risk_haircut(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed_intent(session, risk_level="HIGH", amount=200.0)
 
     resp = client.post(
         f"/audit/payment_intents/{intent_id}/reconcile",
-        json={"telemetry_data": {"max_temp_deviation": 3.0, "breach_duration_minutes": 120}},
+        json={
+            "telemetry_data": {
+                "max_temp_deviation": 3.0,
+                "breach_duration_minutes": 120,
+            }
+        },
     )
     assert resp.status_code == 200
     data = resp.json()
@@ -121,14 +130,21 @@ def test_reconcile_high_risk_haircut(client_with_db: Tuple[TestClient, Any, sess
     assert events[-1]["event_type"] == "RECONCILED"
 
 
-def test_reconcile_blocked_zero_payout(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_reconcile_blocked_zero_payout(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed_intent(session, risk_level="CRITICAL", amount=500.0)
 
     resp = client.post(
         f"/audit/payment_intents/{intent_id}/reconcile",
-        json={"telemetry_data": {"max_temp_deviation": 10.0, "breach_duration_minutes": 300}},
+        json={
+            "telemetry_data": {
+                "max_temp_deviation": 10.0,
+                "breach_duration_minutes": 300,
+            }
+        },
     )
     assert resp.status_code == 200
     data = resp.json()
@@ -136,7 +152,9 @@ def test_reconcile_blocked_zero_payout(client_with_db: Tuple[TestClient, Any, se
     assert data["status"] == "BLOCKED"
 
 
-def test_event_bus_publishes_reconciled(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_event_bus_publishes_reconciled(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     events: list[dict] = []
 

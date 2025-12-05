@@ -1,4 +1,5 @@
 """Tiny metrics façade for counters/timers (stdlib-only)."""
+
 from __future__ import annotations
 
 import threading

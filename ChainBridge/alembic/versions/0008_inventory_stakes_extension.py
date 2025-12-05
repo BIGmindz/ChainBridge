@@ -1,8 +1,10 @@
 """Extend inventory_stakes with finance fields."""
+
 from __future__ import annotations
 
-from alembic import op
 import sqlalchemy as sa
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "0008_inventory_stakes_extension"
@@ -12,12 +14,30 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column("inventory_stakes", sa.Column("principal_amount", sa.Float(), nullable=False, server_default="0"))
-    op.add_column("inventory_stakes", sa.Column("max_advance_rate", sa.Float(), nullable=False, server_default="0"))
-    op.add_column("inventory_stakes", sa.Column("applied_advance_rate", sa.Float(), nullable=False, server_default="0"))
-    op.add_column("inventory_stakes", sa.Column("base_apr", sa.Float(), nullable=False, server_default="0"))
-    op.add_column("inventory_stakes", sa.Column("risk_adjusted_apr", sa.Float(), nullable=False, server_default="0"))
-    op.add_column("inventory_stakes", sa.Column("notional_value", sa.Float(), nullable=False, server_default="0"))
+    op.add_column(
+        "inventory_stakes",
+        sa.Column("principal_amount", sa.Float(), nullable=False, server_default="0"),
+    )
+    op.add_column(
+        "inventory_stakes",
+        sa.Column("max_advance_rate", sa.Float(), nullable=False, server_default="0"),
+    )
+    op.add_column(
+        "inventory_stakes",
+        sa.Column("applied_advance_rate", sa.Float(), nullable=False, server_default="0"),
+    )
+    op.add_column(
+        "inventory_stakes",
+        sa.Column("base_apr", sa.Float(), nullable=False, server_default="0"),
+    )
+    op.add_column(
+        "inventory_stakes",
+        sa.Column("risk_adjusted_apr", sa.Float(), nullable=False, server_default="0"),
+    )
+    op.add_column(
+        "inventory_stakes",
+        sa.Column("notional_value", sa.Float(), nullable=False, server_default="0"),
+    )
     op.add_column("inventory_stakes", sa.Column("lender_name", sa.String(), nullable=True))
     op.add_column("inventory_stakes", sa.Column("borrower_name", sa.String(), nullable=True))
     op.add_column("inventory_stakes", sa.Column("activated_at", sa.DateTime(), nullable=True))

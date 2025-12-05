@@ -1,4 +1,5 @@
 """Pricing adjuster that applies fuzzy confidence to settlement payouts."""
+
 from __future__ import annotations
 
 from typing import Dict

@@ -1,5 +1,9 @@
 """ARQ worker configuration for ChainBridge demo stack."""
+
 from __future__ import annotations
+
+from core.import_safety import ensure_import_safety
+ensure_import_safety()
 
 from app.core.config import settings
 

@@ -11,7 +11,6 @@ from fastapi.responses import StreamingResponse
 
 from api.realtime.bus import event_stream
 
-
 router = APIRouter(prefix="/api/chainboard", tags=["chainboard-realtime"])
 
 

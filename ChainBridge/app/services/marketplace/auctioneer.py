@@ -1,4 +1,5 @@
 """Marketplace auctioneer logic."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -8,14 +9,19 @@ from sqlalchemy.orm import Session
 
 from api.database import SessionLocal
 from api.models.chaindocs import Shipment
-from app.models.marketplace import Listing, Bid
+from app.models.marketplace import Bid, Listing
 
 
 def _session(session: Optional[Session]) -> Session:
     return session or SessionLocal()
 
 
-def create_liquidation_listing(shipment_id: str, *, session: Optional[Session] = None, start_price: float | None = None) -> Listing:
+def create_liquidation_listing(
+    shipment_id: str,
+    *,
+    session: Optional[Session] = None,
+    start_price: float | None = None,
+) -> Listing:
     db = _session(session)
     managed = session is None
     try:
@@ -57,7 +63,13 @@ def place_bid(listing: Listing, amount: float, wallet: str, *, session: Optional
             db.close()
 
 
-def execute_sale(listing: Listing, buyer_wallet: str, amount: float, *, session: Optional[Session] = None) -> Listing:
+def execute_sale(
+    listing: Listing,
+    buyer_wallet: str,
+    amount: float,
+    *,
+    session: Optional[Session] = None,
+) -> Listing:
     db = _session(session)
     managed = session is None
     try:

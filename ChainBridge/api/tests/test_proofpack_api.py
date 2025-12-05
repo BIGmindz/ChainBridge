@@ -4,12 +4,17 @@ Tests for the ProofPack API endpoint.
 
 from datetime import datetime
 
-from fastapi.testclient import TestClient
 import pytest
+from fastapi.testclient import TestClient
 
 from api.server import app
 from chainpay_service.app.database import SessionLocal, init_db
-from chainpay_service.app.models import MilestoneSettlement, PaymentIntent, PaymentStatus, RiskTier
+from chainpay_service.app.models import (
+    MilestoneSettlement,
+    PaymentIntent,
+    PaymentStatus,
+    RiskTier,
+)
 from core.payments.identity import canonical_milestone_id, canonical_shipment_reference
 
 client = TestClient(app)
@@ -48,9 +53,7 @@ def chainpay_milestone():
         db.commit()
         db.refresh(intent)
 
-        shipment_ref = canonical_shipment_reference(
-            shipment_reference=None, freight_token_id=intent.freight_token_id
-        )
+        shipment_ref = canonical_shipment_reference(shipment_reference=None, freight_token_id=intent.freight_token_id)
         milestone_id = canonical_milestone_id(shipment_ref, 1)
         milestone = MilestoneSettlement(
             payment_intent_id=intent.id,

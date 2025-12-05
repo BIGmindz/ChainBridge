@@ -5,9 +5,14 @@ Production-grade intelligence engine for ChainBridge logistics platform.
 Provides risk scoring, payment optimization, and fleet-level analytics.
 """
 
+from core.import_safety import ensure_import_safety
+
+ensure_import_safety()
+
 from fastapi import FastAPI
 
 from .api import router
+from .api_iot import router as iot_router
 
 
 def create_app() -> FastAPI:
@@ -22,6 +27,14 @@ def create_app() -> FastAPI:
 
     # Include the API router with all endpoints
     app.include_router(router)
+
+    # Expose IoT facade separately so it can live outside /iq namespace
+    app.include_router(iot_router)
+
+    # Mount preset analytics router (no extra prefix; router already has /ai/presets)
+    from app.api_ai_presets import router as preset_analytics_router
+
+    app.include_router(preset_analytics_router)
 
     # Health check endpoint
     @app.get("/health")

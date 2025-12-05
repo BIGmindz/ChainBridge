@@ -1,4 +1,5 @@
 """Audit sink wiring events into persistent activity feed."""
+
 from __future__ import annotations
 
 import json

@@ -5,9 +5,10 @@ Request and response validation for shipment and freight token API endpoints.
 """
 
 from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, Field
 from enum import Enum
+from typing import Optional
+
+from pydantic import BaseModel, Field
 
 
 class ShipmentStatusEnum(str, Enum):
@@ -145,12 +146,8 @@ class ShipmentEventCreate(BaseModel):
     """Schema for recording a new shipment event."""
 
     event_type: ShipmentEventTypeEnum = Field(..., description="Type of event")
-    occurred_at: Optional[datetime] = Field(
-        None, description="When event occurred; defaults to now if omitted"
-    )
-    metadata: Optional[str] = Field(
-        None, max_length=500, description="Additional context (e.g., proof hash)"
-    )
+    occurred_at: Optional[datetime] = Field(None, description="When event occurred; defaults to now if omitted")
+    metadata: Optional[str] = Field(None, max_length=500, description="Additional context (e.g., proof hash)")
 
 
 class ShipmentEventResponse(BaseModel):

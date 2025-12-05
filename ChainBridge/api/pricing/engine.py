@@ -1,13 +1,14 @@
 """Pricing engine core."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, Dict
 
-from api.pricing.rate_card import get_base_rate
-from api.pricing.fuel_surcharge import calculate_fuel_multiplier
 from api.pricing.accessorials import calculate_accessorials
+from api.pricing.fuel_surcharge import calculate_fuel_multiplier
+from api.pricing.rate_card import get_base_rate
 from api.pricing.volatility import calculate_volatility_buffer
 
 

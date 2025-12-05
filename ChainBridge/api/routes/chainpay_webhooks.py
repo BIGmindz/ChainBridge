@@ -1,4 +1,5 @@
 """Webhook stubs for ChainPay integration."""
+
 from __future__ import annotations
 
 import logging
@@ -10,11 +11,11 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from api.database import get_db
+from api.events.bus import EventType, event_bus
 from api.models.chainpay import PaymentIntent
-from api.services.settlement_events import append_settlement_event
-from api.services.payment_intents import evaluate_readiness, compute_intent_hash
-from api.events.bus import event_bus, EventType
 from api.routes.chainpay import _serialize_settlement_event
+from api.services.payment_intents import compute_intent_hash, evaluate_readiness
+from api.services.settlement_events import append_settlement_event
 from api.sla.metrics import update_metric
 from api.webhooks.security import enforce_rate_limit, verify_signature
 
@@ -26,6 +27,7 @@ class WebhookPayload(BaseModel):
     payment_intent_id: str
     external_ref: str
     timestamp: Optional[datetime] = None
+
 
 def _handle_event(db: Session, intent: PaymentIntent, event_type: str, *, actor: str = "webhook") -> dict:
     occurred_at = datetime.utcnow()

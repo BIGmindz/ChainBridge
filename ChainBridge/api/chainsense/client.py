@@ -131,9 +131,7 @@ class MockIoTDataProvider(IoTDataProvider):
         # Filter to IoT events only
         iot_event_types = {ShipmentEventType.IOT_ALERT}
 
-        iot_events = [
-            event for event in all_events if event.event_type in iot_event_types
-        ]
+        iot_events = [event for event in all_events if event.event_type in iot_event_types]
 
         # Sort by most recent first and apply limit
         iot_events.sort(key=lambda e: e.occurred_at, reverse=True)

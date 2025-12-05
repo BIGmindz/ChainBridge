@@ -1,9 +1,10 @@
 """In-memory event bus (demo)."""
+
 from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Callable, Awaitable, Dict, List, Union
+from typing import Awaitable, Callable, Dict, List, Union
 
 logger = logging.getLogger(__name__)
 
@@ -30,5 +31,8 @@ def publish(event_type: str, payload: dict) -> None:
                 except RuntimeError:
                     asyncio.run(result)
         except Exception as exc:  # pragma: no cover
-            logger.warning("eventbus_handler_error", extra={"event_type": event_type, "error": str(exc)})
+            logger.warning(
+                "eventbus_handler_error",
+                extra={"event_type": event_type, "error": str(exc)},
+            )
     logger.info("eventbus.publish", extra={"event_type": event_type, "handlers": len(handlers)})

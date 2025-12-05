@@ -1,4 +1,5 @@
 """Bridge module for API-side config access."""
+
 from __future__ import annotations
 
 import sys

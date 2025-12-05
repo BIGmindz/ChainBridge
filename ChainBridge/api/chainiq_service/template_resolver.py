@@ -42,11 +42,7 @@ def seed_default_doc_templates(db: Session) -> Sequence[ShipmentDocRequirement]:
 
     db.flush()
 
-    existing_requirements = (
-        db.query(ShipmentDocRequirement)
-        .filter(ShipmentDocRequirement.template_name == DEFAULT_TEMPLATE_NAME)
-        .all()
-    )
+    existing_requirements = db.query(ShipmentDocRequirement).filter(ShipmentDocRequirement.template_name == DEFAULT_TEMPLATE_NAME).all()
     if not existing_requirements:
         for doc in DEFAULT_DOCUMENT_TYPES:
             db.add(
@@ -62,11 +58,7 @@ def seed_default_doc_templates(db: Session) -> Sequence[ShipmentDocRequirement]:
                 )
             )
         db.flush()
-        existing_requirements = (
-            db.query(ShipmentDocRequirement)
-            .filter(ShipmentDocRequirement.template_name == DEFAULT_TEMPLATE_NAME)
-            .all()
-        )
+        existing_requirements = db.query(ShipmentDocRequirement).filter(ShipmentDocRequirement.template_name == DEFAULT_TEMPLATE_NAME).all()
 
     db.commit()
     return existing_requirements
@@ -87,25 +79,18 @@ def resolve_required_docs_for_shipment(
         query = db.query(ShipmentDocRequirement)
         if shipment.corridor_code:
             query = query.filter(
-                (ShipmentDocRequirement.corridor_code == shipment.corridor_code)
-                | (ShipmentDocRequirement.corridor_code.is_(None))
+                (ShipmentDocRequirement.corridor_code == shipment.corridor_code) | (ShipmentDocRequirement.corridor_code.is_(None))
             )
         else:
             query = query.filter(ShipmentDocRequirement.corridor_code.is_(None))
 
         if shipment.mode:
-            query = query.filter(
-                (ShipmentDocRequirement.mode == shipment.mode)
-                | (ShipmentDocRequirement.mode.is_(None))
-            )
+            query = query.filter((ShipmentDocRequirement.mode == shipment.mode) | (ShipmentDocRequirement.mode.is_(None)))
         else:
             query = query.filter(ShipmentDocRequirement.mode.is_(None))
 
         if shipment.incoterm:
-            query = query.filter(
-                (ShipmentDocRequirement.incoterm == shipment.incoterm)
-                | (ShipmentDocRequirement.incoterm.is_(None))
-            )
+            query = query.filter((ShipmentDocRequirement.incoterm == shipment.incoterm) | (ShipmentDocRequirement.incoterm.is_(None)))
         else:
             query = query.filter(ShipmentDocRequirement.incoterm.is_(None))
 
@@ -114,11 +99,7 @@ def resolve_required_docs_for_shipment(
             template_name = requirements[0].template_name
 
     if not requirements:
-        requirements = (
-            db.query(ShipmentDocRequirement)
-            .filter(ShipmentDocRequirement.template_name == DEFAULT_TEMPLATE_NAME)
-            .all()
-        )
+        requirements = db.query(ShipmentDocRequirement).filter(ShipmentDocRequirement.template_name == DEFAULT_TEMPLATE_NAME).all()
         if requirements:
             template_name = DEFAULT_TEMPLATE_NAME
 

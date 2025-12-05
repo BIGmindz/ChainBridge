@@ -41,12 +41,42 @@ class DemoShipment:
 
 
 CORRIDOR_PROFILES: List[dict] = [
-    {"prefix": "SHIP-OCE", "corridor": "CN-US", "mode": TransportMode.OCEAN.value, "incoterm": "FOB"},
-    {"prefix": "SHIP-AIR", "corridor": "DE-US", "mode": TransportMode.AIR.value, "incoterm": "CIF"},
-    {"prefix": "SHIP-ROAD", "corridor": "MX-US", "mode": TransportMode.TRUCK_LTL.value, "incoterm": "DAP"},
-    {"prefix": "SHIP-OCE2", "corridor": "IN-US", "mode": TransportMode.OCEAN.value, "incoterm": "FOB"},
-    {"prefix": "SHIP-AIR2", "corridor": "BR-US", "mode": TransportMode.AIR.value, "incoterm": "FCA"},
-    {"prefix": "SHIP-ROAD2", "corridor": "US-CA", "mode": TransportMode.INTERMODAL.value, "incoterm": "EXW"},
+    {
+        "prefix": "SHIP-OCE",
+        "corridor": "CN-US",
+        "mode": TransportMode.OCEAN.value,
+        "incoterm": "FOB",
+    },
+    {
+        "prefix": "SHIP-AIR",
+        "corridor": "DE-US",
+        "mode": TransportMode.AIR.value,
+        "incoterm": "CIF",
+    },
+    {
+        "prefix": "SHIP-ROAD",
+        "corridor": "MX-US",
+        "mode": TransportMode.TRUCK_LTL.value,
+        "incoterm": "DAP",
+    },
+    {
+        "prefix": "SHIP-OCE2",
+        "corridor": "IN-US",
+        "mode": TransportMode.OCEAN.value,
+        "incoterm": "FOB",
+    },
+    {
+        "prefix": "SHIP-AIR2",
+        "corridor": "BR-US",
+        "mode": TransportMode.AIR.value,
+        "incoterm": "FCA",
+    },
+    {
+        "prefix": "SHIP-ROAD2",
+        "corridor": "US-CA",
+        "mode": TransportMode.INTERMODAL.value,
+        "incoterm": "EXW",
+    },
 ]
 
 RISK_PROFILES: List[dict] = [
@@ -160,13 +190,9 @@ def _upsert_shipment(session: Session, record: DemoShipment) -> None:
 
 
 def _replace_snapshots(session: Session, record: DemoShipment) -> None:
-    existing_snapshots = session.query(DocumentHealthSnapshot).filter(
-        DocumentHealthSnapshot.shipment_id == record.shipment_id
-    ).all()
+    existing_snapshots = session.query(DocumentHealthSnapshot).filter(DocumentHealthSnapshot.shipment_id == record.shipment_id).all()
     for snapshot in existing_snapshots:
-        session.query(SnapshotExportEvent).filter(
-            SnapshotExportEvent.snapshot_id == snapshot.id
-        ).delete()
+        session.query(SnapshotExportEvent).filter(SnapshotExportEvent.snapshot_id == snapshot.id).delete()
         session.delete(snapshot)
     session.flush()
 

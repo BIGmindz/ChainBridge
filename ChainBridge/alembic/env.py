@@ -1,11 +1,13 @@
 import sys
 from logging.config import fileConfig
 
-from alembic import context
-from sqlalchemy import engine_from_config, pool
-
 # ensure project root in path
 from pathlib import Path
+
+from sqlalchemy import engine_from_config, pool
+
+from alembic import context
+
 root_path = Path(__file__).resolve().parents[1]
 if str(root_path) not in sys.path:
     sys.path.insert(0, str(root_path))

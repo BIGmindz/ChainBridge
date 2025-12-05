@@ -83,34 +83,14 @@ def _compute_results(
 
     for shipment in shipments:
         truth_score = compute_event_truth_score(shipment)
-        financeable = is_financeable(
-            shipment, truth_score, min_value=min_value, min_truth=min_truth
-        )
-        actual_days_to_payment = (
-            shipment.days_to_payment
-            if shipment.days_to_payment is not None
-            else DEFAULT_DAYS_TO_PAYMENT
-        )
+        financeable = is_financeable(shipment, truth_score, min_value=min_value, min_truth=min_truth)
+        actual_days_to_payment = shipment.days_to_payment if shipment.days_to_payment is not None else DEFAULT_DAYS_TO_PAYMENT
         days_pulled_forward = max(actual_days_to_payment, 0.0)
-        financed_amount = (
-            shipment.cargo_value_usd * advance_rate if financeable else 0.0
-        )
-        working_capital_saved = (
-            financed_amount * annual_rate * (days_pulled_forward / 365.0)
-            if financeable
-            else 0.0
-        )
+        financed_amount = shipment.cargo_value_usd * advance_rate if financeable else 0.0
+        working_capital_saved = financed_amount * annual_rate * (days_pulled_forward / 365.0) if financeable else 0.0
         protocol_revenue = financed_amount * take_rate if financeable else 0.0
-        avoided_loss = (
-            shipment.loss_amount_usd
-            if shipment.loss_flag == 1 and truth_score < min_truth
-            else 0.0
-        )
-        salvage_revenue = (
-            shipment.cargo_value_usd * 0.2 * 0.1
-            if shipment.loss_flag == 1 and truth_score >= min_truth
-            else 0.0
-        )
+        avoided_loss = shipment.loss_amount_usd if shipment.loss_flag == 1 and truth_score < min_truth else 0.0
+        salvage_revenue = shipment.cargo_value_usd * 0.2 * 0.1 if shipment.loss_flag == 1 and truth_score >= min_truth else 0.0
 
         result = ShipmentResult(
             shipment_id=shipment.shipment_id,
@@ -177,11 +157,7 @@ def _summarize(results: Iterable[ShipmentResult]) -> ShadowSummary:
     working_capital_saved_usd = sum(r.working_capital_saved_usd for r in results_list)
     losses_avoided_usd = sum(r.avoided_loss_usd for r in results_list)
     salvage_revenue_usd = sum(r.salvage_revenue_usd for r in results_list)
-    average_days_pulled_forward = (
-        sum(r.days_pulled_forward for r in financeable) / financeable_count
-        if financeable_count
-        else 0.0
-    )
+    average_days_pulled_forward = sum(r.days_pulled_forward for r in financeable) / financeable_count if financeable_count else 0.0
 
     return ShadowSummary(
         total_shipments=total_shipments,

@@ -12,10 +12,11 @@ Coverage:
 - No persistence side effects
 """
 
+import tempfile
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
-from pathlib import Path
-import tempfile
 
 # Import the main app
 from api.server import app
@@ -38,8 +39,8 @@ def setup_test_db(monkeypatch):
         chainiq_path = Path(__file__).parent.parent / "chainiq-service"
         sys.path.insert(0, str(chainiq_path))
 
-        from storage import DB_PATH as original_path
         import storage
+        from storage import DB_PATH as original_path
 
         monkeypatch.setattr(storage, "DB_PATH", TEST_DB_PATH)
 
@@ -70,7 +71,7 @@ def _seed_high_risk_shipment(shipment_id: str) -> None:
         "days_in_transit": 8,
         "expected_days": 7,
         "documents_complete": False,
-        "shipper_payment_score": 45
+        "shipper_payment_score": 45,
     }
 
     response = client.post("/iq/score-shipment", json=payload)
@@ -92,13 +93,10 @@ def test_simulation_returns_result_for_known_shipment() -> None:
     # Simulate a safer route option
     simulation_request = {
         "option_type": "route",
-        "option_id": "ROUTE-US-CA-CARRIER-002"
+        "option_id": "ROUTE-US-CA-CARRIER-002",
     }
 
-    response = client.post(
-        f"/iq/options/{shipment_id}/simulate",
-        json=simulation_request
-    )
+    response = client.post(f"/iq/options/{shipment_id}/simulate", json=simulation_request)
 
     assert response.status_code == 200
 
@@ -150,13 +148,10 @@ def test_simulation_returns_404_for_unknown_shipment() -> None:
 
     simulation_request = {
         "option_type": "route",
-        "option_id": "ROUTE-US-CA-CARRIER-002"
+        "option_id": "ROUTE-US-CA-CARRIER-002",
     }
 
-    response = client.post(
-        f"/iq/options/{shipment_id}/simulate",
-        json=simulation_request
-    )
+    response = client.post(f"/iq/options/{shipment_id}/simulate", json=simulation_request)
 
     assert response.status_code == 404
     assert "No scoring history" in response.json()["detail"]
@@ -182,15 +177,9 @@ def test_simulation_does_not_persist_new_history() -> None:
 
     # Run simulation 3 times
     for i in range(3):
-        simulation_request = {
-            "option_type": "route",
-            "option_id": f"ROUTE-TEST-{i}"
-        }
+        simulation_request = {"option_type": "route", "option_id": f"ROUTE-TEST-{i}"}
 
-        sim_response = client.post(
-            f"/iq/options/{shipment_id}/simulate",
-            json=simulation_request
-        )
+        sim_response = client.post(f"/iq/options/{shipment_id}/simulate", json=simulation_request)
         assert sim_response.status_code == 200
 
     # Get history count after simulations
@@ -199,10 +188,7 @@ def test_simulation_does_not_persist_new_history() -> None:
     final_count = history_response_after.json()["total_records"]
 
     # CRITICAL: History count must NOT have changed
-    assert final_count == initial_count, (
-        f"Simulation created new history! "
-        f"Before: {initial_count}, After: {final_count}"
-    )
+    assert final_count == initial_count, f"Simulation created new history! " f"Before: {initial_count}, After: {final_count}"
 
 
 def test_simulation_with_payment_rail_option() -> None:
@@ -224,13 +210,10 @@ def test_simulation_with_payment_rail_option() -> None:
     # Simulate payment rail change
     simulation_request = {
         "option_type": "payment_rail",
-        "option_id": "RAIL-XRPL-INSTANT"
+        "option_id": "RAIL-XRPL-INSTANT",
     }
 
-    response = client.post(
-        f"/iq/options/{shipment_id}/simulate",
-        json=simulation_request
-    )
+    response = client.post(f"/iq/options/{shipment_id}/simulate", json=simulation_request)
 
     assert response.status_code == 200
 
@@ -256,15 +239,9 @@ def test_simulation_with_invalid_option_type() -> None:
     _seed_high_risk_shipment(shipment_id)
 
     # Try invalid option_type
-    simulation_request = {
-        "option_type": "invalid_type",
-        "option_id": "TEST-001"
-    }
+    simulation_request = {"option_type": "invalid_type", "option_id": "TEST-001"}
 
-    response = client.post(
-        f"/iq/options/{shipment_id}/simulate",
-        json=simulation_request
-    )
+    response = client.post(f"/iq/options/{shipment_id}/simulate", json=simulation_request)
 
     # Pydantic validation should reject this
     assert response.status_code == 422
@@ -285,13 +262,10 @@ def test_simulation_safer_route_reduces_risk() -> None:
     # Simulate a much safer route (US-CA)
     simulation_request = {
         "option_type": "route",
-        "option_id": "ROUTE-US-CA-CARRIER-001"
+        "option_id": "ROUTE-US-CA-CARRIER-001",
     }
 
-    response = client.post(
-        f"/iq/options/{shipment_id}/simulate",
-        json=simulation_request
-    )
+    response = client.post(f"/iq/options/{shipment_id}/simulate", json=simulation_request)
 
     assert response.status_code == 200
 
@@ -312,7 +286,5 @@ def test_simulation_safer_route_reduces_risk() -> None:
     simulated_severity_idx = severity_order[data["simulated_severity"]]
 
     assert simulated_severity_idx <= baseline_severity_idx, (
-        f"Expected safer severity. "
-        f"Baseline: {data['baseline_severity']}, "
-        f"Simulated: {data['simulated_severity']}"
+        f"Expected safer severity. " f"Baseline: {data['baseline_severity']}, " f"Simulated: {data['simulated_severity']}"
     )

@@ -1,5 +1,5 @@
-from typing import Any, Tuple
 from datetime import datetime, timedelta
+from typing import Any, Tuple
 
 import pytest
 from fastapi.testclient import TestClient
@@ -45,7 +45,9 @@ def clean_db(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
     Base.metadata.create_all(bind=engine)
 
 
-def test_auditpack_includes_legal_wrapper(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_auditpack_includes_legal_wrapper(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         shipment = Shipment(id="SHIP-AUD", corridor_code="US-MX", mode="TRUCK", incoterm="DAP")

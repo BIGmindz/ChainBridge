@@ -23,7 +23,6 @@ from api.schemas.chainboard import (
     ControlTowerAlert,
 )
 
-
 # ============================================================================
 # IN-MEMORY STATE
 # ============================================================================
@@ -179,9 +178,7 @@ def update_status(alert_id: str, new_status: AlertStatus, actor: AlertOwner) -> 
     action_type = (
         AlertActionType.ACKNOWLEDGE
         if new_status == AlertStatus.ACKNOWLEDGED
-        else AlertActionType.RESOLVE
-        if new_status == AlertStatus.RESOLVED
-        else AlertActionType.COMMENT
+        else (AlertActionType.RESOLVE if new_status == AlertStatus.RESOLVED else AlertActionType.COMMENT)
     )
 
     action = AlertActionRecord(

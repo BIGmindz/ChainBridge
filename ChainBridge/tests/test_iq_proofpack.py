@@ -13,10 +13,11 @@ Coverage:
 - Structural validation of ProofPackResponse
 """
 
+import tempfile
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
-from pathlib import Path
-import tempfile
 
 # Import the main app
 from api.server import app
@@ -39,8 +40,8 @@ def setup_test_db(monkeypatch):
         chainiq_path = Path(__file__).parent.parent / "chainiq-service"
         sys.path.insert(0, str(chainiq_path))
 
-        from storage import DB_PATH as original_path
         import storage
+        from storage import DB_PATH as original_path
 
         monkeypatch.setattr(storage, "DB_PATH", TEST_DB_PATH)
 
@@ -78,7 +79,7 @@ def _seed_risk_decisions(shipment_id: str, count: int) -> None:
             "days_in_transit": 5 + i,
             "expected_days": 7,
             "documents_complete": i % 2 == 0,
-            "shipper_payment_score": 85 - (i * 5)
+            "shipper_payment_score": 85 - (i * 5),
         }
 
         response = client.post("/iq/score-shipment", json=payload)
@@ -338,7 +339,7 @@ def test_proofpack_timestamp_format() -> None:
     generated_at = data["generated_at"]
     try:
         # Should be parseable as ISO-8601
-        datetime.fromisoformat(generated_at.replace('Z', '+00:00'))
+        datetime.fromisoformat(generated_at.replace("Z", "+00:00"))
     except ValueError:
         pytest.fail(f"generated_at is not valid ISO-8601: {generated_at}")
 
@@ -348,6 +349,6 @@ def test_proofpack_timestamp_format() -> None:
     try:
         # Should be parseable as ISO-8601 or SQL timestamp
         # Storage returns SQL TIMESTAMP format, which is ISO-8601 compatible
-        datetime.fromisoformat(last_scored_at.replace('Z', '+00:00'))
+        datetime.fromisoformat(last_scored_at.replace("Z", "+00:00"))
     except ValueError:
         pytest.fail(f"last_scored_at is not valid ISO-8601: {last_scored_at}")

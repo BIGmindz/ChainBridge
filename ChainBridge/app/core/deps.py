@@ -1,4 +1,5 @@
 """Shared FastAPI dependencies for Redis/ARQ pools."""
+
 from __future__ import annotations
 
 import logging

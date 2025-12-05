@@ -1,4 +1,5 @@
 """ChainPay pricing wrapper."""
+
 from __future__ import annotations
 
 from decimal import Decimal
@@ -24,6 +25,9 @@ def calculate_pricing_for_intent(shipment: Any, risk_snapshot: Any) -> Dict[str,
     for key, val in components.items():
         if key == "total_price" or total_price == 0:
             continue
-        pct_of_total[key] = round((val / components["total_price"] * 100) if components["total_price"] else 0, 2)
+        pct_of_total[key] = round(
+            (val / components["total_price"] * 100) if components["total_price"] else 0,
+            2,
+        )
     components["pct_of_total"] = pct_of_total
     return components

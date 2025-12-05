@@ -10,9 +10,7 @@ from __future__ import annotations
 import re
 from typing import Tuple
 
-MILESTONE_ID_PATTERN = re.compile(
-    r"^(?P<shipment>[A-Za-z0-9_\-]+)-M(?P<index>[1-9][0-9]*)$"
-)
+MILESTONE_ID_PATTERN = re.compile(r"^(?P<shipment>[A-Za-z0-9_\-]+)-M(?P<index>[1-9][0-9]*)$")
 
 
 def canonical_milestone_id(shipment_reference: str, index: int) -> str:
@@ -32,10 +30,7 @@ def parse_milestone_identifier(value: str) -> Tuple[str, int]:
     """
     match = MILESTONE_ID_PATTERN.match(value or "")
     if not match:
-        raise ValueError(
-            "Milestone ID must match '<shipment_reference>-M<index>' "
-            "(e.g., 'SHP-2025-042-M1')"
-        )
+        raise ValueError("Milestone ID must match '<shipment_reference>-M<index>' " "(e.g., 'SHP-2025-042-M1')")
     return match.group("shipment"), int(match.group("index"))
 
 

@@ -1,8 +1,10 @@
 """Add final payout and adjustment reason to payment_intents."""
+
 from __future__ import annotations
 
-from alembic import op
 import sqlalchemy as sa
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "0013_payment_intent_final_payout_fields"

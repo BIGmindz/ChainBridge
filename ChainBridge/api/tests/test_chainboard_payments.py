@@ -5,8 +5,9 @@ ChainBoard ChainPay Payment Queue Tests
 Tests for the payment hold queue endpoint.
 """
 
-from fastapi.testclient import TestClient
 from decimal import Decimal
+
+from fastapi.testclient import TestClient
 
 from api.server import app
 
@@ -107,5 +108,4 @@ def test_payment_queue_sorted_by_holds():
 
         # Verify descending order
         for i in range(len(holds_values) - 1):
-            assert holds_values[i] >= holds_values[i + 1], \
-                f"Queue not sorted: {holds_values[i]} < {holds_values[i + 1]}"
+            assert holds_values[i] >= holds_values[i + 1], f"Queue not sorted: {holds_values[i]} < {holds_values[i + 1]}"

@@ -1,4 +1,5 @@
 """Breach monitor to detect margin calls."""
+
 from __future__ import annotations
 
 import logging

@@ -1,10 +1,10 @@
 """SQLAlchemy models for ChainDocs storage."""
 
-from datetime import datetime
 import sys
+from datetime import datetime
 from pathlib import Path
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Float
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from api.database import Base

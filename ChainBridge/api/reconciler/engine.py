@@ -1,12 +1,13 @@
 """Reconciliation engine applying tolerance, IoT discounts, and micro-settlement."""
+
 from __future__ import annotations
 
 from typing import Dict, List, Tuple
 
 from .models import (
+    ExecLine,
     InvoiceLine,
     PoLine,
-    ExecLine,
     ReconciliationBundle,
     ReconciliationDecision,
     ReconciliationLineResult,
@@ -16,7 +17,9 @@ from .models import (
 from .policies import ReconciliationPolicy
 
 
-def _line_by_id(lines: List[InvoiceLine | PoLine | ExecLine]) -> Dict[str, InvoiceLine | PoLine | ExecLine]:
+def _line_by_id(
+    lines: List[InvoiceLine | PoLine | ExecLine],
+) -> Dict[str, InvoiceLine | PoLine | ExecLine]:
     return {line.line_id: line for line in lines}
 
 
@@ -36,9 +39,7 @@ def _determine_status_and_reason(
 
     if abs(price_delta_percent) > policy.price_tolerance_percent:
         return ReconciliationLineStatus.PRICE_DELTA, (
-            "PRICE_OUTSIDE_TOLERANCE_OVER"
-            if price_delta_percent > 0
-            else "PRICE_OUTSIDE_TOLERANCE_UNDER"
+            "PRICE_OUTSIDE_TOLERANCE_OVER" if price_delta_percent > 0 else "PRICE_OUTSIDE_TOLERANCE_UNDER"
         )
 
     if qty_delta_percent > policy.qty_tolerance_percent:
@@ -60,12 +61,29 @@ def run_reconciliation(bundle: ReconciliationBundle) -> ReconciliationResult:
     iot_discount_factor = policy.temp_discount_percent / 100.0 if quality_violation else 0.0
 
     for invoice in bundle.invoice_lines:
-        po_line = po_index.get(invoice.line_id, PoLine(line_id=invoice.line_id, quantity=invoice.quantity, unit_price=invoice.unit_price))
-        exec_line = exec_index.get(invoice.line_id, ExecLine(line_id=invoice.line_id, quantity=invoice.quantity, unit_price=invoice.unit_price))
+        po_line = po_index.get(
+            invoice.line_id,
+            PoLine(
+                line_id=invoice.line_id,
+                quantity=invoice.quantity,
+                unit_price=invoice.unit_price,
+            ),
+        )
+        exec_line = exec_index.get(
+            invoice.line_id,
+            ExecLine(
+                line_id=invoice.line_id,
+                quantity=invoice.quantity,
+                unit_price=invoice.unit_price,
+            ),
+        )
         qty_delta = (invoice.quantity or 0) - (po_line.quantity or exec_line.quantity or 0)
         price_delta = (invoice.unit_price or 0) - (po_line.unit_price or exec_line.unit_price or 0)
         qty_delta_percent = _pct_delta(qty_delta, po_line.quantity or exec_line.quantity or invoice.quantity or 0)
-        price_delta_percent = _pct_delta(price_delta, po_line.unit_price or exec_line.unit_price or invoice.unit_price or 0)
+        price_delta_percent = _pct_delta(
+            price_delta,
+            po_line.unit_price or exec_line.unit_price or invoice.unit_price or 0,
+        )
 
         status, reason = _determine_status_and_reason(qty_delta_percent, price_delta_percent, policy)
 

@@ -4,7 +4,17 @@ from datetime import datetime
 from uuid import uuid4
 
 import sqlalchemy as sa
-from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, UniqueConstraint, JSON, Index
+from sqlalchemy import (
+    JSON,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import relationship
 
 from api.database import Base
@@ -73,7 +83,11 @@ class PaymentIntent(Base):
 
     __tablename__ = "payment_intents"
     __table_args__ = (
-        UniqueConstraint("shipment_id", "latest_risk_snapshot_id", name="uq_payment_intent_shipment_snapshot"),
+        UniqueConstraint(
+            "shipment_id",
+            "latest_risk_snapshot_id",
+            name="uq_payment_intent_shipment_snapshot",
+        ),
     )
 
     id = Column(String, primary_key=True, index=True, default=lambda: f"PAY-{uuid4()}")

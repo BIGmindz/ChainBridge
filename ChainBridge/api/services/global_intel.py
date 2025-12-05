@@ -1,10 +1,18 @@
 """Global intel aggregation helpers for the Global Intel map."""
+
 from __future__ import annotations
 
 from datetime import datetime
 from typing import Sequence
 
-from api.schemas.intel import CorridorKPI, GlobalSnapshot, GlobalTotals, LiveShipmentPosition, ModeKPI, PortHotspot
+from api.schemas.intel import (
+    CorridorKPI,
+    GlobalSnapshot,
+    GlobalTotals,
+    LiveShipmentPosition,
+    ModeKPI,
+    PortHotspot,
+)
 
 AT_RISK_LEVELS = {"HIGH", "CRITICAL"}
 
@@ -22,7 +30,9 @@ def _stp_rate(total: int, blocked: int) -> float:
     return round((total - blocked) / total, 4)
 
 
-def compute_global_intel_from_positions(positions: Sequence[LiveShipmentPosition]) -> GlobalSnapshot:
+def compute_global_intel_from_positions(
+    positions: Sequence[LiveShipmentPosition],
+) -> GlobalSnapshot:
     """Derive KPI rollups from a list of live shipment positions."""
     now = datetime.utcnow()
     corridor_map: dict[str, list[LiveShipmentPosition]] = {}
@@ -42,9 +52,7 @@ def compute_global_intel_from_positions(positions: Sequence[LiveShipmentPosition
         blocked = sum(1 for i in items if (i.settlement_state or "").upper() == "BLOCKED")
         high_risk = sum(1 for i in items if (i.risk_category or "").upper() in AT_RISK_LEVELS)
         at_risk = sum(1 for i in items if (i.risk_band or (i.risk_category or "").lower()) in {"medium", "high", "critical"})
-        avg_eta_delta = (
-            sum(_as_number(i.eta_delta_hours or 0.0) for i in items) / len(items) if items else 0.0
-        )
+        avg_eta_delta = sum(_as_number(i.eta_delta_hours or 0.0) for i in items) / len(items) if items else 0.0
         corridor_kpis.append(
             CorridorKPI(
                 corridor_id=corridor,
@@ -60,9 +68,7 @@ def compute_global_intel_from_positions(positions: Sequence[LiveShipmentPosition
     for mode, items in mode_map.items():
         blocked = sum(1 for i in items if (i.settlement_state or "").upper() == "BLOCKED")
         at_risk = sum(1 for i in items if (i.risk_band or (i.risk_category or "").lower()) in {"medium", "high", "critical"})
-        avg_eta_delta = (
-            sum(_as_number(i.eta_delta_hours or 0.0) for i in items) / len(items) if items else 0.0
-        )
+        avg_eta_delta = sum(_as_number(i.eta_delta_hours or 0.0) for i in items) / len(items) if items else 0.0
         mode_kpis.append(
             ModeKPI(
                 mode=mode,
@@ -80,7 +86,6 @@ def compute_global_intel_from_positions(positions: Sequence[LiveShipmentPosition
         port_name = items[0].dest_port_name or items[0].origin_port_name or "Unknown Port"
         country = None
         at_risk_shipments = sum(1 for i in items if (i.risk_band or (i.risk_category or "").lower()) in {"high", "critical"})
-        avg_risk_score = sum(_as_number(i.risk_score) for i in items) / len(items)
         congestion_index = round((len(items) / max(len(positions), 1)) * 100, 2)
         port_hotspots.append(
             PortHotspot(

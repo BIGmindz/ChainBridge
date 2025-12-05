@@ -12,7 +12,10 @@ from api.chainiq_service.export_worker import (
     mark_event_failed,
     mark_event_success,
 )
-from api.chainiq_service.intel_engine import compute_shipment_health, get_at_risk_shipments
+from api.chainiq_service.intel_engine import (
+    compute_shipment_health,
+    get_at_risk_shipments,
+)
 from api.chainiq_service.schemas import (
     AtRiskShipmentSummary,
     ShipmentHealthResponse,
@@ -126,15 +129,9 @@ def list_snapshot_export_events(
     if target_system:
         query = query.filter(SnapshotExportEvent.target_system == target_system)
     if shipment_id:
-        query = query.join(DocumentHealthSnapshot).filter(
-            DocumentHealthSnapshot.shipment_id == shipment_id
-        )
+        query = query.join(DocumentHealthSnapshot).filter(DocumentHealthSnapshot.shipment_id == shipment_id)
 
-    events = (
-        query.order_by(SnapshotExportEvent.created_at.desc())
-        .limit(limit)
-        .all()
-    )
+    events = query.order_by(SnapshotExportEvent.created_at.desc()).limit(limit).all()
 
     return [_serialize_event(event) for event in events]
 

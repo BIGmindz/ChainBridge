@@ -2,6 +2,7 @@ absl-py==2.3.1
 aiodns==3.5.0
 aiohappyeyeballs==2.6.1
 aiohttp==3.13.2
+aiokafka==0.8.1
 aiosignal==1.4.0
 alembic==1.17.2
 altair==5.5.0
@@ -183,6 +184,7 @@ typing_extensions==4.15.0
 tzdata==2025.2
 urllib3==2.5.0
 uvicorn==0.38.0
+spaceandtime
 uvloop==0.22.1
 virtualenv==20.35.4
 watchdog==6.0.0

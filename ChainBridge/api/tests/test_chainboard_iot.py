@@ -10,8 +10,8 @@ This test suite verifies:
 
 from fastapi.testclient import TestClient
 
-from api.server import app
 from api.chainsense.client import MockIoTDataProvider
+from api.server import app
 
 client = TestClient(app)
 

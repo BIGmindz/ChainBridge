@@ -66,9 +66,7 @@ def test_shadow_pilot_happy_path(tmp_path: Path) -> None:
     assert summary_data["financeable_gmv_usd"] == pytest.approx(180_000)
     assert summary_data["financed_gmv_usd"] == pytest.approx(126_000)
     assert summary_data["protocol_revenue_usd"] == pytest.approx(1_260)
-    assert summary_data["working_capital_saved_usd"] == pytest.approx(
-        932.0547, rel=1e-3
-    )
+    assert summary_data["working_capital_saved_usd"] == pytest.approx(932.0547, rel=1e-3)
     assert summary_data["losses_avoided_usd"] == pytest.approx(5_000)
     assert summary_data["salvage_revenue_usd"] == pytest.approx(1_600)
     assert summary_data["average_days_pulled_forward"] == pytest.approx(45)

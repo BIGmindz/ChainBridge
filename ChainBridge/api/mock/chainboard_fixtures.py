@@ -21,7 +21,7 @@ Version: 1.0.0 (Production-Ready)
 
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from api.schemas.chainboard import (
     CorridorMetrics,
@@ -48,9 +48,9 @@ from api.schemas.chainboard import (
     ProofpackStatus,
     RiskCategory,
     RiskFactor,
-    RiskProfile,
     RiskOverview,
     RiskOverviewResponse,
+    RiskProfile,
     RiskStory,
     RiskStoryResponse,
     Shipment,
@@ -78,6 +78,7 @@ def _milestone(shipment_ref: str, index: int, **kwargs) -> PaymentMilestone:
         freight_token_id=infer_freight_token_id(shipment_ref),
         **kwargs,
     )
+
 
 # --- Shipments Data ---
 mock_shipments: List[Shipment] = [
@@ -413,9 +414,7 @@ def build_mock_risk_overview() -> RiskOverview:
     total_shipments = len(mock_shipments)
     high_risk_shipments = sum(1 for shipment in mock_shipments if shipment.risk.category == RiskCategory.HIGH)
     total_value_usd = sum((shipment.payment.total_value_usd for shipment in mock_shipments), Decimal("0"))
-    average_risk_score = (
-        sum(shipment.risk.score for shipment in mock_shipments) / total_shipments if total_shipments else 0.0
-    )
+    average_risk_score = sum(shipment.risk.score for shipment in mock_shipments) / total_shipments if total_shipments else 0.0
 
     return RiskOverview(
         total_shipments=total_shipments,
@@ -448,18 +447,10 @@ def build_mock_payment_queue() -> PaymentQueueResponse:
 
             next_milestone = next(
                 (m for m in shipment.payment.milestones if m.state != MilestoneState.RELEASED),
-                shipment.payment.milestones[-1] if shipment.payment.milestones else None,
+                (shipment.payment.milestones[-1] if shipment.payment.milestones else None),
             )
-            milestone_id = (
-                next_milestone.milestone_id
-                if next_milestone
-                else canonical_milestone_id(shipment.id, 1)
-            )
-            freight_token_id = (
-                next_milestone.freight_token_id
-                if next_milestone
-                else infer_freight_token_id(shipment.id)
-            )
+            milestone_id = next_milestone.milestone_id if next_milestone else canonical_milestone_id(shipment.id, 1)
+            freight_token_id = next_milestone.freight_token_id if next_milestone else infer_freight_token_id(shipment.id)
 
             item = PaymentQueueItem(
                 shipment_id=shipment.id,
@@ -470,7 +461,7 @@ def build_mock_payment_queue() -> PaymentQueueResponse:
                 holds_usd=shipment.payment.holds_usd,
                 released_usd=shipment.payment.released_usd,
                 aging_days=aging_days,
-                risk_category=shipment.risk.category if shipment.risk.watchlisted else None,
+                risk_category=(shipment.risk.category if shipment.risk.watchlisted else None),
                 milestone_id=milestone_id,
                 freight_token_id=freight_token_id,
             )
@@ -631,7 +622,9 @@ def build_mock_risk_stories() -> RiskStoryResponse:
     )
 
 
-def build_mock_shipment_events(reference: Optional[str] = None) -> TimelineEventResponse:
+def build_mock_shipment_events(
+    reference: Optional[str] = None,
+) -> TimelineEventResponse:
     """Build realistic timeline events for shipments.
 
     Args:
@@ -642,11 +635,7 @@ def build_mock_shipment_events(reference: Optional[str] = None) -> TimelineEvent
     base_time = datetime.utcnow() - timedelta(days=3)
 
     # Filter shipments if reference provided
-    target_shipments = (
-        [s for s in mock_shipments if s.reference == reference]
-        if reference
-        else mock_shipments
-    )
+    target_shipments = [s for s in mock_shipments if s.reference == reference] if reference else mock_shipments
 
     for idx, shipment in enumerate(target_shipments):
         # Determine event timeline based on shipment status
@@ -700,7 +689,11 @@ def build_mock_shipment_events(reference: Optional[str] = None) -> TimelineEvent
             event_time += timedelta(hours=12)
 
         # 4. DEPARTED_PORT (if in_transit, delivery, or completed)
-        if shipment.status in [ShipmentStatus.IN_TRANSIT, ShipmentStatus.DELIVERY, ShipmentStatus.COMPLETED]:
+        if shipment.status in [
+            ShipmentStatus.IN_TRANSIT,
+            ShipmentStatus.DELIVERY,
+            ShipmentStatus.COMPLETED,
+        ]:
             shipment_events.append(
                 TimelineEvent(
                     shipment_id=shipment.id,
@@ -717,7 +710,10 @@ def build_mock_shipment_events(reference: Optional[str] = None) -> TimelineEvent
 
         # 5. IOT_ALERT (if has IoT sensors and high/medium risk)
         iot_snapshot = mock_iot_snapshots.get(shipment.id)
-        if iot_snapshot and shipment.risk.category in [RiskCategory.HIGH, RiskCategory.MEDIUM]:
+        if iot_snapshot and shipment.risk.category in [
+            RiskCategory.HIGH,
+            RiskCategory.MEDIUM,
+        ]:
             alert_type = "temperature spike" if idx % 2 == 0 else "humidity threshold exceeded"
             severity = "critical" if shipment.risk.category == RiskCategory.HIGH else "warning"
             shipment_events.append(
@@ -859,7 +855,7 @@ mock_global_summary = GlobalSummary(
 # ============================================================================
 
 
-def build_mock_alerts() -> List["ControlTowerAlert"]:
+def build_mock_alerts() -> List[dict[str, Any]]:
     """
     Generate realistic alerts from risk, IoT, payment, and customs domains.
 
@@ -867,10 +863,10 @@ def build_mock_alerts() -> List["ControlTowerAlert"]:
     Uses stable IDs for consistent test assertions.
     """
     from api.schemas.chainboard import (
-        ControlTowerAlert,
-        AlertSource,
         AlertSeverity,
+        AlertSource,
         AlertStatus,
+        ControlTowerAlert,
     )
 
     alerts = []

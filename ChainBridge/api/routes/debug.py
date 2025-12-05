@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from api.database import get_db
-from api.models.chainiq import ShipmentEvent
+from api.models.chainfreight import ShipmentEvent
 
 router = APIRouter(prefix="/debug", tags=["debug"])
 

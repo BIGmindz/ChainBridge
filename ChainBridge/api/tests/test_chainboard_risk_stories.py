@@ -7,6 +7,7 @@ Validates the /api/chainboard/iq/risk-stories endpoint.
 """
 
 from fastapi.testclient import TestClient
+
 from api.server import app
 
 client = TestClient(app)

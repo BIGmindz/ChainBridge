@@ -1,13 +1,24 @@
 """Marketplace models for ChainSalvage listings and bids."""
+
 from __future__ import annotations
 
 from datetime import datetime
 from uuid import uuid4
 
-from sqlalchemy import Column, DateTime, Float, ForeignKey, String, Index
+from sqlalchemy import Column, DateTime, Float, ForeignKey, Index, String
 from sqlalchemy.orm import relationship
 
 from api.database import Base
+
+# Drop existing tables from metadata before redefining to avoid mapper conflicts in tests
+for _tbl in [
+    "marketplace_listings",
+    "marketplace_bids",
+    "marketplace_buy_intents",
+    "marketplace_settlements",
+]:
+    if _tbl in Base.metadata.tables:
+        Base.metadata.remove(Base.metadata.tables[_tbl])
 
 
 class Listing(Base):
@@ -15,6 +26,7 @@ class Listing(Base):
     __table_args__ = (
         Index("ix_marketplace_listings_status", "status"),
         Index("ix_marketplace_listings_expires", "expires_at"),
+        {"extend_existing": True},
     )
 
     id = Column(String, primary_key=True, default=lambda: f"LST-{uuid4()}")
@@ -34,6 +46,7 @@ class Listing(Base):
 
 class Bid(Base):
     __tablename__ = "marketplace_bids"
+    __table_args__ = {"extend_existing": True}
 
     id = Column(String, primary_key=True, default=lambda: f"BID-{uuid4()}")
     listing_id = Column(String, ForeignKey("marketplace_listings.id"), nullable=False, index=True)
@@ -49,6 +62,7 @@ class BuyIntent(Base):
     __table_args__ = (
         Index("ix_marketplace_buy_intents_status", "status"),
         Index("ix_marketplace_buy_intents_listing", "listing_id"),
+        {"extend_existing": True},
     )
 
     id = Column(String, primary_key=True, default=lambda: f"INT-{uuid4()}")
@@ -71,7 +85,7 @@ class BuyIntent(Base):
 
 class SettlementRecord(Base):
     __tablename__ = "marketplace_settlements"
-    __table_args__ = (Index("ix_marketplace_settlements_listing", "listing_id"),)
+    __table_args__ = (Index("ix_marketplace_settlements_listing", "listing_id"), {"extend_existing": True})
 
     id = Column(String, primary_key=True, default=lambda: f"STL-{uuid4()}")
     intent_id = Column(String, ForeignKey("marketplace_buy_intents.id"), nullable=False, unique=True)

@@ -1,4 +1,5 @@
 """Marketplace endpoints for authoritative Dutch auction pricing and buy intents."""
+
 from __future__ import annotations
 
 import logging
@@ -11,6 +12,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from api.database import get_db
+from app.core.deps import InMemoryArq, get_arq_pool
+from app.core.metrics import increment_counter
 from app.models.marketplace import Listing
 from app.schemas.marketplace import (
     BuyIntentCreateRequest,
@@ -18,12 +21,13 @@ from app.schemas.marketplace import (
     BuyIntentStatus,
     PriceQuoteResponse,
 )
-from app.services.marketplace.buy_intents import create_buy_intent, BuyIntentValidationError
+from app.services.marketplace.buy_intents import (
+    BuyIntentValidationError,
+    create_buy_intent,
+)
 from app.services.marketplace.dutch_engine import canonical_price
 from app.services.marketplace.price_proof import PriceQuote, add_quote
-from app.core.metrics import increment_counter
 from app.worker.settlement import enqueue_dutch_settlement
-from app.core.deps import get_arq_pool, InMemoryArq
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +48,10 @@ def _auction_state_version(listing: Listing) -> str:
 
 
 def _error(status_code: int, code: str, message: str, details: Optional[dict] = None) -> HTTPException:
-    return HTTPException(status_code=status_code, detail={"code": code, "message": message, "details": details})
+    return HTTPException(
+        status_code=status_code,
+        detail={"code": code, "message": message, "details": details},
+    )
 
 
 def _rate_limit_price(ip: Optional[str]) -> None:
@@ -54,7 +61,11 @@ def _rate_limit_price(ip: Optional[str]) -> None:
     with _PRICE_RL_LOCK:
         recent = [ts for ts in _PRICE_RL.get(ip, []) if ts > now - RATE_LIMIT_WINDOW_SECONDS]
         if len(recent) >= RATE_LIMIT_MAX_REQUESTS:
-            raise _error(status.HTTP_429_TOO_MANY_REQUESTS, "RATE_LIMITED", "Too many price checks; slow down")
+            raise _error(
+                status.HTTP_429_TOO_MANY_REQUESTS,
+                "RATE_LIMITED",
+                "Too many price checks; slow down",
+            )
         recent.append(now)
         _PRICE_RL[ip] = recent
 
@@ -89,7 +100,11 @@ async def get_authoritative_price(listing_id: str, request: Request, db: Session
     )
 
 
-@router.post("/{listing_id}/buy_intents", response_model=BuyIntentResponse, status_code=status.HTTP_202_ACCEPTED)
+@router.post(
+    "/{listing_id}/buy_intents",
+    response_model=BuyIntentResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
 async def create_buy_intent_endpoint(
     listing_id: str,
     payload: BuyIntentCreateRequest,
@@ -98,7 +113,11 @@ async def create_buy_intent_endpoint(
     redis: "_InMemoryArq" = Depends(get_arq_pool),
 ) -> BuyIntentResponse:
     if payload.listing_id != listing_id:
-        raise _error(status.HTTP_400_BAD_REQUEST, "LISTING_ID_MISMATCH", "listing_id in body does not match path")
+        raise _error(
+            status.HTTP_400_BAD_REQUEST,
+            "LISTING_ID_MISMATCH",
+            "listing_id in body does not match path",
+        )
     client_ip: Optional[str] = request.client.host if request.client else None
     try:
         intent = create_buy_intent(
@@ -149,11 +168,23 @@ async def create_buy_intent_endpoint(
         job_id = await enqueue_dutch_settlement(redis, intent.id)
         logger.info(
             "marketplace.intent.enqueued",
-            extra={"intent_id": intent.id, "job_id": job_id, "listing_id": listing_id, "wallet": payload.wallet_address},
+            extra={
+                "intent_id": intent.id,
+                "job_id": job_id,
+                "listing_id": listing_id,
+                "wallet": payload.wallet_address,
+            },
         )
     except Exception as exc:  # pragma: no cover - hard failure paths exercised indirectly
-        logger.warning("marketplace.intent.enqueue_failed", extra={"intent_id": intent.id, "error": str(exc)})
-        raise _error(status.HTTP_503_SERVICE_UNAVAILABLE, "SETTLEMENT_QUEUE_UNAVAILABLE", "Settlement queue unavailable")
+        logger.warning(
+            "marketplace.intent.enqueue_failed",
+            extra={"intent_id": intent.id, "error": str(exc)},
+        )
+        raise _error(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            "SETTLEMENT_QUEUE_UNAVAILABLE",
+            "Settlement queue unavailable",
+        )
 
     return BuyIntentResponse(
         intent_id=intent.id,

@@ -1,4 +1,5 @@
 """Operator Console API surfaces combining ChainPay + ChainIQ + IoT."""
+
 from __future__ import annotations
 
 import logging
@@ -9,41 +10,44 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from api.chainsense.client import IoTDataProvider, MockIoTDataProvider
 from api.database import get_db
+from api.models.canonical import RiskLevel
+from api.models.chainiq import DocumentHealthSnapshot, RiskDecision
 from api.models.chainpay import PaymentIntent, SettlementEvent
 from api.models.legal import RicardianInstrument
-from api.models.chainiq import RiskDecision, DocumentHealthSnapshot
 from api.schemas.chainboard import IoTHealthSummary
 from api.schemas.operator_console import (
-    OperatorQueueItem,
-    OperatorQueueResponse,
-    RiskSnapshotResponse,
-    SettlementEventItem,
+    AuditCoreSummary,
+    AuditDocumentRef,
+    AuditDocuments,
+    AuditEventItem,
+    AuditEventTimeline,
+    AuditIoTSummary,
+    AuditLaneSummary,
+    AuditLegalWrapper,
+    AuditMetadata,
+    AuditPackResponse,
+    AuditProofProvider,
+    AuditProofStatus,
+    AuditProofSummary,
+    AuditRiskSnapshot,
+    AuditRiskSummary,
+    AuditSLASummary,
     OperatorEvent,
     OperatorEventsResponse,
     OperatorIoTHealthSummary,
-    ReconciliationSummary,
+    OperatorQueueItem,
+    OperatorQueueResponse,
     ReconciliationLineResult,
-    AuditPackResponse,
-    AuditCoreSummary,
-    AuditLaneSummary,
-    AuditProofSummary,
-    AuditProofStatus,
-    AuditProofProvider,
-    AuditRiskSummary,
-    AuditRiskSnapshot,
-    AuditEventItem,
-    AuditEventTimeline,
-    AuditSLASummary,
-    AuditIoTSummary,
-    AuditDocuments,
-    AuditMetadata,
-    AuditDocumentRef,
-    AuditLegalWrapper,
+    ReconciliationSummary,
+    RiskSnapshotResponse,
+    SettlementEventItem,
 )
-from api.chainsense.client import MockIoTDataProvider, IoTDataProvider
-from api.models.canonical import RiskLevel
-from api.services.reconciliation import run_reconciliation_for_intent, get_reconciliation_result
+from api.services.reconciliation import (
+    get_reconciliation_result,
+    run_reconciliation_for_intent,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/operator", tags=["operator_console"])
@@ -96,7 +100,10 @@ def get_operator_queue(
     if state:
         desired = state.upper()
         if desired == "READY":
-            query = query.filter(PaymentIntent.proof_pack_id.isnot(None), PaymentIntent.compliance_blocks.is_(None))
+            query = query.filter(
+                PaymentIntent.proof_pack_id.isnot(None),
+                PaymentIntent.compliance_blocks.is_(None),
+            )
         elif desired == "BLOCKED":
             query = query.filter(PaymentIntent.compliance_blocks.isnot(None))
         elif desired == "WAITING_PROOF":
@@ -113,12 +120,7 @@ def get_operator_queue(
         )
 
     total = query.count()
-    rows = (
-        query.order_by(PaymentIntent.created_at.desc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
-        .all()
-    )
+    rows = query.order_by(PaymentIntent.created_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
     now = datetime.now(timezone.utc)
     items: List[OperatorQueueItem] = []
     for intent, snapshot in rows:
@@ -158,10 +160,7 @@ def get_risk_snapshot(intent_id: str, db: Session = Depends(get_db)) -> RiskSnap
     if not intent:
         raise HTTPException(status_code=404, detail="Settlement not found")
     decision = (
-        db.query(RiskDecision)
-        .filter(RiskDecision.shipment_id == intent.shipment_id)
-        .order_by(RiskDecision.decided_at.desc())
-        .first()
+        db.query(RiskDecision).filter(RiskDecision.shipment_id == intent.shipment_id).order_by(RiskDecision.decided_at.desc()).first()
     )
     score = decision.risk_score if decision else intent.risk_score
     band = _risk_band(score)
@@ -206,7 +205,7 @@ def get_settlement_events(
                 metadata=evt.extra_metadata,
                 created_at=evt.occurred_at,
             )
-    )
+        )
     return items
 
 
@@ -223,7 +222,7 @@ def get_reconciliation_summary(intent_id: str, db: Session = Depends(get_db)) ->
         db.refresh(intent)
 
     return ReconciliationSummary(
-        decision=result.decision.value if hasattr(result.decision, "value") else str(result.decision),
+        decision=(result.decision.value if hasattr(result.decision, "value") else str(result.decision)),
         approved_amount=result.approved_amount,
         held_amount=result.held_amount,
         recon_score=result.recon_score,
@@ -232,7 +231,7 @@ def get_reconciliation_summary(intent_id: str, db: Session = Depends(get_db)) ->
         lines=[
             ReconciliationLineResult(
                 line_id=line.line_id,
-                status=line.status.value if hasattr(line.status, "value") else str(line.status),
+                status=(line.status.value if hasattr(line.status, "value") else str(line.status)),
                 reason_code=line.reason_code,
                 contract_amount=line.contract_amount,
                 billed_amount=line.billed_amount,
@@ -281,7 +280,7 @@ def get_operator_events_stream(
         items.append(
             OperatorEvent(
                 id=evt.id,
-                kind="payment_confirmed" if evt.event_type in {"CAPTURED", "CASH_RELEASED"} else "info",
+                kind=("payment_confirmed" if evt.event_type in {"CAPTURED", "CASH_RELEASED"} else "info"),
                 settlement_id=evt.payment_intent_id,
                 severity="info",
                 message=evt.event_type,
@@ -326,12 +325,7 @@ def get_auditpack_for_settlement(
         last_verified_at=None,
     )
 
-    decisions = (
-        db.query(RiskDecision)
-        .filter(RiskDecision.shipment_id == intent.shipment_id)
-        .order_by(RiskDecision.decided_at.asc())
-        .all()
-    )
+    decisions = db.query(RiskDecision).filter(RiskDecision.shipment_id == intent.shipment_id).order_by(RiskDecision.decided_at.asc()).all()
     snapshots: list[AuditRiskSnapshot] = []
     for decision in decisions:
         band = _risk_band(decision.risk_score)
@@ -356,9 +350,7 @@ def get_auditpack_for_settlement(
         .order_by(SettlementEvent.occurred_at.asc())
         .all()
     )
-    event_items: list[AuditEventItem] = [
-        AuditEventItem(event_type=evt.event_type, at=evt.occurred_at, severity=None) for evt in events
-    ]
+    event_items: list[AuditEventItem] = [AuditEventItem(event_type=evt.event_type, at=evt.occurred_at, severity=None) for evt in events]
     events_timeline = AuditEventTimeline(
         count=len(event_items),
         first_at=event_items[0].at if event_items else None,

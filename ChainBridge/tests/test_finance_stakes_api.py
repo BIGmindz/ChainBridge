@@ -41,7 +41,9 @@ def clean_db(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
     Base.metadata.create_all(bind=engine)
 
 
-def test_create_stake_requires_active_instrument(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_create_stake_requires_active_instrument(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         session.add(

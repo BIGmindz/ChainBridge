@@ -1,4 +1,5 @@
 """Audit orchestrator v0 using in-process event bus."""
+
 from __future__ import annotations
 
 from typing import Iterable

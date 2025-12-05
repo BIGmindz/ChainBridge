@@ -1,6 +1,6 @@
 """Simpful-inspired fuzzy engine for payout confidence."""
-from __future__ import annotations
 
+from __future__ import annotations
 
 
 def _clamp(value: float, lo: float, hi: float) -> float:

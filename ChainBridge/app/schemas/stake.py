@@ -1,8 +1,10 @@
 """Stake request/response schemas."""
+
 from __future__ import annotations
 
 from enum import Enum
 from typing import Optional
+
 from pydantic import BaseModel, Field, field_validator
 
 

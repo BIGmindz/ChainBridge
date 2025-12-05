@@ -1,10 +1,11 @@
 """Finance models for inventory stakes backed by Ricardian instruments."""
+
 from __future__ import annotations
 
 from datetime import datetime
 from uuid import uuid4
 
-from sqlalchemy import Column, DateTime, Float, ForeignKey, String, Index
+from sqlalchemy import Column, DateTime, Float, ForeignKey, Index, String
 
 from api.database import Base
 

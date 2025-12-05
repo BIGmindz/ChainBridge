@@ -9,6 +9,8 @@ import logging
 from fastapi import APIRouter, HTTPException
 
 from .risk_engine import calculate_risk_score
+from .services.event_publisher import EventPublisher
+from .services.risk_orchestrator import RiskOrchestrator
 from .schemas import (
     AtRiskShipmentsResponse,
     AtRiskShipmentSummary,
@@ -123,10 +125,11 @@ async def score_shipment(request: ShipmentRiskRequest) -> ShipmentRiskResponse:
             "recommended_action": "RELEASE_PAYMENT"
         }
     """
+
     try:
         logger.info("Scoring shipment: %s", request.shipment_id)
 
-        # Calculate risk score using deterministic engine
+        # Calculate risk score using deterministic engine (with optional IoT signals)
         risk_score, severity, reason_codes, recommended_action = calculate_risk_score(
             route=request.route,
             carrier_id=request.carrier_id,
@@ -135,6 +138,7 @@ async def score_shipment(request: ShipmentRiskRequest) -> ShipmentRiskResponse:
             expected_days=request.expected_days,
             documents_complete=request.documents_complete,
             shipper_payment_score=request.shipper_payment_score,
+            request=request,
         )
 
         response = ShipmentRiskResponse(
@@ -163,6 +167,20 @@ async def score_shipment(request: ShipmentRiskRequest) -> ShipmentRiskResponse:
                     "Failed to persist risk decision: %s",
                     str(storage_err),
                 )
+
+        # --- Event Bus Integration ---
+        try:
+            publisher = EventPublisher()
+            orchestrator = RiskOrchestrator(publisher)
+            await orchestrator.handle_risk_result(
+                shipment_id=request.shipment_id,
+                risk_score=risk_score,
+                severity=severity,
+                reasons=reason_codes,
+                source="chainiq-api"
+            )
+        except Exception as event_err:
+            logger.warning(f"Failed to publish risk event: {event_err}")
 
         logger.info(
             "Risk score completed: shipment=%s, score=%d, severity=%s",
@@ -204,7 +222,10 @@ async def get_risk_history(shipment_id: str) -> RiskHistoryResponse:
         recent_score = get_score(shipment_id)
 
         if not recent_score:
-            raise HTTPException(status_code=404, detail=f"No risk scores found for shipment {shipment_id}")
+            raise HTTPException(
+                status_code=404,
+                detail=f"No risk scores found for shipment {shipment_id}",
+            )
 
         # Build history items (currently only returning most recent)
         history_items = [
@@ -316,13 +337,19 @@ async def replay_risk_score(shipment_id: str) -> ReplayResponse:
         original_score = get_score(shipment_id)
 
         if not original_score:
-            raise HTTPException(status_code=404, detail=f"No original score found for shipment {shipment_id}")
+            raise HTTPException(
+                status_code=404,
+                detail=f"No original score found for shipment {shipment_id}",
+            )
 
         # Get original request data
         request_data = replay_request(shipment_id)
 
         if not request_data:
-            raise HTTPException(status_code=404, detail=f"No request data found for shipment {shipment_id}")
+            raise HTTPException(
+                status_code=404,
+                detail=f"No request data found for shipment {shipment_id}",
+            )
 
         # Re-run risk calculation
         replayed_score, replayed_severity, replayed_reasons, replayed_action = calculate_risk_score(
@@ -395,7 +422,10 @@ async def get_payment_queue(limit: int = 50) -> PaymentQueueResponse:
         GET /pay/queue?limit=20
     """
     if not STORAGE_AVAILABLE or list_scores is None:
-        raise HTTPException(status_code=503, detail="Payment queue unavailable (storage layer not initialized)")
+        raise HTTPException(
+            status_code=503,
+            detail="Payment queue unavailable (storage layer not initialized)",
+        )
 
     # Cap limit at 100
     limit = min(limit, 100)
@@ -482,7 +512,10 @@ async def get_entity_history(entity_id: str, limit: int = 100) -> EntityHistoryR
     - 503: Storage layer unavailable
     """
     if not STORAGE_AVAILABLE or get_history is None:
-        raise HTTPException(status_code=503, detail="History service unavailable (storage layer not initialized)")
+        raise HTTPException(
+            status_code=503,
+            detail="History service unavailable (storage layer not initialized)",
+        )
 
     # Cap limit at 500 for performance
     limit = min(limit, 500)
@@ -496,7 +529,10 @@ async def get_entity_history(entity_id: str, limit: int = 100) -> EntityHistoryR
         # Check if entity exists
         if not history_records:
             logger.warning("No history found for entity: %s", entity_id)
-            raise HTTPException(status_code=404, detail=f"No scoring history found for entity: {entity_id}")
+            raise HTTPException(
+                status_code=404,
+                detail=f"No scoring history found for entity: {entity_id}",
+            )
 
         # Convert to response models
         history_items = []
@@ -859,7 +895,11 @@ async def get_at_risk_shipments(min_risk_score: int = 70, max_results: int = 50)
         GET /iq/shipments/at_risk?min_risk_score=75&max_results=25
     """
 
-    logger.info("Fetching at-risk shipments with min_risk_score=%d, max_results=%d", min_risk_score, max_results)
+    logger.info(
+        "Fetching at-risk shipments with min_risk_score=%d, max_results=%d",
+        min_risk_score,
+        max_results,
+    )
 
     # For demo/development: Return synthetic at-risk shipments
     # TODO: Replace with actual database queries when storage layer is enhanced
@@ -944,7 +984,9 @@ async def get_at_risk_shipments(min_risk_score: int = 70, max_results: int = 50)
     limited_shipments = filtered_shipments[:max_results]
 
     logger.info(
-        "Returning %d at-risk shipments (filtered from %d total)", len(limited_shipments), len(filtered_shipments)
+        "Returning %d at-risk shipments (filtered from %d total)",
+        len(limited_shipments),
+        len(filtered_shipments),
     )
 
     return AtRiskShipmentsResponse(

@@ -1,4 +1,5 @@
 """Hedera HTS/HCS integration for RWA minting and audit logging."""
+
 from __future__ import annotations
 
 import asyncio
@@ -44,7 +45,10 @@ def _client() -> Client | None:
         return None
     network = (settings.HEDERA_NETWORK or "testnet").lower()
     client = Client.forMainnet() if network == "mainnet" else Client.forTestnet()
-    client.setOperator(AccountId.fromString(settings.HEDERA_OPERATOR_ID), PrivateKey.fromString(settings.HEDERA_OPERATOR_KEY))
+    client.setOperator(
+        AccountId.fromString(settings.HEDERA_OPERATOR_ID),
+        PrivateKey.fromString(settings.HEDERA_OPERATOR_KEY),
+    )
     return client
 
 
@@ -74,7 +78,13 @@ def mint_rwa_token_sync(metadata_hash: str, amount: int = 1) -> str:
         )
         receipt = tx.execute(client).getReceipt(client)
         token_id = str(receipt.tokenId)
-        logger.info("hedera.mint.success", extra={"token_id": token_id, "latency_ms": int((time.time() - start) * 1000)})
+        logger.info(
+            "hedera.mint.success",
+            extra={
+                "token_id": token_id,
+                "latency_ms": int((time.time() - start) * 1000),
+            },
+        )
         return token_id
     except Exception as exc:  # pragma: no cover - guardrail
         logger.warning("hedera.mint.failed", extra={"error": str(exc)})
@@ -112,7 +122,13 @@ def log_audit_event_sync(shipment_id: str, event_data: Dict[str, Any]) -> Dict[s
             update_metric("hedera_consensus")  # type: ignore[arg-type]
         except Exception:
             pass
-        logger.info("hedera.audit.success", extra={"message_id": str(receipt.topicId) if hasattr(receipt, "topicId") else None, "latency_ms": latency_ms})
+        logger.info(
+            "hedera.audit.success",
+            extra={
+                "message_id": (str(receipt.topicId) if hasattr(receipt, "topicId") else None),
+                "latency_ms": latency_ms,
+            },
+        )
         return {
             "message_id": str(getattr(receipt, "topicId", topic_id)),
             "status": "RECORDED",

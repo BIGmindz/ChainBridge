@@ -82,6 +82,7 @@ async def test_multiple_subscribers():
 @pytest.mark.asyncio
 async def test_event_stream_generator():
     """Test the event_stream async generator."""
+
     async def consumer():
         events = []
         async for event in event_stream():

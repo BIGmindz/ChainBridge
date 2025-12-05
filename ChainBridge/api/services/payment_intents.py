@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import logging
-import json
 import hashlib
+import json
+import logging
 from datetime import datetime
 from typing import Optional
 
@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from api.models.chaindocs import Shipment
 from api.models.chainiq import DocumentHealthSnapshot
-from api.models.chainpay import PaymentIntent, SettlementPlan, SettlementEvent
+from api.models.chainpay import PaymentIntent, SettlementEvent, SettlementPlan
 
 logger = logging.getLogger(__name__)
 
@@ -54,11 +54,7 @@ def _resolve_amount_and_currency(
     if amount is not None:
         return amount, resolved_currency
 
-    plan = (
-        db.query(SettlementPlan)
-        .filter(SettlementPlan.shipment_id == shipment_id)
-        .first()
-    )
+    plan = db.query(SettlementPlan).filter(SettlementPlan.shipment_id == shipment_id).first()
     if plan and plan.total_value is not None:
         return float(plan.total_value), resolved_currency
 
@@ -108,7 +104,7 @@ def ensure_payment_intent_for_snapshot(
         amount=resolved_amount,
         currency=resolved_currency,
         status="PENDING",
-        risk_score=float(snapshot.risk_score) if snapshot.risk_score is not None else None,
+        risk_score=(float(snapshot.risk_score) if snapshot.risk_score is not None else None),
         risk_level=snapshot.risk_level,
         counterparty=counterparty,
         notes=notes,

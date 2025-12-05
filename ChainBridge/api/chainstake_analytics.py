@@ -1,15 +1,20 @@
 """Read-only analytics helpers for ChainStake."""
+
 from __future__ import annotations
 
 import logging
 from typing import Iterable, List
 
-from sqlalchemy import func, case
+from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
-from api.models.chainstake import StakePosition
 from api.models.chainpay import PaymentIntent
-from api.schemas.chainstake import LiquidityOverview, StakePoolSummary, StakePositionRead
+from api.models.chainstake import StakePosition
+from api.schemas.chainstake import (
+    LiquidityOverview,
+    StakePoolSummary,
+    StakePositionRead,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -42,26 +47,12 @@ def _weighted_avg(values: Iterable[tuple[float, float]]) -> float:
 
 
 def get_liquidity_overview(session: Session) -> LiquidityOverview:
-    tvl = (
-        session.query(func.coalesce(func.sum(StakePosition.notional_usd), 0.0))
-        .filter(StakePosition.status.in_(TVL_STATUSES))
-        .scalar()
-    )
+    tvl = session.query(func.coalesce(func.sum(StakePosition.notional_usd), 0.0)).filter(StakePosition.status.in_(TVL_STATUSES)).scalar()
     utilized = (
-        session.query(func.coalesce(func.sum(StakePosition.notional_usd), 0.0))
-        .filter(StakePosition.status.in_(UTILIZED_STATUSES))
-        .scalar()
+        session.query(func.coalesce(func.sum(StakePosition.notional_usd), 0.0)).filter(StakePosition.status.in_(UTILIZED_STATUSES)).scalar()
     )
-    active_positions = (
-        session.query(func.count(StakePosition.id))
-        .filter(~StakePosition.status.in_(["FAILED", "CLOSED"]))
-        .scalar()
-    )
-    apy_rows = (
-        session.query(StakePosition.realized_apy, StakePosition.notional_usd)
-        .filter(StakePosition.realized_apy.isnot(None))
-        .all()
-    )
+    active_positions = session.query(func.count(StakePosition.id)).filter(~StakePosition.status.in_(["FAILED", "CLOSED"])).scalar()
+    apy_rows = session.query(StakePosition.realized_apy, StakePosition.notional_usd).filter(StakePosition.realized_apy.isnot(None)).all()
     overall_apy = _weighted_avg((row[0], row[1]) for row in apy_rows)
 
     logger.info(
@@ -87,15 +78,19 @@ def list_stake_pools(session: Session) -> List[StakePoolSummary]:
             func.coalesce(func.sum(StakePosition.notional_usd), 0.0).label("tvl"),
             func.coalesce(
                 func.sum(
-                    case((StakePosition.status.in_(UTILIZED_STATUSES), StakePosition.notional_usd), else_=0.0)
+                    case(
+                        (
+                            StakePosition.status.in_(UTILIZED_STATUSES),
+                            StakePosition.notional_usd,
+                        ),
+                        else_=0.0,
+                    )
                 ),
                 0.0,
             ).label("utilized"),
             func.count(StakePosition.id).label("total_positions"),
             func.coalesce(
-                func.sum(
-                    case((StakePosition.status == "FAILED", 1), else_=0)
-                ),
+                func.sum(case((StakePosition.status == "FAILED", 1), else_=0)),
                 0,
             ).label("defaulted"),
         )
@@ -158,20 +153,13 @@ def list_stake_pools(session: Session) -> List[StakePoolSummary]:
 
 
 def list_pool_positions(session: Session, pool_id: str) -> List[StakePositionRead]:
-    positions = (
-        session.query(StakePosition)
-        .filter(StakePosition.pool_id == pool_id)
-        .order_by(StakePosition.staked_at.desc())
-        .all()
-    )
+    positions = session.query(StakePosition).filter(StakePosition.pool_id == pool_id).order_by(StakePosition.staked_at.desc()).all()
     if positions is None:
         return []
 
     pi_lookup = {
         pi.id: pi
-        for pi in session.query(PaymentIntent).filter(
-            PaymentIntent.id.in_([p.payment_intent_id for p in positions if p.payment_intent_id])
-        )
+        for pi in session.query(PaymentIntent).filter(PaymentIntent.id.in_([p.payment_intent_id for p in positions if p.payment_intent_id]))
     }
 
     def _serialize(pos: StakePosition) -> StakePositionRead:

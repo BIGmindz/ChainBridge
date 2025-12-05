@@ -1,4 +1,5 @@
 """ChainStake v1 skeleton service."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -7,8 +8,8 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from api.events.bus import EventType, event_bus
-from api.models.chainpay import PaymentIntent, StakeJob
 from api.models.chaindocs import Shipment
+from api.models.chainpay import PaymentIntent, StakeJob
 from api.services.settlement_events import append_settlement_event
 
 STAKE_STATUSES = {"PENDING", "IN_PROGRESS", "COMPLETED", "FAILED"}
@@ -46,7 +47,11 @@ def create_stake_job(
     db.refresh(job)
     event_bus.publish(
         EventType.STAKE_CREATED,
-        {"stake_job_id": job.id, "shipment_id": shipment_id, "payment_intent_id": payment_intent_id},
+        {
+            "stake_job_id": job.id,
+            "shipment_id": shipment_id,
+            "payment_intent_id": payment_intent_id,
+        },
         correlation_id=payment_intent_id or shipment_id,
         actor="system:stake",
         occurred_at=job.created_at,

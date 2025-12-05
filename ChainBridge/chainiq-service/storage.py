@@ -47,7 +47,8 @@ def init_db() -> None:
     cursor = conn.cursor()
 
     # Create risk_decisions table
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS risk_decisions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             shipment_id TEXT NOT NULL,
@@ -59,18 +60,23 @@ def init_db() -> None:
             request_data TEXT NOT NULL,
             response_data TEXT NOT NULL
         )
-    """)
+    """
+    )
 
     # Create indexes for fast queries
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_shipment_id
         ON risk_decisions(shipment_id)
-    """)
+    """
+    )
 
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_scored_at
         ON risk_decisions(scored_at DESC)
-    """)
+    """
+    )
 
     conn.commit()
     conn.close()
@@ -116,7 +122,8 @@ def insert_score(
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT INTO risk_decisions (
             shipment_id,
             risk_score,
@@ -126,15 +133,17 @@ def insert_score(
             request_data,
             response_data
         ) VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (
-        shipment_id,
-        risk_score,
-        severity,
-        recommended_action,
-        json.dumps(reason_codes),
-        json.dumps(request_data),
-        json.dumps(response_data),
-    ))
+    """,
+        (
+            shipment_id,
+            risk_score,
+            severity,
+            recommended_action,
+            json.dumps(reason_codes),
+            json.dumps(request_data),
+            json.dumps(response_data),
+        ),
+    )
 
     row_id = cursor.lastrowid
     conn.commit()
@@ -172,7 +181,8 @@ def get_score(shipment_id: str) -> Optional[Dict[str, Any]]:
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT
             id,
             shipment_id,
@@ -187,7 +197,9 @@ def get_score(shipment_id: str) -> Optional[Dict[str, Any]]:
         WHERE shipment_id = ?
         ORDER BY scored_at DESC
         LIMIT 1
-    """, (shipment_id,))
+    """,
+        (shipment_id,),
+    )
 
     row = cursor.fetchone()
     conn.close()
@@ -228,7 +240,8 @@ def list_scores(limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT
             id,
             shipment_id,
@@ -242,24 +255,28 @@ def list_scores(limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
         FROM risk_decisions
         ORDER BY scored_at DESC
         LIMIT ? OFFSET ?
-    """, (limit, offset))
+    """,
+        (limit, offset),
+    )
 
     rows = cursor.fetchall()
     conn.close()
 
     results = []
     for row in rows:
-        results.append({
-            "id": row["id"],
-            "shipment_id": row["shipment_id"],
-            "scored_at": row["scored_at"],
-            "risk_score": row["risk_score"],
-            "severity": row["severity"],
-            "recommended_action": row["recommended_action"],
-            "reason_codes": json.loads(row["reason_codes"]),
-            "request_data": json.loads(row["request_data"]),
-            "response_data": json.loads(row["response_data"]),
-        })
+        results.append(
+            {
+                "id": row["id"],
+                "shipment_id": row["shipment_id"],
+                "scored_at": row["scored_at"],
+                "risk_score": row["risk_score"],
+                "severity": row["severity"],
+                "recommended_action": row["recommended_action"],
+                "reason_codes": json.loads(row["reason_codes"]),
+                "request_data": json.loads(row["request_data"]),
+                "response_data": json.loads(row["response_data"]),
+            }
+        )
 
     return results
 
@@ -287,7 +304,8 @@ def get_history(entity_id: str, limit: int = 100) -> List[Dict[str, Any]]:
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT
             id,
             shipment_id,
@@ -302,24 +320,28 @@ def get_history(entity_id: str, limit: int = 100) -> List[Dict[str, Any]]:
         WHERE shipment_id = ?
         ORDER BY scored_at DESC
         LIMIT ?
-    """, (entity_id, limit))
+    """,
+        (entity_id, limit),
+    )
 
     rows = cursor.fetchall()
     conn.close()
 
     results = []
     for row in rows:
-        results.append({
-            "id": row["id"],
-            "entity_id": row["shipment_id"],
-            "timestamp": row["scored_at"],
-            "score": row["risk_score"],
-            "severity": row["severity"],
-            "recommended_action": row["recommended_action"],
-            "reason_codes": json.loads(row["reason_codes"]) if row["reason_codes"] else [],
-            "payload": json.loads(row["request_data"]),
-            "response_data": json.loads(row["response_data"]),
-        })
+        results.append(
+            {
+                "id": row["id"],
+                "entity_id": row["shipment_id"],
+                "timestamp": row["scored_at"],
+                "score": row["risk_score"],
+                "severity": row["severity"],
+                "recommended_action": row["recommended_action"],
+                "reason_codes": (json.loads(row["reason_codes"]) if row["reason_codes"] else []),
+                "payload": json.loads(row["request_data"]),
+                "response_data": json.loads(row["response_data"]),
+            }
+        )
 
     return results
 
@@ -383,7 +405,8 @@ def get_latest_risk_for_shipment(shipment_id: str) -> Optional[Dict[str, Any]]:
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT
             shipment_id,
             scored_at,
@@ -395,7 +418,9 @@ def get_latest_risk_for_shipment(shipment_id: str) -> Optional[Dict[str, Any]]:
         WHERE shipment_id = ?
         ORDER BY scored_at DESC
         LIMIT 1
-    """, (shipment_id,))
+    """,
+        (shipment_id,),
+    )
 
     row = cursor.fetchone()
     conn.close()
@@ -513,10 +538,7 @@ def load_shipment_context_for_simulation(shipment_id: str) -> Dict[str, Any]:
 
     missing_fields = [f for f in required_fields if f not in request_data]
     if missing_fields:
-        raise ValueError(
-            f"Incomplete shipment context for {shipment_id}. "
-            f"Missing fields: {', '.join(missing_fields)}"
-        )
+        raise ValueError(f"Incomplete shipment context for {shipment_id}. " f"Missing fields: {', '.join(missing_fields)}")
 
     logger.debug(
         "Loaded simulation context for %s: route=%s, carrier=%s",

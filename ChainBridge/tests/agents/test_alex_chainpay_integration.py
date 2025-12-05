@@ -87,12 +87,10 @@ def _evaluate_chainbridge_mandate(ctx: dict) -> str:
         ("TERMINATED", "COMPLIANT", "SAFE", True, True, True, "BLOCKED:WRAPPER"),
         ("ACTIVE", "BLOCKED", "SAFE", True, True, True, "BLOCKED:SUPREMACY"),
         ("ACTIVE", "COMPLIANT", "UNSAFE", True, True, True, "BLOCKED:KILL_SWITCH"),
-
         # ❌ Mantra violations
         ("ACTIVE", "COMPLIANT", "SAFE", False, True, True, "BLOCKED:NO_PROOF"),
         ("ACTIVE", "COMPLIANT", "SAFE", True, False, True, "BLOCKED:NO_PIPES"),
         ("ACTIVE", "COMPLIANT", "SAFE", True, True, False, "BLOCKED:NO_CASH"),
-
         # ✅ Everything present
         ("ACTIVE", "COMPLIANT", "SAFE", True, True, True, "APPROVED"),
     ],

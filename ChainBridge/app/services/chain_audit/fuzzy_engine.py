@@ -1,9 +1,9 @@
 """Simpful-backed payout confidence engine."""
+
 from __future__ import annotations
 
-
 try:
-    from simpful import FuzzySystem, LinguisticVariable, FuzzySet, Trapezoidal_MF
+    from simpful import FuzzySet, FuzzySystem, LinguisticVariable, Trapezoidal_MF
 except Exception:  # pragma: no cover - fallback when simpful is unavailable
     FuzzySystem = None  # type: ignore
 
@@ -44,7 +44,10 @@ def get_payout_confidence(delta_temp_c: float, duration_mins: float) -> float:
     conf_full = FuzzySet(function=Trapezoidal_MF(90, 95, 100, 100), term="Full")
     conf_partial = FuzzySet(function=Trapezoidal_MF(40, 50, 80, 90), term="Partial")
     conf_reject = FuzzySet(function=Trapezoidal_MF(0, 0, 10, 20), term="Reject")
-    fs.add_linguistic_variable("Confidence", LinguisticVariable([conf_full, conf_partial, conf_reject], universe_of_discourse=[0, 100]))
+    fs.add_linguistic_variable(
+        "Confidence",
+        LinguisticVariable([conf_full, conf_partial, conf_reject], universe_of_discourse=[0, 100]),
+    )
 
     fs.add_rules(
         [

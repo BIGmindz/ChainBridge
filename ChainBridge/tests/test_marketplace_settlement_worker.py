@@ -9,7 +9,7 @@ from sqlalchemy.pool import StaticPool
 
 from api.database import Base
 from api.eventbus import dispatcher
-from app.models.marketplace import Listing, BuyIntent, SettlementRecord
+from app.models.marketplace import BuyIntent, Listing, SettlementRecord
 from app.schemas.marketplace import BuyIntentStatus
 from app.worker import settlement
 
@@ -24,16 +24,28 @@ def db_sessionmaker() -> Tuple[Any, sessionmaker]:
         poolclass=StaticPool,
     )
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, expire_on_commit=False)
-    Base.metadata.create_all(bind=engine, tables=[Listing.__table__, BuyIntent.__table__, SettlementRecord.__table__])
+    Base.metadata.create_all(
+        bind=engine,
+        tables=[Listing.__table__, BuyIntent.__table__, SettlementRecord.__table__],
+    )
     yield engine, SessionLocal
-    Base.metadata.drop_all(bind=engine, tables=[Listing.__table__, BuyIntent.__table__, SettlementRecord.__table__])
+    Base.metadata.drop_all(
+        bind=engine,
+        tables=[Listing.__table__, BuyIntent.__table__, SettlementRecord.__table__],
+    )
 
 
 @pytest.fixture(autouse=True)
 def clean_db(db_sessionmaker: Tuple[Any, sessionmaker]) -> None:
     engine, _ = db_sessionmaker
-    Base.metadata.drop_all(bind=engine, tables=[Listing.__table__, BuyIntent.__table__, SettlementRecord.__table__])
-    Base.metadata.create_all(bind=engine, tables=[Listing.__table__, BuyIntent.__table__, SettlementRecord.__table__])
+    Base.metadata.drop_all(
+        bind=engine,
+        tables=[Listing.__table__, BuyIntent.__table__, SettlementRecord.__table__],
+    )
+    Base.metadata.create_all(
+        bind=engine,
+        tables=[Listing.__table__, BuyIntent.__table__, SettlementRecord.__table__],
+    )
     dispatcher._SUBSCRIBERS.clear()
 
 

@@ -1,7 +1,7 @@
-from typing import Any, Tuple
 import hashlib
 import hmac
 import json
+from typing import Any, Tuple
 
 import pytest
 from fastapi.testclient import TestClient
@@ -92,7 +92,9 @@ def _signed_headers(payload: dict, secret: str) -> dict:
     }
 
 
-def test_chaindocs_validated_appends_event(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_chaindocs_validated_appends_event(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed_intent(session)
@@ -106,7 +108,9 @@ def test_chaindocs_validated_appends_event(client_with_db: Tuple[TestClient, Any
     assert any(evt["event_type"] == "PROOF_VALIDATED" for evt in events)
 
 
-def test_missing_intent_returns_404(client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_missing_intent_returns_404(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, _ = client_with_db
     resp = client.post(
         "/chainpay/hooks/chaindocs/validated",
@@ -115,7 +119,10 @@ def test_missing_intent_returns_404(client_with_db: Tuple[TestClient, Any, sessi
     assert resp.status_code == 404
 
 
-def test_chainpay_webhook_signature(monkeypatch: pytest.MonkeyPatch, client_with_db: Tuple[TestClient, Any, sessionmaker]) -> None:
+def test_chainpay_webhook_signature(
+    monkeypatch: pytest.MonkeyPatch,
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed_intent(session)
@@ -131,7 +138,10 @@ def test_chainpay_webhook_signature(monkeypatch: pytest.MonkeyPatch, client_with
     monkeypatch.delenv("CHAINBRIDGE_WEBHOOK_SECRET", raising=False)
 
 
-def test_chainpay_webhook_rate_limit(client_with_db: Tuple[TestClient, Any, sessionmaker], monkeypatch: pytest.MonkeyPatch) -> None:
+def test_chainpay_webhook_rate_limit(
+    client_with_db: Tuple[TestClient, Any, sessionmaker],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     client, _, SessionLocal = client_with_db
     with SessionLocal() as session:
         intent_id = _seed_intent(session)

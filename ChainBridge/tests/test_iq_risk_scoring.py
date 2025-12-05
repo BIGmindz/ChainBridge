@@ -35,10 +35,10 @@ def test_valid_request_scores_correctly() -> None:
         "days_in_transit": 5,
         "expected_days": 7,
         "documents_complete": True,
-        "shipper_payment_score": 85
+        "shipper_payment_score": 85,
     }
 
-    response = client.post("/iq/score-shipment", json=payload)
+    response = client.post("/api/iq/score-shipment", json=payload)
 
     assert response.status_code == 200
 
@@ -52,7 +52,7 @@ def test_valid_request_scores_correctly() -> None:
         "RELEASE_PAYMENT",
         "MANUAL_REVIEW",
         "HOLD_PAYMENT",
-        "ESCALATE_COMPLIANCE"
+        "ESCALATE_COMPLIANCE",
     ]
 
     # This specific low-risk scenario should be LOW severity
@@ -75,10 +75,10 @@ def test_high_risk_route_scores_high() -> None:
         "days_in_transit": 5,
         "expected_days": 7,
         "documents_complete": False,
-        "shipper_payment_score": 40
+        "shipper_payment_score": 40,
     }
 
-    response = client.post("/iq/score-shipment", json=payload)
+    response = client.post("/api/iq/score-shipment", json=payload)
 
     assert response.status_code == 200
 
@@ -101,7 +101,7 @@ def test_missing_required_fields_rejected() -> None:
         # Missing carrier_id, shipment_value_usd, etc.
     }
 
-    response = client.post("/iq/score-shipment", json=payload)
+    response = client.post("/api/iq/score-shipment", json=payload)
 
     assert response.status_code == 422  # Validation error
 
@@ -123,10 +123,10 @@ def test_invalid_field_types_rejected() -> None:
         "days_in_transit": 5,
         "expected_days": 7,
         "documents_complete": True,
-        "shipper_payment_score": 85
+        "shipper_payment_score": 85,
     }
 
-    response = client.post("/iq/score-shipment", json=payload)
+    response = client.post("/api/iq/score-shipment", json=payload)
 
     assert response.status_code == 422
 
@@ -145,10 +145,10 @@ def test_negative_values_rejected() -> None:
         "days_in_transit": 5,
         "expected_days": 7,
         "documents_complete": True,
-        "shipper_payment_score": 85
+        "shipper_payment_score": 85,
     }
 
-    response = client.post("/iq/score-shipment", json=payload)
+    response = client.post("/api/iq/score-shipment", json=payload)
 
     assert response.status_code == 422
 
@@ -165,10 +165,10 @@ def test_out_of_range_payment_score_rejected() -> None:
         "days_in_transit": 5,
         "expected_days": 7,
         "documents_complete": True,
-        "shipper_payment_score": 150  # Invalid: > 100
+        "shipper_payment_score": 150,  # Invalid: > 100
     }
 
-    response = client.post("/iq/score-shipment", json=payload)
+    response = client.post("/api/iq/score-shipment", json=payload)
 
     assert response.status_code == 422
 
@@ -187,10 +187,10 @@ def test_edge_case_zero_days_in_transit() -> None:
         "days_in_transit": 0,
         "expected_days": 7,
         "documents_complete": True,
-        "shipper_payment_score": 85
+        "shipper_payment_score": 85,
     }
 
-    response = client.post("/iq/score-shipment", json=payload)
+    response = client.post("/api/iq/score-shipment", json=payload)
 
     assert response.status_code == 200
 
@@ -213,10 +213,10 @@ def test_edge_case_no_reason_codes() -> None:
         "days_in_transit": 5,
         "expected_days": 7,  # On time
         "documents_complete": True,
-        "shipper_payment_score": 95  # Excellent history
+        "shipper_payment_score": 95,  # Excellent history
     }
 
-    response = client.post("/iq/score-shipment", json=payload)
+    response = client.post("/api/iq/score-shipment", json=payload)
 
     assert response.status_code == 200
 
@@ -241,12 +241,12 @@ def test_deterministic_scoring() -> None:
         "days_in_transit": 10,
         "expected_days": 7,
         "documents_complete": True,
-        "shipper_payment_score": 70
+        "shipper_payment_score": 70,
     }
 
     # Call endpoint twice
-    response1 = client.post("/iq/score-shipment", json=payload)
-    response2 = client.post("/iq/score-shipment", json=payload)
+    response1 = client.post("/api/iq/score-shipment", json=payload)
+    response2 = client.post("/api/iq/score-shipment", json=payload)
 
     assert response1.status_code == 200
     assert response2.status_code == 200
@@ -276,10 +276,10 @@ def test_suspiciously_early_shipment() -> None:
         "days_in_transit": 2,
         "expected_days": 10,  # Way too early
         "documents_complete": True,
-        "shipper_payment_score": 85
+        "shipper_payment_score": 85,
     }
 
-    response = client.post("/iq/score-shipment", json=payload)
+    response = client.post("/api/iq/score-shipment", json=payload)
 
     assert response.status_code == 200
 

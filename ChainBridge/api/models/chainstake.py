@@ -1,11 +1,12 @@
 """ChainStake analytics models."""
+
 from __future__ import annotations
 
 from datetime import datetime
 from uuid import uuid4
 
 import sqlalchemy as sa
-from sqlalchemy import Column, DateTime, Float, String, Index
+from sqlalchemy import Column, DateTime, Float, Index, String
 
 from api.database import Base
 
