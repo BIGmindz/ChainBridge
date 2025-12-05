@@ -115,6 +115,8 @@ export type IoTSensorType = "temperature" | "humidity" | "door" | "shock" | "gps
 
 export type Severity = "info" | "warn" | "critical";
 
+export type IoTAnomalySeverity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+
 export interface IoTSensorReading {
   sensor_type: IoTSensorType;
   value: number | string;
@@ -123,17 +125,28 @@ export interface IoTSensorReading {
   status: Severity;
 }
 
+export interface IoTDeviceAnomaly {
+  deviceId: string;
+  severity: IoTAnomalySeverity;
+  label: string;
+  lastSeen: ISODateString;
+  shipmentReference?: string;
+  lane?: string;
+}
+
 export interface IoTHealthSummary {
-  shipments_with_iot: number;
-  active_sensors: number;
-  alerts_last_24h: number;
-  critical_alerts_last_24h: number;
-  coverage_percent: number;
+  fleetId: string;
+  asOf: ISODateString;
+  deviceCount: number;
+  online: number;
+  offline: number;
+  degraded: number;
+  anomalies: IoTDeviceAnomaly[];
+  latencySeconds?: number;
 }
 
 export interface IoTHealthSummaryResponse {
-  iot_health: IoTHealthSummary;
-  generatedAt: ISODateString;
+  summary: IoTHealthSummary;
 }
 
 export interface ShipmentIoTSnapshot {

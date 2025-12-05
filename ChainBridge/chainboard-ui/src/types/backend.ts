@@ -61,6 +61,9 @@ export interface RiskSnapshotResponse {
     completed_fields: number;
     blocking_gaps: number;
   };
+
+  // CamelCase aliases consumed by UI components
+  riskLevel?: RiskSnapshotResponse["risk_level"];
 }
 
 export interface ComplianceBlock {

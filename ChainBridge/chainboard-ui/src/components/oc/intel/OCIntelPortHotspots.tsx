@@ -44,13 +44,18 @@ export default function OCIntelPortHotspots({ ports, onHoverPort }: OCIntelPortH
 
       <div className="divide-y divide-slate-700/50">
         {top10Ports.map((port) => {
-          const riskColor = getRiskColor(port.riskScore);
-          const riskIcon = getRiskIcon(port.riskScore);
+          const riskScore = port.riskScore ?? port.congestionScore ?? 0;
+          const riskColor = getRiskColor(riskScore);
+          const riskIcon = getRiskIcon(riskScore);
+          const portCode = port.port_code ?? port.portCode ?? "UNKNOWN";
+          const portName = port.port_name ?? port.portName ?? "Unknown Port";
+          const activeShipments = port.active_shipments ?? port.activeShipments ?? 0;
+          const atRiskValue = port.at_risk_valueUsd ?? 0;
 
           return (
             <div
-              key={port.port_code}
-              onMouseEnter={() => onHoverPort?.(port.port_code)}
+              key={portCode}
+              onMouseEnter={() => onHoverPort?.(portCode)}
               onMouseLeave={() => onHoverPort?.(null)}
               className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-slate-700/30"
             >
@@ -58,8 +63,8 @@ export default function OCIntelPortHotspots({ ports, onHoverPort }: OCIntelPortH
 
               <div className="flex-1">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-sm font-semibold text-slate-200">{port.port_name}</span>
-                  <span className="font-mono text-xs text-slate-400">{port.port_code}</span>
+                  <span className="text-sm font-semibold text-slate-200">{portName}</span>
+                  <span className="font-mono text-xs text-slate-400">{portCode}</span>
                 </div>
                 {port.country && <span className="text-xs text-slate-500">{port.country}</span>}
               </div>
@@ -67,16 +72,16 @@ export default function OCIntelPortHotspots({ ports, onHoverPort }: OCIntelPortH
               <div className="text-right">
                 <div className="flex items-center gap-1">
                   <Anchor className="h-3 w-3 text-slate-400" />
-                  <span className="font-mono text-xs text-slate-300">{port.active_shipments}</span>
+                  <span className="font-mono text-xs text-slate-300">{activeShipments}</span>
                 </div>
                 <span className="font-mono text-xs text-amber-300">
-                  {formatCurrency(port.at_risk_valueUsd)}
+                  {formatCurrency(atRiskValue)}
                 </span>
               </div>
 
               <div className="flex items-center gap-1">
                 <span className={`font-mono text-sm font-bold ${riskColor}`}>
-                  {port.riskScore.toFixed(0)}
+                  {riskScore.toFixed(0)}
                 </span>
               </div>
             </div>

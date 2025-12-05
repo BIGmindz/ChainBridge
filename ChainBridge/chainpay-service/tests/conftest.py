@@ -8,24 +8,162 @@ Provides:
 - Mock payment intent and freight token factories
 """
 
-import pytest
 from datetime import datetime
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.pool import StaticPool
-from fastapi.testclient import TestClient
+import sys
+from pathlib import Path
+import types
 
-from app.main import app, get_db
-from app.models import (
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
+import importlib.util
+
+# Ensure the ChainPay service package is the one that resolves as `app`
+SERVICE_ROOT = Path(__file__).resolve().parent.parent
+if str(SERVICE_ROOT) not in sys.path:
+    sys.path.insert(0, str(SERVICE_ROOT))
+_ORIGINAL_APP = sys.modules.get("app")
+sys.modules.pop("app", None)
+# Force-load the local app package so later imports resolve correctly
+app_init = SERVICE_ROOT / "app" / "__init__.py"
+spec = importlib.util.spec_from_file_location("app", app_init)
+module = importlib.util.module_from_spec(spec)
+sys.modules["app"] = module
+assert spec.loader is not None
+spec.loader.exec_module(module)
+# Also ensure Base is exposed on app.models for test imports
+try:
+    from chainpay_service.app.models import Base as _ChainpayBase  # type: ignore
+    import app.models as _app_models  # type: ignore
+
+    _app_models.Base = _ChainpayBase  # type: ignore[attr-defined]
+except Exception:
+    pass
+# Ensure app submodules point to ChainPay implementations for this test session
+import chainpay_service.app.models as _cp_models  # type: ignore
+import chainpay_service.app.database as _cp_db  # type: ignore
+import chainpay_service.app.schemas as _cp_schemas  # type: ignore
+sys.modules["app.models"] = _cp_models
+sys.modules["app.database"] = _cp_db
+sys.modules["app.schemas"] = _cp_schemas
+sys.modules["app.services"] = importlib.import_module("chainpay_service.app.services")
+# expose ShipmentEventWebhookRequest directly for tests that import from app.schemas
+try:
+    sys.modules["app.schemas"].ShipmentEventWebhookRequest = _cp_schemas.ShipmentEventWebhookRequest  # type: ignore[attr-defined]
+except Exception:
+    pass
+# Ensure app.models points at the ChainPay models module for imports
+import chainpay_service.app.models as _cp_models  # type: ignore
+sys.modules["app.models"] = _cp_models
+
+# Provide lightweight fallbacks for optional Kafka dependency
+fake_aiokafka = sys.modules.get("aiokafka") or types.ModuleType("aiokafka")
+
+class _NoopConsumer:  # pragma: no cover - simple shim
+    def __init__(self, *args, **kwargs):
+        pass
+
+    async def start(self):
+        return None
+
+    async def stop(self):
+        return None
+
+class _NoopProducer(_NoopConsumer):
+    async def send_and_wait(self, *args, **kwargs):
+        return None
+
+fake_aiokafka.AIOKafkaConsumer = _NoopConsumer
+fake_aiokafka.AIOKafkaProducer = _NoopProducer
+# Alias for older import style
+fake_aiokafka.consumer = fake_aiokafka
+fake_aiokafka.producer = fake_aiokafka
+sys.modules["aiokafka"] = fake_aiokafka
+
+# Provide a stub ml_engine module for deterministic context-ledger tests
+if "ml_engine" not in sys.modules:
+    fake_ml = types.ModuleType("ml_engine")
+    feature_store = types.ModuleType("ml_engine.feature_store.context_ledger_features")
+    feature_store.DEFAULT_FEATURE_COLUMNS = [
+        "amount_log",
+        "risk_score",
+        "corridor_risk_factor",
+        "recent_events",
+        "recent_failed",
+    ]
+    feature_store.TARGET_COLUMN = "risk_probability"
+
+    class _StubModel:
+        def __init__(self):
+            self.feature_columns = feature_store.DEFAULT_FEATURE_COLUMNS
+
+        def predict(self, features):
+            # Basic heuristic to keep tests deterministic without the real model
+            probability = min(1.0, max(0.0, float(features.get("risk_score", 0.0)) / 100.0))
+            return {"risk_probability": probability, "top_signals": ["baseline"]}
+
+    models_mod = types.ModuleType("ml_engine.models.context_ledger_risk_model")
+    models_mod.ContextLedgerRiskModel = _StubModel
+
+    sys.modules["ml_engine"] = fake_ml
+    sys.modules["ml_engine.feature_store"] = types.ModuleType("ml_engine.feature_store")
+    sys.modules["ml_engine.feature_store.context_ledger_features"] = feature_store
+    sys.modules["ml_engine.models"] = types.ModuleType("ml_engine.models")
+    sys.modules["ml_engine.models.context_ledger_risk_model"] = models_mod
+
+# Provide import safety shim expected by app.main
+if "core.import_safety" not in sys.modules:
+    core_mod = types.ModuleType("core.import_safety")
+
+    def ensure_import_safety(*args, **kwargs):  # pragma: no cover - test shim
+        return None
+
+    core_mod.ensure_import_safety = ensure_import_safety  # type: ignore[attr-defined]
+    sys.modules["core"] = types.ModuleType("core")
+    sys.modules["core.import_safety"] = core_mod
+
+
+@pytest.fixture(autouse=True)
+def stub_governance_engine(monkeypatch):
+    """Avoid loading heavy governance rules during tests."""
+    try:
+        from app.governance.alex_engine import alex_engine
+    except Exception:
+        # If governance module is unavailable in isolated test contexts, skip patching.
+        yield
+        return
+
+    def _apply_rules(token_state, risk_state, ml_prediction):
+        return {
+            "rationale": "test-governance",
+            "severity": "LOW",
+            "rule_id": "default",
+            "decision_path": ["default"],
+            "trace_id": "governance-test-trace",
+        }
+
+    monkeypatch.setattr(alex_engine, "apply_governance_rules", _apply_rules)
+    yield
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Restore prior app module after ChainPay tests."""
+    if _ORIGINAL_APP is not None:
+        sys.modules["app"] = _ORIGINAL_APP
+    else:
+        sys.modules.pop("app", None)
+
+from app.models import (  # noqa: E402
     Base,
     PaymentIntent,
     PaymentSchedule,
-    RiskTier,
-    PaymentStatus,
-    ScheduleType,
     PaymentScheduleItem,
+    PaymentStatus,
+    RiskTier,
+    ScheduleType,
 )
-
 
 # In-memory SQLite for tests
 SQLALCHEMY_TEST_URL = "sqlite:///:memory:"
@@ -60,6 +198,7 @@ def db_session(engine) -> Session:
 @pytest.fixture
 def client(db_session: Session):
     """Provide FastAPI TestClient with test database session."""
+    from app.main import app, get_db  # Local import to avoid heavy dependencies for non-HTTP tests
 
     def override_get_db():
         try:
@@ -133,9 +272,7 @@ def payment_intent_high_risk(db_session: Session) -> PaymentIntent:
 
 
 @pytest.fixture
-def payment_schedule_low_risk(
-    db_session: Session, payment_intent_low_risk: PaymentIntent
-) -> PaymentSchedule:
+def payment_schedule_low_risk(db_session: Session, payment_intent_low_risk: PaymentIntent) -> PaymentSchedule:
     """Create a LOW-risk payment schedule (20/70/10) for testing."""
     schedule = PaymentSchedule(
         payment_intent_id=payment_intent_low_risk.id,
@@ -178,9 +315,7 @@ def payment_schedule_low_risk(
 
 
 @pytest.fixture
-def payment_schedule_high_risk(
-    db_session: Session, payment_intent_high_risk: PaymentIntent
-) -> PaymentSchedule:
+def payment_schedule_high_risk(db_session: Session, payment_intent_high_risk: PaymentIntent) -> PaymentSchedule:
     """Create a HIGH-risk payment schedule (0/80/20) for testing."""
     schedule = PaymentSchedule(
         payment_intent_id=payment_intent_high_risk.id,

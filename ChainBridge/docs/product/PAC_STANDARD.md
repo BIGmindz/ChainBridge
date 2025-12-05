@@ -147,16 +147,21 @@ Guidelines:
 
 ---
 
-## Model Requirements (VS Code + Copilot)
+## Model Requirements (Concrete, VS Code)
 
-| Domain | Preferred Model(s) | Notes |
-| --- | --- | --- |
-| Backend, DevOps, ML code | GPT-5.1 Codex Preview | Primary coding model for Python/FastAPI/infra work. |
-| Frontend & UI | GPT-5.1 Codex Preview · GPT-5.1 Preview | Use Codex when editing code, fall back to Preview for planning. |
-| Governance & Security | GPT-5.1 Preview · Claude Opus | Choose based on availability; prioritize governance clarity. |
-| Research & Market Analysis | Gemini 3 Pro Preview · Gemini 2.5 Pro | Non-coding research tasks. |
+For ChainBridge work in VS Code, agents MUST use:
 
-Agents must confirm model selection in their WRAP when deviating from these defaults.
+- **Primary reasoning models:** `GPT-5.1 Preview`, `Claude Opus 4.5 Preview`, or `Gemini 3 Pro Preview`
+- **Primary coding models (backend/frontend/DevOps):** `GPT-5.1 Codex Preview`, `GPT-4.1`, or `Claude Sonnet 4.5`
+- **Fast/snippet models (only for micro-tasks, never for full PACs):** `GPT-5.1 Codex Mini Preview`, `Grok Codefast 1`, `Raptor Mini Preview`
+
+Per-agent defaults:
+- **Benson, ALEX, Sam, Maggie:** `GPT-5.1 Preview` (or Claude Opus / Gemini 3 Pro as backup)
+- **Cody, Cindy, Sonny, Dan:** `GPT-5.1 Codex Preview` for code-heavy PACs, `GPT-5.1 Preview` for more architectural work
+- **Mira-R:** `Gemini 3 Pro Preview` or `Gemini 2.5 Pro` for research, with `GPT-5.1 Preview` for final cross-check
+- **Pax:** `GPT-5.1 Preview` or `Claude Opus 4.5 Preview` for product/contract design
+
+Lightweight/“Mini”/Codefast models are allowed **only** for small edits after a top-tier model has set the design and intent.
 
 ---
 

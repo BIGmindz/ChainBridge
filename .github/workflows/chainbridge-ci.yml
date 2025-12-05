@@ -13,6 +13,10 @@ jobs:
   security-scan:
     name: Security & Vulnerability Assessment (CodeQL)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: chainbridge-security-${{ github.ref }}
+      cancel-in-progress: true
     permissions:
       actions: read
       contents: read
@@ -35,6 +39,10 @@ jobs:
   code-quality:
     name: Code Quality & Standards
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: chainbridge-quality-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v4
       - name: Setup Python
@@ -42,11 +50,19 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pylint black flake8 mypy safety bandit
+          pip install ruff pre-commit pylint black flake8 mypy safety bandit
 
       - name: Normalize markdown fences (dry-run)
         run: |
@@ -56,6 +72,14 @@ jobs:
           else \
             echo 'Normalization script not found'; \
           fi
+
+      - name: Run pre-commit hooks
+        run: pre-commit run --all-files
+
+      - name: Ruff lint and format
+        run: |
+          ruff check . --no-cache
+          ruff format --check .
 
       - name: Code formatting check
         run: black --check --diff .
@@ -109,7 +133,14 @@ jobs:
       - name: Run tests
         run: |
           if [ -f benson_rsi_bot.py ]; then python benson_rsi_bot.py --test; fi
-          if [ -d tests ]; then pytest tests/ -v --cov=. --cov-report=xml; else echo "No tests directory"; fi
+          PYTEST_PATHS=""
+          if [ -d tests ]; then PYTEST_PATHS="$PYTEST_PATHS tests/"; fi
+          if [ -d ChainBridge/api/tests ]; then PYTEST_PATHS="$PYTEST_PATHS ChainBridge/api/tests"; fi
+          if [ -n "$PYTEST_PATHS" ]; then
+            pytest $PYTEST_PATHS -v --cov=ChainBridge --cov-report=xml
+          else
+            echo "No pytest suites discovered"
+          fi
 
       - name: Upload coverage
         if: ${{ hashFiles('coverage.xml') != '' }}
@@ -117,9 +148,29 @@ jobs:
         with:
           file: ./coverage.xml
 
+  chainboard-ui-tests:
+    name: ChainBoard UI Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ChainBridge/chainboard-ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ChainBridge/chainboard-ui
+
+      - name: Run vitest suite
+        run: npm test -- --run
+        working-directory: ChainBridge/chainboard-ui
+
   deployment-staging:
     name: Staging Deployment
-    needs: [security-scan, code-quality, configuration-validation, unit-tests]
+    needs: [security-scan, code-quality, configuration-validation, unit-tests, chainboard-ui-tests]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop'
     steps:
@@ -131,7 +182,7 @@ jobs:
 
   deployment-production:
     name: Production Deployment
-    needs: [security-scan, code-quality, configuration-validation, unit-tests]
+    needs: [security-scan, code-quality, configuration-validation, unit-tests, chainboard-ui-tests]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:

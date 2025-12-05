@@ -47,7 +47,7 @@ Always reference these instructions first and fallback to search or bash command
 ├── .env.example              # Environment template
 ├── requirements.txt          # Python dependencies
 ├── Makefile                  # Build automation
-├── Dockerfile               # Container definition  
+├── Dockerfile               # Container definition
 ├── docker-compose.yml        # Container orchestration
 └── .github/copilot-instructions.md # This file
 ```

@@ -27,9 +27,7 @@ class MilestoneSnapshot:
     last_updated: datetime
 
 
-def get_milestone_snapshot(
-    db: Session, milestone_id: str
-) -> Optional[MilestoneSnapshot]:
+def get_milestone_snapshot(db: Session, milestone_id: str) -> Optional[MilestoneSnapshot]:
     """
     Look up a milestone by canonical identifier.
     """
@@ -37,18 +35,12 @@ def get_milestone_snapshot(
         return None
 
     milestone: MilestoneSettlement | None = (
-        db.query(MilestoneSettlement)
-        .filter(MilestoneSettlement.milestone_identifier == milestone_id)
-        .first()
+        db.query(MilestoneSettlement).filter(MilestoneSettlement.milestone_identifier == milestone_id).first()
     )
     if not milestone:
         return None
 
-    state = (
-        milestone.status.value
-        if milestone.status
-        else PaymentStatus.PENDING.value
-    )
+    state = milestone.status.value if milestone.status else PaymentStatus.PENDING.value
 
     return MilestoneSnapshot(
         milestone_id=milestone.milestone_identifier or milestone_id,

@@ -10,11 +10,11 @@
 import { AlertTriangle, Circle, Globe } from "lucide-react";
 
 import { useLiveShipmentPositions } from "../../hooks/useLiveShipmentPositions";
-import type { LiveShipmentPosition, LiveShipmentStatus } from "../../types/chainbridge";
+import type { LiveShipmentPosition } from "../../types/chainbridge";
 
 
 
-function getRiskColor(status: LiveShipmentStatus, riskScore: number): string {
+function getRiskColor(status: string, riskScore: number): string {
   if (status === 'AT_RISK' || riskScore > 0.7) {
     return '#ef4444'; // red
   } else if (status === 'DELAYED' || riskScore > 0.4) {
@@ -52,14 +52,19 @@ function ShipmentTooltip({ shipment }: ShipmentTooltipProps): JSX.Element {
       {/* Line 2: Financing & Payment */}
       <p className="mt-1 text-slate-300">
         Financed: {formatCurrency(shipment.financedAmountUsd)} · Paid: {formatCurrency(shipment.paidAmountUsd)}
-        <span className={`ml-2 font-medium ${
-          shipment.settlement_state === 'PAID' ? 'text-emerald-400' :
-          shipment.settlement_state === 'PARTIALLY_PAID' ? 'text-purple-400' :
-          shipment.settlement_state === 'FINANCED_UNPAID' ? 'text-blue-400' :
-          'text-slate-400'
-        }`}>
-          ({shipment.settlement_state.replace('_', ' ')})
-        </span>
+        {(() => {
+          const settlementState = shipment.settlement_state ?? shipment.settlementState ?? 'UNKNOWN';
+          const colorClass =
+            settlementState === 'PAID' ? 'text-emerald-400' :
+            settlementState === 'PARTIALLY_PAID' ? 'text-purple-400' :
+            settlementState === 'FINANCED_UNPAID' ? 'text-blue-400' :
+            'text-slate-400';
+          return (
+            <span className={`ml-2 font-medium ${colorClass}`}>
+              ({settlementState.replace('_', ' ')})
+            </span>
+          );
+        })()}
       </p>
 
       {/* Line 3: Risk & Last Event */}
@@ -68,12 +73,12 @@ function ShipmentTooltip({ shipment }: ShipmentTooltipProps): JSX.Element {
         <span className={`ml-1 font-medium ${getRiskColor(shipment.status, shipment.riskScore) === '#ef4444' ? 'text-red-400' : getRiskColor(shipment.status, shipment.riskScore) === '#f59e0b' ? 'text-amber-400' : 'text-emerald-400'}`}>
           ({shipment.status.replace('_', ' ')})
         </span>
-        · Last: {shipment.last_event_code.replace('_', ' ')}
+        · Last: {(shipment.last_event_code ?? shipment.lastEventCode ?? 'UNKNOWN').replace('_', ' ')}
       </p>
 
       {/* Line 4: Location & ETA */}
       <p className="mt-1 text-slate-300">
-        Near: {shipment.destPort_name || 'Unknown'} ({shipment.distance_to_nearest_port_km}km)
+        Near: {shipment.destPort_name || 'Unknown'} ({(shipment.distance_to_nearest_port_km ?? shipment.distanceToNearestPortKm ?? 0)}km)
         {shipment.eta && (
           <span className="ml-2">
             · ETA: {new Date(shipment.eta).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}

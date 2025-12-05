@@ -111,11 +111,6 @@ interface CorridorMetricsEnvelope {
   total: number;
 }
 
-interface IoTHealthSummaryEnvelope {
-  iot_health: IoTHealthSummary;
-  generatedAt: string;
-}
-
 interface ShipmentIoTSnapshotEnvelope {
   snapshot: ShipmentIoTSnapshot;
   retrieved_at: string;
@@ -138,6 +133,131 @@ interface RiskOverviewEnvelope {
   generatedAt: string;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function pickNumber(record: Record<string, unknown>, keys: string[], fallback = 0): number {
+  for (const key of keys) {
+    const raw = record[key];
+    if (typeof raw === "number" && !Number.isNaN(raw)) {
+      return raw;
+    }
+    if (typeof raw === "string" && raw.trim()) {
+      const parsed = Number(raw);
+      if (!Number.isNaN(parsed)) {
+        return parsed;
+      }
+    }
+  }
+  return fallback;
+}
+
+function pickString(record: Record<string, unknown>, keys: string[], fallback?: string): string | undefined {
+  for (const key of keys) {
+    const raw = record[key];
+    if (typeof raw === "string" && raw.trim().length > 0) {
+      return raw;
+    }
+  }
+  return fallback;
+}
+
+function normalizeAnomalies(value: unknown): IoTHealthSummary["anomalies"] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const anomalies: IoTHealthSummary["anomalies"] = [];
+
+  value.forEach((item) => {
+    if (!isRecord(item)) {
+      return;
+    }
+
+    const deviceId = pickString(item, ["deviceId", "device_id"], "UNKNOWN-DEVICE") ?? "UNKNOWN-DEVICE";
+    const severityRaw = (pickString(item, ["severity"], "LOW") ?? "LOW").toUpperCase();
+    const severity: IoTHealthSummary["anomalies"][number]["severity"] = [
+      "LOW",
+      "MEDIUM",
+      "HIGH",
+      "CRITICAL",
+    ].includes(severityRaw as never)
+      ? (severityRaw as IoTHealthSummary["anomalies"][number]["severity"])
+      : "LOW";
+
+    anomalies.push({
+      deviceId,
+      severity,
+      label: pickString(item, ["label", "title", "description"], deviceId) ?? deviceId,
+      lastSeen:
+        pickString(item, ["lastSeen", "last_seen", "detected_at"], new Date().toISOString()) ??
+        new Date().toISOString(),
+      shipmentReference: pickString(item, ["shipmentReference", "shipment_reference", "shipmentId"]),
+      lane: pickString(item, ["lane", "corridor", "route"]),
+    });
+  });
+
+  return anomalies;
+}
+
+function normalizeIoTHealth(payload: unknown): IoTHealthSummary {
+  const root = isRecord(payload) ? payload : {};
+  const summaryCandidate = [
+    root.summary,
+    root.iot_health,
+    root.health,
+    root.data,
+    root,
+  ].find((entry) => isRecord(entry)) as Record<string, unknown> | undefined;
+
+  const summary = summaryCandidate ?? {};
+
+  const fleetId = pickString(summary, ["fleetId", "fleet_id"], "CHAINBOARD-FLEET") ?? "CHAINBOARD-FLEET";
+  const asOf = pickString(summary, ["asOf", "as_of", "generatedAt", "generated_at"], new Date().toISOString()) ??
+    new Date().toISOString();
+
+  const online = pickNumber(summary, ["online", "device_count_active", "devices_online", "active_sensors"], 0);
+  const offline = pickNumber(summary, ["offline", "device_count_offline", "devices_offline", "critical_alerts_last_24h"], 0);
+  const degraded = pickNumber(
+    summary,
+    ["degraded", "devices_degraded", "devices_degraded_count", "devices_stale_env", "devices_stale_gps"],
+    0
+  );
+
+  const deviceCount = pickNumber(
+    summary,
+    [
+      "deviceCount",
+      "device_count",
+      "device_total",
+      "total_devices",
+      "device_count_total",
+      "shipments_with_iot",
+    ],
+    online + offline + degraded
+  );
+
+  const latencySeconds = pickNumber(
+    summary,
+    ["latencySeconds", "latency_seconds", "latency", "last_ingest_age_seconds"],
+    pickNumber(root, ["latencySeconds", "latency_seconds"], 0)
+  );
+
+  const anomalies = normalizeAnomalies(summary.anomalies ?? root.anomalies);
+
+  return {
+    fleetId,
+    asOf,
+    deviceCount,
+    online,
+    offline,
+    degraded: degraded || Math.max(deviceCount - online - offline, 0),
+    anomalies,
+    latencySeconds: latencySeconds || undefined,
+  };
+}
+
 // -------- Metrics / Overview --------
 
 export async function fetchGlobalSummary(): Promise<GlobalSummary> {
@@ -151,19 +271,26 @@ export async function fetchCorridorMetrics(): Promise<CorridorMetrics[]> {
 }
 
 export async function fetchIoTHealthSummary(): Promise<IoTHealthSummary> {
-  try {
-    const payload = await request<IoTHealthSummaryEnvelope>("/iot/health");
-    return payload.iot_health;
-  } catch (error) {
-    const isNotFound =
-      error instanceof Error && /404/.test(error.message ?? "");
-    if (!isNotFound) {
-      throw error;
-    }
+  const endpoints = ["/iot/health-summary", "/iot/health", "/metrics/iot/summary"] as const;
 
-    const fallback = await request<IoTHealthSummaryEnvelope>("/metrics/iot/summary");
-    return fallback.iot_health;
+  let lastError: unknown;
+
+  for (const endpoint of endpoints) {
+    try {
+      const payload = await request<unknown>(endpoint);
+      return normalizeIoTHealth(payload);
+    } catch (error) {
+      lastError = error;
+      if (import.meta.env.DEV) {
+        console.warn(`[realApiClient] IoT health request failed for ${endpoint}`, error);
+      }
+      continue;
+    }
   }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Unable to load IoT health summary from ChainBoard API.");
 }
 
 export async function fetchShipmentIoTSnapshot(

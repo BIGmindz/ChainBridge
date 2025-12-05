@@ -53,9 +53,7 @@ def _safe_extract_risk_data(data: dict) -> tuple[Optional[float], Optional[str]]
         try:
             risk_score = float(risk_score)
         except (ValueError, TypeError):
-            logger.warning(
-                f"Invalid risk_score format: {risk_score}, defaulting to None"
-            )
+            logger.warning(f"Invalid risk_score format: {risk_score}, defaulting to None")
             risk_score = None
 
     # Ensure risk_category is a string
@@ -108,10 +106,7 @@ async def fetch_freight_token(token_id: int) -> Optional[FreightTokenResponse]:
 
         token = FreightTokenResponse(**data)
 
-        logger.info(
-            f"Successfully fetched freight token {token_id}: "
-            f"status={token.status}, risk={token.risk_category}"
-        )
+        logger.info(f"Successfully fetched freight token {token_id}: " f"status={token.status}, risk={token.risk_category}")
 
         return token
 
