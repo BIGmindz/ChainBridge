@@ -13,6 +13,7 @@ import { DemoProvider } from './core/demo/DemoContext';
 import { NotificationProvider } from './core/notifications/NotificationContext';
 import './index.css';
 import { AppRoutes } from './routes';
+import { registerBackendSyncHook } from '@/ai/weightSync';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +35,18 @@ function App() {
     </BrowserRouter>
   );
 }
+
+registerBackendSyncHook(async (payload) => {
+  try {
+    await fetch('/api/ai/presets/analytics/ingest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+  } catch (err) {
+    console.warn('[AI Analytics] Failed to sync to backend', err);
+  }
+});
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

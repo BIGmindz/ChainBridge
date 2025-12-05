@@ -12,6 +12,39 @@
   "python.analysis.exclude": [
     "/Users/johnbozza/crypto1.0/**"
   ],
+  "github.copilot.model": "gpt-4.1",
+  "github.copilot.chat.defaultModel": "gpt-4.1",
+  // Disable unsafe models for coding
+  "github.copilot.allowOpenAI3": false,
+  "github.copilot.allowOpenAI3_5": false,
+  "github.copilot.allowLightModels": false,
+  // Warn if user chooses a model forbidden for a given agent
+  "github.copilot.chat.experimental.assertModel": true,
+  // Prevent accidental use of Claude/Gemini for coding tasks
+  "[python]": {
+    "github.copilot.chat.allowModels": [
+      "gpt-4.1",
+      "gpt-4.1-preview",
+      "gpt-5.1"
+    ]
+  },
+  "[typescriptreact]": {
+    "github.copilot.chat.allowModels": [
+      "gpt-4.1",
+      "gpt-4.1-preview",
+      "gpt-5.1"
+    ]
+  },
+  // Allow higher-creativity models ONLY in markdown (research)
+  "[markdown]": {
+    "github.copilot.chat.allowModels": [
+      "gpt-4.1",
+      "gpt-5.1",
+      "claude-3-5-sonnet",
+      "claude-opus",
+      "gemini-pro-3.0"
+    ]
+  },
   "files.exclude": {
     "**/.git": true,
     "**/.svn": true,
@@ -41,4 +74,17 @@
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
   "yaml.validate": true
+  "chat.tools.terminal.autoApprove": {
+    "cd": true,
+    "echo": true,
+    "ls": true,
+    "pwd": true,
+    "pytest": true,
+    "/^python\\b.*pytest\\b/": true,
+    "/^PYTHONPATH=.*pytest\\b/": true,
+    "git diff": true,
+    "rm": false,
+    "rmdir": false,
+    "del": false
+  }
 }

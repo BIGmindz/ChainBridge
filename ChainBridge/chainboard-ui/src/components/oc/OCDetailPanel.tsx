@@ -192,7 +192,8 @@ export function OCDetailPanel({ selectedShipment }: OCDetailPanelProps) {
 
   // FINANCE-R01: Derive physical reference and notional value
   const physicalRef = selectedShipment?.shipmentId;
-  const notionalValue = selectedShipment?.declared_valueUsd ?? 0; // TODO: Replace with actual backend field
+  const notionalValue =
+    selectedShipment?.declared_valueUsd ?? selectedShipment?.declaredValueUsd ?? 0; // TODO: Replace with actual backend field
 
   // FINANCE-R01: Fetch financing quote
   const {
@@ -288,10 +289,10 @@ export function OCDetailPanel({ selectedShipment }: OCDetailPanelProps) {
             <span className="text-slate-400">Completeness</span>
             <span className="font-bold text-slate-200">{selectedShipment.completeness_pct}%</span>
           </div>
-          {selectedShipment.blocking_gap_count > 0 && (
+          {(selectedShipment.blocking_gap_count ?? selectedShipment.blockingGapCount ?? 0) > 0 && (
             <div className="flex justify-between">
               <span className="text-rose-400">Blocking Gaps</span>
-              <span className="font-bold text-rose-300">{selectedShipment.blocking_gap_count}</span>
+              <span className="font-bold text-rose-300">{selectedShipment.blocking_gap_count ?? selectedShipment.blockingGapCount ?? 0}</span>
             </div>
           )}
         </CardContent>

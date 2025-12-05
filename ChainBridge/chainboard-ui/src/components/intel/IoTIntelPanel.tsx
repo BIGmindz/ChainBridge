@@ -41,10 +41,13 @@ export default function IoTIntelPanel({ emphasize = false, onAnomalyClick }: IoT
     );
   }
 
-  // M04: Backend returns different structure - summary instead of iot_health
-  const coveragePercent = 0; // TODO: Add to backend response if needed
-  const activeSensors = iotHealth.summary.total_devices || 0;
-  const criticalAlerts = iotHealth.summary.devices_offline || 0; // Critical = offline devices
+  const coveragePercent = iotHealth.deviceCount > 0
+    ? Math.round((iotHealth.online / iotHealth.deviceCount) * 100)
+    : 0;
+  const activeSensors = iotHealth.online;
+  const criticalAlerts = Math.max(iotHealth.offline, iotHealth.anomalies.filter((anomaly) =>
+    anomaly.severity === "HIGH" || anomaly.severity === "CRITICAL"
+  ).length);
 
   const emphasisClass = emphasize
     ? "border-blue-500/50 bg-blue-500/5"
@@ -73,7 +76,7 @@ export default function IoTIntelPanel({ emphasize = false, onAnomalyClick }: IoT
           <div className="text-[10px] uppercase tracking-wide text-emerald-300">Coverage</div>
         </div>
         <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-2">
-          <div className="text-2xl font-bold text-blue-400">{activeSensors}</div>
+          <div className="text-2xl font-bold text-blue-400">{activeSensors.toLocaleString()}</div>
           <div className="text-[10px] uppercase tracking-wide text-blue-300">Active</div>
         </div>
       </div>

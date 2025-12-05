@@ -35,7 +35,7 @@ export const API_ROUTES = {
   proofpack: (milestoneId: string) => `/api/chainboard/payments/proofpack/${encodeURIComponent(milestoneId)}`,
 
   // ChainSense IoT Telemetry
-  iotHealth: "/api/chainboard/metrics/iot/summary",
+  iotHealth: "/api/chainboard/iot/health-summary",
   iotByShipment: (id: string) => `/api/chainboard/metrics/iot/shipments/${encodeURIComponent(id)}`,
 
   // Agent Health

@@ -5,7 +5,7 @@ Location: `docs/product/CHAINBRIDGE_AGENT_LAUNCH_CENTER.md`
 
 ---
 
-*Cross-refs:* [ChainBridge PAC Standard](PAC_STANDARD.md) · [ChainBridge Agent Registry](AGENT_REGISTRY.md) · [ChainBridge Reality Baseline](CHAINBRIDGE_REALITY_BASELINE.md)
+*Cross-refs:* [ChainBridge PAC Standard](PAC_STANDARD.md) · [ChainBridge Agent Registry](AGENT_REGISTRY.md) · [ChainBridge Reality Baseline](CHAINBRIDGE_REALITY_BASELINE.md) · [ChainBridge Executive Summary](CHAINBRIDGE_EXEC_SUMMARY.md) · [ChainSense IoT Integration](ChainSense_IoT_Integration.md)
 
 ---
 
@@ -52,7 +52,8 @@ Key docs (must exist under docs/product/):
 - [PAC_STANDARD.md](PAC_STANDARD.md)
 - [AGENT_REGISTRY.md](AGENT_REGISTRY.md)
 - [CHAINBRIDGE_AGENT_LAUNCH_CENTER.md](CHAINBRIDGE_AGENT_LAUNCH_CENTER.md)
-- <!-- Missing: [CHAINBRIDGE_EXEC_SUMMARY.md](CHAINBRIDGE_EXEC_SUMMARY.md) -->
+- [CHAINBRIDGE_EXEC_SUMMARY.md](CHAINBRIDGE_EXEC_SUMMARY.md)
+- [ChainSense_IoT_Integration.md](ChainSense_IoT_Integration.md)
 - <!-- Missing: [Backend_API_Contracts.md](Backend_API_Contracts.md) -->
 - <!-- Missing: [OC_UI_Spec.md](OC_UI_Spec.md) -->
 - <!-- Missing: [Repo_Structure_Overview.md](Repo_Structure_Overview.md) -->

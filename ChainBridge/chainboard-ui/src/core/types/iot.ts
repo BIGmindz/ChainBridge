@@ -29,6 +29,8 @@ export type IoTSensorType =
  */
 export type IoTSeverity = "info" | "warn" | "critical";
 
+export type IoTAnomalySeverity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+
 // ============================================================================
 // CORE MODELS
 // ============================================================================
@@ -60,12 +62,24 @@ export interface ShipmentIoTSnapshot {
  * Network-wide IoT health metrics
  * Matches backend IoTHealthSummary Pydantic model
  */
+export interface IoTDeviceAnomaly {
+  deviceId: string;
+  severity: IoTAnomalySeverity;
+  label: string;
+  lastSeen: ISODateString;
+  shipmentReference?: string;
+  lane?: string;
+}
+
 export interface IoTHealthSummary {
-  shipments_with_iot: number;
-  active_sensors: number;
-  alerts_last_24h: number;
-  critical_alerts_last_24h: number;
-  coverage_percent: number; // 0-100
+  fleetId: string;
+  asOf: ISODateString;
+  deviceCount: number;
+  online: number;
+  offline: number;
+  degraded: number;
+  anomalies: IoTDeviceAnomaly[];
+  latencySeconds?: number;
 }
 
 // ============================================================================
@@ -77,8 +91,7 @@ export interface IoTHealthSummary {
  * Matches backend IoTHealthSummaryResponse
  */
 export interface IoTHealthEnvelope {
-  iot_health: IoTHealthSummary;
-  generatedAt: ISODateString;
+  summary: IoTHealthSummary;
 }
 
 /**

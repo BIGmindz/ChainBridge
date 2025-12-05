@@ -2,7 +2,7 @@
 Tests for the _safe_get utility function used in ChainPay service.
 """
 
-from app.chainfreight_client import _safe_get, _safe_extract_risk_data
+from app.chainfreight_client import _safe_extract_risk_data, _safe_get
 from app.payment_rails import _safe_get as payment_safe_get
 
 
@@ -63,9 +63,7 @@ def test_safe_get_consistency_across_modules() -> None:
     # Both module versions should work the same
     assert _safe_get(test_data, "value") == payment_safe_get(test_data, "value")
     assert _safe_get(test_data, "text") == payment_safe_get(test_data, "text")
-    assert _safe_get(test_data, "missing", "default") == payment_safe_get(
-        test_data, "missing", "default"
-    )
+    assert _safe_get(test_data, "missing", "default") == payment_safe_get(test_data, "missing", "default")
 
 
 def test_real_world_api_scenarios() -> None:

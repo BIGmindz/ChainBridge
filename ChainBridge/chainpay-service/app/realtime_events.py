@@ -213,36 +213,21 @@ def _emit_payment_event(
                             payload=payload,
                         )
                     )
-                    logger.info(
-                        f"Payment event published: {shipment_reference} milestone {milestone_id} "
-                        f"{from_state} → {to_state}"
-                    )
+                    logger.info(f"Payment event published: {shipment_reference} milestone {milestone_id} " f"{from_state} → {to_state}")
                 else:
                     # No event loop - likely in tests or standalone ChainPay
-                    logger.debug(
-                        f"Skipping payment event (no event loop): {shipment_reference} "
-                        f"{from_state} → {to_state}"
-                    )
+                    logger.debug(f"Skipping payment event (no event loop): {shipment_reference} " f"{from_state} → {to_state}")
             except RuntimeError:
                 # No event loop - likely in tests or standalone ChainPay
-                logger.debug(
-                    f"Skipping payment event (no event loop): {shipment_reference} "
-                    f"{from_state} → {to_state}"
-                )
+                logger.debug(f"Skipping payment event (no event loop): {shipment_reference} " f"{from_state} → {to_state}")
 
         except ImportError:
             # ChainBoard realtime bus not available - likely standalone ChainPay service
-            logger.debug(
-                f"ChainBoard realtime bus not available, skipping event: "
-                f"{shipment_reference} {from_state} → {to_state}"
-            )
+            logger.debug(f"ChainBoard realtime bus not available, skipping event: " f"{shipment_reference} {from_state} → {to_state}")
 
     except Exception as e:
         # Never crash ChainPay due to event bus issues
-        logger.error(
-            f"Failed to emit payment event for {shipment_reference}: {e}",
-            exc_info=True
-        )
+        logger.error(f"Failed to emit payment event for {shipment_reference}: {e}", exc_info=True)
 
 
 def _map_transition_to_event_kind(from_state: str, to_state: str) -> str:
@@ -277,7 +262,10 @@ def _map_transition_to_event_kind(from_state: str, to_state: str) -> str:
         return "milestone_blocked"
 
     # Blocked → any other state = unblocked
-    if from_state in ("rejected", "cancelled") and to_state not in ("rejected", "cancelled"):
+    if from_state in ("rejected", "cancelled") and to_state not in (
+        "rejected",
+        "cancelled",
+    ):
         return "milestone_unblocked"
 
     # Default: treat as "became eligible"
