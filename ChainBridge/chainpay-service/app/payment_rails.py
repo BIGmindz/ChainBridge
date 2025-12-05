@@ -23,14 +23,16 @@ Smart Settlements feature:
 # 2) Make the ProofPack endpoint pull from real payment milestone data, clearly labeling mock sections.
 # 3) Enrich payment_state_changed events with truthful proofpack_hint metadata.
 
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-import logging
 from typing import Any, Optional
 
 from sqlalchemy.orm import Session
+
+from app.services.payout_engine import PayoutSchedule, get_payout_schedule
 
 logger = logging.getLogger(__name__)
 
@@ -40,11 +42,28 @@ try:
         canonical_shipment_reference,
     )
 except ModuleNotFoundError:  # pragma: no cover - defensive for isolated unit tests
-    canonical_milestone_id = lambda shipment_reference, index: f"{shipment_reference}-M{index}"  # type: ignore
-    canonical_shipment_reference = (
-        lambda shipment_reference=None, freight_token_id=None: shipment_reference
-        or (f"FTK-{freight_token_id}" if freight_token_id is not None else "SHP-UNKNOWN")
-    )
+
+    def canonical_milestone_id(shipment_reference: str, index: int) -> str:  # type: ignore[override]
+        """
+        Fallback milestone ID builder used when core ID helpers are unavailable.
+        Always returns a non-empty canonical milestone identifier.
+        """
+        return f"{shipment_reference}-M{index}"
+
+    def canonical_shipment_reference(
+        shipment_reference: Optional[str] = None,
+        freight_token_id: Optional[int] = None,
+    ) -> str:  # type: ignore[override]
+        """
+        Fallback shipment reference builder used when core ID helpers are unavailable.
+        Always returns a non-empty reference.
+        """
+        if shipment_reference:
+            return shipment_reference
+        if freight_token_id is not None:
+            return f"FTK-{freight_token_id}"
+        return "SHP-UNKNOWN"
+
 
 def _safe_get(obj: Any, key: str, default: Any = 0.0) -> Any:
     """
@@ -65,12 +84,17 @@ def _safe_get(obj: Any, key: str, default: Any = 0.0) -> Any:
 
 
 class SettlementProvider(str, Enum):
-    """Supported payment settlement providers."""
+    """Supported payment settlement providers.
 
-    INTERNAL_LEDGER = "internal_ledger"
-    STRIPE = "stripe"
-    ACH = "ach"
-    WIRE = "wire"
+    Provider identifiers intentionally align with audit/event payloads so
+    downstream analytics can attribute settlements to the correct rail.
+    """
+
+    INTERNAL_LEDGER = "INTERNAL_LEDGER"
+    CB_USDX = "CB_USDX"
+    STRIPE = "STRIPE"
+    ACH = "ACH"
+    WIRE = "WIRE"
 
 
 class ReleaseStrategy(str, Enum):
@@ -94,13 +118,147 @@ class SettlementResult:
     released_at: Optional[datetime] = None
 
 
-class PaymentRail(ABC):
-    """
-    Abstract base class for payment settlement rails.
+@dataclass(frozen=True)
+class MilestoneReleasePlan:
+    """Computed payout plan for a specific milestone event."""
 
-    Each implementation handles settlement processing through a specific provider,
-    e.g., internal ledger, Stripe, ACH, etc. Subclasses must implement the
-    process_settlement() method.
+    event_type: str
+    risk_band: str
+    percentage: float  # Stored as a percentage value (e.g., 20.0 for 20%)
+    release_amount: float
+    strategy: ReleaseStrategy
+    delay_hours: Optional[int] = None
+    claim_window_days: Optional[int] = None
+    requires_manual_review: bool = False
+    corridor_id: str = "USD_MXN"
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "event_type": self.event_type,
+            "risk_band": self.risk_band,
+            "percentage": self.percentage,
+            "release_amount": self.release_amount,
+            "strategy": self.strategy.value,
+            "delay_hours": self.delay_hours,
+            "claim_window_days": self.claim_window_days,
+            "requires_manual_review": self.requires_manual_review,
+            "corridor_id": self.corridor_id,
+        }
+
+
+_DEFAULT_RISK_BAND = "MEDIUM"
+_DEFAULT_CORRIDOR_ID = "USD_MXN"
+_PAYOUT_EVENTS = {"pickup_confirmed", "mid_transit_verified", "settlement_released"}
+_EVENT_ALIASES = {
+    "pod_confirmed": "mid_transit_verified",
+    "claim_window_closed": "settlement_released",
+    "delivery_confirmed": "settlement_released",
+}
+_EVENT_STAGE = {
+    "pickup_confirmed": "pickup",
+    "mid_transit_verified": "delivered",
+    "settlement_released": "claim",
+}
+
+
+def _normalize_event_type(event_type: str) -> str:
+    key = (event_type or "").strip().lower()
+    return _EVENT_ALIASES.get(key, key)
+
+
+def _normalize_risk_band(risk_band: Optional[str]) -> str:
+    if not risk_band:
+        return _DEFAULT_RISK_BAND
+    normalized = risk_band.upper()
+    if normalized not in {"LOW", "MEDIUM", "HIGH", "CRITICAL"}:
+        return _DEFAULT_RISK_BAND
+    return normalized
+
+
+def _risk_band_from_score(risk_score: float) -> str:
+    if risk_score >= 0.85:
+        return "CRITICAL"
+    if risk_score >= 0.65:
+        return "HIGH"
+    if risk_score >= 0.35:
+        return "MEDIUM"
+    return "LOW"
+
+
+def compute_milestone_release(
+    *,
+    risk_band: Optional[str] = None,
+    event_type: str,
+    base_total_amount: float,
+    risk_score: Optional[float] = None,
+    corridor_id: str = _DEFAULT_CORRIDOR_ID,
+) -> MilestoneReleasePlan:
+    """Return the release plan for a milestone given risk inputs + event."""
+
+    normalized_event = _normalize_event_type(event_type)
+
+    if normalized_event not in _PAYOUT_EVENTS:
+        return MilestoneReleasePlan(
+            event_type=normalized_event,
+            risk_band=_normalize_risk_band(risk_band),
+            percentage=0.0,
+            release_amount=0.0,
+            strategy=ReleaseStrategy.PENDING,
+        )
+
+    # Prefer risk_score mapping; fallback to risk_band override.
+    try:
+        schedule: PayoutSchedule
+        if risk_score is not None:
+            schedule = get_payout_schedule(corridor_id, risk_score)
+        else:
+            schedule = get_payout_schedule(corridor_id, 0.0, override_tier=_normalize_risk_band(risk_band))
+    except Exception:
+        fallback_band = _normalize_risk_band(risk_band) or _DEFAULT_RISK_BAND
+        schedule = get_payout_schedule(_DEFAULT_CORRIDOR_ID, 0.0, override_tier=fallback_band)
+
+    stage = _EVENT_STAGE[normalized_event]
+    percent_map = {
+        "pickup": schedule.pickup_percent,
+        "delivered": schedule.delivered_percent,
+        "claim": schedule.claim_percent,
+    }
+    percentage_raw = float(percent_map.get(stage, 0.0))
+
+    strategy = ReleaseStrategy.IMMEDIATE
+    delay_hours: Optional[int] = None
+
+    if schedule.freeze_all_payouts:
+        strategy = ReleaseStrategy.MANUAL_REVIEW
+    elif schedule.requires_manual_review and stage == "claim":
+        strategy = ReleaseStrategy.MANUAL_REVIEW
+    elif stage == "claim" and schedule.claim_window_days > 0:
+        strategy = ReleaseStrategy.DELAYED
+        delay_hours = schedule.claim_window_days * 24
+
+    total_amount = float(max(base_total_amount, 0.0))
+    release_amount = round(total_amount * percentage_raw, 2)
+
+    return MilestoneReleasePlan(
+        event_type=normalized_event,
+        risk_band=schedule.risk_tier,
+        percentage=round(percentage_raw * 100, 2),
+        release_amount=release_amount,
+        strategy=strategy,
+        delay_hours=delay_hours,
+        claim_window_days=schedule.claim_window_days,
+        requires_manual_review=schedule.requires_manual_review,
+        corridor_id=corridor_id,
+    )
+
+
+class PaymentRail(ABC):
+    """Abstract payment rail contract.
+
+    Rails unify how ChainPay settles milestones, allowing swaps between
+    InternalLedgerRail and future assets (e.g., CB-USDx) without touching
+    business logic. See CHAINPAY_ONCHAIN_SETTLEMENT.md and
+    CHAINPAY_CB_USDX_PRODUCT_MAP.md for the on-chain evolution.
     """
 
     @abstractmethod
@@ -183,11 +341,7 @@ class InternalLedgerRail(PaymentRail):
         from .models import PaymentScheduleItem as PaymentScheduleItemModel
 
         try:
-            milestone = (
-                self.db.query(MilestoneSettlementModel)
-                .filter(MilestoneSettlementModel.id == milestone_id)
-                .first()
-            )
+            milestone = self.db.query(MilestoneSettlementModel).filter(MilestoneSettlementModel.id == milestone_id).first()
 
             if not milestone:
                 return SettlementResult(
@@ -198,9 +352,7 @@ class InternalLedgerRail(PaymentRail):
                 )
 
             # Generate reference ID (INTERNAL_LEDGER:timestamp:milestone_id)
-            reference_id = (
-                f"INTERNAL_LEDGER:{datetime.utcnow().isoformat()}:{milestone_id}"
-            )
+            reference_id = f"INTERNAL_LEDGER:{datetime.utcnow().isoformat()}:{milestone_id}"
 
             # Mark milestone as APPROVED (v2: will be marked SETTLED when funds actually transfer)
             from .models import PaymentStatus
@@ -214,17 +366,13 @@ class InternalLedgerRail(PaymentRail):
             self.db.refresh(milestone)
 
             payment_intent = milestone.payment_intent
-            freight_token_id = (
-                milestone.freight_token_id
-                or (payment_intent.freight_token_id if payment_intent else None)
-            )
+            freight_token_id = milestone.freight_token_id or (payment_intent.freight_token_id if payment_intent else None)
             shipment_ref = milestone.shipment_reference
             if not shipment_ref:
+                from core.payments.identity import canonical_shipment_reference
                 try:
                     shipment_ref = canonical_shipment_reference(
-                        shipment_reference=getattr(payment_intent, "shipment_reference", None)
-                        if payment_intent
-                        else None,
+                        shipment_reference=(getattr(payment_intent, "shipment_reference", None) if payment_intent else None),
                         freight_token_id=freight_token_id,
                     )
                 except ValueError:
@@ -233,16 +381,12 @@ class InternalLedgerRail(PaymentRail):
             milestone_index = 1
             if milestone.schedule_item_id:
                 schedule_item = (
-                    self.db.query(PaymentScheduleItemModel)
-                    .filter(PaymentScheduleItemModel.id == milestone.schedule_item_id)
-                    .first()
+                    self.db.query(PaymentScheduleItemModel).filter(PaymentScheduleItemModel.id == milestone.schedule_item_id).first()
                 )
                 if schedule_item and schedule_item.sequence:
                     milestone_index = schedule_item.sequence
 
-            canonical_id = milestone.milestone_identifier or canonical_milestone_id(
-                shipment_ref, milestone_index
-            )
+            canonical_id = milestone.milestone_identifier or canonical_milestone_id(shipment_ref, milestone_index)
             milestone.milestone_identifier = canonical_id
             milestone.shipment_reference = shipment_ref
             milestone.freight_token_id = freight_token_id
@@ -275,9 +419,7 @@ class InternalLedgerRail(PaymentRail):
                 )
             except Exception as emit_err:
                 # Never fail settlement due to event emission issues
-                logger.warning(
-                    f"Failed to emit payment event for milestone {milestone_id}: {emit_err}"
-                )
+                logger.warning(f"Failed to emit payment event for milestone {milestone_id}: {emit_err}")
 
             return SettlementResult(
                 success=True,
@@ -288,9 +430,7 @@ class InternalLedgerRail(PaymentRail):
             )
 
         except Exception as e:
-            logger.error(
-                f"Internal ledger settlement failed: milestone_id={milestone_id}, error={str(e)}"
-            )
+            logger.error(f"Internal ledger settlement failed: milestone_id={milestone_id}, error={str(e)}")
             return SettlementResult(
                 success=False,
                 provider=SettlementProvider.INTERNAL_LEDGER,
@@ -303,26 +443,140 @@ class InternalLedgerRail(PaymentRail):
         return SettlementProvider.INTERNAL_LEDGER
 
 
+class CbUsdxRail(PaymentRail):
+    """CB-USDx payment rail (V1 stub).
+
+    V1 behavior: no real XRPL calls. We tag settlements as CB-USDx and
+    finalize them in the internal ledger tables so audit and analytics
+    flows can consume rail metadata. Future PACs will replace the stubbed
+    ledger write with actual on-chain submission as defined in
+    CHAINPAY_ONCHAIN_SETTLEMENT.md.
+    """
+
+    def __init__(self, db: Session):
+        self.db = db
+
+    def process_settlement(
+        self,
+        milestone_id: int,
+        amount: float,
+        currency: str,
+        recipient_id: Optional[str] = None,
+    ) -> SettlementResult:
+        from .models import MilestoneSettlement as MilestoneSettlementModel
+        from .models import PaymentScheduleItem as PaymentScheduleItemModel
+        from .models import PaymentStatus
+
+        try:
+            milestone = self.db.query(MilestoneSettlementModel).filter(MilestoneSettlementModel.id == milestone_id).first()
+
+            if not milestone:
+                return SettlementResult(
+                    success=False,
+                    provider=SettlementProvider.CB_USDX,
+                    error=f"Milestone {milestone_id} not found",
+                    message="Settlement failed: milestone not found",
+                )
+
+            reference_id = f"CB_USDX:{datetime.utcnow().isoformat()}:{milestone_id}"
+
+            old_status = milestone.status.value if milestone.status else "unknown"
+            milestone.status = PaymentStatus.APPROVED
+            milestone.provider = SettlementProvider.CB_USDX.value
+            milestone.reference = reference_id
+
+            # Maintain canonical identifiers for downstream analytics
+            payment_intent = milestone.payment_intent
+            freight_token_id = milestone.freight_token_id or (payment_intent.freight_token_id if payment_intent else None)
+            shipment_ref = milestone.shipment_reference or (getattr(payment_intent, "shipment_reference", None) if payment_intent else None)
+            if not shipment_ref:
+                try:
+                    shipment_ref = canonical_shipment_reference(
+                        shipment_reference=(getattr(payment_intent, "shipment_reference", None) if payment_intent else None),
+                        freight_token_id=freight_token_id,
+                    )
+                except Exception:
+                    shipment_ref = f"SHP-{milestone.payment_intent_id:04d}"
+
+            milestone_index = 1
+            if milestone.schedule_item_id:
+                schedule_item = (
+                    self.db.query(PaymentScheduleItemModel).filter(PaymentScheduleItemModel.id == milestone.schedule_item_id).first()
+                )
+                if schedule_item and schedule_item.sequence:
+                    milestone_index = schedule_item.sequence
+
+            canonical_id = milestone.milestone_identifier or canonical_milestone_id(shipment_ref, milestone_index)
+            milestone.milestone_identifier = canonical_id
+            milestone.shipment_reference = shipment_ref
+            milestone.freight_token_id = freight_token_id
+
+            self.db.add(milestone)
+            self.db.commit()
+            self.db.refresh(milestone)
+
+            logger.info(
+                "CB-USDx stub settlement approved: milestone_id=%s, amount=%s %s, reference=%s",
+                milestone_id,
+                amount,
+                currency,
+                reference_id,
+            )
+
+            proofpack_hint = {
+                "milestone_id": canonical_id,
+                "token_type": "CB-USDx",
+                "has_proofpack": True,
+                "version": "v1-alpha",
+            }
+
+            try:
+                from .realtime_events import _emit_payment_event
+
+                _emit_payment_event(
+                    shipment_reference=shipment_ref,
+                    milestone_id=canonical_id,
+                    milestone_name=milestone.event_type.replace("_", " ").title(),
+                    from_state=old_status,
+                    to_state="approved",
+                    amount=amount,
+                    currency=currency,
+                    reason="CB-USDx stub settlement",
+                    freight_token_id=freight_token_id,
+                    proofpack_hint=proofpack_hint,
+                )
+            except Exception as emit_err:
+                logger.warning(f"Failed to emit CB-USDx payment event for milestone {milestone_id}: {emit_err}")
+
+            return SettlementResult(
+                success=True,
+                provider=SettlementProvider.CB_USDX,
+                reference_id=reference_id,
+                message=f"CB-USDx settlement approved: {amount} {currency}",
+                released_at=datetime.utcnow(),
+            )
+
+        except Exception as exc:  # pragma: no cover - defensive logging
+            logger.error(
+                "CB-USDx settlement failed: milestone_id=%s, error=%s",
+                milestone_id,
+                str(exc),
+            )
+            return SettlementResult(
+                success=False,
+                provider=SettlementProvider.CB_USDX,
+                error=str(exc),
+                message="Settlement processing failed",
+            )
+
+    def get_provider(self) -> SettlementProvider:
+        return SettlementProvider.CB_USDX
+
+
 def should_release_now(risk_score: float, event_type: str) -> ReleaseStrategy:
     """
     Determine if a payment should be released immediately or delayed based on
     risk score and event type.
-
-    Release rules (v2 Smart Settlements):
-    - LOW risk (< 0.33):
-      * PICKUP_CONFIRMED: IMMEDIATE (20%)
-      * POD_CONFIRMED: IMMEDIATE (70%)
-      * CLAIM_WINDOW_CLOSED: IMMEDIATE (10%)
-
-    - MEDIUM risk (0.33-0.67):
-      * PICKUP_CONFIRMED: DELAYED (10%)
-      * POD_CONFIRMED: IMMEDIATE (70%)
-      * CLAIM_WINDOW_CLOSED: DELAYED (20%)
-
-    - HIGH risk (> 0.67):
-      * PICKUP_CONFIRMED: PENDING (0%)
-      * POD_CONFIRMED: MANUAL_REVIEW (80%)
-      * CLAIM_WINDOW_CLOSED: MANUAL_REVIEW (20%)
 
     Args:
         risk_score: Risk score from 0.0 (low risk) to 1.0 (high risk)
@@ -331,28 +585,29 @@ def should_release_now(risk_score: float, event_type: str) -> ReleaseStrategy:
     Returns:
         ReleaseStrategy indicating when/how to release the payment
     """
+    normalized_event = (event_type or "").strip().upper().replace("-", "_")
+    risk_score = max(0.0, min(1.0, risk_score))
+
+    # Align with documented tiers: LOW <0.33, MEDIUM <0.67, HIGH >=0.67.
     if risk_score < 0.33:
-        # LOW RISK: All events released immediately
         return ReleaseStrategy.IMMEDIATE
 
-    elif risk_score < 0.67:
-        # MEDIUM RISK: Release immediately at POD, delay others
-        if event_type == "POD_CONFIRMED":
+    if risk_score < 0.67:
+        if normalized_event in {"POD_CONFIRMED", "DELIVERY_CONFIRMED"}:
             return ReleaseStrategy.IMMEDIATE
-        else:
-            return ReleaseStrategy.DELAYED
+        return ReleaseStrategy.DELAYED
 
-    else:
-        # HIGH RISK: POD and CLAIM require manual review
-        if event_type == "PICKUP_CONFIRMED":
-            return ReleaseStrategy.PENDING  # Don't release yet
-        else:
-            return ReleaseStrategy.MANUAL_REVIEW
+    # For very high scores (>=0.90) we require manual review for all events.
+    if risk_score >= 0.9:
+        return ReleaseStrategy.MANUAL_REVIEW
+
+    # High tier default: gate pickup, review everything else.
+    if normalized_event in {"PICKUP_CONFIRMED", "PICKUP"}:
+        return ReleaseStrategy.PENDING
+    return ReleaseStrategy.MANUAL_REVIEW
 
 
-def get_release_delay_hours(
-    risk_score: float, event_type: str, release_strategy: ReleaseStrategy
-) -> Optional[int]:
+def get_release_delay_hours(risk_score: float, event_type: str, release_strategy: ReleaseStrategy) -> Optional[int]:
     """
     Get the number of hours to delay a payment based on strategy.
 
@@ -365,15 +620,11 @@ def get_release_delay_hours(
         Number of hours to delay, or None if immediate/pending
     """
     if release_strategy == ReleaseStrategy.IMMEDIATE:
-        return None  # Release immediately
+        return None
 
-    elif release_strategy == ReleaseStrategy.DELAYED:
-        # MEDIUM risk non-POD events: delay 24 hours
-        return 24
-
-    elif release_strategy == ReleaseStrategy.MANUAL_REVIEW:
-        # HIGH risk: delay indefinitely until manual approval
-        return None  # Don't auto-release
-
-    else:  # PENDING
-        return None  # Don't release yet
+    plan = compute_milestone_release(
+        risk_score=risk_score,
+        event_type=event_type,
+        base_total_amount=1.0,
+    )
+    return plan.delay_hours

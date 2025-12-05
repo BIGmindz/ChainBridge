@@ -11,28 +11,29 @@ const formatPct = (value: number) => `${value.toFixed(1)}%`;
 
 export default function OCIntelTopBar({ snapshot, selectedCorridor }: OCIntelTopBarProps) {
   // Calculate global STP%
-  const totalShipments = snapshot.by_corridor.reduce((sum, c) => sum + c.shipment_count, 0);
-  const globalSTP = totalShipments > 0 ? (snapshot.on_time_count / totalShipments) * 100 : 0;
+  const corridors = snapshot.by_corridor ?? [];
+  const totalShipments = corridors.reduce((sum, c) => sum + (c.shipment_count ?? 0), 0);
+  const globalSTP = totalShipments > 0 ? ((snapshot.on_time_count ?? 0) / totalShipments) * 100 : 0;
 
   // Calculate corridor-specific STP%
   const corridorData = selectedCorridor
-    ? snapshot.by_corridor.find((c) => c.corridorId === selectedCorridor)
+    ? corridors.find((c) => c.corridorId === selectedCorridor)
     : null;
   const corridorSTP = corridorData
-    ? (corridorData.on_time_count / corridorData.shipment_count) * 100
+    ? ((corridorData.on_time_count ?? 0) / Math.max(corridorData.shipment_count ?? 0, 1)) * 100
     : 0;
 
   // High-risk count
-  const highRiskCount = snapshot.by_corridor.reduce(
-    (sum, c) => sum + c.high_risk_count + c.critical_risk_count,
+  const highRiskCount = corridors.reduce(
+    (sum, c) => sum + (c.high_risk_count ?? 0) + (c.critical_risk_count ?? 0),
     0,
   );
 
   // Ports in alert state (riskScore > 70)
-  const alertPorts = snapshot.top_ports_by_risk.filter((p) => p.riskScore > 70).length;
+  const alertPorts = (snapshot.top_ports_by_risk ?? []).filter((p) => (p.riskScore ?? 0) > 70).length;
 
   // Settlement in flight (financed value)
-  const settlementInFlight = snapshot.financed_valueUsd;
+  const settlementInFlight = snapshot.financed_valueUsd ?? 0;
 
   return (
     <div className="flex flex-wrap items-center gap-4 rounded-lg border border-slate-700 bg-slate-800/50 px-4 py-3">

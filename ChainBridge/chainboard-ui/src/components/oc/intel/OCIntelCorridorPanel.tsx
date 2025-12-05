@@ -47,9 +47,10 @@ export default function OCIntelCorridorPanel({
           <tbody>
             {corridors.map((corridor) => {
               const isSelected = selectedCorridor === corridor.corridorId;
-              const stpPct = formatPct(corridor.on_time_count, corridor.shipment_count);
-              const highRisk = corridor.high_risk_count + corridor.critical_risk_count;
-              const atRiskPct = formatPct(corridor.at_risk_valueUsd, corridor.valueUsd || 1);
+              const shipmentCount = corridor.shipment_count ?? 0;
+              const stpPct = formatPct(corridor.on_time_count ?? 0, shipmentCount);
+              const highRisk = (corridor.high_risk_count ?? 0) + (corridor.critical_risk_count ?? 0);
+              const atRiskPct = formatPct(corridor.at_risk_valueUsd ?? 0, corridor.valueUsd ?? 1);
 
               return (
                 <tr

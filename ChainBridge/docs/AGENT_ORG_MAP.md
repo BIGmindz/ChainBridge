@@ -250,6 +250,18 @@ The `tools/agent_runtime.py` provides LLM-agnostic orchestration:
 - Checks for empty prompts
 - Fails the build if agents are incomplete
 
+#### ChainSense IoT Smoke Commands
+
+```
+# Backend IoT health summary smoke
+cd ~/Documents/Projects/ChainBridge-local-repo/ChainBridge
+pytest api/tests/test_chainboard_iot.py
+
+# Frontend IoT panel smoke
+cd chainboard-ui
+npm test -- IoTHealthPanel
+```
+
 ---
 
 ## Operational Guidelines
@@ -294,3 +306,11 @@ The `tools/agent_runtime.py` provides LLM-agnostic orchestration:
 - `tools/agent_runtime.py` — Agent framework runtime
 - `tools/agent_validate.py` — Configuration validation
 - `.github/workflows/agent_ci.yml` — Automated validation
+
+### Routing and New Agents
+
+- Routing behavior is defined in `docs/architecture/AGENT_ROUTER_SPEC.md`.
+- New agent roles:
+  - **DevOps Dan** — Responsibilities: CI/CD, infra hardening, platform observability. Owns: `.github/workflows/**`, `Dockerfile*`, `docker-compose.yml`, `k8s/**`, `Makefile*`, `scripts/dev/**`. Handles: CI/Docker/k8s/install errors.
+  - **SecOps Sam** — Responsibilities: security posture, auth, secrets, compliance alignment. Owns: `docs/SECURITY_AGENT_FRAMEWORK.md` and security-sensitive code paths. Handles: auth/secrets/vuln remediation issues.
+  - **ML Mira** — Responsibilities: ML/signals, feature engineering, risk model pipelines. Owns: `ml_models/`, `modules/`, `tracking/`, signals-related dirs, and model-heavy ChainIQ pipelines. Handles: training/inference/metrics issues.

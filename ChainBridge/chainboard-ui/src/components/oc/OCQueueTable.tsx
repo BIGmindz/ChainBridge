@@ -7,12 +7,12 @@
  * Performance: Implements windowing for queues > 100 items (renders ±30 rows around selection).
  */
 
-import { AlertTriangle, CheckCircle, Shield, Zap } from "lucide-react";
+import { CheckCircle, Shield, Zap } from "lucide-react";
 import { useMemo } from "react";
 
 import type { OperatorQueueItem, TransportMode } from "../../types/chainbridge";
 import { classNames } from "../../utils/classNames";
-import { Skeleton } from "../ui/Skeleton";
+import { ErrorState, TableSkeleton } from "../ui/LoadingStates";
 
 import { ModeBadge } from "./hud/ModeBadge";
 import { RiskBadge } from "./hud/RiskBadge";
@@ -68,20 +68,19 @@ export function OCQueueTable({
 
   if (error) {
     return (
-      <div className="p-4 text-center text-rose-400">
-        <AlertTriangle className="h-8 w-8 mx-auto mb-2" />
-        <p>Failed to load queue</p>
-        <p className="text-xs text-slate-400 mt-1">{error.message}</p>
-      </div>
+      <ErrorState
+        title="Queue temporarily unavailable"
+        message="Unable to load operator queue. Please try again."
+        onRetry={() => window.location.reload()} // Replace with proper refetch when available
+        className="m-4"
+      />
     );
   }
 
   if (isLoading) {
     return (
-      <div className="p-4 space-y-3">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-16" />
-        ))}
+      <div className="p-4">
+        <TableSkeleton rows={5} />
       </div>
     );
   }
@@ -90,8 +89,8 @@ export function OCQueueTable({
     return (
       <div className="p-8 text-center text-slate-400">
         <CheckCircle className="h-12 w-12 mx-auto mb-3 text-emerald-500" />
-        <p className="font-medium">No Critical/High at-risk shipments</p>
-        <p className="text-xs mt-1">All systems nominal ✨</p>
+        <p className="font-medium text-slate-200">No Critical/High at-risk shipments</p>
+        <p className="text-xs mt-1 text-slate-500">All systems nominal — queue is clear</p>
       </div>
     );
   }

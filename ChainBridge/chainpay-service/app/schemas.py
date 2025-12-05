@@ -5,9 +5,10 @@ Request and response validation for payment intent and settlement API endpoints.
 """
 
 from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, Field
 from enum import Enum
+from typing import Optional
+
+from pydantic import BaseModel, Field
 
 
 class PaymentStatusEnum(str, Enum):
@@ -88,9 +89,7 @@ class SettlementRequest(BaseModel):
     """Request to settle a payment intent."""
 
     settlement_notes: Optional[str] = Field(None, max_length=500)
-    force_approval: bool = Field(
-        default=False, description="Override risk checks (requires special permission)"
-    )
+    force_approval: bool = Field(default=False, description="Override risk checks (requires special permission)")
 
 
 class SettlementResponse(BaseModel):
@@ -151,9 +150,7 @@ class PaymentScheduleItemCreate(BaseModel):
     """Schema for creating a payment schedule item."""
 
     event_type: str = Field(..., max_length=50, description="Shipment event type")
-    percentage: float = Field(
-        ..., ge=0.0, le=1.0, description="Percentage of total payment (0.0-1.0)"
-    )
+    percentage: float = Field(..., ge=0.0, le=1.0, description="Percentage of total payment (0.0-1.0)")
     order: int = Field(..., ge=1, description="Sequence order in schedule")
 
 
@@ -217,6 +214,16 @@ class ShipmentEventWebhookRequest(BaseModel):
     event_type: str = Field(..., max_length=50)
     occurred_at: datetime
     event_id: Optional[int] = None
+
+    class Config:
+        json_encoders = {datetime: lambda dt: dt.isoformat()}
+
+    def dict(self, *args, **kwargs):  # type: ignore[override]
+        data = super().dict(*args, **kwargs)
+        occurred = data.get("occurred_at")
+        if isinstance(occurred, datetime):
+            data["occurred_at"] = occurred.isoformat()
+        return data
 
 
 class ShipmentEventWebhookResponse(BaseModel):

@@ -12,6 +12,8 @@ Risk-based milestone allocation:
 The order field controls the sequence in which milestones occur.
 """
 
+from __future__ import annotations
+
 import logging
 from enum import Enum
 
@@ -115,9 +117,7 @@ def build_default_schedule(risk_tier: RiskTierSchedule) -> list[dict]:
 
     schedule = schedules.get(risk_tier, schedules[RiskTierSchedule.MEDIUM])
 
-    logger.info(
-        f"Built default schedule for risk_tier={risk_tier}: {len(schedule)} milestones"
-    )
+    logger.info(f"Built default schedule for risk_tier={risk_tier}: {len(schedule)} milestones")
 
     return schedule
 
@@ -136,16 +136,12 @@ def validate_schedule_percentages(schedule: list[dict]) -> bool:
     tolerance = 0.01  # Allow 1% tolerance for floating-point rounding
 
     if abs(total - 1.0) > tolerance:
-        raise ValueError(
-            f"Schedule percentages sum to {total:.2f}, expected 1.0 (tolerance: {tolerance})"
-        )
+        raise ValueError(f"Schedule percentages sum to {total:.2f}, expected 1.0 (tolerance: {tolerance})")
 
     return True
 
 
-def calculate_milestone_amount(
-    total_amount: float, milestone_percentage: float
-) -> float:
+def calculate_milestone_amount(total_amount: float, milestone_percentage: float) -> float:
     """
     Calculate the settlement amount for a specific milestone.
 

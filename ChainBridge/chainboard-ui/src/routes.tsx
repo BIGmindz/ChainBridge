@@ -18,6 +18,7 @@ import SettlementsPage from "./pages/SettlementsPage";
 import ShadowPilotPage from "./pages/ShadowPilotPage";
 import ShipmentsPage from "./pages/ShipmentsPage";
 import TriagePage from "./pages/TriagePage";
+import GovernancePage from "./pages/GovernancePage";
 
 export function AppRoutes() {
   return (
@@ -25,6 +26,7 @@ export function AppRoutes() {
       <Route path="/" element={<Layout />}>
         <Route index element={<IntelligencePage />} />
         <Route path="intelligence" element={<IntelligencePage />} />
+        <Route path="governance" element={<GovernancePage />} />
         <Route path="overview" element={<OverviewPage />} />
         <Route path="shipments" element={<ShipmentsPage />} />
         <Route path="oc" element={<OperatorConsolePage />} />

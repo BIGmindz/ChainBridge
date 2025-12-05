@@ -12,7 +12,7 @@
  * - IoT device badges (online/offline/stale GPS/stale env)
  */
 
-import { AlertCircle, AlertTriangle, CheckCircle, Clock, MapPin, Thermometer, Wifi, WifiOff } from "lucide-react";
+import { Activity, AlertCircle, AlertTriangle, CheckCircle, Clock, Wifi, WifiOff } from "lucide-react";
 
 import { useIoTHealth } from "../../hooks/useIoTHealth";
 import { useSLA } from "../../hooks/useSLA";
@@ -22,6 +22,9 @@ import { Skeleton } from "../ui/Skeleton";
 export function SLAWidget() {
   const { data: sla, isLoading: slaLoading, error: slaError } = useSLA();
   const { data: iot, isLoading: iotLoading, error: iotError } = useIoTHealth();
+  const severeAnomalyCount = iot?.anomalies
+    ? iot.anomalies.filter((anomaly) => anomaly.severity === "HIGH" || anomaly.severity === "CRITICAL").length
+    : 0;
 
   if (slaLoading) {
     return (
@@ -148,44 +151,40 @@ export function SLAWidget() {
         </div>
       ) : (
         <div className="flex items-center gap-3">
-          {/* Devices Online */}
           <div className="flex items-center gap-1.5">
             <Wifi className="h-3.5 w-3.5 text-emerald-400" />
             <span className="text-xs text-slate-400">Online:</span>
             <span className="text-sm font-mono font-semibold text-emerald-300">
-              {iot.summary.devices_online}
+              {iot.online.toLocaleString()}
             </span>
           </div>
 
-          {/* Devices Offline */}
-          {iot.summary.devices_offline > 0 && (
+          {iot.offline > 0 && (
             <div className="flex items-center gap-1.5">
               <WifiOff className="h-3.5 w-3.5 text-rose-400" />
               <span className="text-xs text-slate-400">Offline:</span>
               <span className="text-sm font-mono font-semibold text-rose-300">
-                {iot.summary.devices_offline}
+                {iot.offline.toLocaleString()}
               </span>
             </div>
           )}
 
-          {/* Stale GPS */}
-          {iot.summary.devices_stale_gps > 0 && (
+          {iot.degraded > 0 && (
             <div className="flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5 text-amber-400" />
-              <span className="text-xs text-slate-400">Stale GPS:</span>
+              <Activity className="h-3.5 w-3.5 text-amber-400" />
+              <span className="text-xs text-slate-400">Degraded:</span>
               <span className="text-sm font-mono font-semibold text-amber-300">
-                {iot.summary.devices_stale_gps}
+                {iot.degraded.toLocaleString()}
               </span>
             </div>
           )}
 
-          {/* Stale Environment Sensors */}
-          {iot.summary.devices_stale_env > 0 && (
+          {severeAnomalyCount > 0 && (
             <div className="flex items-center gap-1.5">
-              <Thermometer className="h-3.5 w-3.5 text-amber-400" />
-              <span className="text-xs text-slate-400">Stale Env:</span>
+              <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />
+              <span className="text-xs text-slate-400">Critical Alerts:</span>
               <span className="text-sm font-mono font-semibold text-amber-300">
-                {iot.summary.devices_stale_env}
+                {severeAnomalyCount}
               </span>
             </div>
           )}

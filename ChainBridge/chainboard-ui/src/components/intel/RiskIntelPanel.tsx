@@ -6,12 +6,16 @@
  */
 
 import { AlertTriangle, TrendingUp } from "lucide-react";
+import { CardSkeleton, InlineError } from "../ui/LoadingStates";
 
 interface RiskIntelPanelProps {
   emphasize?: boolean;
+  isLoading?: boolean;
+  error?: Error | null;
+  onRetry?: () => void;
 }
 
-export default function RiskIntelPanel({ emphasize = false }: RiskIntelPanelProps): JSX.Element {
+export default function RiskIntelPanel({ emphasize = false, isLoading, error, onRetry }: RiskIntelPanelProps): JSX.Element {
   // TODO: Replace with actual risk data from ChainIQ
   const highRiskCorridors = [
     { route: "Shanghai → LA", score: 82, trend: "up" },
@@ -24,6 +28,25 @@ export default function RiskIntelPanel({ emphasize = false }: RiskIntelPanelProp
   const emphasisClass = emphasize
     ? "border-red-500/50 bg-red-500/5"
     : "border-slate-800/70 bg-slate-900/50";
+
+  if (isLoading) {
+    return <CardSkeleton className={`rounded-xl border ${emphasisClass}`} />;
+  }
+
+  if (error) {
+    return (
+      <div className={`rounded-xl border ${emphasisClass} p-6`}>
+        <div className="mb-4 flex items-center gap-3">
+          <AlertTriangle className="h-5 w-5 text-slate-400" />
+          <h3 className="text-base font-semibold text-slate-100">Risk Intelligence</h3>
+        </div>
+        <InlineError
+          message="Risk data temporarily unavailable"
+          onRetry={onRetry}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={`rounded-xl border ${emphasisClass} p-6`}>

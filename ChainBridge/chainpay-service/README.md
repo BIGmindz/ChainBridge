@@ -74,24 +74,24 @@ CREATE TABLE payment_intents (
     amount FLOAT NOT NULL,
     currency VARCHAR(10) DEFAULT 'USD',
     description VARCHAR(255),
-    
+
     -- Risk information (cached)
     risk_score FLOAT,
     risk_category VARCHAR(20),
     risk_tier ENUM (low, medium, high),
-    
+
     -- Settlement status
     status ENUM (pending, approved, settled, delayed, rejected, cancelled),
-    
+
     -- Settlement timing
     settlement_approved_at DATETIME,
     settlement_delayed_until DATETIME,
     settlement_completed_at DATETIME,
-    
+
     -- Notes
     settlement_reason TEXT,
     settlement_notes TEXT,
-    
+
     -- Audit
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -593,5 +593,5 @@ export DATABASE_URL="postgresql://user:pass@localhost/chainpay"
 
 ---
 
-**Status:** ✅ Production Ready  
+**Status:** ✅ Production Ready
 **Date:** November 7, 2025

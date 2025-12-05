@@ -5,21 +5,22 @@ This module contains SQLAlchemy models for payment intents and settlements,
 including risk-based settlement logic tied to freight tokens.
 """
 
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    Float,
-    DateTime,
-    Enum,
-    func,
-    Text,
-    ForeignKey,
-    UniqueConstraint,
-)
-from sqlalchemy.orm import declarative_base, relationship
 import enum
 from datetime import datetime, timedelta
+
+from sqlalchemy import (
+    Column,
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+)
+from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
 
@@ -75,14 +76,11 @@ class PaymentIntent(Base):
     # Risk information (cached from freight token at creation time)
     risk_score = Column(Float, nullable=True)  # 0.0-1.0
     risk_category = Column(String(20), nullable=True)  # low, medium, high
-    risk_tier = Column(
-        Enum(RiskTier), default=RiskTier.MEDIUM, nullable=False, index=True
-    )
+    risk_tier = Column(Enum(RiskTier), default=RiskTier.MEDIUM, nullable=False, index=True)
+
 
     # Payment status
-    status = Column(
-        Enum(PaymentStatus), default=PaymentStatus.PENDING, nullable=False, index=True
-    )
+    status = Column(Enum(PaymentStatus), default=PaymentStatus.PENDING, nullable=False, index=True)
 
     # Settlement tracking
     settlement_approved_at = Column(DateTime, nullable=True)
@@ -93,19 +91,19 @@ class PaymentIntent(Base):
     settlement_reason = Column(Text, nullable=True)
     settlement_notes = Column(Text, nullable=True)
 
+    # --- TOKENOMICS FIELDS ---
+    token_reward = Column(Float, nullable=True, comment="Tokenomics: total token reward")
+    token_burn = Column(Float, nullable=True, comment="Tokenomics: total token burn")
+    token_net = Column(Float, nullable=True, comment="Tokenomics: net token after burn")
+    governance_trace_id = Column(String(64), nullable=True, comment="Tokenomics: ALEX governance trace ID")
+
     # Relationships
-    payment_schedule = relationship(
-        "PaymentSchedule", uselist=False, back_populates="payment_intent"
-    )
-    milestone_settlements = relationship(
-        "MilestoneSettlement", back_populates="payment_intent"
-    )
+    payment_schedule = relationship("PaymentSchedule", uselist=False, back_populates="payment_intent")
+    milestone_settlements = relationship("MilestoneSettlement", back_populates="payment_intent")
 
     # Audit timestamps
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
-    updated_at = Column(
-        DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
-    )
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 
     def __repr__(self):
         return (
@@ -154,7 +152,7 @@ class SettlementLog(Base):
     __tablename__ = "settlement_logs"
 
     id = Column(Integer, primary_key=True, index=True)
-    payment_intent_id = Column(Integer, nullable=False, index=True)
+    payment_intent_id = Column(Integer, ForeignKey("payment_intents.id"), nullable=False, index=True)
 
     # Settlement action
     action = Column(String(50), nullable=False)  # approved, delayed, rejected, settled
@@ -162,19 +160,14 @@ class SettlementLog(Base):
     risk_factors = Column(Text, nullable=True)  # JSON-encoded risk assessment
 
     # Actor information
-    triggered_by = Column(
-        String(50), default="system", nullable=False
-    )  # system, manual
+    triggered_by = Column(String(50), default="system", nullable=False)  # system, manual
     approved_by = Column(String(255), nullable=True)  # User who approved
 
     # Timing
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
     def __repr__(self):
-        return (
-            f"<SettlementLog(payment={self.payment_intent_id}, "
-            f"action={self.action}, reason={self.reason})>"
-        )
+        return f"<SettlementLog(payment={self.payment_intent_id}, " f"action={self.action}, reason={self.reason})>"
 
 
 class PaymentSchedule(Base):
@@ -207,9 +200,7 @@ class PaymentSchedule(Base):
         index=True,
         comment="Type of payment schedule (full_on_pod, milestone, custom)",
     )
-    description = Column(
-        String(255), nullable=True, comment="Human-readable description of the schedule"
-    )
+    description = Column(String(255), nullable=True, comment="Human-readable description of the schedule")
 
     # Risk tier determines default schedule percentages
     risk_tier = Column(
@@ -221,9 +212,7 @@ class PaymentSchedule(Base):
 
     # Relationships
     payment_intent = relationship("PaymentIntent", back_populates="payment_schedule")
-    items = relationship(
-        "PaymentScheduleItem", back_populates="schedule", cascade="all, delete-orphan"
-    )
+    items = relationship("PaymentScheduleItem", back_populates="schedule", cascade="all, delete-orphan")
 
     # Audit
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
@@ -245,9 +234,7 @@ class PaymentScheduleItem(Base):
     __tablename__ = "payment_schedule_items"
 
     id = Column(Integer, primary_key=True, index=True)
-    schedule_id = Column(
-        Integer, ForeignKey("payment_schedules.id"), nullable=False, index=True
-    )
+    schedule_id = Column(Integer, ForeignKey("payment_schedules.id"), nullable=False, index=True)
 
     # Milestone definition
     event_type = Column(
@@ -290,12 +277,8 @@ class MilestoneSettlement(Base):
     __tablename__ = "milestone_settlements"
 
     id = Column(Integer, primary_key=True, index=True)
-    payment_intent_id = Column(
-        Integer, ForeignKey("payment_intents.id"), nullable=False, index=True
-    )
-    schedule_item_id = Column(
-        Integer, ForeignKey("payment_schedule_items.id"), nullable=True, index=True
-    )
+    payment_intent_id = Column(Integer, ForeignKey("payment_intents.id"), nullable=False, index=True)
+    schedule_item_id = Column(Integer, ForeignKey("payment_schedule_items.id"), nullable=True, index=True)
 
     # Milestone identification
     milestone_identifier = Column(
@@ -324,23 +307,13 @@ class MilestoneSettlement(Base):
     )
 
     # Amount and currency
-    amount = Column(
-        Float, nullable=False, comment="Amount to settle for this milestone"
-    )
-    currency = Column(
-        String(10), default="USD", nullable=False, comment="Currency for the settlement"
-    )
+    amount = Column(Float, nullable=False, comment="Amount to settle for this milestone")
+    currency = Column(String(10), default="USD", nullable=False, comment="Currency for the settlement")
 
     # Status and timing
-    status = Column(
-        Enum(PaymentStatus), default=PaymentStatus.PENDING, nullable=False, index=True
-    )
-    occurred_at = Column(
-        DateTime, nullable=True, comment="When the triggering shipment event occurred"
-    )
-    settled_at = Column(
-        DateTime, nullable=True, comment="When the settlement was completed"
-    )
+    status = Column(Enum(PaymentStatus), default=PaymentStatus.PENDING, nullable=False, index=True)
+    occurred_at = Column(DateTime, nullable=True, comment="When the triggering shipment event occurred")
+    settled_at = Column(DateTime, nullable=True, comment="When the settlement was completed")
 
     # Payment processing details
     provider = Column(
@@ -356,22 +329,14 @@ class MilestoneSettlement(Base):
     )
 
     # Relationships
-    payment_intent = relationship(
-        "PaymentIntent", back_populates="milestone_settlements"
-    )
+    payment_intent = relationship("PaymentIntent", back_populates="milestone_settlements")
 
     # Unique constraint: no double-paying for the same event
-    __table_args__ = (
-        UniqueConstraint(
-            "payment_intent_id", "event_type", name="uq_milestone_payment_event"
-        ),
-    )
+    __table_args__ = (UniqueConstraint("payment_intent_id", "event_type", name="uq_milestone_payment_event"),)
 
     # Audit
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
-    updated_at = Column(
-        DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
-    )
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 
     def __repr__(self):
         return (

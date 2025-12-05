@@ -1,3 +1,4 @@
+
 """
 ChainPay Service (ChainBridge)
 
@@ -11,7 +12,7 @@ Goal:
 Milestone-Based Payments:
 - Extend PaymentIntent with risk-based, milestone payment schedules.
 - When ChainFreight sends shipment events, use the schedule to create partial payments
-  (MilestoneSettlements) based on percentages like 20/70/10 that depend on risk_score.
+    (MilestoneSettlements) based on percentages like 20/70/10 that depend on risk_score.
 - Each milestone is tracked separately and prevents double-payment via unique constraints.
 
 Integration:
@@ -20,61 +21,94 @@ Integration:
 - Implements business rules: LOW=immediate, MEDIUM=24h delay, HIGH=manual review
 """
 
-from fastapi import FastAPI, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
+from __future__ import annotations
+from core.import_safety import ensure_import_safety
+ensure_import_safety()
+
 import logging
+from datetime import datetime, timedelta
 
-from core.payments.identity import (
-    canonical_milestone_id,
-    canonical_shipment_reference,
-)
+from fastapi import Depends, FastAPI, HTTPException, Query
+from sqlalchemy.orm import Session
 
-from .database import get_db, init_db
-from .models import (
-    PaymentIntent as PaymentIntentModel,
-    PaymentStatus,
-    RiskTier,
-    ScheduleType,
-    SettlementLog,
-    PaymentSchedule as PaymentScheduleModel,
-    PaymentScheduleItem as PaymentScheduleItemModel,
-    MilestoneSettlement as MilestoneSettlementModel,
-)
-from .schemas import (
-    PaymentIntentCreate,
-    PaymentIntentResponse,
-    PaymentIntentListResponse,
-    SettlementRequest,
-    SettlementResponse,
-    RiskAssessmentResponse,
-    SettlementHistoryResponse,
-    ShipmentEventWebhookRequest,
-    ShipmentEventWebhookResponse,
-)
+
+# Identity module not yet part of ChainBridge — removed legacy import
+# TODO: integrate identity service once ChainBridge identity module is ready
+
 from .chainfreight_client import (
     fetch_freight_token,
     map_risk_to_tier,
 )
-from .schedule_builder import (
-    build_default_schedule,
-    calculate_milestone_amount,
+from .database import get_db, init_db
+from .models import MilestoneSettlement as MilestoneSettlementModel
+from .models import PaymentIntent as PaymentIntentModel
+from .models import PaymentSchedule as PaymentScheduleModel
+from .models import PaymentScheduleItem as PaymentScheduleItemModel
+from .models import (
+    PaymentStatus,
+    RiskTier,
+    ScheduleType,
+    SettlementLog,
 )
+from .schemas import (
+    PaymentIntentCreate,
+    PaymentIntentListResponse,
+    PaymentIntentResponse,
+    RiskAssessmentResponse,
+    SettlementRequest,
+    SettlementResponse,
+    ShipmentEventWebhookRequest,
+    ShipmentEventWebhookResponse,
+)
+from .schedule_builder import RiskTierSchedule, build_default_schedule, calculate_milestone_amount
 from .payment_rails import (
-    InternalLedgerRail,
     ReleaseStrategy,
-    should_release_now,
+    canonical_milestone_id,
+    canonical_shipment_reference,
 )
-
+from .services.payment_rails_engine import PaymentRailsEngine
+from .schemas_context_ledger_feed import ContextLedgerRiskFeed
+from .schemas_settlement import (
+    SettleOnchainRequest,
+    SettleOnchainResponse,
+    SettlementAckRequest,
+    SettlementAckResponse,
+    SettlementDetailResponse,
+)
+from app.schemas import SettlementHistoryResponse
 # Setup logging
-logging.basicConfig(level=logging.INFO)
+
+
 logger = logging.getLogger(__name__)
 
-app = FastAPI(
-    title="ChainPay Service",
-    description="Payment settlement API with risk-based conditional logic",
-    version="1.0.0",
+app = FastAPI()
+
+from app.api_settlement import router as settlement_router
+from app import api_analytics
+
+from .services.context_ledger_feed import serialize_feed
+from .services.context_ledger_service import ContextLedgerService
+from .services.event_publisher import EventPublisher
+from .services.settlement_orchestrator import SettlementOrchestrator
+from .services.event_consumer import EventConsumer
+from .services.settlement_api import (
+    SettlementAPIService,
+    SettlementConflictError,
+    SettlementNotFoundError,
 )
+from .services.xrpl_stub_adapter import XRPLSettlementAdapter
+event_publisher = EventPublisher()
+settlement_orchestrator = SettlementOrchestrator(event_publisher)
+event_consumer = EventConsumer(settlement_orchestrator)
+xrpl_adapter = XRPLSettlementAdapter()
+
+app.include_router(settlement_router)
+app.include_router(api_analytics.router)
+
+@app.on_event("startup")
+async def start_event_consumer():
+    await event_consumer.start()
+    logger.info("ChainPay event consumer started on startup")
 
 
 # --- HELPER FUNCTIONS ---
@@ -117,9 +151,7 @@ def build_default_schedule_for_risk(
             {"event_type": "POD_CONFIRMED", "percentage": 0.70, "sequence": 2},
             {"event_type": "CLAIM_WINDOW_CLOSED", "percentage": 0.20, "sequence": 3},
         ]
-        description = (
-            "Medium-risk: Hold more until POD with final release at claims closure"
-        )
+        description = "Medium-risk: Hold more until POD with final release at claims closure"
     else:
         risk_tier = RiskTier.HIGH
         schedule_items = [
@@ -185,12 +217,12 @@ def process_milestone_for_intent(
     Returns:
         Tuple of (MilestoneSettlement if created or None, status message)
     """
+    from app.payment_rails import should_release_now as _should_release_now  # local import guards circulars in tests
+
+    rails_engine = PaymentRailsEngine(db)
+
     # Find PaymentSchedule
-    schedule = (
-        db.query(PaymentScheduleModel)
-        .filter(PaymentScheduleModel.payment_intent_id == payment_intent.id)
-        .first()
-    )
+    schedule = db.query(PaymentScheduleModel).filter(PaymentScheduleModel.payment_intent_id == payment_intent.id).first()
 
     if not schedule:
         logger.warning(
@@ -243,7 +275,7 @@ def process_milestone_for_intent(
 
     # Determine release strategy using Smart Settlements logic
     risk_score = payment_intent.risk_score or 0.5
-    release_strategy = should_release_now(risk_score, event_payload.event_type)
+    release_strategy = _should_release_now(risk_score, event_payload.event_type)
 
     # Create MilestoneSettlement with status based on release strategy
     if release_strategy == ReleaseStrategy.IMMEDIATE:
@@ -266,6 +298,8 @@ def process_milestone_for_intent(
     milestone_index = schedule_item.sequence or 1
     canonical_identifier = canonical_milestone_id(shipment_reference, milestone_index)
 
+    provider_code = rails_engine.default_provider().value
+
     milestone = MilestoneSettlementModel(
         payment_intent_id=payment_intent.id,
         schedule_item_id=schedule_item.id,
@@ -274,7 +308,7 @@ def process_milestone_for_intent(
         currency=payment_intent.currency,
         status=initial_status,
         occurred_at=event_payload.occurred_at,
-        provider="INTERNAL_LEDGER",
+        provider=provider_code,
         milestone_identifier=canonical_identifier,
         shipment_reference=shipment_reference,
         freight_token_id=payment_intent.freight_token_id,
@@ -298,7 +332,7 @@ def process_milestone_for_intent(
     # If immediate release, route through payment rail
     if release_strategy == ReleaseStrategy.IMMEDIATE:
         try:
-            rail = InternalLedgerRail(db)
+            rail = rails_engine.get_immediate_rail()
             result = rail.process_settlement(
                 milestone_id=milestone.id,
                 amount=milestone_amount,
@@ -348,6 +382,77 @@ async def startup():
 async def health_check():
     """Health check endpoint."""
     return {"status": "ok", "service": "chainpay", "version": "1.0.0"}
+
+
+@app.get(
+    "/context-ledger/risk",
+    response_model=ContextLedgerRiskFeed,
+    tags=["context-ledger"],
+)
+def get_context_ledger_risk_feed(
+    limit: int = Query(50, ge=1, le=200),
+    db: Session = Depends(get_db),
+) -> ContextLedgerRiskFeed:
+    """Return the most recent context-ledger events and their risk snapshots."""
+
+    service = ContextLedgerService(db)
+    entries = service.get_recent_context_ledger_events_with_risk(limit=limit)
+    return serialize_feed(entries)
+
+
+def _build_settlement_service(db: Session) -> SettlementAPIService:
+    return SettlementAPIService(db, xrpl_adapter=xrpl_adapter)
+
+
+@app.post(
+    "/chainpay/settle-onchain",
+    response_model=SettleOnchainResponse,
+    tags=["chainpay"],
+)
+def submit_onchain_settlement(
+    payload: SettleOnchainRequest,
+    db: Session = Depends(get_db),
+) -> SettleOnchainResponse:
+    service = _build_settlement_service(db)
+    try:
+        return service.trigger_onchain_settlement(payload)
+    except SettlementNotFoundError as exc:
+        raise HTTPException(status_code=404, detail={"error": "NOT_FOUND", "message": str(exc)})
+    except SettlementConflictError as exc:
+        raise HTTPException(status_code=409, detail={"error": "VALIDATION_ERROR", "message": str(exc)})
+
+
+@app.get(
+    "/chainpay/settlements/{settlement_id}",
+    response_model=SettlementDetailResponse,
+    tags=["chainpay"],
+)
+def get_settlement_status(
+    settlement_id: str,
+    db: Session = Depends(get_db),
+) -> SettlementDetailResponse:
+    service = _build_settlement_service(db)
+    try:
+        return service.get_settlement_detail(settlement_id)
+    except SettlementNotFoundError as exc:
+        raise HTTPException(status_code=404, detail={"error": "NOT_FOUND", "message": str(exc)})
+
+
+@app.post(
+    "/chainpay/settlements/{settlement_id}/ack",
+    response_model=SettlementAckResponse,
+    tags=["chainpay"],
+)
+def acknowledge_settlement(
+    settlement_id: str,
+    payload: SettlementAckRequest,
+    db: Session = Depends(get_db),
+) -> SettlementAckResponse:
+    service = _build_settlement_service(db)
+    try:
+        return service.record_acknowledgement(settlement_id, payload)
+    except SettlementNotFoundError as exc:
+        raise HTTPException(status_code=404, detail={"error": "NOT_FOUND", "message": str(exc)})
 
 
 # --- PAYMENT INTENT ENDPOINTS ---
@@ -487,9 +592,7 @@ async def get_payment_intent(
     Raises:
         HTTPException: If payment intent not found
     """
-    payment_intent = (
-        db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
-    )
+    payment_intent = db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
 
     if not payment_intent:
         raise HTTPException(status_code=404, detail="Payment intent not found")
@@ -500,9 +603,7 @@ async def get_payment_intent(
 # --- SETTLEMENT ENDPOINTS ---
 
 
-@app.post(
-    "/payment_intents/{payment_id}/assess_risk", response_model=RiskAssessmentResponse
-)
+@app.post("/payment_intents/{payment_id}/assess_risk", response_model=RiskAssessmentResponse)
 async def assess_risk(
     payment_id: int,
     db: Session = Depends(get_db),
@@ -523,9 +624,7 @@ async def assess_risk(
     Raises:
         HTTPException: If payment intent not found
     """
-    payment_intent = (
-        db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
-    )
+    payment_intent = db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
 
     if not payment_intent:
         raise HTTPException(status_code=404, detail="Payment intent not found")
@@ -585,9 +684,7 @@ async def settle_payment(
     Raises:
         HTTPException: If payment intent not found or invalid state
     """
-    payment_intent = (
-        db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
-    )
+    payment_intent = db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
 
     if not payment_intent:
         raise HTTPException(status_code=404, detail="Payment intent not found")
@@ -598,9 +695,7 @@ async def settle_payment(
         PaymentStatus.REJECTED,
         PaymentStatus.CANCELLED,
     ]:
-        raise HTTPException(
-            status_code=400, detail=f"Payment already {payment_intent.status.value}"
-        )
+        raise HTTPException(status_code=400, detail=f"Payment already {payment_intent.status.value}")
 
     # Implement risk-based settlement logic
     action_taken = ""
@@ -646,9 +741,7 @@ async def settle_payment(
         else:
             payment_intent.status = PaymentStatus.REJECTED
             action_taken = "rejected"
-            settlement_reason = (
-                "High risk token - requires manual review and force_approval flag"
-            )
+            settlement_reason = "High risk token - requires manual review and force_approval flag"
 
     # Add settlement notes
     if payload.settlement_notes:
@@ -685,9 +778,7 @@ async def settle_payment(
     )
 
 
-@app.post(
-    "/payment_intents/{payment_id}/complete", response_model=PaymentIntentResponse
-)
+@app.post("/payment_intents/{payment_id}/complete", response_model=PaymentIntentResponse)
 async def complete_settlement(
     payment_id: int,
     db: Session = Depends(get_db),
@@ -708,9 +799,7 @@ async def complete_settlement(
     Raises:
         HTTPException: If payment not in appropriate status
     """
-    payment_intent = (
-        db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
-    )
+    payment_intent = db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
 
     if not payment_intent:
         raise HTTPException(status_code=404, detail="Payment intent not found")
@@ -743,9 +832,7 @@ async def complete_settlement(
 # --- SETTLEMENT HISTORY ENDPOINTS ---
 
 
-@app.get(
-    "/payment_intents/{payment_id}/history", response_model=SettlementHistoryResponse
-)
+@app.get("/payment_intents/{payment_id}/history", response_model=SettlementHistoryResponse)
 async def get_settlement_history(
     payment_id: int,
     db: Session = Depends(get_db),
@@ -763,19 +850,12 @@ async def get_settlement_history(
     Raises:
         HTTPException: If payment intent not found
     """
-    payment_intent = (
-        db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
-    )
+    payment_intent = db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
 
     if not payment_intent:
         raise HTTPException(status_code=404, detail="Payment intent not found")
 
-    logs = (
-        db.query(SettlementLog)
-        .filter(SettlementLog.payment_intent_id == payment_id)
-        .order_by(SettlementLog.created_at)
-        .all()
-    )
+    logs = db.query(SettlementLog).filter(SettlementLog.payment_intent_id == payment_id).order_by(SettlementLog.created_at).all()
 
     return SettlementHistoryResponse(
         payment_intent_id=payment_intent.id,
@@ -829,9 +909,7 @@ async def process_shipment_event(
 
     for payment_intent in payment_intents:
         try:
-            milestone, status_msg = process_milestone_for_intent(
-                db, payment_intent, event
-            )
+            milestone, status_msg = process_milestone_for_intent(db, payment_intent, event)
             if milestone:
                 milestone_count += 1
         except Exception as e:
@@ -850,6 +928,19 @@ async def process_shipment_event(
         milestone_settlements_created=milestone_count,
         message=f"Processed shipment event: {milestone_count} milestone settlement(s) created/updated",
     )
+
+
+@app.post(
+    "/webhooks/shipment-events",
+    response_model=ShipmentEventWebhookResponse,
+    status_code=200,
+)
+async def process_shipment_event_compat(
+    event: ShipmentEventWebhookRequest,
+    db: Session = Depends(get_db),
+) -> ShipmentEventWebhookResponse:
+    """Compatibility alias for legacy test path `/webhooks/shipment-events`."""
+    return await process_shipment_event(event, db)
 
 
 @app.post("/payment_intents/{payment_id}/build_schedule")
@@ -875,19 +966,13 @@ async def build_and_attach_schedule(
     Raises:
         HTTPException: If payment intent not found or schedule already exists
     """
-    payment_intent = (
-        db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
-    )
+    payment_intent = db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
 
     if not payment_intent:
         raise HTTPException(status_code=404, detail="Payment intent not found")
 
     # Check if schedule already exists
-    existing_schedule = (
-        db.query(PaymentScheduleModel)
-        .filter(PaymentScheduleModel.payment_intent_id == payment_id)
-        .first()
-    )
+    existing_schedule = db.query(PaymentScheduleModel).filter(PaymentScheduleModel.payment_intent_id == payment_id).first()
 
     if existing_schedule:
         raise HTTPException(
@@ -896,7 +981,8 @@ async def build_and_attach_schedule(
         )
 
     # Build default schedule based on risk tier
-    schedule_items = build_default_schedule(risk_tier=payment_intent.risk_tier)
+    schedule_risk_tier = RiskTierSchedule(payment_intent.risk_tier.value)
+    schedule_items = build_default_schedule(risk_tier=schedule_risk_tier)
 
     # Create PaymentSchedule
     schedule = PaymentScheduleModel(
@@ -965,95 +1051,40 @@ async def get_shipment_audit(
     """
     # Query all payment intents (TODO: filter by shipment_id when fully integrated)
     # For now, we return milestones for all intents that have associated events
-    milestones = (
-        db.query(MilestoneSettlementModel)
-        .order_by(MilestoneSettlementModel.created_at)
-        .all()
-    )
-
-    if not milestones:
-        return {
-            "shipment_id": shipment_id,
-            "milestones": [],
-            "summary": {
-                "total_milestones": 0,
-                "approved_count": 0,
-                "delayed_count": 0,
-                "pending_count": 0,
-                "settled_count": 0,
-                "total_approved_amount": 0.0,
-                "total_settled_amount": 0.0,
-            },
-            "message": "No milestones found for shipment",
-        }
+    # Find payment intent for this shipment
+    payment_intent = db.query(PaymentIntentModel).filter(PaymentIntentModel.freight_token_id == shipment_id).first()
+    if not payment_intent:
+        raise HTTPException(status_code=404, detail="Shipment not found")
+    milestones = db.query(MilestoneSettlementModel).filter(MilestoneSettlementModel.payment_intent_id == payment_intent.id).order_by(MilestoneSettlementModel.created_at).all()
 
     # Build audit response with settlement details
-    milestones_detail = []
-    summary = {
-        "total_milestones": len(milestones),
-        "approved_count": 0,
-        "delayed_count": 0,
-        "pending_count": 0,
-        "settled_count": 0,
-        "total_approved_amount": 0.0,
-        "total_settled_amount": 0.0,
-    }
-
-    for milestone in milestones:
-        # Get associated payment intent
-        payment_intent = (
-            db.query(PaymentIntentModel)
-            .filter(PaymentIntentModel.id == milestone.payment_intent_id)
-            .first()
-        )
-
-        if not payment_intent:
-            continue
-
-        milestone_detail = {
+    milestones_detail = [
+        {
             "id": milestone.id,
-            "payment_intent_id": milestone.payment_intent_id,
-            "freight_token_id": payment_intent.freight_token_id,
             "event_type": milestone.event_type,
             "amount": milestone.amount,
             "currency": milestone.currency,
             "status": milestone.status.value,
             "provider": milestone.provider,
             "reference": milestone.reference,
-            "occurred_at": (
-                milestone.occurred_at.isoformat() if milestone.occurred_at else None
-            ),
-            "settled_at": (
-                milestone.settled_at.isoformat() if milestone.settled_at else None
-            ),
-            "created_at": (
-                milestone.created_at.isoformat() if milestone.created_at else None
-            ),
-            "payment_intent": {
-                "risk_score": payment_intent.risk_score,
-                "risk_tier": payment_intent.risk_tier.value,
-            },
+            "occurred_at": (milestone.occurred_at.isoformat() if milestone.occurred_at else None),
+            "settled_at": (milestone.settled_at.isoformat() if milestone.settled_at else None),
+            "created_at": (milestone.created_at.isoformat() if milestone.created_at else None),
         }
-
-        milestones_detail.append(milestone_detail)
-
-        # Update summary counts
-        if milestone.status == PaymentStatus.APPROVED:
-            summary["approved_count"] += 1
-            summary["total_approved_amount"] += milestone.amount
-        elif milestone.status == PaymentStatus.DELAYED:
-            summary["delayed_count"] += 1
-        elif milestone.status == PaymentStatus.PENDING:
-            summary["pending_count"] += 1
-        elif milestone.status == PaymentStatus.SETTLED:
-            summary["settled_count"] += 1
-            summary["total_settled_amount"] += milestone.amount
-
+        for milestone in milestones
+    ]
+    summary = {
+        "total_milestones": len(milestones),
+        # Maintain both deprecated and current keys for backward compatibility
+        "total_approved": sum(m.amount for m in milestones if m.status == PaymentStatus.APPROVED),
+        "total_settled": sum(m.amount for m in milestones if m.status == PaymentStatus.SETTLED),
+        "total_approved_amount": sum(m.amount for m in milestones if m.status == PaymentStatus.APPROVED),
+        "total_settled_amount": sum(m.amount for m in milestones if m.status == PaymentStatus.SETTLED),
+    }
     return {
-        "shipment_id": shipment_id,
+        "shipment_id": payment_intent.freight_token_id,
         "milestones": milestones_detail,
         "summary": summary,
-        "message": f"Audit trail for shipment {shipment_id}",
     }
 
 
@@ -1078,9 +1109,7 @@ async def get_payment_intent_milestones(
     Raises:
         HTTPException: If payment intent not found
     """
-    payment_intent = (
-        db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
-    )
+    payment_intent = db.query(PaymentIntentModel).filter(PaymentIntentModel.id == payment_id).first()
 
     if not payment_intent:
         raise HTTPException(status_code=404, detail="Payment intent not found")
@@ -1106,12 +1135,8 @@ async def get_payment_intent_milestones(
             "status": milestone.status.value,
             "provider": milestone.provider,
             "reference": milestone.reference,
-            "occurred_at": (
-                milestone.occurred_at.isoformat() if milestone.occurred_at else None
-            ),
-            "settled_at": (
-                milestone.settled_at.isoformat() if milestone.settled_at else None
-            ),
+            "occurred_at": (milestone.occurred_at.isoformat() if milestone.occurred_at else None),
+            "settled_at": (milestone.settled_at.isoformat() if milestone.settled_at else None),
             "created_at": milestone.created_at.isoformat(),
         }
 
@@ -1123,24 +1148,31 @@ async def get_payment_intent_milestones(
             total_settled += milestone.amount
 
     return {
-        "payment_intent_id": payment_intent.id,
-        "freight_token_id": payment_intent.freight_token_id,
-        "amount": payment_intent.amount,
-        "currency": payment_intent.currency,
-        "risk_score": payment_intent.risk_score,
-        "risk_tier": payment_intent.risk_tier.value,
-        "status": payment_intent.status.value,
+        "payment_intent": {
+            "id": payment_intent.id,
+            "freight_token_id": payment_intent.freight_token_id,
+            "amount": payment_intent.amount,
+            "currency": payment_intent.currency,
+            "risk_score": payment_intent.risk_score,
+            "risk_tier": payment_intent.risk_tier.value,
+            "status": payment_intent.status.value,
+        },
         "milestones": milestones_detail,
         "summary": {
             "total_milestones": len(milestones),
-            "approved_amount": total_approved,
-            "settled_amount": total_settled,
-            "pending_amount": payment_intent.amount - total_approved - total_settled,
+            # Maintain both deprecated and current keys for backward compatibility
+            "total_approved": total_approved,
+            "total_settled": total_settled,
+            "total_approved_amount": total_approved,
+            "total_settled_amount": total_settled,
         },
     }
 
 
 if __name__ == "__main__":
+    from core.import_safety import ensure_import_safety
+    ensure_import_safety()
+
     import uvicorn
 
     uvicorn.run(app, host="0.0.0.0", port=8003)

@@ -192,6 +192,13 @@ export interface AtRiskShipmentSummary {
   last_snapshot_at: string; // ISO timestamp
   latestSnapshotStatus?: string | null; // NONE, PENDING, IN_PROGRESS, SUCCESS, FAILED
   latestSnapshotUpdatedAt?: string | null; // ISO timestamp
+
+  // Legacy/snake_case aliases from backend responses
+  corridor_code?: string | null;
+  template_name?: string | null;
+  completeness_pct?: number;
+  blocking_gap_count?: number;
+  risk_level?: RiskLevel;
 }
 
 export interface SnapshotExportEvent {
@@ -244,6 +251,21 @@ export interface OperatorQueueItem {
   materialAdverseOverride?: boolean | null;
   // Finance fields (FINANCE-R01) - TODO: Replace with actual backend field
   declaredValueUsd?: number | null;
+
+  // Legacy/snake_case aliases from backend responses
+  corridor_code?: string | null;
+  completeness_pct?: number;
+  blocking_gap_count?: number;
+  template_name?: string | null;
+  days_delayed?: number | null;
+  latest_snapshot_updatedAt?: string | null;
+  needs_snapshot?: boolean;
+  has_payment_hold?: boolean;
+  last_event_at?: string | null;
+  recon_state?: "CLEAN" | "PARTIAL_ESCROW" | "BLOCKED_DISPUTE" | null;
+  has_ricardian_wrapper?: boolean | null;
+  ricardian_status?: "ACTIVE" | "FROZEN" | "TERMINATED" | null;
+  declared_valueUsd?: number | null;
 }
 
 export interface ShipmentEvent {
@@ -292,6 +314,10 @@ export interface PaymentIntentListItem {
   payout_confidence?: number | null; // 0.0–1.0 confidence score
   final_payout_amount?: number | null; // Final adjusted payout amount
   adjustment_reason?: string | null; // Reason for adjustment if any
+
+  // Legacy/snake_case aliases
+  corridor_code?: string | null;
+  risk_level?: string | null;
 }
 
 /**
@@ -550,6 +576,15 @@ export interface LiveShipmentPosition {
 
   lastEventCode: string;
   lastEventTs: string;
+
+  // Legacy/snake_case aliases surfaced by backend
+  settlement_state?: string;
+  destPort_name?: string;
+  distance_to_nearest_port_km?: number;
+  eta_band_hours?: string;
+  eta_confidence?: string;
+  eta_delta_hours?: number;
+  last_event_code?: string;
 }
 
 export interface CorridorIntelStats {
@@ -559,6 +594,16 @@ export interface CorridorIntelStats {
   avgEtaDeltaMinutes: number;
   highRiskShipments: number;
   atRiskShipments: number;
+
+  // Legacy/snake_case aliases
+  corridorLabel?: string;
+  shipment_count?: number;
+  on_time_count?: number;
+  high_risk_count?: number;
+  critical_risk_count?: number;
+  at_risk_valueUsd?: number;
+  valueUsd?: number;
+  avg_eta_delta_hours?: number;
 }
 
 export interface ModeIntelStats {
@@ -567,6 +612,17 @@ export interface ModeIntelStats {
   avgEtaDeltaMinutes: number;
   activeShipments: number;
   highRiskShipments: number;
+
+  // Legacy/snake_case aliases
+  shipment_count?: number;
+  risk_distribution?: {
+    low: number;
+    medium: number;
+    high: number;
+    critical: number;
+  };
+  avg_delay_hours?: number;
+  valueUsd?: number;
 }
 
 export interface PortRiskInfo {
@@ -576,6 +632,13 @@ export interface PortRiskInfo {
   congestionScore: number;
   highRiskShipments: number;
   activeShipments: number;
+
+  // Legacy/snake_case aliases
+  port_code?: string;
+  port_name?: string;
+  active_shipments?: number;
+  at_risk_valueUsd?: number;
+  riskScore?: number;
 }
 
 export interface GlobalIntelSnapshot {
@@ -589,6 +652,31 @@ export interface GlobalIntelSnapshot {
     settlementsInFlight: number;
   };
   timestamp: string;
+
+  // Legacy/snake_case aliases used by existing UI components
+  by_corridor?: Array<
+    CorridorIntelStats & {
+      corridorId: string;
+      shipment_count: number;
+      on_time_count: number;
+      high_risk_count: number;
+      critical_risk_count: number;
+      at_risk_valueUsd?: number;
+      valueUsd?: number;
+      avg_eta_delta_hours?: number;
+    }
+  >;
+  on_time_count?: number;
+  top_ports_by_risk?: Array<
+    PortRiskInfo & {
+      riskScore: number;
+      port_code?: string;
+      port_name?: string;
+      active_shipments?: number;
+      at_risk_valueUsd?: number;
+    }
+  >;
+  financed_valueUsd?: number;
 }
 
 export interface OCQueueCardMeta {

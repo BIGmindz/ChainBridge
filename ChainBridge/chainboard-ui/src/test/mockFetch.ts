@@ -1,14 +1,11 @@
 import { vi } from "vitest";
 
-const defaultImplementation = () =>
-  Promise.reject(new Error("Global fetch mock invoked without an implementation"));
-
 type FetchType = typeof fetch;
 
-type FetchParameters = Parameters<FetchType>;
-type FetchReturn = ReturnType<FetchType>;
+const defaultImplementation: FetchType = () =>
+  Promise.reject(new Error("Global fetch mock invoked without an implementation"));
 
-export const fetchMock = vi.fn(defaultImplementation);
+export const fetchMock = vi.fn<FetchType>().mockImplementation(defaultImplementation);
 
 export function resetFetchMock(): void {
   fetchMock.mockReset();

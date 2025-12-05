@@ -319,7 +319,11 @@ export function ShipmentRiskTable({
                     </tr>
                   </thead>
                   <tbody>
-                    {data.map((shipment) => (
+                    {data.map((shipment) => {
+                      const completeness = shipment.completeness_pct ?? shipment.completenessPct ?? 0;
+                      const blockingGaps = shipment.blocking_gap_count ?? shipment.blockingGapCount ?? 0;
+                      const riskLevel = shipment.risk_level ?? shipment.riskLevel;
+                      return (
                       <tr
                         key={shipment.shipmentId}
                         className="border-b border-slate-800/50 transition-colors cursor-pointer hover:bg-slate-800/30"
@@ -347,30 +351,30 @@ export function ShipmentRiskTable({
                         <td className="py-3 px-2">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-slate-100">
-                              {shipment.completeness_pct}%
+                              {completeness}%
                             </span>
                             <div className="w-12 h-1.5 bg-slate-800 rounded-full overflow-hidden">
                               <div
                                 className={classNames(
                                   "h-full transition-all duration-300",
-                                  shipment.completeness_pct >= 80 ? "bg-emerald-500" :
-                                  shipment.completeness_pct >= 60 ? "bg-yellow-500" : "bg-rose-500",
-                                  shipment.completeness_pct === 0 && "w-0",
-                                  shipment.completeness_pct > 0 && shipment.completeness_pct < 25 && "w-1/4",
-                                  shipment.completeness_pct >= 25 && shipment.completeness_pct < 50 && "w-1/2",
-                                  shipment.completeness_pct >= 50 && shipment.completeness_pct < 75 && "w-3/4",
-                                  shipment.completeness_pct >= 75 && "w-full"
+                                  completeness >= 80 ? "bg-emerald-500" :
+                                  completeness >= 60 ? "bg-yellow-500" : "bg-rose-500",
+                                  completeness === 0 && "w-0",
+                                  completeness > 0 && completeness < 25 && "w-1/4",
+                                  completeness >= 25 && completeness < 50 && "w-1/2",
+                                  completeness >= 50 && completeness < 75 && "w-3/4",
+                                  completeness >= 75 && "w-full"
                                 )}
                               />
                             </div>
                           </div>
                         </td>
                         <td className="py-3 px-2">
-                          {shipment.blocking_gap_count > 0 ? (
+                          {blockingGaps > 0 ? (
                             <div className="flex items-center gap-1">
                               <AlertTriangle className="h-3 w-3 text-rose-400" />
                               <span className="text-sm font-medium text-rose-300">
-                                {shipment.blocking_gap_count}
+                                {blockingGaps}
                               </span>
                             </div>
                           ) : (
@@ -379,10 +383,10 @@ export function ShipmentRiskTable({
                         </td>
                         <td className="py-3 px-2">
                           <Badge
-                            variant={riskLevelVariantMap[shipment.risk_level as keyof typeof riskLevelVariantMap] || "info"}
+                            variant={riskLevelVariantMap[riskLevel as keyof typeof riskLevelVariantMap] || "info"}
                             className="text-xs"
                           >
-                            {shipment.risk_level}
+                            {riskLevel}
                           </Badge>
                         </td>
                         <td className="py-3 px-2">
@@ -450,7 +454,8 @@ export function ShipmentRiskTable({
                           </button>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

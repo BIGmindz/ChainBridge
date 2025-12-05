@@ -9,7 +9,7 @@ import { CorridorIntelPanel } from "../components/CorridorIntel";
 import { EchoEventPanel } from "../components/EchoEventPanel";
 import { HealthStatusCard } from "../components/HealthStatusCard";
 import { InsightsFeed } from "../components/InsightsFeed";
-import { IoTHealthPanel } from "../components/IoTHealthPanel";
+import { IoTHealthPanel } from "../components/iot/IoTHealthPanel";
 import { PaymentHoldQueueCard } from "../components/PaymentHoldQueueCard";
 import { PaymentRailsIntelPanel } from "../components/PaymentRailsIntel";
 import { ShipmentRiskCard } from "../components/ShipmentRiskCard";
