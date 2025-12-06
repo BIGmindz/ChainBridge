@@ -8,6 +8,8 @@ ChainBridge frames every build and rollout around **Sense → Think → Act**: s
 
 **Governance Pointers:** See `docs/governance/ALEX_TOOL_GOVERNANCE_V1.md` (tool/auto-approve policy), `docs/governance/ALEX_MCP_POLICY_V1.md` (MCP onboarding/review), and the settings.json governance appendix in this file for required VS Code / Copilot defaults. All agents must log changes in `docs/governance/AGENT_ACTIVITY_LOG.md`.
 
+**Audit & ProofPacks:** For audit logging, ProofPack structure, and One-Click Audit workflows, see `docs/product/CHAINBRIDGE_AUDIT_PROOFPACK_SPEC.md`.
+
 ---
 
 ## Current Service Reality — 2025-12-06
