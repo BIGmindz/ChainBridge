@@ -11,10 +11,15 @@ from fastapi.testclient import TestClient
 #   repo root: /.../ChainBridge-local-repo
 #   app root:  /.../ChainBridge-local-repo/ChainBridge
 ROOT_DIR = Path(__file__).resolve().parents[1]
-APP_DIR = ROOT_DIR / "ChainBridge"
 
-if APP_DIR.is_dir() and str(APP_DIR) not in sys.path:
-    sys.path.insert(0, str(APP_DIR))
+# Use the repo root directly; the app modules (e.g., api.server) live there.
+if ROOT_DIR.is_dir():
+    if str(ROOT_DIR) in sys.path:
+        sys.path.remove(str(ROOT_DIR))
+    sys.path.insert(0, str(ROOT_DIR))
+
+# Note: chainiq-service path is added by api/server.py when it imports the ChainIQ router.
+# We don't add it here to avoid shadowing the monorepo 'app' package.
 
 from api.server import app  # now resolves via injected path
 from api.core.config import settings
