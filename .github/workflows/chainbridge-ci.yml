@@ -35,6 +35,8 @@ jobs:
   code-quality:
     name: Code Quality & Standards
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - name: Setup Python
@@ -98,6 +100,8 @@ jobs:
   configuration-validation:
     name: Configuration & Schema Validation
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - name: Setup Python
@@ -117,6 +121,8 @@ jobs:
   unit-tests:
     name: Unit & Integration Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - name: Setup Python
@@ -153,6 +159,8 @@ jobs:
   chainboard-ui-tests:
     name: ChainBoard UI Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node
@@ -184,6 +192,8 @@ jobs:
     name: Staging Deployment
     needs: [security-scan, code-quality, configuration-validation, unit-tests]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     if: github.ref == 'refs/heads/develop'
     steps:
       - uses: actions/checkout@v4
@@ -196,6 +206,8 @@ jobs:
     name: Production Deployment
     needs: [security-scan, code-quality, configuration-validation, unit-tests]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
@@ -207,6 +219,8 @@ jobs:
   docs-quality:
     name: Documentation Quality
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - name: Setup Python
