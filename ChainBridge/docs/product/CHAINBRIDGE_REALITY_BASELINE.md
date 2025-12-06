@@ -1,10 +1,31 @@
 # ChainBridge Reality Baseline
 
-Last updated: 2025-11-26
+Last updated: 2025-12-06
 Owner: Benson (CTO)
 Source of truth for all AI agents and wraps.
 
+ChainBridge frames every build and rollout around **Sense → Think → Act**: sensing logistics/finance events, thinking via ChainIQ + MCP decision models, and acting through ChainPay settlement and token flows.
+
 **Governance Pointers:** See `docs/governance/ALEX_TOOL_GOVERNANCE_V1.md` (tool/auto-approve policy), `docs/governance/ALEX_MCP_POLICY_V1.md` (MCP onboarding/review), and the settings.json governance appendix in this file for required VS Code / Copilot defaults. All agents must log changes in `docs/governance/AGENT_ACTIVITY_LOG.md`.
+
+---
+
+## Current Service Reality — 2025-12-06
+
+**Branch:** `feature/chainpay-consumer`
+
+### ChainIQ
+- ✅ IQ risk scoring service is wired into the main API via `/iq` routes (`api/server.py`).
+- ✅ Import-path conflict between monorepo `app` and chainiq-service `app` **resolved**; tests and CI are green.
+- ✅ Security invariants added around ChainIQ mount logic (`sys.path`/`sys.modules`) to prevent namespace pollution.
+- ✅ 313 root tests + 50 chainiq-service tests passing locally.
+- ⚠️ **Long-term:** Recommend restructuring services to avoid duplicate `app` package names (reduce `sys.modules` manipulation).
+
+### ChainPay (Consumer)
+- ⚠️ Implementation in progress on `feature/chainpay-consumer`.
+- ✅ Consumer logic, milestone-based payout (20/70/10), and context ledger tests are in place.
+- ⚠️ Full settlement flows and Operator Console integrations are **not yet feature-complete**.
+- ⚠️ On-chain XRPL settlement path remains `MODE_INTERNAL_ONLY` (InternalLedgerRail) until promoted.
 
 ---
 
