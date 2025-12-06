@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 
-import GlobalOpsMap from '@/components/GlobalOpsMap';
 import { SystemStatus } from '@/components/debug/SystemStatus';
+import GlobalOpsMap from '@/components/GlobalOpsMap';
+import { SenseThinkActStrip } from '@/components/oc/SenseThinkActStrip';
+import { ServiceStatusSummary } from '@/components/oc/ServiceStatusSummary';
 
 export default function OperatorConsolePage() {
   const [isCinematic, setIsCinematic] = useState(false);
@@ -105,8 +107,18 @@ export default function OperatorConsolePage() {
           </div>
         </div>
 
+        {/* SENSE THINK ACT STRIP - Centered Top */}
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-full max-w-3xl z-20 pointer-events-none px-4">
+          <div className="pointer-events-auto">
+            <SenseThinkActStrip />
+          </div>
+        </div>
+
         {/* LEFT SIDEBAR - Shipment List with Stats */}
         <div className="absolute top-24 left-4 bottom-8 w-96 flex flex-col gap-4 layer-interactive">
+          {/* Service Status Widget */}
+          <ServiceStatusSummary />
+
           {/* KPI STRIP - With HOVER DRILL-DOWN on RISK */}
           <div className="grid grid-cols-3 gap-2">
             {/* Metric 1: Total */}

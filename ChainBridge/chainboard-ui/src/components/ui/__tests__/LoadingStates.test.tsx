@@ -21,7 +21,7 @@ describe('LoadingStates', () => {
     it('renders custom number of rows', () => {
       render(<TableSkeleton rows={3} />);
       // Should render 3 skeleton rows with proper structure
-      const container = screen.getByRole('generic');
+      const container = screen.getByTestId('table-skeleton');
       expect(container).toBeInTheDocument();
     });
   });
@@ -109,7 +109,7 @@ describe('LoadingStates', () => {
     it('renders with proper structure', () => {
       render(<CardSkeleton />);
 
-      const container = screen.getByRole('generic');
+      const container = screen.getByTestId('card-skeleton');
       expect(container).toBeInTheDocument();
       expect(container).toHaveClass('bg-slate-800/30');
     });
