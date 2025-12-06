@@ -49,12 +49,18 @@ describe("IoTHealthPanel", () => {
 
     render(<IoTHealthPanel />);
 
+    // Header + key metrics
     expect(screen.getByText("IoT Fleet Health")).toBeInTheDocument();
     expect(screen.getByText("Devices Monitored")).toBeInTheDocument();
     expect(screen.getByText("120")).toBeInTheDocument();
+
+    // Anomalies section
     expect(screen.getByText("Active Anomalies")).toBeInTheDocument();
     expect(screen.getByText("Temp excursion")).toBeInTheDocument();
-    expect(screen.getByText(/Critical Alerts:/i)).toBeInTheDocument();
+    expect(screen.getByText("GPS jitter")).toBeInTheDocument();
+
+    // Count label ("2 issues") – tolerate internal whitespace
+    expect(screen.getByText(/2\s+issues/i)).toBeInTheDocument();
   });
 
   it("renders error state with retry", () => {
