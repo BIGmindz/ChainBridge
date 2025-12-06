@@ -193,3 +193,30 @@ These metrics give Cody, Maggie, Sonny, and Dan a shared target definition of �
 - Pricing, risk-sharing, SLAs, and 30/60/90 KPIs are defined there and align with the configurable risk/payout matrix (`docs/product/CHAINPAY_RISK_PAYOUT_MATRIX_V1.md`).
 - Analytics alignment: outcomes and KPIs should be tracked per Maggie’s risk analytics spec (`docs/ai/CHAINPAY_RISK_ANALYTICS_V1.md`, if present) to drive “scale / tweak / pause” decisions after the pilot window.
 - CB-USDx rail rollout modes, eligibility, and phase gating for the USD→MXN pilot are defined in `docs/product/CHAINPAY_CB_USDX_ROLLOUT_V1.md`; default production stance remains `MODE_INTERNAL_ONLY` (InternalLedgerRail) until promoted.
+
+---
+
+## 11. Next Steps / Open Items (as of 2025-12-06)
+
+### ChainIQ Packaging & Integration
+- **Long-term:** Remove the need for `sys.modules` / `sys.path` manipulation by restructuring services to avoid duplicate `app` package names across the monorepo and sub-services.
+- **Goal:** Boring, standard Python package layout for all services; ChainIQ should import cleanly without runtime path hacks.
+- **Status:** Security invariants tests added; current approach is stable but not ideal for long-term maintenance.
+
+### ChainPay Consumer Finalization
+- Finalize consumer flows for event-driven, milestone-based payments (e.g., 20/70/10 release tied to shipment events).
+- Extend tests for payout edge cases: disputes, failed milestones, risk score spikes, IoT degradation scenarios.
+- Wire ChainPay settlement endpoints into the Operator Console for visibility and manual override workflows.
+
+### Operator Console Integration
+- Ensure ChainIQ `/iq` routes and ChainPay consumer endpoints are visible and testable from ChainBoard / OC.
+- Add UI components to display risk tier, payout schedule, and claim windows per settlement.
+- Implement manual override flows with context ledger audit trail.
+
+### Risk Analytics Alignment
+- Correlate ChainIQ risk bands and IoT health with payout outcomes per Maggie's risk analytics spec.
+- Build feedback loop: use settlement outcomes to recalibrate risk thresholds and payout matrix over time.
+
+### CB-USDx Rail Promotion
+- Validate `MODE_INTERNAL_ONLY` flows end-to-end before promoting to `MODE_PILOT` or `MODE_PRODUCTION`.
+- Document XRPL trustline setup, freeze controls, and redemption flows for carrier onboarding.
