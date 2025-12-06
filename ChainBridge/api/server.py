@@ -9,15 +9,31 @@ import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
+
+# ---------------------------------------------------------------------------
+# Project Layout Constants (Security-Critical)
+# ---------------------------------------------------------------------------
+# These paths are STATIC and derived only from __file__. They must NOT be
+# overridden by environment variables, user input, or HTTP request data.
+# If the repo layout changes, update these constants—do not bypass the checks.
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+"""Absolute path to the ChainBridge monorepo root (parent of api/)."""
+
+CHAINIQ_SERVICE_ROOT = PROJECT_ROOT / "chainiq-service"
+"""Absolute path to the ChainIQ service directory."""
+
+CHAINIQ_APP_DIR = CHAINIQ_SERVICE_ROOT / "app"
+"""Absolute path to the ChainIQ app package directory."""
 
 # Add project root to Python path for imports
-project_root = Path(__file__).parent.parent
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
+project_root = PROJECT_ROOT  # Legacy alias for backwards compatibility
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -28,60 +44,156 @@ from core.module_manager import ModuleManager
 from core.pipeline import Pipeline
 from tracking.metrics_collector import MetricsCollector
 
-# Import ChainIQ router
-# Strategy: Temporarily prioritize chainiq-service's app package for this import only,
-# then restore the path so monorepo's app package is used elsewhere.
-try:
-    chainiq_service_root = project_root / "chainiq-service"
-    chainiq_path_str = str(chainiq_service_root)
 
-    # Save current app module if it exists (from monorepo)
-    saved_app_module = sys.modules.get("app")
-    saved_app_api_module = sys.modules.get("app.api")
-    saved_app_risk_module = sys.modules.get("app.risk")
-    saved_app_risk_api_module = sys.modules.get("app.risk.api")
+# ---------------------------------------------------------------------------
+# ChainIQ Router Import Helper
+# ---------------------------------------------------------------------------
 
-    # Remove monorepo app modules temporarily
+
+def _validate_chainiq_paths() -> None:
+    """
+    Validate that ChainIQ directories exist at expected locations.
+
+    SECURITY: This function ensures we only load code from known, trusted
+    locations. If these checks fail, the repo layout is incorrect—fix the
+    layout, don't bypass these checks.
+
+    Raises:
+        RuntimeError: If ChainIQ directories are missing or invalid.
+    """
+    if not CHAINIQ_SERVICE_ROOT.is_dir():
+        raise RuntimeError(
+            f"ChainIQ service directory not found at expected location: "
+            f"{CHAINIQ_SERVICE_ROOT}. Fix the repo layout, don't bypass this check."
+        )
+
+    if not CHAINIQ_APP_DIR.is_dir():
+        raise RuntimeError(
+            f"ChainIQ app directory not found at expected location: "
+            f"{CHAINIQ_APP_DIR}. Fix the repo layout, don't bypass this check."
+        )
+
+    # SECURITY: Ensure paths resolve within project bounds (no symlink escape)
+    try:
+        resolved_root = CHAINIQ_SERVICE_ROOT.resolve(strict=True)
+        if not str(resolved_root).startswith(str(PROJECT_ROOT)):
+            raise RuntimeError(
+                f"ChainIQ path resolves outside project root: {resolved_root}"
+            )
+    except (OSError, ValueError) as e:
+        raise RuntimeError(f"ChainIQ path validation failed: {e}") from e
+
+
+def _load_chainiq_router() -> Tuple[Optional[APIRouter], bool]:
+    """
+    Load the ChainIQ router from chainiq-service.
+
+    This function handles a legacy package layout where both the monorepo
+    and chainiq-service use a top-level `app` package. The chainiq-service
+    modules are loaded and kept in sys.modules so that lazy imports within
+    the chainiq router code work at request time.
+
+    SECURITY NOTES:
+    - All paths are STATIC and derived from __file__ at module load time.
+    - Module names are HARDCODED—no dynamic import targets.
+    - sys.path is only modified with a single, known, validated path.
+    - Path validation ensures we only load from expected project locations.
+
+    Strategy:
+    1. Validate ChainIQ paths exist at expected locations
+    2. Save any existing monorepo `app.*` modules
+    3. Clear them to allow chainiq-service's app to load cleanly
+    4. Add chainiq-service to sys.path and import the router
+    5. Keep chainiq-service modules in sys.modules (they're needed at runtime)
+    6. Also store them under `chainiq_app.*` prefix for explicit access
+    7. Restore monorepo modules if they don't conflict
+
+    Invariants:
+    - ChainIQ router and its dependencies work at request time
+    - Monorepo modules that don't overlap remain accessible
+
+    Returns:
+        Tuple of (router, success_flag). Router is None if loading failed.
+
+    WARNING:
+        This function intentionally manipulates `sys.path` and `sys.modules`
+        to work around a legacy package layout. Do not copy this pattern
+        elsewhere without a clear reason.
+    """
+    # SECURITY: Validate paths exist before proceeding
+    try:
+        _validate_chainiq_paths()
+    except RuntimeError as e:
+        print(f"Warning: ChainIQ path validation failed: {e}")
+        return None, False
+
+    # SECURITY: Use the validated, absolute path constant (not user/env input)
+    chainiq_path_str = str(CHAINIQ_SERVICE_ROOT)
+
+    # Step 1: Save current monorepo app modules (if they exist)
+    saved_monorepo_modules: Dict[str, Any] = {}
     for mod_name in list(sys.modules.keys()):
         if mod_name == "app" or mod_name.startswith("app."):
-            del sys.modules[mod_name]
+            saved_monorepo_modules[mod_name] = sys.modules[mod_name]
 
-    # Add chainiq-service to front of path
+    # Step 2: Clear app modules to allow chainiq-service's app to load
+    for mod_name in saved_monorepo_modules:
+        del sys.modules[mod_name]
+
+    # Step 3: Add chainiq-service to front of sys.path
     sys.path.insert(0, chainiq_path_str)
 
+    router: Optional[APIRouter] = None
     try:
-        # Import chainiq router (this will use chainiq-service/app)
+        # Step 4: Import the ChainIQ router (uses chainiq-service/app)
         from app.api import router as chainiq_router
-        CHAINIQ_AVAILABLE = True
+        router = chainiq_router
+        return router, True
+
+    except Exception as e:
+        print(f"Warning: ChainIQ service not available: {e}")
+        return None, False
+
     finally:
-        # Remove chainiq-service from path
+        # Step 5: Remove chainiq-service from sys.path (import is done)
         if chainiq_path_str in sys.path:
             sys.path.remove(chainiq_path_str)
 
-        # Clear chainiq app modules from sys.modules
-        chainiq_modules = {k: v for k, v in sys.modules.items()
-                          if (k == "app" or k.startswith("app.")) and
-                          getattr(v, "__file__", "") and "chainiq-service" in getattr(v, "__file__", "")}
+        # Step 6: Also store chainiq modules under namespaced prefix for explicit access
+        # but DO NOT remove them from their original names - they're needed at runtime
+        # for lazy imports in the chainiq service layer
+        for mod_name in list(sys.modules.keys()):
+            if mod_name == "app" or mod_name.startswith("app."):
+                mod = sys.modules[mod_name]
+                mod_file = getattr(mod, "__file__", "") or ""
+                if "chainiq-service" in mod_file:
+                    # Add namespaced alias but keep original
+                    namespaced_name = f"chainiq_{mod_name}"
+                    sys.modules[namespaced_name] = mod
 
-        # Store chainiq modules under a namespaced key for later use
-        for mod_name, mod in chainiq_modules.items():
-            namespaced_name = f"chainiq_{mod_name}"
-            sys.modules[namespaced_name] = mod
-            del sys.modules[mod_name]
+        # Step 7: Restore ALL monorepo modules, overwriting chainiq modules.
+        # This means chainiq's lazy imports (from app.risk...) will fail at runtime.
+        # To fix that, we need to keep chainiq modules available under their
+        # original names for runtime imports.
+        #
+        # COMPROMISE: We restore monorepo modules that chainiq DIDN'T load.
+        # Chainiq needs: app, app.api, app.risk, app.risk.*
+        # Monorepo needs: app.services.*, app.api.endpoints.*, etc.
+        # These don't overlap, so we can keep both.
+        for mod_name, mod in saved_monorepo_modules.items():
+            # Check if chainiq loaded a module with this exact name
+            if mod_name in sys.modules:
+                existing = sys.modules[mod_name]
+                existing_file = getattr(existing, "__file__", "") or ""
+                # If chainiq loaded it, DON'T overwrite (chainiq needs it at runtime)
+                if "chainiq-service" in existing_file:
+                    continue
+            # Monorepo module, or no conflict - restore it
+            sys.modules[mod_name] = mod
 
-        # Restore monorepo app modules if they existed
-        if saved_app_module is not None:
-            sys.modules["app"] = saved_app_module
-        if saved_app_api_module is not None:
-            sys.modules["app.api"] = saved_app_api_module
-        if saved_app_risk_module is not None:
-            sys.modules["app.risk"] = saved_app_risk_module
-        if saved_app_risk_api_module is not None:
-            sys.modules["app.risk.api"] = saved_app_risk_api_module
 
-except Exception as e:
-    print(f"Warning: ChainIQ service not available: {e}")
-    CHAINIQ_AVAILABLE = False
+# Load ChainIQ router at module import time
+chainiq_router, CHAINIQ_AVAILABLE = _load_chainiq_router()
 
 # Import ChainBoard router
 try:
