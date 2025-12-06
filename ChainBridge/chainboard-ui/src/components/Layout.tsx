@@ -11,6 +11,7 @@ import {
     PackageSearch,
     Radar,
     Search,
+    Shield,
     TrendingUp,
     User,
     X,
@@ -27,6 +28,7 @@ import { DemoSidebar } from "./DemoSidebar";
 
 const navItems: { to: string; label: string; Icon: LucideIcon }[] = [
   { to: "/", label: "Global Intelligence", Icon: Radar },
+  { to: "/risk", label: "Risk Console", Icon: Shield },
   { to: "/overview", label: "Overview", Icon: LayoutDashboard },
   { to: "/shipments", label: "Shipments", Icon: PackageSearch },
   { to: "/oc", label: "The OC", Icon: Command },

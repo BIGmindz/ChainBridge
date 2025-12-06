@@ -41,6 +41,8 @@ You can also run the VS Code task **Start ChainBridge Stack** to launch both.
 | `VITE_API_BASE_URL` | `http://127.0.0.1:8001` | Base URL for all real API requests |
 | `VITE_USE_MOCKS` | `false` | Force legacy mock services (bypasses gateway) |
 | `VITE_ENVIRONMENT_LABEL` | auto | Badge in UI header to signal environment |
+| `VITE_RISK_API_MODE` | `mock` | Risk Console data source ('mock' or 'live') |
+| `VITE_CHAINIQ_API_BASE_URL` | - | Base URL for ChainIQ Risk API (required for live mode) |
 
 All env access flows through `src/config/env.ts`, which logs the active configuration in development mode.
 

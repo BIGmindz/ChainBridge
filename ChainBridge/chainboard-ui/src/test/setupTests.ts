@@ -1,3 +1,4 @@
+import "@testing-library/jest-dom/vitest";
 import { afterAll, beforeAll, beforeEach, vi } from "vitest";
 
 import { fetchMock, resetFetchMock } from "./mockFetch";

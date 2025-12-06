@@ -17,7 +17,7 @@ import { Skeleton } from "./Skeleton";
  */
 export function TableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" data-testid="table-skeleton">
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="flex items-center gap-4 p-3 bg-slate-800/30 rounded-lg">
           <Skeleton className="h-10 w-10 rounded-full" />
@@ -41,7 +41,7 @@ export function TableSkeleton({ rows = 5 }: { rows?: number }) {
  */
 export function CardSkeleton({ className }: { className?: string }) {
   return (
-    <div className={classNames("bg-slate-800/30 rounded-lg p-4 space-y-3", className)}>
+    <div className={classNames("bg-slate-800/30 rounded-lg p-4 space-y-3", className)} data-testid="card-skeleton">
       <div className="flex items-center justify-between">
         <Skeleton className="h-4 w-24" />
         <Skeleton className="h-4 w-4 rounded" />
