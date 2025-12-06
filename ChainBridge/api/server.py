@@ -29,15 +29,56 @@ from core.pipeline import Pipeline
 from tracking.metrics_collector import MetricsCollector
 
 # Import ChainIQ router
+# Strategy: Temporarily prioritize chainiq-service's app package for this import only,
+# then restore the path so monorepo's app package is used elsewhere.
 try:
-    import sys
+    chainiq_service_root = project_root / "chainiq-service"
+    chainiq_path_str = str(chainiq_service_root)
 
-    chainiq_path = str(project_root / "chainiq-service")
-    if chainiq_path not in sys.path:
-        sys.path.insert(0, chainiq_path)
-    from app.api import router as chainiq_router
+    # Save current app module if it exists (from monorepo)
+    saved_app_module = sys.modules.get("app")
+    saved_app_api_module = sys.modules.get("app.api")
+    saved_app_risk_module = sys.modules.get("app.risk")
+    saved_app_risk_api_module = sys.modules.get("app.risk.api")
 
-    CHAINIQ_AVAILABLE = True
+    # Remove monorepo app modules temporarily
+    for mod_name in list(sys.modules.keys()):
+        if mod_name == "app" or mod_name.startswith("app."):
+            del sys.modules[mod_name]
+
+    # Add chainiq-service to front of path
+    sys.path.insert(0, chainiq_path_str)
+
+    try:
+        # Import chainiq router (this will use chainiq-service/app)
+        from app.api import router as chainiq_router
+        CHAINIQ_AVAILABLE = True
+    finally:
+        # Remove chainiq-service from path
+        if chainiq_path_str in sys.path:
+            sys.path.remove(chainiq_path_str)
+
+        # Clear chainiq app modules from sys.modules
+        chainiq_modules = {k: v for k, v in sys.modules.items()
+                          if (k == "app" or k.startswith("app.")) and
+                          getattr(v, "__file__", "") and "chainiq-service" in getattr(v, "__file__", "")}
+
+        # Store chainiq modules under a namespaced key for later use
+        for mod_name, mod in chainiq_modules.items():
+            namespaced_name = f"chainiq_{mod_name}"
+            sys.modules[namespaced_name] = mod
+            del sys.modules[mod_name]
+
+        # Restore monorepo app modules if they existed
+        if saved_app_module is not None:
+            sys.modules["app"] = saved_app_module
+        if saved_app_api_module is not None:
+            sys.modules["app.api"] = saved_app_api_module
+        if saved_app_risk_module is not None:
+            sys.modules["app.risk"] = saved_app_risk_module
+        if saved_app_risk_api_module is not None:
+            sys.modules["app.risk.api"] = saved_app_risk_api_module
+
 except Exception as e:
     print(f"Warning: ChainIQ service not available: {e}")
     CHAINIQ_AVAILABLE = False
