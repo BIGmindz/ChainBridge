@@ -56,4 +56,4 @@ jobs:
         run: |
           source .venv/bin/activate
           echo "Bot deployment placeholder - configure as needed for production"
-          # Deployment would use: python main.py --mode paper (or --mode live --confirm-live)
+          # Deployment would use: python src/bot/main.py --mode paper (or --mode live --confirm)
