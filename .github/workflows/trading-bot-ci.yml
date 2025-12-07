@@ -108,7 +108,7 @@ jobs:
       
       - name: Run tests
         run: |
-          if [ -f benson_rsi_bot.py ]; then python benson_rsi_bot.py --test; fi
+          # Legacy benson_rsi_bot.py has been deprecated in favor of pytest
           if [ -d tests ]; then pytest tests/ -v --cov=. --cov-report=xml; else echo "No tests directory"; fi
       
       - name: Upload coverage
