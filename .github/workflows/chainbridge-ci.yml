@@ -1,0 +1,451 @@
+# =============================================================================
+# ChainBridge Unified CI Pipeline v0.1
+# =============================================================================
+# Services covered:
+#   - Backend API (api/ + core/)
+#   - ChainBoard UI (ChainBridge/chainboard-ui/)
+#   - ChainPay Service (ChainBridge/chainpay-service/)
+#   - ChainIQ ML Service (ChainBridge/chainiq-service/)
+#   - ChainFreight Service (ChainBridge/chainfreight-service/)
+#
+# Dan (GID-07) — DevOps & CI/CD Lead
+# Last updated: 2024-12-07
+# =============================================================================
+
+name: ChainBridge Unified CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop, 'feature/**' ]
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '20'
+
+# =============================================================================
+# JOBS
+# =============================================================================
+
+jobs:
+
+  # ---------------------------------------------------------------------------
+  # Security Scan (CodeQL)
+  # ---------------------------------------------------------------------------
+  security-scan:
+    name: 🔒 Security Scan (CodeQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: chainbridge-security-${{ github.ref }}
+      cancel-in-progress: true
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'python', 'javascript-typescript' ]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+  # ---------------------------------------------------------------------------
+  # Code Quality (Linting, Formatting, Type Checking)
+  # ---------------------------------------------------------------------------
+  code-quality:
+    name: 🧹 Code Quality & Standards
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: chainbridge-quality-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-quality-${{ hashFiles('requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-quality-
+            ${{ runner.os }}-pip-
+
+      - name: Install linting tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff black
+
+      - name: Ruff lint
+        run: ruff check . --no-cache || true
+
+      - name: Ruff format check
+        run: ruff format --check . || true
+
+      - name: Black format check
+        run: black --check --diff . || true
+
+  # ---------------------------------------------------------------------------
+  # Configuration Validation
+  # ---------------------------------------------------------------------------
+  config-validation:
+    name: ⚙️ Config Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Validate YAML configs
+        run: |
+          echo "Validating configuration files..."
+          for cfg in config/config.yaml config.yaml; do
+            if [ -f "$cfg" ]; then
+              echo "  ✓ Validating $cfg"
+              python -c "import yaml; yaml.safe_load(open('$cfg'))"
+            fi
+          done
+          echo "Configuration validation complete."
+
+  # ---------------------------------------------------------------------------
+  # Backend API Tests (api/ + core/ + root tests/)
+  # ---------------------------------------------------------------------------
+  backend-tests:
+    name: 🐍 Backend API Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-backend-${{ hashFiles('requirements.txt', 'requirements-dev.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-backend-
+            ${{ runner.os }}-pip-
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt || true
+          pip install pytest pytest-cov pytest-asyncio pytest-mock
+
+      - name: Run legacy bot tests
+        run: |
+          if [ -f benson_rsi_bot.py ]; then
+            echo "Running benson_rsi_bot.py --test"
+            python benson_rsi_bot.py --test
+          fi
+
+      - name: Run pytest suite (root tests/)
+        run: |
+          if [ -d tests ]; then
+            echo "Running pytest on tests/"
+            pytest tests/ -v --tb=short --cov=api --cov=core --cov-report=xml --cov-report=term-missing
+          else
+            echo "No tests/ directory found"
+          fi
+
+      - name: Upload coverage
+        if: success() && hashFiles('coverage.xml') != ''
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: backend
+          name: backend-coverage
+
+  # ---------------------------------------------------------------------------
+  # ChainPay Service Tests
+  # ---------------------------------------------------------------------------
+  chainpay-tests:
+    name: 💳 ChainPay Service Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-chainpay-${{ hashFiles('ChainBridge/chainpay-service/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-chainpay-
+            ${{ runner.os }}-pip-
+
+      - name: Install ChainPay dependencies
+        working-directory: ChainBridge/chainpay-service
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-asyncio
+
+      - name: Run ChainPay tests
+        working-directory: ChainBridge/chainpay-service
+        run: |
+          echo "Running ChainPay test suite..."
+          pytest tests/ -v --tb=short --cov=chainpay_service --cov=app --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage
+        if: success()
+        uses: codecov/codecov-action@v4
+        with:
+          file: ChainBridge/chainpay-service/coverage.xml
+          flags: chainpay
+          name: chainpay-coverage
+
+  # ---------------------------------------------------------------------------
+  # ChainIQ ML Service Tests
+  # ---------------------------------------------------------------------------
+  chainiq-tests:
+    name: 🧠 ChainIQ ML Service Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-chainiq-${{ hashFiles('ChainBridge/chainiq-service/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-chainiq-
+            ${{ runner.os }}-pip-
+
+      - name: Install ChainIQ dependencies
+        working-directory: ChainBridge/chainiq-service
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+
+      - name: Run ChainIQ sanity checks
+        working-directory: ChainBridge/chainiq-service
+        run: |
+          echo "Running ChainIQ sanity checks..."
+          # Syntax validation for all Python files (required)
+          python -m compileall app/ -q
+          # Run tests if they exist (tests now implemented by Maggie)
+          if [ -d tests ]; then
+            echo "Running ChainIQ pytest suite..."
+            pytest tests/ -v --tb=short --ignore=tests/security/
+          else
+            echo "No ChainIQ tests directory — skeleton service validated via compileall"
+          fi
+
+  # ---------------------------------------------------------------------------
+  # ChainFreight Service Tests
+  # ---------------------------------------------------------------------------
+  chainfreight-tests:
+    name: 🚚 ChainFreight Service Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-chainfreight-${{ hashFiles('ChainBridge/chainfreight-service/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-chainfreight-
+            ${{ runner.os }}-pip-
+
+      - name: Install ChainFreight dependencies
+        working-directory: ChainBridge/chainfreight-service
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Run ChainFreight sanity checks
+        working-directory: ChainBridge/chainfreight-service
+        run: |
+          echo "Running ChainFreight sanity checks..."
+          # Syntax validation
+          python -m compileall app/ -q
+          # TODO(Dan): Add ChainFreight test suite when service is implemented
+          if [ -d tests ] && [ "$(ls -A tests/*.py 2>/dev/null)" ]; then
+            pytest tests/ -v --tb=short
+          else
+            echo "⚠️ No ChainFreight tests yet — skeleton service validated via compileall"
+          fi
+
+  # ---------------------------------------------------------------------------
+  # ChainBoard UI Tests (React/TypeScript/Vite)
+  # ---------------------------------------------------------------------------
+  chainboard-ui-tests:
+    name: 🎨 ChainBoard UI Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ChainBridge/chainboard-ui/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ChainBridge/chainboard-ui
+        run: npm ci
+
+      - name: Type check
+        working-directory: ChainBridge/chainboard-ui
+        run: npm run type-check
+
+      - name: Lint
+        working-directory: ChainBridge/chainboard-ui
+        run: npm run lint
+
+      - name: Build
+        working-directory: ChainBridge/chainboard-ui
+        run: npm run build
+
+      - name: Run Vitest suite
+        working-directory: ChainBridge/chainboard-ui
+        run: npm test -- --run --reporter=verbose
+
+  # ---------------------------------------------------------------------------
+  # Documentation Quality
+  # ---------------------------------------------------------------------------
+  docs-quality:
+    name: 📚 Documentation Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Run markdown fence normalizer
+        run: |
+          if [ -f scripts/normalize_markdown_fences.py ]; then
+            python scripts/normalize_markdown_fences.py
+            git diff --exit-code || echo "⚠️ Markdown fences need normalization (non-blocking)"
+          fi
+
+  # ---------------------------------------------------------------------------
+  # CI Summary Gate
+  # ---------------------------------------------------------------------------
+  ci-gate:
+    name: ✅ CI Gate (All Checks)
+    runs-on: ubuntu-latest
+    needs:
+      - security-scan
+      - code-quality
+      - config-validation
+      - backend-tests
+      - chainpay-tests
+      - chainiq-tests
+      - chainfreight-tests
+      - chainboard-ui-tests
+      - docs-quality
+    if: always()
+    steps:
+      - name: Check all job results
+        run: |
+          echo "=== CI Pipeline Summary ==="
+          echo "Security Scan:     ${{ needs.security-scan.result }}"
+          echo "Code Quality:      ${{ needs.code-quality.result }}"
+          echo "Config Validation: ${{ needs.config-validation.result }}"
+          echo "Backend Tests:     ${{ needs.backend-tests.result }}"
+          echo "ChainPay Tests:    ${{ needs.chainpay-tests.result }}"
+          echo "ChainIQ Tests:     ${{ needs.chainiq-tests.result }}"
+          echo "ChainFreight Tests: ${{ needs.chainfreight-tests.result }}"
+          echo "ChainBoard UI:     ${{ needs.chainboard-ui-tests.result }}"
+          echo "Docs Quality:      ${{ needs.docs-quality.result }}"
+          echo "=========================="
+
+          # Fail if any critical job failed
+          if [[ "${{ needs.backend-tests.result }}" == "failure" ]] || \
+             [[ "${{ needs.chainpay-tests.result }}" == "failure" ]] || \
+             [[ "${{ needs.chainiq-tests.result }}" == "failure" ]] || \
+             [[ "${{ needs.chainboard-ui-tests.result }}" == "failure" ]]; then
+            echo "❌ Critical job(s) failed!"
+            exit 1
+          fi
+
+          echo "✅ All critical checks passed!"
+
+  # ---------------------------------------------------------------------------
+  # Staging Deployment (develop branch only)
+  # ---------------------------------------------------------------------------
+  deployment-staging:
+    name: 🚀 Staging Deployment
+    needs: ci-gate
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' && needs.ci-gate.result == 'success'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to staging
+        run: |
+          echo "🚀 Deploying to staging environment..."
+          # TODO(Dan): Add staging deployment logic (docker-compose, k8s, etc.)
+
+  # ---------------------------------------------------------------------------
+  # Production Deployment (main branch only)
+  # ---------------------------------------------------------------------------
+  deployment-production:
+    name: 🔒 Production Deployment
+    needs: ci-gate
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && needs.ci-gate.result == 'success'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Production deployment gate
+        run: |
+          echo "🔒 Production deployment requires manual approval"
+          # TODO(Dan): Add production deployment logic with approval gates

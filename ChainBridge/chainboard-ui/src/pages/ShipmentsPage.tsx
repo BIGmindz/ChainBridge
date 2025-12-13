@@ -1,160 +1,182 @@
-import { useEffect, useMemo, useState } from "react";
-import type { PaymentState, RiskCategory, Shipment } from "../types";
-import { apiClient } from "../services/api";
+import { useEffect, useMemo } from "react";
+
 import ShipmentsTable from "../components/ShipmentsTable";
-import type { CorridorId } from "../utils/corridors";
-import {
-  classifyCorridor,
-  getCorridorLabel,
-  isCorridorId,
-  CORRIDOR_FILTER_OPTIONS,
-} from "../utils/corridors";
-
-type StatusFilter = CorridorId | "all";
-type RiskFilter = RiskCategory | "all";
-type PaymentFilter = PaymentState | "all";
-
-interface FilterState {
-  statusFilter: StatusFilter;
-  riskFilter: RiskFilter;
-  paymentFilter: PaymentFilter;
-}
-
-const DEFAULT_FILTERS: FilterState = {
-  statusFilter: "all",
-  riskFilter: "all",
-  paymentFilter: "all",
-};
-
-const RISK_FILTER_OPTIONS: Array<{ value: RiskFilter; label: string }> = [
-  { value: "all", label: "All Risk Levels" },
-  { value: "high", label: "High Risk" },
-  { value: "medium", label: "Medium Risk" },
-  { value: "low", label: "Low Risk" },
-];
-
-const PAYMENT_FILTER_OPTIONS: Array<{ value: PaymentFilter; label: string }> = [
-  { value: "all", label: "All Payment States" },
-  { value: "blocked", label: "Blocked" },
-  { value: "partially_paid", label: "Partially Paid" },
-  { value: "in_progress", label: "In Progress" },
-  { value: "not_started", label: "Not Started" },
-  { value: "completed", label: "Completed" },
-];
+import { useDemo } from "../core/demo/DemoContext";
+import { useShipmentsOverview } from "../hooks/useShipmentsOverview";
+import { useShipmentsViews } from "../hooks/useShipmentsViews";
+import type { Shipment } from "../lib/types";
 
 export default function ShipmentsPage(): JSX.Element {
-  const [shipments, setShipments] = useState<Shipment[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const initialFilters = useMemo<FilterState>(() => deriveFiltersFromUrl(), []);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>(initialFilters.statusFilter);
-  const [riskFilter, setRiskFilter] = useState<RiskFilter>(initialFilters.riskFilter);
-  const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>(initialFilters.paymentFilter);
-
   useEffect(() => {
-    const fetchShipments = async (): Promise<void> => {
-      try {
-        const data = await apiClient.getShipments();
-        setShipments(data);
-      } catch (error) {
-        console.error("Failed to load shipments:", error);
-      } finally {
-        setLoading(false);
+    if (import.meta.env.DEV) {
+      console.log("[ShipmentsPage] MOUNTED");
+    }
+    return () => {
+      if (import.meta.env.DEV) {
+        console.log("[ShipmentsPage] UNMOUNTED");
       }
     };
-
-    void fetchShipments();
   }, []);
 
+  // Demo mode highlight key
+  const { state: demoState } = useDemo();
+  const highlightKey = demoState.currentStep?.highlightKey;
+
+  // View engine manages filters, saved views, and localStorage
+  const {
+    views,
+    currentView,
+    currentFilters,
+    setFilters,
+    selectView,
+  } = useShipmentsViews();
+
+  // Build API filters from current view filters
+  const apiFilters = useMemo(() => {
+    const filters: Record<string, unknown> = {};
+
+    if (currentFilters.riskCategory) {
+      filters.risk = currentFilters.riskCategory;
+    }
+
+    if (currentFilters.corridor) {
+      filters.corridor = currentFilters.corridor;
+    }
+
+    return Object.keys(filters).length > 0 ? filters : undefined;
+  }, [currentFilters]);
+
+  const { data: shipments, total, loading, error, refresh } = useShipmentsOverview(apiFilters);
+
+  // Apply client-side filters that backend doesn't support yet
   const filteredShipments = useMemo(() => {
-    if (shipments.length === 0) return [];
-    return shipments.filter((shipment) => {
-      if (
-        statusFilter !== "all" &&
-        classifyCorridor({ origin: shipment.origin, destination: shipment.destination }).id !== statusFilter
-      ) {
+    if (shipments.length === 0) {
+      return [];
+    }
+
+    return shipments.filter((shipment: Shipment) => {
+      // Search filter (reference, corridor, customer)
+      if (currentFilters.search) {
+        const searchLower = currentFilters.search.toLowerCase();
+        const matchesSearch =
+          shipment.reference.toLowerCase().includes(searchLower) ||
+          shipment.corridor.toLowerCase().includes(searchLower) ||
+          shipment.customer.toLowerCase().includes(searchLower);
+        if (!matchesSearch) return false;
+      }
+
+      // Payment state filter
+      if (currentFilters.paymentState && shipment.payment.state !== currentFilters.paymentState) {
         return false;
       }
 
-      if (riskFilter !== "all" && shipment.risk.risk_category !== riskFilter) {
-        return false;
+      // IoT alerts filter (check if shipment has IoT anomalies)
+      if (currentFilters.hasIoTAlerts) {
+        // For now, use risk score as proxy for IoT alerts
+        // In production, this would check actual IoT data
+        if (shipment.risk.score < 60) return false;
       }
 
-      if (paymentFilter !== "all" && shipment.payment_state !== paymentFilter) {
-        return false;
+      // Payment hold filter
+      if (currentFilters.hasPaymentHold) {
+        if (shipment.payment.state !== "blocked" && shipment.payment.state !== "partially_paid") {
+          return false;
+        }
       }
 
       return true;
     });
-  }, [shipments, statusFilter, riskFilter, paymentFilter]);
-
-  const activeFilters = useMemo(() => {
-    const chips: string[] = [];
-    if (statusFilter !== "all" && isCorridorId(statusFilter)) {
-      chips.push(`Corridor · ${getCorridorLabel(statusFilter)}`);
-    }
-    if (riskFilter !== "all") {
-      chips.push(`Risk · ${riskFilter}`);
-    }
-    if (paymentFilter !== "all") {
-      chips.push(`Payment · ${paymentFilter.replace(/_/g, " ")}`);
-    }
-    return chips;
-  }, [statusFilter, riskFilter, paymentFilter]);
+  }, [shipments, currentFilters]);
 
   return (
     <div className="space-y-6 text-slate-100">
       <header className="space-y-2 border-b border-slate-800/60 pb-4">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-500">Shipments Intelligence</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-500">
+          Shipments Intelligence
+        </p>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold text-slate-50">Manifest Drilldown</h1>
             <p className="text-sm text-slate-400">
-              Filter shipments by corridor lens, ChainIQ risk posture, and ChainPay payment holds.
+              Filter shipments by saved views, search, and Control Tower intelligence.
             </p>
           </div>
-          {activeFilters.length > 0 && (
-            <div className="flex flex-wrap gap-2 text-[11px]">
-              {activeFilters.map((chip) => (
-                <span
-                  key={chip}
-                  className="rounded-full border border-slate-700 bg-slate-900/70 px-3 py-1 font-mono text-slate-300"
-                >
-                  {chip}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
       </header>
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-950/80 p-4">
-        <div className="mb-3 flex items-center justify-between text-[11px] text-slate-400">
-          <span className="uppercase tracking-[0.2em]">Filters</span>
-          <span className="font-mono text-slate-500">{filteredShipments.length} / {shipments.length || "–"} displayed</span>
+      {/* View Bar + Search */}
+      <section
+        className={`space-y-3 ${
+          highlightKey === "view_bar" ? "ring-2 ring-emerald-400 rounded-lg p-2" : ""
+        }`}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {/* View Pills */}
+          <div className="flex flex-wrap items-center gap-2">
+            {views.map((view) => (
+              <button
+                key={view.id}
+                type="button"
+                onClick={() => selectView(view.id)}
+                className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                  view.id === currentView.id
+                    ? "border-emerald-500 bg-emerald-500 text-white"
+                    : "border-slate-700 bg-slate-900/70 text-slate-300 hover:bg-slate-800"
+                }`}
+              >
+                {view.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Search Input */}
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Search by reference, corridor, customer..."
+              className="w-64 rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 outline-none focus:border-emerald-400"
+              value={currentFilters.search ?? ""}
+              onChange={(e) =>
+                setFilters({
+                  ...currentFilters,
+                  search: e.target.value || null,
+                })
+              }
+            />
+            <button
+              type="button"
+              onClick={refresh}
+              disabled={loading}
+              className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-slate-200 transition hover:border-emerald-400 disabled:opacity-50"
+            >
+              {loading ? "Refreshing" : "Refresh"}
+            </button>
+          </div>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <FilterSelect
-            label="Corridor Lens"
-            value={statusFilter}
-            onChange={setStatusFilter}
-            options={CORRIDOR_FILTER_OPTIONS}
-          />
-          <FilterSelect
-            label="Risk Posture"
-            value={riskFilter}
-            onChange={setRiskFilter}
-            options={RISK_FILTER_OPTIONS}
-          />
-          <FilterSelect
-            label="Payment State"
-            value={paymentFilter}
-            onChange={setPaymentFilter}
-            options={PAYMENT_FILTER_OPTIONS}
-          />
+
+        {/* View Description */}
+        {currentView.description && (
+          <p className="text-xs text-slate-400">{currentView.description}</p>
+        )}
+
+        {/* Results Count */}
+        <div className="flex items-center justify-between text-xs text-slate-500">
+          <span>
+            Showing {filteredShipments.length} of {total || "–"} shipments
+          </span>
+          {currentFilters.search && (
+            <button
+              type="button"
+              onClick={() => setFilters({ ...currentFilters, search: null })}
+              className="text-emerald-400 hover:underline"
+            >
+              Clear search
+            </button>
+          )}
         </div>
       </section>
 
+      {/* Shipments Table */}
       {loading ? (
         <div className="flex h-72 items-center justify-center rounded-2xl border border-slate-800 bg-slate-950/60">
           <div className="text-center text-sm text-slate-400">
@@ -162,66 +184,13 @@ export default function ShipmentsPage(): JSX.Element {
             Fetching manifest telemetry…
           </div>
         </div>
+      ) : error ? (
+        <div className="rounded-2xl border border-danger-500/40 bg-danger-500/10 p-6 text-sm text-danger-200">
+          {error}
+        </div>
       ) : (
         <ShipmentsTable shipments={filteredShipments} />
       )}
     </div>
-  );
-}
-
-interface FilterSelectProps<T extends string> {
-  label: string;
-  value: T;
-  options: Array<{ value: T; label: string }>;
-  onChange: (value: T) => void;
-}
-
-function FilterSelect<T extends string>({ label, value, options, onChange }: FilterSelectProps<T>) {
-  return (
-    <label className="flex flex-col gap-2 text-sm text-slate-300">
-      <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">{label}</span>
-      <select
-        className="rounded-xl border border-slate-800 bg-slate-900/70 px-3 py-2 text-slate-100 focus:outline-none focus-visible:border-emerald-400"
-        value={value}
-        onChange={(event) => onChange(event.target.value as T)}
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
-
-function deriveFiltersFromUrl(): FilterState {
-  if (typeof window === "undefined") {
-    return DEFAULT_FILTERS;
-  }
-
-  const params = new URLSearchParams(window.location.search);
-  const corridorParam = params.get("corridor");
-  const riskParam = params.get("risk_category");
-  const paymentParam = params.get("payment_state");
-
-  return {
-    statusFilter: isCorridorId(corridorParam) ? corridorParam : DEFAULT_FILTERS.statusFilter,
-    riskFilter: isRiskCategory(riskParam) ? (riskParam as RiskCategory) : DEFAULT_FILTERS.riskFilter,
-    paymentFilter: isPaymentState(paymentParam) ? (paymentParam as PaymentState) : DEFAULT_FILTERS.paymentFilter,
-  };
-}
-
-function isRiskCategory(value: string | null): value is RiskCategory {
-  return value === "low" || value === "medium" || value === "high";
-}
-
-function isPaymentState(value: string | null): value is PaymentState {
-  return (
-    value === "not_started" ||
-    value === "in_progress" ||
-    value === "partially_paid" ||
-    value === "blocked" ||
-    value === "completed"
   );
 }

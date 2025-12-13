@@ -1,0 +1,163 @@
+name: Forbidden Regions Check
+# PAC-ALEX-NEXT-023: Multi-Service Compliance Alignment
+# CRITICAL: Block PRs that move files without ATLAS Move Matrix approval
+
+on:
+  pull_request:
+    branches: [main, develop, feature/*]
+    types: [opened, synchronize, reopened]
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  forbidden-regions-check:
+    name: "⚪ ALEX: Forbidden Regions Validation"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Check for file moves in forbidden regions
+        id: forbidden_check
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          python3 << 'EOF'
+          import os
+          import sys
+          import re
+          import subprocess
+          from pathlib import Path
+
+          # Forbidden regions that require ATLAS Move Matrix
+          FORBIDDEN_REGIONS = [
+              "core",
+              "modules",
+              "src",
+              "chainpay-service",
+              "chainiq-service",
+              "chainboard-ui",
+              "ChainBridge",
+              "api",
+              "strategies",
+              "tests",
+          ]
+
+          # Critical files that can NEVER be moved
+          CRITICAL_FILES = [
+              "main.py",
+              "config.yaml",
+              "requirements.txt",
+              "pyproject.toml",
+              "Makefile",
+              "Dockerfile",
+              "docker-compose.yml",
+              ".github/ALEX_RULES.json",
+              ".github/agents/colors.json",
+          ]
+
+          # Move Matrix pattern
+          MATRIX_PATTERN = re.compile(r'ATLAS-MOVE-MATRIX-\d{4}-\d{2}-\d{2}', re.IGNORECASE)
+
+          def is_forbidden(filepath):
+              parts = filepath.split("/")
+              for region in FORBIDDEN_REGIONS:
+                  if filepath.startswith(region) or region in parts:
+                      return True, region
+              return False, None
+
+          def is_critical(filepath):
+              return Path(filepath).name in CRITICAL_FILES or filepath in CRITICAL_FILES
+
+          # Get git diff with rename detection
+          # Try multiple approaches in case origin/main isn't available
+          try:
+              result = subprocess.run(
+                  ["git", "diff", "--name-status", "-M", "origin/main...HEAD"],
+                  capture_output=True, text=True, check=True
+              )
+          except subprocess.CalledProcessError:
+              # Fallback: try comparing to base branch
+              try:
+                  result = subprocess.run(
+                      ["git", "diff", "--name-status", "-M", "HEAD~50...HEAD"],
+                      capture_output=True, text=True
+                  )
+              except:
+                  print("✅ Unable to detect file moves - skipping check")
+                  sys.exit(0)
+
+          violations = []
+          file_moves = []
+
+          for line in result.stdout.strip().split('\n'):
+              if not line:
+                  continue
+              parts = line.split('\t')
+              status = parts[0]
+
+              # R = Renamed, D = Deleted (could be move)
+              if status.startswith('R'):
+                  source = parts[1]
+                  dest = parts[2]
+                  file_moves.append((source, dest))
+
+          # Check PR body for Move Matrix reference
+          pr_body = os.environ.get('PR_BODY', '')
+          has_matrix = MATRIX_PATTERN.search(pr_body) is not None
+
+          # Validate moves
+          for source, dest in file_moves:
+              # Check critical files
+              if is_critical(source):
+                  if not has_matrix:
+                      violations.append(
+                          f"❌ CRITICAL: Cannot move '{source}' without ATLAS Move Matrix"
+                      )
+                  continue
+
+              # Check forbidden regions
+              src_forbidden, src_region = is_forbidden(source)
+              dst_forbidden, dst_region = is_forbidden(dest)
+
+              if (src_forbidden or dst_forbidden) and not has_matrix:
+                  region = src_region or dst_region
+                  violations.append(
+                      f"❌ FORBIDDEN: Move '{source}' → '{dest}' in region '{region}' requires ATLAS approval"
+                  )
+
+          # Output results
+          if violations:
+              print("=" * 70)
+              print("⚪ ALEX GOVERNANCE: FILE MOVE VIOLATIONS DETECTED")
+              print("=" * 70)
+              for v in violations:
+                  print(f"  {v}")
+              print()
+              print("TO RESOLVE:")
+              print("  1. Request Move Matrix from ATLAS (GID-05)")
+              print("  2. Add ATLAS-MOVE-MATRIX-YYYY-MM-DD reference to PR description")
+              print("  3. Create docs/governance/ATLAS_MOVE_MATRIX.json with approved moves")
+              print("=" * 70)
+              sys.exit(1)
+          elif file_moves and has_matrix:
+              print(f"✅ {len(file_moves)} file move(s) approved by Move Matrix")
+              sys.exit(0)
+          else:
+              print("✅ No unauthorized file moves detected")
+              sys.exit(0)
+          EOF
+
+      - name: Check Move Matrix validity
+        if: failure()
+        run: |
+          echo "::error::PR blocked due to unauthorized file moves. Request ATLAS Move Matrix approval."

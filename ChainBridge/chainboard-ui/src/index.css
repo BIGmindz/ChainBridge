@@ -27,9 +27,46 @@ body {
   @apply bg-white rounded-lg shadow-sm border border-gray-200;
 }
 
+/* Toast notification animations */
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
 .card-hover {
   @apply cursor-pointer transition-shadow hover:shadow-md;
 }
+
+/* Layering Utilities */
+.layer-map { z-index: 0 !important; position: fixed !important; inset: 0; }
+.layer-ui  { z-index: 10 !important; position: relative; pointer-events: none; }
+.layer-interactive { pointer-events: auto; }
+.layer-modal { z-index: 50 !important; }
 
 .button {
   @apply px-4 py-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2;
@@ -77,4 +114,22 @@ body {
 
 .spinner {
   @apply inline-block animate-spin;
+}
+
+/* Intelligence Page - CIA ops grid overlay */
+.intel-map-grid {
+  background-image:
+    linear-gradient(rgba(56, 189, 248, 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.3) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ChainTicker - Hide scrollbar for cleaner ticker display */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

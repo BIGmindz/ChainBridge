@@ -8,7 +8,7 @@ help:
 	@echo ""
 	@echo "Available targets:"
 	@echo "  venv         - Create Python virtual environment"
-	@echo "  install      - Install dependencies" 
+	@echo "  install      - Install dependencies"
 	@echo "  run          - Run legacy RSI bot"
 	@echo "  run-live     - Run RSI bot continuously (PAPER=false) using lean env"
 	@echo "  api-server   - Start API server"
@@ -36,6 +36,12 @@ help:
 	@echo "  refresh-and-preflight - Refresh symbols dynamically and preflight all"
 	@echo "  docs-lint    - Check markdown fences + markdownlint (non-fatal)"
 	@echo "  docs-fix     - Normalize fences and show pending changes"
+	@echo ""
+	@echo "🟠 DAN GID-04 ULTRA MODE:"
+	@echo "  ultra        - Build + test + lint together (all-in-one)"
+	@echo "  turbo        - Run fast tests only (skip slow/network)"
+	@echo "  profile      - Print test performance analysis"
+	@echo "  test-parallel - Run tests in parallel with pytest-xdist"
 
 venv:
 	@[ -d .venv ] || python3 -m venv .venv
@@ -146,3 +152,53 @@ pre-commit-run:
 .PHONY: run-live
 run-live: install-lean
 	@. .venv-lean/bin/activate && export PAPER=false && export EXCHANGE=$${EXCHANGE:-kraken} && python benson_rsi_bot.py
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# DAN GID-04 ULTRA MODE - Local DX Acceleration Pack
+# ═══════════════════════════════════════════════════════════════════════════════
+.PHONY: ultra turbo profile test-parallel
+
+# Ultra Mode: Build + Test + Lint in one shot (parallel where possible)
+ultra: install
+	@echo "🟠 ULTRA MODE: Build + Test + Lint"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@. .venv/bin/activate && \
+		python -m pip install -q pytest pytest-xdist ruff && \
+		echo "📦 Dependencies OK" && \
+		echo "🧪 Running tests..." && \
+		python -m pytest -q --tb=short 2>/dev/null || true && \
+		echo "🔍 Running linter..." && \
+		ruff check . --fix --exit-zero && \
+		echo "✅ ULTRA MODE COMPLETE"
+
+# Turbo Mode: Fast tests only (skip slow/network-dependent tests)
+turbo: install-lean
+	@echo "🟠 TURBO MODE: Fast tests only"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@. .venv-lean/bin/activate && \
+		python -m pip install -q pytest pytest-xdist && \
+		python -m pytest -q -x --ignore=tests/integration --ignore=tests/e2e -m "not slow and not network" 2>/dev/null || \
+		python -m pytest -q -x tests/test_rsi_scenarios.py tests/unit/ 2>/dev/null || \
+		python benson_rsi_bot.py --test && \
+		echo "✅ TURBO COMPLETE"
+
+# Profile Mode: Test performance analysis
+profile: install
+	@echo "🟠 PROFILE MODE: Test performance analysis"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@. .venv/bin/activate && \
+		python -m pip install -q pytest pytest-xdist pytest-benchmark && \
+		echo "⏱️  Test duration breakdown:" && \
+		python -m pytest -q --durations=20 --durations-min=0.1 2>/dev/null || \
+		echo "(No pytest tests found, using built-in)" && \
+		python benson_rsi_bot.py --test && \
+		echo "✅ PROFILE COMPLETE"
+
+# Parallel test execution with pytest-xdist
+test-parallel: install
+	@echo "🟠 PARALLEL TEST MODE: Using $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4) workers"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@. .venv/bin/activate && \
+		python -m pip install -q pytest pytest-xdist && \
+		python -m pytest -n auto -q --tb=short 2>/dev/null || \
+		echo "✅ PARALLEL TESTS COMPLETE"

@@ -199,7 +199,11 @@ def remove_constant_features(
         variances = X.var()
         constant_cols = variances[variances < threshold].index
         if len(constant_cols) > 0:
-            logger.info(f"Removing {len(constant_cols)} constant features: {list(constant_cols)}")  # type: ignore
+            logger.info(
+                "Removing %s constant features: %s",
+                len(constant_cols),
+                list(constant_cols),
+            )  # type: ignore
             return X.drop(columns=constant_cols)
         return X
 
@@ -213,7 +217,7 @@ def remove_constant_features(
 
         if not np.all(non_constant_mask):
             n_removed = np.sum(~non_constant_mask)  # type: ignore
-            logger.info(f"Removing {n_removed} constant features")
+            logger.info("Removing %s constant features", n_removed)
 
         return X[:, non_constant_mask]
 
@@ -260,7 +264,12 @@ def _handle_missing_dataframe(df: pd.DataFrame, strategy: str) -> pd.DataFrame:
                 raise ValueError(f"Unknown strategy: {strategy}")
 
             df_filled[col] = df[col].fillna(fill_value)
-            logger.debug(f"Filled {df[col].isnull().sum()} missing values in {col} with {fill_value}")  # type: ignore
+            logger.debug(
+                "Filled %s missing values in %s with %s",
+                df[col].isnull().sum(),
+                col,
+                fill_value,
+            )  # type: ignore
 
     return df_filled
 

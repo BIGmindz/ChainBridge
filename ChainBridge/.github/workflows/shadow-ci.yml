@@ -1,0 +1,310 @@
+name: Shadow Mode CI
+
+on:
+  pull_request:
+    branches: [ main, develop, feature/* ]
+    paths:
+      - 'chainiq-service/app/api_shadow.py'
+      - 'chainiq-service/app/models_shadow.py'
+      - 'chainiq-service/app/schemas_shadow.py'
+      - 'chainiq-service/app/shadow_*.py'
+      - 'chainiq-service/tests/test_shadow_*.py'
+      - 'chainiq-service/**/shadow*.py'
+      - 'scripts/shadow_probe.py'
+      - '.github/workflows/shadow-ci.yml'
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'chainiq-service/app/api_shadow.py'
+      - 'chainiq-service/app/models_shadow.py'
+      - 'chainiq-service/app/schemas_shadow.py'
+      - 'chainiq-service/app/shadow_*.py'
+      - 'chainiq-service/tests/test_shadow_*.py'
+
+env:
+  PYTHON_VERSION: '3.11'
+  # Performance Budget Thresholds (ALEX GOVERNED)
+  SHADOW_P95_MS: 75
+  SHADOW_P99_MS: 120
+  SHADOW_MAX_SIZE_KB: 25
+
+jobs:
+  shadow-governance:
+    name: Shadow Mode Governance Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 10
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Check for ungoverned schema changes
+        run: |
+          echo "🟩 Verifying ALEX governance for shadow schema changes"
+
+          # Check if shadow schemas were modified
+          SCHEMA_CHANGED=$(git diff --name-only origin/main...HEAD | grep -c "schemas_shadow.py" || echo "0")
+
+          if [ "$SCHEMA_CHANGED" -gt 0 ]; then
+            echo "⚠️  Shadow schema modified - checking for ALEX approval"
+
+            # Check for ALEX-APPROVED tag in recent commits
+            ALEX_APPROVED=$(git log --oneline -20 | grep -c "\[ALEX-APPROVED\]" || echo "0")
+
+            if [ "$ALEX_APPROVED" -eq 0 ]; then
+              echo "❌ Shadow schema changes require [ALEX-APPROVED] tag in commit message"
+              echo "GOVERNANCE RULE #12: Shadow Mode Performance Budget Enforcement"
+              exit 1
+            fi
+
+            echo "✅ ALEX approval detected for schema changes"
+          fi
+
+          echo "✅ Shadow governance check passed"
+
+      - name: Check for forbidden imports
+        run: |
+          echo "🟩 Checking for forbidden ML imports in shadow code"
+
+          # Check for XGBoost imports
+          XGBOOST_FOUND=$(grep -r "import xgboost\|from xgboost" chainiq-service/app/shadow*.py chainiq-service/app/api_shadow.py 2>/dev/null || echo "")
+
+          if [ ! -z "$XGBOOST_FOUND" ]; then
+            echo "❌ XGBoost imports forbidden in shadow mode (ALEX RULE)"
+            echo "$XGBOOST_FOUND"
+            exit 1
+          fi
+
+          # Check for heavy ML imports in API layer
+          HEAVY_ML=$(grep -r "import torch\|import tensorflow\|from sklearn" chainiq-service/app/api_shadow.py 2>/dev/null || echo "")
+
+          if [ ! -z "$HEAVY_ML" ]; then
+            echo "❌ Heavy ML imports forbidden in shadow API layer"
+            echo "$HEAVY_ML"
+            exit 1
+          fi
+
+          echo "✅ No forbidden imports detected"
+
+  shadow-tests:
+    name: Shadow Mode Test Suite
+    needs: shadow-governance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        working-directory: ./chainiq-service
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-timeout
+
+      - name: Run shadow mode tests
+        working-directory: ./chainiq-service
+        run: |
+          echo "🟦 Running Shadow Mode test suite (24 tests expected)"
+          python -m pytest tests/test_shadow_*.py \
+            -v \
+            --tb=short \
+            --timeout=30 \
+            --cov=app.shadow_mode \
+            --cov=app.shadow_repo \
+            --cov=app.shadow_statistics \
+            --cov-report=term-missing \
+            --cov-report=json:coverage-shadow.json
+
+      - name: Upload shadow coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: shadow-coverage
+          path: chainiq-service/coverage-shadow.json
+          retention-days: 7
+
+  shadow-api-tests:
+    name: Shadow API Integration Tests
+    needs: shadow-governance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        working-directory: ./chainiq-service
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest httpx
+
+      - name: Run shadow API tests
+        working-directory: ./chainiq-service
+        run: |
+          echo "🟦 Running Shadow API integration tests"
+          python -m pytest tests/test_shadow_api.py \
+            -v \
+            --tb=short \
+            --timeout=60
+
+  shadow-performance-probe:
+    name: Shadow Mode Performance Budget
+    needs: [shadow-tests, shadow-api-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pydantic statistics
+
+      - name: Start ChainIQ service (background)
+        working-directory: ./chainiq-service
+        run: |
+          pip install -r requirements.txt
+          nohup python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 > /tmp/chainiq.log 2>&1 &
+
+          echo "⏳ Waiting for service to start..."
+          for i in {1..30}; do
+            if curl -s http://localhost:8000/health > /dev/null 2>&1; then
+              echo "✅ ChainIQ service ready"
+              break
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 2
+          done
+
+          # Verify service is up
+          curl -s http://localhost:8000/health || (cat /tmp/chainiq.log && exit 1)
+
+      - name: Run synthetic performance probe
+        run: |
+          echo "🟦 Executing Shadow Mode synthetic probe"
+          echo "Performance Budgets:"
+          echo "  - p95 < ${SHADOW_P95_MS}ms"
+          echo "  - p99 < ${SHADOW_P99_MS}ms"
+          echo "  - Response size < ${SHADOW_MAX_SIZE_KB}KB"
+
+          python scripts/shadow_probe.py \
+            --p95-threshold ${SHADOW_P95_MS} \
+            --p99-threshold ${SHADOW_P99_MS} \
+            --max-size-kb ${SHADOW_MAX_SIZE_KB}
+
+      - name: Display probe results
+        if: always()
+        run: |
+          echo "📊 Shadow Mode Performance Probe Results"
+          cat /tmp/shadow_probe_results.json 2>/dev/null || echo "No results file generated"
+
+      - name: Upload probe results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shadow-probe-results
+          path: /tmp/shadow_probe_results.json
+          retention-days: 30
+
+  shadow-security-scan:
+    name: Shadow Mode Security Scan
+    needs: shadow-governance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify model version metadata
+        run: |
+          echo "🟩 Verifying model_version in shadow responses"
+
+          # Check that model_version is present in schemas
+          MODEL_VERSION_CHECK=$(grep -c "model_version" chainiq-service/app/schemas_shadow.py || echo "0")
+
+          if [ "$MODEL_VERSION_CHECK" -eq 0 ]; then
+            echo "❌ model_version field missing from shadow schemas (SAM REQUIREMENT)"
+            exit 1
+          fi
+
+          echo "✅ model_version field present in schemas"
+
+      - name: Check for unsigned model artifacts
+        run: |
+          echo "🟩 Checking for unsigned model artifacts in shadow code"
+
+          # Look for model loading patterns without signature verification
+          UNSIGNED_MODELS=$(grep -r "joblib.load\|pickle.load\|torch.load" chainiq-service/app/shadow*.py 2>/dev/null || echo "")
+
+          if [ ! -z "$UNSIGNED_MODELS" ]; then
+            echo "⚠️  Model loading detected - ensure SHA-256 signature verification"
+            echo "$UNSIGNED_MODELS"
+            # Warning only - manual review required
+          fi
+
+      - name: Verify drift detection fields
+        run: |
+          echo "🟩 Verifying drift detection fields in shadow statistics"
+
+          # Check for drift-related fields in statistics
+          DRIFT_FIELDS=$(grep -E "drift|delta|deviation|anomaly" chainiq-service/app/shadow_statistics.py || echo "")
+
+          if [ -z "$DRIFT_FIELDS" ]; then
+            echo "❌ Drift detection fields missing from shadow statistics"
+            exit 1
+          fi
+
+          echo "✅ Drift detection fields present"
+
+  shadow-ci-summary:
+    name: Shadow CI Summary
+    needs: [shadow-governance, shadow-tests, shadow-api-tests, shadow-performance-probe, shadow-security-scan]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Generate CI Summary
+        run: |
+          echo "# 🟦 Shadow Mode CI Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Performance Budgets" >> $GITHUB_STEP_SUMMARY
+          echo "- p95 latency: < ${SHADOW_P95_MS}ms" >> $GITHUB_STEP_SUMMARY
+          echo "- p99 latency: < ${SHADOW_P99_MS}ms" >> $GITHUB_STEP_SUMMARY
+          echo "- Response size: < ${SHADOW_MAX_SIZE_KB}KB" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Governance Rules Enforced" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ ALEX Rule #12: Shadow Mode Performance Budget" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ No ungoverned schema changes" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ No forbidden ML imports (XGBoost, heavy frameworks)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Model version metadata present" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Drift detection validated" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "- Shadow Mode Tests: ${{ needs.shadow-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Shadow API Tests: ${{ needs.shadow-api-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Performance Probe: ${{ needs.shadow-performance-probe.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Security Scan: ${{ needs.shadow-security-scan.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.shadow-performance-probe.result }}" == "failure" ]; then
+            echo "❌ **Performance budget exceeded - PR BLOCKED**" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.shadow-governance.result }}" == "failure" ]; then
+            echo "❌ **Governance check failed - PR BLOCKED**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **All Shadow Mode CI checks passed**" >> $GITHUB_STEP_SUMMARY
+          fi

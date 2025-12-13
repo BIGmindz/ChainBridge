@@ -1,5 +1,9 @@
-import { Shipment } from "../types";
-import { formatRiskScore, formatPaymentState, calculatePaymentProgress } from "../utils/formatting";
+import {
+  formatRiskScore,
+  formatPaymentState,
+  calculatePaymentProgress,
+} from "../lib/formatters";
+import type { Shipment } from "../lib/types";
 
 interface ShipmentsTableProps {
   shipments: Shipment[];
@@ -38,26 +42,26 @@ export default function ShipmentsTable({ shipments }: ShipmentsTableProps): JSX.
               const clampedProgress = Math.min(100, Math.max(0, paymentProgress));
               return (
                 <tr
-                  key={shipment.shipment_id}
+                  key={shipment.id}
                   className="border-b border-slate-900/60 bg-slate-950/30 text-slate-100 transition hover:bg-slate-900/60"
                 >
-                  <td className="px-4 py-3 font-mono text-emerald-300">{shipment.shipment_id}</td>
+                  <td className="px-4 py-3 font-mono text-emerald-300">{shipment.id}</td>
                   <td className="px-4 py-3 text-slate-300">{shipment.carrier}</td>
                   <td className="px-4 py-3 text-slate-300">{shipment.customer}</td>
                   <td className="px-4 py-3 text-slate-300">
-                    {shipment.origin} → {shipment.destination}
+                    {shipment.corridor}
                   </td>
-                  <td className="px-4 py-3 capitalize text-slate-200">{shipment.current_status.replace(/_/g, " ")}</td>
+                  <td className="px-4 py-3 capitalize text-slate-200">{shipment.status.replace(/_/g, " ")}</td>
                   <td className="px-4 py-3 text-center">
                     <span
-                      className={`px-2 py-1 text-xs font-semibold ${formatRiskScore(shipment.risk.risk_score).bgColor} ${formatRiskScore(shipment.risk.risk_score).color}`}
+                      className={`px-2 py-1 text-xs font-semibold ${formatRiskScore(shipment.risk.score).bgColor} ${formatRiskScore(shipment.risk.score).color}`}
                     >
-                      {shipment.risk.risk_score}
+                      {shipment.risk.score}
                     </span>
                   </td>
                   <td className="px-4 py-3 font-mono text-xs">
-                    <span className={formatPaymentState(shipment.payment_state).color}>
-                      {formatPaymentState(shipment.payment_state).text}
+                    <span className={formatPaymentState(shipment.payment.state).color}>
+                      {formatPaymentState(shipment.payment.state).text}
                     </span>
                   </td>
                   <td className="px-4 py-3">

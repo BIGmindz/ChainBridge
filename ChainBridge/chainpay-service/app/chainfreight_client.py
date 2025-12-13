@@ -53,9 +53,7 @@ def _safe_extract_risk_data(data: dict) -> tuple[Optional[float], Optional[str]]
         try:
             risk_score = float(risk_score)
         except (ValueError, TypeError):
-            logger.warning(
-                f"Invalid risk_score format: {risk_score}, defaulting to None"
-            )
+            logger.warning(f"Invalid risk_score format: {risk_score}, defaulting to None")
             risk_score = None
 
     # Ensure risk_category is a string
@@ -108,31 +106,39 @@ async def fetch_freight_token(token_id: int) -> Optional[FreightTokenResponse]:
 
         token = FreightTokenResponse(**data)
 
-        logger.info(
-            f"Successfully fetched freight token {token_id}: "
-            f"status={token.status}, risk={token.risk_category}"
-        )
+        logger.info(f"Successfully fetched freight token {token_id}: " f"status={token.status}, risk={token.risk_category}")
 
         return token
 
     except httpx.TimeoutException:
-        logger.warning(f"ChainFreight service timeout while fetching token {token_id}")
+        logger.warning(
+            "ChainFreight service timeout while fetching token %s",
+            token_id,
+        )
         return None
     except httpx.ConnectError:
         logger.warning(
-            f"ChainFreight service unavailable while fetching token {token_id}"
+            "ChainFreight service unavailable while fetching token %s",
+            token_id,
         )
         return None
     except httpx.HTTPStatusError as e:
         if e.response.status_code == 404:
-            logger.error(f"Freight token {token_id} not found")
+            logger.error("Freight token %s not found", token_id)
         else:
             logger.error(
-                f"HTTP error {e.response.status_code} fetching token {token_id}: {e}"
+                "HTTP error %s fetching token %s: %s",
+                e.response.status_code,
+                token_id,
+                e,
             )
         return None
     except Exception as e:
-        logger.error(f"Error fetching freight token {token_id}: {str(e)}")
+        logger.error(
+            "Error fetching freight token %s: %s",
+            token_id,
+            str(e),
+        )
         return None
 
 

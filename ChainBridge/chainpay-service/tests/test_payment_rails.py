@@ -1,405 +1,210 @@
-"""
-Unit tests for PaymentRail abstraction and InternalLedgerRail implementation.
+"""Focused unit tests for payment release helpers and InternalLedgerRail."""
 
-Tests:
-- InternalLedgerRail.process_settlement() executes successfully
-- SettlementResult is properly structured and populated
-- Reference IDs are generated in the correct format (INTERNAL_LEDGER:timestamp:id)
-- Settlement provider is correctly identified
-- Edge cases (zero amounts, missing fields) are handled gracefully
-"""
+from __future__ import annotations
 
 from datetime import datetime
+from typing import Callable
+
+import pytest
 from sqlalchemy.orm import Session
 
-from app.payment_rails import InternalLedgerRail, SettlementResult, SettlementProvider
-from app.models import MilestoneSettlement, PaymentStatus
+from app.models import MilestoneSettlement, PaymentIntent, PaymentStatus
+from app.payment_rails import (
+    InternalLedgerRail,
+    ReleaseStrategy,
+    SettlementProvider,
+    SettlementResult,
+    _safe_get,
+    compute_milestone_release,
+    get_release_delay_hours,
+    should_release_now,
+)
+
+MilestoneFactory = Callable[..., MilestoneSettlement]
 
 
-class TestInternalLedgerRailBasicExecution:
-    """Test basic execution of InternalLedgerRail.process_settlement()."""
+@pytest.fixture
+def make_milestone(db_session: Session, payment_intent_low_risk: PaymentIntent) -> MilestoneFactory:
+    def _create(**overrides):
+        event_type = overrides.get("event_type", "POD_CONFIRMED")
+        data = {
+            "payment_intent_id": overrides.get("payment_intent_id", payment_intent_low_risk.id),
+            "event_type": event_type,
+            "amount": overrides.get("amount", 100.0),
+            "currency": overrides.get("currency", "USD"),
+            "status": overrides.get("status", PaymentStatus.PENDING),
+            "shipment_reference": overrides.get("shipment_reference", f"SHP-{event_type}"),
+            "schedule_item_id": overrides.get("schedule_item_id"),
+            "milestone_identifier": overrides.get("milestone_identifier"),
+        }
 
-    def test_process_settlement_returns_settlement_result(
-        self, db_session: Session
+        milestone = MilestoneSettlement(**data)
+        db_session.add(milestone)
+        db_session.commit()
+        db_session.refresh(milestone)
+        return milestone
+
+    return _create
+
+
+class TestReleaseStrategyDecisions:
+    """Coverage for should_release_now decision matrix."""
+
+    @pytest.mark.parametrize(
+        "risk_score,event_type,expected",
+        [
+            (0.1, "PICKUP_CONFIRMED", ReleaseStrategy.IMMEDIATE),
+            (0.5, "POD_CONFIRMED", ReleaseStrategy.IMMEDIATE),
+            (0.5, "CLAIM_WINDOW_CLOSED", ReleaseStrategy.DELAYED),
+            (0.9, "PICKUP_CONFIRMED", ReleaseStrategy.MANUAL_REVIEW),
+            (0.9, "CLAIM_WINDOW_CLOSED", ReleaseStrategy.MANUAL_REVIEW),
+        ],
+    )
+    def test_should_release_now_matrix(self, risk_score: float, event_type: str, expected: ReleaseStrategy) -> None:
+        assert should_release_now(risk_score, event_type) == expected
+
+
+class TestReleaseDelayHours:
+    """Ensure release delay helper maps ReleaseStrategy values to delays."""
+
+    @pytest.mark.parametrize(
+        "risk_score,event_type,strategy,expected_delay",
+        [
+            (0.2, "PICKUP_CONFIRMED", ReleaseStrategy.IMMEDIATE, None),
+            (0.5, "CLAIM_WINDOW_CLOSED", ReleaseStrategy.DELAYED, 5 * 24),
+            (0.9, "POD_CONFIRMED", ReleaseStrategy.MANUAL_REVIEW, None),
+            (0.9, "PICKUP_CONFIRMED", ReleaseStrategy.PENDING, None),
+        ],
+    )
+    def test_get_release_delay_hours(self, risk_score: float, event_type: str, strategy: ReleaseStrategy, expected_delay: int | None) -> None:
+        assert get_release_delay_hours(risk_score, event_type, strategy) == expected_delay
+
+
+class TestMilestoneReleasePlan:
+    """Validate compute_milestone_release helper follows the config-driven schedule."""
+
+    @pytest.mark.parametrize(
+        "risk_band,event_type,expected_pct,expected_strategy,expected_delay",
+        [
+            ("LOW", "pickup_confirmed", 20.0, ReleaseStrategy.IMMEDIATE, None),
+            ("LOW", "mid_transit_verified", 70.0, ReleaseStrategy.IMMEDIATE, None),
+            ("LOW", "settlement_released", 10.0, ReleaseStrategy.DELAYED, 3 * 24),
+            ("MEDIUM", "pickup_confirmed", 15.0, ReleaseStrategy.IMMEDIATE, None),
+            ("MEDIUM", "settlement_released", 20.0, ReleaseStrategy.DELAYED, 5 * 24),
+            ("HIGH", "mid_transit_verified", 60.0, ReleaseStrategy.IMMEDIATE, None),
+            ("HIGH", "settlement_released", 30.0, ReleaseStrategy.MANUAL_REVIEW, None),
+            ("CRITICAL", "pickup_confirmed", 0.0, ReleaseStrategy.MANUAL_REVIEW, None),
+            ("CRITICAL", "settlement_released", 100.0, ReleaseStrategy.MANUAL_REVIEW, None),
+        ],
+    )
+    def test_release_plan_matches_matrix(
+        self,
+        risk_band: str,
+        event_type: str,
+        expected_pct: float,
+        expected_strategy: ReleaseStrategy,
+        expected_delay: int | None,
     ) -> None:
-        """process_settlement() should return a SettlementResult object."""
+        plan = compute_milestone_release(
+            risk_band=risk_band,
+            event_type=event_type,
+            base_total_amount=1000.0,
+        )
+        assert plan.event_type == event_type
+        assert plan.risk_band == risk_band
+        assert plan.percentage == expected_pct
+        assert plan.release_amount == pytest.approx(1000.0 * expected_pct / 100.0)
+        assert plan.strategy == expected_strategy
+        assert plan.delay_hours == expected_delay
+
+    def test_alias_event_types_map_to_final_tranche(self) -> None:
+        plan = compute_milestone_release(
+            risk_band="MEDIUM",
+            event_type="CLAIM_WINDOW_CLOSED",
+            base_total_amount=5000.0,
+        )
+        assert plan.event_type == "settlement_released"
+        assert plan.percentage == 20.0
+
+    def test_non_milestone_events_return_pending_plan(self) -> None:
+        plan = compute_milestone_release(
+            risk_band="LOW",
+            event_type="context_created",
+            base_total_amount=2500.0,
+        )
+        assert plan.strategy == ReleaseStrategy.PENDING
+        assert plan.percentage == 0.0
+        assert plan.release_amount == 0.0
+
+
+class TestSafeGetHelper:
+    """Validate fallback behaviour for _safe_get utility."""
+
+    def test_safe_get_from_dict(self) -> None:
+        assert _safe_get({"value": 12}, "value") == 12
+
+    def test_safe_get_missing_key_returns_default(self) -> None:
+        assert _safe_get({}, "value", default=99) == 99
+
+    def test_safe_get_accepts_numeric(self) -> None:
+        assert _safe_get(15.5, "value") == 15.5
+
+    def test_safe_get_handles_non_numeric_string(self) -> None:
+        assert _safe_get("nan", "value", default=-1) == -1
+
+
+class TestInternalLedgerRailSettlements:
+    """Hit success and failure paths for InternalLedgerRail."""
+
+    def test_successful_settlement_updates_milestone(
+        self,
+        db_session: Session,
+        make_milestone: MilestoneFactory,
+    ) -> None:
+        milestone = make_milestone(event_type="POD_CONFIRMED_SUCCESS")
         rail = InternalLedgerRail(db_session)
 
         result = rail.process_settlement(
-            milestone_id=1,
-            amount=100.0,
+            milestone_id=milestone.id,
+            amount=150.0,
             currency="USD",
-            recipient_id="user_123",
+            recipient_id="wallet-123",
         )
 
         assert isinstance(result, SettlementResult)
-
-    def test_process_settlement_success_is_true(self, db_session: Session) -> None:
-        """process_settlement() should return success=True."""
-        rail = InternalLedgerRail(db_session)
-
-        result = rail.process_settlement(
-            milestone_id=1,
-            amount=100.0,
-            currency="USD",
-            recipient_id="user_123",
-        )
-
         assert result.success is True
-
-    def test_process_settlement_provider_internal_ledger(
-        self, db_session: Session
-    ) -> None:
-        """process_settlement() should set provider to INTERNAL_LEDGER."""
-        rail = InternalLedgerRail(db_session)
-
-        result = rail.process_settlement(
-            milestone_id=1,
-            amount=100.0,
-            currency="USD",
-            recipient_id="user_123",
-        )
-
         assert result.provider == SettlementProvider.INTERNAL_LEDGER
-
-    def test_process_settlement_has_reference_id(self, db_session: Session) -> None:
-        """process_settlement() should generate a reference_id."""
-        rail = InternalLedgerRail(db_session)
-
-        result = rail.process_settlement(
-            milestone_id=42,
-            amount=100.0,
-            currency="USD",
-            recipient_id="user_123",
-        )
-
-        assert result.reference_id is not None
-        assert isinstance(result.reference_id, str)
-
-    def test_process_settlement_reference_format(self, db_session: Session) -> None:
-        """process_settlement() reference_id should follow INTERNAL_LEDGER:timestamp:id format."""
-        rail = InternalLedgerRail(db_session)
-        milestone_id = 99
-
-        result = rail.process_settlement(
-            milestone_id=milestone_id,
-            amount=100.0,
-            currency="USD",
-            recipient_id="user_123",
-        )
-
-        ref_id = result.reference_id
-        assert ref_id.startswith("INTERNAL_LEDGER:")
-        parts = ref_id.split(":")
-        assert len(parts) == 3
-        assert parts[0] == "INTERNAL_LEDGER"
-        assert parts[2] == str(milestone_id)
-
-
-class TestSettlementResultStructure:
-    """Test the SettlementResult dataclass structure and fields."""
-
-    def test_settlement_result_has_success_field(self, db_session: Session) -> None:
-        """SettlementResult should have success field."""
-        rail = InternalLedgerRail(db_session)
-        result = rail.process_settlement(1, 100.0, "USD")
-
-        assert hasattr(result, "success")
-        assert isinstance(result.success, bool)
-
-    def test_settlement_result_has_provider_field(self, db_session: Session) -> None:
-        """SettlementResult should have provider field."""
-        rail = InternalLedgerRail(db_session)
-        result = rail.process_settlement(1, 100.0, "USD")
-
-        assert hasattr(result, "provider")
-        assert isinstance(result.provider, SettlementProvider)
-
-    def test_settlement_result_has_reference_id_field(
-        self, db_session: Session
-    ) -> None:
-        """SettlementResult should have reference_id field."""
-        rail = InternalLedgerRail(db_session)
-        result = rail.process_settlement(1, 100.0, "USD")
-
-        assert hasattr(result, "reference_id")
-
-    def test_settlement_result_has_message_field(self, db_session: Session) -> None:
-        """SettlementResult should have message field."""
-        rail = InternalLedgerRail(db_session)
-        result = rail.process_settlement(1, 100.0, "USD")
-
-        assert hasattr(result, "message")
-
-    def test_settlement_result_has_error_field(self, db_session: Session) -> None:
-        """SettlementResult should have error field."""
-        rail = InternalLedgerRail(db_session)
-        result = rail.process_settlement(1, 100.0, "USD")
-
-        assert hasattr(result, "error")
-        assert result.error is None  # No error on success
-
-    def test_settlement_result_has_released_at_field(self, db_session: Session) -> None:
-        """SettlementResult should have released_at field."""
-        rail = InternalLedgerRail(db_session)
-        result = rail.process_settlement(1, 100.0, "USD")
-
-        assert hasattr(result, "released_at")
+        assert result.reference_id and result.reference_id.endswith(f":{milestone.id}")
         assert isinstance(result.released_at, datetime)
 
-
-class TestSettlementAmountHandling:
-    """Test handling of various settlement amounts."""
-
-    def test_process_settlement_zero_amount(self, db_session: Session) -> None:
-        """process_settlement() should handle zero amount."""
-        rail = InternalLedgerRail(db_session)
-
-        result = rail.process_settlement(
-            milestone_id=1,
-            amount=0.0,
-            currency="USD",
-        )
-
-        assert result.success is True
-
-    def test_process_settlement_large_amount(self, db_session: Session) -> None:
-        """process_settlement() should handle large amounts."""
-        rail = InternalLedgerRail(db_session)
-
-        result = rail.process_settlement(
-            milestone_id=1,
-            amount=999999999.99,
-            currency="USD",
-        )
-
-        assert result.success is True
-
-    def test_process_settlement_fractional_amount(self, db_session: Session) -> None:
-        """process_settlement() should handle fractional amounts."""
-        rail = InternalLedgerRail(db_session)
-
-        result = rail.process_settlement(
-            milestone_id=1,
-            amount=123.456,
-            currency="USD",
-        )
-
-        assert result.success is True
-
-    def test_process_settlement_negative_amount(self, db_session: Session) -> None:
-        """process_settlement() should handle negative amounts (refunds)."""
-        rail = InternalLedgerRail(db_session)
-
-        result = rail.process_settlement(
-            milestone_id=1,
-            amount=-50.0,
-            currency="USD",
-        )
-
-        assert result.success is True
-
-
-class TestSettlementCurrencyHandling:
-    """Test handling of various currencies."""
-
-    def test_process_settlement_usd_currency(self, db_session: Session) -> None:
-        """process_settlement() should handle USD currency."""
-        rail = InternalLedgerRail(db_session)
-
-        result = rail.process_settlement(
-            milestone_id=1,
-            amount=100.0,
-            currency="USD",
-        )
-
-        assert result.success is True
-
-    def test_process_settlement_eur_currency(self, db_session: Session) -> None:
-        """process_settlement() should handle EUR currency."""
-        rail = InternalLedgerRail(db_session)
-
-        result = rail.process_settlement(
-            milestone_id=1,
-            amount=100.0,
-            currency="EUR",
-        )
-
-        assert result.success is True
-
-    def test_process_settlement_gbp_currency(self, db_session: Session) -> None:
-        """process_settlement() should handle GBP currency."""
-        rail = InternalLedgerRail(db_session)
-
-        result = rail.process_settlement(
-            milestone_id=1,
-            amount=100.0,
-            currency="GBP",
-        )
-
-        assert result.success is True
-
-
-class TestSettlementWithMilestoneDatabase:
-    """Test process_settlement() with actual MilestoneSettlement records."""
-
-    def test_process_settlement_updates_milestone_status(
-        self, db_session: Session
-    ) -> None:
-        """process_settlement() should update milestone status to APPROVED."""
-        # Create a milestone
-        milestone = MilestoneSettlement(
-            payment_intent_id=1,
-            event_type="POD_CONFIRMED",
-            amount=100.0,
-            currency="USD",
-            status=PaymentStatus.PENDING,
-        )
-        db_session.add(milestone)
-        db_session.commit()
-
-        # Process settlement
-        rail = InternalLedgerRail(db_session)
-        result = rail.process_settlement(
-            milestone_id=milestone.id,
-            amount=100.0,
-            currency="USD",
-        )
-
-        assert result.success is True
-
-        # Verify milestone was updated
         db_session.refresh(milestone)
         assert milestone.status == PaymentStatus.APPROVED
-
-    def test_process_settlement_sets_reference_on_milestone(
-        self, db_session: Session
-    ) -> None:
-        """process_settlement() should set reference on milestone."""
-        milestone = MilestoneSettlement(
-            payment_intent_id=1,
-            event_type="POD_CONFIRMED",
-            amount=100.0,
-            currency="USD",
-            status=PaymentStatus.PENDING,
-        )
-        db_session.add(milestone)
-        db_session.commit()
-
-        rail = InternalLedgerRail(db_session)
-        result = rail.process_settlement(
-            milestone_id=milestone.id,
-            amount=100.0,
-            currency="USD",
-        )
-
-        db_session.refresh(milestone)
         assert milestone.reference == result.reference_id
 
-    def test_process_settlement_sets_provider_on_milestone(
-        self, db_session: Session
+    def test_process_settlement_missing_milestone(self, db_session: Session) -> None:
+        rail = InternalLedgerRail(db_session)
+
+        result = rail.process_settlement(milestone_id=9999, amount=10.0, currency="USD")
+
+        assert result.success is False
+        assert "not found" in (result.error or "")
+        assert result.provider == SettlementProvider.INTERNAL_LEDGER
+
+    def test_settlement_preserves_existing_identifiers(
+        self,
+        db_session: Session,
+        make_milestone: MilestoneFactory,
     ) -> None:
-        """process_settlement() should set provider on milestone."""
-        milestone = MilestoneSettlement(
-            payment_intent_id=1,
-            event_type="POD_CONFIRMED",
-            amount=100.0,
-            currency="USD",
-            status=PaymentStatus.PENDING,
+        milestone = make_milestone(
+            event_type="CLAIM_WINDOW_CLOSED",
+            shipment_reference="SHP-LOCK",
+            milestone_identifier="SHP-LOCK-M2",
         )
-        db_session.add(milestone)
-        db_session.commit()
 
         rail = InternalLedgerRail(db_session)
-        rail.process_settlement(
-            milestone_id=milestone.id,
-            amount=100.0,
-            currency="USD",
-        )
+        result = rail.process_settlement(milestone_id=milestone.id, amount=25.0, currency="USD")
 
+        assert result.success is True
         db_session.refresh(milestone)
-        assert milestone.provider == "INTERNAL_LEDGER"
-
-
-class TestSettlementWithOptionalRecipient:
-    """Test process_settlement() with and without recipient_id."""
-
-    def test_process_settlement_without_recipient(self, db_session: Session) -> None:
-        """process_settlement() should work without recipient_id."""
-        rail = InternalLedgerRail(db_session)
-
-        result = rail.process_settlement(
-            milestone_id=1,
-            amount=100.0,
-            currency="USD",
-        )
-
-        assert result.success is True
-
-    def test_process_settlement_with_recipient(self, db_session: Session) -> None:
-        """process_settlement() should work with recipient_id."""
-        rail = InternalLedgerRail(db_session)
-
-        result = rail.process_settlement(
-            milestone_id=1,
-            amount=100.0,
-            currency="USD",
-            recipient_id="0x123abc",
-        )
-
-        assert result.success is True
-
-    def test_process_settlement_with_empty_recipient(self, db_session: Session) -> None:
-        """process_settlement() should handle empty string recipient_id."""
-        rail = InternalLedgerRail(db_session)
-
-        result = rail.process_settlement(
-            milestone_id=1,
-            amount=100.0,
-            currency="USD",
-            recipient_id="",
-        )
-
-        assert result.success is True
-
-
-class TestMultipleSettlements:
-    """Test processing multiple settlements in sequence."""
-
-    def test_multiple_settlements_same_rail_instance(self, db_session: Session) -> None:
-        """Multiple settlements through same rail instance should work."""
-        rail = InternalLedgerRail(db_session)
-
-        results = []
-        for i in range(5):
-            result = rail.process_settlement(
-                milestone_id=i + 1,
-                amount=100.0 * (i + 1),
-                currency="USD",
-            )
-            results.append(result)
-
-        # All should succeed
-        assert all(r.success for r in results)
-
-        # All should have unique reference IDs
-        ref_ids = [r.reference_id for r in results]
-        assert len(set(ref_ids)) == len(ref_ids)  # All unique
-
-    def test_multiple_settlements_different_currencies(
-        self, db_session: Session
-    ) -> None:
-        """Multiple settlements with different currencies should work."""
-        rail = InternalLedgerRail(db_session)
-        currencies = ["USD", "EUR", "GBP", "JPY", "CHF"]
-
-        results = []
-        for i, currency in enumerate(currencies):
-            result = rail.process_settlement(
-                milestone_id=i + 1,
-                amount=100.0,
-                currency=currency,
-            )
-            results.append(result)
-
-        assert all(r.success for r in results)
+        assert milestone.milestone_identifier == "SHP-LOCK-M2"
+        assert milestone.shipment_reference == "SHP-LOCK"

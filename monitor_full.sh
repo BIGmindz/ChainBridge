@@ -30,7 +30,7 @@ echo "--------------------------------------------------------------------------
 # Run the bot and show continuous output
 python3 live_trading_bot.py 2>&1 | while IFS= read -r line; do
     timestamp=$(date "+%H:%M:%S")
-    
+
     # Show all trading-related output
     if echo "$line" | grep -E "(📊|🎯|💼|💰|📈|🚀|⚡|🟢|🔴|⚪)" > /dev/null; then
         echo "[$timestamp] $line"

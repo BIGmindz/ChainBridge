@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { ExceptionRow, IssueType } from "../types";
-import { formatRiskScore, formatStatus, formatPaymentState } from "../utils/formatting";
+
+import { formatRiskScore, formatStatus, formatPaymentState } from "../lib/formatters";
+import type { ExceptionRow, ExceptionCode } from "../lib/types";
 
 interface ExceptionsPanelProps {
   onSelectShipment: (shipmentId: string) => void;
@@ -14,7 +15,7 @@ export default function ExceptionsPanel({
   onSelectShipment,
 }: ExceptionsPanelProps): JSX.Element {
   const [riskRange, setRiskRange] = useState([0, 100]);
-  const [selectedIssueTypes, setSelectedIssueTypes] = useState<Set<IssueType>>(
+  const [selectedIssueTypes, setSelectedIssueTypes] = useState<Set<ExceptionCode>>(
     new Set()
   );
   const [timeWindow, setTimeWindow] = useState<"2h" | "24h" | "7d">("24h");
@@ -22,15 +23,15 @@ export default function ExceptionsPanel({
   // Mock data - would come from API with filters
   const mockExceptions: ExceptionRow[] = [];
 
-  const issueTypes: IssueType[] = [
-    "high_risk",
+  const issueTypes: ExceptionCode[] = [
+    "risk_spike",
     "late_pickup",
     "late_delivery",
     "no_update",
     "payment_blocked",
   ];
 
-  const toggleIssueType = (issue: IssueType): void => {
+  const toggleIssueType = (issue: ExceptionCode): void => {
     const newSet = new Set(selectedIssueTypes);
     if (newSet.has(issue)) {
       newSet.delete(issue);
@@ -139,12 +140,12 @@ export default function ExceptionsPanel({
             ) : (
               mockExceptions.map((exception) => (
                 <tr
-                  key={exception.shipment_id}
-                  onClick={() => onSelectShipment(exception.shipment_id)}
+                  key={exception.shipmentId}
+                  onClick={() => onSelectShipment(exception.shipmentId)}
                   className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
                 >
                   <td className="px-4 py-3 font-mono text-primary-600">
-                    {exception.shipment_id}
+                    {exception.shipmentId}
                   </td>
                   <td className="px-4 py-3 text-gray-700">{exception.lane}</td>
                   <td className="px-4 py-3">
@@ -159,10 +160,10 @@ export default function ExceptionsPanel({
                   <td className="px-4 py-3 text-center">
                     <span
                       className={`px-2 py-1 rounded font-semibold text-xs ${
-                        formatRiskScore(exception.risk_score).bgColor
-                      } ${formatRiskScore(exception.risk_score).color}`}
+                        formatRiskScore(exception.riskScore).bgColor
+                      } ${formatRiskScore(exception.riskScore).color}`}
                     >
-                      {exception.risk_score}
+                      {exception.riskScore}
                     </span>
                   </td>
                   <td className="px-4 py-3">
