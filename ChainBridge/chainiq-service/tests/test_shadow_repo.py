@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock
 
-
 from app.models_shadow import RiskShadowEvent
 from app.repositories.shadow_repo import ShadowRepo
 
@@ -15,7 +14,7 @@ def test_shadow_repo_log_event():
     repo = ShadowRepo(mock_session)
 
     # Log an event
-    event = repo.log_event(
+    _event = repo.log_event(
         shipment_id="SH-TEST-001",
         dummy_score=0.75,
         real_score=0.82,

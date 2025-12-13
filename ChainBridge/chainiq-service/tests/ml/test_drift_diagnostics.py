@@ -171,25 +171,22 @@ class TestDriftFeatureAttributor:
         """Test drift-weighted importance computation."""
         attributor = DriftFeatureAttributor()
 
-        # Mock feature statistics
+        # Create mock stats that show drift
+        mock_current = {
+            "planned_transit_hours": MagicMock(mean=100, std=30),
+            "eta_deviation_hours": MagicMock(mean=15, std=8),
+        }
+        mock_ref = {
+            "planned_transit_hours": MagicMock(mean=80, std=25),  # 25% drift
+            "eta_deviation_hours": MagicMock(mean=10, std=5),  # 50% drift
+        }
 
-        with patch("app.ml.drift_diagnostics.compute_feature_statistics") as mock_stats:
-            # Create mock stats that show drift
-            mock_current = {
-                "planned_transit_hours": MagicMock(mean=100, std=30),
-                "eta_deviation_hours": MagicMock(mean=15, std=8),
-            }
-            mock_ref = {
-                "planned_transit_hours": MagicMock(mean=80, std=25),  # 25% drift
-                "eta_deviation_hours": MagicMock(mean=10, std=5),  # 50% drift
-            }
+        attributions = attributor.compute_drift_weighted_importance(mock_current, mock_ref)
 
-            attributions = attributor.compute_drift_weighted_importance(mock_current, mock_ref)
-
-            assert isinstance(attributions, list)
-            # Should be sorted by drift_weighted_importance
-            if len(attributions) > 1:
-                assert attributions[0].rank == 1
+        assert isinstance(attributions, list)
+        # Should be sorted by drift_weighted_importance
+        if len(attributions) > 1:
+            assert attributions[0].rank == 1
 
     def test_compute_corridor_attribution(self, sample_shadow_events, sample_reference_data):
         """Test corridor-specific attribution."""
@@ -561,7 +558,8 @@ class TestDriftDiagnosticsReporter:
 
         assert "Corridor-Specific Analysis" in report
         assert "US-CN" in report
-        assert "Drifting Corridors: 1" in report
+        # Report uses markdown bold format
+        assert "Drifting Corridors:** 1" in report
 
     def test_generate_recommendations(self):
         """Test recommendation generation."""
@@ -635,8 +633,8 @@ class TestIntegration:
         """Test complete diagnostics pipeline."""
         from app.ml.drift_diagnostics import run_drift_diagnostics
 
-        # Mock the feature_forensics import
-        with patch("app.ml.drift_diagnostics.compute_feature_statistics") as mock_stats:
+        # Mock at the source module where function is defined
+        with patch("app.ml.feature_forensics.compute_feature_statistics") as mock_stats:
             # Return mock stats
             from collections import namedtuple
 

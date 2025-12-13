@@ -11,7 +11,6 @@ Tests cover:
 
 from datetime import datetime
 
-
 from app.ml.event_parsing import EventType, ParsedEvent
 from app.ml.ingestion import derive_had_claim, derive_had_dispute, derive_is_known_anomaly, derive_loss_amount, derive_severe_delay
 
