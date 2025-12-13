@@ -132,6 +132,47 @@ Summarize results, blockers, and confirmations (see WRAP Requirements below).
 ██████████████████████████████████████████████████████████████████
 ````
 
+## PAC Compliance Rule (Mandatory)
+
+**Effective:** Round-1.2 (2025-12-13)
+**Owner:** GID-08 ALEX — Governance & Alignment Engine
+
+### Banner Requirements
+Every PAC **MUST** include:
+
+1. **START Banner** — Color-coded header block at the beginning:
+   ```
+   🩶🩶🩶 START — GID-XX AGENT_NAME — PAC TITLE 🩶🩶🩶
+   Color Tag: <COLOR>
+   ```
+
+2. **END Banner** — Matching color-coded footer at the conclusion:
+   ```
+   🩶🩶🩶 END — GID-XX AGENT_NAME — PAC TITLE 🩶🩶🩶
+   Color Tag: <COLOR>
+   ```
+
+### Mandatory Sections (1–8)
+All PACs **MUST** include these eight sections in order:
+
+| # | Section | Purpose |
+|---|---------|---------|
+| 1 | **AGENT HEADER** | Agent name, GID, role, authority |
+| 2 | **CONTEXT & GOAL** | Current reality, desired outcome, success definition |
+| 3 | **CONSTRAINTS** | Technical, governance, or timeline constraints |
+| 4 | **TASKS** | Numbered tasks, owners, sequencing |
+| 5 | **FILE TARGETS** | Exact paths to be added/edited |
+| 6 | **CLI** | Shell commands for setup/validation |
+| 7 | **ACCEPTANCE** | Objective tests, linting, reviews for sign-off |
+| 8 | **HANDOFF** | How work is handed to next agent or supervisor |
+
+### Enforcement
+- PACs missing START/END banners or any of sections 1–8 are **non-compliant**.
+- Non-compliant PACs will be flagged by ALEX and returned for correction.
+- Governance maxim: **No banner, no ship.**
+
+---
+
 ## WRAP Requirements
 Every PAC concludes with a WRAP block that must include:
 - **Files touched:** Explicit list of paths (docs/, src/, scripts/, etc.).
