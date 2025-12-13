@@ -18,7 +18,7 @@ on:
   push:
     branches: [ main, develop ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, 'feature/**' ]
 
 env:
   PYTHON_VERSION: '3.11'
@@ -171,7 +171,7 @@ jobs:
         run: |
           if [ -d tests ]; then
             echo "Running pytest on tests/"
-            pytest tests/ -v --tb=short --cov=api --cov=core --cov-report=xml --cov-report=term-missing || true
+            pytest tests/ -v --tb=short --cov=api --cov=core --cov-report=xml --cov-report=term-missing
           else
             echo "No tests/ directory found"
           fi
@@ -264,13 +264,14 @@ jobs:
         working-directory: ChainBridge/chainiq-service
         run: |
           echo "Running ChainIQ sanity checks..."
-          # Syntax validation for all Python files
+          # Syntax validation for all Python files (required)
           python -m compileall app/ -q
-          # TODO(Dan): Add full ChainIQ test suite once Maggie implements ML models
-          if [ -d tests ] && [ "$(ls -A tests/*.py 2>/dev/null)" ]; then
-            pytest tests/ -v --tb=short
+          # Run tests if they exist (tests now implemented by Maggie)
+          if [ -d tests ]; then
+            echo "Running ChainIQ pytest suite..."
+            pytest tests/ -v --tb=short --ignore=tests/security/
           else
-            echo "⚠️ No ChainIQ tests yet — skeleton service validated via compileall"
+            echo "No ChainIQ tests directory — skeleton service validated via compileall"
           fi
 
   # ---------------------------------------------------------------------------
@@ -340,11 +341,11 @@ jobs:
 
       - name: Type check
         working-directory: ChainBridge/chainboard-ui
-        run: npm run type-check || true
+        run: npm run type-check
 
       - name: Lint
         working-directory: ChainBridge/chainboard-ui
-        run: npm run lint || true
+        run: npm run lint
 
       - name: Build
         working-directory: ChainBridge/chainboard-ui
@@ -352,7 +353,7 @@ jobs:
 
       - name: Run Vitest suite
         working-directory: ChainBridge/chainboard-ui
-        run: npm test -- --run
+        run: npm test -- --run --reporter=verbose
 
   # ---------------------------------------------------------------------------
   # Documentation Quality
@@ -411,6 +412,7 @@ jobs:
           # Fail if any critical job failed
           if [[ "${{ needs.backend-tests.result }}" == "failure" ]] || \
              [[ "${{ needs.chainpay-tests.result }}" == "failure" ]] || \
+             [[ "${{ needs.chainiq-tests.result }}" == "failure" ]] || \
              [[ "${{ needs.chainboard-ui-tests.result }}" == "failure" ]]; then
             echo "❌ Critical job(s) failed!"
             exit 1
