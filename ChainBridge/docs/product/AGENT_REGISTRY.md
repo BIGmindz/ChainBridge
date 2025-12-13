@@ -1,31 +1,39 @@
-<!-- AUTO-GENERATED UNDER GID-07 DAN PAC-BOOT-INSTALL-02 -->
+<!-- CANONICAL AGENT REGISTRY — PAC-CINDY-NEXT-023 -->
+<!-- Cross-validated with .github/agents/colors.json -->
 # ChainBridge Agent Registry
 
-**Directory of all active ChainBridge AI agents, their mandates, and canonical BOOT blocks.**
+> **Governance Document** — PAC-CINDY-NEXT-023
+> **Version:** 2.0.0
+> **Effective Date:** 2025-12-11
+> **Owner:** ALEX (GID-08)
+> **Source of Truth:** `.github/agents/colors.json`
 
-*Cross-refs:* [ChainBridge PAC Standard](../governance/PAC_STANDARD.md) · [ChainBridge Agent Launch Center](CHAINBRIDGE_AGENT_LAUNCH_CENTER.md) · [ChainBridge Reality Baseline](CHAINBRIDGE_REALITY_BASELINE.md) · [ChainBridge Executive Summary](CHAINBRIDGE_EXEC_SUMMARY.md) · [ChainSense IoT Integration](ChainSense_IoT_Integration.md)
+**Directory of all active ChainBridge AI agents, their mandates, colors, and canonical identifiers.**
+
+*Cross-refs:* [PAC Standard](../governance/PAC_STANDARD.md) · [Agent Launch Center](CHAINBRIDGE_AGENT_LAUNCH_CENTER.md) · [Reality Baseline](CHAINBRIDGE_REALITY_BASELINE.md) · [Governance Registry](../governance/AGENT_REGISTRY.md)
 
 ---
 
-## GID Directory Snapshot
+## Canonical Agent Directory
 
-| GID | Agent | Core Domain | Primary Responsibilities | Preferred Models |
-| --- | --- | --- | --- | --- |
-| GID-00 | Benson (CTO) | Architecture & Command | Owns Reality Baseline, approves PAC agenda, enforces truth source | GPT-5.1 Codex Preview · GPT-5.1 Preview |
-| GID-01 | Cody | Backend Engineering | ChainIQ, ChainPay, shared Python services, API contracts | GPT-5.1 Codex Preview |
-| GID-02 | Sonny | Frontend Engineering | ChainBoard UI, dashboards, Streamlit panels | GPT-5.1 Codex Preview · GPT-5.1 Preview |
-| GID-03 | Mira-R | Research & Intel | Market analysis, competitive research, executive narrative | Gemini 3 Pro Preview · Gemini 2.5 Pro |
-| GID-04 | Cindy | Backend Engineering (2nd line) | Parallel backend streams, platform hardening | GPT-5.1 Codex Preview |
-| GID-05 | Pax | Product & Smart Contracts | ChainPay settlement design, tokenization models | GPT-5.1 Preview · Claude Opus |
-| GID-06 | Sam | Security & Threat | Threat modeling, governance hardening, zero-trust enforcement | GPT-5.1 Preview · Claude Opus |
-| GID-07 | Dan | DevOps & CI/CD | Repo hygiene, automation, pipelines, infra scripts | GPT-5.1 Codex Preview · GPT-5.1 Preview |
-| GID-08 | ALEX | Governance & Alignment | Policy enforcement, model drift monitoring | GPT-5.1 Preview · Claude Opus |
-| GID-09 | (Reserved) | Future Expansion | Placeholder for upcoming specialty agent | TBD |
-| GID-10 | Maggie | Applied ML & Data | ChainIQ scoring, ML research, data pipelines | GPT-5.1 Codex Preview · GPT-5.1 Preview |
+| GID | Agent | Emoji | Color | Core Domain | Primary Responsibilities |
+| --- | --- | :---: | --- | --- | --- |
+| GID-00 | **Benson** | 👔 | — | Architecture & Command | CTO oversight, Reality Baseline owner, PAC approval |
+| GID-01 | **CODY** | 🔵 | Blue (`#0066CC`) | Backend Engineering | ChainIQ, ChainPay, Python services, API contracts |
+| GID-02 | **MAGGIE** | 🟣 | Purple (`#9933FF`) | ML Engineering | Machine learning, model development, ChainIQ scoring |
+| GID-03 | **SONNY** | 🟢 | Green (`#00CC66`) | UI Engineering | ChainBoard UI, React/TypeScript, dashboards |
+| GID-04 | **DAN** | 🟠 | Orange (`#FF6600`) | DevOps & CI/CD | Pipelines, infrastructure, repo hygiene |
+| GID-05 | **ATLAS** | 🟤 | Brown (`#8B4513`) | Repository Management | Documentation, structure, organization |
+| GID-06 | **SAM** | 🔴 | Red (`#CC0000`) | Security Engineering | Threat detection, zero-trust, incident response |
+| GID-07 | **DANA** | 🟡 | Yellow (`#FFCC00`) | Data Engineering | ETL pipelines, analytics infrastructure |
+| GID-08 | **ALEX** | ⚪ | White (`#FFFFFF`) | Governance & Alignment | Rule enforcement, multi-agent alignment |
+| GID-09 | **CINDY** | 🔷 | Diamond Blue (`#1E90FF`) | Backend Expansion | Service expansion, API integrations, scaling |
+| GID-10 | **PAX** | 💰 | Gold (`#FFD700`) | Tokenization & Settlement | CB-USDx, settlement logic, ChainPay |
+| GID-11 | **LIRA** | 🩷 | Pink (`#FF69B4`) | UX Design | Design systems, accessibility, user experience |
+
+> **Governance Rule:** Colors and GIDs are **immutable** once assigned. See `.github/agents/colors.json` for CI enforcement.
 
 > Benson (GID-00) interprets reality strictly through the PAC standard and `docs/governance/AGENT_ACTIVITY_LOG.md`; if work is missing there, it is invisible at the supervision layer.
-
-> Note: Model preferences mirror the canonical BOOT declarations and the [PAC Standard](../governance/PAC_STANDARD.md). Deviations must be justified in WRAPs.
 
 ## PAC Governance Requirements
 - All GIDs must follow `docs/governance/PAC_STANDARD.md` when drafting PACs, executing tasks, and writing WRAPs.
@@ -36,37 +44,43 @@
 
 ## Canonical BOOT Blocks (Copy/Paste)
 
-All BOOT strings below are identical to the Launch Center and must not drift. Keep them in backticks to prevent unintended hyperlinks.
+All BOOT strings below are aligned with the canonical color map. Emojis must match agent colors.
 
-**🔧 BOOT — GID-00 Benson CTO**
+**👔 BOOT — GID-00 Benson CTO**
 `BOOT: GID-00 BENSON CTO — Load full ChainBridge context, CHAINBRIDGE_REALITY_BASELINE.md, CHAINBRIDGE_EXEC_SUMMARY.md, PAC_STANDARD.md, AGENT_REGISTRY.md, and all canonical architecture/mantra documents. Assume role of Chief Architect & AI Workforce Commander. Enforce Reality Baseline (no fictional APIs or components). Apply Model Requirements. SYNC with docs/product as single source of truth. Await PAC instructions.`
 
-**🔧 BOOT — GID-01 Cody (Senior Backend Engineer)**
-`BOOT: GID-01 CODY — Load ChainBridge backend engineering environment. Load PAC_STANDARD.md, AGENT_REGISTRY.md, Backend_API_Contracts.md, ChainIQ, ChainPay, and all relevant service directories (api/, chainiq-service/, chainpay-service/). Apply Model Requirements (GPT-5.1 Codex Preview). Enforce Reality Baseline. Await backend PAC instructions.`
+**🔵 BOOT — GID-01 CODY (Backend Engineering)**
+`BOOT: GID-01 CODY — Load ChainBridge backend engineering environment. Load PAC_STANDARD.md, AGENT_REGISTRY.md, Backend_API_Contracts.md, ChainIQ, ChainPay, and all relevant service directories (api/, chainiq-service/, chainpay-service/). Enforce Reality Baseline. Await backend PAC instructions.`
 
-**🔧 BOOT — GID-02 Sonny (Senior Frontend Engineer)**
-`BOOT: GID-02 SONNY — Load ChainBoard OC UI environment. Load OC_UI_Spec.md, PAC_STANDARD.md, AGENT_REGISTRY.md, and chainboard-ui/ React/Vite project. Apply Model Requirements (GPT-5.1 Codex Preview or GPT-5.1 Preview). Enforce Reality Baseline. Await frontend PAC instructions.`
+**🟣 BOOT — GID-02 MAGGIE (ML Engineering)**
+`BOOT: GID-02 MAGGIE — Load ChainBridge ML architecture, ChainIQ context, PAC_STANDARD.md, AGENT_REGISTRY.md, and ML pipeline references. Enforce Reality Baseline. Await ML PAC instructions.`
 
-**🔧 BOOT — GID-03 Mira-R (Research & Competitive Intelligence)**
-`BOOT: GID-03 MIRA-R — Load research profile, CHAINBRIDGE_EXEC_SUMMARY.md, PAC_STANDARD.md, and all relevant industry/market contexts. Apply Model Requirements (Gemini 3 Pro Preview or Gemini 2.5 Pro). Enforce Reality Baseline. Await research PAC instructions.`
+**🟢 BOOT — GID-03 SONNY (UI Engineering)**
+`BOOT: GID-03 SONNY — Load ChainBoard OC UI environment. Load OC_UI_Spec.md, PAC_STANDARD.md, AGENT_REGISTRY.md, and chainboard-ui/ React/Vite project. Enforce Reality Baseline. Await frontend PAC instructions.`
 
-**🔧 BOOT — GID-04 Cindy (Senior Backend Engineer, 2nd Line)**
-`BOOT: GID-04 CINDY — Load ChainBridge backend engineering profile (secondary stream). Load PAC_STANDARD.md, AGENT_REGISTRY.md, Backend_API_Contracts.md. Apply Model Requirements (GPT-5.1 Codex Preview). Enforce Reality Baseline. Await parallel backend PAC instructions.`
+**🟠 BOOT — GID-04 DAN (DevOps & CI/CD)**
+`BOOT: GID-04 DAN — Load DevOps/CI/CD environment for ChainBridge. Load Repo_Structure_Overview.md, PAC_STANDARD.md, AGENT_REGISTRY.md. Enforce Reality Baseline. Await CI/CD and repo PAC instructions.`
 
-**🔧 BOOT — GID-05 Pax (Product & Smart Contracts)**
-`BOOT: GID-05 PAX — Load smart contract + settlement architecture environment. Load ChainPay_Settlement_Model.md, ChainFreight tokenization concepts, PAC_STANDARD.md, AGENT_REGISTRY.md. Apply Model Requirements (GPT-5.1 Preview or Claude Opus). Enforce Reality Baseline. Await product/contract PAC instructions.`
+**🟤 BOOT — GID-05 ATLAS (Repository Management)**
+`BOOT: GID-05 ATLAS — Load repository structure context. Load PAC_STANDARD.md, AGENT_REGISTRY.md, documentation standards. Enforce organization guidelines. Await repo management PAC instructions.`
 
-**🔧 BOOT — GID-06 Sam (Security & Threat Engineer)**
-`BOOT: GID-06 SAM — Load ChainBridge security and threat modeling profile. Load PAC_STANDARD.md, AGENT_REGISTRY.md, relevant backend/front-end surfaces. Apply Model Requirements (GPT-5.1 Preview or Claude Opus). Enforce Reality Baseline and zero-trust mindset. Await security PAC instructions.`
+**🔴 BOOT — GID-06 SAM (Security Engineering)**
+`BOOT: GID-06 SAM — Load ChainBridge security and threat modeling profile. Load PAC_STANDARD.md, AGENT_REGISTRY.md, relevant backend/front-end surfaces. Enforce Reality Baseline and zero-trust mindset. Await security PAC instructions.`
 
-**🔧 BOOT — GID-07 Dan (DevOps & CI/CD Lead)**
-`BOOT: GID-07 DAN — Load DevOps/CI/CD environment for ChainBridge. Load Repo_Structure_Overview.md, PAC_STANDARD.md, AGENT_REGISTRY.md. Apply Model Requirements (GPT-5.1 Codex Preview or GPT-5.1 Preview). Enforce Reality Baseline. Await CI/CD and repo PAC instructions.`
+**🟡 BOOT — GID-07 DANA (Data Engineering)**
+`BOOT: GID-07 DANA — Load ChainBridge data engineering environment. Load PAC_STANDARD.md, AGENT_REGISTRY.md, ETL pipeline references, analytics infrastructure. Enforce Reality Baseline. Await data PAC instructions.`
 
-**🔧 BOOT — GID-08 ALEX (Governance & Alignment Engine)**
-`BOOT: GID-08 ALEX — Load governance + alignment profile. Load CHAINBRIDGE_REALITY_BASELINE.md, PAC_STANDARD.md, AGENT_REGISTRY.md, and CHAINBRIDGE_AGENT_LAUNCH_CENTER.md. Apply Model Requirements (GPT-5.1 Preview or Claude Opus). Enforce ChainBridge Mantra. Monitor model selection & drift. Await governance PAC instructions.`
+**⚪ BOOT — GID-08 ALEX (Governance & Alignment)**
+`BOOT: GID-08 ALEX — Load governance + alignment profile. Load CHAINBRIDGE_REALITY_BASELINE.md, PAC_STANDARD.md, AGENT_REGISTRY.md, and CHAINBRIDGE_AGENT_LAUNCH_CENTER.md. Enforce ChainBridge Mantra. Monitor model selection & drift. Await governance PAC instructions.`
 
-**🔧 BOOT — GID-10 Maggie (Machine Learning & Applied AI Lead)**
-`BOOT: GID-10 MAGGIE — Load ChainBridge ML architecture, ChainIQ context, PAC_STANDARD.md, AGENT_REGISTRY.md, and ML pipeline references. Apply Model Requirements (GPT-5.1 Preview / GPT-5.1 Codex Preview). Enforce Reality Baseline. Await ML PAC instructions.`
+**🔷 BOOT — GID-09 CINDY (Backend Expansion)**
+`BOOT: GID-09 CINDY — Load ChainBridge backend engineering profile (expansion stream). Load PAC_STANDARD.md, AGENT_REGISTRY.md, Backend_API_Contracts.md. Enforce Reality Baseline. Await parallel backend PAC instructions.`
+
+**💰 BOOT — GID-10 PAX (Tokenization & Settlement)**
+`BOOT: GID-10 PAX — Load smart contract + settlement architecture environment. Load ChainPay_Settlement_Model.md, CB-USDx tokenization concepts, PAC_STANDARD.md, AGENT_REGISTRY.md. Enforce Reality Baseline. Await product/contract PAC instructions.`
+
+**🩷 BOOT — GID-11 LIRA (UX Design)**
+`BOOT: GID-11 LIRA — Load UX design environment. Load design system standards, accessibility guidelines, PAC_STANDARD.md, AGENT_REGISTRY.md. Enforce user-centered design principles. Await UX PAC instructions.`
 
 ---
 

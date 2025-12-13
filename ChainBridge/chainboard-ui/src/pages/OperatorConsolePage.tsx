@@ -4,6 +4,7 @@ import { SystemStatus } from '@/components/debug/SystemStatus';
 import GlobalOpsMap from '@/components/GlobalOpsMap';
 import { SenseThinkActStrip } from '@/components/oc/SenseThinkActStrip';
 import { ServiceStatusSummary } from '@/components/oc/ServiceStatusSummary';
+import { OCIntelligenceWidget } from '@/components/oc/OCIntelligenceWidget';
 
 export default function OperatorConsolePage() {
   const [isCinematic, setIsCinematic] = useState(false);
@@ -246,6 +247,9 @@ export default function OperatorConsolePage() {
                 <div className="bg-emerald-500 h-full w-[98%] shadow-[0_0_10px_#10b981]" />
               </div>
             </div>
+
+            {/* Shadow Intelligence Widget */}
+            <OCIntelligenceWidget />
 
             <div className="p-4 bg-slate-800/30 rounded-lg border border-slate-700/50">
               <div className="text-xs text-slate-500 uppercase mb-2">Live Telemetry</div>

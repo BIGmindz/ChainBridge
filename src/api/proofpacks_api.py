@@ -1,18 +1,19 @@
+import datetime
+import hashlib
+import json
+import os
+import uuid
+from typing import List, Optional
+
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import List, Optional
-import uuid, hashlib, json, os, datetime
-
-from src.security.signing import (
-    now_utc_iso,
-    canonical_json_bytes,
-    sign_response_headers,
-)
+from src.security.signing import canonical_json_bytes, now_utc_iso, sign_response_headers
 
 router = APIRouter(prefix="/proofpacks", tags=["ProofPacks"])
 
 RUNTIME_DIR = "proofpacks/runtime"
+
 
 # ---------- MODELS ----------
 class ProofEvent(BaseModel):
@@ -20,11 +21,13 @@ class ProofEvent(BaseModel):
     timestamp: datetime.datetime | str
     details: Optional[dict] = None
 
+
 class ProofPackRequest(BaseModel):
     shipment_id: str
     events: List[ProofEvent]
     risk_score: Optional[float] = None
     policy_version: Optional[str] = "1.0"
+
 
 # ---------- HELPERS ----------
 def _normalize_events(events: List[ProofEvent]) -> List[dict]:
@@ -33,15 +36,13 @@ def _normalize_events(events: List[ProofEvent]) -> List[dict]:
         ts = e.timestamp
         if hasattr(ts, "isoformat"):
             ts = ts.isoformat()
-        norm.append({
-            "event_type": e.event_type,
-            "timestamp": str(ts),
-            "details": e.details or {}
-        })
+        norm.append({"event_type": e.event_type, "timestamp": str(ts), "details": e.details or {}})
     return norm
+
 
 def _sha256_hex(b: bytes) -> str:
     return hashlib.sha256(b).hexdigest()
+
 
 # ---------- ENDPOINTS ----------
 @router.post("/run")
@@ -81,6 +82,7 @@ async def run_proofpack(payload: ProofPackRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/{pack_id}")
 async def get_proofpack(pack_id: str):

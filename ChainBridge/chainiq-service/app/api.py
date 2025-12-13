@@ -5,8 +5,17 @@ Exposes risk scoring and intelligence endpoints.
 """
 
 import logging
+import sys
+from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
+
+from app.risk.api import router as risk_router
+
+# Ensure the chainiq-service root is importable before loading helper modules
+CHAINIQ_ROOT = Path(__file__).parent.parent
+if str(CHAINIQ_ROOT) not in sys.path:
+    sys.path.insert(0, str(CHAINIQ_ROOT))
 
 from .risk_engine import calculate_risk_score
 from .schemas import (
@@ -82,6 +91,9 @@ except ImportError as e:
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/iq", tags=["ChainIQ"])
+
+# Mount risk endpoints under /iq/risk
+router.include_router(risk_router)
 
 
 @router.post("/score-shipment", response_model=ShipmentRiskResponse)
@@ -943,9 +955,7 @@ async def get_at_risk_shipments(min_risk_score: int = 70, max_results: int = 50)
     # Apply result limit
     limited_shipments = filtered_shipments[:max_results]
 
-    logger.info(
-        "Returning %d at-risk shipments (filtered from %d total)", len(limited_shipments), len(filtered_shipments)
-    )
+    logger.info("Returning %d at-risk shipments (filtered from %d total)", len(limited_shipments), len(filtered_shipments))
 
     return AtRiskShipmentsResponse(
         shipments=limited_shipments,

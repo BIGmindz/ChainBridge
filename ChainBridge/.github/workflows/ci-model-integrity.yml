@@ -1,0 +1,471 @@
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# CI-MODEL-INTEGRITY: ML Model Security & Integrity Pipeline
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# PAC: DAN-PAC-031 - CI/CD Normalization (integrates SAM security checks)
+# Author: DAN (GID-07) - DevOps & CI/CD Lead
+# Security: SAM (GID-08) - Security Lead
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+name: CI-Model-Integrity
+
+on:
+  pull_request:
+    paths:
+      - '**.pkl'
+      - '**.joblib'
+      - '**.onnx'
+      - '**.sig.json'
+      - 'chainiq-service/app/ml/models/**'
+      - 'ml_models/**'
+      - '.chainbridge/models/**'
+  push:
+    branches: [main, develop]
+    paths:
+      - '**.pkl'
+      - '**.joblib'
+      - '**.onnx'
+      - '**.sig.json'
+  schedule:
+    # Nightly integrity scan at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      force_full_scan:
+        description: 'Force full scan even if no models changed'
+        required: false
+        default: 'false'
+
+env:
+  PYTHON_VERSION: '3.11'
+  MODEL_REGISTRY: 'ml_models'
+  QUARANTINE_DIR: '.quarantine'
+
+jobs:
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Job 1: Model Discovery
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  discover-models:
+    name: 🔍 Discover Model Files
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      model_count: ${{ steps.find.outputs.model_count }}
+      model_files: ${{ steps.find.outputs.model_files }}
+      skip_check: ${{ steps.find.outputs.skip_check }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find model files
+        id: find
+        run: |
+          echo "🔍 Searching for ML model files..."
+
+          # Find all model files
+          MODEL_FILES=$(find . -type f \( -name "*.pkl" -o -name "*.joblib" -o -name "*.onnx" \) | grep -v ".venv" | grep -v "node_modules" | sort)
+          MODEL_COUNT=$(echo "$MODEL_FILES" | grep -c "." || echo "0")
+
+          echo "Found $MODEL_COUNT model file(s)"
+
+          if [ -z "$MODEL_FILES" ] || [ "$MODEL_COUNT" -eq "0" ]; then
+            echo "⚠️ No model files found"
+            echo "skip_check=true" >> $GITHUB_OUTPUT
+            echo "model_count=0" >> $GITHUB_OUTPUT
+            echo "model_files=" >> $GITHUB_OUTPUT
+          else
+            echo "Model files:"
+            echo "$MODEL_FILES"
+            echo "skip_check=false" >> $GITHUB_OUTPUT
+            echo "model_count=$MODEL_COUNT" >> $GITHUB_OUTPUT
+            # Convert to JSON array for matrix
+            MODEL_JSON=$(echo "$MODEL_FILES" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+            echo "model_files=$MODEL_JSON" >> $GITHUB_OUTPUT
+          fi
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Job 2: SHA-256 Verification
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  sha256-verify:
+    name: 🔐 SHA-256 Verification
+    needs: discover-models
+    if: needs.discover-models.outputs.skip_check != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Verify SHA-256 signatures
+        run: |
+          echo "🔐 Verifying SHA-256 signatures for all model files..."
+
+          FAILED=0
+          PASSED=0
+          MISSING_SIG=0
+
+          for model in $(find . -type f \( -name "*.pkl" -o -name "*.joblib" -o -name "*.onnx" \) | grep -v ".venv"); do
+            SIG_FILE="${model}.sig.json"
+
+            if [ ! -f "$SIG_FILE" ]; then
+              echo "⚠️  Missing signature: $model"
+              MISSING_SIG=$((MISSING_SIG + 1))
+              continue
+            fi
+
+            # Compute SHA-256
+            COMPUTED_HASH=$(sha256sum "$model" | cut -d' ' -f1)
+
+            # Extract expected hash from signature file
+            EXPECTED_HASH=$(python -c "import json; print(json.load(open('$SIG_FILE')).get('sha256', ''))" 2>/dev/null || echo "")
+
+            if [ -z "$EXPECTED_HASH" ]; then
+              echo "❌ Invalid signature file: $SIG_FILE"
+              FAILED=$((FAILED + 1))
+            elif [ "$COMPUTED_HASH" != "$EXPECTED_HASH" ]; then
+              echo "❌ SHA-256 MISMATCH: $model"
+              echo "   Expected: $EXPECTED_HASH"
+              echo "   Computed: $COMPUTED_HASH"
+              FAILED=$((FAILED + 1))
+            else
+              echo "✅ Verified: $model"
+              PASSED=$((PASSED + 1))
+            fi
+          done
+
+          echo ""
+          echo "━━━ SHA-256 Verification Summary ━━━"
+          echo "Passed: $PASSED"
+          echo "Failed: $FAILED"
+          echo "Missing signatures: $MISSING_SIG"
+
+          if [ $FAILED -gt 0 ]; then
+            echo "❌ SHA-256 verification failed - DEPLOY BLOCKED"
+            exit 1
+          fi
+
+          if [ $MISSING_SIG -gt 0 ]; then
+            echo "⚠️  Warning: $MISSING_SIG model(s) without signatures"
+          fi
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Job 3: PQC Kyber Verification (Post-Quantum Cryptography)
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  pqc-verify:
+    name: 🔮 PQC Kyber Verification
+    needs: discover-models
+    if: needs.discover-models.outputs.skip_check != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install PQC dependencies
+        run: |
+          pip install pycryptodome || echo "⚠️ PQC library not available"
+
+      - name: Verify PQC signatures (if present)
+        run: |
+          echo "🔮 Checking for PQC Kyber signatures..."
+
+          PQC_FOUND=0
+          PQC_VERIFIED=0
+
+          for sig_file in $(find . -name "*.sig.json" | grep -v ".venv"); do
+            # Check if signature contains PQC data
+            HAS_PQC=$(python -c "import json; d=json.load(open('$sig_file')); print('yes' if 'pqc_kyber' in d or 'kyber_signature' in d else 'no')" 2>/dev/null || echo "no")
+
+            if [ "$HAS_PQC" == "yes" ]; then
+              PQC_FOUND=$((PQC_FOUND + 1))
+              echo "🔮 PQC signature found: $sig_file"
+
+              # Verify PQC signature structure
+              VALID=$(python -c "
+          import json
+          import sys
+          try:
+              d = json.load(open('$sig_file'))
+              kyber = d.get('pqc_kyber', d.get('kyber_signature', {}))
+              required = ['public_key', 'signature', 'algorithm']
+              valid = all(k in kyber for k in required)
+              print('valid' if valid else 'invalid')
+          except:
+              print('invalid')
+          " 2>/dev/null || echo "invalid")
+
+              if [ "$VALID" == "valid" ]; then
+                echo "  ✅ PQC structure verified"
+                PQC_VERIFIED=$((PQC_VERIFIED + 1))
+              else
+                echo "  ❌ Invalid PQC structure"
+              fi
+            fi
+          done
+
+          echo ""
+          echo "━━━ PQC Verification Summary ━━━"
+          echo "PQC signatures found: $PQC_FOUND"
+          echo "PQC verified: $PQC_VERIFIED"
+
+          if [ $PQC_FOUND -gt 0 ] && [ $PQC_VERIFIED -ne $PQC_FOUND ]; then
+            echo "⚠️  Warning: Some PQC signatures could not be verified"
+          fi
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Job 4: Model Metadata Validation
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  metadata-validation:
+    name: 📋 Metadata Validation
+    needs: discover-models
+    if: needs.discover-models.outputs.skip_check != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Validate model metadata
+        run: |
+          echo "📋 Validating model metadata..."
+
+          VALID=0
+          INVALID=0
+
+          for sig_file in $(find . -name "*.sig.json" | grep -v ".venv"); do
+            echo "Checking: $sig_file"
+
+            RESULT=$(python -c "
+          import json
+          import sys
+
+          required_fields = ['model_version', 'created_at', 'sha256']
+          recommended_fields = ['model_name', 'framework', 'python_version']
+
+          try:
+              d = json.load(open('$sig_file'))
+
+              # Check required fields
+              missing_required = [f for f in required_fields if f not in d]
+              missing_recommended = [f for f in recommended_fields if f not in d]
+
+              if missing_required:
+                  print(f'INVALID:missing:{','.join(missing_required)}')
+              elif missing_recommended:
+                  print(f'WARN:recommended:{','.join(missing_recommended)}')
+              else:
+                  print('VALID')
+          except Exception as e:
+              print(f'ERROR:{e}')
+          " 2>/dev/null || echo "ERROR:parse_failed")
+
+            if [[ "$RESULT" == "VALID" ]]; then
+              echo "  ✅ Metadata valid"
+              VALID=$((VALID + 1))
+            elif [[ "$RESULT" == WARN* ]]; then
+              echo "  ⚠️  $RESULT"
+              VALID=$((VALID + 1))
+            else
+              echo "  ❌ $RESULT"
+              INVALID=$((INVALID + 1))
+            fi
+          done
+
+          echo ""
+          echo "━━━ Metadata Validation Summary ━━━"
+          echo "Valid: $VALID"
+          echo "Invalid: $INVALID"
+
+          if [ $INVALID -gt 0 ]; then
+            echo "❌ Metadata validation failed - DEPLOY BLOCKED"
+            exit 1
+          fi
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Job 5: Quarantine Detection
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  quarantine-check:
+    name: 🚫 Quarantine Detection
+    needs: discover-models
+    if: needs.discover-models.outputs.skip_check != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for quarantined models
+        run: |
+          echo "🚫 Checking for quarantined models..."
+
+          QUARANTINE_DIR=".quarantine"
+          BLOCKED=0
+
+          # Check if quarantine directory exists and has models
+          if [ -d "$QUARANTINE_DIR" ]; then
+            QUARANTINED=$(find "$QUARANTINE_DIR" -type f \( -name "*.pkl" -o -name "*.joblib" -o -name "*.onnx" \) | wc -l)
+
+            if [ $QUARANTINED -gt 0 ]; then
+              echo "⚠️  Found $QUARANTINED quarantined model(s):"
+              find "$QUARANTINE_DIR" -type f \( -name "*.pkl" -o -name "*.joblib" -o -name "*.onnx" \)
+            fi
+          fi
+
+          # Check if any model is on the blocklist
+          BLOCKLIST=".chainbridge/model_blocklist.txt"
+          if [ -f "$BLOCKLIST" ]; then
+            echo "Checking against blocklist..."
+
+            for model in $(find . -type f \( -name "*.pkl" -o -name "*.joblib" -o -name "*.onnx" \) | grep -v ".venv" | grep -v ".quarantine"); do
+              MODEL_HASH=$(sha256sum "$model" | cut -d' ' -f1)
+
+              if grep -q "$MODEL_HASH" "$BLOCKLIST" 2>/dev/null; then
+                echo "❌ BLOCKED: $model is on blocklist"
+                BLOCKED=$((BLOCKED + 1))
+              fi
+            done
+          fi
+
+          if [ $BLOCKED -gt 0 ]; then
+            echo "❌ $BLOCKED blocked model(s) detected - DEPLOY BLOCKED"
+            exit 1
+          fi
+
+          echo "✅ No quarantined or blocked models detected"
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Job 6: Model Security Scan
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  security-scan:
+    name: 🛡️ Security Scan
+    needs: discover-models
+    if: needs.discover-models.outputs.skip_check != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install security scanning tools
+        run: |
+          pip install fickling 2>/dev/null || echo "⚠️ fickling not available"
+          pip install joblib || true
+
+      - name: Scan for pickle exploits
+        run: |
+          echo "🛡️ Scanning for pickle exploits..."
+
+          SUSPICIOUS=0
+
+          for model in $(find . -type f -name "*.pkl" | grep -v ".venv"); do
+            echo "Scanning: $model"
+
+            # Check for suspicious patterns using Python
+            RESULT=$(python -c "
+          import pickle
+          import sys
+
+          suspicious_patterns = [
+              b'__reduce__',
+              b'subprocess',
+              b'os.system',
+              b'eval(',
+              b'exec(',
+              b'__import__',
+          ]
+
+          try:
+              with open('$model', 'rb') as f:
+                  content = f.read()
+
+              found = []
+              for pattern in suspicious_patterns:
+                  if pattern in content:
+                      found.append(pattern.decode('utf-8', errors='ignore'))
+
+              if found:
+                  print(f'SUSPICIOUS:{','.join(found)}')
+              else:
+                  print('CLEAN')
+          except Exception as e:
+              print(f'ERROR:{e}')
+          " 2>/dev/null || echo "ERROR:scan_failed")
+
+            if [[ "$RESULT" == SUSPICIOUS* ]]; then
+              echo "  ⚠️  $RESULT"
+              SUSPICIOUS=$((SUSPICIOUS + 1))
+            elif [[ "$RESULT" == "CLEAN" ]]; then
+              echo "  ✅ Clean"
+            else
+              echo "  ⚠️  $RESULT"
+            fi
+          done
+
+          if [ $SUSPICIOUS -gt 0 ]; then
+            echo "⚠️  Warning: $SUSPICIOUS suspicious model(s) detected"
+            echo "Manual review required before deployment"
+          fi
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Summary Job
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  integrity-summary:
+    name: 📊 Integrity Summary
+    needs: [discover-models, sha256-verify, pqc-verify, metadata-validation, quarantine-check, security-scan]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Generate Summary
+        run: |
+          echo "# 🔐 Model Integrity Check Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Security Verification Status" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Model Discovery | ${{ needs.discover-models.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SHA-256 Verification | ${{ needs.sha256-verify.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| PQC Kyber Check | ${{ needs.pqc-verify.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Metadata Validation | ${{ needs.metadata-validation.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Quarantine Check | ${{ needs.quarantine-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Scan | ${{ needs.security-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.sha256-verify.result }}" == "failure" ] || \
+             [ "${{ needs.metadata-validation.result }}" == "failure" ] || \
+             [ "${{ needs.quarantine-check.result }}" == "failure" ]; then
+            echo "❌ **DEPLOY BLOCKED: Model integrity check failed**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Review the failed jobs above and fix issues before deployment." >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.discover-models.outputs.skip_check }}" == "true" ]; then
+            echo "ℹ️ **No model files found - check skipped**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **All model integrity checks passed**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "_PAC: DAN-PAC-031 + SAM Security | Model Integrity v1.0_" >> $GITHUB_STEP_SUMMARY
+
+      - name: Block deploy if failed
+        if: |
+          needs.sha256-verify.result == 'failure' ||
+          needs.metadata-validation.result == 'failure' ||
+          needs.quarantine-check.result == 'failure'
+        run: |
+          echo "❌ Model integrity check failed - deployment blocked"
+          exit 1

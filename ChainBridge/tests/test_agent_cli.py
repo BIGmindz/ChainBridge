@@ -5,10 +5,14 @@ Tests the CLI subcommands (list, show, validate, dump-json) for correctness,
 exit codes, and output formatting.
 """
 
+import os
 import subprocess
+from pathlib import Path
 from typing import Tuple
 
 import pytest
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
 
 
 def run_agent_cli_command(command: list[str]) -> Tuple[int, str]:
@@ -20,10 +24,15 @@ def run_agent_cli_command(command: list[str]) -> Tuple[int, str]:
     Returns:
         Tuple of (exit_code, stdout+stderr output)
     """
+    env = os.environ.copy()
+    # Ensure the monorepo root is on PYTHONPATH so `python -m tools.agent_cli` resolves
+    env["PYTHONPATH"] = f"{ROOT_DIR}:{env.get('PYTHONPATH','')}" if env.get("PYTHONPATH") else str(ROOT_DIR)
     result = subprocess.run(
         command,
+        cwd=ROOT_DIR,
         capture_output=True,
         text=True,
+        env=env,
     )
     return result.returncode, result.stdout + result.stderr
 

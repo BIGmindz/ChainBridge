@@ -1,5 +1,10 @@
 # AT-02 Phase 2 Dependencies — IT-01, MT-01, CCT-01
 
+> **Legend**:
+> 🩷 **MAGGIE** (GID-10) — Chief AI Architect
+> 🟢 **ALEX** (GID-08) — Governance & Alignment
+> 🔵 **ATLAS** — Infrastructure & Security
+
 ## 1. BLUF
 
 This document outlines how the AT-02 Accessorial Fraud Engine (Phase 1) evolves into a **Phase 2 multi-token intelligence layer** connected to:
@@ -73,7 +78,7 @@ The goal is to turn AT-02 from an isolated fraud detector into a **coherent comp
 
 ### 4.2. Governance
 
-- ALEX must ensure **gradual** and **fair** adjustments:
+- 🟢 ALEX must ensure **gradual** and **fair** adjustments:
   - No abrupt credit cliff just from one model.
   - Rolling averages and confidence bands.
 
@@ -123,6 +128,14 @@ The goal is to turn AT-02 from an isolated fraud detector into a **coherent comp
 - Each token-linked model (AT-02, IT-01, MT-01, CCT-01) must:
   - Document its dependencies on others.
   - Expose how upstream model changes affect downstream risk.
+
+- 🟢 ALEX enforces:
+  - "No circular dependencies that cause feedback loops."
+  - "No hidden dependencies on deprecated tokens."
+
+---
+
+🩷 **MAGGIE** — Chief AI Architect
 
 - ALEX enforces:
   - No hidden circular reasoning (e.g., AT-02 using CCT-01 which heavily uses AT-02 again).
