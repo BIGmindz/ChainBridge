@@ -1,9 +1,11 @@
 """ARQ job for running and persisting Shadow Pilot simulations."""
+
 from __future__ import annotations
 
 import logging
+import os
 from datetime import datetime
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from typing import Any, Dict
 
@@ -11,6 +13,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from api.database import SessionLocal
 from api.models.shadow_pilot import ShadowPilotRun, ShadowPilotShipment
+from core.path_security import PathTraversalError, validate_path_within_base
 from tools.shadow_pilot import run_shadow_pilot_from_csv
 
 logger = logging.getLogger(__name__)
@@ -48,8 +51,17 @@ async def run_shadow_pilot_job(
         "shadow_pilot.job.start",
         extra={"run_id": run_id, "csv_path": csv_path, "config": config},
     )
+
+    # Security: Validate csv_path is within allowed data directory
+    allowed_base = Path(os.getenv("SHADOW_PILOT_DATA_DIR", "data/shadow_pilot")).resolve()
+    try:
+        validated_path = validate_path_within_base(csv_path, allowed_base)
+    except PathTraversalError as e:
+        logger.error("shadow_pilot.job.path_traversal_blocked", extra={"run_id": run_id, "path": csv_path, "error": str(e)})
+        raise ValueError("Invalid CSV path: path traversal detected") from e
+
     summary, results, _ = run_shadow_pilot_from_csv(
-        Path(csv_path),
+        validated_path,
         annual_rate=config["annual_rate"],
         advance_rate=config["advance_rate"],
         take_rate=config["take_rate"],
