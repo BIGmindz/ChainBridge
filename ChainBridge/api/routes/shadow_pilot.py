@@ -1,4 +1,5 @@
 """Shadow Pilot ingestion and retrieval endpoints."""
+
 from __future__ import annotations
 
 import os
@@ -12,11 +13,9 @@ from sqlalchemy.orm import Session
 from api.database import SessionLocal, get_db
 from api.jobs.shadow_pilot_jobs import run_shadow_pilot_job
 from api.models.shadow_pilot import ShadowPilotRun, ShadowPilotShipment
-from api.schemas.shadow_pilot import (
-    ShadowPilotShipmentsPageResponse,
-    ShadowPilotSummaryResponse,
-)
+from api.schemas.shadow_pilot import ShadowPilotShipmentsPageResponse, ShadowPilotSummaryResponse
 from api.security import get_current_admin_user
+from core.path_security import PathTraversalError, safe_filename, safe_join
 
 router = APIRouter(prefix="/shadow-pilot", tags=["shadow-pilot"])
 
@@ -83,9 +82,16 @@ async def ingest_shadow_pilot(
     if existing:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="run_id already exists")
 
-    safe_name = input_filename or (file.filename or "shipments.csv")
-    safe_name = Path(safe_name).name  # strip path traversal
-    destination = settings["data_dir"] / f"{resolved_run_id}_{safe_name}"
+    raw_name = input_filename or (file.filename or "shipments.csv")
+    try:
+        safe_name = safe_filename(raw_name)
+    except PathTraversalError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid filename")
+
+    try:
+        destination = safe_join(settings["data_dir"], f"{resolved_run_id}_{safe_name}")
+    except PathTraversalError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid path")
     await _save_upload(file, destination)
 
     run = ShadowPilotRun(
@@ -114,14 +120,8 @@ async def ingest_shadow_pilot(
 
 
 @router.get("/summaries", response_model=List[ShadowPilotSummaryResponse])
-def list_shadow_pilot_summaries(
-    db: Session = Depends(get_db), user=Depends(get_current_admin_user)
-) -> List[ShadowPilotSummaryResponse]:
-    runs = (
-        db.query(ShadowPilotRun)
-        .order_by(ShadowPilotRun.created_at.desc())
-        .all()
-    )
+def list_shadow_pilot_summaries(db: Session = Depends(get_db), user=Depends(get_current_admin_user)) -> List[ShadowPilotSummaryResponse]:
+    runs = db.query(ShadowPilotRun).order_by(ShadowPilotRun.created_at.desc()).all()
     return runs
 
 
