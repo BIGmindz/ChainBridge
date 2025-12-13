@@ -39,7 +39,7 @@
  .status { font-size:0.8rem; opacity:0.8; }
  main { padding:16px 24px 60px; }
  section { margin-bottom:28px; }
- h2 { font-size:0.95rem; margin:0 0 12px; border-left:4px solid var(--accent-green); padding-left:8px; } 
+ h2 { font-size:0.95rem; margin:0 0 12px; border-left:4px solid var(--accent-green); padding-left:8px; }
  .grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); }
  .card { background:var(--bg-card); border:1px solid var(--border); border-radius:6px; padding:10px 12px; position:relative; }
  .card h3 { margin:0 0 6px; font-size:0.8rem; font-weight:600; letter-spacing:0.5px; }
@@ -110,7 +110,7 @@ const els = {
   themeToggle: document.getElementById('themeToggle')
 };
 
-function fmt(n, d=2){ if(n===undefined||n===null||isNaN(n)) return '-'; return Number(n).toFixed(d);} 
+function fmt(n, d=2){ if(n===undefined||n===null||isNaN(n)) return '-'; return Number(n).toFixed(d);}
 function esc(s){ return (s+'').replace(/[&<>]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;' }[c])); }
 
 async function fetchTrades(){

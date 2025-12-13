@@ -1,0 +1,184 @@
+name: PAC Color-Lock Validation
+# PAC-ALEX-GOV-022: Enforce agent color consistency in PAC documents
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**/*.md'
+      - '.github/**/*.md'
+      - '.github/agents/colors.json'
+  push:
+    branches:
+      - main
+      - 'feature/**'
+    paths:
+      - 'docs/**/*.md'
+      - '.github/**/*.md'
+      - '.github/agents/colors.json'
+
+jobs:
+  color-lock-check:
+    name: PAC Color-Lock Governance
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Color-Lock Validation
+        run: |
+          python3 << 'EOF'
+          import json
+          import re
+          import sys
+          from pathlib import Path
+
+          # Load color registry
+          colors_path = Path(".github/agents/colors.json")
+          if colors_path.exists():
+              with open(colors_path) as f:
+                  colors_data = json.load(f)
+                  AGENT_COLORS = {
+                      name: {
+                          "gid": info["gid"],
+                          "emoji": info["emoji"],
+                      }
+                      for name, info in colors_data.get("agents", {}).items()
+                  }
+          else:
+              # Fallback hardcoded colors
+              AGENT_COLORS = {
+                  "CODY": {"gid": "GID-01", "emoji": "🔵"},
+                  "MAGGIE": {"gid": "GID-02", "emoji": "🟣"},
+                  "SONNY": {"gid": "GID-03", "emoji": "🟢"},
+                  "DAN": {"gid": "GID-04", "emoji": "🟠"},
+                  "ATLAS": {"gid": "GID-05", "emoji": "🟤"},
+                  "SAM": {"gid": "GID-06", "emoji": "🔴"},
+                  "DANA": {"gid": "GID-07", "emoji": "🟡"},
+                  "ALEX": {"gid": "GID-08", "emoji": "⚪"},
+                  "CINDY": {"gid": "GID-09", "emoji": "🔷"},
+                  "PAX": {"gid": "GID-10", "emoji": "💰"},
+                  "LIRA": {"gid": "GID-11", "emoji": "🩷"},
+              }
+
+          violations = []
+
+          # Patterns
+          emoji_row_pattern = re.compile(r"^[⚪🔵🟣🟢🟠🟤🔴🟡🔷💰🩷]{10}$")
+          agent_line_pattern = re.compile(r"^[⚪🔵🟣🟢🟠🟤🔴🟡🔷💰🩷]\s+(\w+)\s+—\s+(GID-\d+)\s+—")
+          pac_id_pattern = re.compile(r"^PAC-(\w+)-")
+
+          def check_file(filepath: Path):
+              try:
+                  content = filepath.read_text(encoding='utf-8')
+              except UnicodeDecodeError:
+                  return
+
+              # Only check PAC-like documents
+              if "PAC-" not in content or "GID-" not in content:
+                  return
+
+              lines = content.split('\n')
+              detected_emoji = None
+              detected_agent = None
+
+              for i, line in enumerate(lines):
+                  stripped = line.strip()
+
+                  # Check emoji row consistency
+                  if emoji_row_pattern.match(stripped):
+                      if detected_emoji is None:
+                          detected_emoji = stripped[0]
+                      elif not all(c == detected_emoji for c in stripped):
+                          violations.append(f"{filepath}:{i+1}: Mixed emojis in border row")
+
+                  # Check agent line
+                  agent_match = agent_line_pattern.match(stripped)
+                  if agent_match:
+                      agent_name = agent_match.group(1).upper()
+                      gid = agent_match.group(2)
+                      line_emoji = stripped[0]
+                      detected_agent = agent_name
+
+                      if agent_name in AGENT_COLORS:
+                          expected = AGENT_COLORS[agent_name]
+                          if line_emoji != expected["emoji"]:
+                              violations.append(
+                                  f"{filepath}:{i+1}: Agent {agent_name} must use {expected['emoji']}, found {line_emoji}"
+                              )
+                          if gid != expected["gid"]:
+                              violations.append(
+                                  f"{filepath}:{i+1}: Agent {agent_name} GID must be {expected['gid']}, found {gid}"
+                              )
+
+                  # Check PAC ID matches agent
+                  pac_match = pac_id_pattern.match(stripped)
+                  if pac_match and detected_agent:
+                      pac_agent = pac_match.group(1).upper()
+                      if pac_agent != detected_agent:
+                          violations.append(
+                              f"{filepath}:{i+1}: PAC prefix '{pac_agent}' must match agent '{detected_agent}'"
+                          )
+
+          # Scan docs/ and .github/ directories
+          for md_file in Path("docs").rglob("*.md"):
+              check_file(md_file)
+
+          for md_file in Path(".github").rglob("*.md"):
+              check_file(md_file)
+
+          if violations:
+              print("❌ PAC COLOR-LOCK VIOLATIONS DETECTED")
+              print("=" * 60)
+              for v in violations:
+                  print(f"  {v}")
+              print("=" * 60)
+              print("Fix violations or obtain [ALEX-APPROVED] tag")
+              sys.exit(1)
+          else:
+              print("✅ PAC Color-Lock: All checks passed")
+              sys.exit(0)
+          EOF
+
+      - name: Validate colors.json schema
+        run: |
+          python3 << 'EOF'
+          import json
+          import sys
+          from pathlib import Path
+
+          colors_path = Path(".github/agents/colors.json")
+          if not colors_path.exists():
+              print("⚠️  colors.json not found - skipping schema validation")
+              sys.exit(0)
+
+          try:
+              with open(colors_path) as f:
+                  data = json.load(f)
+          except json.JSONDecodeError as e:
+              print(f"❌ Invalid JSON in colors.json: {e}")
+              sys.exit(1)
+
+          # Validate required fields
+          required_top_level = ["governance_id", "agents", "version"]
+          missing = [f for f in required_top_level if f not in data]
+          if missing:
+              print(f"❌ Missing required fields in colors.json: {missing}")
+              sys.exit(1)
+
+          # Validate each agent
+          required_agent_fields = ["gid", "emoji", "color_name", "hex"]
+          for agent_name, agent_info in data.get("agents", {}).items():
+              missing = [f for f in required_agent_fields if f not in agent_info]
+              if missing:
+                  print(f"❌ Agent {agent_name} missing fields: {missing}")
+                  sys.exit(1)
+
+          print("✅ colors.json schema valid")
+          sys.exit(0)
+          EOF

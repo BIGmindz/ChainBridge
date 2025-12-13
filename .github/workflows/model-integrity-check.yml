@@ -1,0 +1,280 @@
+name: Model Integrity Check
+
+# PAC-SAM-SEC-018: Model Supply-Chain Protection
+# SAM (GID-06) - Security & Threat Engineer
+#
+# Enforces:
+# - SHA256 + PQC Kyber hybrid signature verification
+# - Anomaly detection (size, entropy, magic bytes)
+# - Automatic quarantine for unsigned/tampered models
+# - Chain of trust verification
+
+on:
+  pull_request:
+    paths:
+      - '**.pkl'
+      - '**.sig.json'
+      - 'ChainBridge/chainiq-service/app/ml/models/**'
+      - 'ChainBridge/chainiq-service/app/ml/model_security.py'
+      - '.chainbridge/models/**'
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - '**.pkl'
+      - '**.sig.json'
+  schedule:
+    # Run nightly at 2 AM UTC to detect tampering
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    # Allow manual triggering
+
+jobs:
+  model-integrity-check:
+    name: ML Model Security Scan (PAC-SAM-SEC-018)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 🔒 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for forensics
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 📦 Install Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r ChainBridge/chainiq-service/requirements.txt
+          # Optional: Install PQC library for quantum-resistant verification
+          pip install liboqs-python || echo "⚠️ PQC library not available - using SHA256 only"
+
+      - name: 🔍 Find Model Files
+        id: find_models
+        run: |
+          echo "Searching for .pkl model files..."
+          model_count=$(find . -name "*.pkl" -type f | wc -l)
+          echo "model_count=$model_count" >> $GITHUB_OUTPUT
+          echo "Found $model_count model file(s)"
+
+          if [ $model_count -eq 0 ]; then
+            echo "⚠️  No model files found - skipping integrity check"
+            echo "skip_check=true" >> $GITHUB_OUTPUT
+          else
+            echo "Model files:"
+            find . -name "*.pkl" -type f
+            echo "skip_check=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🔐 Run Model Integrity Check
+        if: steps.find_models.outputs.skip_check == 'false'
+        run: |
+          echo "🔒 SAM (GID-06) — Model Integrity Check (PAC-SAM-SEC-018)"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Policy: PAC-SAM-SEC-018 - Model Supply-Chain Protection"
+          echo "Features: SHA256 + PQC Kyber hybrid signatures"
+          echo ""
+
+          # Run integrity check in CI mode (strict)
+          python3 scripts/check_model_integrity.py \
+            --ci \
+            --json \
+            ChainBridge/chainiq-service/app/ml/models/ > integrity_results.json || true
+
+          # Parse results
+          if [ -f integrity_results.json ]; then
+            echo "📊 Integrity Check Results:"
+            cat integrity_results.json | jq '.'
+
+            # Check for failures
+            failed=$(cat integrity_results.json | jq '[.[] | select(.success == false)] | length')
+
+            if [ "$failed" -gt 0 ]; then
+              echo ""
+              echo "❌ INTEGRITY CHECK FAILED"
+              echo "$failed model(s) failed security verification"
+              echo ""
+              echo "Failed models:"
+              cat integrity_results.json | jq -r 'to_entries[] | select(.value.success == false) | "  - \(.key): \(.value.message)"'
+              exit 1
+            else
+              echo ""
+              echo "✅ ALL MODELS PASSED INTEGRITY CHECK"
+            fi
+          fi
+
+      - name: 🚨 Check for Unsigned Models
+        if: steps.find_models.outputs.skip_check == 'false'
+        run: |
+          echo "Checking for unsigned model files..."
+
+          unsigned_count=0
+          for model in $(find . -name "*.pkl" -type f); do
+            signature="${model}.sig.json"
+            if [ ! -f "$signature" ]; then
+              echo "⚠️  UNSIGNED: $model (missing $signature)"
+              unsigned_count=$((unsigned_count + 1))
+            fi
+          done
+
+          if [ $unsigned_count -gt 0 ]; then
+            echo ""
+            echo "❌ Found $unsigned_count unsigned model(s)"
+            echo "All models MUST be signed before deployment."
+            echo "Run: python3 -m app.ml.model_security sign <model.pkl>"
+            exit 1
+          else
+            echo "✅ All models have signatures"
+          fi
+
+      - name: 🔍 Verify Signature Files
+        if: steps.find_models.outputs.skip_check == 'false'
+        run: |
+          echo "Verifying signature file format..."
+
+          invalid_count=0
+          for sig in $(find . -name "*.sig.json" -type f); do
+            # Check if it's valid JSON
+            if ! jq empty "$sig" 2>/dev/null; then
+              echo "⚠️  INVALID JSON: $sig"
+              invalid_count=$((invalid_count + 1))
+              continue
+            fi
+
+            # Check required fields
+            required_fields="signature_version model_name model_version sha256 signed_at"
+            for field in $required_fields; do
+              if ! jq -e ".$field" "$sig" > /dev/null 2>&1; then
+                echo "⚠️  MISSING FIELD '$field' in $sig"
+                invalid_count=$((invalid_count + 1))
+              fi
+            done
+          done
+
+          if [ $invalid_count -gt 0 ]; then
+            echo ""
+            echo "❌ Found $invalid_count invalid signature file(s)"
+            exit 1
+          else
+            echo "✅ All signature files are valid"
+          fi
+
+      - name: 📊 Security Report
+        if: always()
+        run: |
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔒 ML MODEL SECURITY REPORT"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Workflow: ${{ github.workflow }}"
+          echo "Trigger: ${{ github.event_name }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Actor: ${{ github.actor }}"
+          echo ""
+
+          if [ -f integrity_results.json ]; then
+            total=$(cat integrity_results.json | jq 'length')
+            passed=$(cat integrity_results.json | jq '[.[] | select(.success == true)] | length')
+            failed=$(cat integrity_results.json | jq '[.[] | select(.success == false)] | length')
+
+            echo "Models Scanned: $total"
+            echo "Passed: $passed ✅"
+            echo "Failed: $failed ❌"
+          else
+            echo "No models found or integrity check skipped"
+          fi
+          echo ""
+          echo "Maintained by: SAM (GID-06) - Security & Threat Engineer"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+      - name: 📤 Upload Integrity Results
+        if: always() && steps.find_models.outputs.skip_check == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-integrity-results
+          path: integrity_results.json
+          retention-days: 90
+
+      - name: 💬 Comment on PR (if applicable)
+        if: github.event_name == 'pull_request' && steps.find_models.outputs.skip_check == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            if (!fs.existsSync('integrity_results.json')) {
+              return;
+            }
+
+            const results = JSON.parse(fs.readFileSync('integrity_results.json'));
+            const total = Object.keys(results).length;
+            const passed = Object.values(results).filter(r => r.success).length;
+            const failed = total - passed;
+
+            let comment = '## 🔒 ML Model Integrity Check\n\n';
+            comment += `**SAM (GID-06) Security Scan Results:**\n\n`;
+            comment += `- 📊 Total Models: ${total}\n`;
+            comment += `- ✅ Passed: ${passed}\n`;
+            comment += `- ❌ Failed: ${failed}\n\n`;
+
+            if (failed > 0) {
+              comment += '### ⚠️ Failed Models\n\n';
+              for (const [path, result] of Object.entries(results)) {
+                if (!result.success) {
+                  comment += `- \`${path}\`: ${result.message}\n`;
+                }
+              }
+              comment += '\n**Action Required:** Re-sign models or investigate tampering.\n';
+            } else {
+              comment += '### ✅ All Models Secure\n\n';
+              comment += 'All model signatures verified. Safe to deploy.\n';
+            }
+
+            comment += '\n---\n*Maintained by SAM (GID-06) — Security & Threat Engineer*';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  quarantine-check:
+    name: Quarantine Directory Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🔒 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🚨 Check Quarantine Directory
+        run: |
+          echo "Checking for quarantined models..."
+
+          if [ -d ".chainbridge/quarantine" ]; then
+            quarantined=$(find .chainbridge/quarantine -name "*.pkl" -type f | wc -l)
+
+            if [ $quarantined -gt 0 ]; then
+              echo ""
+              echo "⚠️  WARNING: Found $quarantined quarantined model(s)"
+              echo ""
+              echo "Quarantined models:"
+              find .chainbridge/quarantine -name "*.pkl" -type f
+              echo ""
+              echo "Quarantine reports:"
+              find .chainbridge/quarantine -name "*.quarantine.json" -type f -exec cat {} \;
+              echo ""
+              echo "⚠️  This requires security team attention"
+            else
+              echo "✅ No quarantined models"
+            fi
+          else
+            echo "✅ Quarantine directory not present (clean)"
+          fi

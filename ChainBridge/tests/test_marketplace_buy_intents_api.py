@@ -8,10 +8,10 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from api.database import Base, get_db
-from app.api.api import app
+from app.api import app
 from app.api.endpoints import marketplace as marketplace_api
-from app.models.marketplace import Listing, BuyIntent
-from app.services.marketplace import price_proof, buy_intents
+from app.models.marketplace import BuyIntent, Listing
+from app.services.marketplace import buy_intents, price_proof
 
 pytestmark = pytest.mark.phase2
 

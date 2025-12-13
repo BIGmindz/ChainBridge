@@ -1,8 +1,13 @@
 # AT-02 Model Output Contract — ChainIQ Integration
 
+> **Legend**:
+> 🩷 **MAGGIE** (GID-10) — Chief AI Architect
+> 🟢 **ALEX** (GID-08) — Governance & Alignment
+> 🔵 **ATLAS** — Infrastructure & Security
+
 ## 1. BLUF
 
-This document defines the **JSON output contract** between the AT-02 Accessorial Fraud Engine and ChainIQ / backend services. The primary object is the **Fraud Assessment Object**, which is the only shape that downstream systems (ChainIQ, ALEX, SxT ProofPack, ChainPay) rely on.
+This document defines the **JSON output contract** between the AT-02 Accessorial Fraud Engine and ChainIQ / backend services. The primary object is the **Fraud Assessment Object**, which is the only shape that downstream systems (ChainIQ, 🟢 ALEX, SxT ProofPack, ChainPay) rely on.
 
 ---
 
@@ -59,7 +64,7 @@ This document defines the **JSON output contract** between the AT-02 Accessorial
 - **Range:** [0.0, 1.0]
 - **Definition:** Calibrated probability that the accessorial is fraudulent or materially invalid.
 - **Source:** Monotonic GBDT ensemble, calibrated via Platt/isotonic scaling.
-- **Usage:** Input to ALEX governance thresholds and ChainIQ risk scoring.
+- **Usage:** Input to 🟢 ALEX governance thresholds and ChainIQ risk scoring.
 
 ### 3.2. `confidence`
 
@@ -68,7 +73,7 @@ This document defines the **JSON output contract** between the AT-02 Accessorial
 - **Definition:** Confidence score derived from ensemble variance and data completeness.
 - **Usage:**
   - Low confidence triggers downgrades from auto-`deny` to `hold`/`review`.
-  - Used by ALEX to manage decisions on poor data.
+  - Used by 🟢 ALEX to manage decisions on poor data.
 
 ### 3.3. `reason`
 
@@ -94,7 +99,7 @@ Each element:
 
 - **Purpose:**
   - Make the decision glass-box.
-  - Enable dashboards and ALEX governance explanations.
+  - Enable dashboards and 🟢 ALEX governance explanations.
 
 ### 3.5. `counterfactual`
 
@@ -115,7 +120,7 @@ Fields:
 - **Type:** string enum
 - **Values:** `"approve" | "review" | "hold" | "deny"`
 - **Definition:**
-  - Derived from fraud_score, confidence, data completeness, and ALEX rules.
+  - Derived from fraud_score, confidence, data completeness, and 🟢 ALEX rules.
   - See `ALEX_AT02_GOVERNANCE_RULES.md`.
 
 ### 3.7. `alex_gate`
@@ -124,7 +129,7 @@ Fields:
 - **Values:** `"pass" | "fail"`
 - **Definition:**
   - Governance gate result for this accessorial instance.
-  - `pass` means no additional ALEX enforcement; `fail` means governance guardrails require intervention.
+  - `pass` means no additional 🟢 ALEX enforcement; `fail` means governance guardrails require intervention.
 
 ### 3.8. `model_metadata`
 
@@ -200,9 +205,13 @@ When served over an HTTP API (see `AT02_TO_BACKEND_INTEGRATION.md`), the respons
 
 ## 8. Regulator-Safe Summary
 
-- This contract ensures that for every accessorial claim, ChainIQ and ALEX receive:
+- This contract ensures that for every accessorial claim, ChainIQ and 🟢 ALEX receive:
   - A **numeric fraud probability**
   - A **confidence estimate**
+
+---
+
+🩷 **MAGGIE** — Chief AI Architect
   - A **clear explanation** of the decision
   - A **counterfactual suggestion** where applicable
   - A **governance-ready action recommendation**

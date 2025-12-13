@@ -1,5 +1,9 @@
 # ChainBridge – Freight + Payments Intelligence Ecosystem
 
+*Sense. Think. Act.*
+
+ChainBridge is a tokenized supply chain and financial OS that senses real-world freight and payment events, thinks with AI-driven risk and decision models (ChainIQ + MCP), and acts through ChainPay settlement rails (CB-USDx, XRPL/EVM paths).
+
 ![Tests](https://github.com/BIGmindz/ChainBridge/actions/workflows/tests.yml/badge.svg)
 ![ALEX Governance Gate](https://github.com/BIGmindz/ChainBridge/actions/workflows/tests.yml/badge.svg?job=alex-governance)
 
@@ -22,9 +26,31 @@ For a guided walkthrough, start with:
 - `START_HERE.md`
 - `docs/architecture/REPO_STRUCTURE.md`
 
+## Sense. Think. Act.
+
+ChainBridge is organized around three coordinated pillars:
+
+1) **Sense (ChainSense & data plane)** — Ingest shipment events, EDI-style messages, IoT/telemetry signals, and finance data from carriers, TMS/WMS, and banks; normalize into canonical shipment and payment timelines.
+2) **Think (ChainIQ & MCP)** — Score shipments, counterparties, and payment flows using AI/rule-based risk models; MCP (Model & Control Plane) orchestrates agents, model versions, and decision policies.
+3) **Act (ChainPay settlement layer)** — Turn decisions into actions with milestone-based payouts (e.g., 20/70/10), CB-USDx token flows, and XRPL/EVM settlement paths tied to real freight movement and ChainIQ risk states.
+
+## Core Docs
+
+- Reality baseline: `docs/product/CHAINBRIDGE_REALITY_BASELINE.md`
+- ChainPay v1 product spec: `docs/product/CHAINPAY_V1_SPEC.md`
+- ChainPay on-chain settlement architecture: `docs/architecture/CHAINPAY_ONCHAIN_SETTLEMENT.md`
+- ChainIQ overview: `docs/product/CHAINIQ_OVERVIEW.md`
+
 ## 🌐 What is ChainBridge?
 
 ChainBridge is an **ecosystem of integrated services** that brings CIA-grade intelligence and operational control to global freight and logistics. The platform combines real-time shipment tracking, automated payment rails, supply chain analytics, and predictive intelligence into a single unified control tower.
+
+## Architecture at a Glance
+
+- **ChainSense (IoT & data plane)** — Event ingestion from logistics APIs/EDI/IoT (WIP, mock-backed today) into canonical shipment timelines.
+- **ChainIQ Service** — Risk scoring, decision APIs, and MCP-managed models/policies powering freight and payment decisions.
+- **ChainPay Service** — Context ledger, CB-USDx flows, milestone settlements, XRPL/EVM settlement paths.
+- **ChainBoard / Operator Console** — Control tower UI for shipments, risk, settlements, and guardrails.
 
 ### The Ecosystem
 
@@ -1231,11 +1257,39 @@ docker-compose --profile rsi-only up benson-rsi
 ### Running Tests
 
 ```bash
-
 make test                  # Run all tests
 python benson_system.py --mode test  # System tests
+```
 
-```text
+### Full-Stack Test Orchestration
+
+From the repo root (`ChainBridge/`), use these commands to run the complete test suites:
+
+```bash
+# Run ALL tests (backend + frontend)
+make test-all
+
+# Backend only: ChainIQ risk engine, ORM, ETL, history APIs
+make test-backend
+
+# Frontend only: ChainBoard UI React tests (197+ tests)
+make test-frontend
+```
+
+**Individual test suites:**
+
+```bash
+# ChainIQ service tests (run from chainiq-service folder)
+cd chainiq-service && .venv/bin/python -m pytest -q app/risk/tests
+
+# ChainBoard UI tests (run from chainboard-ui folder)
+cd chainboard-ui && npm test -- --run
+
+# ALEX governance tests
+make test-alex
+```
+
+All tests should be green before merging or tagging a release.
 
 ## 🌟 Features
 

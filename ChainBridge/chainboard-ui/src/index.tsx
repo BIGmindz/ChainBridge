@@ -10,6 +10,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastContainer } from './components/ToastContainer';
 import { useCommandPalette } from './core/command/hooks';
 import { DemoProvider } from './core/demo/DemoContext';
+import { FocusModeProvider } from './core/focus/FocusModeContext';
 import { NotificationProvider } from './core/notifications/NotificationContext';
 import './index.css';
 import { AppRoutes } from './routes';
@@ -52,12 +53,14 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
       <NotificationProvider>
-        <DemoProvider>
-          <QueryClientProvider client={queryClient}>
-            <App />
-            {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
-          </QueryClientProvider>
-        </DemoProvider>
+        <FocusModeProvider>
+          <DemoProvider>
+            <QueryClientProvider client={queryClient}>
+              <App />
+              {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+            </QueryClientProvider>
+          </DemoProvider>
+        </FocusModeProvider>
       </NotificationProvider>
     </ErrorBoundary>
   </React.StrictMode>,

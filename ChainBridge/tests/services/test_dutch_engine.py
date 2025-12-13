@@ -9,7 +9,7 @@ from sqlalchemy.pool import StaticPool
 
 from api.database import Base
 from app.models.marketplace import Listing
-from app.services.marketplace.dutch_engine import calculate_price, get_live_price, execute_atomic_purchase
+from app.services.marketplace.dutch_engine import calculate_price, execute_atomic_purchase, get_live_price
 
 pytestmark = pytest.mark.phase2
 
@@ -61,7 +61,7 @@ def test_get_live_price_uses_cache():
 
 
 def asyncio_run(coro):
-    return asyncio.get_event_loop().run_until_complete(coro)
+    return asyncio.run(coro)
 
 
 def test_atomic_purchase_allows_single_winner():

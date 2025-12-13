@@ -2,6 +2,7 @@ import { X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import GlobalIntelMap from '@/components/intel/GlobalIntelMap';
+import { ShadowIntelligencePanel } from '@/components/intel/ShadowIntelligencePanel';
 import { useLiveShipmentPositions } from '@/hooks/useLiveShipmentPositions';
 import { formatPct, formatUsd } from '@/lib/intelStats';
 import type { RiskLevel } from '@/types/chainbridge';
@@ -242,6 +243,9 @@ export default function GlobalIntelPageSimple() {
         isLoading={isLoading}
         onSelectShipment={handleSelectShipment}
       />
+
+      {/* Shadow Intelligence Panel - Compact Mode */}
+      <ShadowIntelligencePanel compact />
 
       {/* Detail Drawer */}
       {selectedShipment && (
