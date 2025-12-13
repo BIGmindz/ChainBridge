@@ -10,7 +10,6 @@ Tests cover:
 import json
 from datetime import datetime
 
-
 from app.ml.event_parsing import EventType, ParsedEvent
 from app.ml.ingestion import backfill_training_data, build_training_rows_from_events, extract_features_from_events
 
