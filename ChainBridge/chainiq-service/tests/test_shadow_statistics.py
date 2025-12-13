@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock
 
-
 from app.analysis.shadow_diff import compute_shadow_statistics, get_high_delta_events
 from app.models_shadow import RiskShadowEvent
 

@@ -30,12 +30,7 @@ from typing import Any, Dict, List, Literal, Optional
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from app.ml.fusion_engine import (
-    FusionScoreResult,
-    compute_fusion_score,
-    compute_multi_corridor_fusion,
-    get_fusion_cache,
-)
+from app.ml.fusion_engine import FusionScoreResult, compute_fusion_score, compute_multi_corridor_fusion, get_fusion_cache
 
 logger = logging.getLogger(__name__)
 

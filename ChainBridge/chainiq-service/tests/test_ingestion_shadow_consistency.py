@@ -9,15 +9,9 @@ PAC-CODY-026: Shadow Mode + Ingestion Alignment Patch
 
 from datetime import datetime, timezone
 
-
 from app.ml.datasets import ShipmentTrainingRow
 from app.ml.event_parsing import EventType, ParsedEvent
-from app.ml.ingestion import (
-    build_training_rows_from_events,
-    derive_loss_amount,
-    derive_severe_delay,
-    extract_features_from_events,
-)
+from app.ml.ingestion import build_training_rows_from_events, derive_loss_amount, derive_severe_delay, extract_features_from_events
 from app.models.features import ShipmentFeaturesV0
 
 

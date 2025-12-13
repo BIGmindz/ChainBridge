@@ -1,6 +1,5 @@
 import csv
 
-
 from app.risk.synthetic_eval import run_synthetic_eval
 
 
