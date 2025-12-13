@@ -1,4 +1,3 @@
-
 """
 ChainPay Service (ChainBridge)
 
@@ -22,7 +21,9 @@ Integration:
 """
 
 from __future__ import annotations
+
 from core.import_safety import ensure_import_safety
+
 ensure_import_safety()
 
 import logging
@@ -31,25 +32,18 @@ from datetime import datetime, timedelta
 from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlalchemy.orm import Session
 
+from app.core.auth import AuthenticatedUser, get_current_user, verify_shipment_access
+from app.schemas import SettlementHistoryResponse
 
-# Identity module not yet part of ChainBridge — removed legacy import
-# TODO: integrate identity service once ChainBridge identity module is ready
-
-from .chainfreight_client import (
-    fetch_freight_token,
-    map_risk_to_tier,
-)
+from .chainfreight_client import fetch_freight_token, map_risk_to_tier
 from .database import get_db, init_db
 from .models import MilestoneSettlement as MilestoneSettlementModel
 from .models import PaymentIntent as PaymentIntentModel
 from .models import PaymentSchedule as PaymentScheduleModel
 from .models import PaymentScheduleItem as PaymentScheduleItemModel
-from .models import (
-    PaymentStatus,
-    RiskTier,
-    ScheduleType,
-    SettlementLog,
-)
+from .models import PaymentStatus, RiskTier, ScheduleType, SettlementLog
+from .payment_rails import ReleaseStrategy, canonical_milestone_id, canonical_shipment_reference
+from .schedule_builder import RiskTierSchedule, build_default_schedule, calculate_milestone_amount
 from .schemas import (
     PaymentIntentCreate,
     PaymentIntentListResponse,
@@ -60,22 +54,19 @@ from .schemas import (
     ShipmentEventWebhookRequest,
     ShipmentEventWebhookResponse,
 )
-from .schedule_builder import RiskTierSchedule, build_default_schedule, calculate_milestone_amount
-from .payment_rails import (
-    ReleaseStrategy,
-    canonical_milestone_id,
-    canonical_shipment_reference,
-)
-from .services.payment_rails_engine import PaymentRailsEngine
 from .schemas_context_ledger_feed import ContextLedgerRiskFeed
 from .schemas_settlement import (
-    SettleOnchainRequest,
-    SettleOnchainResponse,
     SettlementAckRequest,
     SettlementAckResponse,
     SettlementDetailResponse,
+    SettleOnchainRequest,
+    SettleOnchainResponse,
 )
-from app.schemas import SettlementHistoryResponse
+from .services.payment_rails_engine import PaymentRailsEngine
+
+# Identity module not yet part of ChainBridge — removed legacy import
+# TODO: integrate identity service once ChainBridge identity module is ready
+
 # Setup logging
 
 
@@ -83,20 +74,17 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-from app.api_settlement import router as settlement_router
 from app import api_analytics
+from app.api_settlement import router as settlement_router
 
 from .services.context_ledger_feed import serialize_feed
 from .services.context_ledger_service import ContextLedgerService
-from .services.event_publisher import EventPublisher
-from .services.settlement_orchestrator import SettlementOrchestrator
 from .services.event_consumer import EventConsumer
-from .services.settlement_api import (
-    SettlementAPIService,
-    SettlementConflictError,
-    SettlementNotFoundError,
-)
+from .services.event_publisher import EventPublisher
+from .services.settlement_api import SettlementAPIService, SettlementConflictError, SettlementNotFoundError
+from .services.settlement_orchestrator import SettlementOrchestrator
 from .services.xrpl_stub_adapter import XRPLSettlementAdapter
+
 event_publisher = EventPublisher()
 settlement_orchestrator = SettlementOrchestrator(event_publisher)
 event_consumer = EventConsumer(settlement_orchestrator)
@@ -104,6 +92,7 @@ xrpl_adapter = XRPLSettlementAdapter()
 
 app.include_router(settlement_router)
 app.include_router(api_analytics.router)
+
 
 @app.on_event("startup")
 async def start_event_consumer():
@@ -412,7 +401,9 @@ def _build_settlement_service(db: Session) -> SettlementAPIService:
 def submit_onchain_settlement(
     payload: SettleOnchainRequest,
     db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
 ) -> SettleOnchainResponse:
+    """Submit onchain settlement. Requires authentication."""
     service = _build_settlement_service(db)
     try:
         return service.trigger_onchain_settlement(payload)
@@ -430,7 +421,11 @@ def submit_onchain_settlement(
 def get_settlement_status(
     settlement_id: str,
     db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
 ) -> SettlementDetailResponse:
+    """Get settlement status. Requires authentication with shipment access."""
+    # IDOR protection: verify user can access this settlement
+    verify_shipment_access(settlement_id, user)
     service = _build_settlement_service(db)
     try:
         return service.get_settlement_detail(settlement_id)
@@ -447,7 +442,11 @@ def acknowledge_settlement(
     settlement_id: str,
     payload: SettlementAckRequest,
     db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
 ) -> SettlementAckResponse:
+    """Acknowledge settlement. Requires authentication with shipment access."""
+    # IDOR protection: verify user can access this settlement
+    verify_shipment_access(settlement_id, user)
     service = _build_settlement_service(db)
     try:
         return service.record_acknowledgement(settlement_id, payload)
@@ -1028,9 +1027,12 @@ async def build_and_attach_schedule(
 async def get_shipment_audit(
     shipment_id: str,
     db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
 ):
     """
     Get audit trail for a shipment showing all milestone settlements and their status.
+
+    Requires authentication with shipment access.
 
     This endpoint provides comprehensive settlement information for a shipment including:
     - All payment intents linked to the shipment (via freight tokens)
@@ -1049,13 +1051,21 @@ async def get_shipment_audit(
         Current implementation: processes all payment intents with schedules.
         TODO: Filter by shipment_id when ChainFreight API fully integrated.
     """
+    # IDOR protection: verify user can access this shipment
+    verify_shipment_access(shipment_id, user)
+
     # Query all payment intents (TODO: filter by shipment_id when fully integrated)
     # For now, we return milestones for all intents that have associated events
     # Find payment intent for this shipment
     payment_intent = db.query(PaymentIntentModel).filter(PaymentIntentModel.freight_token_id == shipment_id).first()
     if not payment_intent:
         raise HTTPException(status_code=404, detail="Shipment not found")
-    milestones = db.query(MilestoneSettlementModel).filter(MilestoneSettlementModel.payment_intent_id == payment_intent.id).order_by(MilestoneSettlementModel.created_at).all()
+    milestones = (
+        db.query(MilestoneSettlementModel)
+        .filter(MilestoneSettlementModel.payment_intent_id == payment_intent.id)
+        .order_by(MilestoneSettlementModel.created_at)
+        .all()
+    )
 
     # Build audit response with settlement details
     milestones_detail = [
@@ -1171,6 +1181,7 @@ async def get_payment_intent_milestones(
 
 if __name__ == "__main__":
     from core.import_safety import ensure_import_safety
+
     ensure_import_safety()
 
     import uvicorn

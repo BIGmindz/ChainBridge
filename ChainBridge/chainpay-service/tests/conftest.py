@@ -8,17 +8,17 @@ Provides:
 - Mock payment intent and freight token factories
 """
 
-from datetime import datetime
+import importlib.util
 import sys
-from pathlib import Path
 import types
+from datetime import datetime
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
-import importlib.util
 
 # Ensure the ChainPay service package is the one that resolves as `app`
 SERVICE_ROOT = Path(__file__).resolve().parent.parent
@@ -35,16 +35,18 @@ assert spec.loader is not None
 spec.loader.exec_module(module)
 # Also ensure Base is exposed on app.models for test imports
 try:
-    from chainpay_service.app.models import Base as _ChainpayBase  # type: ignore
     import app.models as _app_models  # type: ignore
+    from chainpay_service.app.models import Base as _ChainpayBase  # type: ignore
 
     _app_models.Base = _ChainpayBase  # type: ignore[attr-defined]
 except Exception:
     pass
+import chainpay_service.app.database as _cp_db  # type: ignore
+
 # Ensure app submodules point to ChainPay implementations for this test session
 import chainpay_service.app.models as _cp_models  # type: ignore
-import chainpay_service.app.database as _cp_db  # type: ignore
 import chainpay_service.app.schemas as _cp_schemas  # type: ignore
+
 sys.modules["app.models"] = _cp_models
 sys.modules["app.database"] = _cp_db
 sys.modules["app.schemas"] = _cp_schemas
@@ -56,10 +58,12 @@ except Exception:
     pass
 # Ensure app.models points at the ChainPay models module for imports
 import chainpay_service.app.models as _cp_models  # type: ignore
+
 sys.modules["app.models"] = _cp_models
 
 # Provide lightweight fallbacks for optional Kafka dependency
 fake_aiokafka = sys.modules.get("aiokafka") or types.ModuleType("aiokafka")
+
 
 class _NoopConsumer:  # pragma: no cover - simple shim
     def __init__(self, *args, **kwargs):
@@ -71,9 +75,11 @@ class _NoopConsumer:  # pragma: no cover - simple shim
     async def stop(self):
         return None
 
+
 class _NoopProducer(_NoopConsumer):
     async def send_and_wait(self, *args, **kwargs):
         return None
+
 
 fake_aiokafka.AIOKafkaConsumer = _NoopConsumer
 fake_aiokafka.AIOKafkaProducer = _NoopProducer
@@ -155,15 +161,8 @@ def pytest_sessionfinish(session, exitstatus):
     else:
         sys.modules.pop("app", None)
 
-from app.models import (  # noqa: E402
-    Base,
-    PaymentIntent,
-    PaymentSchedule,
-    PaymentScheduleItem,
-    PaymentStatus,
-    RiskTier,
-    ScheduleType,
-)
+
+from app.models import Base, PaymentIntent, PaymentSchedule, PaymentScheduleItem, PaymentStatus, RiskTier, ScheduleType  # noqa: E402
 
 # In-memory SQLite for tests
 SQLALCHEMY_TEST_URL = "sqlite:///:memory:"
@@ -197,7 +196,16 @@ def db_session(engine) -> Session:
 
 @pytest.fixture
 def client(db_session: Session):
-    """Provide FastAPI TestClient with test database session."""
+    """Provide FastAPI TestClient with test database session.
+
+    NOTE: DEV_AUTH_BYPASS=true is set for backward compatibility with tests
+    written before auth was added. For auth-specific tests, see test_security_authz.py
+    which explicitly manages this setting.
+    """
+    import os
+
+    os.environ["DEV_AUTH_BYPASS"] = "true"  # Enable bypass for existing tests
+
     from app.main import app, get_db  # Local import to avoid heavy dependencies for non-HTTP tests
 
     def override_get_db():
@@ -209,6 +217,7 @@ def client(db_session: Session):
     app.dependency_overrides[get_db] = override_get_db
     yield TestClient(app)
     app.dependency_overrides.clear()
+    os.environ.pop("DEV_AUTH_BYPASS", None)  # Clean up
 
 
 @pytest.fixture
