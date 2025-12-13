@@ -23,12 +23,7 @@ from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import APIRouter, HTTPException, Query
 
-from app.ml.drift_engine import (
-    categorical_drift_bucket,
-    compute_global_drift_summary,
-    corridor_drift_score,
-    get_drift_cache,
-)
+from app.ml.drift_engine import categorical_drift_bucket, compute_global_drift_summary, corridor_drift_score, get_drift_cache
 from app.serializers.drift_explain import (
     CacheStatsResponse,
     CorridorDriftDetailResponse,

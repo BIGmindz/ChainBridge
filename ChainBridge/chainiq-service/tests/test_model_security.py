@@ -539,7 +539,6 @@ class TestThreatCorrelationEngine:
         """Test ThreatSignal dataclass."""
         from datetime import datetime
 
-
         signal = ThreatSignal(
             source="test_detector",
             signal_type="content_anomaly",
@@ -693,7 +692,7 @@ class TestThreatCorrelationEngine:
         engine.add_content_anomaly(details={"test": "1"}, severity="HIGH", source="detector_a")
         engine.add_content_anomaly(details={"test": "2"}, severity="HIGH", source="detector_b")
 
-        score = engine.compute_stacking_score()
+        _score = engine.compute_stacking_score()
         patterns = engine.correlation_cache.get("patterns", [])
 
         # Multi-source pattern should be detected
