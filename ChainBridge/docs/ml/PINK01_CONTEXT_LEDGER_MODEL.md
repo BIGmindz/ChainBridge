@@ -1,5 +1,10 @@
 # PINK-01 Context Ledger Risk Model (v1.1)
 
+> **Legend**:
+> 🩷 **MAGGIE** (GID-10) — Chief AI Architect
+> 🟢 **ALEX** (GID-08) — Governance & Alignment
+> 🔵 **ATLAS** — Infrastructure & Security
+
 ## Purpose
 
 PINK-01 scores ChainPay settlement context events for manual review and
@@ -165,3 +170,7 @@ must be accompanied by:
 PINK-01 v1.1 is the baseline for the ChainPay v1 pilot corridor and
 should remain stable for the duration of the pilot unless a governance
 change is explicitly approved.
+
+---
+
+🩷 **MAGGIE** — Chief AI Architect

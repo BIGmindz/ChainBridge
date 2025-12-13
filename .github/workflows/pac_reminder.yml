@@ -1,0 +1,151 @@
+name: PAC Reminder Bot
+# PAC-ALEX-NEXT-023: Multi-Service Compliance Alignment
+# Governance ID: GID-08-CI-REMINDER | Owner: ALEX (GID-08)
+# Provides CI reminder when PAC documentation is missing or incomplete
+
+on:
+  pull_request:
+    branches: [main, develop, feature/*]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  pac-reminder:
+    name: "⚪ ALEX PAC Compliance Check"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Check for PAC documentation
+        id: pac_check
+        run: |
+          python3 << 'EOF'
+          import os
+          import sys
+          import re
+          from pathlib import Path
+
+          # Multi-service paths to check
+          MULTI_SERVICE_PATHS = [
+              "chainpay-service",
+              "chainiq-service",
+              "chainboard-ui",
+              "scripts",
+              "src",
+              "modules",
+          ]
+
+          # Get changed files from git
+          import subprocess
+          result = subprocess.run(
+              ["git", "diff", "--name-only", "origin/main...HEAD"],
+              capture_output=True, text=True
+          )
+          changed_files = [f.strip() for f in result.stdout.split('\n') if f.strip()]
+
+          # Check which services have changes
+          services_changed = set()
+          for filepath in changed_files:
+              for service in MULTI_SERVICE_PATHS:
+                  if filepath.startswith(service) or f"/{service}/" in filepath:
+                      services_changed.add(service)
+
+          # Look for PAC references in PR
+          pac_patterns = [
+              re.compile(r'PAC-[A-Z]+-[A-Z0-9-]+'),
+              re.compile(r'GID-\d+'),
+          ]
+
+          pr_body = os.environ.get('PR_BODY', '')
+          has_pac_reference = any(p.search(pr_body) for p in pac_patterns)
+
+          # Check if any changed files have PAC headers
+          pac_in_code = False
+          for filepath in changed_files:
+              if Path(filepath).exists():
+                  try:
+                      content = Path(filepath).read_text()
+                      if 'PAC-' in content or 'GID-' in content:
+                          pac_in_code = True
+                          break
+                  except:
+                      pass
+
+          # Generate reminder message
+          reminder_needed = False
+          messages = []
+
+          if services_changed and not has_pac_reference:
+              reminder_needed = True
+              messages.append(f"⚠️ Changes detected in services: {', '.join(services_changed)}")
+              messages.append("Consider referencing the governing PAC in your PR description.")
+
+          if len(changed_files) > 10 and not has_pac_reference:
+              reminder_needed = True
+              messages.append("⚠️ Large PR detected without PAC reference.")
+              messages.append("Consider creating a PAC document for this work.")
+
+          # Output results
+          if reminder_needed:
+              print("::set-output name=reminder_needed::true")
+              print("\n".join(messages))
+          else:
+              print("::set-output name=reminder_needed::false")
+              print("✅ PAC compliance check passed")
+
+          # Don't fail the build, just remind
+          sys.exit(0)
+          EOF
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+
+      - name: Post PAC reminder comment
+        if: steps.pac_check.outputs.reminder_needed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = `## ⚪ ALEX Governance Reminder
+
+            This PR does not appear to reference a PAC (Planning & Alignment Cycle) document.
+
+            ### Required PAC Structure
+            All significant changes should reference or include:
+
+            1. **PAC Header**: \`⚪⚪⚪⚪⚪⚪⚪⚪⚪⚪\` (agent color)
+            2. **Agent Identity**: \`⚪ AGENT — GID-XX — ROLE\`
+            3. **PAC ID**: \`PAC-AGENT-XXX — TASK_TITLE\`
+            4. **PAC Footer**: Matching header with \`END OF PAC\`
+
+            ### Quick Reference
+            | Agent | GID | Emoji | Role |
+            |-------|-----|-------|------|
+            | CODY | GID-01 | 🔵 | Backend Engineering |
+            | MAGGIE | GID-02 | 🟣 | ML Engineering |
+            | SONNY | GID-03 | 🟢 | UI Engineering |
+            | DAN | GID-04 | 🟠 | DevOps & CI/CD |
+            | ATLAS | GID-05 | 🟤 | Repository Management |
+            | SAM | GID-06 | 🔴 | Security Engineering |
+            | DANA | GID-07 | 🟡 | Data Engineering |
+            | ALEX | GID-08 | ⚪ | Governance & Alignment |
+            | CINDY | GID-09 | 🔷 | Backend Expansion |
+            | PAX | GID-10 | 💰 | Tokenization & Settlement |
+            | LIRA | GID-11 | 🩷 | UX Design |
+
+            ---
+            ⚪ ALEX — GID-08 — Governance Engine
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });

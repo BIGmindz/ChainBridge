@@ -106,3 +106,37 @@ jobs:
       - name: Build ChainBoard UI
         working-directory: chainboard-ui
         run: npm run build
+
+      - name: Run ChainBoard UI tests
+        working-directory: chainboard-ui
+        run: npm test -- --run
+
+  chainiq-risk-tests:
+    name: ChainIQ Risk Engine Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ChainIQ service dependencies
+        working-directory: chainiq-service
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Run ChainIQ risk tests
+        working-directory: chainiq-service
+        env:
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
+        run: |
+          source .venv/bin/activate
+          python -m pytest -q app/risk/tests

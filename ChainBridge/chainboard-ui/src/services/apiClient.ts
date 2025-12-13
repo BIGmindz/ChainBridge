@@ -441,4 +441,6 @@ export async function fetchShadowPilotShipments(
   return httpGet<PaginatedShadowPilotShipments>(path);
 }
 
+// Export utilities for feature-specific API clients
+export { httpGet, httpPost };
 export type { ApiError };

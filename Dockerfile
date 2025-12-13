@@ -1,15 +1,20 @@
+# syntax=docker/dockerfile:1.4
 # Multi-stage build: builder stage installs build deps; runtime stage is minimal and non-root
+# Build with: DOCKER_BUILDKIT=1 docker build --cache-from=type=registry,ref=<registry>/chainbridge:buildcache .
 FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
 # Install build deps only in builder stage
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
     build-essential curl && \
     rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r requirements.txt
 
 # Copy source into builder (so pip-installed wheels are available if needed)
 COPY . /app

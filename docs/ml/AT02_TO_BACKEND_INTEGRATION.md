@@ -1,5 +1,10 @@
 # AT-02 → Backend Integration Blueprint (Cody)
 
+> **Legend**:
+> 🩷 **MAGGIE** (GID-10) — Chief AI Architect
+> 🟢 **ALEX** (GID-08) — Governance & Alignment
+> 🔵 **ATLAS** — Infrastructure & Security
+
 ## 1. BLUF
 
 This document defines how Cody should integrate the AT-02 Accessorial Fraud Engine into the ChainBridge backend stack (ChainIQ, APIs, event router). It covers endpoints, payloads, async flows, and dependencies.
@@ -15,7 +20,7 @@ This document defines how Cody should integrate the AT-02 Accessorial Fraud Engi
 - **ChainIQ Core:**
   - Consumes Fraud Assessments and updates risk views.
 
-- **ALEX Governance:**
+- **🟢 ALEX Governance:**
   - Reads model outputs and applies governance rules (`ALEX_AT02_GOVERNANCE_RULES.md`).
 
 - **Event Router / Message Bus:**
@@ -167,7 +172,7 @@ For high throughput and better user experience, consider an **event-driven flow*
    - Produces Fraud Assessment Object.
    - Emits `invoice.accessorial.scored` with fraud assessment and metadata.
 
-4. **ALEX Governance:**
+4. **🟢 ALEX Governance:**
    - Subscribes to `invoice.accessorial.scored`.
    - Applies `ALEX_AT02_GOVERNANCE_RULES.md`.
    - Emits `invoice.accessorial.decision` with final action.
@@ -229,3 +234,7 @@ No PII is required for AT-02; payloads should be de-identified where possible.
 - Place implementation stubs in `chainiq-service` (e.g., `app/routers/ml_at02.py`, `app/services/ml_at02.py`).
 - Use `AT02_OUTPUT_CONTRACT.md` as the single source of truth for response shapes.
 - Coordinate with Maggie for any schema changes; bump `schema_version` when needed.
+
+---
+
+🩷 **MAGGIE** — Chief AI Architect

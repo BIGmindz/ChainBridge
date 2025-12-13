@@ -48,6 +48,12 @@ yarn-error.log*
 .coverage.*
 htmlcov/
 coverage*/
+
+# ML Model Security (SAM GID-06)
+# WARNING: Never commit quarantined models to git
+.chainbridge/quarantine/
+*.quarantine.json
+# Note: .chainbridge/models/ signed models CAN be committed
 reports*/
 
 # OS junk

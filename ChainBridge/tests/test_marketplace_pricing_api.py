@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from api.database import Base, get_db
-from app.api.api import app
+from app.api import app
 from app.models.marketplace import Listing
 
 pytestmark = pytest.mark.phase2
@@ -65,7 +65,9 @@ def test_price_pre_start_uses_start_price(client_with_db: Tuple[TestClient, Any,
     client, _, SessionLocal = client_with_db
     start_time = datetime.now(timezone.utc) + timedelta(minutes=10)
     with SessionLocal() as session:
-        listing_id = _listing(session, id="LST-PRE", start_time=start_time, start_price=120.0, reserve_price=90.0, decay_rate_per_minute=1.5)
+        listing_id = _listing(
+            session, id="LST-PRE", start_time=start_time, start_price=120.0, reserve_price=90.0, decay_rate_per_minute=1.5
+        )
     resp = client.get(f"/marketplace/listings/{listing_id}/price")
     assert resp.status_code == 200
     body = resp.json()
@@ -77,7 +79,9 @@ def test_price_active_decays_but_above_reserve(client_with_db: Tuple[TestClient,
     client, _, SessionLocal = client_with_db
     start_time = datetime.now(timezone.utc) - timedelta(minutes=10)
     with SessionLocal() as session:
-        listing_id = _listing(session, id="LST-ACTIVE", start_time=start_time, start_price=100.0, reserve_price=80.0, decay_rate_per_minute=1.5)
+        listing_id = _listing(
+            session, id="LST-ACTIVE", start_time=start_time, start_price=100.0, reserve_price=80.0, decay_rate_per_minute=1.5
+        )
     resp = client.get(f"/marketplace/listings/{listing_id}/price")
     assert resp.status_code == 200
     body = resp.json()
@@ -88,7 +92,9 @@ def test_price_at_reserve_after_long_decay(client_with_db: Tuple[TestClient, Any
     client, _, SessionLocal = client_with_db
     start_time = datetime.now(timezone.utc) - timedelta(minutes=90)
     with SessionLocal() as session:
-        listing_id = _listing(session, id="LST-RESERVE", start_time=start_time, start_price=150.0, reserve_price=60.0, decay_rate_per_minute=2.0)
+        listing_id = _listing(
+            session, id="LST-RESERVE", start_time=start_time, start_price=150.0, reserve_price=60.0, decay_rate_per_minute=2.0
+        )
     resp = client.get(f"/marketplace/listings/{listing_id}/price")
     assert resp.status_code == 200
     body = resp.json()
@@ -119,7 +125,9 @@ def test_price_rounding_and_decay_boundary(client_with_db: Tuple[TestClient, Any
     client, _, SessionLocal = client_with_db
     start_time = datetime.now(timezone.utc) - timedelta(minutes=10)
     with SessionLocal() as session:
-        listing_id = _listing(session, id="LST-ROUND", start_time=start_time, start_price=100.01, reserve_price=40.0, decay_rate_per_minute=1.0)
+        listing_id = _listing(
+            session, id="LST-ROUND", start_time=start_time, start_price=100.01, reserve_price=40.0, decay_rate_per_minute=1.0
+        )
     resp = client.get(f"/marketplace/listings/{listing_id}/price")
     assert resp.status_code == 200
     body = resp.json()

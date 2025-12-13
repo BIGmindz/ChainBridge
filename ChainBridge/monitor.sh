@@ -28,7 +28,7 @@ echo "--------------------------------------------------------------------------
 python3 live_trading_bot.py 2>&1 | while IFS= read -r line; do
     # Add timestamp to each line
     timestamp=$(date "+%H:%M:%S")
-    
+
     # Filter for all trading symbols and important keywords
     if echo "$line" | grep -E "(📊|🎯|💼|💰|📈|🚀|⚡)" > /dev/null; then
         echo "[$timestamp] $line"

@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
     Activity,
     AlertTriangle,
+    Beaker,
     Coins,
     Command,
     FlaskConical,
@@ -12,6 +13,7 @@ import {
     Radar,
     Search,
     Shield,
+    Target,
     TrendingUp,
     User,
     X,
@@ -25,13 +27,17 @@ import { AlertsBell } from "./AlertsBell";
 import { AlertsDrawer } from "./AlertsDrawer";
 import { DemoControllerBar } from "./DemoControllerBar";
 import { DemoSidebar } from "./DemoSidebar";
+import { ALEXGovernanceFooter } from "./governance/ALEXGovernanceFooter";
 
 const navItems: { to: string; label: string; Icon: LucideIcon }[] = [
   { to: "/", label: "Global Intelligence", Icon: Radar },
+  { to: "/iq-lab", label: "IQ Lab", Icon: Beaker },
+  { to: "/shadow", label: "Shadow Mode", Icon: Activity },
   { to: "/risk", label: "Risk Console", Icon: Shield },
   { to: "/overview", label: "Overview", Icon: LayoutDashboard },
   { to: "/shipments", label: "Shipments", Icon: PackageSearch },
   { to: "/oc", label: "The OC", Icon: Command },
+  { to: "/oc-exceptions", label: "Exception Cockpit", Icon: Target },
   { to: "/chainpay", label: "ChainPay", Icon: Coins },
   { to: "/settlements", label: "Settlements", Icon: Coins },
   { to: "/exceptions", label: "Exceptions", Icon: AlertTriangle },
@@ -165,6 +171,9 @@ export default function Layout(): JSX.Element {
                 <main className="relative z-0 flex-1 p-6">
           <Outlet />
         </main>
+
+        {/* ALEX Governance Footer */}
+        <ALEXGovernanceFooter variant="minimal" className="border-t border-slate-900/50" />
       </div>
 
       {/* Demo Mode Overlays */}

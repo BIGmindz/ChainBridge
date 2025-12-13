@@ -1,5 +1,10 @@
 # AT-02 Accessorial Fraud Detection — Model Architecture
 
+> **Legend**:
+> 🩷 **MAGGIE** (GID-10) — Chief AI Architect
+> 🟢 **ALEX** (GID-08) — Governance & Alignment
+> 🔵 **ATLAS** — Infrastructure & Security
+
 ## 1. BLUF
 
 AT-02 is a **glass-box, token-aware fraud scoring engine** that estimates
@@ -10,7 +15,7 @@ for a given accessorial claim, along with calibrated confidence and full feature
 
 The engine is designed to be:
 - **Regulator-safe:** fully explainable and auditable
-- **Governance-ready:** aligned with ALEX gates and SxT ProofPack
+- **Governance-ready:** aligned with 🟢 ALEX gates and SxT ProofPack
 - **Adversarial-hardened:** tested against GPS spoofing, backfilled claims, and batch inflation.
 
 ---
@@ -110,7 +115,7 @@ The fraud score is a **probability-like risk score**, calibrated against histori
 4. **Explainability Layer:**
    - Compute SHAP values per model, aggregate top-K.
    - Map feature contributions to human-readable reasons.
-5. **Governance Layer (ALEX):**
+5. **Governance Layer (🟢 ALEX):**
    - Apply score thresholds and governance rules.
    - Compare GBDT outputs with GAM outputs for consistency.
 6. **Output Construction:**
@@ -227,7 +232,7 @@ Features not obviously monotonic remain unconstrained but are monitored.
 
 ---
 
-## 10. Model Governance Hooks (ALEX)
+## 10. Model Governance Hooks (🟢 ALEX)
 
 - **Versioning:**
   - Each trained model has `model_version_id`, training data snapshot ID, feature schema version.
@@ -238,7 +243,7 @@ Features not obviously monotonic remain unconstrained but are monitored.
   - Bias/fairness checks across carrier tiers, modes, facilities.
   - Performance decay monitored over time (via `AT02_DRIFT_MONITORING.md`).
 
-ALEX can enforce policies such as:
+🟢 ALEX can enforce policies such as:
 - "No deployment if AUC < threshold on latest validation."
 - "No deployment if monotonicity violations exceed epsilon."
 
@@ -265,6 +270,10 @@ The model architecture explicitly surfaces these variables to:
    - Implement offline training pipeline and evaluation.
 2. **Phase 2:**
    - Integrate with ChainIQ, SxT ProofPack, AT-02 mint/burn workflows.
+
+---
+
+🩷 **MAGGIE** — Chief AI Architect
    - Extend to IT-01, MT-01, CCT-01 dependencies (`AT02_PHASE2_DEPENDENCIES.md`).
 3. **Phase 3:**
    - Continuous learning with feedback from disputes and ALEX decisions.

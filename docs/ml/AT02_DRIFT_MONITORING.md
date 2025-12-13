@@ -1,5 +1,10 @@
 # AT-02 Drift & Monitoring Plan
 
+> **Legend**:
+> 🩷 **MAGGIE** (GID-10) — Chief AI Architect
+> 🟢 **ALEX** (GID-08) — Governance & Alignment
+> 🔵 **ATLAS** — Infrastructure & Security
+
 ## 1. BLUF
 
 This document specifies how to **monitor and manage drift** for the AT-02 Accessorial Fraud Detection Engine. It covers data drift, concept drift, feature aging, seasonality, and carrier behavior shifts to ensure the model remains reliable in production.
@@ -105,7 +110,7 @@ Triggers:
 ## 7. Alerts & Governance Workflow
 
 - All drift signals publish into a **Model Monitoring Dashboard**.
-- ALEX subscribes to alerts:
+- 🟢 ALEX subscribes to alerts:
   - **Warning:** Log and recommend closer manual review.
   - **Critical:**
     - Freeze new deployments.
@@ -126,7 +131,7 @@ Policy:
   - Pass all unit/integration tests.
   - Meet or exceed baseline metrics.
   - Pass monotonicity and fairness checks.
-  - Be approved by ALEX with recorded decision.
+  - Be approved by 🟢 ALEX with recorded decision.
 
 ---
 
@@ -148,4 +153,8 @@ This monitoring plan ensures AT-02 remains:
 - Sensitive to real behavioral changes.
 - Protected against silent degradation.
 
-Drift signals directly feed into ALEX governance and Maggie’s retraining workflows to keep the system aligned with ChainBridge’s risk doctrine.
+Drift signals directly feed into 🟢 ALEX governance and 🩷 Maggie’s retraining workflows to keep the system aligned with ChainBridge’s risk doctrine.
+
+---
+
+🩷 **MAGGIE** — Chief AI Architect

@@ -1,0 +1,491 @@
+name: ALEX Governance Check
+# Governance ID: GID-08-CI | Classification: CRITICAL | Owner: ALEX (GID-08) + Dan (GID-04)
+
+on:
+  pull_request:
+    branches: [main, develop, feature/*, release/*]
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+env:
+  ALEX_MODE: protection
+  FAIL_ON_VIOLATION: true
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  governance-pre-check:
+    name: "ALEX Pre-Check: PR Metadata"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for lineage tracking
+
+      - name: Check PR description completeness
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "Checking PR description for governance requirements..."
+
+          PR_BODY="${{ github.event.pull_request.body }}"
+
+          # Required sections in PR description
+          REQUIRED_SECTIONS=(
+            "## Description"
+            "## Changes"
+            "## Risk Assessment"
+            "## Governance Statement"
+          )
+
+          for section in "${REQUIRED_SECTIONS[@]}"; do
+            if [[ ! "$PR_BODY" =~ "$section" ]]; then
+              echo "❌ ALEX GOVERNANCE VIOLATION: Missing required section '$section' in PR description"
+              echo "All PRs must include: Description, Changes, Risk Assessment, Governance Statement"
+              exit 1
+            fi
+          done
+
+          echo "✅ PR description meets governance requirements"
+
+      - name: Check for migration notes (if DB changes detected)
+        run: |
+          echo "Checking for database migrations..."
+
+          # Check if DB models or migrations changed
+          DB_CHANGES=$(git diff --name-only origin/main... | grep -E "(models|migrations|alembic)" || true)
+
+          if [[ -n "$DB_CHANGES" ]]; then
+            echo "Database changes detected: $DB_CHANGES"
+
+            # Verify migration notes exist
+            if [[ ! -f "docs/migrations/LATEST_MIGRATION.md" ]]; then
+              echo "❌ ALEX GOVERNANCE VIOLATION: DB changes require migration notes"
+              echo "Create docs/migrations/LATEST_MIGRATION.md with migration details"
+              exit 1
+            fi
+
+            echo "✅ Migration notes found"
+          else
+            echo "No database changes detected"
+          fi
+
+  governance-code-scan:
+    name: "ALEX Code Scan: Rule Violations"
+    runs-on: ubuntu-latest
+    needs: governance-pre-check
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install ALEX governance scanner
+        run: |
+          pip install pyyaml
+          pip install semgrep  # Static analysis tool
+
+      - name: Rule 1 - Glass-Box ML Models Only
+        run: |
+          echo "Scanning for prohibited ML model types..."
+
+          # Block black-box models
+          VIOLATIONS=$(grep -r -E "(RandomForest|XGBClassifier|NeuralNetwork|MLPClassifier|KerasClassifier)" \
+            --include="*.py" \
+            --exclude-dir=".venv" \
+            --exclude-dir="archived" \
+            --exclude="*test*.py" \
+            . || true)
+
+          if [[ -n "$VIOLATIONS" ]]; then
+            echo "❌ ALEX RULE #1 VIOLATION: Black-box ML models detected"
+            echo "$VIOLATIONS"
+            echo ""
+            echo "Only allowed: EBM, GAM, LogisticRegression, MonotoneGBDT"
+            exit 1
+          fi
+
+          echo "✅ Rule 1: No black-box models detected"
+
+      - name: Rule 3 - Quantum-Safe Cryptography
+        run: |
+          echo "Scanning for quantum-vulnerable cryptography..."
+
+          # Block RSA/ECDSA
+          VIOLATIONS=$(grep -r -E "(from cryptography.hazmat.primitives.asymmetric import (rsa|dsa|ec)|from Crypto.PublicKey import (RSA|DSA)|import ecdsa)" \
+            --include="*.py" \
+            --exclude-dir=".venv" \
+            --exclude-dir="archived" \
+            --exclude-dir="tests" \
+            . || true)
+
+          if [[ -n "$VIOLATIONS" ]]; then
+            echo "❌ ALEX RULE #3 VIOLATION: Quantum-vulnerable cryptography detected"
+            echo "$VIOLATIONS"
+            echo ""
+            echo "Use PQC libraries: pqcrypto.sign (SPHINCS+, Dilithium), pqcrypto.kem (Kyber)"
+            exit 1
+          fi
+
+          echo "✅ Rule 3: No quantum-vulnerable cryptography detected"
+
+      - name: Rule 4 - No Unbounded Attack Surface
+        run: |
+          echo "Scanning for dangerous code patterns..."
+
+          # Block eval, exec, unsafe yaml
+          VIOLATIONS=$(grep -r -E "(eval\(|exec\(|yaml\.load\((?!.*SafeLoader)|__import__\(.*user)" \
+            --include="*.py" \
+            --exclude-dir=".venv" \
+            --exclude-dir="archived" \
+            . || true)
+
+          if [[ -n "$VIOLATIONS" ]]; then
+            echo "❌ ALEX RULE #4 VIOLATION: Unbounded attack surface detected"
+            echo "$VIOLATIONS"
+            echo ""
+            echo "Prohibited: eval(), exec(), yaml.load() without SafeLoader, dynamic imports"
+            exit 1
+          fi
+
+          echo "✅ Rule 4: No unbounded attack surface detected"
+
+      - name: Rule 5 - Canonical DB Fields
+        run: |
+          echo "Scanning database models for canonical fields..."
+
+          python3 << 'EOF'
+          import re
+          import sys
+          from pathlib import Path
+
+          # Required canonical fields
+          REQUIRED_FIELDS = ['canonical_id', 'created_at', 'updated_at', 'version', 'source']
+
+          # Find all SQLAlchemy models
+          model_files = list(Path('.').rglob('*/models/*.py'))
+
+          violations = []
+
+          for model_file in model_files:
+              if '.venv' in str(model_file) or 'archived' in str(model_file):
+                  continue
+
+              content = model_file.read_text()
+
+              # Find class definitions
+              class_pattern = r'class\s+(\w+)\(.*Base.*\):'
+              classes = re.findall(class_pattern, content)
+
+              for class_name in classes:
+                  # Check if canonical fields exist
+                  missing_fields = []
+                  for field in REQUIRED_FIELDS:
+                      if field not in content:
+                          missing_fields.append(field)
+
+                  if missing_fields and 'CanonicalBaseModel' not in content:
+                      violations.append(f"{model_file}: {class_name} missing {missing_fields}")
+
+          if violations:
+              print("❌ ALEX RULE #5 VIOLATION: DB models missing canonical fields")
+              for v in violations:
+                  print(f"  {v}")
+              print("\nAll models must inherit from CanonicalBaseModel or include:")
+              print(f"  {REQUIRED_FIELDS}")
+              sys.exit(1)
+
+          print("✅ Rule 5: All models have canonical fields")
+          EOF
+
+      - name: Rule 10 - No Side-Effects in Import Paths
+        run: |
+          echo "Scanning for side-effects during imports..."
+
+          # Check for heavy imports at module level
+          VIOLATIONS=$(grep -r -E "(^MODEL\s*=\s*load_|^model\s*=\s*joblib\.load|^engine\s*=\s*create_engine)" \
+            --include="*.py" \
+            --exclude-dir=".venv" \
+            --exclude-dir="archived" \
+            --exclude="*test*.py" \
+            . || true)
+
+          if [[ -n "$VIOLATIONS" ]]; then
+            echo "❌ ALEX RULE #10 VIOLATION: Side-effects during import detected"
+            echo "$VIOLATIONS"
+            echo ""
+            echo "Move heavy operations to startup events or lazy loading"
+            exit 1
+          fi
+
+          echo "✅ Rule 10: No import-time side-effects detected"
+
+      - name: Rule 11 - Zero Silent Failures
+        run: |
+          echo "Scanning for silent exception handling..."
+
+          # Block except: pass
+          VIOLATIONS=$(grep -r -A1 "except" --include="*.py" \
+            --exclude-dir=".venv" \
+            --exclude-dir="archived" \
+            . | grep -B1 "pass" || true)
+
+          if [[ -n "$VIOLATIONS" ]]; then
+            echo "⚠️  ALEX RULE #11 WARNING: Potential silent exception handling detected"
+            echo "$VIOLATIONS"
+            echo ""
+            echo "Review exception handling - ensure logging and re-raising"
+          fi
+
+          echo "✅ Rule 11: Silent failures check completed"
+
+  governance-ml-check:
+    name: "ALEX ML Governance: Model Metadata"
+    runs-on: ubuntu-latest
+    needs: governance-pre-check
+    if: contains(github.event.pull_request.changed_files, 'chainiq-service') || contains(github.event.pull_request.changed_files, 'training')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Check for model metadata
+        run: |
+          echo "Checking ML model governance..."
+
+          # If training scripts changed, require metadata
+          TRAINING_CHANGES=$(git diff --name-only origin/main... | grep -E "training/train_.*\.py" || true)
+
+          if [[ -n "$TRAINING_CHANGES" ]]; then
+            echo "Training scripts changed: $TRAINING_CHANGES"
+
+            # Verify metadata files exist
+            for script in $TRAINING_CHANGES; do
+              model_name=$(basename "$script" .py | sed 's/train_//')
+              metadata_file="models/${model_name}_metadata.json"
+
+              if [[ ! -f "$metadata_file" ]]; then
+                echo "❌ ALEX ML GOVERNANCE VIOLATION: Missing metadata for $model_name"
+                echo "Required: $metadata_file"
+                echo "Metadata must include: model_type, monotonicity_constraints, calibration_metrics"
+                exit 1
+              fi
+
+              # Validate metadata structure
+              python3 << EOF
+          import json
+          import sys
+
+          with open('$metadata_file') as f:
+              metadata = json.load(f)
+
+          required_keys = ['model_type', 'monotonicity_constraints', 'calibration_metrics', 'explainability_method', 'proof_pack_id']
+
+          missing_keys = [k for k in required_keys if k not in metadata]
+
+          if missing_keys:
+              print(f"❌ Metadata missing keys: {missing_keys}")
+              sys.exit(1)
+
+          # Validate model type
+          allowed_types = ['EBM', 'GAM', 'LogisticRegression', 'MonotoneGBDT']
+          if metadata['model_type'] not in allowed_types:
+              print(f"❌ Invalid model type: {metadata['model_type']}")
+              print(f"Allowed: {allowed_types}")
+              sys.exit(1)
+
+          print(f"✅ Metadata valid for {metadata['model_type']}")
+          EOF
+            done
+          fi
+
+          echo "✅ ML governance check passed"
+
+  governance-security-scan:
+    name: "ALEX Security Scan: Vulnerabilities"
+    runs-on: ubuntu-latest
+    needs: governance-pre-check
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Check for critical vulnerabilities
+        run: |
+          # Fail on CRITICAL vulnerabilities
+          CRITICAL_COUNT=$(grep -c '"level": "error"' trivy-results.sarif || true)
+
+          if [[ $CRITICAL_COUNT -gt 0 ]]; then
+            echo "❌ ALEX SECURITY VIOLATION: $CRITICAL_COUNT critical vulnerabilities found"
+            echo "Review and patch before merging"
+            exit 1
+          fi
+
+          echo "✅ No critical vulnerabilities detected"
+
+  governance-test-coverage:
+    name: "ALEX Test Coverage: Minimum 80%"
+    runs-on: ubuntu-latest
+    needs: governance-pre-check
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov
+
+          # Install project dependencies
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+          if [ -f requirements-dev.txt ]; then
+            pip install -r requirements-dev.txt
+          fi
+
+      - name: Run tests with coverage
+        run: |
+          pytest --cov=. --cov-report=term --cov-report=xml --cov-fail-under=80 || COVERAGE_FAILED=1
+
+          if [[ $COVERAGE_FAILED -eq 1 ]]; then
+            echo "❌ ALEX GOVERNANCE VIOLATION: Test coverage below 80%"
+            echo "Add more tests to meet governance requirements"
+            exit 1
+          fi
+
+          echo "✅ Test coverage meets 80% threshold"
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+
+  governance-chainpay-check:
+    name: "ALEX ChainPay Governance: Settlement Rules"
+    runs-on: ubuntu-latest
+    needs: governance-pre-check
+    if: contains(github.event.pull_request.changed_files, 'chainpay') || contains(github.event.pull_request.changed_files, 'settlement')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Rule 6 - Deterministic Settlement Check
+        run: |
+          echo "Checking ChainPay settlement logic..."
+
+          # Verify no non-deterministic operations in settlement functions
+          VIOLATIONS=$(grep -r -E "(random\.|datetime\.now\(\)|\.utcnow\(\))" \
+            --include="*settlement*.py" \
+            --include="*chainpay*.py" \
+            --exclude-dir=".venv" \
+            --exclude="*test*.py" \
+            . || true)
+
+          if [[ -n "$VIOLATIONS" ]]; then
+            echo "⚠️  ALEX RULE #6 WARNING: Potential non-determinism in settlement logic"
+            echo "$VIOLATIONS"
+            echo ""
+            echo "Settlement calculations must be pure functions"
+            echo "Pass timestamps/randomness as parameters, don't generate internally"
+          fi
+
+          # Check for risk score requirement
+          MISSING_RISK=$(grep -r "def.*settlement" --include="*.py" -A20 \
+            --exclude-dir=".venv" \
+            . | grep -v "risk_score" || true)
+
+          if [[ -n "$MISSING_RISK" ]]; then
+            echo "⚠️  ALEX RULE #6 WARNING: Settlement functions may be missing risk_score parameter"
+            echo "All settlements must require ChainIQ risk scores"
+          fi
+
+          echo "✅ ChainPay governance check completed"
+
+  governance-report:
+    name: "ALEX Governance Report"
+    runs-on: ubuntu-latest
+    needs: [governance-code-scan, governance-ml-check, governance-security-scan, governance-test-coverage, governance-chainpay-check]
+    if: always()
+    steps:
+      - name: Generate governance report
+        run: |
+          echo "# ALEX Governance Report" > governance-report.md
+          echo "" >> governance-report.md
+          echo "**PR:** ${{ github.event.pull_request.html_url }}" >> governance-report.md
+          echo "**Branch:** ${{ github.head_ref }}" >> governance-report.md
+          echo "**Author:** ${{ github.actor }}" >> governance-report.md
+          echo "**Date:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> governance-report.md
+          echo "" >> governance-report.md
+          echo "## Governance Checks" >> governance-report.md
+          echo "" >> governance-report.md
+          echo "| Check | Status |" >> governance-report.md
+          echo "|-------|--------|" >> governance-report.md
+          echo "| Pre-Check (PR Metadata) | ${{ needs.governance-pre-check.result }} |" >> governance-report.md
+          echo "| Code Scan (Rule Violations) | ${{ needs.governance-code-scan.result }} |" >> governance-report.md
+          echo "| ML Governance | ${{ needs.governance-ml-check.result }} |" >> governance-report.md
+          echo "| Security Scan | ${{ needs.governance-security-scan.result }} |" >> governance-report.md
+          echo "| Test Coverage | ${{ needs.governance-test-coverage.result }} |" >> governance-report.md
+          echo "| ChainPay Governance | ${{ needs.governance-chainpay-check.result }} |" >> governance-report.md
+          echo "" >> governance-report.md
+          echo "---" >> governance-report.md
+          echo "*ALEX (GID-08) - Governance Above All • Integrity Before Speed • Proof Before Execution*" >> governance-report.md
+
+          cat governance-report.md
+
+      - name: Comment PR with report
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('governance-report.md', 'utf8');
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
+
+      - name: Final governance decision
+        run: |
+          # Check if any job failed
+          if [[ "${{ needs.governance-code-scan.result }}" != "success" ]] || \
+             [[ "${{ needs.governance-security-scan.result }}" != "success" ]] || \
+             [[ "${{ needs.governance-test-coverage.result }}" != "success" ]]; then
+            echo "❌ ALEX GOVERNANCE: PR BLOCKED"
+            echo "Fix violations before merging"
+            exit 1
+          fi
+
+          echo "✅ ALEX GOVERNANCE: PR APPROVED"
+          echo "All governance checks passed"
