@@ -1,4 +1,5 @@
 """Centralised settings for ChainBridge demo stack."""
+
 from __future__ import annotations
 
 import os
@@ -35,6 +36,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+        extra = "ignore"
 
 
 settings = Settings()

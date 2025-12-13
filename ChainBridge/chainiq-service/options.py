@@ -53,7 +53,15 @@ def suggest_options_for_shipment(
 6) Include risk_appetite in the returned dictionary so the API layer can populate OptionsAdvisorResponse.
 """
 
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
+try:  # Optional storage integration for presence checks
+    from storage import get_score  # type: ignore
+
+    _STORAGE_AVAILABLE = True
+except Exception:
+    get_score = None  # type: ignore
+    _STORAGE_AVAILABLE = False
 
 
 def suggest_options_for_shipment(
@@ -77,6 +85,12 @@ def suggest_options_for_shipment(
     if risk_appetite not in {"conservative", "balanced", "aggressive"}:
         risk_appetite = "balanced"
 
+    # Require a known shipment when storage is available
+    if _STORAGE_AVAILABLE and get_score is not None:
+        latest_score = get_score(shipment_id)
+        if latest_score is None:
+            raise ValueError(f"No history for shipment {shipment_id}")
+
     # NOTE: Fetch current shipment data from storage/database
     # For now, using mock data structure
     current_risk_score = 75
@@ -93,7 +107,7 @@ def suggest_options_for_shipment(
             "risk_score": 45,
             "cost_delta_usd": 200.0,
             "eta_delta_days": 2,
-            "notes": ["Route via Turkey to EU gateway"]
+            "notes": ["Route via Turkey to EU gateway"],
         },
         {
             "option_id": f"ROUTE-{current_route.replace('-', '')}-ALT2",
@@ -102,7 +116,7 @@ def suggest_options_for_shipment(
             "risk_score": 50,
             "cost_delta_usd": 150.0,
             "eta_delta_days": 1,
-            "notes": ["Route via UAE to EU gateway"]
+            "notes": ["Route via UAE to EU gateway"],
         },
         {
             "option_id": f"ROUTE-{current_route.replace('-', '')}-ALT3",
@@ -111,7 +125,7 @@ def suggest_options_for_shipment(
             "risk_score": 55,
             "cost_delta_usd": -50.0,
             "eta_delta_days": 4,
-            "notes": ["Route via India (slower but cheaper)"]
+            "notes": ["Route via India (slower but cheaper)"],
         },
         {
             "option_id": f"ROUTE-{current_route.replace('-', '')}-ALT4",
@@ -120,7 +134,7 @@ def suggest_options_for_shipment(
             "risk_score": 80,
             "cost_delta_usd": -200.0,
             "eta_delta_days": -1,
-            "notes": ["Direct route via China (cheaper, faster, higher risk)"]
+            "notes": ["Direct route via China (cheaper, faster, higher risk)"],
         },
     ]
 
@@ -132,7 +146,7 @@ def suggest_options_for_shipment(
             "risk_score": 40,
             "fees_delta_usd": -100.0,
             "settlement_speed": "T+0",
-            "notes": ["Stablecoin on Polygon (fast, low fees)"]
+            "notes": ["Stablecoin on Polygon (fast, low fees)"],
         },
         {
             "option_id": f"PAYMENT-{current_payment_rail.replace('-', '')}-ALT2",
@@ -140,7 +154,7 @@ def suggest_options_for_shipment(
             "risk_score": 42,
             "fees_delta_usd": 50.0,
             "settlement_speed": "T+0",
-            "notes": ["Stablecoin on Ethereum (fast, higher gas)"]
+            "notes": ["Stablecoin on Ethereum (fast, higher gas)"],
         },
         {
             "option_id": f"PAYMENT-{current_payment_rail.replace('-', '')}-ALT3",
@@ -148,7 +162,7 @@ def suggest_options_for_shipment(
             "risk_score": 65,
             "fees_delta_usd": -80.0,
             "settlement_speed": "T+3",
-            "notes": ["ACH transfer (cheaper, slower)"]
+            "notes": ["ACH transfer (cheaper, slower)"],
         },
         {
             "option_id": f"PAYMENT-{current_payment_rail.replace('-', '')}-ALT4",
@@ -156,7 +170,7 @@ def suggest_options_for_shipment(
             "risk_score": 70,
             "fees_delta_usd": 0.0,
             "settlement_speed": "T+1",
-            "notes": ["Bank wire (similar to SWIFT)"]
+            "notes": ["Bank wire (similar to SWIFT)"],
         },
     ]
 
@@ -191,11 +205,7 @@ def suggest_options_for_shipment(
     }
 
 
-def _filter_route_options(
-    routes: List[Dict[str, Any]],
-    risk_appetite: str,
-    current_risk_score: int
-) -> List[Dict[str, Any]]:
+def _filter_route_options(routes: List[Dict[str, Any]], risk_appetite: str, current_risk_score: int) -> List[Dict[str, Any]]:
     """
     Filter route options based on risk_appetite.
 
@@ -205,31 +215,16 @@ def _filter_route_options(
     """
 
     if risk_appetite == "conservative":
-        return [
-            r for r in routes
-            if r["risk_delta"] >= 10 and r["eta_delta_days"] <= 3
-        ]
+        return [r for r in routes if r["risk_delta"] >= 10 and r["eta_delta_days"] <= 3]
     elif risk_appetite == "balanced":
-        return [
-            r for r in routes
-            if r["risk_delta"] >= 5
-        ]
+        return [r for r in routes if r["risk_delta"] >= 5]
     elif risk_appetite == "aggressive":
-        return [
-            r for r in routes
-            if r["risk_delta"] >= -5 and (
-                r["cost_delta_usd"] <= 0 or r["eta_delta_days"] <= 0
-            )
-        ]
+        return [r for r in routes if r["risk_delta"] >= -5 and (r["cost_delta_usd"] <= 0 or r["eta_delta_days"] <= 0)]
 
     return routes
 
 
-def _filter_payment_options(
-    payments: List[Dict[str, Any]],
-    risk_appetite: str,
-    current_risk_score: int
-) -> List[Dict[str, Any]]:
+def _filter_payment_options(payments: List[Dict[str, Any]], risk_appetite: str, current_risk_score: int) -> List[Dict[str, Any]]:
     """
     Filter payment options based on risk_appetite.
 
@@ -239,30 +234,17 @@ def _filter_payment_options(
     """
 
     if risk_appetite == "conservative":
-        # Keep only options that don't increase risk
-        return [
-            p for p in payments
-            if p["risk_score"] <= current_risk_score
-        ]
+        # Keep only options that don't increase risk and do not cost more
+        return [p for p in payments if p["risk_score"] <= current_risk_score and p["fees_delta_usd"] <= 0]
     elif risk_appetite == "balanced":
-        return [
-            p for p in payments
-            if p["risk_delta"] >= 5
-        ]
+        return [p for p in payments if p["risk_delta"] >= 5]
     elif risk_appetite == "aggressive":
-        return [
-            p for p in payments
-            if p["risk_delta"] >= -5 and p["fees_delta_usd"] <= 0
-        ]
+        return [p for p in payments if p["risk_delta"] >= -5 and p["fees_delta_usd"] <= 0]
 
     return payments
 
 
-def _sort_options(
-    options: List[Dict[str, Any]],
-    risk_appetite: str,
-    option_type: str
-) -> List[Dict[str, Any]]:
+def _sort_options(options: List[Dict[str, Any]], risk_appetite: str, option_type: str) -> List[Dict[str, Any]]:
     """
     Sort options based on risk_appetite.
 
@@ -273,28 +255,15 @@ def _sort_options(
 
     if risk_appetite == "conservative":
         # Safest first, then cheapest
-        return sorted(
-            options,
-            key=lambda x: (x["risk_score"], x.get("cost_delta_usd", x.get("fees_delta_usd", 0)))
-        )
+        return sorted(options, key=lambda x: (x["risk_score"], x.get("cost_delta_usd", x.get("fees_delta_usd", 0))))
     elif risk_appetite == "balanced":
         # Greatest risk improvement first
-        return sorted(
-            options,
-            key=lambda x: x["risk_delta"],
-            reverse=True
-        )
+        return sorted(options, key=lambda x: x["risk_delta"], reverse=True)
     elif risk_appetite == "aggressive":
         # Best cost savings first (negative delta = savings), then lowest risk
         if option_type == "route":
-            return sorted(
-                options,
-                key=lambda x: (x["cost_delta_usd"], x["risk_score"])
-            )
+            return sorted(options, key=lambda x: (x["cost_delta_usd"], x["risk_score"]))
         else:  # payment
-            return sorted(
-                options,
-                key=lambda x: (x["fees_delta_usd"], x["risk_score"])
-            )
+            return sorted(options, key=lambda x: (x["fees_delta_usd"], x["risk_score"]))
 
     return options

@@ -44,7 +44,6 @@ from core.module_manager import ModuleManager
 from core.pipeline import Pipeline
 from tracking.metrics_collector import MetricsCollector
 
-
 # ---------------------------------------------------------------------------
 # ChainIQ Router Import Helper
 # ---------------------------------------------------------------------------
@@ -69,17 +68,14 @@ def _validate_chainiq_paths() -> None:
 
     if not CHAINIQ_APP_DIR.is_dir():
         raise RuntimeError(
-            f"ChainIQ app directory not found at expected location: "
-            f"{CHAINIQ_APP_DIR}. Fix the repo layout, don't bypass this check."
+            f"ChainIQ app directory not found at expected location: " f"{CHAINIQ_APP_DIR}. Fix the repo layout, don't bypass this check."
         )
 
     # SECURITY: Ensure paths resolve within project bounds (no symlink escape)
     try:
         resolved_root = CHAINIQ_SERVICE_ROOT.resolve(strict=True)
         if not str(resolved_root).startswith(str(PROJECT_ROOT)):
-            raise RuntimeError(
-                f"ChainIQ path resolves outside project root: {resolved_root}"
-            )
+            raise RuntimeError(f"ChainIQ path resolves outside project root: {resolved_root}")
     except (OSError, ValueError) as e:
         raise RuntimeError(f"ChainIQ path validation failed: {e}") from e
 
@@ -147,6 +143,7 @@ def _load_chainiq_router() -> Tuple[Optional[APIRouter], bool]:
     try:
         # Step 4: Import the ChainIQ router (uses chainiq-service/app)
         from app.api import router as chainiq_router
+
         router = chainiq_router
         return router, True
 
@@ -357,8 +354,9 @@ try:
 except ImportError as e:
     print(f"Warning: ChainIQ health router not available: {e}")
     CHAINIQ_HEALTH_AVAILABLE = False
-from api.database import init_db
 import api.events.audit_log  # noqa: F401
+from api.database import init_db
+
 try:
     from api.routes.sla import router as sla_router
 
@@ -366,6 +364,81 @@ try:
 except ImportError as e:
     print(f"Warning: SLA router not available: {e}")
     SLA_ROUTER_AVAILABLE = False
+
+# Import core governance routers
+try:
+    from api.routes.parties import router as parties_router
+
+    PARTIES_ROUTER_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Parties router not available: {e}")
+    PARTIES_ROUTER_AVAILABLE = False
+
+try:
+    from api.routes.exceptions import router as exceptions_router
+
+    EXCEPTIONS_ROUTER_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Exceptions router not available: {e}")
+    EXCEPTIONS_ROUTER_AVAILABLE = False
+
+try:
+    from api.routes.playbooks import router as playbooks_router
+
+    PLAYBOOKS_ROUTER_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Playbooks router not available: {e}")
+    PLAYBOOKS_ROUTER_AVAILABLE = False
+
+try:
+    from api.routes.settlement_policies import router as settlement_policies_router
+
+    SETTLEMENT_POLICIES_ROUTER_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Settlement Policies router not available: {e}")
+    SETTLEMENT_POLICIES_ROUTER_AVAILABLE = False
+
+try:
+    from api.routes.decision_records import router as decision_records_router
+
+    DECISION_RECORDS_ROUTER_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Decision Records router not available: {e}")
+    DECISION_RECORDS_ROUTER_AVAILABLE = False
+
+try:
+    from api.routes.esg_evidence import router as esg_evidence_router
+
+    ESG_EVIDENCE_ROUTER_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: ESG Evidence router not available: {e}")
+    ESG_EVIDENCE_ROUTER_AVAILABLE = False
+
+try:
+    from api.routes.party_relationships import router as party_relationships_router
+
+    PARTY_RELATIONSHIPS_ROUTER_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Party Relationships router not available: {e}")
+    PARTY_RELATIONSHIPS_ROUTER_AVAILABLE = False
+
+# OC (Exception Cockpit) router - serves frontend at /oc-exceptions
+try:
+    from api.routes.oc import router as oc_router
+
+    OC_ROUTER_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: OC router not available: {e}")
+    OC_ROUTER_AVAILABLE = False
+
+# Risk router - gateway to ChainIQ scoring service
+try:
+    from api.routes.risk import router as risk_router
+
+    RISK_ROUTER_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Risk router not available: {e}")
+    RISK_ROUTER_AVAILABLE = False
 
 
 # Default module configuration
@@ -550,12 +623,14 @@ if SHADOW_PILOT_AVAILABLE:
     print("✅ Shadow Pilot registered")
 try:
     from api.routes.operator import router as operator_router
+
     app.include_router(operator_router)
     print("✅ Operator routes registered")
 except Exception as e:
     print(f"Warning: Operator router not available: {e}")
 try:
     from api.routes.webhooks import router as webhooks_router
+
     app.include_router(webhooks_router)
     print("✅ Settlement webhook orchestrator registered")
 except Exception as e:
@@ -579,6 +654,39 @@ if SLA_ROUTER_AVAILABLE:
 if AGENTS_FRAMEWORK_AVAILABLE:
     app.include_router(agents_router, prefix="/api")
     print("✅ Agent Framework service registered")
+
+# Register core governance routers under /api/v1
+if PARTIES_ROUTER_AVAILABLE:
+    app.include_router(parties_router, prefix="/api/v1")
+    print("✅ Parties router registered")
+if EXCEPTIONS_ROUTER_AVAILABLE:
+    app.include_router(exceptions_router, prefix="/api/v1")
+    print("✅ Exceptions router registered")
+if PLAYBOOKS_ROUTER_AVAILABLE:
+    app.include_router(playbooks_router, prefix="/api/v1")
+    print("✅ Playbooks router registered")
+if SETTLEMENT_POLICIES_ROUTER_AVAILABLE:
+    app.include_router(settlement_policies_router, prefix="/api/v1")
+    print("✅ Settlement Policies router registered")
+if DECISION_RECORDS_ROUTER_AVAILABLE:
+    app.include_router(decision_records_router, prefix="/api/v1")
+    print("✅ Decision Records router registered")
+if ESG_EVIDENCE_ROUTER_AVAILABLE:
+    app.include_router(esg_evidence_router, prefix="/api/v1")
+    print("✅ ESG Evidence router registered")
+if PARTY_RELATIONSHIPS_ROUTER_AVAILABLE:
+    app.include_router(party_relationships_router, prefix="/api/v1")
+    print("✅ Party Relationships router registered")
+
+# Register OC (Exception Cockpit) router for frontend consumption
+if OC_ROUTER_AVAILABLE:
+    app.include_router(oc_router, prefix="/api/v1")
+    print("✅ OC (Exception Cockpit) router registered")
+
+# Register Risk router (ChainIQ gateway)
+if RISK_ROUTER_AVAILABLE:
+    app.include_router(risk_router, prefix="/api/v1")
+    print("✅ Risk router registered (ChainIQ gateway)")
 
 
 @app.get("/", response_model=Dict[str, str])
@@ -641,9 +749,7 @@ async def execute_module(module_name: str, request: ModuleExecutionRequest):
 
         # Track metrics
         execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
-        metrics_collector.track_module_execution(
-            module_name, execution_time, len(str(request.input_data)), len(str(result))
-        )
+        metrics_collector.track_module_execution(module_name, execution_time, len(str(request.input_data)), len(str(result)))
 
         return {
             "result": result,

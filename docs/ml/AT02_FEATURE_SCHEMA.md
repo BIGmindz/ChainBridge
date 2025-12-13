@@ -1,5 +1,10 @@
 # AT-02 Feature Schema v1
 
+> **Legend**:
+> 🩷 **MAGGIE** (GID-10) — Chief AI Architect
+> 🟢 **ALEX** (GID-08) — Governance & Alignment
+> 🔵 **ATLAS** — Infrastructure & Security
+
 ## 1. BLUF
 
 AT-02 uses a glass-box, token-aware feature schema to detect falsified or inflated accessorials (detention, layover, reclassification, TONU, liftgate, etc.) by combining IoT telemetry, route timelines, carrier history, and document metadata. All features are engineered to be auditable, explainable, and compatible with monotonic GBMs/GAMs and SHAP-based attribution.
@@ -146,7 +151,7 @@ Assume we have a time series of GPS + device events around the window of claimed
 15. **`gps_signal_quality_score`**
     - Type: numeric (0–1)
     - Source: sensor metadata (HDOP, satellite count, etc.)
-    - Rationale: Low signal quality weakens IoT evidence; ALEX may require proofPack supplementation.
+    - Rationale: Low signal quality weakens IoT evidence; 🟢 ALEX may require proofPack supplementation.
     - Monotonic: ↓ quality → ↑ uncertainty & governance friction (used for confidence modeling, not pure fraud score).
 
 16. **`iot_message_dropout_rate`**
@@ -410,7 +415,7 @@ Assume we have a time series of GPS + device events around the window of claimed
 52. **`data_completeness_score`**
     - Type: numeric (0–1)
     - Source: feature-level missingness
-    - Rationale: Low completeness = higher uncertainty; ALEX may require proofPack reinforcement.
+    - Rationale: Low completeness = higher uncertainty; 🟢 ALEX may require proofPack reinforcement.
     - Monotonic: ↓ completeness → ↓ confidence (uncertainty up, not directly fraud up).
 
 53. **`num_critical_features_missing`**
@@ -454,4 +459,8 @@ All features must be:
 - **CCT-01 (Carrier Credit Token):**
   - Provides carrier tiering and behavioral risk aggregates.
 
-Each feature must be mappable to at least one token and loggable for later forensics, ALEX reviews, and SxT ProofPack verification.
+Each feature must be mappable to at least one token and loggable for later forensics, 🟢 ALEX reviews, and SxT ProofPack verification.
+
+---
+
+🩷 **MAGGIE** — Chief AI Architect

@@ -1,4 +1,5 @@
 """FastAPI entrypoint wiring ChainBridge routers together."""
+
 from __future__ import annotations
 
 from fastapi import Depends, FastAPI, Request
@@ -9,7 +10,7 @@ from api.database import get_db
 from api.routes.chain_audit import router as chain_audit_router
 from api.routes.chainboard import router as chainboard_router
 from api.routes.intel import router as intel_router
-from app.api.api import create_app as create_v2_app
+from app.api import create_app as create_v2_app
 from app.api.endpoints.marketplace import get_authoritative_price
 
 
@@ -38,9 +39,7 @@ def build_app() -> FastAPI:
         return {"status": "ok"}
 
     @app.get("/marketplace/pricing/{listing_id}")
-    async def pricing_alias(
-        listing_id: str, request: Request, db: Session = Depends(get_db)
-    ):
+    async def pricing_alias(listing_id: str, request: Request, db: Session = Depends(get_db)):
         """Alias endpoint for deterministic Dutch price checks."""
         return await get_authoritative_price(listing_id, request, db)
 

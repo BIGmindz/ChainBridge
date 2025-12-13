@@ -9,7 +9,7 @@ from sqlalchemy.pool import StaticPool
 
 from api.database import Base
 from api.eventbus import dispatcher
-from app.models.marketplace import Listing, BuyIntent, SettlementRecord
+from app.models.marketplace import BuyIntent, Listing, SettlementRecord
 from app.schemas.marketplace import BuyIntentStatus
 from app.worker import settlement
 
@@ -79,7 +79,7 @@ def _intent(session, listing_id: str, status: str = BuyIntentStatus.QUEUED.value
 
 
 def _run(coro):
-    return asyncio.get_event_loop().run_until_complete(coro)
+    return asyncio.run(coro)
 
 
 def test_execute_dutch_settlement_happy_path(db_sessionmaker: Tuple[Any, sessionmaker], monkeypatch: pytest.MonkeyPatch) -> None:

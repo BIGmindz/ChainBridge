@@ -1,0 +1,2558 @@
+=== PWD ===
+/Users/johnbozza/Documents/Projects/ChainBridge-local-repo
+
+=== BRANCH ===
+feature/chainpay-consumer
+
+=== LAST 15 COMMITS ===
+edea2f93 CODY-011: Add minimal audit event and decision log skeleton to ChainPay
+7bc84667 MAGGIE-001: Add ChainIQ glass-box risk model v0 spec and stub implementation
+2291e780 ALEX-008: Add ChainBridge Audit & ProofPack v0 specification
+21d8c624 SONNY-005: Add Sense·Think·Act strip and ChainIQ/ChainPay status to Operator Console
+c93dedff CODY-010: Refactor ChainIQ router mount and add mounting/security invariants tests
+0989a081 ALEX-007: Update governance log, reality baseline, and ChainPay spec for ChainIQ/ChainPay status (2025-12-06)
+56025d4a Fix ChainIQ import path conflict and ensure IQ routes are registered
+c738d172 ci: guard ChainPay backend and ChainBoard build
+ae68091f Update ChainBridge/api/schemas/operator_console.py
+c44d3191 Update ChainBridge/api/server.py
+7aa2b162 chainpay: consumer + governance + ui updates
+3fa9b9ec MAGGIE PAC-004: AI preset weight blending, KPIs, and analytics export
+d1456079 Add PAC_STANDARD and AGENT_REGISTRY and wire canonical launch center docs
+8415f2fc Fix ruff E741 and wire lean quick-checks (RSI + integrator)
+bba31e57 SAFETY SNAPSHOT: OC/API/tests/agents before enterprise refactor
+
+=== GIT STATUS ===
+On branch feature/chainpay-consumer
+Your branch is up to date with 'origin/feature/chainpay-consumer'.
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	new file:   .chainbridge/models/.gitkeep
+	new file:   .devcontainer/Dockerfile
+	modified:   .github/workflows/chainbridge-ci.yml
+	new file:   .github/workflows/forbidden_regions_check.yml
+	new file:   .github/workflows/governance_check.yml
+	new file:   .github/workflows/model-integrity-check.yml
+	new file:   .github/workflows/pac_color_check.yml
+	new file:   .github/workflows/pac_reminder.yml
+	modified:   .gitignore
+	modified:   .pre-commit-config.yaml
+	modified:   ChainBridge/.github/CODEOWNERS
+	new file:   ChainBridge/.github/workflows/alex-governance.yml
+	modified:   ChainBridge/.github/workflows/chainpay-iq-ui-ci.yml
+	new file:   ChainBridge/.github/workflows/ci-core.yml
+	new file:   ChainBridge/.github/workflows/ci-model-integrity.yml
+	new file:   ChainBridge/.github/workflows/deploy-staging.yml
+	modified:   ChainBridge/.github/workflows/python-ci.yml
+	new file:   ChainBridge/.github/workflows/repo-sanity.yml
+	new file:   ChainBridge/.github/workflows/shadow-ci.yml
+	modified:   ChainBridge/.pre-commit-config.yaml
+	modified:   ChainBridge/Dockerfile
+	new file:   ChainBridge/GOVERNANCE.md
+	modified:   ChainBridge/Makefile
+	modified:   ChainBridge/README.md
+	new file:   ChainBridge/alembic/versions/0019_core_governance_models.py
+	new file:   ChainBridge/api/Dockerfile.dev
+	modified:   ChainBridge/api/chainpay_pricing.py
+	new file:   ChainBridge/api/clients/__init__.py
+	new file:   ChainBridge/api/clients/chainiq.py
+	modified:   ChainBridge/api/database.py
+	new file:   ChainBridge/api/models/decision_record.py
+	new file:   ChainBridge/api/models/esg_evidence.py
+	new file:   ChainBridge/api/models/exception.py
+	new file:   ChainBridge/api/models/party.py
+	new file:   ChainBridge/api/models/party_relationship.py
+	new file:   ChainBridge/api/models/playbook.py
+	new file:   ChainBridge/api/models/settlement_policy.py
+	new file:   ChainBridge/api/routes/decision_records.py
+	new file:   ChainBridge/api/routes/esg_evidence.py
+	new file:   ChainBridge/api/routes/exceptions.py
+	new file:   ChainBridge/api/routes/oc.py
+	new file:   ChainBridge/api/routes/parties.py
+	new file:   ChainBridge/api/routes/party_relationships.py
+	new file:   ChainBridge/api/routes/playbooks.py
+	new file:   ChainBridge/api/routes/risk.py
+	new file:   ChainBridge/api/routes/settlement_policies.py
+	new file:   ChainBridge/api/schemas/decision_record.py
+	new file:   ChainBridge/api/schemas/esg_evidence.py
+	new file:   ChainBridge/api/schemas/exception.py
+	new file:   ChainBridge/api/schemas/party.py
+	new file:   ChainBridge/api/schemas/party_relationship.py
+	new file:   ChainBridge/api/schemas/playbook.py
+	new file:   ChainBridge/api/schemas/risk.py
+	new file:   ChainBridge/api/schemas/settlement_policy.py
+	modified:   ChainBridge/api/server.py
+	modified:   ChainBridge/app/api/__init__.py
+	modified:   ChainBridge/app/core/config.py
+	modified:   ChainBridge/app/main.py
+	modified:   ChainBridge/cache/gscpi_data.csv
+	modified:   ChainBridge/chainboard-ui/Dockerfile
+	new file:   ChainBridge/chainboard-ui/src/api/chainiq.ts
+	new file:   ChainBridge/chainboard-ui/src/api/driftApi.ts
+	new file:   ChainBridge/chainboard-ui/src/api/fusionApi.ts
+	new file:   ChainBridge/chainboard-ui/src/api/shadow.ts
+	new file:   ChainBridge/chainboard-ui/src/api/shadowMode.ts
+	modified:   ChainBridge/chainboard-ui/src/components/Layout.tsx
+	new file:   ChainBridge/chainboard-ui/src/components/governance/ALEXGovernanceFooter.tsx
+	new file:   ChainBridge/chainboard-ui/src/components/intel/CorridorOverviewAnimation.tsx
+	new file:   ChainBridge/chainboard-ui/src/components/intel/CorridorSelector.tsx
+	new file:   ChainBridge/chainboard-ui/src/components/intel/DriftSignalBadge.tsx
+	new file:   ChainBridge/chainboard-ui/src/components/intel/DriftSparkline.tsx
+	new file:   ChainBridge/chainboard-ui/src/components/intel/FusionIntelligencePanel.tsx
+	new file:   ChainBridge/chainboard-ui/src/components/intel/ShadowEventTimeline.tsx
+	new file:   ChainBridge/chainboard-ui/src/components/intel/ShadowIntelligencePanel.tsx
+	new file:   ChainBridge/chainboard-ui/src/components/intel/ShadowIntelligencePanelV2.tsx
+	new file:   ChainBridge/chainboard-ui/src/components/intel/ShadowKPICards.tsx
+	new file:   ChainBridge/chainboard-ui/src/components/oc/FocusModeSwitcher.tsx
+	new file:   ChainBridge/chainboard-ui/src/components/oc/OCAuditLog.tsx
+	new file:   ChainBridge/chainboard-ui/src/components/oc/OCExceptionDetailPane.tsx
+	new file:   ChainBridge/chainboard-ui/src/components/oc/OCExceptionQueue.tsx
+	new file:   ChainBridge/chainboard-ui/src/components/oc/OCIntelligenceWidget.tsx
+	new file:   ChainBridge/chainboard-ui/src/components/oc/OCKPIStrip.tsx
+	modified:   ChainBridge/chainboard-ui/src/components/oc/OCLayout.tsx
+	new file:   ChainBridge/chainboard-ui/src/core/focus/FocusModeContext.tsx
+	new file:   ChainBridge/chainboard-ui/src/core/focus/index.ts
+	new file:   ChainBridge/chainboard-ui/src/features/chainiq/IqLabPanel.tsx
+	new file:   ChainBridge/chainboard-ui/src/features/chainiq/samplePayloads.ts
+	new file:   ChainBridge/chainboard-ui/src/features/shadow/ShadowCorridorTable.tsx
+	new file:   ChainBridge/chainboard-ui/src/features/shadow/ShadowDashboard.tsx
+	new file:   ChainBridge/chainboard-ui/src/features/shadow/ShadowEventsTable.tsx
+	new file:   ChainBridge/chainboard-ui/src/features/shadow/ShadowStatsCard.tsx
+	new file:   ChainBridge/chainboard-ui/src/hooks/useDrift.ts
+	new file:   ChainBridge/chainboard-ui/src/hooks/useExceptions.ts
+	new file:   ChainBridge/chainboard-ui/src/hooks/useFusion.ts
+	new file:   ChainBridge/chainboard-ui/src/hooks/useRisk.ts
+	new file:   ChainBridge/chainboard-ui/src/hooks/useShadowMode.ts
+	modified:   ChainBridge/chainboard-ui/src/index.css
+	modified:   ChainBridge/chainboard-ui/src/index.tsx
+	modified:   ChainBridge/chainboard-ui/src/pages/GlobalIntelPageSimple.tsx
+	new file:   ChainBridge/chainboard-ui/src/pages/IqLabPage.tsx
+	new file:   ChainBridge/chainboard-ui/src/pages/OCExceptionCockpitPage.tsx
+	modified:   ChainBridge/chainboard-ui/src/pages/OperatorConsolePage.tsx
+	new file:   ChainBridge/chainboard-ui/src/pages/ShadowPage.tsx
+	modified:   ChainBridge/chainboard-ui/src/routes.tsx
+	modified:   ChainBridge/chainboard-ui/src/services/apiClient.ts
+	new file:   ChainBridge/chainboard-ui/src/services/exceptionsApi.ts
+	new file:   ChainBridge/chainboard-ui/src/services/riskApi.ts
+	new file:   ChainBridge/chainboard-ui/src/types/exceptions.ts
+	new file:   ChainBridge/chainboard-ui/src/types/risk.ts
+	new file:   ChainBridge/chainiq-service/app/analysis/__init__.py
+	new file:   ChainBridge/chainiq-service/app/analysis/corridor_analysis.py
+	new file:   ChainBridge/chainiq-service/app/analysis/shadow_diff.py
+	modified:   ChainBridge/chainiq-service/app/api.py
+	new file:   ChainBridge/chainiq-service/app/api_drift.py
+	new file:   ChainBridge/chainiq-service/app/api_fusion.py
+	new file:   ChainBridge/chainiq-service/app/api_iq_ml.py
+	new file:   ChainBridge/chainiq-service/app/api_shadow.py
+	new file:   ChainBridge/chainiq-service/app/cli.py
+	new file:   ChainBridge/chainiq-service/app/core/__init__.py
+	new file:   ChainBridge/chainiq-service/app/core/config.py
+	new file:   ChainBridge/chainiq-service/app/database.py
+	new file:   ChainBridge/chainiq-service/app/ingest/__init__.py
+	new file:   ChainBridge/chainiq-service/app/ingest/backfill.py
+	modified:   ChainBridge/chainiq-service/app/main.py
+	new file:   ChainBridge/chainiq-service/app/metrics.py
+	new file:   ChainBridge/chainiq-service/app/ml/README_SECURITY.md
+	new file:   ChainBridge/chainiq-service/app/ml/__init__.py
+	new file:   ChainBridge/chainiq-service/app/ml/base.py
+	new file:   ChainBridge/chainiq-service/app/ml/datasets.py
+	new file:   ChainBridge/chainiq-service/app/ml/drift_diagnostics.py
+	new file:   ChainBridge/chainiq-service/app/ml/drift_engine.py
+	new file:   ChainBridge/chainiq-service/app/ml/dummy_models.py
+	new file:   ChainBridge/chainiq-service/app/ml/ebm_drift.py
+	new file:   ChainBridge/chainiq-service/app/ml/event_parsing.py
+	new file:   ChainBridge/chainiq-service/app/ml/feature_forensics.py
+	new file:   ChainBridge/chainiq-service/app/ml/fusion_engine.py
+	new file:   ChainBridge/chainiq-service/app/ml/ingestion.py
+	new file:   ChainBridge/chainiq-service/app/ml/model_security.py
+	new file:   ChainBridge/chainiq-service/app/ml/monotone_gam.py
+	new file:   ChainBridge/chainiq-service/app/ml/preprocessing.py
+	new file:   ChainBridge/chainiq-service/app/ml/training_v02.py
+	new file:   ChainBridge/chainiq-service/app/ml/validation_real_data.py
+	new file:   ChainBridge/chainiq-service/app/models/__init__.py
+	new file:   ChainBridge/chainiq-service/app/models/features.py
+	new file:   ChainBridge/chainiq-service/app/models/scoring.py
+	new file:   ChainBridge/chainiq-service/app/models_shadow.py
+	new file:   ChainBridge/chainiq-service/app/observability.py
+	new file:   ChainBridge/chainiq-service/app/repositories/__init__.py
+	new file:   ChainBridge/chainiq-service/app/repositories/shadow_repo.py
+	new file:   ChainBridge/chainiq-service/app/risk/__init__.py
+	new file:   ChainBridge/chainiq-service/app/risk/api.py
+	new file:   ChainBridge/chainiq-service/app/risk/db_models.py
+	new file:   ChainBridge/chainiq-service/app/risk/engine.py
+	new file:   ChainBridge/chainiq-service/app/risk/etl_cli.py
+	new file:   ChainBridge/chainiq-service/app/risk/ingest.py
+	new file:   ChainBridge/chainiq-service/app/risk/metrics_compute.py
+	new file:   ChainBridge/chainiq-service/app/risk/metrics_schemas.py
+	new file:   ChainBridge/chainiq-service/app/risk/schemas.py
+	new file:   ChainBridge/chainiq-service/app/risk/service.py
+	new file:   ChainBridge/chainiq-service/app/risk/synthetic_eval.py
+	new file:   ChainBridge/chainiq-service/app/risk/tests/conftest.py
+	new file:   ChainBridge/chainiq-service/app/risk/tests/test_api_risk.py
+	new file:   ChainBridge/chainiq-service/app/risk/tests/test_api_risk_history.py
+	new file:   ChainBridge/chainiq-service/app/risk/tests/test_risk_etl_cli.py
+	new file:   ChainBridge/chainiq-service/app/risk/tests/test_risk_metrics_compute.py
+	new file:   ChainBridge/chainiq-service/app/risk/tests/test_risk_metrics_orm.py
+	new file:   ChainBridge/chainiq-service/app/risk/tests/test_synthetic_eval.py
+	new file:   ChainBridge/chainiq-service/app/schemas_shadow.py
+	new file:   ChainBridge/chainiq-service/app/security/__init__.py
+	new file:   ChainBridge/chainiq-service/app/security/fusion_guard.py
+	new file:   ChainBridge/chainiq-service/app/serializers/__init__.py
+	new file:   ChainBridge/chainiq-service/app/serializers/drift_explain.py
+	new file:   ChainBridge/chainiq-service/app/services/feature_builder.py
+	new file:   ChainBridge/chainiq-service/app/services/sentiment_adapter.py
+	new file:   ChainBridge/chainiq-service/docs/FEATURE_FORENSICS.md
+	new file:   ChainBridge/chainiq-service/docs/INGESTION_ALIGNMENT_NOTES.md
+	new file:   ChainBridge/chainiq-service/docs/MAGGIE_PAC004_WRAP.md
+	new file:   ChainBridge/chainiq-service/docs/PAC-021_Shadow_Mode_v03.md
+	new file:   ChainBridge/chainiq-service/docs/PAC_021_SHADOW_MODE_API.md
+	new file:   ChainBridge/chainiq-service/docs/PAC_C22_COMPLIANCE_REPORT.md
+	new file:   ChainBridge/chainiq-service/docs/chainiq/CHAINIQ_ML_V02_EVAL.md
+	new file:   ChainBridge/chainiq-service/docs/risk_metrics_contract.md
+	new file:   ChainBridge/chainiq-service/docs/synthetic_eval.md
+	new file:   ChainBridge/chainiq-service/migrations/001_shadow_mode_tables.sql
+	new file:   ChainBridge/chainiq-service/migrations/README.md
+	new file:   ChainBridge/chainiq-service/ml_models/anomaly_v0.2.0.pkl
+	new file:   ChainBridge/chainiq-service/ml_models/risk_v0.2.0.pkl
+	modified:   ChainBridge/chainiq-service/options.py
+	new file:   ChainBridge/chainiq-service/pytest.ini
+	modified:   ChainBridge/chainiq-service/requirements.txt
+	new file:   ChainBridge/chainiq-service/tests/drift/__init__.py
+	new file:   ChainBridge/chainiq-service/tests/drift/test_drift_api.py
+	new file:   ChainBridge/chainiq-service/tests/drift/test_drift_engine_v11.py
+	new file:   ChainBridge/chainiq-service/tests/fusion/__init__.py
+	new file:   ChainBridge/chainiq-service/tests/fusion/test_fusion_engine.py
+	new file:   ChainBridge/chainiq-service/tests/ml/test_drift_diagnostics.py
+	new file:   ChainBridge/chainiq-service/tests/test_feature_builder.py
+	new file:   ChainBridge/chainiq-service/tests/test_ingestion_event_parsing.py
+	new file:   ChainBridge/chainiq-service/tests/test_ingestion_label_rules.py
+	new file:   ChainBridge/chainiq-service/tests/test_ingestion_shadow_consistency.py
+	new file:   ChainBridge/chainiq-service/tests/test_ingestion_training_rows.py
+	new file:   ChainBridge/chainiq-service/tests/test_iq_ml_api.py
+	new file:   ChainBridge/chainiq-service/tests/test_iq_observability.py
+	new file:   ChainBridge/chainiq-service/tests/test_metrics_endpoint.py
+	new file:   ChainBridge/chainiq-service/tests/test_ml_interfaces.py
+	new file:   ChainBridge/chainiq-service/tests/test_ml_training_v02.py
+	new file:   ChainBridge/chainiq-service/tests/test_model_fairness.py
+	new file:   ChainBridge/chainiq-service/tests/test_model_security.py
+	new file:   ChainBridge/chainiq-service/tests/test_sentiment_adapter.py
+	new file:   ChainBridge/chainiq-service/tests/test_shadow_api.py
+	new file:   ChainBridge/chainiq-service/tests/test_shadow_corridor_analysis.py
+	new file:   ChainBridge/chainiq-service/tests/test_shadow_mode.py
+	new file:   ChainBridge/chainiq-service/tests/test_shadow_repo.py
+	new file:   ChainBridge/chainiq-service/tests/test_shadow_repo_extended.py
+	new file:   ChainBridge/chainiq-service/tests/test_shadow_statistics.py
+	new file:   ChainBridge/chainiq-service/tests/test_validation_real_data.py
+	new file:   ChainBridge/chainiq-service/tmp/synthetic_core.csv
+	new file:   ChainBridge/chainiq-service/tmp/synthetic_core_verify.csv
+	new file:   ChainBridge/chainiq-service/tmp/synthetic_extended.csv
+	modified:   ChainBridge/chainpay-service/.coverage
+	new file:   ChainBridge/chainpay-service/app/risk/__init__.py
+	new file:   ChainBridge/chainpay-service/app/risk/risk_pricing.py
+	new file:   ChainBridge/chainpay-service/tests/risk/test_risk_pricing.py
+	modified:   ChainBridge/chainpay.db
+	new file:   ChainBridge/docs/PAC-A-GOVERNANCE-INSTALLATION-REPORT.md
+	new file:   ChainBridge/docs/PAC-S02_Shadow_Dashboard_Handoff.md
+	new file:   ChainBridge/docs/chainiq/CHAINIQ_ML_V02_PLAN.md
+	new file:   ChainBridge/docs/chainiq/MAGGIE_PAC005_WRAP.md
+	new file:   ChainBridge/docs/chainiq/REAL_DATA_EVAL_ANOMALY.md
+	new file:   ChainBridge/docs/chainiq/REAL_DATA_EVAL_RISK.md
+	new file:   ChainBridge/docs/chainiq/VALIDATION_QUICKSTART.md
+	new file:   ChainBridge/docs/ci/PAC_DAN_023_COMPLETION_REPORT.md
+	new file:   ChainBridge/docs/ci/PAC_DAN_023_SHADOW_CI.md
+	new file:   ChainBridge/docs/devops/CI_OVERVIEW.md
+	new file:   ChainBridge/docs/devops/STAGING_PIPELINE.md
+	modified:   ChainBridge/docs/governance/AGENT_ACTIVITY_LOG.md
+	new file:   ChainBridge/docs/governance/AGENT_REGISTRY.md
+	modified:   ChainBridge/docs/governance/PAC_STANDARD.md
+	modified:   ChainBridge/docs/ml/PINK01_CONTEXT_LEDGER_MODEL.md
+	new file:   ChainBridge/docs/policy/DATA_AND_MODEL_POLICY_V0.md
+	new file:   ChainBridge/docs/policy/GOVERNANCE_AND_DECISION_RIGHTS_V0.md
+	modified:   ChainBridge/docs/product/AGENT_REGISTRY.md
+	new file:   ChainBridge/docs/product/CHAINPAY_V0_SPEC.md
+	new file:   ChainBridge/docs/research/FUSION_ARCH_VALIDATION.md
+	new file:   ChainBridge/docs/research/FUSION_COMPETITIVE_LANDSCAPE.md
+	new file:   ChainBridge/docs/security/MODEL_SECURITY_POLICY.md
+	new file:   ChainBridge/docs/security/SAM_GID06_DELIVERABLES.md
+	new file:   ChainBridge/docs/tokenomics/FUSION_RISK_PRICING.md
+	modified:   ChainBridge/monitor.sh
+	modified:   ChainBridge/monitor_full.sh
+	new file:   ChainBridge/scripts/devops/cleanup_legacy_workflows.sh
+	new file:   ChainBridge/scripts/seed_oc_data.py
+	new file:   ChainBridge/scripts/shadow_probe.py
+	modified:   ChainBridge/static/dashboard.html
+	modified:   ChainBridge/tests/services/test_dutch_engine.py
+	modified:   ChainBridge/tests/test_agent_cli.py
+	new file:   ChainBridge/tests/test_core_governance_api.py
+	modified:   ChainBridge/tests/test_marketplace_buy_intents_api.py
+	modified:   ChainBridge/tests/test_marketplace_pricing_api.py
+	modified:   ChainBridge/tests/test_marketplace_settlement_worker.py
+	new file:   ChainBridge/tests/test_oc_api.py
+	new file:   ChainBridge/tests/test_risk_api.py
+	new file:   ChainBridge/tools/governance_python.py
+	modified:   Dockerfile
+	modified:   Dockerfile.enterprise
+	modified:   Makefile
+	new file:   SAM_GID06_MISSION_COMPLETE.md
+	new file:   cache/chaindocs/doc1.bin
+	new file:   cache/chaindocs/doc2.bin
+	new file:   chainiq-service/Dockerfile
+	new file:   chainiq-service/app/__init__.py
+	new file:   chainiq-service/app/cli_retrospective_pilot.py
+	new file:   chainiq-service/app/evaluation.py
+	new file:   chainiq-service/app/explain.py
+	new file:   chainiq-service/app/features.py
+	modified:   chainiq-service/app/main.py
+	new file:   chainiq-service/app/models.py
+	new file:   chainiq-service/app/schemas.py
+	new file:   chainiq-service/app/scoring.py
+	new file:   chainiq-service/app/settlement.py
+	new file:   chainiq-service/app/settlement_rules.py
+	new file:   chainiq-service/docs/CHAINIQ_V0_SPEC.md
+	new file:   chainiq-service/sample_data/pilot_report_DEMO-Corp_20251207_115839.md
+	new file:   chainiq-service/sample_data/sample_pilot.csv
+	new file:   chainiq-service/tests/__init__.py
+	new file:   chainiq-service/tests/test_evaluation.py
+	new file:   chainiq-service/tests/test_settlement_rules.py
+	new file:   chainpay.db
+	new file:   docker-compose.dev.yml
+	new file:   docs/chainiq/CHAINIQ_LAB_CHARTER.md
+	new file:   docs/chainiq/CHAINIQ_ML_CONTRACT_V0.md
+	new file:   docs/dev/LOCAL_DEV.md
+	new file:   docs/governance/ALEX_GOVERNANCE_AUDIT_REPORT.md
+	new file:   docs/governance/ALEX_PROTECTION_MANUAL.md
+	new file:   docs/governance/CHAINIQ_GOVERNANCE_RULES.md
+	new file:   docs/governance/CHAINPAY_GOVERNANCE_RULES.md
+	new file:   docs/governance/ML_LIFECYCLE_GOVERNANCE.md
+	new file:   docs/governance/MODEL_INGESTION_GOVERNANCE.md
+	new file:   docs/governance/MODEL_LIFECYCLE_POLICY_v2.md
+	new file:   docs/governance/README.md
+	new file:   docs/governance/SECURITY_BASELINE_V1.md
+	new file:   docs/governance/SHADOW_MODE_GOVERNANCE.md
+	modified:   docs/ml/ALEX_AT02_GOVERNANCE_RULES.md
+	modified:   docs/ml/AT02_DRIFT_MONITORING.md
+	modified:   docs/ml/AT02_FEATURE_SCHEMA.md
+	modified:   docs/ml/AT02_MODEL_ARCHITECTURE.md
+	modified:   docs/ml/AT02_OUTPUT_CONTRACT.md
+	modified:   docs/ml/AT02_PHASE2_DEPENDENCIES.md
+	modified:   docs/ml/AT02_TO_BACKEND_INTEGRATION.md
+	new file:   docs/ml/DRIFT_DIAGNOSTICS_v02.md
+	modified:   docs/ml/ML_COMPATIBILITY_REPORT_2025-11-25.md
+	modified:   docs/product/CHAINIQ_OVERVIEW.md
+	modified:   k8s/deployment.yaml
+	modified:   monitor.sh
+	modified:   monitor_full.sh
+	modified:   proofpacks/PROOFPACK_GOVERNANCE.md
+	modified:   requirements-dev.txt
+	new file:   scripts/check_model_integrity.py
+	new file:   scripts/sign_model.py
+	new file:   scripts/verify_security_implementation.sh
+	new file:   settlement_actions.db
+	modified:   src/api/proofpacks_api.py
+	modified:   src/bot/core/observability.py
+	modified:   src/bot/core/resilient_data_fetcher.py
+	modified:   src/bot/core/secrets_manager.py
+	modified:   src/bot/main.py
+	modified:   src/security/signing.py
+	modified:   static/dashboard.html
+	new file:   tests/agents/test_forbidden_regions.py
+	new file:   tests/agents/test_multi_service_rules.py
+	new file:   tests/agents/test_pac_structural_validator.py
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   .github/workflows/forbidden_regions_check.yml
+	modified:   .github/workflows/governance_check.yml
+	modified:   .github/workflows/model-integrity-check.yml
+	modified:   .github/workflows/pac_color_check.yml
+	modified:   .github/workflows/pac_reminder.yml
+	modified:   ChainBridge/.github/workflows/ci-core.yml
+	modified:   ChainBridge/.github/workflows/ci-model-integrity.yml
+	modified:   ChainBridge/.github/workflows/deploy-staging.yml
+	modified:   ChainBridge/.github/workflows/repo-sanity.yml
+	modified:   ChainBridge/.github/workflows/shadow-ci.yml
+	modified:   ChainBridge/GOVERNANCE.md
+	modified:   ChainBridge/Makefile
+	modified:   ChainBridge/api/chainpay_pricing.py
+	modified:   ChainBridge/api/clients/__init__.py
+	modified:   ChainBridge/api/clients/chainiq.py
+	modified:   ChainBridge/api/models/decision_record.py
+	modified:   ChainBridge/api/models/esg_evidence.py
+	modified:   ChainBridge/api/models/exception.py
+	modified:   ChainBridge/api/models/party_relationship.py
+	modified:   ChainBridge/api/models/playbook.py
+	modified:   ChainBridge/api/models/settlement_policy.py
+	modified:   ChainBridge/api/routes/decision_records.py
+	modified:   ChainBridge/api/routes/esg_evidence.py
+	modified:   ChainBridge/api/routes/exceptions.py
+	modified:   ChainBridge/api/routes/oc.py
+	modified:   ChainBridge/api/routes/parties.py
+	modified:   ChainBridge/api/routes/party_relationships.py
+	modified:   ChainBridge/api/routes/playbooks.py
+	modified:   ChainBridge/api/routes/risk.py
+	modified:   ChainBridge/api/routes/settlement_policies.py
+	modified:   ChainBridge/api/schemas/risk.py
+	modified:   ChainBridge/api/server.py
+	modified:   ChainBridge/app/api/__init__.py
+	modified:   ChainBridge/app/core/config.py
+	modified:   ChainBridge/app/main.py
+	modified:   ChainBridge/chainboard-ui/src/api/chainiq.ts
+	modified:   ChainBridge/chainboard-ui/src/components/intel/FusionIntelligencePanel.tsx
+	modified:   ChainBridge/chainboard-ui/src/services/exceptionsApi.ts
+	modified:   ChainBridge/chainiq-service/app/analysis/corridor_analysis.py
+	modified:   ChainBridge/chainiq-service/app/analysis/shadow_diff.py
+	modified:   ChainBridge/chainiq-service/app/api.py
+	modified:   ChainBridge/chainiq-service/app/api_drift.py
+	modified:   ChainBridge/chainiq-service/app/api_fusion.py
+	modified:   ChainBridge/chainiq-service/app/api_iq_ml.py
+	modified:   ChainBridge/chainiq-service/app/api_shadow.py
+	modified:   ChainBridge/chainiq-service/app/cli.py
+	modified:   ChainBridge/chainiq-service/app/database.py
+	modified:   ChainBridge/chainiq-service/app/ingest/__init__.py
+	modified:   ChainBridge/chainiq-service/app/ingest/backfill.py
+	modified:   ChainBridge/chainiq-service/app/metrics.py
+	modified:   ChainBridge/chainiq-service/app/ml/README_SECURITY.md
+	modified:   ChainBridge/chainiq-service/app/ml/__init__.py
+	modified:   ChainBridge/chainiq-service/app/ml/base.py
+	modified:   ChainBridge/chainiq-service/app/ml/datasets.py
+	modified:   ChainBridge/chainiq-service/app/ml/drift_diagnostics.py
+	modified:   ChainBridge/chainiq-service/app/ml/drift_engine.py
+	modified:   ChainBridge/chainiq-service/app/ml/dummy_models.py
+	modified:   ChainBridge/chainiq-service/app/ml/ebm_drift.py
+	modified:   ChainBridge/chainiq-service/app/ml/event_parsing.py
+	modified:   ChainBridge/chainiq-service/app/ml/feature_forensics.py
+	modified:   ChainBridge/chainiq-service/app/ml/fusion_engine.py
+	modified:   ChainBridge/chainiq-service/app/ml/ingestion.py
+	modified:   ChainBridge/chainiq-service/app/ml/model_security.py
+	modified:   ChainBridge/chainiq-service/app/ml/monotone_gam.py
+	modified:   ChainBridge/chainiq-service/app/ml/preprocessing.py
+	modified:   ChainBridge/chainiq-service/app/ml/training_v02.py
+	modified:   ChainBridge/chainiq-service/app/ml/validation_real_data.py
+	modified:   ChainBridge/chainiq-service/app/models/features.py
+	modified:   ChainBridge/chainiq-service/app/models/scoring.py
+	modified:   ChainBridge/chainiq-service/app/models_shadow.py
+	modified:   ChainBridge/chainiq-service/app/observability.py
+	modified:   ChainBridge/chainiq-service/app/repositories/shadow_repo.py
+	modified:   ChainBridge/chainiq-service/app/risk/api.py
+	modified:   ChainBridge/chainiq-service/app/risk/db_models.py
+	modified:   ChainBridge/chainiq-service/app/risk/etl_cli.py
+	modified:   ChainBridge/chainiq-service/app/risk/ingest.py
+	modified:   ChainBridge/chainiq-service/app/risk/service.py
+	modified:   ChainBridge/chainiq-service/app/risk/synthetic_eval.py
+	modified:   ChainBridge/chainiq-service/app/risk/tests/conftest.py
+	modified:   ChainBridge/chainiq-service/app/risk/tests/test_api_risk_history.py
+	modified:   ChainBridge/chainiq-service/app/risk/tests/test_risk_etl_cli.py
+	modified:   ChainBridge/chainiq-service/app/risk/tests/test_risk_metrics_compute.py
+	modified:   ChainBridge/chainiq-service/app/risk/tests/test_risk_metrics_orm.py
+	modified:   ChainBridge/chainiq-service/app/risk/tests/test_synthetic_eval.py
+	modified:   ChainBridge/chainiq-service/app/schemas_shadow.py
+	modified:   ChainBridge/chainiq-service/app/security/__init__.py
+	modified:   ChainBridge/chainiq-service/app/security/fusion_guard.py
+	modified:   ChainBridge/chainiq-service/app/serializers/drift_explain.py
+	modified:   ChainBridge/chainiq-service/app/services/feature_builder.py
+	modified:   ChainBridge/chainiq-service/app/services/sentiment_adapter.py
+	modified:   ChainBridge/chainiq-service/docs/FEATURE_FORENSICS.md
+	modified:   ChainBridge/chainiq-service/docs/INGESTION_ALIGNMENT_NOTES.md
+	modified:   ChainBridge/chainiq-service/docs/MAGGIE_PAC004_WRAP.md
+	modified:   ChainBridge/chainiq-service/docs/PAC-021_Shadow_Mode_v03.md
+	modified:   ChainBridge/chainiq-service/docs/PAC_021_SHADOW_MODE_API.md
+	modified:   ChainBridge/chainiq-service/docs/PAC_C22_COMPLIANCE_REPORT.md
+	modified:   ChainBridge/chainiq-service/docs/chainiq/CHAINIQ_ML_V02_EVAL.md
+	modified:   ChainBridge/chainiq-service/migrations/001_shadow_mode_tables.sql
+	modified:   ChainBridge/chainiq-service/options.py
+	modified:   ChainBridge/chainiq-service/pytest.ini
+	modified:   ChainBridge/chainiq-service/tests/drift/test_drift_api.py
+	modified:   ChainBridge/chainiq-service/tests/drift/test_drift_engine_v11.py
+	modified:   ChainBridge/chainiq-service/tests/fusion/test_fusion_engine.py
+	modified:   ChainBridge/chainiq-service/tests/ml/test_drift_diagnostics.py
+	modified:   ChainBridge/chainiq-service/tests/test_ingestion_event_parsing.py
+	modified:   ChainBridge/chainiq-service/tests/test_ingestion_label_rules.py
+	modified:   ChainBridge/chainiq-service/tests/test_ingestion_shadow_consistency.py
+	modified:   ChainBridge/chainiq-service/tests/test_ingestion_training_rows.py
+	modified:   ChainBridge/chainiq-service/tests/test_iq_ml_api.py
+	modified:   ChainBridge/chainiq-service/tests/test_metrics_endpoint.py
+	modified:   ChainBridge/chainiq-service/tests/test_ml_training_v02.py
+	modified:   ChainBridge/chainiq-service/tests/test_model_fairness.py
+	modified:   ChainBridge/chainiq-service/tests/test_model_security.py
+	modified:   ChainBridge/chainiq-service/tests/test_sentiment_adapter.py
+	modified:   ChainBridge/chainiq-service/tests/test_shadow_api.py
+	modified:   ChainBridge/chainiq-service/tests/test_shadow_corridor_analysis.py
+	modified:   ChainBridge/chainiq-service/tests/test_shadow_mode.py
+	modified:   ChainBridge/chainiq-service/tests/test_shadow_repo.py
+	modified:   ChainBridge/chainiq-service/tests/test_shadow_repo_extended.py
+	modified:   ChainBridge/chainiq-service/tests/test_shadow_statistics.py
+	modified:   ChainBridge/chainiq-service/tests/test_validation_real_data.py
+	modified:   ChainBridge/chainpay-service/app/risk/risk_pricing.py
+	modified:   ChainBridge/chainpay-service/tests/risk/test_risk_pricing.py
+	modified:   ChainBridge/docs/PAC-A-GOVERNANCE-INSTALLATION-REPORT.md
+	modified:   ChainBridge/docs/PAC-S02_Shadow_Dashboard_Handoff.md
+	modified:   ChainBridge/docs/chainiq/CHAINIQ_ML_V02_PLAN.md
+	modified:   ChainBridge/docs/chainiq/MAGGIE_PAC005_WRAP.md
+	modified:   ChainBridge/docs/chainiq/REAL_DATA_EVAL_ANOMALY.md
+	modified:   ChainBridge/docs/chainiq/REAL_DATA_EVAL_RISK.md
+	modified:   ChainBridge/docs/chainiq/VALIDATION_QUICKSTART.md
+	modified:   ChainBridge/docs/ci/PAC_DAN_023_COMPLETION_REPORT.md
+	modified:   ChainBridge/docs/ci/PAC_DAN_023_SHADOW_CI.md
+	modified:   ChainBridge/docs/devops/CI_OVERVIEW.md
+	modified:   ChainBridge/docs/devops/STAGING_PIPELINE.md
+	modified:   ChainBridge/docs/governance/AGENT_REGISTRY.md
+	modified:   ChainBridge/docs/policy/DATA_AND_MODEL_POLICY_V0.md
+	modified:   ChainBridge/docs/policy/GOVERNANCE_AND_DECISION_RIGHTS_V0.md
+	modified:   ChainBridge/docs/product/AGENT_REGISTRY.md
+	modified:   ChainBridge/docs/security/MODEL_SECURITY_POLICY.md
+	modified:   ChainBridge/docs/security/SAM_GID06_DELIVERABLES.md
+	modified:   ChainBridge/scripts/devops/cleanup_legacy_workflows.sh
+	modified:   ChainBridge/scripts/seed_oc_data.py
+	modified:   ChainBridge/scripts/shadow_probe.py
+	modified:   ChainBridge/tests/services/test_dutch_engine.py
+	modified:   ChainBridge/tests/test_agent_cli.py
+	modified:   ChainBridge/tests/test_marketplace_buy_intents_api.py
+	modified:   ChainBridge/tests/test_marketplace_settlement_worker.py
+	modified:   ChainBridge/tests/test_oc_api.py
+	modified:   ChainBridge/tests/test_risk_api.py
+	modified:   ChainBridge/tools/governance_python.py
+	modified:   SAM_GID06_MISSION_COMPLETE.md
+	modified:   cache/chaindocs/doc1.bin
+	modified:   cache/chaindocs/doc2.bin
+	modified:   chainiq-service/app/__init__.py
+	modified:   chainiq-service/app/cli_retrospective_pilot.py
+	modified:   chainiq-service/app/evaluation.py
+	modified:   chainiq-service/app/explain.py
+	modified:   chainiq-service/app/features.py
+	modified:   chainiq-service/app/main.py
+	modified:   chainiq-service/app/models.py
+	modified:   chainiq-service/app/schemas.py
+	modified:   chainiq-service/app/scoring.py
+	modified:   chainiq-service/app/settlement.py
+	modified:   chainiq-service/app/settlement_rules.py
+	modified:   chainiq-service/docs/CHAINIQ_V0_SPEC.md
+	modified:   chainiq-service/sample_data/pilot_report_DEMO-Corp_20251207_115839.md
+	modified:   chainiq-service/tests/test_evaluation.py
+	modified:   chainiq-service/tests/test_settlement_rules.py
+	modified:   docs/chainiq/CHAINIQ_LAB_CHARTER.md
+	modified:   docs/chainiq/CHAINIQ_ML_CONTRACT_V0.md
+	modified:   docs/dev/LOCAL_DEV.md
+	modified:   docs/governance/ALEX_GOVERNANCE_AUDIT_REPORT.md
+	modified:   docs/governance/ALEX_PROTECTION_MANUAL.md
+	modified:   docs/governance/CHAINIQ_GOVERNANCE_RULES.md
+	modified:   docs/governance/CHAINPAY_GOVERNANCE_RULES.md
+	modified:   docs/governance/ML_LIFECYCLE_GOVERNANCE.md
+	modified:   docs/governance/MODEL_INGESTION_GOVERNANCE.md
+	modified:   docs/governance/MODEL_LIFECYCLE_POLICY_v2.md
+	modified:   docs/governance/README.md
+	modified:   docs/governance/SECURITY_BASELINE_V1.md
+	modified:   docs/governance/SHADOW_MODE_GOVERNANCE.md
+	modified:   docs/ml/DRIFT_DIAGNOSTICS_v02.md
+	modified:   scripts/check_model_integrity.py
+	modified:   scripts/sign_model.py
+	modified:   src/api/proofpacks_api.py
+	modified:   src/bot/core/observability.py
+	modified:   src/bot/core/resilient_data_fetcher.py
+	modified:   src/bot/core/secrets_manager.py
+	modified:   src/bot/main.py
+	modified:   src/security/signing.py
+	modified:   tests/agents/test_forbidden_regions.py
+	modified:   tests/agents/test_multi_service_rules.py
+	modified:   tests/agents/test_pac_structural_validator.py
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	root_snapshot.txt
+
+
+=== ROOT LS -LA ===
+total 9928
+drwxr-xr-x@   3 johnbozza  staff       96 Nov 12 10:23 __pycache__
+drwxr-xr-x@ 105 johnbozza  staff     3360 Dec 12 22:32 .
+drwxr-xr-x@   8 johnbozza  staff      256 Dec 11 09:34 ..
+drwxr-xr-x@   3 johnbozza  staff       96 Dec 11 10:56 .chainbridge
+-rw-r--r--@   1 johnbozza  staff    69632 Dec  5 14:25 .coverage
+drwxr-xr-x@   4 johnbozza  staff      128 Dec 11 12:00 .devcontainer
+-rw-r--r--@   1 johnbozza  staff      473 Dec  5 08:45 .dockerignore
+-rw-r--r--@   1 johnbozza  staff    14340 Nov 26 12:53 .DS_Store
+-rw-r--r--@   1 johnbozza  staff     2581 Dec  7 11:55 .env.dev
+-rw-r--r--@   1 johnbozza  staff     2581 Dec  7 11:59 .env.dev.example
+-rw-r--r--@   1 johnbozza  staff     1070 Nov  4 21:30 .env.example
+-rw-r--r--@   1 johnbozza  staff      152 Nov  4 21:30 .flake8
+drwxr-xr-x   17 johnbozza  staff      544 Dec 12 22:32 .git
+drwxr-xr-x    7 johnbozza  staff      224 Dec 11 11:30 .github
+-rw-r--r--@   1 johnbozza  staff      767 Dec 11 11:11 .gitignore
+-rw-r--r--@   1 johnbozza  staff       94 Nov  4 21:30 .markdownlint.json
+-rw-r--r--@   1 johnbozza  staff      203 Nov  4 21:30 .markdownlintignore
+-rw-r--r--@   1 johnbozza  staff     4881 Dec 11 12:02 .pre-commit-config.yaml
+-rw-r--r--@   1 johnbozza  staff      277 Nov  4 21:30 .pylintrc
+drwxr-xr-x@   6 johnbozza  staff      192 Nov 13 13:11 .pytest_cache
+-rw-r--r--@   1 johnbozza  staff        7 Nov  4 21:30 .python-version
+drwxr-xr-x@   7 johnbozza  staff      224 Dec  2 15:59 .ruff_cache
+drwxr-xr-x@   8 johnbozza  staff      256 Dec  2 15:32 .venv
+drwxr-xr-x@   6 johnbozza  staff      192 Nov 15 05:55 .venv-lean
+drwxr-xr-x    4 johnbozza  staff      128 Nov 25 09:41 .vscode
+drwxr-xr-x@   5 johnbozza  staff      160 Dec  4 13:52 api
+drwxr-xr-x    3 johnbozza  staff       96 Nov 14 10:39 apps
+drwxr-xr-x    4 johnbozza  staff      128 Nov  4 21:30 archived_logs
+drwxr-xr-x    3 johnbozza  staff       96 Nov  4 21:30 assets
+drwxr-xr-x@   3 johnbozza  staff       96 Dec  5 14:25 cache
+drwxr-xr-x    3 johnbozza  staff       96 Nov 13 13:08 chainboard-service
+drwxr-xr-x@   6 johnbozza  staff      192 Dec  5 13:04 chainboard-ui
+drwxr-xr-x@  99 johnbozza  staff     3168 Dec 11 10:49 ChainBridge
+drwxr-xr-x    7 johnbozza  staff      224 Dec  7 11:52 chainiq-service
+-rw-r--r--@   1 johnbozza  staff   135168 Dec 11 10:32 chainpay.db
+-rw-r--r--@   1 johnbozza  staff   814016 Nov 14 10:39 codeql-results.sarif
+-rw-r--r--@   1 johnbozza  staff     1502 Nov  4 21:30 config.yaml.backup.20251001_070128
+-rw-r--r--@   1 johnbozza  staff     1666 Nov  4 21:30 config.yaml.backup.enterprise_multisignal_20251001_070603
+drwxr-xr-x    7 johnbozza  staff      224 Dec  4 13:52 core
+-rw-r--r--@   1 johnbozza  staff     4662 Dec  7 11:59 docker-compose.dev.yml
+-rw-r--r--@   1 johnbozza  staff     1144 Nov 13 13:10 docker-compose.yml
+-rw-r--r--@   1 johnbozza  staff     1477 Dec 11 12:02 Dockerfile
+-rw-r--r--@   1 johnbozza  staff     2295 Dec 11 12:02 Dockerfile.enterprise
+drwxr-xr-x   12 johnbozza  staff      384 Dec 11 10:40 docs
+drwxr-xr-x    3 johnbozza  staff       96 Nov 14 10:39 examples
+drwxr-xr-x@  56 johnbozza  staff     1792 Dec  5 11:16 htmlcov
+-rw-r--r--@   1 johnbozza  staff      191 Nov  4 21:30 immediate_actions_executed_2025-09-17_19-22-01.txt
+-rw-r--r--@   1 johnbozza  staff      191 Nov  4 21:30 immediate_actions_executed_2025-09-17_19-22-17.txt
+drwxr-xr-x    3 johnbozza  staff       96 Dec  5 13:04 k8s
+-rw-r--r--@   1 johnbozza  staff  2458017 Nov  4 21:30 local_repo_snapshot.bundle
+drwxr-xr-x    3 johnbozza  staff       96 Nov 12 12:51 logs
+-rwxr-xr-x@   1 johnbozza  staff      196 Nov 13 13:10 main.py
+-rw-r--r--@   1 johnbozza  staff     9350 Dec 11 12:02 Makefile
+-rw-r--r--@   1 johnbozza  staff      314 Nov  4 21:30 Makefile.dashboard
+drwxr-xr-x    3 johnbozza  staff       96 Nov 12 12:47 market_metrics
+-rw-r--r--    1 johnbozza  staff   162960 Nov  4 21:30 market_regime_simulation.png
+drwxr-xr-x    4 johnbozza  staff      128 Nov  4 21:30 ml_models
+drwxr-xr-x    8 johnbozza  staff      256 Dec  4 10:03 modules
+-rwxr-xr-x@   1 johnbozza  staff     3221 Dec 11 11:09 monitor_full.sh
+-rwxr-xr-x@   1 johnbozza  staff     2581 Dec 11 11:09 monitor.sh
+-rwxr-xr-x@   1 johnbozza  staff    35890 Nov  4 21:30 multi_signal_bot.py.backup
+-rw-r--r--@   1 johnbozza  staff    26753 Nov  4 21:30 MultiSignalBot.py.backup
+-rw-r--r--    1 johnbozza  staff    31007 Nov  4 21:30 new_listings_backtest_performance.png
+-rw-r--r--    1 johnbozza  staff    42945 Nov  4 21:30 new_listings_integration_status.png
+-rw-r--r--    1 johnbozza  staff    24019 Nov  4 21:30 new_listings_signals.png
+drwxr-xr-x    4 johnbozza  staff      128 Dec  5 13:04 proofpacks
+-rw-r--r--    1 johnbozza  staff    36377 Nov  4 21:30 purged_kfold_demo.png
+-rwxr-xr-x@   1 johnbozza  staff     1170 Nov  4 21:30 push_to_github.sh
+-rw-r--r--@   1 johnbozza  staff      824 Nov  4 21:30 pyproject.toml
+drwxr-xr-x   10 johnbozza  staff      320 Nov 15 05:55 ql-db
+-rw-r--r--@   1 johnbozza  staff     3400 Nov 25 13:03 README.md
+drwxr-xr-x   11 johnbozza  staff      352 Nov 15 05:55 repo.git
+drwxr-xr-x    9 johnbozza  staff      288 Nov  4 21:30 reports
+-rw-r--r--@   1 johnbozza  staff       39 Nov  4 21:30 requirements-dashboard.txt
+-rw-r--r--@   1 johnbozza  staff      463 Dec 11 12:02 requirements-dev.txt
+-rw-r--r--@   1 johnbozza  staff      609 Nov  4 21:30 requirements-enterprise.txt
+-rw-r--r--@   1 johnbozza  staff      114 Nov  4 21:30 requirements-listings.txt
+-rw-r--r--@   1 johnbozza  staff      321 Nov  4 21:30 requirements-runtime.txt
+-rw-r--r--@   1 johnbozza  staff     2237 Dec  5 13:04 requirements.txt
+-rwxr-xr-x@   1 johnbozza  staff     1599 Nov  4 21:30 restart_system.sh
+-rw-r--r--    1 johnbozza  staff    32882 Dec 12 22:32 root_snapshot.txt
+-rw-r--r--@   1 johnbozza  staff      981 Nov  4 21:30 ruff.toml
+-rwxr-xr-x@   1 johnbozza  staff      571 Nov  4 21:30 run_bot.sh
+-rwxr-xr-x@   1 johnbozza  staff      133 Nov  4 21:30 run_dashboard.sh
+-rwxr-xr-x@   1 johnbozza  staff      654 Nov  4 21:30 run_multi_signal_silent.sh
+-rwxr-xr-x@   1 johnbozza  staff      421 Nov  4 21:30 run_streamlit_dashboard.sh
+-rw-r--r--@   1 johnbozza  staff    12231 Dec 12 22:32 SAM_GID06_MISSION_COMPLETE.md
+drwxr-xr-x    4 johnbozza  staff      128 Nov  4 21:30 sample_data
+drwxr-xr-x   11 johnbozza  staff      352 Dec 12 22:32 scripts
+-rw-r--r--@   1 johnbozza  staff    24576 Dec  5 14:21 settlement_actions.db
+-rwxr-xr-x@   1 johnbozza  staff     2093 Nov  4 21:30 setup_credentials.sh
+-rwxr-xr-x@   1 johnbozza  staff     3657 Dec  5 13:04 setup_new_listings.sh
+-rw-r--r--    1 johnbozza  staff   548866 Nov  4 21:30 signal_correlation_matrix.png
+-rw-r--r--    1 johnbozza  staff    63960 Nov  4 21:30 signal_regime_performance.png
+drwxr-xr-x   12 johnbozza  staff      384 Nov 15 05:55 src
+-rwxr-xr-x@   1 johnbozza  staff     2344 Nov  4 21:30 start_trading.sh
+drwxr-xr-x    4 johnbozza  staff      128 Dec  5 13:04 static
+drwxr-xr-x    7 johnbozza  staff      224 Nov 15 05:55 strategies
+-rw-r--r--    1 johnbozza  staff     1734 Nov  4 21:30 streamlit.out
+drwxr-xr-x    6 johnbozza  staff      192 Dec  5 13:04 tests
+drwxr-xr-x    3 johnbozza  staff       96 Nov 12 12:47 tools
+drwxr-xr-x    5 johnbozza  staff      160 Dec  4 13:52 tracking
+-rw-r--r--@   1 johnbozza  staff   324030 Nov  4 21:30 ui_history.jsonl
+drwxr-xr-x    3 johnbozza  staff       96 Nov 12 13:14 utils
+-rw-r--r--@   1 johnbozza  staff       98 Nov  4 21:30 viz_requirements.txt
+
+=== ROOT TREE (depth 3) ===
+.
+./.env.dev.example
+./requirements-enterprise.txt
+./.flake8
+./restart_system.sh
+./.markdownlintignore
+./new_listings_backtest_performance.png
+./.pylintrc
+./chainpay.db
+./.venv-lean
+./.venv-lean/.DS_Store
+./.venv-lean/bin
+./.venv-lean/bin/pip3.9
+./.venv-lean/bin/Activate.ps1
+./.venv-lean/bin/dotenv
+./.venv-lean/bin/python3
+./.venv-lean/bin/pytest
+./.venv-lean/bin/python
+./.venv-lean/bin/pip3
+./.venv-lean/bin/activate.fish
+./.venv-lean/bin/python3.9
+./.venv-lean/bin/f2py
+./.venv-lean/bin/pip
+./.venv-lean/bin/markdown-it
+./.venv-lean/bin/pygmentize
+./.venv-lean/bin/activate
+./.venv-lean/bin/normalizer
+./.venv-lean/bin/numpy-config
+./.venv-lean/bin/py.test
+./.venv-lean/bin/activate.csh
+./.venv-lean/pyvenv.cfg
+./.venv-lean/lib
+./.venv-lean/lib/.DS_Store
+./.venv-lean/lib/python3.9
+./start_trading.sh
+./tools
+./tools/analyze_regime_detection.py
+./purged_kfold_demo.png
+./.DS_Store
+./core
+./core/module_manager.py
+./core/data_processor.py
+./core/__init__.py
+./core/__pycache__
+./core/__pycache__/pipeline.cpython-311.pyc
+./core/__pycache__/data_processor.cpython-311.pyc
+./core/__pycache__/module_manager.cpython-311.pyc
+./core/__pycache__/__init__.cpython-311.pyc
+./core/pipeline.py
+./cache
+./cache/chaindocs
+./cache/chaindocs/doc1.bin
+./cache/chaindocs/doc2.bin
+./viz_requirements.txt
+./codeql-results.sarif
+./requirements.txt
+./.pytest_cache
+./.pytest_cache/CACHEDIR.TAG
+./.pytest_cache/README.md
+./.pytest_cache/.gitignore
+./.pytest_cache/v
+./.pytest_cache/v/cache
+./setup_credentials.sh
+./streamlit.out
+./Dockerfile.enterprise
+./run_dashboard.sh
+./config.yaml.backup.enterprise_multisignal_20251001_070603
+./.pre-commit-config.yaml
+./config.yaml.backup.20251001_070128
+./Dockerfile
+./.coverage
+./Makefile
+./market_metrics
+./market_metrics/__init__.py
+./.ruff_cache
+./.ruff_cache/CACHEDIR.TAG
+./.ruff_cache/.gitignore
+./.ruff_cache/0.14.6
+./.ruff_cache/0.14.7
+./.ruff_cache/0.14.7/5107679202337311529
+./.ruff_cache/0.14.7/16554635802590328207
+./.ruff_cache/0.14.7/3538896381649548140
+./.ruff_cache/0.14.7/14481040382810214599
+./.ruff_cache/0.14.7/4346435792565788633
+./.ruff_cache/0.14.7/14784320104168793314
+./.ruff_cache/0.14.7/16333086540890015922
+./.ruff_cache/0.14.7/17516602578908956578
+./.ruff_cache/0.14.7/17172034166794310623
+./.ruff_cache/0.14.7/459207557086604189
+./.ruff_cache/0.14.7/134746391012545293
+./.ruff_cache/0.14.7/1298545650824242926
+./.ruff_cache/0.14.7/5528522505575288723
+./.ruff_cache/0.14.7/299023045249556753
+./.ruff_cache/0.14.7/13590112592199080807
+./.ruff_cache/0.14.7/7271190708014352218
+./.ruff_cache/0.14.7/259540582816477438
+./.ruff_cache/0.14.7/11832084718041941118
+./.ruff_cache/0.6.9
+./.ruff_cache/0.6.9/11430322795220029781
+./.ruff_cache/0.6.9/6525836066272028445
+./.ruff_cache/0.6.9/1581943311773128928
+./.ruff_cache/0.6.9/10482010879787531195
+./.ruff_cache/0.6.9/13946871640876182895
+./.ruff_cache/0.6.9/17114037658394086155
+./.ruff_cache/0.6.9/14633941865900611979
+./.ruff_cache/0.6.9/11045686708609634759
+./.ruff_cache/0.6.9/13572470327058570906
+./.ruff_cache/0.6.9/6579208452311680248
+./.ruff_cache/0.6.9/643064219190124029
+./.ruff_cache/0.6.9/7828888220668484684
+./.ruff_cache/0.6.9/577497222747422785
+./.ruff_cache/0.6.9/6546647501978869933
+./.ruff_cache/0.6.9/3001466365288619514
+./.ruff_cache/0.6.9/3642766908603059020
+./.ruff_cache/0.6.9/13230103098447011985
+./.ruff_cache/0.6.9/9072143718147633868
+./.ruff_cache/0.6.9/16228987120717372550
+./strategies
+./strategies/.DS_Store
+./strategies/README.md
+./strategies/bear_market
+./strategies/bear_market/scaler.pkl
+./strategies/bear_market/backtest_equity_curve.html
+./strategies/bear_market/config.yaml
+./strategies/bear_market/model.pkl
+./strategies/bear_market/backtest_report.md
+./strategies/sideways_market
+./strategies/sideways_market/scaler.pkl
+./strategies/sideways_market/backtest_equity_curve.html
+./strategies/sideways_market/config.yaml
+./strategies/sideways_market/model.pkl
+./strategies/sideways_market/backtest_report.md
+./strategies/bull_market
+./strategies/bull_market/scaler.pkl
+./strategies/bull_market/backtest_equity_curve.html
+./strategies/bull_market/config.yaml
+./strategies/bull_market/model.pkl
+./strategies/bull_market/backtest_report.md
+./k8s
+./k8s/deployment.yaml
+./signal_regime_performance.png
+./new_listings_integration_status.png
+./new_listings_signals.png
+./pyproject.toml
+./repo.git
+./repo.git/.DS_Store
+./repo.git/config
+./repo.git/objects
+./repo.git/objects/pack
+./repo.git/objects/info
+./repo.git/HEAD
+./repo.git/info
+./repo.git/info/exclude
+./repo.git/info/refs
+./repo.git/description
+./repo.git/hooks
+./repo.git/hooks/commit-msg.sample
+./repo.git/hooks/pre-rebase.sample
+./repo.git/hooks/pre-commit.sample
+./repo.git/hooks/applypatch-msg.sample
+./repo.git/hooks/fsmonitor-watchman.sample
+./repo.git/hooks/pre-receive.sample
+./repo.git/hooks/prepare-commit-msg.sample
+./repo.git/hooks/post-update.sample
+./repo.git/hooks/pre-merge-commit.sample
+./repo.git/hooks/pre-applypatch.sample
+./repo.git/hooks/pre-push.sample
+./repo.git/hooks/update.sample
+./repo.git/hooks/push-to-checkout.sample
+./repo.git/packed-refs
+./repo.git/FETCH_HEAD
+./tests
+./tests/__init__.py
+./tests/agents
+./tests/agents/test_multi_service_rules.py
+./tests/agents/test_pac_structural_validator.py
+./tests/agents/__pycache__
+./tests/agents/test_forbidden_regions.py
+./tests/agents/test_alex_mantra_enforcement.py
+./tests/agents/test_alex_response_structure.py
+./tests/__pycache__
+./tests/__pycache__/test_rsi_scenarios.cpython-311-pytest-8.4.2.pyc
+./tests/__pycache__/test_rsi_scenarios.cpython-311-pytest-9.0.1.pyc
+./tests/__pycache__/__init__.cpython-311.pyc
+./tests/test_rsi_scenarios.py
+./ChainBridge
+./ChainBridge/requirements-enterprise.txt
+./ChainBridge/PHASE_3_DEPLOY_CHECKLIST.sh
+./ChainBridge/.flake8
+./ChainBridge/restart_system.sh
+./ChainBridge/.markdownlintignore
+./ChainBridge/.pylintrc
+./ChainBridge/chainpay.db
+./ChainBridge/.venv-lean
+./ChainBridge/.venv-lean/bin
+./ChainBridge/.venv-lean/include
+./ChainBridge/.venv-lean/pyvenv.cfg
+./ChainBridge/.venv-lean/lib
+./ChainBridge/.githooks
+./ChainBridge/.githooks/pre-commit-import-safety
+./ChainBridge/AGENTS 2
+./ChainBridge/AGENTS 2/BLOCKCHAIN_INTEGRATION_ENGINEER
+./ChainBridge/AGENTS 2/ALEX
+./ChainBridge/AGENTS 2/.DS_Store
+./ChainBridge/AGENTS 2/BIZDEV_PARTNERSHIPS_LEAD
+./ChainBridge/AGENTS 2/DATA_ML_ENGINEER
+./ChainBridge/AGENTS 2/STAFF_ARCHITECT
+./ChainBridge/AGENTS 2/ML_PLATFORM_ENGINEER
+./ChainBridge/AGENTS 2/BACKEND_CODY
+./ChainBridge/AGENTS 2/CODY
+./ChainBridge/AGENTS 2/LOGISTICS_OPS_SME
+./ChainBridge/AGENTS 2/BLOCKCHAIN_PROTOCOL_ENGINEER
+./ChainBridge/AGENTS 2/DEVOPS_SRE
+./ChainBridge/AGENTS 2/FRONTEND_SONNY
+./ChainBridge/AGENTS 2/EDI_SPECIALIST
+./ChainBridge/AGENTS 2/AI_AGENT_TIM
+./ChainBridge/AGENTS 2/HEAD_OF_PRODUCT
+./ChainBridge/AGENTS 2/UX_PRODUCT_DESIGNER
+./ChainBridge/AGENTS 2/CTO_BENSON
+./ChainBridge/AGENTS 2/APPLIED_ML_SCIENTIST
+./ChainBridge/AGENTS 2/BLOCKCHAIN_PRODUCT_LEAD
+./ChainBridge/AGENTS 2/AI_RESEARCH_BENSON
+./ChainBridge/AGENTS 2/DATA_ENGINEER
+./ChainBridge/AGENTS 2/SECURITY_COMPLIANCE_ENGINEER
+./ChainBridge/tools
+./ChainBridge/tools/governance_python.py
+./ChainBridge/tools/agent_runtime.py
+./ChainBridge/tools/shadow_pilot
+./ChainBridge/tools/__pycache__
+./ChainBridge/tools/agent_cli.py
+./ChainBridge/tools/agent_validate.py
+./ChainBridge/tools/agent_loader.py
+./ChainBridge/.DS_Store
+./ChainBridge/docker_quickstart.sh
+./ChainBridge/core
+./ChainBridge/core/module_manager.py
+./ChainBridge/core/payments
+./ChainBridge/core/data_processor.py
+./ChainBridge/core/__init__.py
+./ChainBridge/core/__pycache__
+./ChainBridge/core/pipeline.py
+./ChainBridge/app
+./ChainBridge/app/core
+./ChainBridge/app/__init__.py
+./ChainBridge/app/models
+./ChainBridge/app/__pycache__
+./ChainBridge/app/schemas
+./ChainBridge/app/api
+./ChainBridge/app/worker
+./ChainBridge/app/main.py
+./ChainBridge/app/services
+./ChainBridge/cache
+./ChainBridge/cache/gscpi_data.csv
+./ChainBridge/cache/chainalysis_adoption_data.json
+./ChainBridge/cache/chaindocs
+./ChainBridge/cache/gscpi_plot.png
+./ChainBridge/requirements.txt
+./ChainBridge/launch_enterprise.sh
+./ChainBridge/.pytest_cache
+./ChainBridge/.pytest_cache/CACHEDIR.TAG
+./ChainBridge/.pytest_cache/README.md
+./ChainBridge/.pytest_cache/.gitignore
+./ChainBridge/.pytest_cache/v
+./ChainBridge/setup_credentials.sh
+./ChainBridge/Dockerfile.enterprise
+./ChainBridge/.pre-commit-config.yaml
+./ChainBridge/alembic.ini
+./ChainBridge/Dockerfile
+./ChainBridge/.coverage
+./ChainBridge/Makefile
+./ChainBridge/.ruff_cache
+./ChainBridge/.ruff_cache/CACHEDIR.TAG
+./ChainBridge/.ruff_cache/0.14.4
+./ChainBridge/.ruff_cache/.gitignore
+./ChainBridge/.ruff_cache/0.14.6
+./ChainBridge/.ruff_cache/0.14.7
+./ChainBridge/.ruff_cache/0.6.9
+./ChainBridge/START_HERE.md
+./ChainBridge/GOVERNANCE.md
+./ChainBridge/pyproject.toml
+./ChainBridge/chainiq.log
+./ChainBridge/node_modules
+./ChainBridge/node_modules/pako
+./ChainBridge/node_modules/d3-format
+./ChainBridge/node_modules/is-extendable
+./ChainBridge/node_modules/define-data-property
+./ChainBridge/node_modules/d3-contour
+./ChainBridge/node_modules/@types
+./ChainBridge/node_modules/murmurhash-js
+./ChainBridge/node_modules/d3-shape
+./ChainBridge/node_modules/jsep
+./ChainBridge/node_modules/process-nextick-args
+./ChainBridge/node_modules/moment-timezone
+./ChainBridge/node_modules/functions-have-names
+./ChainBridge/node_modules/.bin
+./ChainBridge/node_modules/bytewise
+./ChainBridge/node_modules/@lit
+./ChainBridge/node_modules/has-property-descriptors
+./ChainBridge/node_modules/csstype
+./ChainBridge/node_modules/md5
+./ChainBridge/node_modules/isobject
+./ChainBridge/node_modules/sort-asc
+./ChainBridge/node_modules/snappyjs
+./ChainBridge/node_modules/timezone-groups
+./ChainBridge/node_modules/markerjs2
+./ChainBridge/node_modules/@interactjs
+./ChainBridge/node_modules/arr-union
+./ChainBridge/node_modules/es-errors
+./ChainBridge/node_modules/earcut
+./ChainBridge/node_modules/sort-object
+./ChainBridge/node_modules/quickselect
+./ChainBridge/node_modules/style-observer
+./ChainBridge/node_modules/call-bind
+./ChainBridge/node_modules/math-intrinsics
+./ChainBridge/node_modules/tinyqueue
+./ChainBridge/node_modules/@zip.js
+./ChainBridge/node_modules/has-tostringtag
+./ChainBridge/node_modules/supercluster
+./ChainBridge/node_modules/lz4js
+./ChainBridge/node_modules/unicode-properties
+./ChainBridge/node_modules/d3-array
+./ChainBridge/node_modules/type-fest
+./ChainBridge/node_modules/commander
+./ChainBridge/node_modules/core-util-is
+./ChainBridge/node_modules/bytewise-core
+./ChainBridge/node_modules/color-string
+./ChainBridge/node_modules/lit
+./ChainBridge/node_modules/d3-polygon
+./ChainBridge/node_modules/ktx-parse
+./ChainBridge/node_modules/resolve-protobuf-schema
+./ChainBridge/node_modules/moment
+./ChainBridge/node_modules/draco3d
+./ChainBridge/node_modules/call-bind-apply-helpers
+./ChainBridge/node_modules/deep-equal
+./ChainBridge/node_modules/@probe.gl
+./ChainBridge/node_modules/base64-js
+./ChainBridge/node_modules/strnum
+./ChainBridge/node_modules/a5-js
+./ChainBridge/node_modules/h3-js
+./ChainBridge/node_modules/object-is
+./ChainBridge/node_modules/pdfmake
+./ChainBridge/node_modules/sax
+./ChainBridge/node_modules/d3-scale
+./ChainBridge/node_modules/d3-scale-chromatic
+./ChainBridge/node_modules/@vis.gl
+./ChainBridge/node_modules/@mapbox
+./ChainBridge/node_modules/dfa
+./ChainBridge/node_modules/d3-axis
+./ChainBridge/node_modules/quadbin
+./ChainBridge/node_modules/martinez-polygon-clipping
+./ChainBridge/node_modules/d3-color
+./ChainBridge/node_modules/crypt
+./ChainBridge/node_modules/cheap-ruler
+./ChainBridge/node_modules/extend-shallow
+./ChainBridge/node_modules/mapbox-gl
+./ChainBridge/node_modules/sort-desc
+./ChainBridge/node_modules/d3-dispatch
+./ChainBridge/node_modules/json-stringify-pretty-compact
+./ChainBridge/node_modules/d3-weighted-voronoi
+./ChainBridge/node_modules/string_decoder
+./ChainBridge/node_modules/brotli
+./ChainBridge/node_modules/tslib
+./ChainBridge/node_modules/seedrandom
+./ChainBridge/node_modules/es-toolkit
+./ChainBridge/node_modules/argparse
+./ChainBridge/node_modules/jpeg-exif
+./ChainBridge/node_modules/safe-buffer
+./ChainBridge/node_modules/fast-xml-parser
+./ChainBridge/node_modules/@polymer
+./ChainBridge/node_modules/d3-geo
+./ChainBridge/node_modules/d3-timer
+./ChainBridge/node_modules/function-bind
+./ChainBridge/node_modules/marked
+./ChainBridge/node_modules/color
+./ChainBridge/node_modules/tiny-inflate
+./ChainBridge/node_modules/typescript
+./ChainBridge/node_modules/d3-voronoi-map
+./ChainBridge/node_modules/d3-time-format
+./ChainBridge/node_modules/inherits
+./ChainBridge/node_modules/is-date-object
+./ChainBridge/node_modules/is-error
+./ChainBridge/node_modules/grid-index
+./ChainBridge/node_modules/iconv-lite
+./ChainBridge/node_modules/split-string
+./ChainBridge/node_modules/color-name
+./ChainBridge/node_modules/es-define-property
+./ChainBridge/node_modules/d3-interpolate
+./ChainBridge/node_modules/d3-zoom
+./ChainBridge/node_modules/get-intrinsic
+./ChainBridge/node_modules/@math.gl
+./ChainBridge/node_modules/xss
+./ChainBridge/node_modules/setimmediate
+./ChainBridge/node_modules/d3-random
+./ChainBridge/node_modules/flatpickr
+./ChainBridge/node_modules/call-bound
+./ChainBridge/node_modules/d3-hexbin
+./ChainBridge/node_modules/scheduler
+./ChainBridge/node_modules/set-function-name
+./ChainBridge/node_modules/@webcomponents
+./ChainBridge/node_modules/dunder-proto
+./ChainBridge/node_modules/deep-strict-equal
+./ChainBridge/node_modules/d3-time
+./ChainBridge/node_modules/hasown
+./ChainBridge/node_modules/safer-buffer
+./ChainBridge/node_modules/d3-selection
+./ChainBridge/node_modules/sortablejs
+./ChainBridge/node_modules/unicode-trie
+./ChainBridge/node_modules/undici-types
+./ChainBridge/node_modules/immediate
+./ChainBridge/node_modules/minimist
+./ChainBridge/node_modules/@luma.gl
+./ChainBridge/node_modules/regexp.prototype.flags
+./ChainBridge/node_modules/assign-symbols
+./ChainBridge/node_modules/@foliojs-fork
+./ChainBridge/node_modules/polylabel
+./ChainBridge/node_modules/react-map-gl
+./ChainBridge/node_modules/d3-voronoi-treemap
+./ChainBridge/node_modules/interactjs
+./ChainBridge/node_modules/tabbable
+./ChainBridge/node_modules/@maplibre
+./ChainBridge/node_modules/delaunator
+./ChainBridge/node_modules/color-convert
+./ChainBridge/node_modules/preact
+./ChainBridge/node_modules/texture-compressor
+./ChainBridge/node_modules/crypto-js
+./ChainBridge/node_modules/react-dom
+./ChainBridge/node_modules/util-deprecate
+./ChainBridge/node_modules/@lit-labs
+./ChainBridge/node_modules/has-symbols
+./ChainBridge/node_modules/gl-matrix
+./ChainBridge/node_modules/protocol-buffers-schema
+./ChainBridge/node_modules/.package-lock.json
+./ChainBridge/node_modules/ieee754
+./ChainBridge/node_modules/@loaders.gl
+./ChainBridge/node_modules/geojson-vt
+./ChainBridge/node_modules/long
+./ChainBridge/node_modules/d3-drag
+./ChainBridge/node_modules/define-properties
+./ChainBridge/node_modules/typewise-core
+./ChainBridge/node_modules/d3-sankey
+./ChainBridge/node_modules/d3-delaunay
+./ChainBridge/node_modules/robust-predicates
+./ChainBridge/node_modules/d3-hierarchy
+./ChainBridge/node_modules/d3-fetch
+./ChainBridge/node_modules/deck.gl
+./ChainBridge/node_modules/@esri
+./ChainBridge/node_modules/clone
+./ChainBridge/node_modules/png-js
+./ChainBridge/node_modules/d3
+./ChainBridge/node_modules/@carto
+./ChainBridge/node_modules/esri-loader
+./ChainBridge/node_modules/image-size
+./ChainBridge/node_modules/union-value
+./ChainBridge/node_modules/jszip
+./ChainBridge/node_modules/xmldoc
+./ChainBridge/node_modules/mjolnir.js
+./ChainBridge/node_modules/sprintf-js
+./ChainBridge/node_modules/set-function-length
+./ChainBridge/node_modules/@deck.gl
+./ChainBridge/node_modules/@open-wc
+./ChainBridge/node_modules/@turf
+./ChainBridge/node_modules/typewise
+./ChainBridge/node_modules/potpack
+./ChainBridge/node_modules/lie
+./ChainBridge/node_modules/charenc
+./ChainBridge/node_modules/d3-path
+./ChainBridge/node_modules/get-proto
+./ChainBridge/node_modules/d3-transition
+./ChainBridge/node_modules/@arcgis
+./ChainBridge/node_modules/lit-html
+./ChainBridge/node_modules/d3-force
+./ChainBridge/node_modules/is-regex
+./ChainBridge/node_modules/kdbush
+./ChainBridge/node_modules/splaytree
+./ChainBridge/node_modules/@vaadin
+./ChainBridge/node_modules/@amcharts
+./ChainBridge/node_modules/d3-chord
+./ChainBridge/node_modules/@floating-ui
+./ChainBridge/node_modules/object-keys
+./ChainBridge/node_modules/gopd
+./ChainBridge/node_modules/colorbrewer
+./ChainBridge/node_modules/wgsl_reflect
+./ChainBridge/node_modules/d3-brush
+./ChainBridge/node_modules/svg-arc-to-cubic-bezier
+./ChainBridge/node_modules/get-value
+./ChainBridge/node_modules/isarray
+./ChainBridge/node_modules/core-assert
+./ChainBridge/node_modules/buf-compare
+./ChainBridge/node_modules/is-buffer
+./ChainBridge/node_modules/serialize-to-js
+./ChainBridge/node_modules/is-plain-object
+./ChainBridge/node_modules/luxon
+./ChainBridge/node_modules/d3-dsv
+./ChainBridge/node_modules/set-value
+./ChainBridge/node_modules/lzo-wasm
+./ChainBridge/node_modules/cssfilter
+./ChainBridge/node_modules/composed-offset-position
+./ChainBridge/node_modules/csscolorparser
+./ChainBridge/node_modules/react
+./ChainBridge/node_modules/d3-ease
+./ChainBridge/node_modules/d3-quadtree
+./ChainBridge/node_modules/focus-trap
+./ChainBridge/node_modules/pbf
+./ChainBridge/node_modules/readable-stream
+./ChainBridge/node_modules/.vite
+./ChainBridge/node_modules/fflate
+./ChainBridge/node_modules/cartocolor
+./ChainBridge/node_modules/rw
+./ChainBridge/node_modules/is-arguments
+./ChainBridge/node_modules/lit-element
+./ChainBridge/node_modules/internmap
+./ChainBridge/node_modules/zstd-codec
+./ChainBridge/node_modules/es-object-atoms
+./ChainBridge/repo.git
+./ChainBridge/repo.git/config
+./ChainBridge/repo.git/objects
+./ChainBridge/repo.git/HEAD
+./ChainBridge/repo.git/info
+./ChainBridge/repo.git/description
+./ChainBridge/repo.git/hooks
+./ChainBridge/repo.git/packed-refs
+./ChainBridge/repo.git/FETCH_HEAD
+./ChainBridge/tests
+./ChainBridge/tests/test_agent_cli.py
+./ChainBridge/tests/test_ricardian_supremacy_api.py
+./ChainBridge/tests/intel
+./ChainBridge/tests/test_finance_quote_api.py
+./ChainBridge/tests/test_iq_persistence.py
+./ChainBridge/tests/test_agent_runtime.py
+./ChainBridge/tests/test_chainpay_webhooks_api.py
+./ChainBridge/tests/test_chain_audit_fuzzy_engine.py
+./ChainBridge/tests/test_chainiq_api.py
+./ChainBridge/tests/test_chainiq_mounting.py
+./ChainBridge/tests/test_risk_api.py
+./ChainBridge/tests/test_api_health.py
+./ChainBridge/tests/test_chain_audit_api.py
+./ChainBridge/tests/test_intel_global_snapshot_api.py
+./ChainBridge/tests/conftest.py
+./ChainBridge/tests/test_finance_stakes_api.py
+./ChainBridge/tests/test_api_health_and_echo.py
+./ChainBridge/tests/tools
+./ChainBridge/tests/test_chaindocs_api.py
+./ChainBridge/tests/test_event_bus.py
+./ChainBridge/tests/shadow_pilot
+./ChainBridge/tests/test_marketplace_pricing_api.py
+./ChainBridge/tests/test_ricardian_chainpay_integration.py
+./ChainBridge/tests/test_sla_api.py
+./ChainBridge/tests/test_chainpay_api.py
+./ChainBridge/tests/test_oc_api.py
+./ChainBridge/tests/test_operator_api.py
+./ChainBridge/tests/test_marketplace_settlement_worker.py
+./ChainBridge/tests/test_ricardian_kill_switch.py
+./ChainBridge/tests/agents
+./ChainBridge/tests/test_operator_console_api.py
+./ChainBridge/tests/test_core_governance_api.py
+./ChainBridge/tests/__pycache__
+./ChainBridge/tests/test_pricing_engine.py
+./ChainBridge/tests/README.md
+./ChainBridge/tests/test_webhooks_settlement_api.py
+./ChainBridge/tests/ml
+./ChainBridge/tests/test_auditpack_legal_wrapper.py
+./ChainBridge/tests/test_ricardian_legal_api.py
+./ChainBridge/tests/test_iq_simulation.py
+./ChainBridge/tests/test_iq_options.py
+./ChainBridge/tests/test_chainiq_chainpay_paymentintent.py
+./ChainBridge/tests/test_chaindocs_hashing.py
+./ChainBridge/tests/test_chainstake_api.py
+./ChainBridge/tests/api
+./ChainBridge/tests/test_rsi_scenarios.py
+./ChainBridge/tests/test_live_positions_api.py
+./ChainBridge/tests/test_iq_risk_scoring.py
+./ChainBridge/tests/test_reconciler_engine_r01.py
+./ChainBridge/tests/test_chainiq_security_invariants.py
+./ChainBridge/tests/test_marketplace_buy_intents_api.py
+./ChainBridge/tests/test_events_feed_api.py
+./ChainBridge/tests/test_sla_operator_api.py
+./ChainBridge/tests/helpers
+./ChainBridge/tests/test_chainpay_settlement_api.py
+./ChainBridge/tests/services
+./ChainBridge/tests/test_iq_proofpack.py
+./ChainBridge/tests/test_chainiq_operator.py
+./ChainBridge/tests/test_chainstake_analytics.py
+./ChainBridge/tests/test_audit_orchestrator.py
+./ChainBridge/chainbridge
+./ChainBridge/chainbridge/chainsense
+./ChainBridge/chainbridge/chainpay
+./ChainBridge/chainbridge/runtime
+./ChainBridge/chainbridge/sxt
+./ChainBridge/chainbridge/__pycache__
+./ChainBridge/chainbridge/governance
+./ChainBridge/chainbridge/telemetry
+./ChainBridge/chainbridge/events
+./ChainBridge/chainbridge/tokens
+./ChainBridge/chainbridge/chainiq
+./ChainBridge/chainboard-service
+./ChainBridge/chainboard-service/app
+./ChainBridge/chainboard-service/requirements.txt
+./ChainBridge/chainboard-service/README.md
+./ChainBridge/legacy
+./ChainBridge/legacy/legacy-benson-bot
+./ChainBridge/AGENTS
+./ChainBridge/AGENTS/BLOCKCHAIN_INTEGRATION_ENGINEER
+./ChainBridge/AGENTS/BIZDEV_PARTNERSHIPS_LEAD
+./ChainBridge/AGENTS/DATA_ML_ENGINEER
+./ChainBridge/AGENTS/STAFF_ARCHITECT
+./ChainBridge/AGENTS/ML_PLATFORM_ENGINEER
+./ChainBridge/AGENTS/BACKEND_CODY
+./ChainBridge/AGENTS/LOGISTICS_OPS_SME
+./ChainBridge/AGENTS/README.md
+./ChainBridge/AGENTS/BLOCKCHAIN_PROTOCOL_ENGINEER
+./ChainBridge/AGENTS/DEVOPS_SRE
+./ChainBridge/AGENTS/FRONTEND_SONNY
+./ChainBridge/AGENTS/EDI_SPECIALIST
+./ChainBridge/AGENTS/AI_AGENT_TIM
+./ChainBridge/AGENTS/HEAD_OF_PRODUCT
+./ChainBridge/AGENTS/UX_PRODUCT_DESIGNER
+./ChainBridge/AGENTS/CTO_BENSON
+./ChainBridge/AGENTS/APPLIED_ML_SCIENTIST
+./ChainBridge/AGENTS/BLOCKCHAIN_PRODUCT_LEAD
+./ChainBridge/AGENTS/AI_RESEARCH_BENSON
+./ChainBridge/AGENTS/DATA_ENGINEER
+./ChainBridge/AGENTS/SECURITY_COMPLIANCE_ENGINEER
+./ChainBridge/immediate_actions_executed_2025-09-17_19-22-01.txt
+./ChainBridge/utils
+./ChainBridge/utils/feature_hygiene.py
+./ChainBridge/utils/__pycache__
+./ChainBridge/models
+./ChainBridge/models/__init__.py
+./ChainBridge/models/__pycache__
+./ChainBridge/models/driver.py
+./ChainBridge/__pycache__
+./ChainBridge/__pycache__/run_regime_backtest.cpython-312.pyc
+./ChainBridge/__pycache__/market_regime_data_collector.cpython-312.pyc
+./ChainBridge/__pycache__/benson_system.cpython-312.pyc
+./ChainBridge/__pycache__/test_global_macro.cpython-312.pyc
+./ChainBridge/__pycache__/regime_specific_trainer.cpython-312.pyc
+./ChainBridge/__pycache__/test_kraken_paper_trading.cpython-312.pyc
+./ChainBridge/__pycache__/main.cpython-312.pyc
+./ChainBridge/__pycache__/minute_paper.cpython-312.pyc
+./ChainBridge/__pycache__/ml_regime_integration.cpython-312.pyc
+./ChainBridge/__pycache__/test_chainfreight_simple.cpython-311-pytest-8.4.2.pyc
+./ChainBridge/__pycache__/run_global_macro_demo.cpython-312.pyc
+./ChainBridge/__pycache__/multi_signal_bot.cpython-312.pyc
+./ChainBridge/__pycache__/secure_update_env.cpython-312.pyc
+./ChainBridge/__pycache__/setup_new_listings.cpython-312.pyc
+./ChainBridge/__pycache__/purged_kfold_demo.cpython-312.pyc
+./ChainBridge/__pycache__/setup_exchange_alerts.cpython-312.pyc
+./ChainBridge/__pycache__/system_monitor.cpython-312.pyc
+./ChainBridge/__pycache__/run_paper_trading_training.cpython-312.pyc
+./ChainBridge/__pycache__/run_adaptive_weight_demo.cpython-312.pyc
+./ChainBridge/__pycache__/run_enhanced_bot_setup.cpython-312.pyc
+./ChainBridge/__pycache__/analyze_regime.cpython-312.pyc
+./ChainBridge/__pycache__/switch_trading_mode.cpython-312.pyc
+./ChainBridge/__pycache__/test_strategy_engine.cpython-312.pyc
+./ChainBridge/__pycache__/setup_credentials.cpython-312.pyc
+./ChainBridge/__pycache__/live_trading_bot.cpython-312.pyc
+./ChainBridge/__pycache__/test_full_bot.cpython-312.pyc
+./ChainBridge/__pycache__/budget_manager.cpython-312.pyc
+./ChainBridge/__pycache__/monitor_bot.cpython-312.pyc
+./ChainBridge/__pycache__/analyze_trading_performance.cpython-312.pyc
+./ChainBridge/__pycache__/integrate_region_crypto_module.cpython-312.pyc
+./ChainBridge/__pycache__/integration_example.cpython-312.pyc
+./ChainBridge/__pycache__/ev_thresholding_demo.cpython-312.pyc
+./ChainBridge/__pycache__/diagnostic_new_listings.cpython-312.pyc
+./ChainBridge/__pycache__/liquidate_positions.cpython-312.pyc
+./ChainBridge/__pycache__/immediate_liquidate_amount.cpython-312.pyc
+./ChainBridge/__pycache__/integrate_logistics.cpython-312.pyc
+./ChainBridge/__pycache__/simple_kraken_demo.cpython-312.pyc
+./ChainBridge/__pycache__/simple_rapid_fire_trainer.cpython-312.pyc
+./ChainBridge/__pycache__/unified_signal_dashboard.cpython-312.pyc
+./ChainBridge/__pycache__/update_api_keys.cpython-312.pyc
+./ChainBridge/__pycache__/force_close_positions.cpython-312.pyc
+./ChainBridge/__pycache__/test_poll_seconds_minimal.cpython-312.pyc
+./ChainBridge/__pycache__/test_market_data.cpython-312.pyc
+./ChainBridge/__pycache__/liquidate.cpython-312.pyc
+./ChainBridge/__pycache__/dashboard.cpython-312.pyc
+./ChainBridge/__pycache__/enterprise_quality_remediation.cpython-312.pyc
+./ChainBridge/__pycache__/test_existing_bot.cpython-312.pyc
+./ChainBridge/__pycache__/automated_trader.cpython-312.pyc
+./ChainBridge/__pycache__/test_entity_history_endpoint.cpython-311-pytest-8.4.2.pyc
+./ChainBridge/__pycache__/multi_signal_bot_clean.cpython-312.pyc
+./ChainBridge/__pycache__/test_inflation_api.cpython-312.pyc
+./ChainBridge/__pycache__/dynamic_crypto_selector.cpython-312.pyc
+./ChainBridge/__pycache__/run_new_listings_radar.cpython-312.pyc
+./ChainBridge/__pycache__/run_simple_rapid_training.cpython-312.pyc
+./ChainBridge/__pycache__/market_regime_trainer.cpython-312.pyc
+./ChainBridge/__pycache__/test_logistics_signals.cpython-312.pyc
+./ChainBridge/__pycache__/integrate_chainalysis_adoption.cpython-312.pyc
+./ChainBridge/__pycache__/ui_server.cpython-312.pyc
+./ChainBridge/__pycache__/integration_demo.cpython-312.pyc
+./ChainBridge/__pycache__/test_volatility_targeting.cpython-312.pyc
+./ChainBridge/__pycache__/test_chainalysis_adoption.cpython-311-pytest-8.4.2.pyc
+./ChainBridge/__pycache__/visualize_signal_correlations.cpython-312.pyc
+./ChainBridge/__pycache__/test_placeholder_substitution.cpython-312.pyc
+./ChainBridge/__pycache__/multi_signal_demo.cpython-312.pyc
+./ChainBridge/__pycache__/verify_new_listings_integration.cpython-312.pyc
+./ChainBridge/__pycache__/MultiSignalBot.cpython-312.pyc
+./ChainBridge/__pycache__/monitor_performance.cpython-312.pyc
+./ChainBridge/__pycache__/test_poll_seconds.cpython-312.pyc
+./ChainBridge/__pycache__/integrate_global_macro.cpython-312.pyc
+./ChainBridge/__pycache__/live_system_monitor.cpython-312.pyc
+./ChainBridge/__pycache__/strategy_trainer_v2.cpython-312.pyc
+./ChainBridge/__pycache__/test_regime_backtester.cpython-312.pyc
+./ChainBridge/__pycache__/monitor_live_system.cpython-312.pyc
+./ChainBridge/__pycache__/logging_filters.cpython-312.pyc
+./ChainBridge/__pycache__/run_live_dashboard.cpython-312.pyc
+./ChainBridge/__pycache__/test_trading_no_tensorflow.cpython-312.pyc
+./ChainBridge/__pycache__/test_enhanced_regime_model.cpython-312.pyc
+./ChainBridge/__pycache__/test_logistics_direct.cpython-312.pyc
+./ChainBridge/__pycache__/allocate_capital.cpython-312.pyc
+./ChainBridge/__pycache__/enhanced_regime_model.cpython-311.pyc
+./ChainBridge/__pycache__/benson_rsi_bot.cpython-312.pyc
+./ChainBridge/__pycache__/risk_management_utils.cpython-312.pyc
+./ChainBridge/__pycache__/new_listings_dashboard.cpython-312.pyc
+./ChainBridge/__pycache__/test_chainalysis_adoption.cpython-312.pyc
+./ChainBridge/__pycache__/run_enhanced_dashboard.cpython-312.pyc
+./ChainBridge/__pycache__/setup_news_api.cpython-312.pyc
+./ChainBridge/__pycache__/market_regime_controller.cpython-312.pyc
+./ChainBridge/__pycache__/enhanced_regime_model.cpython-312.pyc
+./ChainBridge/__pycache__/rapid_fire_ml_trainer.cpython-312.pyc
+./ChainBridge/__pycache__/data_ingestor_backup.cpython-312.pyc
+./ChainBridge/__pycache__/regime_model_utils.cpython-312.pyc
+./ChainBridge/__pycache__/strategy_specific_trainer.cpython-312.pyc
+./ChainBridge/__pycache__/strategy_launcher.cpython-312.pyc
+./ChainBridge/__pycache__/simple_strategy_launcher.cpython-312.pyc
+./ChainBridge/__pycache__/debug_config_loader.cpython-312.pyc
+./ChainBridge/__pycache__/test_region_module.cpython-312.pyc
+./ChainBridge/__pycache__/fix_all_markdown.cpython-312.pyc
+./ChainBridge/__pycache__/test_ensemble_system.cpython-312.pyc
+./ChainBridge/__pycache__/test_new_listings_radar.cpython-312.pyc
+./ChainBridge/__pycache__/test_gscpi_data.cpython-312.pyc
+./ChainBridge/__pycache__/test_rsi.cpython-312.pyc
+./ChainBridge/__pycache__/integrated_trading_system.cpython-312.pyc
+./ChainBridge/__pycache__/fix_markdown.cpython-312.pyc
+./ChainBridge/__pycache__/example_regime_prediction.cpython-312.pyc
+./ChainBridge/__pycache__/enterprise_multi_signal_bot.cpython-312.pyc
+./ChainBridge/__pycache__/multi_signal_bot_original.cpython-312.pyc
+./ChainBridge/__pycache__/live_trading_bot.preflight_fix.cpython-312.pyc
+./ChainBridge/__pycache__/run_live.cpython-312.pyc
+./ChainBridge/__pycache__/data_ingestor.cpython-312.pyc
+./ChainBridge/__pycache__/strategy_engine.cpython-312.pyc
+./ChainBridge/__pycache__/multi_signal_bot_backup_20251001_071832.cpython-312.pyc
+./ChainBridge/__pycache__/dashboard_summary.cpython-312.pyc
+./ChainBridge/__pycache__/balance_analysis.cpython-312.pyc
+./ChainBridge/__pycache__/run_rapid_fire_training.cpython-312.pyc
+./ChainBridge/__pycache__/run_dashboard.cpython-312.pyc
+./ChainBridge/__pycache__/simple_monitor.cpython-312.pyc
+./ChainBridge/__pycache__/test_enhanced_regime_model.cpython-311-pytest-8.4.2.pyc
+./ChainBridge/__pycache__/execute_immediate_actions.cpython-312.pyc
+./ChainBridge/__pycache__/animated_dashboard_new.cpython-312.pyc
+./ChainBridge/__pycache__/run_market_regime_demo.cpython-312.pyc
+./ChainBridge/immediate_actions_executed_2025-09-17_19-22-17.txt
+./ChainBridge/docs
+./ChainBridge/docs/research
+./ChainBridge/docs/DEV_IMPORT_SAFETY.md
+./ChainBridge/docs/devops
+./ChainBridge/docs/AGENT_ORG_MAP.md
+./ChainBridge/docs/security
+./ChainBridge/docs/ci
+./ChainBridge/docs/product
+./ChainBridge/docs/SECURITY_AGENT_FRAMEWORK.md
+./ChainBridge/docs/AGENT_READINESS_REPORT_TEMPLATE.md
+./ChainBridge/docs/architecture
+./ChainBridge/docs/ml
+./ChainBridge/docs/ai
+./ChainBridge/docs/PRD_AGENT_HEALTH_OVERVIEW.md
+./ChainBridge/docs/governance
+./ChainBridge/docs/PAC-S02_Shadow_Dashboard_Handoff.md
+./ChainBridge/docs/api
+./ChainBridge/docs/dev
+./ChainBridge/docs/ops
+./ChainBridge/docs/tokenomics
+./ChainBridge/docs/chainiq
+./ChainBridge/docs/policy
+./ChainBridge/docs/PAC-A-GOVERNANCE-INSTALLATION-REPORT.md
+./ChainBridge/ml_engine
+./ChainBridge/ml_engine/models
+./ChainBridge/ml_engine/__pycache__
+./ChainBridge/ml_engine/logs
+./ChainBridge/ml_engine/feature_store
+./ChainBridge/chainfreight-service
+./ChainBridge/chainfreight-service/app
+./ChainBridge/chainfreight-service/requirements.txt
+./ChainBridge/chainfreight-service/README.md
+./ChainBridge/push_to_github.sh
+./ChainBridge/requirements-runtime.txt
+./ChainBridge/README.md
+./ChainBridge/common
+./ChainBridge/common/kafka
+./ChainBridge/common/events
+./ChainBridge/PROJECT_CHECKLIST.md
+./ChainBridge/.dockerignore
+./ChainBridge/vite
+./ChainBridge/archived_logs
+./ChainBridge/archived_logs/benson_signals.csv.20250927_201836
+./ChainBridge/archived_logs/live.log.20250927_201836
+./ChainBridge/requirements-dev.txt
+./ChainBridge/.mypy_cache
+./ChainBridge/.mypy_cache/3.11
+./ChainBridge/.mypy_cache/missing_stubs
+./ChainBridge/.mypy_cache/CACHEDIR.TAG
+./ChainBridge/.mypy_cache/.gitignore
+./ChainBridge/.gitignore
+./ChainBridge/package-lock.json
+./ChainBridge/package.json
+./ChainBridge/test_entity_history_endpoint.py
+./ChainBridge/chainbridge.db
+./ChainBridge/.env
+./ChainBridge/static
+./ChainBridge/static/dashboard.css
+./ChainBridge/static/dashboard.html
+./ChainBridge/chainboard-ui
+./ChainBridge/chainboard-ui/IMPLEMENTATION.md
+./ChainBridge/chainboard-ui/tsconfig.node.json
+./ChainBridge/chainboard-ui/index.html
+./ChainBridge/chainboard-ui/tailwind.config.js
+./ChainBridge/chainboard-ui/.DS_Store
+./ChainBridge/chainboard-ui/GOD_VIEW_MAP_DOCS.md
+./ChainBridge/chainboard-ui/.env.local
+./ChainBridge/chainboard-ui/requirements.txt
+./ChainBridge/chainboard-ui/dist
+./ChainBridge/chainboard-ui/Dockerfile
+./ChainBridge/chainboard-ui/postcss.config.cjs
+./ChainBridge/chainboard-ui/node_modules
+./ChainBridge/chainboard-ui/.eslintrc.cjs
+./ChainBridge/chainboard-ui/README.md
+./ChainBridge/chainboard-ui/.gitignore
+./ChainBridge/chainboard-ui/package-lock.json
+./ChainBridge/chainboard-ui/package.json
+./ChainBridge/chainboard-ui/.prettierrc
+./ChainBridge/chainboard-ui/tsconfig.json
+./ChainBridge/chainboard-ui/test-entity-history-api.ts
+./ChainBridge/chainboard-ui/.env.example
+./ChainBridge/chainboard-ui/vite.config.ts
+./ChainBridge/chainboard-ui/vitest.config.ts
+./ChainBridge/chainboard-ui/src
+./ChainBridge/examples
+./ChainBridge/examples/shadow_pilot_demo.csv
+./ChainBridge/ruff.toml
+./ChainBridge/chainpay-service
+./ChainBridge/chainpay-service/.DS_Store
+./ChainBridge/chainpay-service/config.py
+./ChainBridge/chainpay-service/app
+./ChainBridge/chainpay-service/pytest.ini
+./ChainBridge/chainpay-service/requirements.txt
+./ChainBridge/chainpay-service/.pytest_cache
+./ChainBridge/chainpay-service/.coverage
+./ChainBridge/chainpay-service/tests
+./ChainBridge/chainpay-service/__pycache__
+./ChainBridge/chainpay-service/README.md
+./ChainBridge/chainpay-service/common
+./ChainBridge/chainpay-service/.venv
+./ChainBridge/chainpay-service/chainpay_service
+./ChainBridge/chainpay-service/htmlcov
+./ChainBridge/chainpay-service/QUICK_START.md
+./ChainBridge/.venv
+./ChainBridge/.venv/.lock
+./ChainBridge/.venv/bin
+./ChainBridge/.venv/etc
+./ChainBridge/.venv/pyvenv.cfg
+./ChainBridge/.venv/CACHEDIR.TAG
+./ChainBridge/.venv/.gitignore
+./ChainBridge/.venv/lib
+./ChainBridge/.venv/share
+./ChainBridge/scripts
+./ChainBridge/scripts/load_test_oc_intel.py
+./ChainBridge/scripts/migrations
+./ChainBridge/scripts/devops
+./ChainBridge/scripts/integrator_smoke_test.py
+./ChainBridge/scripts/seed_oc_data.py
+./ChainBridge/scripts/demo_oc_intel.py
+./ChainBridge/scripts/ci
+./ChainBridge/scripts/__init__.py
+./ChainBridge/scripts/__pycache__
+./ChainBridge/scripts/backfill_latest_risk_snapshot.py
+./ChainBridge/scripts/run_snapshot_worker.py
+./ChainBridge/scripts/seed_ricardian_demo.py
+./ChainBridge/scripts/db_upgrade.py
+./ChainBridge/scripts/generate_demo_settlement_events.py
+./ChainBridge/scripts/seed_chainiq_demo.py
+./ChainBridge/scripts/run_oc_intel_tests.sh
+./ChainBridge/scripts/shadow_probe.py
+./ChainBridge/.github
+./ChainBridge/.github/CODEOWNERS
+./ChainBridge/.github/workflows
+./ChainBridge/.github/ALEX_RULES.json
+./ChainBridge/ChainBridge_AGENTS_Folder_Structure.zip
+./ChainBridge/.python-version
+./ChainBridge/requirements-listings.txt
+./ChainBridge/api
+./ChainBridge/api/chainsense
+./ChainBridge/api/chainpay_pricing.py
+./ChainBridge/api/clients
+./ChainBridge/api/eventbus
+./ChainBridge/api/server.py
+./ChainBridge/api/core
+./ChainBridge/api/app
+./ChainBridge/api/chaindocs_hashing.py
+./ChainBridge/api/shadow_pilot
+./ChainBridge/api/mock
+./ChainBridge/api/chainstake_analytics.py
+./ChainBridge/api/database.py
+./ChainBridge/api/chainstake_service.py
+./ChainBridge/api/security.py
+./ChainBridge/api/tests
+./ChainBridge/api/__init__.py
+./ChainBridge/api/agents
+./ChainBridge/api/triage
+./ChainBridge/api/models
+./ChainBridge/api/__pycache__
+./ChainBridge/api/chain_audit_engine.py
+./ChainBridge/api/schemas
+./ChainBridge/api/storage
+./ChainBridge/api/Dockerfile.dev
+./ChainBridge/api/chain_audit_service.py
+./ChainBridge/api/realtime
+./ChainBridge/api/audit
+./ChainBridge/api/chainiq_service
+./ChainBridge/api/chaindocs_client.py
+./ChainBridge/api/sla
+./ChainBridge/api/reconciler
+./ChainBridge/api/jobs
+./ChainBridge/api/events
+./ChainBridge/api/legal
+./ChainBridge/api/webhooks
+./ChainBridge/api/pricing
+./ChainBridge/api/routes
+./ChainBridge/api/services
+./ChainBridge/tracking
+./ChainBridge/tracking/__init__.py
+./ChainBridge/tracking/__pycache__
+./ChainBridge/tracking/metrics_collector.py
+./ChainBridge/monitor.sh
+./ChainBridge/docker-compose.yml
+./ChainBridge/alembic
+./ChainBridge/alembic/env.py
+./ChainBridge/alembic/versions
+./ChainBridge/alembic/__pycache__
+./ChainBridge/M02_QUICK_REFERENCE.md
+./ChainBridge/.env.example
+./ChainBridge/chainpay_service
+./ChainBridge/chainpay_service/app
+./ChainBridge/chainpay_service/__init__.py
+./ChainBridge/chainpay_service/__pycache__
+./ChainBridge/chainpay_test.db
+./ChainBridge/htmlcov
+./ChainBridge/htmlcov/z_c0f67d75e686303c_normalized_logistics_py.html
+./ChainBridge/htmlcov/z_cfb6adc3f81c8e3c_api_py.html
+./ChainBridge/htmlcov/z_cfb6adc3f81c8e3c___init___py.html
+./ChainBridge/htmlcov/z_2650a664e7be277c_auctioneer_py.html
+./ChainBridge/htmlcov/z_c0f67d75e686303c_audit_response_py.html
+./ChainBridge/htmlcov/z_c318f3fa19a49f69___init___py.html
+./ChainBridge/htmlcov/z_b787cb77e9c21892_seeburger_py.html
+./ChainBridge/htmlcov/z_57760688d1f824db_pipeline_py.html
+./ChainBridge/htmlcov/z_6c0e4b930745278b_marketplace_py.html
+./ChainBridge/htmlcov/z_c2f2d505d7a887a6_marketplace_py.html
+./ChainBridge/htmlcov/z_1d8b19f23759731f_fuzzy_engine_py.html
+./ChainBridge/htmlcov/z_5f5a17c013354698_main_py.html
+./ChainBridge/htmlcov/z_29fb2fb7ae442f9e_settlement_py.html
+./ChainBridge/htmlcov/z_10fae538ba4e8521_server_py.html
+./ChainBridge/htmlcov/style_cb_a37fa487.css
+./ChainBridge/htmlcov/index.html
+./ChainBridge/htmlcov/z_b787cb77e9c21892___init___py.html
+./ChainBridge/htmlcov/coverage_html_cb_cadff66e.js
+./ChainBridge/htmlcov/z_57760688d1f824db_data_processor_py.html
+./ChainBridge/htmlcov/z_2650a664e7be277c_price_proof_py.html
+./ChainBridge/htmlcov/z_c0f67d75e686303c___init___py.html
+./ChainBridge/htmlcov/z_654b331895e7bf31___init___py.html
+./ChainBridge/htmlcov/style_cb_6b508a39.css
+./ChainBridge/htmlcov/z_29fb2fb7ae442f9e_tasks_py.html
+./ChainBridge/htmlcov/z_57760688d1f824db___init___py.html
+./ChainBridge/htmlcov/z_c2f2d505d7a887a6_audit_py.html
+./ChainBridge/htmlcov/z_10fae538ba4e8521___init___py.html
+./ChainBridge/htmlcov/z_29fb2fb7ae442f9e_dutch_ticker_py.html
+./ChainBridge/htmlcov/z_5f5a17c013354698___init___py.html
+./ChainBridge/htmlcov/z_2650a664e7be277c_dutch_engine_py.html
+./ChainBridge/htmlcov/z_c2f2d505d7a887a6_ingest_py.html
+./ChainBridge/htmlcov/z_c0f67d75e686303c_marketplace_py.html
+./ChainBridge/htmlcov/z_2650a664e7be277c_buy_intents_py.html
+./ChainBridge/htmlcov/z_c0f67d75e686303c_audit_py.html
+./ChainBridge/htmlcov/z_654b331895e7bf31_hedera_engine_py.html
+./ChainBridge/htmlcov/z_b787cb77e9c21892_factory_py.html
+./ChainBridge/htmlcov/z_b787cb77e9c21892_base_py.html
+./ChainBridge/htmlcov/z_c2f2d505d7a887a6_dutch_py.html
+./ChainBridge/htmlcov/z_c0f67d75e686303c_ricardian_py.html
+./ChainBridge/htmlcov/keybd_closed_cb_ce680311.png
+./ChainBridge/htmlcov/coverage_html_cb_6fb7b396.js
+./ChainBridge/htmlcov/z_b787cb77e9c21892_iot_fusion_py.html
+./ChainBridge/htmlcov/.gitignore
+./ChainBridge/htmlcov/z_4122fff55f9b6382___init___py.html
+./ChainBridge/htmlcov/z_f7ae8f68761e96dd_chainlink_client_py.html
+./ChainBridge/htmlcov/z_770dde3012c14350_breach_monitor_py.html
+./ChainBridge/htmlcov/z_2650a664e7be277c___init___py.html
+./ChainBridge/htmlcov/z_57760688d1f824db_module_manager_py.html
+./ChainBridge/htmlcov/z_2650a664e7be277c_settlement_client_py.html
+./ChainBridge/htmlcov/function_index.html
+./ChainBridge/htmlcov/z_b787cb77e9c21892_repository_py.html
+./ChainBridge/htmlcov/z_c2f2d505d7a887a6___init___py.html
+./ChainBridge/htmlcov/z_29fb2fb7ae442f9e___init___py.html
+./ChainBridge/htmlcov/z_770dde3012c14350___init___py.html
+./ChainBridge/htmlcov/z_1d8b19f23759731f___init___py.html
+./ChainBridge/htmlcov/style_cb_8432e98f.css
+./ChainBridge/htmlcov/coverage_html_cb_bcae5fc4.js
+./ChainBridge/htmlcov/z_29fb2fb7ae442f9e_functions_py.html
+./ChainBridge/htmlcov/z_c0f67d75e686303c_stake_py.html
+./ChainBridge/htmlcov/status.json
+./ChainBridge/htmlcov/z_29fb2fb7ae442f9e_main_py.html
+./ChainBridge/htmlcov/z_4122fff55f9b6382_sxt_client_py.html
+./ChainBridge/htmlcov/favicon_32_cb_58284776.png
+./ChainBridge/htmlcov/z_c2f2d505d7a887a6_demo_py.html
+./ChainBridge/htmlcov/z_f7ae8f68761e96dd___init___py.html
+./ChainBridge/htmlcov/z_6c0e4b930745278b_ingest_py.html
+./ChainBridge/htmlcov/z_6c0e4b930745278b___init___py.html
+./ChainBridge/htmlcov/z_c2f2d505d7a887a6_stake_py.html
+./ChainBridge/htmlcov/class_index.html
+./ChainBridge/.vscode
+./ChainBridge/.vscode/settings.json
+./ChainBridge/.vscode/tasks.json
+./ChainBridge/SONNY_FRONTEND_READY.sh
+./ChainBridge/monitor_full.sh
+./ChainBridge/data
+./ChainBridge/data/regime_training
+./ChainBridge/data/rapid_fire_sessions
+./ChainBridge/data/minute_paper_results.png
+./ChainBridge/data/consolidated_market_data.csv
+./ChainBridge/data/ny_fed_gscpi_cache.csv
+./ChainBridge/data/chainiq.db
+./ChainBridge/data/enhanced_ml_results.json
+./ChainBridge/data/sample_trades.csv
+./ChainBridge/data/sample_doge_data.csv
+./ChainBridge/data/minute_paper_results.json
+./ChainBridge/data/benson_signals.csv
+./ChainBridge/data/sample_avax_data.csv
+./ChainBridge/data/chainbridge.db
+./ChainBridge/data/sample_sol_data.csv
+./ChainBridge/data/sample_near_data.csv
+./ChainBridge/assets
+./ChainBridge/assets/styles.css
+./ChainBridge/setup_new_listings.sh
+./ChainBridge/settlement_actions.db
+./ChainBridge/PHASE_3_QUICK_START.sh
+./ChainBridge/.markdownlint.json
+./ChainBridge/PROJECT_STATUS_SUMMARY.md
+./ChainBridge/Makefile.dashboard
+./ChainBridge/chainiq-service
+./ChainBridge/chainiq-service/simulation.py
+./ChainBridge/chainiq-service/options.py
+./ChainBridge/chainiq-service/migrations
+./ChainBridge/chainiq-service/.DS_Store
+./ChainBridge/chainiq-service/app
+./ChainBridge/chainiq-service/pytest.ini
+./ChainBridge/chainiq-service/requirements.txt
+./ChainBridge/chainiq-service/.pytest_cache
+./ChainBridge/chainiq-service/tests
+./ChainBridge/chainiq-service/__init__.py
+./ChainBridge/chainiq-service/__pycache__
+./ChainBridge/chainiq-service/docs
+./ChainBridge/chainiq-service/README.md
+./ChainBridge/chainiq-service/.venv
+./ChainBridge/chainiq-service/storage.py
+./ChainBridge/chainiq-service/tmp
+./ChainBridge/chainiq-service/demo_seed.py
+./ChainBridge/chainiq-service/ml_models
+./ChainBridge/DOCKER_STARTUP_GUIDE.sh
+./ChainBridge/requirements-dashboard.txt
+./chainboard-service
+./chainboard-service/models
+./chainboard-service/models/driver.py
+./.chainbridge
+./.chainbridge/models
+./.chainbridge/models/.gitkeep
+./immediate_actions_executed_2025-09-17_19-22-01.txt
+./MultiSignalBot.py.backup
+./utils
+./utils/feature_hygiene.py
+./docker-compose.dev.yml
+./__pycache__
+./__pycache__/main.cpython-312.pyc
+./immediate_actions_executed_2025-09-17_19-22-17.txt
+./docs
+./docs/REGIME_BASED_STRATEGIES.md
+./docs/MARKET_REGIME_DETECTION.md
+./docs/KRAKEN_PAPER_TRADING.md
+./docs/product
+./docs/product/OPERATOR_CONSOLE_OVERVIEW.md
+./docs/product/CHAINPAY_OVERVIEW.md
+./docs/product/CHAINIQ_OVERVIEW.md
+./docs/architecture
+./docs/architecture/REPO_STRUCTURE.md
+./docs/ml
+./docs/ml/ALEX_AT02_GOVERNANCE_RULES.md
+./docs/ml/AT02_PHASE2_DEPENDENCIES.md
+./docs/ml/AT02_DRIFT_MONITORING.md
+./docs/ml/AT02_FEATURE_SCHEMA.md
+./docs/ml/AT02_MODEL_ARCHITECTURE.md
+./docs/ml/AT02_TO_BACKEND_INTEGRATION.md
+./docs/ml/ML_COMPATIBILITY_REPORT_2025-11-25.md
+./docs/ml/AT02_OUTPUT_CONTRACT.md
+./docs/ml/DRIFT_DIAGNOSTICS_v02.md
+./docs/governance
+./docs/governance/CHAINPAY_GOVERNANCE_RULES.md
+./docs/governance/ALEX_GOVERNANCE_AUDIT_REPORT.md
+./docs/governance/SHADOW_MODE_GOVERNANCE.md
+./docs/governance/ALEX_PROTECTION_MANUAL.md
+./docs/governance/README.md
+./docs/governance/MODEL_LIFECYCLE_POLICY_v2.md
+./docs/governance/ML_LIFECYCLE_GOVERNANCE.md
+./docs/governance/CHAINIQ_GOVERNANCE_RULES.md
+./docs/governance/MODEL_INGESTION_GOVERNANCE.md
+./docs/governance/SECURITY_BASELINE_V1.md
+./docs/dev
+./docs/dev/LOCAL_DEV.md
+./docs/REGIME_SPECIFIC_BACKTESTING.md
+./docs/chainiq
+./docs/chainiq/CHAINIQ_ML_CONTRACT_V0.md
+./docs/chainiq/CHAINIQ_LAB_CHARTER.md
+./.devcontainer
+./.devcontainer/Dockerfile
+./.devcontainer/devcontainer.json
+./push_to_github.sh
+./run_streamlit_dashboard.sh
+./requirements-runtime.txt
+./local_repo_snapshot.bundle
+./README.md
+./signal_correlation_matrix.png
+./proofpacks
+./proofpacks/runtime
+./proofpacks/runtime/38189f60-8c9d-493c-8f99-67925d3a2a40.json
+./proofpacks/runtime/2ef95e6f-c68c-4feb-a82d-668bf8d22b22.json
+./proofpacks/runtime/20755810-f4fa-4fc1-85aa-ff1d5b3af0a5.json
+./proofpacks/runtime/94b62bf8-c4a2-4449-b8cf-efb5342e42f1.json
+./proofpacks/runtime/233d3bd3-9dbb-4ac8-96fc-ee0669fe26cb.json
+./proofpacks/runtime/d56fb0d9-6710-47a3-b3a2-4fe05db0f426.json
+./proofpacks/runtime/a7d172ab-1bec-45c3-a059-77935f37b708.json
+./proofpacks/runtime/674c8725-2f40-48f9-95e3-c4b9b0354d42.json
+./proofpacks/runtime/5be3bc56-8aa9-4a01-9ab4-29e0e60d2a1e.json
+./proofpacks/runtime/e43fdef4-e60b-4edc-9215-508e9d9b3423.json
+./proofpacks/runtime/2d8d6612-a4c9-403a-8880-001fb3c446a1.json
+./proofpacks/runtime/831c4efd-a948-45d9-a63c-bd8666c020e4.json
+./proofpacks/runtime/fe66e3fa-e691-467a-b6c5-a6a1ab7411d8.json
+./proofpacks/runtime/49ce8f44-519c-485b-b2d0-9a13807ece40.json
+./proofpacks/runtime/8c3522a2-0fcb-48f4-833e-4a2a48c9f005.json
+./proofpacks/PROOFPACK_GOVERNANCE.md
+./sample_data
+./sample_data/sales_data.csv
+./sample_data/btc_price_data.csv
+./market_regime_simulation.png
+./.dockerignore
+./logs
+./logs/adaptive_weight_integration.log
+./archived_logs
+./archived_logs/benson_signals.csv.20250927_201836
+./archived_logs/live.log.20250927_201836
+./requirements-dev.txt
+./.gitignore
+./static
+./static/dashboard.css
+./static/dashboard.html
+./chainboard-ui
+./chainboard-ui/dist
+./chainboard-ui/dist/index.html
+./chainboard-ui/dist/assets
+./chainboard-ui/node_modules
+./chainboard-ui/node_modules/queue-microtask
+./chainboard-ui/node_modules/tinyglobby
+./chainboard-ui/node_modules/@alloc
+./chainboard-ui/node_modules/victory-vendor
+./chainboard-ui/node_modules/d3-format
+./chainboard-ui/node_modules/reusify
+./chainboard-ui/node_modules/jsesc
+./chainboard-ui/node_modules/pirates
+./chainboard-ui/node_modules/@types
+./chainboard-ui/node_modules/d3-shape
+./chainboard-ui/node_modules/lodash
+./chainboard-ui/node_modules/browserslist
+./chainboard-ui/node_modules/thenify
+./chainboard-ui/node_modules/.bin
+./chainboard-ui/node_modules/jiti
+./chainboard-ui/node_modules/csstype
+./chainboard-ui/node_modules/@rolldown
+./chainboard-ui/node_modules/react-is
+./chainboard-ui/node_modules/react-transition-group
+./chainboard-ui/node_modules/loose-envify
+./chainboard-ui/node_modules/sucrase
+./chainboard-ui/node_modules/ms
+./chainboard-ui/node_modules/node-releases
+./chainboard-ui/node_modules/mz
+./chainboard-ui/node_modules/lru-cache
+./chainboard-ui/node_modules/use-sync-external-store
+./chainboard-ui/node_modules/d3-array
+./chainboard-ui/node_modules/commander
+./chainboard-ui/node_modules/autoprefixer
+./chainboard-ui/node_modules/escalade
+./chainboard-ui/node_modules/postcss-load-config
+./chainboard-ui/node_modules/resolve
+./chainboard-ui/node_modules/dom-helpers
+./chainboard-ui/node_modules/decimal.js-light
+./chainboard-ui/node_modules/object-hash
+./chainboard-ui/node_modules/nanoid
+./chainboard-ui/node_modules/ts-interface-checker
+./chainboard-ui/node_modules/d3-scale
+./chainboard-ui/node_modules/@nodelib
+./chainboard-ui/node_modules/postcss-js
+./chainboard-ui/node_modules/gensync
+./chainboard-ui/node_modules/d3-color
+./chainboard-ui/node_modules/picomatch
+./chainboard-ui/node_modules/d3-timer
+./chainboard-ui/node_modules/function-bind
+./chainboard-ui/node_modules/is-glob
+./chainboard-ui/node_modules/typescript
+./chainboard-ui/node_modules/baseline-browser-mapping
+./chainboard-ui/node_modules/d3-time-format
+./chainboard-ui/node_modules/react-smooth
+./chainboard-ui/node_modules/anymatch
+./chainboard-ui/node_modules/d3-interpolate
+./chainboard-ui/node_modules/chokidar
+./chainboard-ui/node_modules/postcss
+./chainboard-ui/node_modules/arg
+./chainboard-ui/node_modules/scheduler
+./chainboard-ui/node_modules/pify
+./chainboard-ui/node_modules/is-binary-path
+./chainboard-ui/node_modules/d3-time
+./chainboard-ui/node_modules/hasown
+./chainboard-ui/node_modules/run-parallel
+./chainboard-ui/node_modules/tiny-invariant
+./chainboard-ui/node_modules/fraction.js
+./chainboard-ui/node_modules/react-refresh
+./chainboard-ui/node_modules/@vitejs
+./chainboard-ui/node_modules/supports-preserve-symlinks-flag
+./chainboard-ui/node_modules/eventemitter3
+./chainboard-ui/node_modules/readdirp
+./chainboard-ui/node_modules/fill-range
+./chainboard-ui/node_modules/binary-extensions
+./chainboard-ui/node_modules/react-dom
+./chainboard-ui/node_modules/util-deprecate
+./chainboard-ui/node_modules/path-parse
+./chainboard-ui/node_modules/clsx
+./chainboard-ui/node_modules/picocolors
+./chainboard-ui/node_modules/.package-lock.json
+./chainboard-ui/node_modules/lines-and-columns
+./chainboard-ui/node_modules/semver
+./chainboard-ui/node_modules/vite
+./chainboard-ui/node_modules/postcss-value-parser
+./chainboard-ui/node_modules/is-core-module
+./chainboard-ui/node_modules/js-tokens
+./chainboard-ui/node_modules/dlv
+./chainboard-ui/node_modules/@babel
+./chainboard-ui/node_modules/is-number
+./chainboard-ui/node_modules/@radix-ui
+./chainboard-ui/node_modules/postcss-import
+./chainboard-ui/node_modules/postcss-selector-parser
+./chainboard-ui/node_modules/rollup
+./chainboard-ui/node_modules/postcss-nested
+./chainboard-ui/node_modules/json5
+./chainboard-ui/node_modules/update-browserslist-db
+./chainboard-ui/node_modules/thenify-all
+./chainboard-ui/node_modules/lilconfig
+./chainboard-ui/node_modules/convert-source-map
+./chainboard-ui/node_modules/any-promise
+./chainboard-ui/node_modules/camelcase-css
+./chainboard-ui/node_modules/object-assign
+./chainboard-ui/node_modules/d3-path
+./chainboard-ui/node_modules/recharts-scale
+./chainboard-ui/node_modules/prop-types
+./chainboard-ui/node_modules/to-regex-range
+./chainboard-ui/node_modules/zustand
+./chainboard-ui/node_modules/normalize-range
+./chainboard-ui/node_modules/didyoumean
+./chainboard-ui/node_modules/fast-equals
+./chainboard-ui/node_modules/esbuild
+./chainboard-ui/node_modules/yallist
+./chainboard-ui/node_modules/@jridgewell
+./chainboard-ui/node_modules/cssesc
+./chainboard-ui/node_modules/micromatch
+./chainboard-ui/node_modules/fast-glob
+./chainboard-ui/node_modules/tailwindcss
+./chainboard-ui/node_modules/is-extglob
+./chainboard-ui/node_modules/fastq
+./chainboard-ui/node_modules/recharts
+./chainboard-ui/node_modules/caniuse-lite
+./chainboard-ui/node_modules/read-cache
+./chainboard-ui/node_modules/merge2
+./chainboard-ui/node_modules/react
+./chainboard-ui/node_modules/d3-ease
+./chainboard-ui/node_modules/braces
+./chainboard-ui/node_modules/.vite
+./chainboard-ui/node_modules/normalize-path
+./chainboard-ui/node_modules/electron-to-chromium
+./chainboard-ui/node_modules/debug
+./chainboard-ui/node_modules/glob-parent
+./chainboard-ui/node_modules/internmap
+./chainboard-ui/node_modules/source-map-js
+./chainboard-ui/node_modules/@esbuild
+./chainboard-ui/package-lock.json
+./chainboard-ui/package.json
+./examples
+./examples/regime_dashboard_demo.py
+./ruff.toml
+./.env.dev
+./run_multi_signal_silent.sh
+./.venv
+./.venv/bin
+./.venv/bin/flask
+./.venv/bin/ruff
+./.venv/bin/streamlit.cmd
+./.venv/bin/import_pb_to_tensorboard
+./.venv/bin/pyftsubset
+./.venv/bin/uvx
+./.venv/bin/renderer
+./.venv/bin/Activate.ps1
+./.venv/bin/streamlit
+./.venv/bin/nodeenv
+./.venv/bin/dotenv
+./.venv/bin/coverage-3.11
+./.venv/bin/python3
+./.venv/bin/isort-identify-imports
+./.venv/bin/ttx
+./.venv/bin/pytest
+./.venv/bin/identify-cli
+./.venv/bin/coverage3
+./.venv/bin/python
+./.venv/bin/pip3
+./.venv/bin/activate.fish
+./.venv/bin/fonttools
+./.venv/bin/cython
+./.venv/bin/websockets
+./.venv/bin/python3.11
+./.venv/bin/isort
+./.venv/bin/tf_upgrade_v2
+./.venv/bin/pyproject-build
+./.venv/bin/f2py
+./.venv/bin/dash-generate-components
+./.venv/bin/pip
+./.venv/bin/uv
+./.venv/bin/httpx
+./.venv/bin/dash-update-components
+./.venv/bin/plotly_get_chrome
+./.venv/bin/jsonschema
+./.venv/bin/markdown-it
+./.venv/bin/pip3.11
+./.venv/bin/cygdb
+./.venv/bin/fastapi
+./.venv/bin/pygmentize
+./.venv/bin/tensorboard
+./.venv/bin/tflite_convert
+./.venv/bin/blackd
+./.venv/bin/activate
+./.venv/bin/normalizer
+./.venv/bin/numpy-config
+./.venv/bin/cythonize
+./.venv/bin/virtualenv
+./.venv/bin/saved_model_cli
+./.venv/bin/black
+./.venv/bin/pre-commit
+./.venv/bin/toco
+./.venv/bin/coverage
+./.venv/bin/py.test
+./.venv/bin/pyftmerge
+./.venv/bin/activate.csh
+./.venv/include
+./.venv/include/python3.11
+./.venv/etc
+./.venv/etc/jupyter
+./.venv/pyvenv.cfg
+./.venv/lib
+./.venv/lib/python3.11
+./.venv/share
+./.venv/share/man
+./.venv/share/jupyter
+./scripts
+./scripts/verify_security_implementation.sh
+./scripts/integrator_smoke_test.py
+./scripts/test_markets.json
+./scripts/__pycache__
+./scripts/__pycache__/integrator_smoke_test.cpython-311-pytest-8.4.2.pyc
+./scripts/README.md
+./scripts/dev
+./scripts/dev/run_chainboard.sh
+./scripts/dev/run_api_gateway.sh
+./scripts/dev/run_stack.sh
+./scripts/LIVE_TICKER_README.md
+./scripts/sign_model.py
+./scripts/check_model_integrity.py
+./.github
+./.github/workflows
+./.github/workflows/forbidden_regions_check.yml
+./.github/workflows/pac_reminder.yml
+./.github/workflows/governance_check.yml
+./.github/workflows/model-integrity-check.yml
+./.github/workflows/chainbridge-ci.yml
+./.github/workflows/ci.yml
+./.github/workflows/pac_color_check.yml
+./.github/agents
+./.github/agents/colors.json
+./.github/copilot-instructions.md
+./.github/ALEX_RULES.json
+./.github/copilot.md
+./run_bot.sh
+./.python-version
+./multi_signal_bot.py.backup
+./ql-db
+./ql-db/.DS_Store
+./ql-db/db-python
+./ql-db/db-python/semmlecode.python.dbscheme.stats
+./ql-db/db-python/default
+./ql-db/db-python/semmlecode.python.dbscheme
+./ql-db/diagnostic
+./ql-db/diagnostic/cli-diagnostics-add-20251112T170354.799Z.json
+./ql-db/diagnostic/cli-diagnostics-add-20251112T170405.321Z.json
+./ql-db/diagnostic/cli-diagnostics-add-20251112T170442.972Z.json
+./ql-db/diagnostic/cli-diagnostics-add-20251112T170354.816Z.json
+./ql-db/diagnostic/cli-diagnostics-add-20251112T171209.076Z.json
+./ql-db/diagnostic/extractors
+./ql-db/diagnostic/cli-diagnostics-add-20251112T170407.675Z.json
+./ql-db/results
+./ql-db/results/codeql
+./ql-db/results/run-info-20251112.171210.042.yml
+./ql-db/codeql-database.yml
+./ql-db/src.zip
+./ql-db/log
+./ql-db/log/database-analyze-20251112.121209.022.log
+./ql-db/log/database-analyze-20251112.120442.917.log
+./ql-db/log/database-index-files-20251112.120404.702.log
+./ql-db/log/database-create-20251112.120350.542.log
+./ql-db/log/execute-queries-20251112.121209.303.log
+./ql-db/log/execute-queries-20251112.120443.199.log
+./ql-db/baseline-info.json
+./requirements-listings.txt
+./api
+./api/server.py
+./api/__init__.py
+./api/__pycache__
+./api/__pycache__/server.cpython-311.pyc
+./api/__pycache__/__init__.cpython-311.pyc
+./tracking
+./tracking/__init__.py
+./tracking/__pycache__
+./tracking/__pycache__/metrics_collector.cpython-311.pyc
+./tracking/__pycache__/__init__.cpython-311.pyc
+./tracking/metrics_collector.py
+./monitor.sh
+./SAM_GID06_MISSION_COMPLETE.md
+./docker-compose.yml
+./root_snapshot.txt
+./.env.example
+./.git
+./.git/.DS_Store
+./.git/ORIG_HEAD
+./.git/config
+./.git/objects
+./.git/objects/61
+./.git/objects/0d
+./.git/objects/95
+./.git/objects/59
+./.git/objects/92
+./.git/objects/0c
+./.git/objects/66
+./.git/objects/3e
+./.git/objects/50
+./.git/objects/68
+./.git/objects/57
+./.git/objects/3b
+./.git/objects/6f
+./.git/objects/03
+./.git/objects/9b
+./.git/objects/9e
+./.git/objects/04
+./.git/objects/6a
+./.git/objects/32
+./.git/objects/35
+./.git/objects/69
+./.git/objects/3c
+./.git/objects/56
+./.git/objects/51
+./.git/objects/3d
+./.git/objects/58
+./.git/objects/67
+./.git/objects/0b
+./.git/objects/93
+./.git/objects/94
+./.git/objects/0e
+./.git/objects/60
+./.git/objects/34
+./.git/objects/5a
+./.git/objects/5f
+./.git/objects/33
+./.git/objects/05
+./.git/objects/9d
+./.git/objects/9c
+./.git/objects/02
+./.git/objects/a4
+./.git/objects/a3
+./.git/objects/b5
+./.git/objects/b2
+./.git/objects/d9
+./.git/objects/ac
+./.git/objects/ad
+./.git/objects/bb
+./.git/objects/d7
+./.git/objects/d0
+./.git/objects/be
+./.git/objects/b3
+./.git/objects/df
+./.git/objects/da
+./.git/objects/b4
+./.git/objects/a2
+./.git/objects/a5
+./.git/objects/bd
+./.git/objects/d1
+./.git/objects/d6
+./.git/objects/bc
+./.git/objects/ae
+./.git/objects/d8
+./.git/objects/ab
+./.git/objects/e5
+./.git/objects/e2
+./.git/objects/f4
+./.git/objects/f3
+./.git/objects/eb
+./.git/objects/c7
+./.git/objects/c0
+./.git/objects/ee
+./.git/objects/c9
+./.git/objects/fc
+./.git/objects/fd
+./.git/objects/f2
+./.git/objects/f5
+./.git/objects/e3
+./.git/objects/cf
+./.git/objects/ca
+./.git/objects/e4
+./.git/objects/fe
+./.git/objects/c8
+./.git/objects/fb
+./.git/objects/ed
+./.git/objects/c1
+./.git/objects/c6
+./.git/objects/ec
+./.git/objects/4e
+./.git/objects/20
+./.git/objects/18
+./.git/objects/27
+./.git/objects/4b
+./.git/objects/pack
+./.git/objects/11
+./.git/objects/7d
+./.git/objects/29
+./.git/objects/7c
+./.git/objects/16
+./.git/objects/42
+./.git/objects/89
+./.git/objects/45
+./.git/objects/1f
+./.git/objects/73
+./.git/objects/87
+./.git/objects/80
+./.git/objects/74
+./.git/objects/1a
+./.git/objects/28
+./.git/objects/17
+./.git/objects/7b
+./.git/objects/8f
+./.git/objects/8a
+./.git/objects/7e
+./.git/objects/10
+./.git/objects/19
+./.git/objects/4c
+./.git/objects/26
+./.git/objects/21
+./.git/objects/4d
+./.git/objects/75
+./.git/objects/81
+./.git/objects/86
+./.git/objects/72
+./.git/objects/44
+./.git/objects/2a
+./.git/objects/2f
+./.git/objects/43
+./.git/objects/88
+./.git/objects/9f
+./.git/objects/6b
+./.git/objects/07
+./.git/objects/38
+./.git/objects/00
+./.git/objects/6e
+./.git/objects/9a
+./.git/objects/36
+./.git/objects/5c
+./.git/objects/09
+./.git/objects/5d
+./.git/objects/31
+./.git/objects/info
+./.git/objects/91
+./.git/objects/65
+./.git/objects/62
+./.git/objects/96
+./.git/objects/3a
+./.git/objects/54
+./.git/objects/98
+./.git/objects/53
+./.git/objects/3f
+./.git/objects/30
+./.git/objects/5e
+./.git/objects/5b
+./.git/objects/37
+./.git/objects/08
+./.git/objects/6d
+./.git/objects/01
+./.git/objects/06
+./.git/objects/6c
+./.git/objects/39
+./.git/objects/99
+./.git/objects/52
+./.git/objects/55
+./.git/objects/97
+./.git/objects/63
+./.git/objects/0f
+./.git/objects/0a
+./.git/objects/64
+./.git/objects/90
+./.git/objects/bf
+./.git/objects/d3
+./.git/objects/d4
+./.git/objects/ba
+./.git/objects/a0
+./.git/objects/a7
+./.git/objects/b8
+./.git/objects/b1
+./.git/objects/dd
+./.git/objects/dc
+./.git/objects/b6
+./.git/objects/a9
+./.git/objects/d5
+./.git/objects/d2
+./.git/objects/aa
+./.git/objects/af
+./.git/objects/b7
+./.git/objects/db
+./.git/objects/a8
+./.git/objects/de
+./.git/objects/b0
+./.git/objects/a6
+./.git/objects/b9
+./.git/objects/a1
+./.git/objects/ef
+./.git/objects/c3
+./.git/objects/c4
+./.git/objects/ea
+./.git/objects/e1
+./.git/objects/cd
+./.git/objects/cc
+./.git/objects/e6
+./.git/objects/f9
+./.git/objects/f0
+./.git/objects/f7
+./.git/objects/e8
+./.git/objects/fa
+./.git/objects/ff
+./.git/objects/c5
+./.git/objects/c2
+./.git/objects/f6
+./.git/objects/e9
+./.git/objects/f1
+./.git/objects/e7
+./.git/objects/cb
+./.git/objects/f8
+./.git/objects/ce
+./.git/objects/e0
+./.git/objects/46
+./.git/objects/2c
+./.git/objects/79
+./.git/objects/2d
+./.git/objects/41
+./.git/objects/83
+./.git/objects/1b
+./.git/objects/77
+./.git/objects/48
+./.git/objects/70
+./.git/objects/1e
+./.git/objects/84
+./.git/objects/4a
+./.git/objects/24
+./.git/objects/23
+./.git/objects/4f
+./.git/objects/8d
+./.git/objects/15
+./.git/objects/12
+./.git/objects/8c
+./.git/objects/85
+./.git/objects/1d
+./.git/objects/71
+./.git/objects/76
+./.git/objects/1c
+./.git/objects/82
+./.git/objects/49
+./.git/objects/40
+./.git/objects/2e
+./.git/objects/2b
+./.git/objects/47
+./.git/objects/78
+./.git/objects/8b
+./.git/objects/13
+./.git/objects/7f
+./.git/objects/7a
+./.git/objects/14
+./.git/objects/8e
+./.git/objects/22
+./.git/objects/25
+./.git/HEAD
+./.git/info
+./.git/info/exclude
+./.git/info/refs
+./.git/logs
+./.git/logs/HEAD
+./.git/logs/refs
+./.git/description
+./.git/hooks
+./.git/hooks/commit-msg.sample
+./.git/hooks/pre-rebase.sample
+./.git/hooks/sendemail-validate.sample
+./.git/hooks/pre-commit.sample
+./.git/hooks/applypatch-msg.sample
+./.git/hooks/fsmonitor-watchman.sample
+./.git/hooks/pre-receive.sample
+./.git/hooks/prepare-commit-msg.sample
+./.git/hooks/post-update.sample
+./.git/hooks/pre-merge-commit.sample
+./.git/hooks/pre-applypatch.sample
+./.git/hooks/pre-commit
+./.git/hooks/pre-push.sample
+./.git/hooks/update.sample
+./.git/hooks/push-to-checkout.sample
+./.git/worktrees
+./.git/worktrees/worktree-2025-12-11T14-34-55
+./.git/refs
+./.git/refs/heads
+./.git/refs/tags
+./.git/refs/remotes
+./.git/refs/stash
+./.git/index
+./.git/packed-refs
+./.git/COMMIT_EDITMSG
+./.git/FETCH_HEAD
+./htmlcov
+./htmlcov/z_dff8135e17ecac36_payment_rails_engine_py.html
+./htmlcov/z_841199bbcad38c11_schemas_context_ledger_feed_py.html
+./htmlcov/z_388cf7fc38ed24ab_alex_engine_py.html
+./htmlcov/z_dff8135e17ecac36_context_ledger_service_py.html
+./htmlcov/index.html
+./htmlcov/z_c7190a4b7487f515_token_engine_py.html
+./htmlcov/z_dff8135e17ecac36_analytics_service_py.html
+./htmlcov/z_841199bbcad38c11_schemas_context_risk_py.html
+./htmlcov/z_dff8135e17ecac36_payout_engine_py.html
+./htmlcov/style_cb_6b508a39.css
+./htmlcov/z_b4a8287eb28c735b_client_py.html
+./htmlcov/z_dff8135e17ecac36_context_ledger_feed_py.html
+./htmlcov/z_388cf7fc38ed24ab___init___py.html
+./htmlcov/z_dff8135e17ecac36_event_publisher_py.html
+./htmlcov/z_841199bbcad38c11_realtime_events_py.html
+./htmlcov/z_841199bbcad38c11_schedule_builder_py.html
+./htmlcov/z_dff8135e17ecac36_context_ledger_risk_py.html
+./htmlcov/z_841199bbcad38c11_schemas_analytics_py.html
+./htmlcov/z_841199bbcad38c11_payment_rails_py.html
+./htmlcov/z_388cf7fc38ed24ab_models_py.html
+./htmlcov/z_841199bbcad38c11_api_analytics_py.html
+./htmlcov/z_dff8135e17ecac36_token_event_publisher_py.html
+./htmlcov/z_dff8135e17ecac36_event_consumer_py.html
+./htmlcov/z_841199bbcad38c11_schemas_py.html
+./htmlcov/z_dff8135e17ecac36_guardrail_service_py.html
+./htmlcov/z_841199bbcad38c11_database_py.html
+./htmlcov/z_841199bbcad38c11_models_py.html
+./htmlcov/z_dff8135e17ecac36_settlement_api_py.html
+./htmlcov/z_dff8135e17ecac36_settlement_service_py.html
+./htmlcov/z_841199bbcad38c11_main_py.html
+./htmlcov/z_b4a8287eb28c735b_xrpl_settlement_service_py.html
+./htmlcov/keybd_closed_cb_ce680311.png
+./htmlcov/coverage_html_cb_6fb7b396.js
+./htmlcov/.gitignore
+./htmlcov/z_841199bbcad38c11_schemas_guardrails_py.html
+./htmlcov/z_841199bbcad38c11___init___py.html
+./htmlcov/function_index.html
+./htmlcov/z_841199bbcad38c11_schemas_settlement_py.html
+./htmlcov/z_841199bbcad38c11_config_payout_matrix_py.html
+./htmlcov/z_dff8135e17ecac36_settlement_orchestrator_py.html
+./htmlcov/z_841199bbcad38c11_models_analytics_py.html
+./htmlcov/z_841199bbcad38c11_models_context_ledger_py.html
+./htmlcov/style_cb_8432e98f.css
+./htmlcov/z_388cf7fc38ed24ab_gid_kernel_py.html
+./htmlcov/coverage_html_cb_bcae5fc4.js
+./htmlcov/z_841199bbcad38c11_proofpack_helper_py.html
+./htmlcov/z_841199bbcad38c11_api_settlement_py.html
+./htmlcov/status.json
+./htmlcov/z_dff8135e17ecac36_xrpl_stub_adapter_py.html
+./htmlcov/favicon_32_cb_58284776.png
+./htmlcov/z_841199bbcad38c11_chainfreight_client_py.html
+./htmlcov/z_841199bbcad38c11_models_settlement_py.html
+./htmlcov/z_841199bbcad38c11_api_guardrails_py.html
+./htmlcov/class_index.html
+./.vscode
+./.vscode/settings.json
+./.vscode/tasks.json
+./main.py
+./modules
+./modules/logistics_signal_module.py
+./modules/logistics_signals_module.py
+./modules/csv_ingestion.py
+./modules/__init__.py
+./modules/__pycache__
+./modules/__pycache__/csv_ingestion.cpython-311.pyc
+./modules/__pycache__/__init__.cpython-311.pyc
+./modules/README_global_macro_module.md
+./monitor_full.sh
+./assets
+./assets/styles.css
+./setup_new_listings.sh
+./settlement_actions.db
+./ml_models
+./ml_models/enhanced_regime_model.pkl
+./ml_models/regime_detection_model.pkl
+./apps
+./apps/dashboard
+./apps/dashboard/run_dashboard.sh
+./apps/dashboard/__init__.py
+./apps/dashboard/README.md
+./ui_history.jsonl
+./.markdownlint.json
+./Makefile.dashboard
+./reports
+./reports/regime_dashboard_20250917_114258.png
+./reports/regime_results_20250917_115212.json
+./reports/regime_report_20250917_114259.txt
+./reports/regime_results_20250917_114259.json
+./reports/regime_report_20250917_115212.txt
+./reports/trading_performance_report.json
+./reports/regime_dashboard_20250917_115211.png
+./chainiq-service
+./chainiq-service/app
+./chainiq-service/app/models.py
+./chainiq-service/app/scoring.py
+./chainiq-service/app/evaluation.py
+./chainiq-service/app/settlement.py
+./chainiq-service/app/__init__.py
+./chainiq-service/app/features.py
+./chainiq-service/app/settlement_rules.py
+./chainiq-service/app/schemas.py
+./chainiq-service/app/main.py
+./chainiq-service/app/explain.py
+./chainiq-service/app/cli_retrospective_pilot.py
+./chainiq-service/Dockerfile
+./chainiq-service/tests
+./chainiq-service/tests/__init__.py
+./chainiq-service/tests/__pycache__
+./chainiq-service/tests/test_evaluation.py
+./chainiq-service/tests/test_settlement_rules.py
+./chainiq-service/docs
+./chainiq-service/docs/CHAINIQ_V0_SPEC.md
+./chainiq-service/sample_data
+./chainiq-service/sample_data/pilot_report_DEMO-Corp_20251207_115839.json
+./chainiq-service/sample_data/pilot_report_DEMO-Corp_20251207_115839.md
+./chainiq-service/sample_data/sample_pilot.csv
+./src
+./src/.DS_Store
+./src/core
+./src/core/unified_trading_engine.py
+./src/core/pattern_engine.py
+./src/security
+./src/security/signing.py
+./src/security/__init__.py
+./src/security/__pycache__
+./src/__init__.py
+./src/__pycache__
+./src/__pycache__/__init__.cpython-312.pyc
+./src/api
+./src/api/__init__.py
+./src/api/proofpacks_api.py
+./src/api/__pycache__
+./src/bot
+./src/bot/core
+./src/bot/main.py
+./src/tests.py
+./src/UNKNOWN.egg-info
+./src/UNKNOWN.egg-info/PKG-INFO
+./src/UNKNOWN.egg-info/SOURCES.txt
+./src/UNKNOWN.egg-info/top_level.txt
+./src/main.py
+./requirements-dashboard.txt

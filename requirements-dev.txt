@@ -4,6 +4,10 @@
 # Base dependencies from requirements.txt
 -r requirements.txt
 
+# Parallel testing (pytest-xdist)
+pytest-xdist>=3.5.0
+pytest-benchmark>=4.0.0
+
 # Machine Learning dependencies
 tensorflow>=2.8.0
 scikit-learn>=1.0.0

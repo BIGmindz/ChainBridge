@@ -1,0 +1,11 @@
+scenario_id,origin,destination,value_usd,is_hazmat,is_temp_control,expected_transit_days,iot_alert_count,recent_delay_events,lane_risk_index,border_crossing_count,carrier_incident_rate_90d,carrier_tenure_days,risk_score,risk_band
+1,US,US,10000,False,False,4,0,0,0.1,0,0.0,400,0,LOW
+2,US,US,10000,False,False,4,0,0,0.1,0,0.08,400,26,LOW
+3,US,MX,10000,False,False,4,0,0,0.1,1,0.0,400,1,LOW
+4,US,MX,10000,False,False,4,0,0,0.1,1,0.08,400,31,LOW
+5,US,US,10000,False,False,4,0,0,0.8,0,0.0,400,38,LOW
+6,US,US,10000,False,False,4,0,0,0.8,0,0.08,400,68,MEDIUM
+7,US,MX,10000,False,False,4,0,0,0.8,1,0.0,400,43,MEDIUM
+8,US,MX,10000,False,False,4,0,0,0.8,1,0.08,400,73,HIGH
+9,US,US,10000,False,False,4,0,2,0.1,0,0.0,400,6,LOW
+10,US,US,10000,False,False,4,0,2,0.1,0,0.08,400,36,LOW

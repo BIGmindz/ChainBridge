@@ -1,5 +1,10 @@
 # ALEX Governance Rules — AT-02 Accessorial Fraud Engine
 
+> **Legend**:
+> 🩷 **MAGGIE** (GID-10) — Chief AI Architect
+> 🟢 **ALEX** (GID-08) — Governance & Alignment
+> 🔵 **ATLAS** — Infrastructure & Security
+
 ## 1. BLUF
 
 This document defines the **ALEX governance rules** for the AT-02 Accessorial Fraud Detection Engine. The rules map model outputs (fraud score, confidence, data quality) to governance actions and ensure that every decision is auditable, reproducible, and regulator-safe.
@@ -150,9 +155,9 @@ Controls:
   - Training data period
   - Feature schema version
   - Calibration report
-  - Governance approval record (ALEX decision ID)
+  - Governance approval record (🟢 ALEX decision ID)
 
-- ALEX will **block**:
+- 🟢 ALEX will **block**:
   - Any model without completed calibration.
   - Any model failing monotonicity checks on key features.
   - Any model with degraded performance < governance thresholds on validation.
@@ -162,11 +167,15 @@ Controls:
 ## 10. Regulator-Safe Summary (For CFO / Legal)
 
 - AT-02 assigns each accessorial a **fraud risk probability** and **confidence**.
-- ALEX uses clear, documented **thresholds** to decide whether to approve, hold, deny, or review.
+- 🟢 ALEX uses clear, documented **thresholds** to decide whether to approve, hold, deny, or review.
 - All decisions are:
   - **Traceable** (who/what decided and when)
   - **Explainable** (why, based on which features)
   - **Reproducible** (same inputs → same outputs)
+
+---
+
+🩷 **MAGGIE** — Chief AI Architect
 - No purely black-box logic is used; every output is backed by:
   - Documented model architecture
   - Measurable performance

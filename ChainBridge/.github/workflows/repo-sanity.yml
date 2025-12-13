@@ -1,0 +1,465 @@
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# REPO-SANITY: Repository Structure & Atlas Unification Checker
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# PAC: DAN-PAC-031 - CI/CD Normalization
+# Author: DAN (GID-07) - DevOps & CI/CD Lead
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+name: Repo-Sanity
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  schedule:
+    # Run weekly on Sundays at 3 AM UTC
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Check 1: Duplicate Service Detection
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  duplicate-detection:
+    name: 🔍 Duplicate Detection
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for duplicate service folders
+        run: |
+          echo "🔍 Checking for duplicate service folders..."
+
+          DUPLICATES=0
+
+          # Check for duplicate chainiq-service
+          CHAINIQ_COUNT=$(find . -type d -name "chainiq-service" | wc -l)
+          if [ "$CHAINIQ_COUNT" -gt 1 ]; then
+            echo "❌ Multiple chainiq-service folders found:"
+            find . -type d -name "chainiq-service"
+            DUPLICATES=$((DUPLICATES + 1))
+          else
+            echo "✅ chainiq-service: single location"
+          fi
+
+          # Check for duplicate chainpay-service
+          CHAINPAY_COUNT=$(find . -type d -name "chainpay-service" | wc -l)
+          if [ "$CHAINPAY_COUNT" -gt 1 ]; then
+            echo "❌ Multiple chainpay-service folders found:"
+            find . -type d -name "chainpay-service"
+            DUPLICATES=$((DUPLICATES + 1))
+          else
+            echo "✅ chainpay-service: single location"
+          fi
+
+          # Check for duplicate chainboard-ui
+          CHAINBOARD_COUNT=$(find . -type d -name "chainboard-ui" | wc -l)
+          if [ "$CHAINBOARD_COUNT" -gt 1 ]; then
+            echo "❌ Multiple chainboard-ui folders found:"
+            find . -type d -name "chainboard-ui"
+            DUPLICATES=$((DUPLICATES + 1))
+          else
+            echo "✅ chainboard-ui: single location"
+          fi
+
+          # Check for duplicate api folders
+          API_COUNT=$(find . -type d -name "api" -not -path "*/.*" | wc -l)
+          if [ "$API_COUNT" -gt 2 ]; then
+            echo "⚠️ Multiple api folders found (may be intentional):"
+            find . -type d -name "api" -not -path "*/.*"
+          fi
+
+          if [ $DUPLICATES -gt 0 ]; then
+            echo ""
+            echo "❌ $DUPLICATES duplicate service folder(s) detected"
+            echo "Atlas unification requires single canonical locations"
+            exit 1
+          fi
+
+          echo ""
+          echo "✅ No duplicate service folders detected"
+
+      - name: Check for duplicate main.py files
+        run: |
+          echo "🔍 Checking for duplicate main.py files in service folders..."
+
+          # Find main.py files that could cause confusion
+          MAIN_FILES=$(find . -name "main.py" -path "*/app/*" | grep -v ".venv" | grep -v "node_modules")
+
+          echo "Found main.py files:"
+          echo "$MAIN_FILES"
+
+          MAIN_COUNT=$(echo "$MAIN_FILES" | grep -c "." || echo "0")
+
+          if [ "$MAIN_COUNT" -gt 3 ]; then
+            echo "⚠️ Many main.py files found - verify each is intentional"
+          fi
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Check 2: Missing Migrations Detection
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  migrations-check:
+    name: 🗄️ Migration Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for missing Alembic migrations
+        run: |
+          echo "🗄️ Checking for Alembic migrations..."
+
+          # Find services with SQLAlchemy models
+          SERVICES_WITH_MODELS=$(find . -name "models*.py" -path "*/app/*" -exec dirname {} \; | sort -u)
+
+          MISSING_MIGRATIONS=0
+
+          for service_app in $SERVICES_WITH_MODELS; do
+            SERVICE_DIR=$(dirname "$service_app")
+            SERVICE_NAME=$(basename "$SERVICE_DIR")
+
+            # Check if service has models but no alembic
+            ALEMBIC_DIR="$SERVICE_DIR/alembic"
+            MIGRATIONS_DIR="$SERVICE_DIR/migrations"
+
+            if [ ! -d "$ALEMBIC_DIR" ] && [ ! -d "$MIGRATIONS_DIR" ]; then
+              # Check if models actually use SQLAlchemy
+              if grep -q "Base\|SQLAlchemy\|Column\|relationship" "$service_app/models"*.py 2>/dev/null; then
+                echo "⚠️ $SERVICE_NAME has SQLAlchemy models but no migrations folder"
+                MISSING_MIGRATIONS=$((MISSING_MIGRATIONS + 1))
+              fi
+            else
+              echo "✅ $SERVICE_NAME has migrations"
+            fi
+          done
+
+          if [ $MISSING_MIGRATIONS -gt 0 ]; then
+            echo ""
+            echo "⚠️ $MISSING_MIGRATIONS service(s) may need Alembic setup"
+          else
+            echo ""
+            echo "✅ Migration structure verified"
+          fi
+
+      - name: Check migration version sequence
+        run: |
+          echo "Checking migration version sequences..."
+
+          for alembic_dir in $(find . -type d -name "alembic" | grep -v ".venv"); do
+            VERSIONS_DIR="$alembic_dir/versions"
+            if [ -d "$VERSIONS_DIR" ]; then
+              MIGRATION_COUNT=$(ls -1 "$VERSIONS_DIR"/*.py 2>/dev/null | wc -l || echo "0")
+              echo "  $alembic_dir: $MIGRATION_COUNT migration(s)"
+            fi
+          done
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Check 3: Forbidden File Locations
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  forbidden-locations:
+    name: 🚫 Forbidden Locations
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for forbidden file locations
+        run: |
+          echo "🚫 Checking for files in forbidden locations..."
+
+          VIOLATIONS=0
+
+          # Check for .env files that should not be committed
+          ENV_FILES=$(find . -name ".env" -not -name ".env.example" -not -path "*/.git/*" | head -10)
+          if [ ! -z "$ENV_FILES" ]; then
+            echo "❌ .env files should not be committed:"
+            echo "$ENV_FILES"
+            VIOLATIONS=$((VIOLATIONS + 1))
+          else
+            echo "✅ No .env files in repo"
+          fi
+
+          # Check for private keys
+          PRIVATE_KEYS=$(find . -name "*.pem" -o -name "*.key" -o -name "id_rsa*" | grep -v ".git" | head -10)
+          if [ ! -z "$PRIVATE_KEYS" ]; then
+            echo "❌ Private key files detected:"
+            echo "$PRIVATE_KEYS"
+            VIOLATIONS=$((VIOLATIONS + 1))
+          else
+            echo "✅ No private key files"
+          fi
+
+          # Check for database files in wrong locations
+          DB_FILES=$(find . -name "*.db" -o -name "*.sqlite" | grep -v ".git" | grep -v "test" | head -10)
+          if [ ! -z "$DB_FILES" ]; then
+            echo "⚠️ Database files found (should be in /data or ignored):"
+            echo "$DB_FILES"
+          fi
+
+          # Check for node_modules that shouldn't be committed
+          NODE_MODULES=$(find . -type d -name "node_modules" -not -path "*/.git/*" | head -5)
+          if [ ! -z "$NODE_MODULES" ]; then
+            # Check if they're in .gitignore
+            if ! grep -q "node_modules" .gitignore 2>/dev/null; then
+              echo "⚠️ node_modules directories found but not in .gitignore"
+            fi
+          fi
+
+          # Check for __pycache__ directories
+          PYCACHE=$(find . -type d -name "__pycache__" -not -path "*/.git/*" | wc -l)
+          if [ "$PYCACHE" -gt 0 ]; then
+            echo "ℹ️ Found $PYCACHE __pycache__ directories (should be gitignored)"
+          fi
+
+          if [ $VIOLATIONS -gt 0 ]; then
+            echo ""
+            echo "❌ $VIOLATIONS forbidden file violation(s) detected"
+            exit 1
+          fi
+
+          echo ""
+          echo "✅ No critical forbidden files detected"
+
+      - name: Check model file locations
+        run: |
+          echo "Checking ML model file locations..."
+
+          # Models should be in ml_models/ or chainiq-service/app/ml/models/
+          MISPLACED_MODELS=$(find . -name "*.pkl" -o -name "*.joblib" | grep -v "ml_models" | grep -v "chainiq-service/app/ml" | grep -v ".venv" | head -10)
+
+          if [ ! -z "$MISPLACED_MODELS" ]; then
+            echo "⚠️ Model files in non-standard locations:"
+            echo "$MISPLACED_MODELS"
+            echo "Recommended locations: ml_models/ or chainiq-service/app/ml/models/"
+          else
+            echo "✅ Model files in correct locations"
+          fi
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Check 4: Atlas Unification Validation
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  atlas-validation:
+    name: 🗺️ Atlas Unification
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Atlas structure
+        run: |
+          echo "🗺️ Validating Atlas unified structure..."
+
+          # Expected structure for unified monorepo
+          EXPECTED_DIRS=(
+            "chainiq-service"
+            "chainpay-service"
+            "chainboard-ui"
+            ".github/workflows"
+            "docs"
+            "scripts"
+          )
+
+          MISSING=0
+
+          for dir in "${EXPECTED_DIRS[@]}"; do
+            if [ -d "$dir" ]; then
+              echo "✅ $dir exists"
+            else
+              echo "⚠️ $dir missing (may be expected during migration)"
+              MISSING=$((MISSING + 1))
+            fi
+          done
+
+          echo ""
+          echo "Atlas structure: ${#EXPECTED_DIRS[@]} expected, $MISSING missing"
+
+      - name: Check for nested ChainBridge folders
+        run: |
+          echo "Checking for nested/duplicate ChainBridge folders..."
+
+          # This is a key Atlas unification issue
+          CHAINBRIDGE_DIRS=$(find . -type d -name "ChainBridge" | grep -v ".git")
+
+          CB_COUNT=$(echo "$CHAINBRIDGE_DIRS" | grep -c "." || echo "0")
+
+          if [ "$CB_COUNT" -gt 0 ]; then
+            echo "⚠️ Nested ChainBridge folder(s) found:"
+            echo "$CHAINBRIDGE_DIRS"
+            echo ""
+            echo "Atlas unification should flatten these into root"
+          else
+            echo "✅ No nested ChainBridge folders"
+          fi
+
+      - name: Validate canonical service paths
+        run: |
+          echo "Validating canonical service paths..."
+
+          # Check that main.py files are in expected locations
+          echo ""
+          echo "Service entry points:"
+
+          # ChainIQ
+          if [ -f "chainiq-service/app/main.py" ]; then
+            echo "✅ ChainIQ: chainiq-service/app/main.py"
+          else
+            echo "⚠️ ChainIQ main.py not in expected location"
+          fi
+
+          # ChainPay
+          if [ -f "chainpay-service/app/main.py" ]; then
+            echo "✅ ChainPay: chainpay-service/app/main.py"
+          else
+            echo "⚠️ ChainPay main.py not in expected location"
+          fi
+
+          # ChainBoard
+          if [ -f "chainboard-ui/package.json" ]; then
+            echo "✅ ChainBoard: chainboard-ui/package.json"
+          else
+            echo "⚠️ ChainBoard package.json not in expected location"
+          fi
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Check 5: Workflow Consistency
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  workflow-check:
+    name: ⚙️ Workflow Consistency
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for duplicate workflows
+        run: |
+          echo "⚙️ Checking for duplicate workflows..."
+
+          # Find all workflow files
+          ROOT_WORKFLOWS=$(find .github/workflows -name "*.yml" 2>/dev/null | wc -l || echo "0")
+          NESTED_WORKFLOWS=$(find . -path "*/.github/workflows/*.yml" -not -path "./.github/*" | wc -l || echo "0")
+
+          echo "Root workflows: $ROOT_WORKFLOWS"
+          echo "Nested workflows: $NESTED_WORKFLOWS"
+
+          if [ "$NESTED_WORKFLOWS" -gt 0 ]; then
+            echo ""
+            echo "⚠️ Workflows in nested locations:"
+            find . -path "*/.github/workflows/*.yml" -not -path "./.github/*"
+            echo ""
+            echo "These should be consolidated to root .github/workflows/"
+          fi
+
+          # Check for obsolete workflow patterns
+          OBSOLETE=$(find . -path "*/.github/workflows/*.yml" -exec grep -l "benson_rsi_bot\|legacy\|old_" {} \; 2>/dev/null || true)
+
+          if [ ! -z "$OBSOLETE" ]; then
+            echo ""
+            echo "⚠️ Potentially obsolete workflows:"
+            echo "$OBSOLETE"
+          fi
+
+      - name: Validate workflow naming
+        run: |
+          echo "Validating workflow naming conventions..."
+
+          STANDARD_NAMES=(
+            "ci-core.yml"
+            "ci-shadow.yml"
+            "ci-model-integrity.yml"
+            "ci-ingestion.yml"
+            "deploy-staging.yml"
+            "repo-sanity.yml"
+          )
+
+          echo ""
+          echo "Checking for standardized workflow names:"
+
+          for name in "${STANDARD_NAMES[@]}"; do
+            if [ -f ".github/workflows/$name" ]; then
+              echo "✅ $name"
+            else
+              echo "⚠️ $name not found"
+            fi
+          done
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Check 6: Config Drift Detection
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  config-drift:
+    name: 📐 Config Drift
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for config drift between environments
+        run: |
+          echo "📐 Checking for config drift..."
+
+          # Find all config files
+          CONFIG_FILES=$(find . -name "config*.yaml" -o -name "config*.yml" -o -name "*.env.example" | grep -v ".venv" | grep -v "node_modules")
+
+          echo "Config files found:"
+          echo "$CONFIG_FILES"
+
+          # Check for multiple docker-compose files
+          COMPOSE_FILES=$(find . -name "docker-compose*.yml" -o -name "docker-compose*.yaml" | grep -v ".venv")
+          COMPOSE_COUNT=$(echo "$COMPOSE_FILES" | grep -c "." || echo "0")
+
+          echo ""
+          echo "Docker Compose files: $COMPOSE_COUNT"
+          if [ "$COMPOSE_COUNT" -gt 2 ]; then
+            echo "⚠️ Multiple compose files may cause drift:"
+            echo "$COMPOSE_FILES"
+          fi
+
+          # Check for environment-specific configs
+          DEV_CONFIGS=$(find . -name "*dev*" -name "*.yml" -o -name "*dev*" -name "*.yaml" | grep -v ".venv" | grep -v ".git")
+          STAGING_CONFIGS=$(find . -name "*staging*" -name "*.yml" -o -name "*staging*" -name "*.yaml" | grep -v ".venv" | grep -v ".git")
+          PROD_CONFIGS=$(find . -name "*prod*" -name "*.yml" -o -name "*prod*" -name "*.yaml" | grep -v ".venv" | grep -v ".git")
+
+          echo ""
+          echo "Environment-specific configs:"
+          echo "  Dev: $(echo "$DEV_CONFIGS" | grep -c "." || echo "0")"
+          echo "  Staging: $(echo "$STAGING_CONFIGS" | grep -c "." || echo "0")"
+          echo "  Prod: $(echo "$PROD_CONFIGS" | grep -c "." || echo "0")"
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Summary
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  sanity-summary:
+    name: 📊 Sanity Summary
+    needs: [duplicate-detection, migrations-check, forbidden-locations, atlas-validation, workflow-check, config-drift]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Generate Summary
+        run: |
+          echo "# 🔍 Repository Sanity Check Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Check Status" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Duplicate Detection | ${{ needs.duplicate-detection.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Migration Check | ${{ needs.migrations-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Forbidden Locations | ${{ needs.forbidden-locations.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Atlas Validation | ${{ needs.atlas-validation.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Workflow Check | ${{ needs.workflow-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Config Drift | ${{ needs.config-drift.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.duplicate-detection.result }}" == "failure" ] || \
+             [ "${{ needs.forbidden-locations.result }}" == "failure" ]; then
+            echo "❌ **Critical issues detected - requires attention**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **Repository structure is healthy**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "_PAC: DAN-PAC-031 | Repo Sanity v1.0_" >> $GITHUB_STEP_SUMMARY
