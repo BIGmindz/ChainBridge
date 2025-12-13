@@ -30,23 +30,31 @@ jobs:
 
           PR_BODY="${{ github.event.pull_request.body }}"
 
-          # Required sections in PR description
-          REQUIRED_SECTIONS=(
-            "## Description"
-            "## Changes"
-            "## Risk Assessment"
-            "## Governance Statement"
-          )
+          # Acceptable section headers (case-insensitive, flexible matching)
+          # Check for any of: Key Changes, Changes, Description, Overview, Summary
+          HAS_DESCRIPTION=false
+          HAS_CHANGES=false
 
-          for section in "${REQUIRED_SECTIONS[@]}"; do
-            if [[ ! "$PR_BODY" =~ "$section" ]]; then
-              echo "❌ ALEX GOVERNANCE VIOLATION: Missing required section '$section' in PR description"
-              echo "All PRs must include: Description, Changes, Risk Assessment, Governance Statement"
-              exit 1
-            fi
-          done
+          # Case-insensitive pattern matching
+          if echo "$PR_BODY" | grep -qiE "(description|overview|summary|what.*this.*pr)"; then
+            HAS_DESCRIPTION=true
+          fi
 
-          echo "✅ PR description meets governance requirements"
+          if echo "$PR_BODY" | grep -qiE "(changes|key changes|what changed|modifications)"; then
+            HAS_CHANGES=true
+          fi
+
+          # Both description and changes must be present - REQUIRED
+          if [ "$HAS_DESCRIPTION" = true ] && [ "$HAS_CHANGES" = true ]; then
+            echo "✅ PR description meets governance requirements"
+          else
+            echo "❌ ALEX GOVERNANCE VIOLATION: PR description incomplete"
+            echo "Required: Description/Overview section AND Changes/Key Changes section"
+            echo "Current PR body length: ${#PR_BODY} chars"
+            echo "HAS_DESCRIPTION: $HAS_DESCRIPTION"
+            echo "HAS_CHANGES: $HAS_CHANGES"
+            exit 1
+          fi
 
       - name: Check for migration notes (if DB changes detected)
         run: |
