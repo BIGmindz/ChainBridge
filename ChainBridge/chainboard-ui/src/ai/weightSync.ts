@@ -322,10 +322,29 @@ function createInitialKPIMetrics(): KPIMetrics {
 }
 
 /**
- * Generate a unique session ID.
+ * Generate a cryptographically secure random hex string.
+ * Uses crypto.getRandomValues for security-compliant randomness.
+ */
+function secureRandomHex(length: number): string {
+  const bytes = new Uint8Array(Math.ceil(length / 2));
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("")
+    .slice(0, length);
+}
+
+/**
+ * Generate a unique session ID using cryptographically secure randomness.
+ * Uses crypto.randomUUID when available, falls back to crypto.getRandomValues.
  */
 function generateSessionId(): string {
-  return `session_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  // Prefer crypto.randomUUID if available (modern browsers/Node 19+)
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return `session_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
+  }
+  // Fallback to crypto.getRandomValues (secure)
+  return `session_${Date.now()}_${secureRandomHex(8)}`;
 }
 
 /**
