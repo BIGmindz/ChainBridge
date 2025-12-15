@@ -55,19 +55,20 @@ export function OCLayout({ children, layoutModeToggle }: OCLayoutProps) {
         filter: `saturate(${config.saturation})`,
       }}
     >
-      {/* Header */}
+      {/* Header — Calm, authoritative, breathing room */}
       <div
         className={classNames(
-          "border-b px-6 py-4 flex items-center justify-between transition-colors duration-300",
+          "border-b px-6 py-5 flex items-center justify-between",
+          "transition-colors duration-500 ease-out", // Slower, calmer transitions
           styles.headerBg,
           styles.border
         )}
       >
-        <div>
-          <h1 className="text-2xl font-bold text-white">The OC — Operator Console</h1>
-          <p className="text-sm text-slate-400">Action queue for at-risk shipments</p>
+        <div className="space-y-1">
+          <h1 className="text-xl font-semibold text-white tracking-tight">Operator Console</h1>
+          <p className="text-sm text-slate-400/80">You have control. Take your time.</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-5">
           <SLAWidget />
           <FocusModeSwitcher />
           {layoutModeToggle}

@@ -4,11 +4,12 @@
  * ===================
  *
  * React hook for consuming real-time SSE events from Control Tower.
+ * Returns connection status for "Live" indicator display.
  */
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
-import { createEventStreamClient } from "../core/realtime/eventSource";
+import { config } from "../config/env";
 import type { ControlTowerEvent, ControlTowerEventType } from "../core/types/realtime";
 
 export interface UseEventStreamOptions {
@@ -21,64 +22,113 @@ export interface UseEventStreamOptions {
   onEvent: (event: ControlTowerEvent) => void;
 }
 
+export interface UseEventStreamResult {
+  isConnected: boolean;
+  error: string | null;
+}
+
 /**
  * Hook to subscribe to real-time SSE events.
  *
  * @param options Configuration options
- * @returns void
+ * @returns Connection status and error state
  *
  * @example
  * ```tsx
- * useEventStream({
+ * const { isConnected } = useEventStream({
  *   enabled: true,
  *   filter: { types: ["alert_updated"] },
  *   onEvent: (event) => {
- *     mutate(); // Refetch SWR cache
+ *     refetch(); // Refresh data
  *   }
  * });
+ *
+ * return isConnected && <span className="text-green-400">● Live</span>;
  * ```
  */
-export function useEventStream(options: UseEventStreamOptions): void {
+export function useEventStream(options: UseEventStreamOptions): UseEventStreamResult {
   const { enabled = true, filter, onEvent } = options;
   const eventSourceRef = useRef<EventSource | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!enabled) {
-      return;
+  // Stable callback ref to prevent reconnects on onEvent changes
+  const onEventRef = useRef(onEvent);
+  onEventRef.current = onEvent;
+
+  const filterRef = useRef(filter);
+  filterRef.current = filter;
+
+  const connect = useCallback(() => {
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
     }
 
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8001";
+    const baseUrl = config.apiBaseUrl || "http://localhost:8001";
+    const url = `${baseUrl}/api/chainboard/events/stream`;
 
-    // Create EventSource
-    eventSourceRef.current = createEventStreamClient(baseUrl, {
-      onEvent: (event) => {
+    const eventSource = new EventSource(url);
+    eventSourceRef.current = eventSource;
+
+    eventSource.onopen = () => {
+      setIsConnected(true);
+      setError(null);
+      if (import.meta.env.DEV) {
+        console.log("[useEventStream] Connected to SSE");
+      }
+    };
+
+    eventSource.onmessage = (messageEvent) => {
+      try {
+        const event: ControlTowerEvent = JSON.parse(messageEvent.data);
+        const currentFilter = filterRef.current;
+
         // Apply filter if provided
-        if (filter) {
-          if (filter.types && !filter.types.includes(event.type)) {
+        if (currentFilter) {
+          if (currentFilter.types && !currentFilter.types.includes(event.type)) {
             return;
           }
-          if (filter.sources && !filter.sources.includes(event.source)) {
+          if (currentFilter.sources && !currentFilter.sources.includes(event.source)) {
             return;
           }
-          if (filter.keys && !filter.keys.includes(event.key)) {
+          if (currentFilter.keys && !currentFilter.keys.includes(event.key)) {
             return;
           }
         }
 
         // Pass through to callback
-        onEvent(event);
-      },
-      onError: (error) => {
-        console.error("[useEventStream] Error:", error);
-      },
-    });
+        onEventRef.current(event);
+      } catch (err) {
+        console.error("[useEventStream] Failed to parse event:", err);
+      }
+    };
+
+    eventSource.onerror = () => {
+      setIsConnected(false);
+      setError("Connection lost");
+      if (import.meta.env.DEV) {
+        console.warn("[useEventStream] Connection error, will retry...");
+      }
+    };
+
+    return eventSource;
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) {
+      setIsConnected(false);
+      return;
+    }
+
+    const eventSource = connect();
 
     // Cleanup on unmount
     return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-        eventSourceRef.current = null;
-      }
+      eventSource.close();
+      eventSourceRef.current = null;
+      setIsConnected(false);
     };
-  }, [enabled, filter, onEvent]);
+  }, [enabled, connect]);
+
+  return { isConnected, error };
 }

@@ -84,12 +84,13 @@ function ExceptionRow({
     <div
       onClick={onSelect}
       className={classNames(
-        "px-4 py-3 cursor-pointer transition-all border-l-4",
+        "px-4 py-3.5 cursor-pointer border-l-4",
+        "transition-all duration-200 ease-out",
         isSelected
           ? "bg-slate-700/80 border-emerald-400"
           : isResolved
-            ? "bg-slate-800/30 border-slate-700 opacity-60 hover:opacity-80"
-            : "bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 hover:border-slate-600"
+            ? "bg-slate-800/20 border-slate-700/50 opacity-50"
+            : "bg-slate-800/40 border-slate-700/50 hover:bg-slate-700/40 hover:border-slate-600"
       )}
       tabIndex={0}
       data-selected={isSelected}
@@ -166,11 +167,13 @@ function QueueSkeleton() {
 
 function EmptyState() {
   return (
-    <div className="p-8 text-center">
-      <CheckCircle className="h-12 w-12 mx-auto mb-3 text-emerald-500" />
-      <p className="font-medium text-slate-200">No Open Exceptions</p>
-      <p className="text-xs mt-1 text-slate-500">
-        All systems nominal — queue is clear
+    <div className="p-10 text-center">
+      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-500/10 mb-4">
+        <CheckCircle className="h-7 w-7 text-emerald-400" />
+      </div>
+      <p className="font-medium text-slate-200 text-base">Queue Clear</p>
+      <p className="text-sm mt-2 text-slate-400/80 max-w-[200px] mx-auto leading-relaxed">
+        No exceptions need your attention right now.
       </p>
     </div>
   );

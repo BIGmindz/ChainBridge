@@ -87,10 +87,15 @@ export function OCQueueTable({
 
   if (items.length === 0) {
     return (
-      <div className="p-8 text-center text-slate-400">
-        <CheckCircle className="h-12 w-12 mx-auto mb-3 text-emerald-500" />
-        <p className="font-medium text-slate-200">No Critical/High at-risk shipments</p>
-        <p className="text-xs mt-1 text-slate-500">All systems nominal — queue is clear</p>
+      <div className="p-10 text-center text-slate-400">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/10 mb-4">
+          <CheckCircle className="h-8 w-8 text-emerald-400" />
+        </div>
+        <p className="font-medium text-slate-200 text-lg">All Clear</p>
+        <p className="text-sm mt-2 text-slate-500 max-w-xs mx-auto leading-relaxed">
+          No critical shipments need attention right now.
+          You're ahead of the queue.
+        </p>
       </div>
     );
   }
@@ -121,14 +126,15 @@ export function OCQueueTable({
             key={item.shipmentId}
             onClick={() => onSelect(item.shipmentId)}
             className={classNames(
-              "p-3 cursor-pointer transition-all border-l-4 relative",
+              "p-3.5 cursor-pointer border-l-4 relative",
+              "transition-all duration-200 ease-out", // Smooth, non-jarring
               isSelected && isKeyboardFocused
-                ? "bg-slate-700 border-emerald-400 ring-2 ring-emerald-500/50"
+                ? "bg-slate-700/90 border-emerald-400 ring-1 ring-emerald-500/30"
                 : isSelected
-                ? "bg-slate-700 border-blue-500"
+                ? "bg-slate-700/70 border-blue-400/80"
                 : isMultiSelected
-                ? "bg-emerald-500/5 border-emerald-500/50"
-                : "bg-slate-800/50 border-slate-700 hover:bg-slate-700/50"
+                ? "bg-emerald-500/5 border-emerald-500/40"
+                : "bg-slate-800/40 border-slate-700/50 hover:bg-slate-700/40 hover:border-slate-600"
             )}
             role="listitem"
             aria-current={isSelected ? "true" : undefined}

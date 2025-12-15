@@ -2,10 +2,9 @@
 /**
  * Alerts Feed Hook
  *
- * SWR-powered hook for listing and filtering Control Tower alerts.
- * Implements stale-while-revalidate pattern for optimal UX.
- *
- * Auto-refetches on real-time alert events via SSE.
+ * Fetches alerts from /api/chainboard/alerts (real backend).
+ * Auto-refetches on real-time SSE alert events.
+ * Exposes connection status for "Live" indicator.
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -34,20 +33,30 @@ export interface UseAlertsFeedResult {
   loading: boolean;
   error: Error | null;
   refresh: () => Promise<void>;
+  /** True when SSE stream is connected (real-time updates active) */
+  isLive: boolean;
 }
 
 /**
  * Hook for fetching the global alerts feed with optional filters.
+ * Connects to real backend - no mock fallback.
  *
  * @param filters - Optional filters (source, severity, status, limit)
- * @returns Alerts data, loading state, error, and refresh function
+ * @returns Alerts data, loading state, error, refresh function, and live status
  *
  * @example
  * ```tsx
- * const { alerts, loading, error, refresh } = useAlertsFeed({
+ * const { alerts, loading, error, refresh, isLive } = useAlertsFeed({
  *   status: "open",
  *   limit: 50,
  * });
+ *
+ * return (
+ *   <>
+ *     {isLive && <span className="text-green-400">● Live</span>}
+ *     {alerts?.map(a => <AlertCard key={a.id} alert={a} />)}
+ *   </>
+ * );
  * ```
  */
 export function useAlertsFeed(filters?: AlertsFilters): UseAlertsFeedResult {
@@ -94,7 +103,7 @@ export function useAlertsFeed(filters?: AlertsFilters): UseAlertsFeedResult {
       if (mountedRef.current) {
         setError(errorObj);
       }
-      console.error("Failed to fetch alerts:", errorObj);
+      console.error("[useAlertsFeed] Failed to fetch alerts:", errorObj);
     } finally {
       if (mountedRef.current) {
         setLoading(false);
@@ -111,8 +120,8 @@ export function useAlertsFeed(filters?: AlertsFilters): UseAlertsFeedResult {
     };
   }, [fetchAlerts]);
 
-  // Subscribe to real-time alert events
-  useEventStream({
+  // Subscribe to real-time alert events and get connection status
+  const { isConnected } = useEventStream({
     filter: {
       types: ["alert_created", "alert_updated", "alert_status_changed"],
       sources: ["alerts"],
@@ -133,5 +142,6 @@ export function useAlertsFeed(filters?: AlertsFilters): UseAlertsFeedResult {
     loading,
     error,
     refresh,
+    isLive: isConnected,
   };
 }

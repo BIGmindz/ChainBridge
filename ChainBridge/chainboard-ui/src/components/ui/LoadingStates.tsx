@@ -78,25 +78,30 @@ interface ErrorStateProps {
 
 /**
  * ErrorState - Localized error component with retry capability
+ *
+ * LIRA: Calm under stress - uses softer colors and encouraging language
  */
 export function ErrorState({ title, message, onRetry, className }: ErrorStateProps) {
   return (
     <div className={classNames(
-      "flex flex-col items-center justify-center p-8 text-center bg-slate-800/20 rounded-lg border border-slate-700/50",
+      "flex flex-col items-center justify-center p-8 text-center bg-slate-800/30 rounded-lg border border-slate-700/30",
+      "transition-all duration-300",
       className
     )}>
-      <AlertTriangle className="h-8 w-8 text-rose-400 mb-3" />
+      <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center mb-4">
+        <AlertTriangle className="h-5 w-5 text-amber-400/80" />
+      </div>
       <h3 className="text-sm font-medium text-slate-200 mb-1">{title}</h3>
       {message && (
-        <p className="text-xs text-slate-400 mb-4 max-w-sm">{message}</p>
+        <p className="text-xs text-slate-400/80 mb-4 max-w-sm leading-relaxed">{message}</p>
       )}
       {onRetry && (
         <button
           onClick={onRetry}
-          className="inline-flex items-center gap-2 px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-md transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 text-xs bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 rounded-lg transition-all duration-200"
         >
           <RefreshCw className="h-3 w-3" />
-          Retry
+          Try again
         </button>
       )}
     </div>
@@ -108,11 +113,16 @@ export function ErrorState({ title, message, onRetry, className }: ErrorStatePro
  */
 export function InlineError({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
-    <div className="flex items-center gap-2 text-xs text-rose-400">
-      <AlertTriangle className="h-3 w-3" />
-      <span>{message}</span>
+    <div className="flex items-center gap-2 text-xs text-amber-400/80">
+      <div className="w-1.5 h-1.5 rounded-full bg-amber-400/60" />
+      <span className="text-slate-400">{message}</span>
       {onRetry && (
-        <button onClick={onRetry} className="hover:text-rose-300">
+        <button
+          onClick={onRetry}
+          className="text-slate-500 hover:text-slate-300 transition-colors"
+          title="Retry"
+          aria-label="Retry"
+        >
           <RefreshCw className="h-3 w-3" />
         </button>
       )}

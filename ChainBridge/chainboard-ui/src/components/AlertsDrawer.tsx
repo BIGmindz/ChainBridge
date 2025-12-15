@@ -14,7 +14,7 @@ export const AlertsDrawer: React.FC<AlertsDrawerProps> = ({
   onClose,
   onNavigateToShipment,
 }) => {
-  const { alerts, loading, error, refresh } = useAlertsFeed({
+  const { alerts, loading, error, refresh, isLive } = useAlertsFeed({
     status: "open",
     limit: 50,
   });
@@ -44,7 +44,15 @@ export const AlertsDrawer: React.FC<AlertsDrawerProps> = ({
     <aside className="fixed right-0 top-0 z-40 h-full w-full max-w-md border-l border-slate-200 bg-white shadow-xl">
       <header className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">Alerts</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-semibold text-slate-900">Alerts</h2>
+            {isLive && (
+              <span className="flex items-center gap-1 text-[10px] text-emerald-500 font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Live
+              </span>
+            )}
+          </div>
           <p className="text-xs text-slate-500">
             Open issues across risk, IoT, payments, and customs.
           </p>

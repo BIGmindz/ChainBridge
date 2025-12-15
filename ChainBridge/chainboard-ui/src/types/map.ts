@@ -5,13 +5,7 @@ export interface GhostShip {
   actualCoordinates: [number, number];  // From IoT
   gapDistanceKm: number;
 }
-// Reality Gap Visualization
-export interface GhostShip {
-  shipmentId: string;
-  plannedCoordinates: [number, number]; // From EDI 214/856
-  actualCoordinates: [number, number];  // From IoT
-  gapDistanceKm: number;
-}
+
 /**
  * Global Operations Map Type Definitions
  * "God View" telemetry and geospatial data structures

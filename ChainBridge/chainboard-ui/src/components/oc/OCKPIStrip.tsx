@@ -50,7 +50,9 @@ function KPICard({ label, value, subtext, icon, variant = "default", isLoading }
   return (
     <div
       className={classNames(
-        "rounded-xl border px-4 py-3 backdrop-blur-sm transition-all hover:scale-[1.02]",
+        "rounded-xl border px-4 py-3 backdrop-blur-sm",
+        "transition-all duration-300 ease-out", // Smooth, calm transitions
+        "hover:border-opacity-80", // Subtle hover without jarring scale
         variantStyles[variant]
       )}
     >
@@ -68,7 +70,7 @@ function KPICard({ label, value, subtext, icon, variant = "default", isLoading }
         </div>
       )}
       {subtext && (
-        <div className="text-[10px] text-slate-500 mt-1">{subtext}</div>
+        <div className="text-[11px] text-slate-400/80 mt-1.5 tracking-wide">{subtext}</div>
       )}
     </div>
   );
@@ -79,8 +81,9 @@ export function OCKPIStrip() {
 
   if (error) {
     return (
-      <div className="bg-rose-950/30 border border-rose-900/50 rounded-xl px-4 py-3 text-rose-300 text-sm">
-        Unable to load exception statistics
+      <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-400 text-sm flex items-center gap-3">
+        <div className="w-2 h-2 rounded-full bg-amber-400/80" />
+        <span>Metrics temporarily unavailable — will retry automatically</span>
       </div>
     );
   }

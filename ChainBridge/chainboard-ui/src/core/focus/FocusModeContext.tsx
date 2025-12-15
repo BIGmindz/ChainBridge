@@ -87,14 +87,14 @@ export interface FocusModeActions {
 export const FOCUS_MODE_CONFIGS: Record<FocusModeType, FocusModeConfig> = {
   NEUROCALM: {
     label: "Neurocalm",
-    description: "Minimal distractions, soft colors",
+    description: "Calm focus — minimal motion, soft contrast",
     icon: "brain",
-    animationIntensity: 0.3,
+    animationIntensity: 0.15, // Very subtle animations only
     soundEnabled: false,
-    saturation: 0.7,
+    saturation: 0.65, // Slightly desaturated for reduced visual stress
     contrast: "normal",
     showNonCriticalAlerts: false,
-    autoRefreshInterval: 60000, // 1 minute
+    autoRefreshInterval: 90000, // 90 seconds — less frequent updates reduce anxiety
     maxListItems: 5,
     showDecorative: false,
     fontScale: 1.0,
