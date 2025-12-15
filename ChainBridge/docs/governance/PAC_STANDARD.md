@@ -173,6 +173,61 @@ All PACs **MUST** include these eight sections in order:
 
 ---
 
+## Agent-First Execution Mandate ⚪ NEW
+
+**Effective:** 2025-12-15
+**Owner:** GID-08 ALEX — Governance & Alignment Engine
+**Reference:** [AGENT_FIRST_EXECUTION_DOCTRINE_v1.md](./AGENT_FIRST_EXECUTION_DOCTRINE_v1.md)
+
+### Mandatory Agent-First Clause
+
+Every PAC **MUST** be executed by an agent unless the task is explicitly CEO-only.
+
+**CEO-Only Exceptions (Exhaustive List):**
+1. Final merge approval to `main`
+2. External vendor contract signatures
+3. Security incident response (P0/P1)
+4. Investor/board communications
+5. Agent termination decisions
+6. Production deployment confirmation
+
+**Enforcement:**
+- If a human executes non-CEO-only work → `⛔ REJECT: AGENT-FIRST VIOLATION`
+- No exceptions. No "it was faster to do it myself."
+
+### Mandatory Stop-the-Line Clause
+
+Every PAC **MUST** halt if tests are red.
+
+**Rule:** If CI pipeline shows FAILED or any test is red:
+1. STOP all forward progress immediately
+2. Fix the failing tests
+3. Achieve GREEN status
+4. Resume only after CI = SUCCESS
+
+**Enforcement:**
+- If forward progress continues with red tests → `⛔ HALT: TESTS RED — STOP THE LINE`
+- No exceptions. No "I'll fix it later."
+
+### Mandatory Training Artifact Clause
+
+Every incident or failure **MUST** produce a training artifact.
+
+**Required After:**
+- Test failures that blocked a round
+- Governance violations (any severity)
+- Security incidents
+- Production issues
+
+**Artifact Location:** `docs/agent_university/`
+**Format:** `{AGENT}_{INCIDENT_TYPE}_{DATE}.md`
+
+**Enforcement:**
+- If incident occurs without training artifact within 48h → `⛔ REJECT: TRAINING LOOP VIOLATION`
+- Training artifacts factor into weekly grading
+
+---
+
 ## WRAP Requirements
 Every PAC concludes with a WRAP block that must include:
 - **Files touched:** Explicit list of paths (docs/, src/, scripts/, etc.).
