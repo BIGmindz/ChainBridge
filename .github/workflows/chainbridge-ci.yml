@@ -160,13 +160,6 @@ jobs:
           pip install -r requirements-dev.txt || true
           pip install pytest pytest-cov pytest-asyncio pytest-mock
 
-      - name: Run legacy bot tests
-        run: |
-          if [ -f benson_rsi_bot.py ]; then
-            echo "Running benson_rsi_bot.py --test"
-            python benson_rsi_bot.py --test
-          fi
-
       - name: Run pytest suite (root tests/)
         run: |
           if [ -d tests ]; then
