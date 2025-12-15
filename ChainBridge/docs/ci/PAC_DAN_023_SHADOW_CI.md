@@ -1,6 +1,6 @@
 # PAC-DAN-023: Shadow Mode CI Integration + Governance Hardening
 
-**Agent:** DAN (GID-07) - DevOps & CI/CD Lead
+**Agent:** DAN (GID-04) - DevOps & CI/CD Lead
 **Date:** 2024-12-11
 **Status:** ✅ COMPLETE
 **Branch:** feature/chainpay-consumer
@@ -156,7 +156,7 @@ paths:
 
 **File:** [scripts/shadow_probe.py](scripts/shadow_probe.py)
 **Lines:** 420
-**Author:** DAN (GID-07)
+**Author:** DAN (GID-04)
 
 **Capabilities:**
 
@@ -319,7 +319,7 @@ Timeout: 10s
   ],
   "workflow": ".github/workflows/shadow-ci.yml",
   "probe_script": "scripts/shadow_probe.py",
-  "owner": "DAN (GID-07)",
+  "owner": "DAN (GID-04)",
   "pac_reference": "PAC-DAN-023"
 }
 ```
@@ -1025,7 +1025,7 @@ Shadow Mode is now a **first-class, governed, performance-budget-protected subsy
 **CI Jobs Added:** 6
 **Governance Rules Added:** 1
 
-**Approved by:** DAN (GID-07) - DevOps & CI/CD Lead
+**Approved by:** DAN (GID-04) - DevOps & CI/CD Lead
 **Date:** 2024-12-11
 **Branch:** feature/chainpay-consumer
 **Ready for:** Staging deployment validation
