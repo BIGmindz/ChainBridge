@@ -1,6 +1,6 @@
 # Staging Pipeline Documentation — PAC-DAN-031
 
-> **Author**: DAN (GID-07) DevOps & CI/CD Lead
+> **Author**: DAN (GID-04) DevOps & CI/CD Lead
 > **Status**: Active
 > **Last Updated**: 2025-01-XX
 > **Workflow**: `deploy-staging.yml`
