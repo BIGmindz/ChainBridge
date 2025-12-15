@@ -36,7 +36,7 @@ jobs:
       - name: Run unit tests
         run: |
           source .venv/bin/activate
-          python benson_rsi_bot.py --test
+          pytest -q
 
   deploy:
     runs-on: ubuntu-latest
@@ -61,8 +61,7 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
 
-      - name: Deploy Bot (example command)
+      - name: Deploy placeholder
         run: |
           source .venv/bin/activate
-          nohup python benson_rsi_bot.py > bot.log 2>&1 &
-          echo "Bot deployed."
+          echo "Deploy step placeholder - configure for ChainBridge services"

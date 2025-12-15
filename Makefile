@@ -1,18 +1,20 @@
 PY=python
 COMPOSE?=docker compose
 
-.PHONY: help venv install run test lint fmt docker-build up down logs shell api-server rsi-compat system-test
+.PHONY: help venv install run test lint fmt docker-build up down logs shell api-server rsi-compat system-test dev dev-docker setup
 
 help:
-	@echo "Benson Multi-Signal Decision Bot - Modular Architecture"
+	@echo "ChainBridge Platform — Build Targets"
+	@echo ""
+	@echo "🚀 QUICK START (fresh clone):"
+	@echo "  setup        - One-command setup (venv + deps + env files)"
+	@echo "  dev          - Start local dev stack (API + UI)"
+	@echo "  dev-docker   - Start Docker dev stack"
 	@echo ""
 	@echo "Available targets:"
 	@echo "  venv         - Create Python virtual environment"
 	@echo "  install      - Install dependencies"
-	@echo "  run          - Run legacy RSI bot"
-	@echo "  run-live     - Run RSI bot continuously (PAPER=false) using lean env"
 	@echo "  api-server   - Start API server"
-	@echo "  rsi-compat   - Run RSI bot in compatibility mode"
 	@echo "  system-test  - Run comprehensive system tests"
 	@echo "  test         - Run pytest tests"
 	@echo "  lint         - Run code linting"
@@ -29,19 +31,53 @@ help:
 	@echo "  quick-checks - Run lean quick checks (tests + integrator)"
 	@echo "  pre-commit-install - Install pre-commit and register hooks"
 	@echo "  pre-commit-run     - Run pre-commit on all files"
-	@echo "  run-once-paper     - Run RSI bot once (PAPER=true) using lean env"
-	@echo "  run-once-live      - Run RSI bot once (PAPER=false) using lean env"
 	@echo "  preflight-order    - Preview normalized order params (no placement)"
 	@echo "  select-dynamic     - Select top volatile USD symbols and update config"
 	@echo "  refresh-and-preflight - Refresh symbols dynamically and preflight all"
 	@echo "  docs-lint    - Check markdown fences + markdownlint (non-fatal)"
 	@echo "  docs-fix     - Normalize fences and show pending changes"
 	@echo ""
-	@echo "🟠 DAN GID-04 ULTRA MODE:"
+	@echo "🟠 DAN GID-07 DEVOPS MODE:"
 	@echo "  ultra        - Build + test + lint together (all-in-one)"
 	@echo "  turbo        - Run fast tests only (skip slow/network)"
 	@echo "  profile      - Print test performance analysis"
 	@echo "  test-parallel - Run tests in parallel with pytest-xdist"
+
+# =============================================================================
+# DAN GID-07: Fresh Clone Boot Targets
+# =============================================================================
+
+# One-command setup for fresh clones
+setup: venv install
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🔧 Setting up environment files..."
+	@[ -f .env ] || cp .env.example .env && echo "  ✓ Created .env from .env.example"
+	@[ -f .env.dev ] || cp .env.dev.example .env.dev && echo "  ✓ Created .env.dev from .env.dev.example"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "✅ SETUP COMPLETE"
+	@echo ""
+	@echo "Next steps:"
+	@echo "  make dev         # Start local dev stack"
+	@echo "  make dev-docker  # Start Docker dev stack"
+	@echo ""
+
+# Start local development stack (API Gateway + ChainBoard UI)
+dev: install-lean
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🚀 Starting ChainBridge Dev Stack (local)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@chmod +x scripts/dev/run_stack.sh 2>/dev/null || true
+	@./scripts/dev/run_stack.sh
+
+# Start Docker-based development stack
+dev-docker:
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🐳 Starting ChainBridge Dev Stack (Docker)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@[ -f .env.dev ] || cp .env.dev.example .env.dev
+	$(COMPOSE) -f docker-compose.dev.yml up --build
+
+# =============================================================================
 
 venv:
 	@[ -d .venv ] || python3 -m venv .venv
@@ -50,17 +86,11 @@ venv:
 install:
 	@. .venv/bin/activate && pip install -r requirements.txt
 
-run:
-	@. .venv/bin/activate && $(PY) benson_rsi_bot.py
-
 api-server:
-	@. .venv/bin/activate && $(PY) benson_system.py --mode api-server
-
-rsi-compat:
-	@. .venv/bin/activate && $(PY) benson_system.py --mode rsi-compat --once
+	@. .venv/bin/activate && uvicorn api.server:app --reload --host 0.0.0.0 --port 8000
 
 system-test:
-	$(PY) benson_system.py --mode test
+	@. .venv/bin/activate && pytest -q
 
 test:
 	@. .venv/bin/activate && $(PY) -m pytest -q || true
@@ -120,27 +150,12 @@ run-lean: install-lean
 run-integrator-lean: install-lean
 	@. .venv-lean/bin/activate && python scripts/integrator_smoke_test.py
 
-# Run a tiny lean suite: sanity import, RSI tests, and integrator smoke test
+# Run a tiny lean suite: sanity import and pytest
 quick-checks: install-lean
 	@. .venv-lean/bin/activate && \
 	  python -m pip install -q pytest && \
 	  python -c "import yaml, os; print('PyYAML import OK')" && \
-	  pytest -q tests/test_rsi_scenarios.py && \
-	  python scripts/integrator_smoke_test.py
-
-run-once-paper: install-lean
-	@. .venv-lean/bin/activate && export PAPER=true && export EXCHANGE=$${EXCHANGE:-kraken} && python benson_rsi_bot.py --once
-
-run-once-live: install-lean
-	@. .venv-lean/bin/activate && export PAPER=false && export EXCHANGE=$${EXCHANGE:-kraken} && python benson_rsi_bot.py --once
-
-select-dynamic: install-lean
-	@. .venv-lean/bin/activate && python dynamic_crypto_selector.py --exchange $${EXCHANGE:-kraken} --base USD --top-n 30 --timeframe 1h --lookback 24 --config-path config/config.yaml
-
-refresh-and-preflight: install-lean
-	@. .venv-lean/bin/activate && \
-	  python dynamic_crypto_selector.py --exchange $${EXCHANGE:-kraken} --base USD --top-n $${TOP_N:-30} --timeframe $${TF:-1h} --lookback $${LB:-24} --config-path config/config.yaml && \
-	  python scripts/preflight_config_symbols.py
+	  pytest -q
 
 pre-commit-install:
 	@. .venv/bin/activate && python -m pip install -q pre-commit && pre-commit install
@@ -148,13 +163,8 @@ pre-commit-install:
 pre-commit-run:
 	@. .venv/bin/activate && python -m pip install -q pre-commit && pre-commit run --all-files --show-diff-on-failure
 
-# Ensure the run-live target exists for continuous live runs
-.PHONY: run-live
-run-live: install-lean
-	@. .venv-lean/bin/activate && export PAPER=false && export EXCHANGE=$${EXCHANGE:-kraken} && python benson_rsi_bot.py
-
 # ═══════════════════════════════════════════════════════════════════════════════
-# DAN GID-04 ULTRA MODE - Local DX Acceleration Pack
+# DAN GID-07 ULTRA MODE - Local DX Acceleration Pack
 # ═══════════════════════════════════════════════════════════════════════════════
 .PHONY: ultra turbo profile test-parallel
 
@@ -178,8 +188,7 @@ turbo: install-lean
 	@. .venv-lean/bin/activate && \
 		python -m pip install -q pytest pytest-xdist && \
 		python -m pytest -q -x --ignore=tests/integration --ignore=tests/e2e -m "not slow and not network" 2>/dev/null || \
-		python -m pytest -q -x tests/test_rsi_scenarios.py tests/unit/ 2>/dev/null || \
-		python benson_rsi_bot.py --test && \
+		pytest -q && \
 		echo "✅ TURBO COMPLETE"
 
 # Profile Mode: Test performance analysis
@@ -190,8 +199,7 @@ profile: install
 		python -m pip install -q pytest pytest-xdist pytest-benchmark && \
 		echo "⏱️  Test duration breakdown:" && \
 		python -m pytest -q --durations=20 --durations-min=0.1 2>/dev/null || \
-		echo "(No pytest tests found, using built-in)" && \
-		python benson_rsi_bot.py --test && \
+		echo "(No pytest tests found)" && \
 		echo "✅ PROFILE COMPLETE"
 
 # Parallel test execution with pytest-xdist
