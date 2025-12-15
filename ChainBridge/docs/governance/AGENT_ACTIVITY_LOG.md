@@ -98,6 +98,12 @@ Example:
 
 ---
 
+## GID-09 – LIRA (UX Systems & Operator Experience)
+
+- 2025-12-15 – **PAC-06-C Operator Trust & Cognitive Load Layer**: Implemented calm UX component library (AllClearBadge, AllClearCard, ReassuranceMessage, ConfidenceIndicator, CalmTransition, CalmPulse, ProgressiveDisclosure, QuietLoading, StatusHeartbeat, SectionDivider, ImportanceHint); added calm animation system with reduced-motion support; authored OPERATOR_TRUST_UX_POLICY.md with validation checklist for 4 scenarios (high-risk decision, escalation, override, all-clear); files: chainboard-ui/src/components/ui/CalmUX.tsx, chainboard-ui/src/components/ui/index.ts, chainboard-ui/src/index.css, docs/governance/OPERATOR_TRUST_UX_POLICY.md; tests: `npx tsc --noEmit` (TypeScript passes).
+
+---
+
 ## GID-10 – MAGGIE (ML & Applied AI Lead)
 
 - 2025-12-04 – Fixed context_ledger_features and ML tests for risk_score; files: ChainBridge/chainpay-service/app/ml/context_ledger_features.py, ChainBridge/chainpay-service/tests/test_context_ledger_risk_model.py.
