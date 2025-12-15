@@ -85,6 +85,7 @@ Example:
 - 2025-12-05 – ALEX-006: Wired governance into Reality Baseline, added MCP server registry, and appended settings.json governance baseline; files: docs/product/CHAINBRIDGE_REALITY_BASELINE.md, docs/governance/ALEX_MCP_SERVER_REGISTRY.md, docs/governance/ALEX_TOOL_GOVERNANCE_V1.md; tests: none (docs-only).
 - 2025-12-06 – Updated governance log and reality baseline for ChainIQ routing fix + security hardening; refreshed README tagline alignment with "Sense. Think. Act." narrative; added Next Steps / Open Items to ChainPay spec; files: docs/governance/AGENT_ACTIVITY_LOG.md, docs/product/CHAINBRIDGE_REALITY_BASELINE.md, docs/product/CHAINPAY_V1_SPEC.md, README.md; tests: none (docs-only).
 - 2025-12-13 – **Round-1.2**: Enforced PAC banner compliance (START/END mandatory) and sections 1–8 requirement; logged Round-1.2 activation decisions; files: docs/governance/PAC_STANDARD.md, docs/governance/AGENT_ACTIVITY_LOG.md; tests: none (docs-only).
+- 2025-12-15 – **Decision Explainability Policy v1.0**: Established decision explainability checklist (60-second test), governance approval flow (state machine + authority matrix), and override logging policy (mandatory fields + audit trail); files: docs/governance/DECISION_EXPLAINABILITY_POLICY.md; tests: none (docs-only).
 
 ### Round-1.2 Governance Decision Log
 
