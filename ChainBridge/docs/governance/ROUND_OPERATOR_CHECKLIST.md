@@ -66,10 +66,15 @@ Reference: [AGENT_FIRST_EXECUTION_DOCTRINE_v1.md](./AGENT_FIRST_EXECUTION_DOCTRI
 ```
 ☐ Drift or format violation detected?
 ☐ Issue appropriate RESET command (see AGENT_RESET_PIPELINE_v1.md)
-☐ Wait for valid RESET-ACK (max 5 minutes)
-☐ Validate RESET-ACK per checklist
-☐ If HARD RESET: Confirm training artifact commitment
+☐ Wait for valid BOXED RESET-ACK (max 5 minutes)
+    - **Check 1:** Is it a BOXED RESET-ACK with correct top+bottom emoji banners (matches CANON_REGISTRY_v1.md)?
+    - **Check 2:** Are all 6 parts present?
+    - **Check 3:** Is the Status exactly "READY — awaiting RESUME"?
+☐ If valid: Issue `RESUME` command.
+☐ If invalid: Re-issue RESET (Escalate severity).
 ```
+**If RESET-ACK is not boxed:** Treat as `DRIFT_FORMAT` and re-issue RESET immediately (no negotiation).
+**If narration/logs appear between RESET-ACK and RESUME:** Escalate to **HARD_RESET** on the next command.
 **If no RESET-ACK within 5 min:** Escalate to HARD RESET or BLOCK
 **Reference:** [AGENT_RESET_PIPELINE_v1.md](./AGENT_RESET_PIPELINE_v1.md)
 
@@ -88,6 +93,7 @@ Reference: [AGENT_FIRST_EXECUTION_DOCTRINE_v1.md](./AGENT_FIRST_EXECUTION_DOCTRI
 ☐ Heightened monitoring active (30 min post-reset)
 ```
 **Do NOT accept WRAPs from reset agents until RESUME issued.**
+**If output appears before RESUME after a reset:** Trigger HARD_RESET immediately.
 **Reference:** [RESET_PACKET_TEMPLATES_v1.md](./RESET_PACKET_TEMPLATES_v1.md)
 
 ### Step 6: Lint Each WRAP
@@ -160,7 +166,7 @@ Reference: [AGENT_FIRST_EXECUTION_DOCTRINE_v1.md](./AGENT_FIRST_EXECUTION_DOCTRI
 | 2 | Define scope | Must have mission |
 | 3 | Issue PACs | Must have acceptance criteria |
 | 4 | Monitor | Halt on violation |
-| 4.5 | Reset (if needed) | Valid RESET-ACK required ⚪ NEW |
+| 4.5 | Reset (if needed) | Valid BOXED RESET-ACK required ⚪ NEW |
 | 5 | Receive WRAPs | No partials |
 | 5.5 | Resume Gate | RESUME before continue ⚪ NEW |
 | 6 | Lint WRAPs | 14-check pass |

@@ -1,8 +1,8 @@
 # BENSON (GID-00) — Agent University Training Artifact
 
-> **Document:** AU07.A-2 Training Artifact  
-> **Agent:** BENSON (GID-00)  
-> **Role:** Command & Orchestration  
+> **Document:** AU07.A-2 Training Artifact
+> **Agent:** BENSON (GID-00)
+> **Role:** Command & Orchestration
 > **Date:** 2025-12-15
 
 ---

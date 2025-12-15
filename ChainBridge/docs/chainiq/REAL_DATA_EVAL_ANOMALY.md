@@ -1,6 +1,6 @@
 # ChainIQ Anomaly Model - Real Data Evaluation
 
-**Generated:** 2025-12-11 16:14:46 UTC
+**Generated:** 2025-12-13 04:47:15 UTC
 **Model:** mock
 **Evaluation Type:** Real Ingestion-Derived Shipment Data
 
@@ -108,7 +108,7 @@ Training Data: 5,000 synthetic shipments (PAC-004)
 Feature Count: 1
 Contamination: 0.05 (5% expected anomalies)
 Tree Count: 200
-Validation Date: 2025-12-11 16:14:46 UTC
+Validation Date: 2025-12-13 04:47:15 UTC
 ```
 
 ---

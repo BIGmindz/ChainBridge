@@ -31,8 +31,8 @@
 | 10 | **Acceptance Criteria Met?** — All criteria from PAC are checked off | ☐ |
 | 11 | **Agent-First Compliance?** — Was this executed by an agent (not human)? | ☐ |
 | 12 | **Stop-the-Line Compliance?** — If tests failed, did we halt before proceeding? | ☐ |
-| 13 | **Reset Compliance?** — If RESET issued this session, was valid RESET-ACK submitted? ⚪ NEW | ☐ |
-| 14 | **Resume Gate Passed?** — If reset occurred, did agent wait for RESUME before continuing? ⚪ NEW | ☐ |
+| 13 | **Reset Compliance (Boxed + Status)?** — If RESET issued: Valid **BOXED RESET-ACK** (correct emoji top+bottom) + valid 6-part schema + Status line exactly `READY — awaiting RESUME` | ☐ |
+| 14 | **Resume Gate Passed?** — ZERO output between ACK and RESUME (any narration/logs = immediate HARD_RESET) | ☐ |
 
 ---
 
@@ -72,7 +72,7 @@ Check 12 (Stop-the-Line) ──NO──▶ ⛔ HALT "Tests red — stop the line
   YES
   │
   ▼
-Check 13 (Reset Compliance) ──NO──▶ ⛔ BLOCK "Ignored RESET command"
+Check 13 (Reset Compliance) ──NO──▶ ⛔ BLOCK "Missing/incorrect BOXED RESET-ACK"
   │
   YES
   │
@@ -174,7 +174,8 @@ Governance Maxim: No green, no go.
 ```
 ⛔ BLOCK: IGNORED RESET COMMAND
 
-Detected: RESET issued but no valid RESET-ACK received
+Detected: RESET issued but no valid BOXED RESET-ACK received
+Hard Rule: RESET-ACK must be boxed with correct emoji banners (top+bottom) per CANON_REGISTRY_v1.md
 Reset Command: {RESET | HARD RESET}
 Time Since Reset: {minutes}
 
@@ -183,6 +184,8 @@ Required Actions:
 2. Clear all prior context
 3. Reload PAC scope
 4. Wait for RESUME command
+
+If the only defect is missing/incorrect box: re-issue RESET using reason code `DRIFT_FORMAT`.
 
 Violation: V-H-006
 Reference: AGENT_RESET_PIPELINE_v1.md §4
@@ -230,7 +233,9 @@ Reference: AGENT_RESET_PIPELINE_v1.md §7
 | Human executed task | Agent-First violation (Check 11) |
 | Ignored red tests | Stop-the-Line violation (Check 12) |
 | No RESET-ACK after reset | Reset non-compliance (Check 13) ⚪ NEW |
-| Continued without RESUME | Resume gate violation (Check 14) ⚪ NEW |
+| RESET-ACK not boxed (wrong/missing emoji banners) | Reset non-compliance (Check 13) ⚪ NEW |
+| RESET-ACK status not exactly "READY — awaiting RESUME" | Reset non-compliance (Check 13) ⚪ NEW |
+| Continued without RESUME or any narration between ACK and RESUME | Resume gate violation (Check 14) ⚪ NEW |
 
 ---
 

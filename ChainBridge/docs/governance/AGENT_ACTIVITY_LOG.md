@@ -87,6 +87,7 @@ Example:
 - 2025-12-13 – **Round-1.2**: Enforced PAC banner compliance (START/END mandatory) and sections 1–8 requirement; logged Round-1.2 activation decisions; files: docs/governance/PAC_STANDARD.md, docs/governance/AGENT_ACTIVITY_LOG.md; tests: none (docs-only).
 - 2025-12-15 – **Decision Explainability Policy v1.0**: Established decision explainability checklist (60-second test), governance approval flow (state machine + authority matrix), and override logging policy (mandatory fields + audit trail); files: docs/governance/DECISION_EXPLAINABILITY_POLICY.md; tests: none (docs-only).
 - 2025-12-15 – **PAC-06-E Override Governance Policy v1.0**: Formalized override lifecycle (5-state machine: PENDING→REQUESTED→APPROVED/REJECTED→REVERTED), approval authority matrix (risk-tier based, dual-approval for HIGH+), required fields schema, and audit trail specification; files: docs/governance/OVERRIDE_GOVERNANCE_POLICY.md; tests: none (docs-only).
+- 2025-01-13 – **AU07.A Governance Finalization**: Locked CANON_REGISTRY_v1 (12 agents, unique colors verified), created AGENT_LEVEL_RUBRIC_v1 (L0-L3 measurable grading criteria, 100-point scale across Compliance/Quality/Collaboration/Initiative), created VIOLATION_ESCALATION_v1 (4-stage ladder: WARN→REJECT→BLOCK→RETRAIN with violation catalog), defined MONDAY_GRADING_RITUAL_v1 (weekly 60-min ceremony at 09:00 UTC); files: docs/governance/AGENT_LEVEL_RUBRIC_v1.md, docs/governance/VIOLATION_ESCALATION_v1.md, docs/governance/MONDAY_GRADING_RITUAL_v1.md; tests: none (docs-only).
 
 ### Round-1.2 Governance Decision Log
 
