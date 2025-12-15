@@ -59,3 +59,6 @@ reports*/
 # OS junk
 .DS_Store
 Thumbs.db
+ChainBridge/chainpay.db
+chainpay.db
+.atlas_safety/
