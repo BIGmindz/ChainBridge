@@ -38,6 +38,18 @@ The 12-step checklist for running any ChainBridge execution round. Follow in ord
 ☐ Agents acknowledged receipt
 ```
 
+### Step 3.5: Agent-First Gate ⚪ NEW
+```
+☐ All tasks assigned to agents (not humans)
+☐ No CEO-only exception claimed without justification
+☐ CI pipeline is GREEN before starting
+☐ No outstanding training artifacts missing
+```
+**If human attempts non-CEO-only work:** Issue `⛔ REJECT: AGENT-FIRST VIOLATION`
+**If tests are RED:** Issue `⛔ HALT: TESTS RED — STOP THE LINE`
+
+Reference: [AGENT_FIRST_EXECUTION_DOCTRINE_v1.md](./AGENT_FIRST_EXECUTION_DOCTRINE_v1.md)
+
 ---
 
 ## Execution (Steps 4-7)
@@ -50,6 +62,17 @@ The 12-step checklist for running any ChainBridge execution round. Follow in ord
 ```
 **If violation:** Issue `⛔ HALT` immediately.
 
+### Step 4.5: Reset Step (If Drift Detected) ⚪ NEW
+```
+☐ Drift or format violation detected?
+☐ Issue appropriate RESET command (see AGENT_RESET_PIPELINE_v1.md)
+☐ Wait for valid RESET-ACK (max 5 minutes)
+☐ Validate RESET-ACK per checklist
+☐ If HARD RESET: Confirm training artifact commitment
+```
+**If no RESET-ACK within 5 min:** Escalate to HARD RESET or BLOCK
+**Reference:** [AGENT_RESET_PIPELINE_v1.md](./AGENT_RESET_PIPELINE_v1.md)
+
 ### Step 5: Receive WRAPs
 ```
 ☐ WRAP received from each PAC
@@ -57,9 +80,19 @@ The 12-step checklist for running any ChainBridge execution round. Follow in ord
 ☐ Single agent per WRAP
 ```
 
+### Step 5.5: Resume Gate (After Reset) ⚪ NEW
+```
+☐ If reset was issued: RESET-ACK validated
+☐ Issue RESUME command to cleared agent(s)
+☐ Confirm agent acknowledged RESUME
+☐ Heightened monitoring active (30 min post-reset)
+```
+**Do NOT accept WRAPs from reset agents until RESUME issued.**
+**Reference:** [RESET_PACKET_TEMPLATES_v1.md](./RESET_PACKET_TEMPLATES_v1.md)
+
 ### Step 6: Lint Each WRAP
 ```
-☐ Run WRAP_LINTER_CHECKLIST.md (10 checks)
+☐ Run WRAP_LINTER_CHECKLIST.md (14 checks) ← Updated from 12
 ☐ All checks pass = ACCEPT
 ☐ Any check fails = REJECT with template
 ```
@@ -127,8 +160,10 @@ The 12-step checklist for running any ChainBridge execution round. Follow in ord
 | 2 | Define scope | Must have mission |
 | 3 | Issue PACs | Must have acceptance criteria |
 | 4 | Monitor | Halt on violation |
+| 4.5 | Reset (if needed) | Valid RESET-ACK required ⚪ NEW |
 | 5 | Receive WRAPs | No partials |
-| 6 | Lint WRAPs | 10-check pass |
+| 5.5 | Resume Gate | RESUME before continue ⚪ NEW |
+| 6 | Lint WRAPs | 14-check pass |
 | 7 | Handle rejections | Loop until clean |
 | 8 | Security gate | SAM approval |
 | 9 | Lock round | Explicit declaration |
