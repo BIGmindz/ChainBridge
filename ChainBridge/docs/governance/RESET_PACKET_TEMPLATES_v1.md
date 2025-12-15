@@ -282,6 +282,8 @@ I will submit training artifact to `docs/agent_university/MAGGIE_RESET_20251215.
 
 ```
 ☐ GID matches reset target
+☐ Agent name matches GID per CANON_REGISTRY_v1.md
+☐ Emoji block matches GID per CANON_REGISTRY_v1.md
 ☐ Reset type matches issued command
 ☐ Prior Context Cleared = YES
 ☐ PAC Scope is valid PAC-ID
@@ -292,10 +294,14 @@ I will submit training artifact to `docs/agent_university/MAGGIE_RESET_20251215.
 ☐ (Hard only) Heightened monitoring accepted
 ```
 
+**Identity Mismatch = Invalid ACK:** If GID, agent name, or emoji block does not match `CANON_REGISTRY_v1.md`, the ACK is automatically rejected with trigger code `DRIFT_IDENTITY`.
+
 ### Common Mistakes (Invalid ACK)
 
 | Mistake | Why Invalid |
 |---------|-------------|
+| Wrong GID for agent name | Identity mismatch → `DRIFT_IDENTITY` |
+| Wrong emoji block for GID | Identity mismatch → `DRIFT_IDENTITY` |
 | Missing GID | Can't verify identity |
 | "Prior Context Cleared: PARTIAL" | Must be full clear |
 | Generic constraints ("do my job") | Must be specific from PAC |
