@@ -13,6 +13,7 @@ from .api_drift import router as drift_router
 from .api_fusion import router as fusion_router
 from .api_iq_ml import router as iq_ml_router
 from .api_shadow import router as shadow_router
+from .ml.api_decision import router as decision_router
 
 
 def create_app() -> FastAPI:
@@ -39,6 +40,9 @@ def create_app() -> FastAPI:
 
     # Include the Fusion Scoring API router (v1.2)
     app.include_router(fusion_router)
+
+    # Include the Decision Engine API router (v1.0 - MAGGIE GID-10)
+    app.include_router(decision_router)
 
     # Health check endpoint
     @app.get("/health")

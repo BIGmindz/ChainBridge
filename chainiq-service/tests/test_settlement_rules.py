@@ -10,12 +10,7 @@ from datetime import datetime
 
 import pytest
 
-from app.schemas import (
-    SettlementPolicyRecommendation,
-    ShipmentRiskAssessment,
-    ShipmentRiskContext,
-    TopFactor,
-)
+from app.schemas import SettlementPolicyRecommendation, ShipmentRiskAssessment, ShipmentRiskContext, TopFactor
 from app.settlement import SettlementRecommender, get_default_recommender, recommend_settlement, recommend_settlements
 from app.settlement_rules import (
     RISK_BAND_TO_POLICY,

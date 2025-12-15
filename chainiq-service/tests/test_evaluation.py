@@ -6,7 +6,6 @@ Tests for the retrospective pilot evaluation functionality.
 Author: Maggie (GID-10) - ML & Applied AI Lead
 """
 
-
 import pytest
 
 # Test imports
