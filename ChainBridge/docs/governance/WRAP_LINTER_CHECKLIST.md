@@ -10,12 +10,12 @@
 
 ## Quick Reference
 
-**Pass = All 10 checks YES**
+**Pass = All 14 checks YES** ← Updated from 12
 **Fail = Any check NO → REJECT immediately**
 
 ---
 
-## The 10-Point Check
+## The 14-Point Check
 
 | # | Check | YES/NO |
 |---|-------|--------|
@@ -29,6 +29,10 @@
 | 8 | **Tests Included?** — Evidence of validation (commands, output, or explicit skip reason) | ☐ |
 | 9 | **Scope Matches PAC?** — Work done matches the assigned PAC scope | ☐ |
 | 10 | **Acceptance Criteria Met?** — All criteria from PAC are checked off | ☐ |
+| 11 | **Agent-First Compliance?** — Was this executed by an agent (not human)? | ☐ |
+| 12 | **Stop-the-Line Compliance?** — If tests failed, did we halt before proceeding? | ☐ |
+| 13 | **Reset Compliance?** — If RESET issued this session, was valid RESET-ACK submitted? ⚪ NEW | ☐ |
+| 14 | **Resume Gate Passed?** — If reset occurred, did agent wait for RESUME before continuing? ⚪ NEW | ☐ |
 
 ---
 
@@ -54,6 +58,26 @@ Check 6-7 (Content) ──NO──▶ 🔁 REJECT "Missing sections / partial lo
   │
   ▼
 Check 8-10 (Quality) ──NO──▶ 🔁 REJECT "Incomplete work"
+  │
+  YES
+  │
+  ▼
+Check 11 (Agent-First) ──NO──▶ ⛔ REJECT "Human executed agent work"
+  │
+  YES
+  │
+  ▼
+Check 12 (Stop-the-Line) ──NO──▶ ⛔ HALT "Tests red — stop the line"
+  │
+  YES
+  │
+  ▼
+Check 13 (Reset Compliance) ──NO──▶ ⛔ BLOCK "Ignored RESET command"
+  │
+  YES
+  │
+  ▼
+Check 14 (Resume Gate) ──NO──▶ ⛔ BLOCK "Continued without RESUME"
   │
   YES
   │
@@ -110,6 +134,77 @@ Missing: [List unmet criteria]
 Fix: Complete work, add evidence, resubmit
 ```
 
+### Agent-First Violation (Check 11) ⚪ NEW
+```
+⛔ REJECT: AGENT-FIRST VIOLATION
+
+Detected: Human executed agent-assignable work
+Task: [TASK DESCRIPTION]
+Rule: Agent-First Execution Doctrine v1 §1
+
+Required Fix:
+1. Revert any human-executed changes
+2. Assign task to appropriate agent (GID-XX)
+3. Agent executes via proper PAC
+4. Submit compliant WRAP
+
+Reference: AGENT_FIRST_EXECUTION_DOCTRINE_v1.md §2 for CEO-only exceptions
+```
+
+### Stop-the-Line Violation (Check 12) ⚪ NEW
+```
+⛔ HALT: TESTS RED — STOP THE LINE
+
+Detected: Test failure(s) blocking forward progress
+Failing Tests: [LIST TESTS]
+Pipeline Status: FAILED
+
+Required Actions:
+1. STOP all new development immediately
+2. Identify root cause of failure
+3. Fix tests (not skip them)
+4. Achieve GREEN status
+5. Resume only after CI = SUCCESS
+
+Rule: Agent-First Execution Doctrine v1 §1
+Governance Maxim: No green, no go.
+```
+
+### Reset Non-Compliance (Check 13) ⚪ NEW
+```
+⛔ BLOCK: IGNORED RESET COMMAND
+
+Detected: RESET issued but no valid RESET-ACK received
+Reset Command: {RESET | HARD RESET}
+Time Since Reset: {minutes}
+
+Required Actions:
+1. Submit valid RESET-ACK immediately
+2. Clear all prior context
+3. Reload PAC scope
+4. Wait for RESUME command
+
+Violation: V-H-006
+Reference: AGENT_RESET_PIPELINE_v1.md §4
+```
+
+### Resume Gate Violation (Check 14) ⚪ NEW
+```
+⛔ BLOCK: CONTINUED WITHOUT RESUME
+
+Detected: Agent continued operations after reset without RESUME command
+Last Command: RESET / HARD RESET
+RESUME Issued: NO
+
+Required Actions:
+1. STOP all operations immediately
+2. Wait for explicit RESUME command
+3. Do not generate any output until resumed
+
+Violation: V-H-007
+Reference: AGENT_RESET_PIPELINE_v1.md §7
+```
+
 ---
 
 ## Speed Tips for Reviewers
@@ -132,6 +227,10 @@ Fix: Complete work, add evidence, resubmit
 | Missing GID | Can't verify agent identity |
 | Two agents in one WRAP | Violates single-authorship rule |
 | "Tests: TODO" | No evidence of validation |
+| Human executed task | Agent-First violation (Check 11) |
+| Ignored red tests | Stop-the-Line violation (Check 12) |
+| No RESET-ACK after reset | Reset non-compliance (Check 13) ⚪ NEW |
+| Continued without RESUME | Resume gate violation (Check 14) ⚪ NEW |
 
 ---
 
