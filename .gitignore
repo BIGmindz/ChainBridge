@@ -48,6 +48,19 @@ yarn-error.log*
 .coverage.*
 htmlcov/
 coverage*/
+**/.coverage
+
+# Local artifacts (do not track)
+ChainBridge/chainpay.db
+ChainBridge/chainpay-service/.coverage
+**/__pycache__/
+**/*.pyc
+
+# State files (DAN GID-07 - no hidden state)
+*.db
+*.sqlite
+chainpay.db
+settlement_actions.db
 
 # ML Model Security (SAM GID-06)
 # WARNING: Never commit quarantined models to git
@@ -59,6 +72,10 @@ reports*/
 # OS junk
 .DS_Store
 Thumbs.db
+
+# Local artifacts
 ChainBridge/chainpay.db
-chainpay.db
-.atlas_safety/
+ChainBridge/chainpay-service/.coverage
+**/.coverage
+**/__pycache__/
+**/*.pyc
