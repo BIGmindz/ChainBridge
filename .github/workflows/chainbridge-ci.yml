@@ -143,20 +143,23 @@ jobs:
           if [ -f benson_rsi_bot.py ]; then python benson_rsi_bot.py --test; fi
           PYTEST_PATHS=""
           if [ -d tests ]; then PYTEST_PATHS="$PYTEST_PATHS tests/"; fi
-          for d in ChainBridge/*/tests; do
-            if [ -d "$d" ]; then PYTEST_PATHS="$PYTEST_PATHS $d"; fi
-          done
-          if [ -n "$PYTEST_PATHS" ]; then
-            pytest $PYTEST_PATHS -v --cov=ChainBridge --cov-report=xml
-          else
+          # Run tests in 'tests/' with coverage for all code (.)
+          if [ -d tests ]; then
+            pytest tests/ -v --cov=. --cov-report=xml:coverage.xml
+          fi
+          # Run tests in 'ChainBridge/api/tests' with coverage for ChainBridge
+          if [ -d ChainBridge/api/tests ]; then
+            pytest ChainBridge/api/tests -v --cov=ChainBridge --cov-report=xml:coverage-chainbridge.xml
+          fi
+          if [ ! -d tests ] && [ ! -d ChainBridge/api/tests ]; then
             echo "No pytest suites discovered"
           fi
       
       - name: Upload coverage
-        if: ${{ hashFiles('coverage.xml') != '' }}
+        if: ${{ hashFiles('coverage.xml') != '' || hashFiles('coverage-chainbridge.xml') != '' }}
         uses: codecov/codecov-action@v3
         with:
-          file: ./coverage.xml
+          files: ./coverage.xml,./coverage-chainbridge.xml
 
   chainboard-ui-tests:
     name: ChainBoard UI Tests
