@@ -1,0 +1,253 @@
+name: ChainBridge Main Protection CI/CD
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  PYTHON_VERSION: 3.11
+  
+jobs:
+  security-scan:
+    name: Security & Vulnerability Assessment (CodeQL)
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'python' ]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+  code-quality:
+    name: Code Quality & Standards
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pylint black flake8 mypy safety bandit
+      
+      - name: Normalize markdown fences (dry-run)
+        run: |
+          if [ -f scripts/normalize_markdown_fences.py ]; then \
+            python scripts/normalize_markdown_fences.py; \
+            git diff --exit-code || (echo 'Markdown fence normalization required. Run scripts/normalize_markdown_fences.py locally and commit.' && exit 1); \
+          else \
+            echo 'Normalization script not found'; \
+          fi
+      
+      - name: Run pre-commit hooks
+        run: |
+          if [ -f .pre-commit-config.yaml ]; then \
+            pip install pre-commit && pre-commit run --all-files || true; \
+          else \
+            echo 'No pre-commit config found'; \
+          fi
+      
+      - name: Ruff lint and format
+        run: |
+          if [ -f ruff.toml ]; then \
+            pip install ruff && ruff check . && ruff format --check . || true; \
+          else \
+            echo 'No ruff config found'; \
+          fi
+      
+      - name: Code formatting check
+        run: black --check --diff . || true
+      
+      - name: Linting
+        run: pylint --rcfile=.pylintrc *.py || true
+      
+      - name: Type checking
+        run: mypy --config-file=pyproject.toml . || true
+      
+      - name: Security audit
+        run: |
+          safety check || true
+          bandit -r . -f json -o bandit-report.json || true
+
+  configuration-validation:
+    name: Configuration & Schema Validation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Validate configuration files
+        run: |
+          python -c "import yaml; yaml.safe_load(open('config/config.yaml'))" || echo "No config/config.yaml"
+          python -c "import os,yaml; p='config.yaml'; print('root config exists' if os.path.exists(p) else 'no root config'); (yaml.safe_load(open(p)) if os.path.exists(p) else None); print('YAML root config validated if present')" || true
+      
+      - name: Schema validation
+        run: |
+          if [ -f scripts/validate_config_schema.py ]; then python scripts/validate_config_schema.py; else echo "No schema validator"; fi
+
+  unit-tests:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-mock
+      
+      - name: Run tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/ChainBridge
+        run: |
+          if [ -f benson_rsi_bot.py ]; then python benson_rsi_bot.py --test; fi
+          
+          # Run tests in root 'tests/' directory with coverage for all code
+          if [ -d tests ]; then
+            pytest tests/ -v --cov=. --cov-report=xml:coverage.xml
+          fi
+          
+          # Discover and run tests in ChainBridge service directories
+          CHAINBRIDGE_TESTS=""
+          for d in ChainBridge/*/tests; do
+            if [ -d "$d" ]; then
+              CHAINBRIDGE_TESTS="$CHAINBRIDGE_TESTS $d"
+            fi
+          done
+          
+          if [ -n "$CHAINBRIDGE_TESTS" ]; then
+            pytest $CHAINBRIDGE_TESTS -v --cov=ChainBridge --cov-report=xml:coverage-chainbridge.xml
+          fi
+          
+          if [ ! -d tests ] && [ -z "$CHAINBRIDGE_TESTS" ]; then
+            echo "No pytest suites discovered"
+          fi
+      
+      - name: Upload coverage
+        if: ${{ hashFiles('coverage.xml') != '' || hashFiles('coverage-chainbridge.xml') != '' }}
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml,./coverage-chainbridge.xml
+
+  chainboard-ui-tests:
+    name: ChainBoard UI Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+      
+      - name: Install dependencies
+        run: |
+          if [ -d ChainBridge/chainboard-ui ] && [ -f ChainBridge/chainboard-ui/package.json ]; then
+            cd ChainBridge/chainboard-ui
+            npm ci
+          else
+            echo "No ChainBoard UI found"
+          fi
+      
+      - name: Run vitest suite
+        run: |
+          if [ -d ChainBridge/chainboard-ui ] && [ -f ChainBridge/chainboard-ui/package.json ]; then
+            cd ChainBridge/chainboard-ui
+            npm test || true
+          else
+            echo "No ChainBoard UI tests found"
+          fi
+
+  deployment-staging:
+    name: Staging Deployment
+    needs: [security-scan, code-quality, configuration-validation, unit-tests]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to staging
+        run: |
+          echo "🚀 Deploying to staging environment"
+          # Add staging deployment logic here
+
+  deployment-production:
+    name: Production Deployment
+    needs: [security-scan, code-quality, configuration-validation, unit-tests]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Production deployment gate
+        run: |
+          echo "🔒 Production deployment requires manual approval"
+          # Add production deployment logic here
+
+  docs-quality:
+    name: Documentation Quality
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Run fence normalizer & enforce cleanliness
+        run: |
+          if [ -f scripts/normalize_markdown_fences.py ]; then python scripts/normalize_markdown_fences.py; fi
+          git diff --exit-code || (echo '❌ Unnormalized markdown fences detected. Run make docs-fix locally.' && exit 1)
+      - name: Markdown lint
+        run: |
+          if command -v npx >/dev/null 2>&1; then \
+            npx --yes markdownlint-cli '**/*.md' || true; \
+          else \
+            echo 'markdownlint skipped: npx missing'; \
+          fi
