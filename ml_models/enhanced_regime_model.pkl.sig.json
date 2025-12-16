@@ -1,0 +1,32 @@
+{
+  "signature_version": "2.0-PQC",
+  "model_name": "enhanced_regime",
+  "model_version": "v1.0.0",
+  "sha256": "f1fc7608c39b6a580306390cc5f8cf8ba9c449923409c34da78a059e2f4c254b",
+  "file_size_mb": 0.664,
+  "signed_at": "2025-12-16T19:07:41.332433Z",
+  "signed_by": "SAM-GID-06-ModelSecurityManager",
+  "training_date": "unknown",
+  "dependencies": {
+    "sklearn": "unknown",
+    "numpy": "unknown"
+  },
+  "pqc": {
+    "enabled": false,
+    "algorithm": "SHA256",
+    "kem_algorithm": null,
+    "sig_algorithm": null,
+    "variant": null,
+    "ciphertext": null,
+    "mac": null,
+    "public_key": null,
+    "dilithium_signature": null,
+    "dilithium_public_key": null
+  },
+  "chain_of_trust": {
+    "signer": "SAM-GID-06",
+    "policy": "PAC-SAM-NEXT-019",
+    "trust_level": "VERIFIED",
+    "verification_required": true
+  }
+}
