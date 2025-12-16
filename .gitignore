@@ -17,6 +17,11 @@ venv/
 logs/
 *.log
 *.json
+!docs/governance/*.json
+!.github/**/*.json
+!package.json
+!package-lock.json
+!tsconfig.json
 benson_metrics.json
 multi_signal_trades.json
 trading_metrics.json
