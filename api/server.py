@@ -14,13 +14,18 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+from api.chainboard_stub import router as chainboard_router
 from core.data_processor import DataProcessor
 
 # Import core components
 from core.module_manager import ModuleManager
+from core.occ.api.activities import router as occ_activities_router
+from core.occ.api.artifacts import router as occ_artifacts_router
+from core.occ.api.audit_events import router as occ_audit_events_router
+from core.occ.api.decisions import router as occ_decisions_router
+from core.occ.api.proofpacks import router as occ_proofpacks_router
 from core.pipeline import Pipeline
 from tracking.metrics_collector import MetricsCollector
-
 
 # Default module configuration
 DEFAULT_MODULE_IMPORTS = {
@@ -131,6 +136,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount OCC APIs and ChainBoard projection layer
+app.include_router(occ_activities_router)
+app.include_router(occ_artifacts_router)
+app.include_router(occ_audit_events_router)
+app.include_router(occ_decisions_router)
+app.include_router(occ_proofpacks_router)
+app.include_router(chainboard_router)
 
 
 @app.get("/", response_model=Dict[str, str])
