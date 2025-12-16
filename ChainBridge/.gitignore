@@ -16,7 +16,7 @@ venv/
 .DS_Store
 logs/
 *.log
-*.json
+# Specific json files to ignore (not blanket *.json)
 benson_metrics.json
 multi_signal_trades.json
 trading_metrics.json

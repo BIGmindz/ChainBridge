@@ -71,4 +71,4 @@ chainpay.db
 # Local-only / not for commit
 .github/ALEX_RULES.json
 .github/agents/
-chainboard-ui/
+/chainboard-ui/
