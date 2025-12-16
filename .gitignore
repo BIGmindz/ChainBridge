@@ -24,7 +24,7 @@ logs/
 !tsconfig.json
 !tsconfig.node.json
 !**/__fixtures__/*.json
-!**/*.sig.json
+!ChainBridge/**/ml_models/*.sig.json
 benson_metrics.json
 multi_signal_trades.json
 trading_metrics.json
