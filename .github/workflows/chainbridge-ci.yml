@@ -141,17 +141,25 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/ChainBridge
         run: |
           if [ -f benson_rsi_bot.py ]; then python benson_rsi_bot.py --test; fi
-          PYTEST_PATHS=""
-          if [ -d tests ]; then PYTEST_PATHS="$PYTEST_PATHS tests/"; fi
-          # Run tests in 'tests/' with coverage for all code (.)
+          
+          # Run tests in root 'tests/' directory with coverage for all code
           if [ -d tests ]; then
             pytest tests/ -v --cov=. --cov-report=xml:coverage.xml
           fi
-          # Run tests in 'ChainBridge/api/tests' with coverage for ChainBridge
-          if [ -d ChainBridge/api/tests ]; then
-            pytest ChainBridge/api/tests -v --cov=ChainBridge --cov-report=xml:coverage-chainbridge.xml
+          
+          # Discover and run tests in ChainBridge service directories
+          CHAINBRIDGE_TESTS=""
+          for d in ChainBridge/*/tests; do
+            if [ -d "$d" ]; then
+              CHAINBRIDGE_TESTS="$CHAINBRIDGE_TESTS $d"
+            fi
+          done
+          
+          if [ -n "$CHAINBRIDGE_TESTS" ]; then
+            pytest $CHAINBRIDGE_TESTS -v --cov=ChainBridge --cov-report=xml:coverage-chainbridge.xml
           fi
-          if [ ! -d tests ] && [ ! -d ChainBridge/api/tests ]; then
+          
+          if [ ! -d tests ] && [ -z "$CHAINBRIDGE_TESTS" ]; then
             echo "No pytest suites discovered"
           fi
       
