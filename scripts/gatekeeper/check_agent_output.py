@@ -30,6 +30,20 @@ from typing import Dict, List, Optional, Set
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
+def resolve_registry_path(repo_root: Path) -> Path:
+    """Find AGENT_REGISTRY.json in either monorepo or flat layout."""
+    candidates = [
+        repo_root / "ChainBridge" / "docs" / "governance" / "AGENT_REGISTRY.json",
+        repo_root / "docs" / "governance" / "AGENT_REGISTRY.json",
+    ]
+    for c in candidates:
+        if c.is_file():
+            return c
+    raise FileNotFoundError(
+        "AGENT_REGISTRY.json not found. Tried:\n" + "\n".join(str(c) for c in candidates)
+    )
+
+
 def resolve_repo_file(p: Path) -> Path:
     """Validate that a file path is within the repository root (CodeQL path traversal fix)."""
     candidate = p
@@ -233,7 +247,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--quiet", "-q", action="store_true", help="Only output on failure")
     args = parser.parse_args(argv)
 
-    registry_path = REPO_ROOT / "ChainBridge" / "docs" / "governance" / "AGENT_REGISTRY.json"
+    registry_path = resolve_registry_path(REPO_ROOT)
 
     try:
         registry = Registry(registry_path)
