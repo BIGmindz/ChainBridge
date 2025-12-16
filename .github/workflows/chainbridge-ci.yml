@@ -322,12 +322,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Detect ChainBoard UI lockfile
+        id: lockfile
+        shell: bash
+        run: |
+          if [ -f "ChainBridge/chainboard-ui/package-lock.json" ]; then
+            echo "has_lockfile=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_lockfile=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Node.js (cached)
+        if: steps.lockfile.outputs.has_lockfile == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
           cache-dependency-path: ChainBridge/chainboard-ui/package-lock.json
+
+      - name: Setup Node.js (no cache)
+        if: steps.lockfile.outputs.has_lockfile != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Install dependencies
         working-directory: ChainBridge/chainboard-ui
