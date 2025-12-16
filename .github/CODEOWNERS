@@ -37,7 +37,6 @@
 
 # Main entry points
 /main.py @BIGmindz
-/benson_rsi_bot.py @BIGmindz
 /start_trading.sh @BIGmindz
 
 # Core trading engine

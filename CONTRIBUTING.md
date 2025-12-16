@@ -276,17 +276,18 @@ python -m pytest tests/test_gatekeeper.py -v
 ### BensonBot Testing
 
 ```bash
-# Built-in RSI tests
-python benson_rsi_bot.py --test
+# Built-in tests
+python -m src.tests
 
-# Full test suite
+# Full test suite (if pytest available)
+pytest src/tests.py -v
 pytest tests/ -v
 
-# Specific test modules
+# Specific test modules (if they exist)
 pytest tests/test_signals.py -v
 
 # Paper trading validation
-python main.py --mode paper  # Let run for 24h
+python -m src.main --mode paper  # Let run for 24h
 ```
 
 ### Test Coverage Requirements

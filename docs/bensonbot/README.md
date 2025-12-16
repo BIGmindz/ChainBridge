@@ -82,25 +82,28 @@ Adapts strategy parameters based on detected market regime.
 
 ### Entry Points
 
-#### `main.py` (Canonical Entry Point)
+#### `src/main.py` (Main Entry Point)
 ```bash
 # Paper trading (safe testing)
-python main.py --mode paper
+python -m src.main --mode paper
 
 # Live trading (requires confirmation)
-python main.py --mode live --confirm-live
+python -m src.main --mode live --confirm-live
 
 # Backtesting
-python main.py --mode backtest
+python -m src.main --mode backtest
+
+# Alternatively, use direct path
+python src/main.py --mode paper
 ```
 
-#### `benson_rsi_bot.py` (Legacy)
+#### `src/tests.py` (Built-in Tests)
 ```bash
 # Run built-in unit tests
-python benson_rsi_bot.py --test
+python -m src.tests
 
-# Single iteration (legacy)
-python benson_rsi_bot.py --once
+# Or use pytest if available
+pytest src/tests.py -v
 ```
 
 #### `start_trading.sh` (Automated System)
@@ -183,7 +186,11 @@ BensonBot Architecture
 
 4. **Validate installation**
    ```bash
-   python benson_rsi_bot.py --test
+   # Run built-in tests
+   python -m src.tests
+   
+   # Or if pytest is installed
+   pytest src/tests.py -v
    ```
 
 ### Configuration
@@ -217,9 +224,12 @@ MAX_POSITION_SIZE=0.20             # Max 20% of portfolio
 
 ```bash
 # Run RSI calculation tests
-python benson_rsi_bot.py --test
+python -m src.tests
 
-# Expected output: All 5 tests PASS
+# Or with pytest
+pytest src/tests.py -v
+
+# Expected output: All tests PASS
 # - Flatline test
 # - Uptrend test  
 # - Downtrend test
@@ -233,7 +243,7 @@ python benson_rsi_bot.py --test
 
 ```bash
 # Paper trading mode (no real money)
-python main.py --mode paper
+python -m src.main --mode paper
 
 # Monitor for 24-48 hours
 # Review performance metrics
@@ -243,7 +253,7 @@ python main.py --mode paper
 
 ```bash
 # Run backtesting on historical data
-python main.py --mode backtest
+python -m src.main --mode backtest
 
 # Regime-specific backtesting
 python strategies/bull_market/backtest.py
@@ -272,10 +282,10 @@ pytest tests/test_risk_management.py -v
 
 ```bash
 # This will NOT work (safe by design)
-python main.py --mode live
+python -m src.main --mode live
 
 # This WILL work (explicit confirmation)
-python main.py --mode live --confirm-live
+python -m src.main --mode live --confirm-live
 ```
 
 ### Pre-Flight Checklist
