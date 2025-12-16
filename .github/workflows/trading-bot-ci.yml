@@ -3,8 +3,26 @@ name: Trading Bot CI/CD Pipeline
 on:
   push:
     branches: [ main, develop ]
+    paths:
+      - 'benson_rsi_bot.py'
+      - 'tv_engine.py'
+      - 'trading/**'
+      - 'strategies/**'
+      - 'Crypto-1.0/**'
+      - 'config/**'
+      - 'requirements.txt'
+      - '.github/workflows/trading-bot-ci.yml'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'benson_rsi_bot.py'
+      - 'tv_engine.py'
+      - 'trading/**'
+      - 'strategies/**'
+      - 'Crypto-1.0/**'
+      - 'config/**'
+      - 'requirements.txt'
+      - '.github/workflows/trading-bot-ci.yml'
 
 env:
   PYTHON_VERSION: 3.11
