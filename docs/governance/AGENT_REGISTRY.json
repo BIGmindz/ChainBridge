@@ -1,0 +1,55 @@
+{
+  "agents": {
+    "CODY": {
+      "gid": "GID-01",
+      "emoji": "🔵",
+      "role": "Backend development, API design, database architecture"
+    },
+    "MAGGIE": {
+      "gid": "GID-02",
+      "emoji": "🟣",
+      "role": "Machine learning, model development, ChainIQ"
+    },
+    "SONNY": {
+      "gid": "GID-03",
+      "emoji": "🟢",
+      "role": "Frontend development, React/TypeScript, ChainBoard UI"
+    },
+    "DAN": {
+      "gid": "GID-07",
+      "emoji": "🟠",
+      "role": "DevOps, CI/CD pipelines, infrastructure"
+    },
+    "ATLAS": {
+      "gid": "GID-05",
+      "emoji": "🟤",
+      "role": "Repository structure, documentation, organization"
+    },
+    "SAM": {
+      "gid": "GID-06",
+      "emoji": "🔴",
+      "role": "Security review, threat detection, incident response"
+    },
+    "ALEX": {
+      "gid": "GID-08",
+      "emoji": "⚪",
+      "role": "Master governance, rule enforcement, multi-agent alignment"
+    },
+    "CINDY": {
+      "gid": "GID-09",
+      "emoji": "🔷",
+      "role": "Service expansion, API integrations, backend scaling"
+    },
+    "PAX": {
+      "gid": "GID-10",
+      "emoji": "💰",
+      "role": "CB-USDx tokenization, settlement logic, ChainPay"
+    },
+    "LIRA": {
+      "gid": "GID-11",
+      "emoji": "🩷",
+      "role": "User experience, design systems, accessibility"
+    }
+  },
+  "forbidden_aliases": ["DANA"]
+}
