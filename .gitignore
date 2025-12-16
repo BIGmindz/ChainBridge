@@ -23,6 +23,7 @@ logs/
 !package-lock.json
 !tsconfig.json
 !tsconfig.node.json
+!**/__fixtures__/*.json
 benson_metrics.json
 multi_signal_trades.json
 trading_metrics.json
