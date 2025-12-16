@@ -67,3 +67,8 @@ Thumbs.db
 ChainBridge/chainpay.db
 chainpay.db
 .atlas_safety/
+
+# Local-only / not for commit
+.github/ALEX_RULES.json
+.github/agents/
+chainboard-ui/
