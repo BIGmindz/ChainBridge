@@ -8,6 +8,9 @@
 pytest-xdist>=3.5.0
 pytest-benchmark>=4.0.0
 
+# HTTP client for FastAPI/Starlette TestClient
+httpx>=0.24.0
+
 # Machine Learning dependencies
 tensorflow>=2.8.0
 scikit-learn>=1.0.0
