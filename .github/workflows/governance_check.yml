@@ -25,10 +25,14 @@ jobs:
 
       - name: Check PR description completeness
         if: github.event_name == 'pull_request'
+        env:
+          # Pass PR body via env var to avoid shell expansion issues with special chars
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
           echo "Checking PR description for governance requirements..."
 
-          PR_BODY="${{ github.event.pull_request.body }}"
+          # Normalize CRLF to LF to handle Windows line endings
+          NORMALIZED_BODY=$(echo "$PR_BODY" | tr -d '\r')
 
           # Acceptable section headers (case-insensitive, flexible matching)
           # Check for any of: Key Changes, Changes, Description, Overview, Summary
@@ -36,11 +40,11 @@ jobs:
           HAS_CHANGES=false
 
           # Case-insensitive pattern matching
-          if echo "$PR_BODY" | grep -qiE "(description|overview|summary|what.*this.*pr)"; then
+          if echo "$NORMALIZED_BODY" | grep -qiE "(description|overview|summary|what.*this.*pr)"; then
             HAS_DESCRIPTION=true
           fi
 
-          if echo "$PR_BODY" | grep -qiE "(changes|key changes|what changed|modifications)"; then
+          if echo "$NORMALIZED_BODY" | grep -qiE "(changes|key changes|what changed|modifications)"; then
             HAS_CHANGES=true
           fi
 
