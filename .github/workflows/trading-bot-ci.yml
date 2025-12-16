@@ -3,8 +3,20 @@ name: Trading Bot CI/CD Pipeline
 on:
   push:
     branches: [ main, develop ]
+    paths:
+      - 'benson_rsi_bot.py'
+      - 'tv_engine.py'
+      - 'trading/**'
+      - 'Crypto-1.0/**'
+      - '.github/workflows/trading-bot-ci.yml'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'benson_rsi_bot.py'
+      - 'tv_engine.py'
+      - 'trading/**'
+      - 'Crypto-1.0/**'
+      - '.github/workflows/trading-bot-ci.yml'
 
 env:
   PYTHON_VERSION: 3.11
@@ -84,7 +96,7 @@ jobs:
       - name: Validate configuration files
         run: |
           python -c "import yaml; yaml.safe_load(open('config/config.yaml'))"
-          python -c "import os,yaml; p='config.yaml'; print('root config exists' if os.path.exists(p) else 'no root config'); (yaml.safe_load(open(p)) if os.path.exists(p) else None); print('YAML root config validated if present')"
+          python -c "import os,yaml; p='config.yaml'; print('root config exists' if os.path.exists(p) else 'no root config'); (yaml.safe_load(open(p)) if os.path.exists(p) else None); print('YAML validation complete')"
       
       - name: Schema validation
         run: |
