@@ -1,7 +1,7 @@
 PY=python
 COMPOSE?=docker compose
 
-.PHONY: help venv install run test lint fmt docker-build up down logs shell api-server rsi-compat system-test dev dev-docker setup
+.PHONY: help venv install run test lint fmt docker-build up down logs shell api-server rsi-compat system-test dev dev-docker setup gatekeeper
 
 help:
 	@echo "ChainBridge Platform — Build Targets"
@@ -156,6 +156,16 @@ quick-checks: install-lean
 	  python -m pip install -q pytest && \
 	  python -c "import yaml, os; print('PyYAML import OK')" && \
 	  pytest -q
+
+# Gatekeeper: Validate agent packet identity (PAC-DAN-GATEKEEPER-02)
+# Usage: make gatekeeper FILE=tests/fixtures/agent_outputs/valid_dan_packet.txt
+gatekeeper:
+ifndef FILE
+	@echo "Usage: make gatekeeper FILE=<path-to-agent-packet>"
+	@echo "Example: make gatekeeper FILE=tests/fixtures/agent_outputs/valid_dan_packet.txt"
+	@exit 1
+endif
+	@. .venv/bin/activate && python scripts/gatekeeper/check_agent_output.py $(FILE)
 
 pre-commit-install:
 	@. .venv/bin/activate && python -m pip install -q pre-commit && pre-commit install

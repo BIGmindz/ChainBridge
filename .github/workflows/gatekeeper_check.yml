@@ -1,0 +1,33 @@
+name: gatekeeper-check
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/gatekeeper/**'
+      - 'tests/agents/**'
+      - 'tests/fixtures/agent_outputs/**'
+      - 'ChainBridge/docs/governance/**'
+      - '.github/workflows/gatekeeper_check.yml'
+
+jobs:
+  gatekeeper:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run gatekeeper tests (agents only)
+        run: pytest tests/agents -q
+
+      - name: Gatekeeper sample (pass case)
+        run: python scripts/gatekeeper/check_agent_output.py tests/fixtures/agent_outputs/valid_dan_packet.txt
