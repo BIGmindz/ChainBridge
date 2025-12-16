@@ -30,9 +30,3 @@ numpy>=1.21.0
 # Database and settings
 sqlalchemy>=2.0.0
 pydantic-settings>=2.0.0
-
-# CI/test imports (ChainBridge Unified CI)
-numpy
-scikit-learn
-sqlalchemy
-pydantic-settings
