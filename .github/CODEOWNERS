@@ -1,0 +1,185 @@
+# Code Ownership for BIGmindz Monorepo
+# 
+# This file defines code ownership for the ChainBridge monorepo.
+# Owners are automatically requested for review when PRs modify their code.
+#
+# Format: path/pattern @username
+# More specific rules override general rules (bottom-up evaluation)
+
+# ============================================================================
+# DEFAULT OWNER
+# ============================================================================
+
+# Default owner for everything (unless overridden)
+* @BIGmindz
+
+# ============================================================================
+# CHAINBRIDGE PLATFORM
+# ============================================================================
+
+# All ChainBridge freight/logistics code
+/ChainBridge/ @BIGmindz
+
+# ChainBridge services
+/ChainBridge/chainiq-service/ @BIGmindz
+/ChainBridge/chainpay-service/ @BIGmindz
+/ChainBridge/chainfreight-service/ @BIGmindz
+/ChainBridge/chainboard-service/ @BIGmindz
+/ChainBridge/chainboard-ui/ @BIGmindz
+
+# ChainBridge tests and governance
+/ChainBridge/tests/ @BIGmindz
+/ChainBridge/docs/governance/ @BIGmindz
+
+# ============================================================================
+# BENSONBOT TRADING SYSTEM
+# ============================================================================
+
+# Main entry points
+/main.py @BIGmindz
+/start_trading.sh @BIGmindz
+
+# Core trading engine
+/src/ @BIGmindz
+/src/core/unified_trading_engine.py @BIGmindz
+
+# Signal modules
+/modules/ @BIGmindz
+/modules/adaptive_weight_module/ @BIGmindz
+/modules/market_regime_module/ @BIGmindz
+/modules/risk_management/ @BIGmindz
+/modules/logistics_signal_module.py @BIGmindz
+
+# Trading strategies
+/strategies/ @BIGmindz
+/strategies/bull_market/ @BIGmindz
+/strategies/bear_market/ @BIGmindz
+/strategies/sideways_market/ @BIGmindz
+
+# Core modules
+/core/ @BIGmindz
+/api/ @BIGmindz
+/tracking/ @BIGmindz
+/utils/ @BIGmindz
+/tools/ @BIGmindz
+
+# Applications and dashboards
+/apps/ @BIGmindz
+/apps/dashboard/ @BIGmindz
+
+# Scripts and utilities
+/scripts/ @BIGmindz
+/scripts/validate_thresholds.py @BIGmindz
+/scripts/live_ticker.py @BIGmindz
+
+# Tests
+/tests/ @BIGmindz
+
+# Examples and demos
+/examples/ @BIGmindz
+
+# Data and models
+/ml_models/ @BIGmindz
+/market_metrics/ @BIGmindz
+/sample_data/ @BIGmindz
+
+# Reports and tracking
+/reports/ @BIGmindz
+/tracking/ @BIGmindz
+
+# Proof packages
+/proofpacks/ @BIGmindz
+
+# ============================================================================
+# DOCUMENTATION
+# ============================================================================
+
+# BensonBot documentation
+/docs/bensonbot/ @BIGmindz
+/docs/MARKET_REGIME_DETECTION.md @BIGmindz
+/docs/REGIME_SPECIFIC_BACKTESTING.md @BIGmindz
+/docs/REGIME_BASED_STRATEGIES.md @BIGmindz
+/docs/KRAKEN_PAPER_TRADING.md @BIGmindz
+
+# Repository documentation
+/docs/REPO_MAP.md @BIGmindz
+/README.md @BIGmindz
+/CONTRIBUTING.md @BIGmindz
+
+# ============================================================================
+# CI/CD & GOVERNANCE
+# ============================================================================
+
+# GitHub workflows
+/.github/ @BIGmindz
+/.github/workflows/ @BIGmindz
+/.github/workflows/trading-bot-ci.yml @BIGmindz
+/.github/workflows/ci.yml @BIGmindz
+
+# GitHub configuration
+/.github/CODEOWNERS @BIGmindz
+/.github/pull_request_template.md @BIGmindz
+/.github/SECURITY.md @BIGmindz
+
+# Copilot configuration
+/.github/copilot-instructions.md @BIGmindz
+/.github/copilot.md @BIGmindz
+
+# ============================================================================
+# CONFIGURATION FILES
+# ============================================================================
+
+# Root configuration
+/.editorconfig @BIGmindz
+/.gitignore @BIGmindz
+/.python-version @BIGmindz
+/pyproject.toml @BIGmindz
+/ruff.toml @BIGmindz
+/.flake8 @BIGmindz
+/.pylintrc @BIGmindz
+/.pre-commit-config.yaml @BIGmindz
+
+# Markdown configuration
+/.markdownlint.json @BIGmindz
+/.markdownlintignore @BIGmindz
+
+# Docker configuration
+/Dockerfile @BIGmindz
+/Dockerfile.enterprise @BIGmindz
+/docker-compose.yml @BIGmindz
+/.dockerignore @BIGmindz
+
+# Dependencies
+/requirements.txt @BIGmindz
+/requirements-*.txt @BIGmindz
+
+# Build files
+/Makefile @BIGmindz
+/Makefile.dashboard @BIGmindz
+
+# ============================================================================
+# SECURITY-SENSITIVE FILES
+# ============================================================================
+
+# Environment templates (no secrets should be here, but still sensitive)
+/.env.example @BIGmindz
+
+# Security policies
+/.github/SECURITY.md @BIGmindz
+
+# Governance documentation
+/ChainBridge/docs/governance/ @BIGmindz
+/proofpacks/ @BIGmindz
+
+# ============================================================================
+# NOTES FOR CONTRIBUTORS
+# ============================================================================
+#
+# 1. CODEOWNERS rules are evaluated bottom-up (more specific rules override general ones)
+# 2. All paths are relative to repository root
+# 3. At least one code owner approval is required for PRs
+# 4. Code owners are automatically requested for review when their code is modified
+# 5. You can use teams (@org/team-name) or individuals (@username)
+#
+# For more information:
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
