@@ -27,6 +27,22 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def resolve_repo_file(p: Path) -> Path:
+    """Validate that a file path is within the repository root (CodeQL path traversal fix)."""
+    candidate = p
+    if not candidate.is_absolute():
+        candidate = REPO_ROOT / candidate
+    resolved = candidate.resolve()
+    if resolved != REPO_ROOT and REPO_ROOT not in resolved.parents:
+        raise ValueError("Path escapes repository root")
+    if not resolved.is_file():
+        raise ValueError(f"Not a file: {resolved}")
+    return resolved
+
+
 REQUIRED_FIELDS = [
     "Identity",
     "Authority",
@@ -217,7 +233,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--quiet", "-q", action="store_true", help="Only output on failure")
     args = parser.parse_args(argv)
 
-    registry_path = Path(__file__).resolve().parents[2] / "ChainBridge" / "docs" / "governance" / "AGENT_REGISTRY.json"
+    registry_path = REPO_ROOT / "ChainBridge" / "docs" / "governance" / "AGENT_REGISTRY.json"
 
     try:
         registry = Registry(registry_path)
@@ -228,12 +244,15 @@ def main(argv: Optional[List[str]] = None) -> int:
         print(f"ERROR: Failed to load registry: {exc}", file=sys.stderr)
         return 2
 
-    if not args.file.exists():
-        print(f"ERROR: File not found: {args.file}", file=sys.stderr)
+    # Validate file path to prevent path traversal (CodeQL security fix)
+    try:
+        safe_file = resolve_repo_file(args.file)
+    except ValueError as exc:
+        print(f"ERROR: Invalid file path: {exc}", file=sys.stderr)
         return 2
 
     try:
-        content = args.file.read_text(encoding="utf-8")
+        content = safe_file.read_text(encoding="utf-8")
     except Exception as exc:  # pragma: no cover
         print(f"ERROR: Could not read file: {exc}", file=sys.stderr)
         return 2
