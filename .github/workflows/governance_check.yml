@@ -25,10 +25,10 @@ jobs:
 
       - name: Check PR description completeness
         if: github.event_name == 'pull_request'
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
           echo "Checking PR description for governance requirements..."
-
-          PR_BODY="${{ github.event.pull_request.body }}"
 
           # Acceptable section headers (case-insensitive, flexible matching)
           # Check for any of: Key Changes, Changes, Description, Overview, Summary
