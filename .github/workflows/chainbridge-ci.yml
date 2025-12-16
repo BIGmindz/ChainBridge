@@ -258,12 +258,10 @@ jobs:
         working-directory: ChainBridge/chainiq-service
         run: |
           echo "Running ChainIQ sanity checks..."
-          # Syntax validation for all Python files (required)
           python -m compileall app/ -q
-          # Run tests if they exist (tests now implemented by Maggie)
           if [ -d tests ]; then
             echo "Running ChainIQ pytest suite..."
-            pytest tests/ -v --tb=short --ignore=tests/security/
+            PYTHONPATH=app pytest tests/ -v --tb=short --ignore=tests/security/
           else
             echo "No ChainIQ tests directory — skeleton service validated via compileall"
           fi
