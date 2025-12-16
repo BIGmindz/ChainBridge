@@ -64,6 +64,14 @@ coverage*/
 # Note: .chainbridge/models/ signed models CAN be committed
 reports*/
 
+# Legacy BensonBot / Crypto-1.0 models (NOT ChainBridge)
+# These predate ChainBridge and are not governed under ChainBridge security policy
+# ChainBridge models live ONLY in: ChainBridge/chainiq-service/ml_models/
+ml_models/
+strategies/bear_market/*.pkl
+strategies/bull_market/*.pkl
+strategies/sideways_market/*.pkl
+
 # OS junk
 .DS_Store
 Thumbs.db
