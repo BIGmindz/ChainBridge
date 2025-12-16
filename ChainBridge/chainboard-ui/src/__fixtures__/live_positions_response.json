@@ -1,0 +1,21 @@
+[
+  {
+    "shipmentId": "SHP-101",
+    "corridorId": "US-CN",
+    "mode": "OCEAN",
+    "riskBand": "LOW",
+    "settlementState": "PAID",
+    "etaIso": "2025-12-01T12:00:00Z",
+    "nearestPort": "USLAX",
+    "lat": 34.0522,
+    "lon": -118.2437,
+    "cargoValueUsd": 50000,
+    "financedAmountUsd": 0,
+    "paidAmountUsd": 50000,
+    "status": "ON_TIME",
+    "riskScore": 10,
+    "lastEventCode": "DEPARTED",
+    "lastEventTs": "2025-11-20T08:00:00Z",
+    "canonicalShipmentRef": "REF-101"
+  }
+]
