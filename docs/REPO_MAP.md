@@ -50,8 +50,7 @@ BIGmindz/ChainBridge/
 ├── requirements-dashboard.txt         # [BENSONBOT] Dashboard deps
 ├── viz_requirements.txt               # [BENSONBOT] Visualization
 │
-├── main.py                            # [BENSONBOT] Main entry point
-├── benson_rsi_bot.py                  # [BENSONBOT] Legacy entry point
+├── main.py                            # [CHAINBRIDGE] FastAPI main entry
 ├── start_trading.sh                   # [BENSONBOT] Trading launcher
 ├── Dockerfile                         # [BENSONBOT] Container definition
 ├── Dockerfile.enterprise              # [BENSONBOT] Enterprise container
@@ -62,8 +61,11 @@ BIGmindz/ChainBridge/
 ├── src/                               # [BENSONBOT] Core source code
 │   ├── core/
 │   │   └── unified_trading_engine.py  # Main trading engine
-│   ├── main.py                        # Alternative entry point
-│   └── tests.py                       # Test suite
+│   ├── main.py                        # [BENSONBOT] Main entry point
+│   ├── tests.py                       # [BENSONBOT] Built-in tests
+│   ├── signal_engine.py               # Signal processing
+│   ├── data_provider.py               # Market data provider
+│   └── exchange_adapter.py            # Exchange interface
 │
 ├── modules/                           # [BENSONBOT] Signal modules
 │   ├── adaptive_weight_module/        # Dynamic signal weighting
@@ -313,8 +315,8 @@ cd docs/
 
 | Component | Location | Purpose |
 |-----------|----------|---------|
-| Main Entry | `main.py` | Canonical entry point (paper/live/backtest) |
-| Legacy Entry | `benson_rsi_bot.py` | Legacy RSI bot with tests |
+| Main Entry | `src/main.py` | Main entry point (paper/live/backtest) |
+| Tests | `src/tests.py` | Built-in unit tests |
 | Trading Engine | `src/core/unified_trading_engine.py` | Core trading logic |
 | Signal Modules | `modules/` | RSI, MACD, Volume, Sentiment, etc. |
 | Strategies | `strategies/` | Bull/Bear/Sideways configs |
@@ -349,8 +351,9 @@ cd docs/
 
 ```bash
 # BensonBot tests
-python benson_rsi_bot.py --test
-pytest tests/ -v
+python -m src.tests
+pytest src/tests.py -v
+pytest tests/ -v  # If additional tests exist
 
 # ChainBridge tests
 cd ChainBridge/
@@ -377,7 +380,8 @@ pip install -r requirements.txt
 
 ```bash
 # BensonBot paper trading
-python main.py --mode paper
+python -m src.main --mode paper
+# Or: ./start_trading.sh
 
 # ChainBridge services (Docker)
 cd ChainBridge/

@@ -75,10 +75,12 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
 # Run built-in tests
-python benson_rsi_bot.py --test
+python -m src.tests
+# Or: pytest src/tests.py -v
 
-# Test main entry point
-python main.py --mode paper
+# Test main entry point (paper trading)
+python -m src.main --mode paper
+# Or: python src/main.py --mode paper
 
 # Start trading system (paper trading)
 ./start_trading.sh --test
