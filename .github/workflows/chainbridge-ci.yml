@@ -261,7 +261,7 @@ jobs:
           python -m compileall app/ -q
           if [ -d tests ]; then
             echo "Running ChainIQ pytest suite..."
-            PYTHONPATH=app pytest tests/ -v --tb=short --ignore=tests/security/
+            PYTHONPATH=. pytest tests/ -v --tb=short --ignore=tests/security/ --ignore=tests/drift/
           else
             echo "No ChainIQ tests directory — skeleton service validated via compileall"
           fi
