@@ -1,55 +1,111 @@
 {
+  "calp_version": "1.0.0",
+  "canonical_date": "2025-12-17",
+  "description": "CALP v1 Canonical Agent Registry - Source of truth for agent identities",
+
   "agents": {
+    "BENSON": {
+      "gid": "GID-00",
+      "emoji": "🟦🟩",
+      "color": "TEAL",
+      "role": "Chief Architect & Orchestrator",
+      "role_short": "Orchestrator"
+    },
     "CODY": {
       "gid": "GID-01",
       "emoji": "🔵",
-      "role": "Backend development, API design, database architecture"
-    },
-    "MAGGIE": {
-      "gid": "GID-02",
-      "emoji": "🟣",
-      "role": "Machine learning, model development, ChainIQ"
+      "color": "BLUE",
+      "role": "Senior Backend Engineer",
+      "role_short": "Backend Engineering"
     },
     "SONNY": {
+      "gid": "GID-02",
+      "emoji": "🟡",
+      "color": "YELLOW",
+      "role": "Senior Frontend Engineer",
+      "role_short": "Frontend Engineering"
+    },
+    "MIRA_R": {
       "gid": "GID-03",
-      "emoji": "🟢",
-      "role": "Frontend development, React/TypeScript, ChainBoard UI"
+      "emoji": "🟣",
+      "color": "PURPLE",
+      "role": "Research Lead",
+      "role_short": "Research"
     },
-    "DAN": {
-      "gid": "GID-07",
-      "emoji": "🟠",
-      "role": "DevOps, CI/CD pipelines, infrastructure"
+    "CINDY": {
+      "gid": "GID-04",
+      "emoji": "🔷",
+      "color": "TEAL",
+      "role": "Senior Backend Engineer",
+      "role_short": "Backend Expansion"
     },
-    "ATLAS": {
+    "PAX": {
       "gid": "GID-05",
-      "emoji": "🟤",
-      "role": "Repository structure, documentation, organization"
+      "emoji": "🟠",
+      "color": "ORANGE",
+      "role": "Product & Smart Contract Strategy",
+      "role_short": "Product Strategy"
     },
     "SAM": {
       "gid": "GID-06",
       "emoji": "🔴",
-      "role": "Security review, threat detection, incident response"
+      "color": "DARK RED",
+      "role": "Security & Threat Engineer",
+      "role_short": "Security"
+    },
+    "DAN": {
+      "gid": "GID-07",
+      "emoji": "🟢",
+      "color": "GREEN",
+      "role": "DevOps & CI/CD",
+      "role_short": "DevOps"
     },
     "ALEX": {
       "gid": "GID-08",
       "emoji": "⚪",
-      "role": "Master governance, rule enforcement, multi-agent alignment"
-    },
-    "CINDY": {
-      "gid": "GID-09",
-      "emoji": "🔷",
-      "role": "Service expansion, API integrations, backend scaling"
-    },
-    "PAX": {
-      "gid": "GID-10",
-      "emoji": "💰",
-      "role": "CB-USDx tokenization, settlement logic, ChainPay"
+      "color": "GREY",
+      "role": "Governance & Alignment",
+      "role_short": "Governance"
     },
     "LIRA": {
-      "gid": "GID-11",
+      "gid": "GID-09",
       "emoji": "🩷",
-      "role": "User experience, design systems, accessibility"
+      "color": "PINK",
+      "role": "Frontend / ChainBoard UX",
+      "role_short": "UX"
+    },
+    "MAGGIE": {
+      "gid": "GID-10",
+      "emoji": "💗",
+      "color": "PINK",
+      "role": "ML & Applied AI Lead",
+      "role_short": "ML & Risk"
+    },
+    "ATLAS": {
+      "gid": "GID-11",
+      "emoji": "🔵",
+      "color": "BLUE",
+      "role": "Build / Repair / Refactor",
+      "role_short": "Build & Repair"
     }
   },
-  "forbidden_aliases": ["DANA"]
+
+  "gid_index": {
+    "GID-00": "BENSON",
+    "GID-01": "CODY",
+    "GID-02": "SONNY",
+    "GID-03": "MIRA_R",
+    "GID-04": "CINDY",
+    "GID-05": "PAX",
+    "GID-06": "SAM",
+    "GID-07": "DAN",
+    "GID-08": "ALEX",
+    "GID-09": "LIRA",
+    "GID-10": "MAGGIE",
+    "GID-11": "ATLAS"
+  },
+
+  "forbidden_aliases": ["DANA"],
+
+  "governance_doc": "docs/governance/CALP_v1.md"
 }

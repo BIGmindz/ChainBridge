@@ -1,0 +1,284 @@
+# DIGGI CORRECTION MAP v1.0.0
+# Status: GOVERNANCE-LOCKED
+# Authority: ALEX (GID-08)
+# Purpose: Deterministic correction mappings for denied intents
+#
+# CONSTRAINTS:
+# - NO correction may include EXECUTE verb
+# - NO correction may include APPROVE verb
+# - NO correction may include BLOCK verb
+# - Empty allowed_next_steps is VALID
+# - Unknown denial = FAIL CLOSED
+#
+# This file is loaded at startup and validated.
+# Any schema violation = startup failure.
+
+version: "1.0.0"
+schema_version: "DCC-v1"
+governance_lock: true
+
+# Correction mappings by DenialReason
+corrections:
+
+  # ============================================================
+  # INTENT VALIDATION FAILURES
+  # ============================================================
+
+  INVALID_INTENT:
+    constraints:
+      - "Intent structure failed validation"
+      - "Required fields may be missing or malformed"
+    allowed_next_steps:
+      - verb: "PROPOSE"
+        target_scope: "governance.intent.correction"
+        description: "Submit corrected intent structure via PROPOSE"
+      - verb: "ESCALATE"
+        target: "human.operator"
+        description: "Request human assistance for intent formatting"
+
+  MALFORMED_GID:
+    constraints:
+      - "Agent GID does not conform to GID-XX format"
+      - "Cannot identify agent for authorization"
+    allowed_next_steps:
+      - verb: "ESCALATE"
+        target: "human.operator"
+        description: "Request human verification of agent identity"
+
+  # ============================================================
+  # ACM LOOKUP FAILURES
+  # ============================================================
+
+  UNKNOWN_AGENT:
+    constraints:
+      - "No ACM manifest exists for this agent"
+      - "Agent is not registered in governance system"
+    allowed_next_steps:
+      - verb: "ESCALATE"
+        target: "human.operator"
+        description: "Request agent registration via human operator"
+
+  ACM_NOT_LOADED:
+    constraints:
+      - "ACM system failed to initialize"
+      - "Governance enforcement unavailable"
+    allowed_next_steps:
+      - verb: "ESCALATE"
+        target: "human.operator"
+        description: "Alert human operator to ACM initialization failure"
+
+  # ============================================================
+  # CAPABILITY DENIALS
+  # ============================================================
+
+  VERB_NOT_PERMITTED:
+    constraints:
+      - "Agent ACM does not grant this verb capability"
+      - "Action is outside agent's authorized scope"
+    allowed_next_steps:
+      - verb: "PROPOSE"
+        target_scope: "governance.capability.request"
+        description: "Draft proposal requesting capability addition"
+      - verb: "ESCALATE"
+        target: "human.operator"
+        description: "Request human authorization for this action"
+
+  TARGET_NOT_IN_SCOPE:
+    constraints:
+      - "Target is outside agent's authorized scope"
+      - "Agent may have verb capability but not for this target"
+    allowed_next_steps:
+      - verb: "PROPOSE"
+        target_scope: "governance.scope.request"
+        description: "Draft proposal for scope expansion"
+      - verb: "READ"
+        target_scope: "governance.acm.self"
+        description: "Read own ACM to verify authorized scopes"
+      - verb: "ESCALATE"
+        target: "human.operator"
+        description: "Request human routing to authorized agent"
+
+  EXECUTE_NOT_PERMITTED:
+    constraints:
+      - "Agent lacks EXECUTE authority"
+      - "Only agents with explicit EXECUTE grants may perform mutations"
+    allowed_next_steps:
+      - verb: "PROPOSE"
+        target_scope: "*.draft"
+        description: "Draft change and submit for review by authorized agent"
+      - verb: "READ"
+        target_scope: "governance.acm.execute_agents"
+        description: "Identify agents with EXECUTE authority for routing"
+      - verb: "ESCALATE"
+        target: "human.operator"
+        description: "Request human authorization for execution"
+
+  BLOCK_NOT_PERMITTED:
+    constraints:
+      - "Agent lacks BLOCK authority"
+      - "Only Sam (GID-06) and ALEX (GID-08) may BLOCK"
+    allowed_next_steps:
+      - verb: "PROPOSE"
+        target_scope: "governance.block.request"
+        description: "Submit block request to authorized agent"
+      - verb: "ESCALATE"
+        target: "human.operator"
+        description: "Request human review of blocking action"
+
+  # ============================================================
+  # MUTATION GUARD
+  # ============================================================
+
+  MUTATION_WITHOUT_EXECUTE:
+    constraints:
+      - "Action would mutate state but agent lacks EXECUTE"
+      - "Read-only agents cannot perform mutations"
+    allowed_next_steps:
+      - verb: "READ"
+        target_scope: "*"
+        description: "Perform read-only operations within scope"
+      - verb: "PROPOSE"
+        target_scope: "*.draft"
+        description: "Draft changes for review by executing agent"
+      - verb: "ESCALATE"
+        target: "human.operator"
+        description: "Request human to authorize mutation"
+
+  # ============================================================
+  # CHAIN-OF-COMMAND ENFORCEMENT
+  # ============================================================
+
+  CHAIN_OF_COMMAND_VIOLATION:
+    constraints:
+      - "High-authority verbs require routing through Diggi (GID-00)"
+      - "EXECUTE/BLOCK/APPROVE must pass orchestration"
+    allowed_next_steps:
+      - verb: "PROPOSE"
+        target_scope: "diggi.orchestration"
+        description: "Submit intent to Diggi for orchestrated routing"
+      - verb: "ESCALATE"
+        target: "human.operator"
+        description: "Request human override of chain-of-command"
+
+  # ============================================================
+  # CHECKLIST ENFORCEMENT
+  # ============================================================
+
+  CHECKLIST_NOT_LOADED:
+    constraints:
+      - "Governance validation checklist failed to load"
+      - "Cannot verify compliance requirements"
+    allowed_next_steps:
+      - verb: "ESCALATE"
+        target: "human.operator"
+        description: "Alert human operator to checklist initialization failure"
+
+  CHECKLIST_VERSION_MISMATCH:
+    constraints:
+      - "Checklist version does not match expected version"
+      - "Governance rules may be out of date"
+    allowed_next_steps:
+      - verb: "ESCALATE"
+        target: "human.operator"
+        description: "Request human verification of checklist version"
+
+  # ============================================================
+  # FORBIDDEN OPERATIONS
+  # ============================================================
+
+  DELETE_FORBIDDEN:
+    constraints:
+      - "DELETE operations are globally forbidden"
+      - "No agent may delete resources without human approval"
+    allowed_next_steps:
+      - verb: "PROPOSE"
+        target_scope: "governance.delete.request"
+        description: "Submit deletion request for human review"
+      - verb: "ESCALATE"
+        target: "human.operator"
+        description: "Request human authorization for deletion"
+
+  APPROVE_NOT_PERMITTED:
+    constraints:
+      - "APPROVE is reserved for human operators"
+      - "No agent may grant approvals autonomously"
+    allowed_next_steps:
+      - verb: "ESCALATE"
+        target: "human.operator"
+        description: "Request human operator to provide approval"
+
+  # ============================================================
+  # DRCP v1 — Diggy Rejection & Correction Protocol
+  # ============================================================
+
+  RETRY_AFTER_DENY_FORBIDDEN:
+    constraints:
+      - "Agent attempted to retry a denied action"
+      - "Retries after DENY are forbidden — await Diggi correction"
+    allowed_next_steps:
+      - verb: "READ"
+        target_scope: "governance.denial.correction"
+        description: "Read correction plan from previous denial"
+      - verb: "ESCALATE"
+        target: "human.operator"
+        description: "Request human override if correction is blocked"
+
+  DIGGY_EXECUTE_FORBIDDEN:
+    constraints:
+      - "Diggi (GID-00) cannot EXECUTE"
+      - "Diggi is correction authority only — no execution capability"
+    allowed_next_steps:
+      - verb: "PROPOSE"
+        target_scope: "*.correction"
+        description: "Propose corrected intent for execution by other agent"
+      - verb: "ESCALATE"
+        target: "human.operator"
+        description: "Escalate to human if no correction path exists"
+
+  DIGGY_BLOCK_FORBIDDEN:
+    constraints:
+      - "Diggi (GID-00) cannot BLOCK"
+      - "BLOCK authority is reserved for ALEX (GID-08)"
+    allowed_next_steps:
+      - verb: "PROPOSE"
+        target_scope: "governance.block.request"
+        description: "Propose block action to ALEX"
+      - verb: "ESCALATE"
+        target: "human.operator"
+        description: "Request human review of blocking requirement"
+
+  DIGGY_APPROVE_FORBIDDEN:
+    constraints:
+      - "Diggi (GID-00) cannot APPROVE"
+      - "APPROVE authority is reserved for human operators"
+    allowed_next_steps:
+      - verb: "ESCALATE"
+        target: "human.operator"
+        description: "Route approval request to human operator"
+
+  # ============================================================
+  # PAC-GOV-ATLAS-01 — ATLAS DOMAIN BOUNDARY ENFORCEMENT
+  # ============================================================
+
+  ATLAS_DOMAIN_VIOLATION:
+    constraints:
+      - "Atlas (GID-11) cannot modify domain-owned code"
+      - "Atlas is a meta-agent with zero domain authority"
+      - "Frontend, backend, and service code is domain-owned"
+      - "Atlas may only modify governance artifacts and documentation"
+    allowed_next_steps:
+      - verb: "PROPOSE"
+        target_scope: "docs.governance"
+        description: "Document the required change for domain agent execution"
+      - verb: "ESCALATE"
+        target: "human.operator"
+        description: "Request human review of intended modification"
+
+# ============================================================
+# GOVERNANCE CANONICAL CLOSE
+# ============================================================
+# This mapping is DETERMINISTIC.
+# Identical input → Identical output.
+# No heuristics. No LLM. No inference.
+# Unknown DenialReason → FAIL CLOSED.
+# ============================================================

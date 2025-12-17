@@ -1,0 +1,172 @@
+# Governance Validation Checklist v1 (Machine-Readable)
+# Consumed by: ALEX (GID-08)
+# Status: GOVERNANCE-LOCKED
+# This file is a HARD DEPENDENCY — missing file = system refuses to boot
+
+version: "1.0.0"
+minimum_compatible_version: "1.0.0"
+status: "GOVERNANCE-LOCKED"
+enforced_by: "GID-08"
+
+# Scope definition
+applies_to:
+  - all_intents
+
+# Verbs that require chain-of-command routing through Diggy
+chain_of_command_required_verbs:
+  - EXECUTE
+  - BLOCK
+  - APPROVE
+
+# The orchestrator GID (Diggy/BENSON)
+orchestrator_gid: "GID-00"
+
+# Ordered validation gates - evaluated in sequence, first failure = DENY
+required_checks:
+  - gate_id: "agent_identity_known"
+    description: "Agent GID must map to a loaded ACM manifest"
+    failure_reason: "UNKNOWN_AGENT"
+    failure_detail: "No ACM found for {agent_gid}"
+    next_hop: null
+    fatal: true
+
+  - gate_id: "chain_of_command_enforced"
+    description: "EXECUTE/BLOCK/APPROVE must originate from or route through Diggy"
+    failure_reason: "CHAIN_OF_COMMAND_VIOLATION"
+    failure_detail: "Action requires chain-of-command routing through GID-00"
+    next_hop: "GID-00"
+    fatal: true
+
+  - gate_id: "verb_permitted_by_acm"
+    description: "Requested verb must be in agent's capability list"
+    failure_reason: "VERB_NOT_PERMITTED"
+    failure_detail: "{agent_id} does not have {verb} capability"
+    next_hop: "GID-00"
+    fatal: true
+
+  - gate_id: "target_in_scope"
+    description: "Target must match agent's capability scope for the verb"
+    failure_reason: "TARGET_NOT_IN_SCOPE"
+    failure_detail: "Target '{target}' not in {verb} scope"
+    next_hop: "GID-00"
+    fatal: true
+
+  - gate_id: "mutation_requires_execute"
+    description: "State-changing operations require EXECUTE verb"
+    failure_reason: "MUTATION_WITHOUT_EXECUTE"
+    failure_detail: "Mutation operations require EXECUTE verb"
+    next_hop: "GID-00"
+    fatal: true
+
+  - gate_id: "escalation_gate_applied"
+    description: "Check if target matches escalation triggers"
+    failure_reason: null
+    failure_detail: null
+    next_hop: null
+    fatal: false
+
+  - gate_id: "audit_log_written"
+    description: "Evaluation result must be logged before proceeding"
+    failure_reason: "AUDIT_FAILURE"
+    failure_detail: "Failed to write audit log"
+    next_hop: null
+    fatal: true
+
+# Denial reason codes (exhaustive list)
+denial_reasons:
+  - code: "UNKNOWN_AGENT"
+    description: "Agent GID not found in loaded manifests"
+    severity: "CRITICAL"
+
+  - code: "ACM_NOT_LOADED"
+    description: "ACM system not initialized"
+    severity: "CRITICAL"
+
+  - code: "INVALID_INTENT"
+    description: "Intent structure is malformed"
+    severity: "HIGH"
+
+  - code: "MALFORMED_GID"
+    description: "Agent GID format is invalid"
+    severity: "HIGH"
+
+  - code: "VERB_NOT_PERMITTED"
+    description: "Agent lacks capability for this verb"
+    severity: "HIGH"
+
+  - code: "TARGET_NOT_IN_SCOPE"
+    description: "Target not in agent's scope for verb"
+    severity: "HIGH"
+
+  - code: "EXECUTE_NOT_PERMITTED"
+    description: "Agent lacks EXECUTE authority for target"
+    severity: "HIGH"
+
+  - code: "BLOCK_NOT_PERMITTED"
+    description: "Agent lacks BLOCK authority"
+    severity: "HIGH"
+
+  - code: "APPROVE_NOT_PERMITTED"
+    description: "APPROVE is human-only"
+    severity: "CRITICAL"
+
+  - code: "DELETE_FORBIDDEN"
+    description: "DELETE verb is forbidden system-wide"
+    severity: "CRITICAL"
+
+  - code: "MUTATION_WITHOUT_EXECUTE"
+    description: "Mutation attempted without EXECUTE verb"
+    severity: "HIGH"
+
+  - code: "CHAIN_OF_COMMAND_VIOLATION"
+    description: "Action requires routing through Diggy"
+    severity: "CRITICAL"
+
+  - code: "CHECKLIST_NOT_LOADED"
+    description: "Governance checklist file missing"
+    severity: "CRITICAL"
+
+  - code: "CHECKLIST_VERSION_MISMATCH"
+    description: "Checklist version incompatible"
+    severity: "CRITICAL"
+
+  - code: "AUDIT_FAILURE"
+    description: "Failed to write to audit log"
+    severity: "CRITICAL"
+
+# Non-negotiable invariants (these can NEVER be violated)
+invariants:
+  - "No agent may act without identity"
+  - "No agent may exceed ACM capabilities"
+  - "No mutation without EXECUTE permission"
+  - "No BLOCK without BLOCK authority"
+  - "APPROVE is human-only"
+  - "DELETE is forbidden (use ARCHIVE/REVERSE)"
+  - "Chain-of-command must be honored"
+  - "All decisions must be logged"
+
+# Forbidden verbs (system-wide prohibition)
+forbidden_verbs:
+  - "DELETE"
+  - "APPROVE"  # Human-only
+
+# Protected paths requiring governance review in CI
+protected_paths:
+  - "core/governance/*"
+  - "gateway/alex_*"
+  - "manifests/*"
+  - "docs/governance/*"
+
+# Default failure mode
+failure_mode: "DENY"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# CANONICAL CLOSE
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Checklist: GOVERNANCE_VALIDATION_CHECKLIST
+# Version: 1.0.0
+# Enforced By: ALEX (GID-08)
+# Status: GOVERNANCE-LOCKED
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# END OF CHECKLIST — GOVERNANCE LOCKED
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
