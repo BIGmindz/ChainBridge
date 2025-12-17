@@ -13,6 +13,9 @@ from fastapi.testclient import TestClient
 
 from core.occ.schemas.artifact import ArtifactCreate, ArtifactStatus, ArtifactType, ArtifactUpdate
 
+# PDO headers required for OCC write operations
+PDO_HEADERS = {"X-PDO-ID": "test-pdo-001", "X-PDO-Approved": "true"}
+
 
 @pytest.fixture(autouse=True)
 def reset_store_singleton(monkeypatch):
@@ -94,6 +97,7 @@ class TestAlertsEndpoint:
                 "description": "Needs review",
                 "status": "Draft",
             },
+            headers=PDO_HEADERS,
         )
 
         response = client.get("/api/chainboard/alerts?status=open")
@@ -113,6 +117,7 @@ class TestAlertsEndpoint:
                 "artifact_type": "ComplianceRecord",
                 "status": "Pending",
             },
+            headers=PDO_HEADERS,
         )
 
         response = client.get("/api/chainboard/alerts?status=open")
@@ -127,14 +132,16 @@ class TestAlertsEndpoint:
         client.post(
             "/occ/artifacts",
             json={"name": "Draft Alert", "artifact_type": "Decision", "status": "Draft"},
+            headers=PDO_HEADERS,
         )
         # Create Approved artifact (should not appear in open)
         resp = client.post(
             "/occ/artifacts",
             json={"name": "Approved Alert", "artifact_type": "Decision"},
+            headers=PDO_HEADERS,
         )
         artifact_id = resp.json()["id"]
-        client.patch(f"/occ/artifacts/{artifact_id}", json={"status": "Approved"})
+        client.patch(f"/occ/artifacts/{artifact_id}", json={"status": "Approved"}, headers=PDO_HEADERS)
 
         response = client.get("/api/chainboard/alerts?status=open")
         data = response.json()
@@ -147,9 +154,10 @@ class TestAlertsEndpoint:
         resp = client.post(
             "/occ/artifacts",
             json={"name": "Blocked Alert", "artifact_type": "Decision"},
+            headers=PDO_HEADERS,
         )
         artifact_id = resp.json()["id"]
-        client.patch(f"/occ/artifacts/{artifact_id}", json={"status": "Rejected"})
+        client.patch(f"/occ/artifacts/{artifact_id}", json={"status": "Rejected"}, headers=PDO_HEADERS)
 
         response = client.get("/api/chainboard/alerts?status=blocked")
         data = response.json()
@@ -162,9 +170,10 @@ class TestAlertsEndpoint:
         resp = client.post(
             "/occ/artifacts",
             json={"name": "Resolved Alert", "artifact_type": "ComplianceRecord"},
+            headers=PDO_HEADERS,
         )
         artifact_id = resp.json()["id"]
-        client.patch(f"/occ/artifacts/{artifact_id}", json={"status": "Approved"})
+        client.patch(f"/occ/artifacts/{artifact_id}", json={"status": "Approved"}, headers=PDO_HEADERS)
 
         response = client.get("/api/chainboard/alerts?status=resolved")
         data = response.json()
@@ -177,13 +186,15 @@ class TestAlertsEndpoint:
         client.post(
             "/occ/artifacts",
             json={"name": "Alert 1", "artifact_type": "Decision"},
+            headers=PDO_HEADERS,
         )
         resp = client.post(
             "/occ/artifacts",
             json={"name": "Alert 2", "artifact_type": "ComplianceRecord"},
+            headers=PDO_HEADERS,
         )
         artifact_id = resp.json()["id"]
-        client.patch(f"/occ/artifacts/{artifact_id}", json={"status": "Approved"})
+        client.patch(f"/occ/artifacts/{artifact_id}", json={"status": "Approved"}, headers=PDO_HEADERS)
 
         response = client.get("/api/chainboard/alerts?status=all")
         data = response.json()
@@ -195,10 +206,12 @@ class TestAlertsEndpoint:
         client.post(
             "/occ/artifacts",
             json={"name": "My Plan", "artifact_type": "Plan"},
+            headers=PDO_HEADERS,
         )
         client.post(
             "/occ/artifacts",
             json={"name": "My Report", "artifact_type": "Report"},
+            headers=PDO_HEADERS,
         )
 
         response = client.get("/api/chainboard/alerts?status=all")
@@ -212,6 +225,7 @@ class TestAlertsEndpoint:
             client.post(
                 "/occ/artifacts",
                 json={"name": f"Alert {i}", "artifact_type": "Decision"},
+                headers=PDO_HEADERS,
             )
 
         response = client.get("/api/chainboard/alerts?status=open&limit=3")

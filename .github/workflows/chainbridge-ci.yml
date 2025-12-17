@@ -365,6 +365,66 @@ jobs:
         run: npm test -- --run --reporter=verbose
 
   # ---------------------------------------------------------------------------
+  # Prompt Regression (ChainIQ)
+  # ---------------------------------------------------------------------------
+  prompt-regression:
+    name: 🤖 Prompt Regression (ChainIQ)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PROMPTFOO_OPENAI_API_KEY: ${{ secrets.PROMPTFOO_OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ensure OpenAI key present
+        run: |
+          if [ -z "${PROMPTFOO_OPENAI_API_KEY}" ]; then
+            echo "PROMPTFOO_OPENAI_API_KEY is required for prompt regression checks"
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install promptfoo
+        run: npm install -g promptfoo@latest
+
+      - name: Run ChainIQ golden set
+        run: |
+          mkdir -p .promptfoo/chain_iq
+          promptfoo eval -c prompts/promptfooconfig.chain_iq.yaml \
+            --format junit \
+            --output .promptfoo/chain_iq/results.xml
+
+      - name: Upload prompt regression artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prompt-regression-chainiq
+          path: .promptfoo/chain_iq
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  # Gateway Policy Enforcement (prod simulation)
+  # ---------------------------------------------------------------------------
+  gateway-policy:
+    name: 🛡️ Gateway Policy Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run gateway policy check (prod defaults)
+        env:
+          GATEWAY_ENV: prod
+          GATEWAY_CORS_ORIGINS: ${{ secrets.GATEWAY_CORS_ORIGINS || 'https://chainbridge.app,https://dashboard.chainbridge.app' }}
+          GATEWAY_ALLOW_DYNAMIC_MODULES: ${{ vars.GATEWAY_ALLOW_DYNAMIC_MODULES || 'false' }}
+          GATEWAY_REQUIRE_PDO: ${{ vars.GATEWAY_REQUIRE_PDO || 'true' }}
+        run: python scripts/ci/gateway_policy_check.py
+
+  # ---------------------------------------------------------------------------
   # Documentation Quality
   # ---------------------------------------------------------------------------
   docs-quality:
@@ -401,6 +461,8 @@ jobs:
       - chainiq-tests
       - chainfreight-tests
       - chainboard-ui-tests
+      - prompt-regression
+      - gateway-policy
       - docs-quality
     if: always()
     steps:
@@ -415,6 +477,8 @@ jobs:
           echo "ChainIQ Tests:     ${{ needs.chainiq-tests.result }}"
           echo "ChainFreight Tests: ${{ needs.chainfreight-tests.result }}"
           echo "ChainBoard UI:     ${{ needs.chainboard-ui-tests.result }}"
+           echo "Prompt Regression: ${{ needs.prompt-regression.result }}"
+           echo "Gateway Policy:    ${{ needs.gateway-policy.result }}"
           echo "Docs Quality:      ${{ needs.docs-quality.result }}"
           echo "=========================="
 
@@ -422,7 +486,9 @@ jobs:
           if [[ "${{ needs.backend-tests.result }}" == "failure" ]] || \
              [[ "${{ needs.chainpay-tests.result }}" == "failure" ]] || \
              [[ "${{ needs.chainiq-tests.result }}" == "failure" ]] || \
-             [[ "${{ needs.chainboard-ui-tests.result }}" == "failure" ]]; then
+             [[ "${{ needs.chainboard-ui-tests.result }}" == "failure" ]] || \
+             [[ "${{ needs.prompt-regression.result }}" == "failure" ]] || \
+             [[ "${{ needs.gateway-policy.result }}" == "failure" ]]; then
             echo "❌ Critical job(s) failed!"
             exit 1
           fi

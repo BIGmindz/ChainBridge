@@ -1,0 +1,323 @@
+# Gateway Airlock Security Acceptance Checklist
+# Version: 1.0
+# Author: Sam (GID-06)
+# Purpose: Machine-verifiable checks for merge-blocking enforcement
+#
+# Usage:
+#   python scripts/security/run_airlock_checks.py
+#   OR
+#   make security-check
+#
+# Exit codes:
+#   0 = All CRITICAL/HIGH checks pass
+#   1 = One or more CRITICAL checks failed (merge blocked)
+#   2 = One or more HIGH checks failed (warning)
+
+version: "1.0"
+metadata:
+  author: "SAM-GID-06"
+  enforcement_level: "merge-blocking"
+  applies_to:
+    - "api/**"
+    - "gateway/**"
+    - "core/occ/**"
+    - "tools/**"
+
+# =============================================================================
+# CRITICAL CHECKS — Merge blocked if ANY fail
+# =============================================================================
+
+critical_checks:
+
+  # --- Gateway Middleware Stack ---
+
+  - id: SEC-GW-001
+    name: "AuthN middleware present on protected routes"
+    description: "All protected endpoints must enforce authentication"
+    type: grep
+    pattern: "@require_auth|RequireAuth|authenticate_request"
+    paths: ["api/", "gateway/"]
+    expect: "matches > 0"
+    remediation: "Add @require_auth decorator to protected route handlers"
+
+  - id: SEC-GW-002
+    name: "AuthZ middleware present on elevated routes"
+    description: "Elevated endpoints must enforce authorization"
+    type: grep
+    pattern: "@require_permission|check_permission|authorize_request"
+    paths: ["api/", "gateway/"]
+    expect: "matches > 0"
+    remediation: "Add @require_permission decorator with scope to elevated handlers"
+
+  - id: SEC-GW-004
+    name: "PDO verification on execute endpoints"
+    description: "Module/pipeline execute must verify PDO approval"
+    type: grep
+    pattern: "verify_pdo|require_pdo|PDOOutcome\\.APPROVED"
+    paths: ["api/", "gateway/"]
+    expect: "matches > 0"
+    remediation: "Add PDO verification middleware to execute endpoints"
+
+  - id: SEC-GW-005
+    name: "No wildcard CORS in production"
+    description: "CORS allow_origins must not be '*' in production config"
+    type: grep_negative
+    pattern: 'allow_origins=\\["\\*"\\]'
+    paths: ["api/server.py"]
+    expect: "matches == 0 OR gated by GATEWAY_CORS_ORIGINS env"
+    remediation: "Gate CORS origins with env flag; pin to trusted origins in prod"
+
+  # --- Secret Isolation ---
+
+  - id: SEC-ISO-001
+    name: "No hardcoded secrets in source"
+    description: "API keys, tokens, credentials must not appear in source"
+    type: grep_negative
+    pattern: "(sk-[A-Za-z0-9]{20,}|AKIA[A-Z0-9]{16}|ghp_[A-Za-z0-9]{36}|xox[baprs]-[A-Za-z0-9-]{10,})"
+    paths: ["**/*.py", "**/*.ts", "**/*.js"]
+    exclude: ["**/test*", "**/*_test.py", "**/node_modules/**"]
+    expect: "matches == 0"
+    remediation: "Remove hardcoded secrets; use environment variables or vault"
+
+  # --- PDO Enforcement ---
+
+  - id: SEC-PDO-001
+    name: "GatewayPDO schema defined"
+    description: "PDO schema must exist with outcome enum"
+    type: file_exists
+    path: "gateway/pdo_schema.py"
+    contains: "PDOOutcome"
+    expect: "exists AND contains"
+    remediation: "Create gateway/pdo_schema.py with PDOOutcome enum"
+
+  - id: SEC-PDO-004
+    name: "Intent validation enforced"
+    description: "GatewayIntent must be validated before PDO generation"
+    type: grep
+    pattern: "validate_intent|GatewayValidator"
+    paths: ["gateway/"]
+    expect: "matches > 0"
+    remediation: "Use GatewayValidator.validate_intent() before decision"
+
+# =============================================================================
+# HIGH CHECKS — Warning if fail, should fix before release
+# =============================================================================
+
+high_checks:
+
+  # --- Rate Limiting ---
+
+  - id: SEC-RL-001
+    name: "Rate limit middleware defined"
+    description: "Rate limiting middleware must be implemented"
+    type: grep
+    pattern: "RateLimitMiddleware|@rate_limit|slowapi|limiter"
+    paths: ["api/", "gateway/"]
+    expect: "matches > 0"
+    remediation: "Add rate limiting middleware (slowapi or custom)"
+
+  - id: SEC-RL-002
+    name: "429 response on rate limit"
+    description: "Rate limited requests must return HTTP 429"
+    type: grep
+    pattern: "429|Too Many Requests|HTTPException.*429"
+    paths: ["api/", "gateway/"]
+    expect: "matches > 0"
+    remediation: "Ensure rate limiter returns 429 status code"
+
+  # --- Secret Redaction ---
+
+  - id: SEC-ISO-002
+    name: "Secret redaction in agent context"
+    description: "Secrets must be redacted before LLM context"
+    type: grep
+    pattern: "redact_secrets|SecretRedaction|sanitize_context"
+    paths: ["tools/", "ChainBridge/tools/"]
+    expect: "matches > 0"
+    remediation: "Add secret redaction middleware to agent runtime"
+
+  - id: SEC-ISO-003
+    name: ".env files excluded from agent reads"
+    description: "Agent loader must not read .env files"
+    type: grep_negative
+    pattern: 'read.*\\.env|load_dotenv.*agent'
+    paths: ["tools/agent_loader.py", "tools/agent_runtime.py"]
+    expect: "matches == 0"
+    remediation: "Block .env file access in agent loader"
+
+  # --- PDO Audit ---
+
+  - id: SEC-PDO-002
+    name: "PDO rejection returns 422"
+    description: "Rejected PDO must return HTTP 422"
+    type: grep
+    pattern: "422|Unprocessable|HTTPException.*422"
+    paths: ["api/", "gateway/"]
+    expect: "matches > 0"
+    remediation: "Return 422 Unprocessable Entity on PDO rejection"
+
+  - id: SEC-PDO-003
+    name: "PDO audit events emitted"
+    description: "PDO decisions must emit audit events"
+    type: grep
+    pattern: "PDO_REJECTED|pdo_rejected|emit_audit.*pdo"
+    paths: ["api/", "gateway/", "core/"]
+    expect: "matches > 0"
+    remediation: "Emit audit event on PDO rejection"
+
+  # --- Audit Trail ---
+
+  - id: SEC-AUD-001
+    name: "Gateway rejection events logged"
+    description: "All gateway rejections must be logged"
+    type: grep
+    pattern: "GATEWAY_REJECTION|AUTH_FAILED|AUTHZ_DENIED|RATE_LIMITED"
+    paths: ["api/", "gateway/", "core/"]
+    expect: "matches > 0"
+    remediation: "Add audit logging for all rejection types"
+
+  - id: SEC-AUD-002
+    name: "Principal identity in audit events"
+    description: "Audit events must include actor/principal ID"
+    type: grep
+    pattern: 'principal.*id|actor.*id|"user_id"'
+    paths: ["core/occ/"]
+    expect: "matches > 0"
+    remediation: "Include principal identity in AuditEvent schema"
+
+  # --- Environment Flags ---
+
+  - id: SEC-ENV-001
+    name: "Dynamic modules gated by env flag"
+    description: "Module registration must check GATEWAY_ALLOW_DYNAMIC_MODULES"
+    type: grep
+    pattern: "GATEWAY_ALLOW_DYNAMIC_MODULES|allow_dynamic_modules"
+    paths: ["api/"]
+    expect: "matches > 0"
+    remediation: "Gate /modules/register with GATEWAY_ALLOW_DYNAMIC_MODULES env"
+
+  - id: SEC-ENV-002
+    name: "PDO requirement gated by env flag"
+    description: "PDO enforcement must check GATEWAY_REQUIRE_PDO"
+    type: grep
+    pattern: "GATEWAY_REQUIRE_PDO|require_pdo_env"
+    paths: ["api/", "gateway/"]
+    expect: "matches > 0"
+    remediation: "Gate PDO enforcement with GATEWAY_REQUIRE_PDO env"
+
+  - id: SEC-ENV-003
+    name: "Auth requirement gated by env flag"
+    description: "Auth enforcement must check GATEWAY_REQUIRE_AUTH"
+    type: grep
+    pattern: "GATEWAY_REQUIRE_AUTH|require_auth_env"
+    paths: ["api/", "gateway/"]
+    expect: "matches > 0"
+    remediation: "Gate auth enforcement with GATEWAY_REQUIRE_AUTH env"
+
+# =============================================================================
+# MEDIUM CHECKS — Advisory, track for future
+# =============================================================================
+
+medium_checks:
+
+  - id: SEC-RL-003
+    name: "Rate limit headers in response"
+    description: "Rate limited responses should include X-RateLimit-* headers"
+    type: grep
+    pattern: "X-RateLimit|ratelimit.*header"
+    paths: ["api/", "gateway/"]
+    expect: "matches > 0"
+    remediation: "Add X-RateLimit-Limit, X-RateLimit-Remaining headers"
+
+  - id: SEC-AUD-003
+    name: "Correlation ID in responses"
+    description: "All responses should include X-Request-Id header"
+    type: grep
+    pattern: "X-Request-Id|correlation_id.*header|request_id.*response"
+    paths: ["api/"]
+    expect: "matches > 0"
+    remediation: "Add X-Request-Id header to all responses"
+
+  - id: SEC-GW-006
+    name: "Content-Type enforcement"
+    description: "Execute endpoints should require application/json"
+    type: grep
+    pattern: 'Content-Type.*application/json|media_type.*json'
+    paths: ["api/"]
+    expect: "matches > 0"
+    remediation: "Reject requests without Content-Type: application/json"
+
+# =============================================================================
+# INVARIANT CHECKS — Core security properties
+# =============================================================================
+
+invariants:
+
+  - id: INV-001
+    name: "No PDO → No Execution"
+    description: "Every execute endpoint must verify PDO before execution"
+    type: code_path_analysis
+    entry_points:
+      - "execute_module"
+      - "execute_pipeline"
+    required_gates:
+      - "verify_pdo"
+      - "PDOOutcome.APPROVED"
+    remediation: "Add PDO verification gate before all execution handlers"
+
+  - id: INV-002
+    name: "No Gateway → No Action"
+    description: "No execution path exists outside gateway middleware"
+    type: import_analysis
+    forbidden_direct_imports:
+      module: "core.module_manager"
+      from_packages: ["tools/", "ChainBridge/"]
+    remediation: "All module execution must go through gateway API"
+
+  - id: INV-003
+    name: "Fail-Closed Default"
+    description: "All middleware defaults to rejection on error"
+    type: grep
+    pattern: "fail_closed|default.*reject|raise.*HTTPException"
+    paths: ["api/", "gateway/"]
+    expect: "matches > 0"
+    remediation: "Ensure middleware fails closed on unexpected errors"
+
+# =============================================================================
+# CI INTEGRATION
+# =============================================================================
+
+ci_config:
+
+  run_on:
+    - pull_request
+    - push_to_main
+
+  blocking_levels:
+    - CRITICAL
+
+  warning_levels:
+    - HIGH
+
+  report_format: "json"
+  report_path: "reports/security/airlock_check_results.json"
+
+  notifications:
+    on_critical_fail:
+      - "security-team"
+      - "pr-author"
+    on_high_fail:
+      - "pr-author"
+
+# =============================================================================
+# EXCEPTIONS (requires security team approval)
+# =============================================================================
+
+exceptions:
+  # Example:
+  # - id: SEC-GW-005
+  #   reason: "Dev environment needs wildcard CORS for local testing"
+  #   approved_by: "SAM-GID-06"
+  #   expires: "2025-12-31"
+  #   scope: "dev only"
+  []
