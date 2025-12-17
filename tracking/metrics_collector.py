@@ -67,6 +67,49 @@ class MetricsCollector:
                 "by_pipeline": Counter(),
                 "recent_errors": [],
             },
+            "llm": {
+                "by_model": defaultdict(
+                    lambda: {
+                        "requests": 0,
+                        "tokens_in": 0,
+                        "tokens_out": 0,
+                        "total_cost": 0.0,
+                        "last_used": None,
+                        "tier": None,
+                        "reasons": Counter(),
+                    }
+                ),
+                "by_user": defaultdict(
+                    lambda: {
+                        "requests": 0,
+                        "tokens_in": 0,
+                        "tokens_out": 0,
+                        "total_cost": 0.0,
+                    }
+                ),
+                "by_agent": defaultdict(
+                    lambda: {
+                        "requests": 0,
+                        "tokens_in": 0,
+                        "tokens_out": 0,
+                        "total_cost": 0.0,
+                    }
+                ),
+                "by_endpoint": defaultdict(
+                    lambda: {
+                        "requests": 0,
+                        "tokens_in": 0,
+                        "tokens_out": 0,
+                        "total_cost": 0.0,
+                    }
+                ),
+                "recent": [],
+            },
+            "rate_limit": {
+                "exceeded": 0,
+                "by_scope": defaultdict(int),
+                "recent": [],
+            },
         }
 
         # Load existing metrics if file exists
@@ -88,6 +131,20 @@ class MetricsCollector:
                 if "pipelines" in stored_metrics:
                     for pipeline_name, pipeline_metrics in stored_metrics["pipelines"].items():
                         self.metrics["pipelines"][pipeline_name].update(pipeline_metrics)
+
+                if "llm" in stored_metrics:
+                    llm_snapshot = stored_metrics.get("llm", {})
+                    for scope in ("by_model", "by_user", "by_agent", "by_endpoint"):
+                        for key, values in llm_snapshot.get(scope, {}).items():
+                            self.metrics["llm"][scope][key].update(values)
+                    self.metrics["llm"]["recent"] = llm_snapshot.get("recent", [])
+
+                if "rate_limit" in stored_metrics:
+                    rl_snapshot = stored_metrics.get("rate_limit", {})
+                    self.metrics["rate_limit"]["exceeded"] = rl_snapshot.get("exceeded", 0)
+                    for scope, count in rl_snapshot.get("by_scope", {}).items():
+                        self.metrics["rate_limit"]["by_scope"][scope] += count
+                    self.metrics["rate_limit"]["recent"] = rl_snapshot.get("recent", [])
 
             except Exception as e:
                 print(f"Warning: Could not load metrics file: {e}")
@@ -229,6 +286,79 @@ class MetricsCollector:
 
         self._save_metrics()
 
+    def track_llm_usage(
+        self,
+        model: str,
+        tier: str,
+        tokens_in: int,
+        tokens_out: int,
+        cost: float,
+        user_id: str,
+        agent_id: str,
+        endpoint: str,
+        reason: str,
+    ) -> None:
+        """Track LLM routing, token usage, and cost."""
+
+        now = datetime.now(timezone.utc).isoformat()
+
+        model_metrics = self.metrics["llm"]["by_model"][model]
+        model_metrics["requests"] += 1
+        model_metrics["tokens_in"] += max(tokens_in, 0)
+        model_metrics["tokens_out"] += max(tokens_out, 0)
+        model_metrics["total_cost"] += max(cost, 0.0)
+        model_metrics["last_used"] = now
+        model_metrics["tier"] = tier
+        model_metrics["reasons"][reason] += 1  # type: ignore
+
+        for scope, key in ("by_user", user_id), ("by_agent", agent_id), ("by_endpoint", endpoint):
+            scoped = self.metrics["llm"][scope][key]
+            scoped["requests"] += 1
+            scoped["tokens_in"] += max(tokens_in, 0)
+            scoped["tokens_out"] += max(tokens_out, 0)
+            scoped["total_cost"] += max(cost, 0.0)
+
+        recent = self.metrics["llm"]["recent"]
+        recent.append(
+            {
+                "timestamp": now,
+                "model": model,
+                "tier": tier,
+                "tokens_in": tokens_in,
+                "tokens_out": tokens_out,
+                "cost": cost,
+                "user_id": user_id,
+                "agent_id": agent_id,
+                "endpoint": endpoint,
+                "reason": reason,
+            }
+        )
+        self.metrics["llm"]["recent"] = recent[-200:]
+
+        self._save_metrics()
+
+    def track_rate_limit_exhaustion(self, scope: str, key: str, endpoint: str, retry_after: float) -> None:
+        """Record when a rate limit is exceeded for alerting/observability."""
+
+        now = datetime.now(timezone.utc).isoformat()
+
+        self.metrics["rate_limit"]["exceeded"] += 1
+        self.metrics["rate_limit"]["by_scope"][scope] += 1
+
+        recent = self.metrics["rate_limit"]["recent"]
+        recent.append(
+            {
+                "timestamp": now,
+                "scope": scope,
+                "key": key,
+                "endpoint": endpoint,
+                "retry_after": retry_after,
+            }
+        )
+        self.metrics["rate_limit"]["recent"] = recent[-200:]
+
+        self._save_metrics()
+
     def track_business_impact(self, impact_type: str, value: float, metadata: Dict[str, Any] = None):
         """Track business impact metrics."""
         if impact_type == "signal_generated":
@@ -324,6 +454,7 @@ class MetricsCollector:
             "business_impact": self.get_business_impact_metrics(),
             "adoption": self.get_adoption_metrics(),
             "errors": self.get_error_metrics(),
+            "llm": self.get_llm_metrics(),
             "collected_at": datetime.now(timezone.utc).isoformat(),
         }
 
@@ -353,4 +484,16 @@ class MetricsCollector:
             "total_forecasts_generated": impact["total_forecasts_generated"],
             "data_processed_mb": impact["data_processed_mb"],
             "report_generated_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+    def get_llm_metrics(self) -> Dict[str, Any]:
+        """Expose LLM routing and cost telemetry."""
+
+        snapshot = self.metrics["llm"]
+        return {
+            "by_model": {k: dict(v) for k, v in snapshot["by_model"].items()},
+            "by_user": {k: dict(v) for k, v in snapshot["by_user"].items()},
+            "by_agent": {k: dict(v) for k, v in snapshot["by_agent"].items()},
+            "by_endpoint": {k: dict(v) for k, v in snapshot["by_endpoint"].items()},
+            "recent": list(snapshot["recent"]),
         }

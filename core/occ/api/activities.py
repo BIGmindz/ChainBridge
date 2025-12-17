@@ -26,6 +26,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from core.oc.auth import Principal, get_current_principal
+from core.occ.api.pdo_deps import require_pdo_header
 from core.occ.schemas.activity import ActivityStats, ActivityStatus, ActivityType, AgentActivity, AgentActivityCreate, AgentActivityList
 from core.occ.store.activity_store import AgentActivityStore, get_activity_store
 
@@ -51,7 +52,7 @@ class ActivityCreateResponse(BaseModel):
 # =============================================================================
 
 
-@router.post("", response_model=ActivityCreateResponse, status_code=201)
+@router.post("", response_model=ActivityCreateResponse, status_code=201, dependencies=[Depends(require_pdo_header)])
 async def create_activity(
     activity_in: AgentActivityCreate,
     store: AgentActivityStore = Depends(get_activity_store),
@@ -60,7 +61,7 @@ async def create_activity(
     """
     Log a new agent activity.
 
-    Requires: Any authenticated principal.
+    Requires: Valid PDO (X-PDO-ID and X-PDO-Approved headers) + authenticated principal.
 
     This is an append-only operation. Once logged, activities cannot be
     modified or deleted. Every activity gets a monotonic sequence number
