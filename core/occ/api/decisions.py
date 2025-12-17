@@ -26,6 +26,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from core.occ.api.pdo_deps import require_pdo_header
 from core.occ.schemas.decision import (
     Decision,
     DecisionCreate,
@@ -77,13 +78,15 @@ class LinkProofPackResponse(BaseModel):
 # =============================================================================
 
 
-@router.post("", response_model=Decision, status_code=201)
+@router.post("", response_model=Decision, status_code=201, dependencies=[Depends(require_pdo_header)])
 async def create_decision(
     decision_in: DecisionCreate,
     store: DecisionStore = Depends(get_decision_store),
 ) -> Decision:
     """
     Create a new decision record.
+
+    Requires: Valid PDO (X-PDO-ID and X-PDO-Approved headers).
 
     Decisions are immutable once created. The input_snapshot captures
     all inputs at decision time for deterministic replay verification.

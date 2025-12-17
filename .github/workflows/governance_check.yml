@@ -82,10 +82,126 @@ jobs:
             echo "No database changes detected"
           fi
 
+  governance-checklist-validation:
+    name: "ALEX Checklist: Validation Gate"
+    runs-on: ubuntu-latest
+    needs: governance-pre-check
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install pyyaml
+
+      - name: Verify checklist exists
+        run: |
+          echo "Checking for governance validation checklist..."
+
+          if [[ ! -f "docs/governance/GOVERNANCE_VALIDATION_CHECKLIST_v1.yaml" ]]; then
+            echo "❌ ALEX GOVERNANCE VIOLATION: Checklist not found"
+            echo "System cannot operate without governance checklist"
+            exit 1
+          fi
+
+          if [[ ! -f "docs/governance/GOVERNANCE_VALIDATION_CHECKLIST_v1.md" ]]; then
+            echo "❌ ALEX GOVERNANCE VIOLATION: Checklist documentation not found"
+            exit 1
+          fi
+
+          echo "✅ Governance checklist files present"
+
+      - name: Validate checklist YAML
+        run: |
+          python3 << 'EOF'
+          import yaml
+          import sys
+          from pathlib import Path
+
+          checklist_path = Path("docs/governance/GOVERNANCE_VALIDATION_CHECKLIST_v1.yaml")
+
+          try:
+              with open(checklist_path) as f:
+                  data = yaml.safe_load(f)
+          except yaml.YAMLError as e:
+              print(f"❌ ALEX GOVERNANCE VIOLATION: Invalid checklist YAML")
+              print(f"Error: {e}")
+              sys.exit(1)
+
+          # Required fields
+          required = ["version", "minimum_compatible_version", "required_checks", "failure_mode"]
+          missing = [f for f in required if f not in data]
+
+          if missing:
+              print(f"❌ ALEX GOVERNANCE VIOLATION: Checklist missing fields: {missing}")
+              sys.exit(1)
+
+          # Verify version
+          version = data.get("version", "0.0.0")
+          min_version = data.get("minimum_compatible_version", "1.0.0")
+
+          if version < min_version:
+              print(f"❌ ALEX GOVERNANCE VIOLATION: Checklist version {version} below minimum {min_version}")
+              sys.exit(1)
+
+          # Verify failure mode is DENY
+          if data.get("failure_mode") != "DENY":
+              print(f"❌ ALEX GOVERNANCE VIOLATION: failure_mode must be DENY")
+              sys.exit(1)
+
+          # Verify checklist is locked
+          if data.get("status") != "GOVERNANCE-LOCKED":
+              print(f"❌ ALEX GOVERNANCE VIOLATION: Checklist must be GOVERNANCE-LOCKED")
+              sys.exit(1)
+
+          print(f"✅ Checklist validation passed (v{version})")
+          EOF
+
+      - name: Check protected path changes
+        run: |
+          echo "Checking for changes to protected governance paths..."
+
+          # Get changed files
+          CHANGED=$(git diff --name-only origin/main... 2>/dev/null || git diff --name-only HEAD~1 2>/dev/null || echo "")
+
+          PROTECTED_PATTERNS=(
+            "core/governance/"
+            "gateway/alex_"
+            "manifests/"
+            "docs/governance/"
+          )
+
+          NEEDS_CHECKLIST_ACK=false
+          for pattern in "${PROTECTED_PATTERNS[@]}"; do
+            if echo "$CHANGED" | grep -q "$pattern"; then
+              echo "⚠️  Protected path modified: $pattern"
+              NEEDS_CHECKLIST_ACK=true
+            fi
+          done
+
+          if [[ "$NEEDS_CHECKLIST_ACK" == "true" ]]; then
+            echo ""
+            echo "📋 Changes to governance paths detected"
+            echo "Governance tests are REQUIRED for this PR"
+
+            # Check if governance tests exist
+            if [[ ! -d "tests/governance" ]]; then
+              echo "❌ ALEX GOVERNANCE VIOLATION: tests/governance/ directory missing"
+              exit 1
+            fi
+          fi
+
+          echo "✅ Protected path check complete"
+
   governance-code-scan:
     name: "ALEX Code Scan: Rule Violations"
     runs-on: ubuntu-latest
-    needs: governance-pre-check
+    needs: [governance-pre-check, governance-checklist-validation]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

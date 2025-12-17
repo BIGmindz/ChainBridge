@@ -17,6 +17,7 @@ from uuid import UUID, uuid4
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from core.occ.api.pdo_deps import require_pdo_header
 from core.occ.schemas.artifact import Artifact, ArtifactCreate, ArtifactStatus, ArtifactType, ArtifactUpdate
 from core.occ.schemas.audit_event import AuditEvent
 from core.occ.store.artifact_store import ArtifactStore, get_artifact_store
@@ -35,13 +36,15 @@ class ArtifactListResponse(BaseModel):
     offset: int
 
 
-@router.post("", response_model=Artifact, status_code=201)
+@router.post("", response_model=Artifact, status_code=201, dependencies=[Depends(require_pdo_header)])
 async def create_artifact(
     artifact_in: ArtifactCreate,
     store: ArtifactStore = Depends(get_artifact_store),
 ) -> Artifact:
     """
     Create a new artifact.
+
+    Requires: Valid PDO (X-PDO-ID and X-PDO-Approved headers).
 
     The artifact ID and timestamps are generated server-side.
     """
@@ -92,7 +95,7 @@ async def get_artifact(
     return artifact
 
 
-@router.patch("/{artifact_id}", response_model=Artifact)
+@router.patch("/{artifact_id}", response_model=Artifact, dependencies=[Depends(require_pdo_header)])
 async def update_artifact(
     artifact_id: UUID,
     artifact_update: ArtifactUpdate,
@@ -100,6 +103,8 @@ async def update_artifact(
 ) -> Artifact:
     """
     Update an artifact with partial data.
+
+    Requires: Valid PDO (X-PDO-ID and X-PDO-Approved headers).
 
     Only fields provided in the request body will be updated.
     """
@@ -109,13 +114,15 @@ async def update_artifact(
     return artifact
 
 
-@router.delete("/{artifact_id}", status_code=204)
+@router.delete("/{artifact_id}", status_code=204, dependencies=[Depends(require_pdo_header)])
 async def delete_artifact(
     artifact_id: UUID,
     store: ArtifactStore = Depends(get_artifact_store),
 ) -> None:
     """
     Delete an artifact by ID.
+
+    Requires: Valid PDO (X-PDO-ID and X-PDO-Approved headers).
     """
     deleted = store.delete(artifact_id)
     if not deleted:

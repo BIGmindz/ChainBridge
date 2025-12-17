@@ -1,0 +1,195 @@
+# =============================================================================
+# ATLAS SCOPE LOCK v1 — Domain Boundary Enforcement
+# =============================================================================
+#
+# This file defines the CANONICAL source of truth for Atlas (GID-11) path
+# restrictions. Atlas is a meta-agent responsible for repo integrity,
+# governance artifacts, and structural scaffolding — NOT runtime code.
+#
+# GOVERNANCE LOCK: This file is enforced by ALEX middleware at runtime
+# and by CI at build time. Violations result in immediate DENY.
+#
+# @see PAC-GOV-ATLAS-01 — Atlas Domain Boundary Enforcement
+# =============================================================================
+
+version: "1.0.0"
+governance_lock: true
+effective_date: "2025-12-17"
+
+# =============================================================================
+# AGENT IDENTITY
+# =============================================================================
+
+agent:
+  gid: "GID-11"
+  name: "ATLAS"
+  role: "Build / Repair / Repo Integrity"
+  color: "blue"
+  type: "meta-agent"
+  description: >
+    Atlas is a structural agent responsible for repository scaffolding,
+    governance documentation, and build integrity. Atlas has ZERO domain
+    authority and cannot create, modify, or patch runtime code.
+
+# =============================================================================
+# FORBIDDEN PATHS (DENY LIST)
+# =============================================================================
+# Atlas MUST NEVER touch these paths. Any write intent to these paths
+# by GID-11 results in immediate DENY with reason ATLAS_DOMAIN_VIOLATION.
+#
+# Pattern syntax:
+#   - "path/**" matches all files recursively under path
+#   - "path/*" matches files directly under path (one level)
+#   - "path/*.ext" matches files with specific extension
+# =============================================================================
+
+forbidden_paths:
+  # ---------------------------------------------------------------------------
+  # FRONTEND (Domain Owner: SONNY GID-02)
+  # ---------------------------------------------------------------------------
+  - "ChainBridge/chainboard-ui/**"
+  - "chainboard-ui/**"
+  - "src/components/**"
+  - "src/types/**"
+  - "src/pages/**"
+  - "src/hooks/**"
+  - "src/services/**"
+  - "src/lib/**"
+  - "src/ai/**"
+
+  # ---------------------------------------------------------------------------
+  # BACKEND CORE (Domain Owner: Various)
+  # ---------------------------------------------------------------------------
+  - "core/**"
+  - "gateway/**"
+  - "services/**"
+  - "api/**"
+
+  # ---------------------------------------------------------------------------
+  # SERVICE IMPLEMENTATIONS
+  # ---------------------------------------------------------------------------
+  - "ChainBridge/chainiq-service/**"
+  - "ChainBridge/chainpay-service/**"
+  - "ChainBridge/chainfreight-service/**"
+  - "chainiq-service/**"
+  - "chainpay-service/**"
+  - "chainboard-service/**"
+
+  # ---------------------------------------------------------------------------
+  # APPLICATION CODE
+  # ---------------------------------------------------------------------------
+  - "app/**"
+  - "modules/**"
+  - "utils/**"
+  - "strategies/**"
+
+# =============================================================================
+# ALLOWED PATHS (PERMIT LIST)
+# =============================================================================
+# Atlas MAY ONLY touch these paths. This is an exhaustive list.
+# Any path not in this list AND not in forbidden_paths requires escalation.
+# =============================================================================
+
+allowed_paths:
+  # ---------------------------------------------------------------------------
+  # DOCUMENTATION & GOVERNANCE
+  # ---------------------------------------------------------------------------
+  - "docs/**"
+  - "docs/governance/**"
+
+  # ---------------------------------------------------------------------------
+  # MANIFESTS & CONFIGURATION
+  # ---------------------------------------------------------------------------
+  - "manifests/**"
+  - ".github/**"
+  - "k8s/**"
+
+  # ---------------------------------------------------------------------------
+  # BUILD & SCAFFOLDING
+  # ---------------------------------------------------------------------------
+  - "Makefile"
+  - "Dockerfile"
+  - "Dockerfile.*"
+  - "docker-compose.yml"
+  - "docker-compose.*.yml"
+  - "pyproject.toml"
+  - "requirements*.txt"
+  - "ruff.toml"
+  - "pytest.ini"
+  - ".gitignore"
+  - ".env.example"
+  - ".env.*.example"
+
+  # ---------------------------------------------------------------------------
+  # SCRIPTS (Non-Runtime)
+  # ---------------------------------------------------------------------------
+  - "scripts/**"
+
+  # ---------------------------------------------------------------------------
+  # TEST SCAFFOLDING (Structure Only)
+  # ---------------------------------------------------------------------------
+  # Note: Atlas may create test STRUCTURE but not test LOGIC for domain code.
+  # Atlas CAN write governance tests (tests/governance/**)
+  - "tests/governance/**"
+
+# =============================================================================
+# ENFORCEMENT RULES
+# =============================================================================
+
+enforcement:
+  # Runtime enforcement via ALEX middleware
+  runtime:
+    enabled: true
+    fail_closed: true
+    denial_reason: "ATLAS_DOMAIN_VIOLATION"
+    audit_level: "CRITICAL"
+
+  # Build-time enforcement via CI
+  ci:
+    enabled: true
+    fail_on_violation: true
+    check_modified_files: true
+    check_executor_gid: true
+
+# =============================================================================
+# VIOLATION RESPONSE
+# =============================================================================
+
+violation_response:
+  decision: "DENY"
+  reason: "ATLAS_DOMAIN_VIOLATION"
+  reason_detail: "Atlas (GID-11) attempted to modify a domain-owned path. Atlas is a meta-agent with zero domain authority."
+  correction_plan:
+    cause: "ATLAS_DOMAIN_VIOLATION"
+    constraints:
+      - "Atlas has zero domain authority"
+      - "Atlas may only modify governance and scaffolding files"
+      - "Domain code must be modified by domain-owning agents"
+    allowed_next_steps:
+      - verb: "ESCALATE"
+        target: "human.operator"
+        description: "Request human review of the intended change"
+      - verb: "PROPOSE"
+        target_scope: "docs.governance"
+        description: "Document the required change for domain agent execution"
+
+# =============================================================================
+# AUDIT REQUIREMENTS
+# =============================================================================
+
+audit:
+  log_all_attempts: true
+  log_violations: true
+  include_in_proofpack: true
+  retention_days: 365
+
+# =============================================================================
+# METADATA
+# =============================================================================
+
+metadata:
+  created_by: "ATLAS (GID-11)"
+  created_at: "2025-12-17"
+  pac_reference: "PAC-GOV-ATLAS-01"
+  review_required: true
+  next_review: "2026-06-17"

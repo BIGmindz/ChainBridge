@@ -1,0 +1,172 @@
+version: 1
+# Prompt regression harness for ChainIQ. Baseline metrics:
+# - schema_pass_rate: 1.0 (all cases must satisfy JSON schema)
+# - score_variance_tolerance: 0.05 (scores may drift by <= 0.05 from golden set)
+description: ChainIQ prompt regression (golden set, schema + score stability)
+
+providers:
+  - id: openai:gpt-4o-mini
+    config:
+      temperature: 0
+      max_tokens: 400
+
+defaultTest:
+  options:
+    maxConcurrency: 2
+    transform:
+      prompt: none
+
+defaultAssertions:
+  - type: json-schema
+    value:
+      type: object
+      required: [schema_version, risk_score, risk_label, signals, rationale, policy_flags]
+      properties:
+        schema_version:
+          const: "1.0.1"
+        risk_score:
+          type: number
+          minimum: 0
+          maximum: 1
+        risk_label:
+          type: string
+          enum: [low, medium, high]
+        signals:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 6
+        rationale:
+          type: string
+          minLength: 12
+        policy_flags:
+          type: array
+          items:
+            type: string
+      additionalProperties: false
+
+prompts:
+  - id: chain-iq-v1.0.1
+    label: chain_iq_v1_0_1
+    file: prompts/chain_iq/v1.0.1.yaml
+
+# Golden set (CI enforced)
+# score_variance_tolerance is enforced via JS assertion per test.
+tests:
+  - description: High-risk cross-border payout (sanctions hit)
+    vars:
+      transaction_id: TX-1001
+      amount_usd: 125000
+      corridor: NG -> US
+      entity_risk: high
+      velocity_flags: burst,ip_mismatch
+      historical_score: 0.41
+      sanctions_hit: true
+      notes: OFAC name match and fresh domain
+      expected_schema_version: "1.0.1"
+      expected_risk_label: high
+      expected_risk_score: 0.92
+    assert:
+      - type: javascript
+        value: |
+          const parsed = typeof output === 'string' ? JSON.parse(output) : output;
+          if (parsed.schema_version !== vars.expected_schema_version) {
+            throw new Error(`Schema version mismatch: ${parsed.schema_version}`);
+          }
+      - type: javascript
+        value: |
+          const parsed = typeof output === 'string' ? JSON.parse(output) : output;
+          const label = (parsed.risk_label || '').toLowerCase();
+          if (label !== vars.expected_risk_label) {
+            throw new Error(`risk_label ${label} != expected ${vars.expected_risk_label}`);
+          }
+      - type: javascript
+        value: |
+          const parsed = typeof output === 'string' ? JSON.parse(output) : output;
+          const score = Number(parsed.risk_score);
+          if (!Number.isFinite(score)) {
+            throw new Error('risk_score is not numeric');
+          }
+          const diff = Math.abs(score - Number(vars.expected_risk_score));
+          if (diff > 0.05) {
+            throw new Error(`Score variance ${diff.toFixed(3)} exceeds tolerance 0.05`);
+          }
+
+  - description: Medium-risk new business with moderate amount
+    vars:
+      transaction_id: TX-2044
+      amount_usd: 15000
+      corridor: US -> CA
+      entity_risk: medium
+      velocity_flags: card_change
+      historical_score: 0.35
+      sanctions_hit: false
+      notes: new merchant with limited history
+      expected_schema_version: "1.0.1"
+      expected_risk_label: medium
+      expected_risk_score: 0.58
+    assert:
+      - type: javascript
+        value: |
+          const parsed = typeof output === 'string' ? JSON.parse(output) : output;
+          if (parsed.schema_version !== vars.expected_schema_version) {
+            throw new Error(`Schema version mismatch: ${parsed.schema_version}`);
+          }
+      - type: javascript
+        value: |
+          const parsed = typeof output === 'string' ? JSON.parse(output) : output;
+          const label = (parsed.risk_label || '').toLowerCase();
+          if (label !== vars.expected_risk_label) {
+            throw new Error(`risk_label ${label} != expected ${vars.expected_risk_label}`);
+          }
+      - type: javascript
+        value: |
+          const parsed = typeof output === 'string' ? JSON.parse(output) : output;
+          const score = Number(parsed.risk_score);
+          if (!Number.isFinite(score)) {
+            throw new Error('risk_score is not numeric');
+          }
+          const diff = Math.abs(score - Number(vars.expected_risk_score));
+          if (diff > 0.05) {
+            throw new Error(`Score variance ${diff.toFixed(3)} exceeds tolerance 0.05`);
+          }
+
+  - description: Low-risk returning customer with clean history
+    vars:
+      transaction_id: TX-3099
+      amount_usd: 1200
+      corridor: US -> US
+      entity_risk: low
+      velocity_flags: none
+      historical_score: 0.18
+      sanctions_hit: false
+      notes: repeat buyer, no disputes
+      expected_schema_version: "1.0.1"
+      expected_risk_label: low
+      expected_risk_score: 0.22
+    assert:
+      - type: javascript
+        value: |
+          const parsed = typeof output === 'string' ? JSON.parse(output) : output;
+          if (parsed.schema_version !== vars.expected_schema_version) {
+            throw new Error(`Schema version mismatch: ${parsed.schema_version}`);
+          }
+      - type: javascript
+        value: |
+          const parsed = typeof output === 'string' ? JSON.parse(output) : output;
+          const label = (parsed.risk_label || '').toLowerCase();
+          if (label !== vars.expected_risk_label) {
+            throw new Error(`risk_label ${label} != expected ${vars.expected_risk_label}`);
+          }
+      - type: javascript
+        value: |
+          const parsed = typeof output === 'string' ? JSON.parse(output) : output;
+          const score = Number(parsed.risk_score);
+          if (!Number.isFinite(score)) {
+            throw new Error('risk_score is not numeric');
+          }
+          const diff = Math.abs(score - Number(vars.expected_risk_score));
+          if (diff > 0.05) {
+            throw new Error(`Score variance ${diff.toFixed(3)} exceeds tolerance 0.05`);
+          }
