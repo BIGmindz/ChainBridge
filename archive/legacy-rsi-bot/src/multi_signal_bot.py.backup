@@ -60,26 +60,14 @@ def safe_fetch_ohlcv(exchange, symbol, timeframe, limit=100):
         raise RuntimeError(f"Live data fetch failed for {symbol}: {str(e)}")
 
 
-from modules.adoption_tracker_module import (  # Chainalysis adoption tracker  # noqa: E402
-    AdoptionTrackerModule,
-)
+from modules.adoption_tracker_module import AdoptionTrackerModule  # Chainalysis adoption tracker  # noqa: E402
 from modules.bollinger_bands_module import BollingerBandsModule  # noqa: E402
-from modules.global_macro_module import (  # Global macro predictor  # noqa: E402
-    GlobalMacroModule,
-)
-from modules.logistics_signal_module import (  # Ultra-low correlation predictor  # noqa: E402
-    LogisticsSignalModule,
-)
+from modules.global_macro_module import GlobalMacroModule  # Global macro predictor  # noqa: E402
+from modules.logistics_signal_module import LogisticsSignalModule  # Ultra-low correlation predictor  # noqa: E402
 from modules.macd_module import MACDModule  # noqa: E402
-from modules.multi_signal_aggregator_module import (  # noqa: E402
-    MultiSignalAggregatorModule,
-)
-from modules.new_listings_radar_module import (  # New listings monitoring  # noqa: E402
-    NewListingsRadar,
-)
-from modules.region_specific_crypto_module import (  # Region-specific crypto mapper  # noqa: E402
-    RegionSpecificCryptoModule,
-)
+from modules.multi_signal_aggregator_module import MultiSignalAggregatorModule  # noqa: E402
+from modules.new_listings_radar_module import NewListingsRadar  # New listings monitoring  # noqa: E402
+from modules.region_specific_crypto_module import RegionSpecificCryptoModule  # Region-specific crypto mapper  # noqa: E402
 
 # Import signal modules
 from modules.rsi_module import RSIModule  # noqa: E402
