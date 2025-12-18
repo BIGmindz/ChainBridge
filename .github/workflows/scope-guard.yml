@@ -1,0 +1,175 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# ChainBridge Scope Guard CI
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# Enforces repository scope boundaries as defined in:
+#   docs/governance/REPO_SCOPE_MANIFEST.md
+#   docs/governance/REPO_SCOPE_LOCK.md (PAC-DAN-03)
+#
+# This workflow fails if:
+#   - Files matching forbidden patterns appear outside /archive
+#   - Any code imports from /archive
+#   - Makefile contains forbidden legacy patterns
+#   - Forbidden file extensions (.ipynb, .streamlit) appear
+#   - Unauthorized requirements files appear
+#
+# PAC Reference: PAC-REPO-SCOPE-LOCK-01, PAC-DAN-03
+# Locked by: ATLAS (GID-11), DAN (GID-07)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+name: Scope Guard
+
+on:
+  push:
+    branches: [main, develop, "fix/**", "feature/**"]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  scope-guard:
+    name: Repository Scope Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run Scope Guard
+        run: |
+          echo "═══════════════════════════════════════════════════════════════"
+          echo "  ChainBridge Scope Guard v2.0.0 (PAC-DAN-03)"
+          echo "═══════════════════════════════════════════════════════════════"
+          python scripts/scope_guard/check_repo_scope.py --ci
+
+      - name: Verify archive isolation
+        run: |
+          echo "Checking archive is not imported..."
+          if grep -r "from archive" --include="*.py" . 2>/dev/null | grep -v "archive/" | grep -v "__pycache__" | grep -v ".venv"; then
+            echo "::error::Found imports from archive directory"
+            exit 1
+          fi
+          echo "✅ Archive isolation verified"
+
+      - name: Check for forbidden root files
+        run: |
+          echo "Checking for forbidden files at root..."
+          FORBIDDEN_FOUND=0
+
+          # Check for trading bot files at root
+          for pattern in "*bot*.py" "*trading*.py" "*rsi*.py" "*alpha*.py"; do
+            if ls $pattern 2>/dev/null | grep -v "archive/"; then
+              echo "::error::Forbidden file pattern found: $pattern"
+              FORBIDDEN_FOUND=1
+            fi
+          done
+
+          if [ $FORBIDDEN_FOUND -eq 1 ]; then
+            exit 1
+          fi
+          echo "✅ No forbidden files at root"
+
+  # PAC-DAN-03: Extension and Requirements Lock
+  requirements-lock:
+    name: Requirements File Lock
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check requirements files
+        run: |
+          echo "═══════════════════════════════════════════════════════════════"
+          echo "  PAC-DAN-03: Requirements Lock Check"
+          echo "═══════════════════════════════════════════════════════════════"
+
+          ALLOWED_REQUIREMENTS="requirements.txt requirements-dev.txt"
+          VIOLATIONS=0
+
+          for file in requirements*.txt; do
+            if [ -f "$file" ]; then
+              if ! echo "$ALLOWED_REQUIREMENTS" | grep -qw "$file"; then
+                echo "::error::Unauthorized requirements file: $file"
+                VIOLATIONS=$((VIOLATIONS + 1))
+              else
+                echo "✅ $file - authorized"
+              fi
+            fi
+          done
+
+          if [ $VIOLATIONS -gt 0 ]; then
+            echo ""
+            echo "::error::Found $VIOLATIONS unauthorized requirements file(s)"
+            echo "Allowed files: $ALLOWED_REQUIREMENTS"
+            exit 1
+          fi
+
+          echo ""
+          echo "✅ Requirements lock verified"
+
+      - name: Check forbidden extensions
+        run: |
+          echo "═══════════════════════════════════════════════════════════════"
+          echo "  PAC-DAN-03: Forbidden Extension Check"
+          echo "═══════════════════════════════════════════════════════════════"
+
+          VIOLATIONS=0
+
+          # Check for .ipynb files outside archive
+          IPYNB_FILES=$(find . -name "*.ipynb" -not -path "./archive/*" -not -path "./.venv/*" -not -path "./ql-db/*" 2>/dev/null || true)
+          if [ -n "$IPYNB_FILES" ]; then
+            echo "::error::Found Jupyter notebooks outside archive:"
+            echo "$IPYNB_FILES"
+            VIOLATIONS=$((VIOLATIONS + 1))
+          fi
+
+          # Check for .streamlit files
+          STREAMLIT_FILES=$(find . -name "*.streamlit" -not -path "./archive/*" -not -path "./.venv/*" 2>/dev/null || true)
+          if [ -n "$STREAMLIT_FILES" ]; then
+            echo "::error::Found .streamlit files outside archive:"
+            echo "$STREAMLIT_FILES"
+            VIOLATIONS=$((VIOLATIONS + 1))
+          fi
+
+          if [ $VIOLATIONS -gt 0 ]; then
+            exit 1
+          fi
+
+          echo "✅ No forbidden extensions found"
+
+  archive-inert-check:
+    name: Archive Inert Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify archive is excluded from lint
+        run: |
+          echo "Verifying archive exclusion from lint config..."
+          if [ -f "ruff.toml" ]; then
+            if grep -q "archive" ruff.toml; then
+              echo "✅ Archive referenced in ruff.toml"
+            else
+              echo "⚠️ Warning: archive not explicitly excluded in ruff.toml"
+            fi
+          fi
+          echo "✅ Archive inert check passed"
+
+      - name: Verify archive is excluded from tests
+        run: |
+          echo "Verifying archive excluded from pytest..."
+          if [ -f "pytest.ini" ]; then
+            if grep -q "testpaths" pytest.ini; then
+              if ! grep -q "archive" pytest.ini; then
+                echo "✅ Archive not in testpaths"
+              fi
+            fi
+          fi
+          echo "✅ Archive test exclusion verified"

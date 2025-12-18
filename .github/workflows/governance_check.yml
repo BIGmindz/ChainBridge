@@ -198,10 +198,78 @@ jobs:
 
           echo "✅ Protected path check complete"
 
+  # ============================================================================
+  # 🟢 DAN (GID-07) GOVERNANCE GUARD — PAC-DAN-01
+  # Repo Scope + Immutability + Provenance
+  # ============================================================================
+  governance-guard:
+    name: "DAN Governance Guard: Scope & Immutability"
+    runs-on: ubuntu-latest
+    needs: governance-pre-check
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Generate Build Provenance
+        run: |
+          echo "🟢 DAN (GID-07) — Generating build provenance..."
+          python scripts/ci/generate_provenance.py --format header
+          python scripts/ci/generate_provenance.py --format json --output provenance.json
+
+      - name: Upload Provenance Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-provenance
+          path: provenance.json
+
+      - name: Check Repo Scope (Forbidden Artifacts)
+        run: |
+          echo "🟢 DAN (GID-07) — Checking repo scope..."
+          python scripts/ci/check_repo_scope.py --json-output scope-report.json
+        env:
+          PYTHONPATH: .
+
+      - name: Upload Scope Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: scope-report
+          path: scope-report.json
+
+      - name: Check Governance Immutability
+        run: |
+          echo "🟢 DAN (GID-07) — Checking governance file immutability..."
+          python scripts/ci/check_governance_immutability.py --json-output immutability-report.json
+        env:
+          PYTHONPATH: .
+          GOVERNANCE_OVERRIDE: ${{ vars.GOVERNANCE_OVERRIDE }}
+          GOVERNANCE_OVERRIDE_REASON: ${{ vars.GOVERNANCE_OVERRIDE_REASON }}
+
+      - name: Upload Immutability Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: immutability-report
+          path: immutability-report.json
+
+      - name: Governance Guard Summary
+        run: |
+          echo "="
+          echo "🟢 DAN (GID-07) — GOVERNANCE GUARD COMPLETE"
+          echo "="
+          echo "Repo integrity > velocity"
+
   governance-code-scan:
     name: "ALEX Code Scan: Rule Violations"
     runs-on: ubuntu-latest
-    needs: [governance-pre-check, governance-checklist-validation]
+    needs: [governance-pre-check, governance-checklist-validation, governance-guard]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -561,9 +629,16 @@ jobs:
   governance-report:
     name: "ALEX Governance Report"
     runs-on: ubuntu-latest
-    needs: [governance-code-scan, governance-ml-check, governance-security-scan, governance-test-coverage, governance-chainpay-check]
+    needs: [governance-guard, governance-code-scan, governance-ml-check, governance-security-scan, governance-test-coverage, governance-chainpay-check]
     if: always()
     steps:
+      - name: Download Provenance Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-provenance
+          path: ./artifacts
+        continue-on-error: true
+
       - name: Generate governance report
         run: |
           echo "# ALEX Governance Report" > governance-report.md
@@ -573,11 +648,22 @@ jobs:
           echo "**Author:** ${{ github.actor }}" >> governance-report.md
           echo "**Date:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> governance-report.md
           echo "" >> governance-report.md
+
+          # Include provenance if available
+          if [[ -f "./artifacts/provenance.json" ]]; then
+            echo "## Build Provenance" >> governance-report.md
+            echo '```json' >> governance-report.md
+            cat ./artifacts/provenance.json >> governance-report.md
+            echo '```' >> governance-report.md
+            echo "" >> governance-report.md
+          fi
+
           echo "## Governance Checks" >> governance-report.md
           echo "" >> governance-report.md
           echo "| Check | Status |" >> governance-report.md
           echo "|-------|--------|" >> governance-report.md
           echo "| Pre-Check (PR Metadata) | ${{ needs.governance-pre-check.result }} |" >> governance-report.md
+          echo "| 🟢 DAN Guard (Scope/Immutability) | ${{ needs.governance-guard.result }} |" >> governance-report.md
           echo "| Code Scan (Rule Violations) | ${{ needs.governance-code-scan.result }} |" >> governance-report.md
           echo "| ML Governance | ${{ needs.governance-ml-check.result }} |" >> governance-report.md
           echo "| Security Scan | ${{ needs.governance-security-scan.result }} |" >> governance-report.md
@@ -607,7 +693,8 @@ jobs:
       - name: Final governance decision
         run: |
           # Check if any job failed
-          if [[ "${{ needs.governance-code-scan.result }}" != "success" ]] || \
+          if [[ "${{ needs.governance-guard.result }}" != "success" ]] || \
+             [[ "${{ needs.governance-code-scan.result }}" != "success" ]] || \
              [[ "${{ needs.governance-security-scan.result }}" != "success" ]] || \
              [[ "${{ needs.governance-test-coverage.result }}" != "success" ]]; then
             echo "❌ ALEX GOVERNANCE: PR BLOCKED"
@@ -617,3 +704,4 @@ jobs:
 
           echo "✅ ALEX GOVERNANCE: PR APPROVED"
           echo "All governance checks passed"
+          echo "🟢 DAN (GID-07) — Repo integrity verified"

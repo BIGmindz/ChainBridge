@@ -16,6 +16,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from api.chainboard_stub import router as chainboard_router
+from api.trust import router as trust_router
 from core.data_processor import DataProcessor
 
 # Import core components
@@ -24,6 +25,8 @@ from core.occ.api.activities import router as occ_activities_router
 from core.occ.api.artifacts import router as occ_artifacts_router
 from core.occ.api.audit_events import router as occ_audit_events_router
 from core.occ.api.decisions import router as occ_decisions_router
+from core.occ.api.pdo import router as occ_pdo_router
+from core.occ.api.proofpack_v1 import router as occ_proofpack_v1_router
 from core.occ.api.proofpacks import router as occ_proofpacks_router
 from core.pipeline import Pipeline
 from gateway.rate_limit import RateLimitConfig, RateLimiter, RateLimitError, RequestContext
@@ -232,8 +235,11 @@ app.include_router(occ_activities_router)
 app.include_router(occ_artifacts_router)
 app.include_router(occ_audit_events_router)
 app.include_router(occ_decisions_router)
+app.include_router(occ_pdo_router)
 app.include_router(occ_proofpacks_router)
+app.include_router(occ_proofpack_v1_router)  # PDO-based ProofPack per PROOFPACK_SPEC_v1.md
 app.include_router(chainboard_router)
+app.include_router(trust_router)
 
 
 @app.get("/", response_model=Dict[str, str])
@@ -244,6 +250,7 @@ async def root():
         "version": "1.0.0",
         "docs": "/docs",
         "health": "/health",
+        "governance": "/governance/fingerprint",
     }
 
 
@@ -254,6 +261,39 @@ async def health_check():
         modules_loaded=len(module_manager.list_modules()),
         active_pipelines=len(pipelines),
     )
+
+
+@app.get("/governance/fingerprint")
+async def get_governance_fingerprint():
+    """Get governance fingerprint for audit and verification.
+
+    Returns the cryptographic fingerprint of all governance root files,
+    enabling operators to verify governance state consistency across
+    environments (local, CI, prod).
+
+    This endpoint is read-only and does not modify state.
+    """
+    try:
+        from core.governance.governance_fingerprint import GovernanceBootError, get_fingerprint_engine
+
+        engine = get_fingerprint_engine()
+        if not engine.is_initialized():
+            # Compute on first access if not yet initialized
+            engine.compute_fingerprint()
+
+        fingerprint = engine.get_fingerprint()
+        return fingerprint.to_dict()
+
+    except GovernanceBootError as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Governance fingerprint unavailable: {e}",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to compute governance fingerprint: {e}",
+        )
 
 
 @app.get("/modules", response_model=List[str])
