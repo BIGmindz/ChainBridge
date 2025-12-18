@@ -51,6 +51,7 @@ from core.governance.drcp import (
     requires_diggy_routing,
 )
 from core.governance.intent_schema import AgentIntent, IntentVerb
+from gateway.decision_envelope import GatewayDecisionEnvelope, create_envelope_from_result
 
 # Configure governance audit logger
 _GOVERNANCE_LOG_DIR = Path(__file__).parent.parent / "logs"
@@ -84,13 +85,25 @@ class GovernanceAuditLogger:
             f.write(json.dumps(record, default=str) + "\n")
             f.flush()
 
+    def set_governance_fingerprint(self, fingerprint_data: Dict[str, str] | None) -> None:
+        """Set the governance fingerprint to include in all audit records.
+
+        Args:
+            fingerprint_data: Dict with composite_hash and version, or None to disable
+        """
+        self._governance_fingerprint = fingerprint_data
+
     def log_decision(self, result: EvaluationResult) -> None:
-        """Log an evaluation decision.
+        """Log an evaluation decision with governance fingerprint.
 
         Args:
             result: The evaluation result to log
         """
-        self._write_record(result.to_audit_dict())
+        audit_record = result.to_audit_dict()
+        # Enrich with governance fingerprint (additive only, PAC-ALEX-02)
+        if hasattr(self, "_governance_fingerprint") and self._governance_fingerprint:
+            audit_record["governance_fingerprint"] = self._governance_fingerprint
+        self._write_record(audit_record)
 
     def log_startup(self, manifest_count: int, acm_versions: Dict[str, str]) -> None:
         """Log ALEX startup event.
@@ -270,6 +283,42 @@ class GovernanceAuditLogger:
             "target_path": target_path,
             "forbidden_pattern": forbidden_pattern,
             "severity": "CRITICAL",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        self._write_record(record)
+
+    def log_governance_fingerprint_computed(self, composite_hash: str, version: str, file_count: int, categories: list[str]) -> None:
+        """Log governance fingerprint computation at startup.
+
+        Args:
+            composite_hash: The composite SHA-256 hash
+            version: Fingerprint schema version
+            file_count: Number of files hashed
+            categories: List of governance categories included
+        """
+        record = {
+            "event": "GOVERNANCE_FINGERPRINT_COMPUTED",
+            "composite_hash": composite_hash,
+            "version": version,
+            "file_count": file_count,
+            "categories": categories,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        self._write_record(record)
+
+    def log_governance_drift_detected(self, original_hash: str, current_hash: str, severity: str = "CRITICAL") -> None:
+        """Log governance drift detection.
+
+        Args:
+            original_hash: Hash at boot time
+            current_hash: Hash at drift detection time
+            severity: Severity level (always CRITICAL for drift)
+        """
+        record = {
+            "event": "GOVERNANCE_DRIFT_DETECTED",
+            "original_hash": original_hash,
+            "current_hash": current_hash,
+            "severity": severity,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         self._write_record(record)
@@ -964,6 +1013,97 @@ class ALEXMiddleware:
         )
         return self.evaluate(intent)
 
+    def evaluate_envelope(
+        self,
+        intent: AgentIntent,
+        allowed_tools: list[str] | None = None,
+    ) -> GatewayDecisionEnvelope:
+        """Evaluate an intent and return a Canonical Decision Envelope (CDE).
+
+        This is the PRIMARY method for downstream consumers.
+        Returns a versioned, stable envelope — no internal structures leaked.
+
+        PAC-GATEWAY-01: All consumers should use this method.
+
+        Args:
+            intent: The agent intent to evaluate
+            allowed_tools: Optional list of tools to allow on ALLOW decision
+
+        Returns:
+            GatewayDecisionEnvelope (CDE v1)
+
+        Raises:
+            ALEXMiddlewareError: If middleware is not initialized
+        """
+        # Get the internal result (may raise IntentDeniedError if configured)
+        # Temporarily disable raise_on_denial to get the result
+        original_raise = self._config.raise_on_denial
+        self._config = MiddlewareConfig(
+            fail_closed_on_invalid_manifest=self._config.fail_closed_on_invalid_manifest,
+            fail_closed_on_unknown_agent=self._config.fail_closed_on_unknown_agent,
+            log_all_decisions=self._config.log_all_decisions,
+            raise_on_denial=False,  # Don't raise, we need the result
+            require_checklist=self._config.require_checklist,
+            enforce_chain_of_command=self._config.enforce_chain_of_command,
+            enforce_drcp=self._config.enforce_drcp,
+            enforce_dcc=self._config.enforce_dcc,
+            enforce_atlas_scope=self._config.enforce_atlas_scope,
+        )
+
+        try:
+            result = self.evaluate(intent)
+        finally:
+            # Restore original config
+            self._config = MiddlewareConfig(
+                fail_closed_on_invalid_manifest=self._config.fail_closed_on_invalid_manifest,
+                fail_closed_on_unknown_agent=self._config.fail_closed_on_unknown_agent,
+                log_all_decisions=self._config.log_all_decisions,
+                raise_on_denial=original_raise,
+                require_checklist=self._config.require_checklist,
+                enforce_chain_of_command=self._config.enforce_chain_of_command,
+                enforce_drcp=self._config.enforce_drcp,
+                enforce_dcc=self._config.enforce_dcc,
+                enforce_atlas_scope=self._config.enforce_atlas_scope,
+            )
+
+        # Convert to CDE
+        return create_envelope_from_result(result, allowed_tools)
+
+    def guard_envelope(
+        self,
+        agent_gid: str,
+        verb: str | IntentVerb,
+        target: str,
+        scope: str | None = None,
+        metadata: Dict[str, str] | None = None,
+        allowed_tools: list[str] | None = None,
+    ) -> GatewayDecisionEnvelope:
+        """Guard an action and return a CDE (convenience method).
+
+        PAC-GATEWAY-01: Primary API for downstream consumers.
+
+        Args:
+            agent_gid: Agent GID
+            verb: Capability verb
+            target: Target resource
+            scope: Optional scope
+            metadata: Optional metadata
+            allowed_tools: Optional list of tools to allow on ALLOW decision
+
+        Returns:
+            GatewayDecisionEnvelope (CDE v1)
+        """
+        from core.governance.intent_schema import create_intent
+
+        intent = create_intent(
+            agent_gid=agent_gid,
+            verb=verb,
+            target=target,
+            scope=scope,
+            metadata=metadata,
+        )
+        return self.evaluate_envelope(intent, allowed_tools)
+
 
 # Module-level singleton
 _middleware_instance: Optional[ALEXMiddleware] = None
@@ -1021,3 +1161,30 @@ def guard_action(
     if not middleware.is_initialized():
         middleware.initialize()
     return middleware.guard(agent_gid, verb, target, scope)
+
+
+def guard_action_envelope(
+    agent_gid: str,
+    verb: str | IntentVerb,
+    target: str,
+    scope: str | None = None,
+    allowed_tools: list[str] | None = None,
+) -> GatewayDecisionEnvelope:
+    """Guard an action and return a CDE (convenience function).
+
+    PAC-GATEWAY-01: Primary API for downstream consumers.
+
+    Args:
+        agent_gid: Agent GID
+        verb: Capability verb
+        target: Target resource
+        scope: Optional scope
+        allowed_tools: Optional list of tools to allow on ALLOW decision
+
+    Returns:
+        GatewayDecisionEnvelope (CDE v1)
+    """
+    middleware = get_alex_middleware()
+    if not middleware.is_initialized():
+        middleware.initialize()
+    return middleware.guard_envelope(agent_gid, verb, target, scope, allowed_tools=allowed_tools)

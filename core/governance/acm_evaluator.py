@@ -20,6 +20,9 @@ from typing import Dict, Optional
 from core.governance.acm_loader import ACM, ACMLoader, get_acm_loader
 from core.governance.intent_schema import AgentIntent, IntentVerb
 
+# Telemetry import (PAC-GOV-OBS-01)
+from core.governance.telemetry import emit_acm_evaluation
+
 
 class ACMDecision(str, Enum):
     """Evaluation decision outcomes."""
@@ -267,7 +270,7 @@ class ACMEvaluator:
         timestamp: str,
     ) -> EvaluationResult:
         """Create an ALLOW result."""
-        return EvaluationResult(
+        result = EvaluationResult(
             decision=ACMDecision.ALLOW,
             agent_gid=intent.agent_gid,
             intent_verb=intent.verb.value,
@@ -278,6 +281,9 @@ class ACMEvaluator:
             timestamp=timestamp,
             correlation_id=intent.correlation_id,
         )
+        # PAC-GOV-OBS-01: Emit telemetry (fail-open)
+        emit_acm_evaluation(result)
+        return result
 
     def _deny(
         self,
@@ -288,7 +294,7 @@ class ACMEvaluator:
         timestamp: str,
     ) -> EvaluationResult:
         """Create a DENY result."""
-        return EvaluationResult(
+        result = EvaluationResult(
             decision=ACMDecision.DENY,
             agent_gid=intent.agent_gid,
             intent_verb=intent.verb.value,
@@ -299,6 +305,9 @@ class ACMEvaluator:
             timestamp=timestamp,
             correlation_id=intent.correlation_id,
         )
+        # PAC-GOV-OBS-01: Emit telemetry (fail-open)
+        emit_acm_evaluation(result)
+        return result
 
 
 # Convenience function for direct evaluation
