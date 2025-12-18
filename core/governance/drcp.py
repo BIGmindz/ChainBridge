@@ -19,6 +19,9 @@ from typing import Any, Dict, List, Optional, Set
 
 from core.governance.acm_evaluator import EvaluationResult
 
+# Telemetry import (PAC-GOV-OBS-01)
+from core.governance.telemetry import emit_drcp_triggered
+
 # Diggy's GID (orchestrator/correction authority)
 DIGGY_GID = "GID-00"
 
@@ -181,6 +184,15 @@ class DenialRegistry:
         if record.agent_gid not in self._agent_denials:
             self._agent_denials[record.agent_gid] = set()
         self._agent_denials[record.agent_gid].add(record.intent_id)
+
+        # PAC-GOV-OBS-01: Emit telemetry (fail-open)
+        emit_drcp_triggered(
+            agent_gid=record.agent_gid,
+            verb=record.verb,
+            target=record.target,
+            denial_code=record.denial_code,
+            intent_id=record.intent_id,
+        )
 
     def is_denied(self, intent_id: str) -> bool:
         """Check if an intent was previously denied.

@@ -37,6 +37,8 @@ docker-compose.override.yml
 
 # Python
 *.sqlite3
+*.db
+settlement_actions.db
 .pytest_cache/
 
 # Virtual envs
