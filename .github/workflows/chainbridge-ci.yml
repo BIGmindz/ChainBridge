@@ -1,5 +1,5 @@
 # =============================================================================
-# ChainBridge Unified CI Pipeline v0.1
+# ChainBridge Unified CI Pipeline v0.2
 # =============================================================================
 # Services covered:
 #   - Backend API (api/ + core/)
@@ -9,7 +9,10 @@
 #   - ChainFreight Service (ChainBridge/chainfreight-service/)
 #
 # Dan (GID-07) — DevOps & CI/CD Lead
-# Last updated: 2024-12-07
+# PAC Reference: PAC-DAN-CI-GOVERNANCE-HARDENING-02
+# Last updated: 2024-12-19
+# =============================================================================
+# ENFORCEMENT: All jobs require activation-gate to pass first
 # =============================================================================
 
 name: ChainBridge Unified CI
@@ -30,12 +33,49 @@ env:
 
 jobs:
 
+  # ═══════════════════════════════════════════════════════════════════════════
+  # GATE 0: Activation Gate (MANDATORY - MUST PASS FIRST)
+  # ═══════════════════════════════════════════════════════════════════════════
+  activation-gate:
+    name: "🚦 DAN: Activation Gate (MANDATORY)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: "🚦 CI Activation Gate (HARD FAIL)"
+        run: |
+          echo "════════════════════════════════════════════════════════════════════"
+          echo "🟢 DAN (GID-07) — CI ACTIVATION GATE"
+          echo "════════════════════════════════════════════════════════════════════"
+          echo "PAC: PAC-DAN-CI-GOVERNANCE-HARDENING-02"
+          echo "ENFORCEMENT: No CI job executes without activation"
+          echo "BYPASS: NONE"
+          echo ""
+          python scripts/ci/activation_gate.py --base ${{ github.event.pull_request.base.ref || 'main' }} --verbose
+
   # ---------------------------------------------------------------------------
-  # Security Scan (CodeQL)
+  # Security Scan (CodeQL) - requires activation-gate
   # ---------------------------------------------------------------------------
   security-scan:
     name: 🔒 Security Scan (CodeQL)
     runs-on: ubuntu-latest
+    needs: activation-gate  # MANDATORY: Must pass activation gate first
     timeout-minutes: 15
     concurrency:
       group: chainbridge-security-${{ github.ref }}
@@ -60,11 +100,12 @@ jobs:
         uses: github/codeql-action/analyze@v3
 
   # ---------------------------------------------------------------------------
-  # Code Quality (Linting, Formatting, Type Checking)
+  # Code Quality (Linting, Formatting, Type Checking) - requires activation-gate
   # ---------------------------------------------------------------------------
   code-quality:
     name: 🧹 Code Quality & Standards
     runs-on: ubuntu-latest
+    needs: activation-gate  # MANDATORY: Must pass activation gate first
     timeout-minutes: 15
     concurrency:
       group: chainbridge-quality-${{ github.ref }}
@@ -101,11 +142,12 @@ jobs:
         run: black --check --diff . || true
 
   # ---------------------------------------------------------------------------
-  # Configuration Validation
+  # Configuration Validation - requires activation-gate
   # ---------------------------------------------------------------------------
   config-validation:
     name: ⚙️ Config Validation
     runs-on: ubuntu-latest
+    needs: activation-gate  # MANDATORY: Must pass activation gate first
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
@@ -130,11 +172,12 @@ jobs:
           echo "Configuration validation complete."
 
   # ---------------------------------------------------------------------------
-  # Backend API Tests (api/ + core/ + root tests/)
+  # Backend API Tests (api/ + core/ + root tests/) - requires activation-gate
   # ---------------------------------------------------------------------------
   backend-tests:
     name: 🐍 Backend API Tests
     runs-on: ubuntu-latest
+    needs: activation-gate  # MANDATORY: Must pass activation gate first
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -178,11 +221,12 @@ jobs:
           name: backend-coverage
 
   # ---------------------------------------------------------------------------
-  # ChainPay Service Tests
+  # ChainPay Service Tests - requires activation-gate
   # ---------------------------------------------------------------------------
   chainpay-tests:
     name: 💳 ChainPay Service Tests
     runs-on: ubuntu-latest
+    needs: activation-gate  # MANDATORY: Must pass activation gate first
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -223,11 +267,12 @@ jobs:
           name: chainpay-coverage
 
   # ---------------------------------------------------------------------------
-  # ChainIQ ML Service Tests
+  # ChainIQ ML Service Tests - requires activation-gate
   # ---------------------------------------------------------------------------
   chainiq-tests:
     name: 🧠 ChainIQ ML Service Tests
     runs-on: ubuntu-latest
+    needs: activation-gate  # MANDATORY: Must pass activation gate first
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -267,11 +312,12 @@ jobs:
           fi
 
   # ---------------------------------------------------------------------------
-  # ChainFreight Service Tests
+  # ChainFreight Service Tests - requires activation-gate
   # ---------------------------------------------------------------------------
   chainfreight-tests:
     name: 🚚 ChainFreight Service Tests
     runs-on: ubuntu-latest
+    needs: activation-gate  # MANDATORY: Must pass activation gate first
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -311,11 +357,12 @@ jobs:
           fi
 
   # ---------------------------------------------------------------------------
-  # ChainBoard UI Tests (React/TypeScript/Vite)
+  # ChainBoard UI Tests (React/TypeScript/Vite) - requires activation-gate
   # ---------------------------------------------------------------------------
   chainboard-ui-tests:
     name: 🎨 ChainBoard UI Tests
     runs-on: ubuntu-latest
+    needs: activation-gate  # MANDATORY: Must pass activation gate first
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -365,11 +412,12 @@ jobs:
         run: npm test -- --run --reporter=verbose
 
   # ---------------------------------------------------------------------------
-  # Prompt Regression (ChainIQ)
+  # Prompt Regression (ChainIQ) - requires activation-gate
   # ---------------------------------------------------------------------------
   prompt-regression:
     name: 🤖 Prompt Regression (ChainIQ)
     runs-on: ubuntu-latest
+    needs: activation-gate  # MANDATORY: Must pass activation gate first
     timeout-minutes: 15
     env:
       PROMPTFOO_OPENAI_API_KEY: ${{ secrets.PROMPTFOO_OPENAI_API_KEY }}
@@ -407,11 +455,12 @@ jobs:
           if-no-files-found: ignore
 
   # ---------------------------------------------------------------------------
-  # Gateway Policy Enforcement (prod simulation)
+  # Gateway Policy Enforcement (prod simulation) - requires activation-gate
   # ---------------------------------------------------------------------------
   gateway-policy:
     name: 🛡️ Gateway Policy Check
     runs-on: ubuntu-latest
+    needs: activation-gate  # MANDATORY: Must pass activation gate first
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
@@ -425,11 +474,12 @@ jobs:
         run: python scripts/ci/gateway_policy_check.py
 
   # ---------------------------------------------------------------------------
-  # Documentation Quality
+  # Documentation Quality - requires activation-gate
   # ---------------------------------------------------------------------------
   docs-quality:
     name: 📚 Documentation Quality
     runs-on: ubuntu-latest
+    needs: activation-gate  # MANDATORY: Must pass activation gate first
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
@@ -447,12 +497,13 @@ jobs:
           fi
 
   # ---------------------------------------------------------------------------
-  # CI Summary Gate
+  # CI Summary Gate - includes activation-gate
   # ---------------------------------------------------------------------------
   ci-gate:
     name: ✅ CI Gate (All Checks)
     runs-on: ubuntu-latest
     needs:
+      - activation-gate
       - security-scan
       - code-quality
       - config-validation
@@ -468,7 +519,10 @@ jobs:
     steps:
       - name: Check all job results
         run: |
-          echo "=== CI Pipeline Summary ==="
+          echo "════════════════════════════════════════════════════════════════════"
+          echo "🟢 DAN (GID-07) — CI PIPELINE SUMMARY"
+          echo "════════════════════════════════════════════════════════════════════"
+          echo "Activation Gate:   ${{ needs.activation-gate.result }}"
           echo "Security Scan:     ${{ needs.security-scan.result }}"
           echo "Code Quality:      ${{ needs.code-quality.result }}"
           echo "Config Validation: ${{ needs.config-validation.result }}"
@@ -477,10 +531,16 @@ jobs:
           echo "ChainIQ Tests:     ${{ needs.chainiq-tests.result }}"
           echo "ChainFreight Tests: ${{ needs.chainfreight-tests.result }}"
           echo "ChainBoard UI:     ${{ needs.chainboard-ui-tests.result }}"
-           echo "Prompt Regression: ${{ needs.prompt-regression.result }}"
-           echo "Gateway Policy:    ${{ needs.gateway-policy.result }}"
+          echo "Prompt Regression: ${{ needs.prompt-regression.result }}"
+          echo "Gateway Policy:    ${{ needs.gateway-policy.result }}"
           echo "Docs Quality:      ${{ needs.docs-quality.result }}"
-          echo "=========================="
+          echo "════════════════════════════════════════════════════════════════════"
+
+          # CRITICAL: Fail if activation gate failed
+          if [[ "${{ needs.activation-gate.result }}" != "success" ]]; then
+            echo "❌ DENIED: Activation Gate failed — NO BYPASS"
+            exit 1
+          fi
 
           # Fail if any critical job failed
           if [[ "${{ needs.backend-tests.result }}" == "failure" ]] || \
@@ -494,6 +554,9 @@ jobs:
           fi
 
           echo "✅ All critical checks passed!"
+          echo "════════════════════════════════════════════════════════════════════"
+          echo "🟢 END — DAN (GID-07) — CI GATE"
+          echo "════════════════════════════════════════════════════════════════════"
 
   # ---------------------------------------------------------------------------
   # Staging Deployment (develop branch only)
