@@ -32,6 +32,7 @@ from typing import Dict, List, Optional
 from uuid import UUID
 
 from core.occ.schemas.pdo import PDOCreate, PDOImmutabilityError, PDOOutcome, PDORecord, PDOSourceSystem, PDOTamperDetectedError
+from core.occ.telemetry import get_invariant_telemetry
 
 logger = logging.getLogger(__name__)
 
@@ -288,6 +289,12 @@ class PDOStore:
 
             if verify_integrity and not record.verify_hash():
                 logger.error(f"TAMPER DETECTED: PDO {pdo_id} hash mismatch")
+                # Emit telemetry for tamper detection
+                get_invariant_telemetry().log_pdo_tamper_detected(
+                    pdo_id=pdo_id,
+                    expected_hash=record.hash,
+                    actual_hash=record.compute_hash(),
+                )
                 raise PDOTamperDetectedError(
                     f"PDO {pdo_id} failed integrity check",
                     pdo_id=pdo_id,
@@ -439,6 +446,7 @@ class PDOStore:
             PDOImmutabilityError: Always. Updates are not permitted.
         """
         logger.error(f"IMMUTABILITY VIOLATION: Attempted update on PDO {pdo_id}")
+        get_invariant_telemetry().log_pdo_update_attempt(pdo_id)
         raise PDOImmutabilityError(
             f"PDO {pdo_id} cannot be updated. PDOs are immutable.",
             pdo_id=pdo_id,
@@ -452,6 +460,7 @@ class PDOStore:
             PDOImmutabilityError: Always. Deletes are not permitted.
         """
         logger.error(f"IMMUTABILITY VIOLATION: Attempted delete on PDO {pdo_id}")
+        get_invariant_telemetry().log_pdo_delete_attempt(pdo_id)
         raise PDOImmutabilityError(
             f"PDO {pdo_id} cannot be deleted. PDOs are immutable.",
             pdo_id=pdo_id,
@@ -465,6 +474,7 @@ class PDOStore:
             PDOImmutabilityError: Always. Soft-deletes are not permitted.
         """
         logger.error(f"IMMUTABILITY VIOLATION: Attempted soft-delete on PDO {pdo_id}")
+        get_invariant_telemetry().log_pdo_delete_attempt(pdo_id)
         raise PDOImmutabilityError(
             f"PDO {pdo_id} cannot be soft-deleted. PDOs are immutable.",
             pdo_id=pdo_id,
@@ -478,6 +488,7 @@ class PDOStore:
             PDOImmutabilityError: Always. Overwrites are not permitted.
         """
         logger.error(f"IMMUTABILITY VIOLATION: Attempted overwrite on PDO {pdo_id}")
+        get_invariant_telemetry().log_pdo_update_attempt(pdo_id)
         raise PDOImmutabilityError(
             f"PDO {pdo_id} cannot be overwritten. PDOs are immutable.",
             pdo_id=pdo_id,
@@ -491,6 +502,7 @@ class PDOStore:
             PDOImmutabilityError: Always. Hash modification is not permitted.
         """
         logger.error(f"IMMUTABILITY VIOLATION: Attempted hash modification on PDO {pdo_id}")
+        get_invariant_telemetry().log_pdo_hash_modification_attempt(pdo_id)
         raise PDOImmutabilityError(
             f"PDO {pdo_id} hash cannot be modified. PDO seals are immutable.",
             pdo_id=pdo_id,

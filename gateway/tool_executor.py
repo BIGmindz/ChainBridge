@@ -28,6 +28,13 @@ from gateway.decision_envelope import GatewayDecision, GatewayDecisionEnvelope
 # Evidence binding (PAC-CODY-OBS-BIND-01)
 from gateway.execution_context import TOOL_EXECUTION_ALLOWED_EVENT, ExecutionEvidenceContext
 
+# Activation Block enforcement (PAC-BENSON-ACTIVATION-BLOCK-IMPLEMENTATION-01)
+from core.governance.activation_block import (
+    ActivationBlock,
+    ActivationBlockViolationError,
+    validate_activation_block,
+)
+
 
 class DenialReasonCode(str, Enum):
     """Explicit reason codes for tool execution denial."""
@@ -44,6 +51,9 @@ class DenialReasonCode(str, Enum):
     INVALID_EVIDENCE = "INVALID_EVIDENCE"
     EVIDENCE_EVENT_MISMATCH = "EVIDENCE_EVENT_MISMATCH"
     EVIDENCE_AUDIT_MISMATCH = "EVIDENCE_AUDIT_MISMATCH"
+    # PAC-BENSON-ACTIVATION-BLOCK-IMPLEMENTATION-01: Activation Block failures
+    NO_ACTIVATION_BLOCK = "NO_ACTIVATION_BLOCK"
+    INVALID_ACTIVATION_BLOCK = "INVALID_ACTIVATION_BLOCK"
 
 
 @dataclass(frozen=True)
@@ -188,6 +198,7 @@ def execute_tool(
     envelope: Optional[GatewayDecisionEnvelope],
     tool_name: str,
     tool_callable: Callable[..., T],
+    activation_block: Optional[ActivationBlock] = None,
     **kwargs: Any,
 ) -> ToolExecutionResult:
     """Execute a tool ONLY if explicitly allowed by the envelope.
@@ -198,6 +209,7 @@ def execute_tool(
         envelope: The GatewayDecisionEnvelope authorizing execution.
         tool_name: The canonical name of the tool being executed.
         tool_callable: The function/method to execute.
+        activation_block: Optional ActivationBlock for identity enforcement.
         **kwargs: Arguments to pass to the tool_callable.
 
     Returns:
@@ -207,6 +219,7 @@ def execute_tool(
         ToolExecutionDenied: If execution is not permitted for any reason.
 
     Rules:
+        - If activation_block provided, it MUST validate → DENY if invalid
         - If envelope.decision != "ALLOW" → DENY
         - If tool_name not in envelope.allowed_tools → DENY
         - If envelope.human_required is True → DENY
@@ -215,6 +228,21 @@ def execute_tool(
     """
     # Validate envelope
     validated_envelope = _validate_envelope(envelope, tool_name)
+
+    # === ACTIVATION BLOCK GATE (PAC-BENSON-ACTIVATION-BLOCK-IMPLEMENTATION-01) ===
+    # If activation_block is provided, validate it BEFORE tool binding
+    if activation_block is not None:
+        try:
+            validate_activation_block(activation_block)
+        except ActivationBlockViolationError as e:
+            raise ToolExecutionDenied(
+                reason_code=DenialReasonCode.INVALID_ACTIVATION_BLOCK,
+                audit_ref=validated_envelope.audit_ref,
+                tool_name=tool_name,
+                message=f"Activation Block validation failed: {e.message}",
+                envelope_id=validated_envelope.audit_ref,
+                agent_gid=validated_envelope.agent_gid,
+            ) from e
 
     # Enforce tool binding
     _enforce_tool_binding(validated_envelope, tool_name)
