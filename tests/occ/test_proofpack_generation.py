@@ -452,3 +452,155 @@ class TestVerificationInstructions:
 
         content = result["files"]["VERIFICATION.txt"]
         assert str(sample_pdo.pdo_id) in content
+
+
+# =============================================================================
+# INV-PP-005: ONE PROOFPACK = ONE PDO (GAP-004 ENFORCEMENT)
+# =============================================================================
+
+
+class TestOnePDOEnforcement:
+    """
+    Tests for INV-PP-005: One ProofPack = One PDO.
+    
+    GAP-004 Enforcement: ProofPacks must contain exactly one root PDO.
+    Multi-PDO aggregation is not permitted.
+    
+    Per CANONICAL_INVARIANTS.md:
+    - ProofPacks do not aggregate multiple PDOs
+    - Failure Condition: ProofPack contains multiple root PDOs
+    """
+
+    def test_proofpack_contains_single_pdo(self, sample_pdo, custom_artifact_resolver):
+        """ProofPack contains exactly one PDO record."""
+        generator = ProofPackGenerator(artifact_resolver=custom_artifact_resolver)
+        result = generator.generate(sample_pdo.pdo_id)
+
+        # Only one pdo/record.json file
+        pdo_files = [k for k in result["files"] if k.startswith("pdo/")]
+        assert len(pdo_files) == 1
+        assert "pdo/record.json" in pdo_files
+
+    def test_proofpack_pdo_id_matches(self, sample_pdo, custom_artifact_resolver):
+        """ProofPack's pdo_id matches the generated PDO."""
+        generator = ProofPackGenerator(artifact_resolver=custom_artifact_resolver)
+        result = generator.generate(sample_pdo.pdo_id)
+
+        # Top-level pdo_id must match
+        assert result["pdo_id"] == str(sample_pdo.pdo_id)
+
+        # Record inside must match
+        pdo_record = json.loads(result["files"]["pdo/record.json"])
+        assert pdo_record["pdo_id"] == str(sample_pdo.pdo_id)
+
+    def test_generate_requires_valid_pdo_id(self, custom_artifact_resolver):
+        """Generation fails for non-existent PDO ID."""
+        generator = ProofPackGenerator(artifact_resolver=custom_artifact_resolver)
+        fake_id = uuid4()
+
+        with pytest.raises(ProofPackGenerationError) as exc_info:
+            generator.generate(fake_id)
+
+        assert "not found" in str(exc_info.value).lower()
+
+    def test_generate_for_each_pdo_separately(self, custom_artifact_resolver):
+        """Each PDO requires separate ProofPack generation."""
+        store = get_pdo_store()
+
+        # Create multiple PDOs
+        pdo1 = store.create(PDOCreate(
+            source_system=PDOSourceSystem.OCC,
+            outcome=PDOOutcome.APPROVED,
+            actor="agent-1",
+            input_refs=["input:1"],
+            decision_ref="decision:1",
+            outcome_ref="outcome:1",
+        ))
+        pdo2 = store.create(PDOCreate(
+            source_system=PDOSourceSystem.OCC,
+            outcome=PDOOutcome.REJECTED,
+            actor="agent-2",
+            input_refs=["input:2"],
+            decision_ref="decision:2",
+            outcome_ref="outcome:2",
+        ))
+
+        generator = ProofPackGenerator(artifact_resolver=custom_artifact_resolver)
+
+        # Generate separate ProofPacks
+        pp1 = generator.generate(pdo1.pdo_id)
+        pp2 = generator.generate(pdo2.pdo_id)
+
+        # Each contains only its own PDO
+        assert pp1["pdo_id"] == str(pdo1.pdo_id)
+        assert pp2["pdo_id"] == str(pdo2.pdo_id)
+        assert pp1["pdo_id"] != pp2["pdo_id"]
+
+    def test_no_multi_pdo_generation_method(self):
+        """Generator has no method to aggregate multiple PDOs."""
+        generator = ProofPackGenerator()
+
+        # Assert no batch/multi methods exist
+        assert not hasattr(generator, "generate_batch")
+        assert not hasattr(generator, "generate_multi")
+        assert not hasattr(generator, "generate_aggregate")
+        assert not hasattr(generator, "aggregate")
+
+    def test_manifest_single_pdo_entry(self, sample_pdo, custom_artifact_resolver):
+        """Manifest references exactly one PDO."""
+        generator = ProofPackGenerator(artifact_resolver=custom_artifact_resolver)
+        result = generator.generate(sample_pdo.pdo_id)
+
+        manifest = json.loads(result["files"]["manifest.json"])
+
+        # Single pdo entry (not a list)
+        assert "pdo" in manifest["contents"]
+        assert isinstance(manifest["contents"]["pdo"], dict)
+        assert "pdos" not in manifest["contents"]
+
+    def test_lineage_pdos_not_root_pdos(self, custom_artifact_resolver):
+        """Lineage PDOs are referenced, not aggregated as root PDOs."""
+        store = get_pdo_store()
+
+        # Create PDO chain
+        pdo1 = store.create(PDOCreate(
+            source_system=PDOSourceSystem.OCC,
+            outcome=PDOOutcome.APPROVED,
+            actor="agent-chain",
+            input_refs=["input:chain:1"],
+            decision_ref="decision:chain:1",
+            outcome_ref="outcome:chain:1",
+        ))
+        pdo2 = store.create(PDOCreate(
+            source_system=PDOSourceSystem.OCC,
+            outcome=PDOOutcome.APPROVED,
+            actor="agent-chain",
+            input_refs=["input:chain:2"],
+            decision_ref="decision:chain:2",
+            outcome_ref="outcome:chain:2",
+            previous_pdo_id=pdo1.pdo_id,  # Link to previous
+        ))
+
+        generator = ProofPackGenerator(artifact_resolver=custom_artifact_resolver)
+        pp = generator.generate(pdo2.pdo_id)
+
+        # Only pdo2 is the root PDO (in pdo/record.json)
+        assert pp["pdo_id"] == str(pdo2.pdo_id)
+
+        # The main PDO record should be pdo2
+        manifest = json.loads(pp["files"]["manifest.json"])
+        assert manifest["contents"]["pdo"]["path"] == "pdo/record.json"
+        
+        pdo_record = json.loads(pp["files"]["pdo/record.json"])
+        assert pdo_record["pdo_id"] == str(pdo2.pdo_id)
+
+        # Lineage entries are in lineage/ directory (separate from main pdo/)
+        if manifest["contents"]["lineage"]:
+            lineage_pdo_ids = {entry["pdo_id"] for entry in manifest["contents"]["lineage"]}
+            # Lineage includes the chain (oldest first), which contains pdo1 and pdo2
+            # The key point is that lineage files are in lineage/, not pdo/
+            for lineage_entry in manifest["contents"]["lineage"]:
+                assert lineage_entry["path"].startswith("lineage/")
+                assert not lineage_entry["path"].startswith("pdo/")
+
+

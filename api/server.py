@@ -16,11 +16,14 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from api.chainboard_stub import router as chainboard_router
+from api.ingress import router as ingress_router
+from api.spine import router as spine_router
 from api.trust import router as trust_router
 from core.data_processor import DataProcessor
 
 # Import core components
 from core.module_manager import ModuleManager
+from core.proof_storage import ProofIntegrityError, init_proof_storage
 from core.occ.api.activities import router as occ_activities_router
 from core.occ.api.artifacts import router as occ_artifacts_router
 from core.occ.api.audit_events import router as occ_audit_events_router
@@ -240,6 +243,8 @@ app.include_router(occ_proofpacks_router)
 app.include_router(occ_proofpack_v1_router)  # PDO-based ProofPack per PROOFPACK_SPEC_v1.md
 app.include_router(chainboard_router)
 app.include_router(trust_router)
+app.include_router(spine_router)  # Minimum Execution Spine (PAC-BENSON-EXEC-SPINE-01)
+app.include_router(ingress_router)  # Event Ingress (PAC-CODY-EXEC-SPINE-01)
 
 
 @app.get("/", response_model=Dict[str, str])
@@ -666,7 +671,26 @@ async def get_available_signals():
 # Load default modules on startup
 @app.on_event("startup")
 async def startup_event():
-    """Initialize default modules and pipelines."""
+    """Initialize proof storage, default modules and pipelines."""
+    # PAC-DAN-PROOF-PERSISTENCE-01: Validate proof integrity on startup
+    # This MUST happen first - if proofs are corrupted, we fail loudly
+    try:
+        proof_report = init_proof_storage()
+        print("=" * 60)
+        print("PROOF STORAGE VALIDATION")
+        print(f"  Status: {proof_report['status']}")
+        print(f"  Proof Count: {proof_report['validated_count']}")
+        print(f"  Last Hash: {proof_report['last_content_hash'][:16]}..." if proof_report['last_content_hash'] != '0' * 64 else "  Last Hash: (empty)")
+        print(f"  Log Path: {proof_report['log_path']}")
+        print("=" * 60)
+    except ProofIntegrityError as e:
+        print("=" * 60)
+        print("CRITICAL: PROOF INTEGRITY VALIDATION FAILED!")
+        print(f"  Error: {e}")
+        print("  Startup ABORTED - proof artifacts may be corrupted")
+        print("=" * 60)
+        raise SystemExit(1)  # Hard crash on integrity failure
+
     try:
         newly_loaded = ensure_default_modules_loaded()
 
