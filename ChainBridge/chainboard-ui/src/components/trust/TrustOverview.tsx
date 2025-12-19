@@ -13,8 +13,6 @@
  * @see PAC-TRUST-CENTER-UI-01 — Customer Trust Center (Read-Only)
  */
 
-import { Shield } from 'lucide-react';
-
 import { classNames } from '../../utils/classNames';
 import { Card, CardContent } from '../ui/Card';
 import type { GovernanceFingerprint, AuditBundleMetadata, GamedaySummary } from '../../types/trust';
@@ -43,18 +41,16 @@ export function TrustOverview({
   return (
     <Card className={classNames('overflow-hidden', className)}>
       <CardContent className="py-8">
-        {/* Header with shield icon */}
-        <div className="flex items-center gap-3 mb-6">
-          <Shield className="h-10 w-10 text-slate-400" />
-          <h2 className="text-xl font-semibold text-slate-200">
-            Governance Overview
-          </h2>
+        {/* Header — no icons, no claims */}
+        <div className="mb-6">
+          <p className="text-xs text-slate-600 uppercase tracking-wider">
+            Governance Artifacts
+          </p>
         </div>
 
-        {/* Customer-safe static copy */}
-        <p className="text-base text-slate-300 leading-relaxed mb-8 max-w-2xl">
-          ChainBridge operates with enforced governance controls.
-          Decisions are rule-based, auditable, and fail-closed.
+        {/* Neutral description — evidence only */}
+        <p className="text-sm text-slate-400 leading-relaxed mb-8 max-w-2xl font-mono">
+          Governance data as recorded. Evidence presented without interpretation.
         </p>
 
         {/* Live data fields */}
@@ -82,10 +78,10 @@ export function TrustOverview({
           {/* Last Gameday Run Timestamp */}
           <div className="space-y-1">
             <p className="text-xs text-slate-500 uppercase tracking-wider">
-              Last Validation Run
+              Last Artifact Run
             </p>
             <p className="text-sm text-slate-300 font-mono">
-              {gameday ? 'Completed' : 'Unavailable'}
+              {gameday ? 'Recorded' : 'Unavailable'}
             </p>
           </div>
         </div>

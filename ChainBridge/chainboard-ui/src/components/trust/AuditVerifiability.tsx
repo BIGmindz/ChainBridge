@@ -14,7 +14,6 @@
  */
 
 import { useState } from 'react';
-import { Archive, Copy, Check } from 'lucide-react';
 
 import { classNames } from '../../utils/classNames';
 import { Card, CardContent, CardHeader } from '../ui/Card';
@@ -56,12 +55,9 @@ export function AuditVerifiability({
   return (
     <Card className={classNames('overflow-hidden', className)}>
       <CardHeader className="border-b border-slate-800/50">
-        <div className="flex items-center gap-2">
-          <Archive className="h-5 w-5 text-slate-400" />
-          <h3 className="text-sm font-semibold text-slate-200">
-            Audit Verifiability
-          </h3>
-        </div>
+        <p className="text-xs text-slate-600 uppercase tracking-wider">
+          audit_bundle_reference
+        </p>
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -78,20 +74,10 @@ export function AuditVerifiability({
               <button
                 type="button"
                 onClick={handleCopyHash}
-                className="flex items-center gap-1.5 px-3 py-2 text-xs text-slate-400 bg-slate-800/50 border border-slate-700/50 rounded hover:bg-slate-800 transition-colors"
+                className="px-3 py-2 text-xs text-slate-400 bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors font-mono"
                 aria-label="Copy bundle hash"
               >
-                {copied ? (
-                  <>
-                    <Check className="h-3.5 w-3.5" />
-                    <span>Copied</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-3.5 w-3.5" />
-                    <span>Copy</span>
-                  </>
-                )}
+                {copied ? 'copied' : 'copy'}
               </button>
             )}
           </div>

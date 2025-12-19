@@ -13,8 +13,6 @@
  * @see PAC-TRUST-CENTER-UI-01 — Customer Trust Center (Read-Only)
  */
 
-import { FlaskConical } from 'lucide-react';
-
 import { classNames } from '../../utils/classNames';
 import { Card, CardContent, CardHeader } from '../ui/Card';
 import type { GamedaySummary } from '../../types/trust';
@@ -37,46 +35,32 @@ export function GamedayStatus({
   return (
     <Card className={classNames('overflow-hidden', className)}>
       <CardHeader className="border-b border-slate-800/50">
-        <div className="flex items-center gap-2">
-          <FlaskConical className="h-5 w-5 text-slate-400" />
-          <h3 className="text-sm font-semibold text-slate-200">
-            Adversarial Testing
-          </h3>
-        </div>
+        <p className="text-xs text-slate-600 uppercase tracking-wider">
+          adversarial_testing
+        </p>
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Customer-safe static statement */}
-        <p className="text-sm text-slate-400 leading-relaxed">
-          ChainBridge governance controls are continuously validated using adversarial
-          test scenarios designed to simulate misuse, escalation, and tampering.
-        </p>
+        {/* Demo data warning */}
+        {!gameday && (
+          <div className="border border-slate-600 bg-slate-900/50 px-3 py-2 text-xs text-slate-400 font-mono">
+            UNLINKED / DEMO DATA — Not linked to live backend
+          </div>
+        )}
 
-        {/* Live facts — no charts, no trends */}
-        <div className="grid grid-cols-3 gap-4 py-2">
-          <div className="text-center">
-            <p className="text-2xl font-semibold text-slate-200">
-              {gameday?.scenarios_tested ?? '—'}
-            </p>
-            <p className="text-xs text-slate-500 uppercase tracking-wider mt-1">
-              Scenarios Tested
-            </p>
+        {/* Data fields only — no marketing copy */}
+        <div className="space-y-3 font-mono text-sm">
+          <div className="flex justify-between">
+            <span className="text-slate-600">scenarios_tested:</span>
+            <span className="text-slate-400">{gameday?.scenarios_tested ?? '—'}</span>
           </div>
-          <div className="text-center">
-            <p className="text-2xl font-semibold text-slate-200">
-              {gameday?.silent_failures ?? '—'}
-            </p>
-            <p className="text-xs text-slate-500 uppercase tracking-wider mt-1">
-              Silent Failures
-            </p>
+          <div className="flex justify-between">
+            <span className="text-slate-600">silent_failures:</span>
+            <span className="text-slate-400">{gameday?.silent_failures ?? '—'}</span>
           </div>
-          <div className="text-center">
-            <p className="text-2xl font-semibold text-slate-200">
-              {gameday?.fail_closed_all ? 'Yes' : '—'}
-            </p>
-            <p className="text-xs text-slate-500 uppercase tracking-wider mt-1">
-              Fail-Closed
-            </p>
+          <div className="flex justify-between">
+            <span className="text-slate-600">fail_closed_all:</span>
+            <span className="text-slate-400">{gameday?.fail_closed_all ? 'true' : 'false'}</span>
           </div>
         </div>
       </CardContent>

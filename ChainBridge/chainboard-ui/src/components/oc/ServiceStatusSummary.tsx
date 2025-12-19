@@ -1,29 +1,26 @@
 import React from "react";
 
-import { Badge } from "../ui/Badge";
 import { Card } from "../ui/Card";
-
-type ServiceStatus = "online" | "partial" | "offline";
 
 interface ServiceDescriptor {
   id: "chainiq" | "chainpay-consumer";
   name: string;
-  status: ServiceStatus;
+  status: string;
   description: string;
 }
 
 const SERVICES: ServiceDescriptor[] = [
   {
     id: "chainiq",
-    name: "ChainIQ",
-    status: "online",
-    description: "Risk scoring & IQ routes are mounted under /iq.",
+    name: "chainiq",
+    status: "mounted",
+    description: "/iq routes",
   },
   {
     id: "chainpay-consumer",
-    name: "ChainPay Consumer",
+    name: "chainpay_consumer",
     status: "partial",
-    description: "Milestone payout logic in progress on this branch.",
+    description: "milestone logic",
   },
 ];
 
@@ -33,28 +30,29 @@ export const ServiceStatusSummary: React.FC = () => {
   return (
     <Card className="w-full mb-4">
       <div className="px-4 py-3 border-b border-slate-800/50">
-        <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
-          Service Status
-        </div>
+        <p className="text-xs text-slate-600 uppercase tracking-wider font-mono">
+          service_status
+        </p>
       </div>
-      <div className="flex flex-col md:flex-row md:flex-wrap divide-y md:divide-y-0 md:divide-x divide-slate-800/50">
+
+      {/* Demo data warning */}
+      <div className="border-b border-slate-700/50 bg-slate-900/50 px-4 py-2">
+        <p className="text-xs text-slate-500 font-mono">
+          UNLINKED / DEMO DATA — Not linked to live backend
+        </p>
+      </div>
+
+      <div className="divide-y divide-slate-800/50 font-mono text-sm">
         {SERVICES.map((service) => (
           <div
             key={service.id}
-            className="flex-1 min-w-[200px] px-4 py-3 flex items-start justify-between gap-3"
+            className="px-4 py-3 flex items-center justify-between"
           >
-            <div className="flex flex-col gap-1">
-              <div className="text-sm font-medium text-slate-200">{service.name}</div>
-              <p className="text-xs text-slate-400">{service.description}</p>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-slate-400">{service.name}</span>
+              <span className="text-xs text-slate-600">{service.description}</span>
             </div>
-            <Badge variant={
-              service.status === "online" ? "success" :
-              service.status === "partial" ? "warning" : "danger"
-            }>
-              {service.status === "online" && "Online"}
-              {service.status === "partial" && "In Progress"}
-              {service.status === "offline" && "Offline"}
-            </Badge>
+            <span className="text-slate-500">{service.status}</span>
           </div>
         ))}
       </div>
