@@ -20,8 +20,10 @@ import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
+from uuid import UUID
 
 from core.occ.proofpack.schemas import ProofPackVerificationResult, VerificationOutcome, VerificationStep, compute_json_hash, compute_sha256
+from core.occ.telemetry import get_invariant_telemetry
 
 logger = logging.getLogger(__name__)
 
@@ -218,7 +220,29 @@ class ProofPackVerifier:
         steps: List[VerificationStep],
         pdo_id: str = "unknown",
     ) -> ProofPackVerificationResult:
-        """Create a failure result."""
+        """Create a failure result and emit telemetry."""
+        # Emit telemetry for verification failure
+        try:
+            pdo_uuid = UUID(pdo_id) if pdo_id != "unknown" else None
+        except ValueError:
+            pdo_uuid = None
+
+        # Find expected/actual hashes from steps if available
+        expected_hash = None
+        actual_hash = None
+        for step in steps:
+            if not step.passed and step.expected:
+                expected_hash = step.expected
+                actual_hash = step.actual
+                break
+
+        get_invariant_telemetry().log_proofpack_verification_failure(
+            pdo_id=pdo_uuid,
+            outcome=outcome.value,
+            expected_hash=expected_hash,
+            actual_hash=actual_hash,
+        )
+
         return ProofPackVerificationResult(
             outcome=outcome,
             pdo_id=pdo_id,
