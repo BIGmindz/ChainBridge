@@ -661,7 +661,6 @@ jobs:
         with:
           name: pac-lint-output
           path: pac_lint_output.txt
-          output: 'trivy-results.sarif'
 
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v3

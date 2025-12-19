@@ -107,22 +107,22 @@ jobs:
           echo "════════════════════════════════════════════════════════════════════"
           echo "Validating core/governance/activation_block.py module"
           echo "════════════════════════════════════════════════════════════════════"
-          python -c "
-from core.governance.activation_block import (
-    ActivationBlock,
-    ActivationBlockValidator,
-    ActivationBlockViolationCode,
-    ActivationBlockViolationError,
-    check_activation_block_presence,
-    validate_activation_block_fields,
-    require_activation_before_color_gateway,
-    require_activation_before_pac_admission,
-    require_activation_before_tool_execution,
-    ExecutionGateError,
-)
-print('✅ Activation Block module imports successfully')
-print('✅ Execution gate functions available')
-"
+          python << 'PYEOF'
+          from core.governance.activation_block import (
+              ActivationBlock,
+              ActivationBlockValidator,
+              ActivationBlockViolationCode,
+              ActivationBlockViolationError,
+              check_activation_block_presence,
+              validate_activation_block_fields,
+              require_activation_before_color_gateway,
+              require_activation_before_pac_admission,
+              require_activation_before_tool_execution,
+              ExecutionGateError,
+          )
+          print("✅ Activation Block module imports successfully")
+          print("✅ Execution gate functions available")
+          PYEOF
 
       - name: Run Activation Block Tests
         run: |
@@ -158,72 +158,73 @@ print('✅ Execution gate functions available')
           echo "════════════════════════════════════════════════════════════════════"
           echo "Testing execution order enforcement"
           echo "════════════════════════════════════════════════════════════════════"
-          python -c "
-from core.governance.activation_block import (
-    reset_execution_gates,
-    mark_activation_validated,
-    mark_color_gateway_validated,
-    mark_pac_admission_validated,
-    require_activation_before_color_gateway,
-    require_activation_before_pac_admission,
-    require_activation_before_tool_execution,
-    require_full_validation_chain,
-    ExecutionGateError,
-    get_gate_state,
-)
+          python << 'PYEOF'
+          from core.governance.activation_block import (
+              reset_execution_gates,
+              mark_activation_validated,
+              mark_color_gateway_validated,
+              mark_pac_admission_validated,
+              require_activation_before_color_gateway,
+              require_activation_before_pac_admission,
+              require_activation_before_tool_execution,
+              require_full_validation_chain,
+              ExecutionGateError,
+              get_gate_state,
+          )
+          import sys
 
-# Test 1: Gate violations when activation not validated
-reset_execution_gates()
-print('Test 1: Activation required before color gateway...')
-try:
-    require_activation_before_color_gateway()
-    print('❌ FAILED: Should have raised ExecutionGateError')
-    exit(1)
-except ExecutionGateError as e:
-    print(f'✅ PASSED: {e.gate_name} raised correctly')
+          # Test 1: Gate violations when activation not validated
+          reset_execution_gates()
+          print("Test 1: Activation required before color gateway...")
+          try:
+              require_activation_before_color_gateway()
+              print("❌ FAILED: Should have raised ExecutionGateError")
+              sys.exit(1)
+          except ExecutionGateError as e:
+              print(f"✅ PASSED: {e.gate_name} raised correctly")
 
-# Test 2: Gate passes after activation validated
-reset_execution_gates()
-mark_activation_validated()
-print('Test 2: Color gateway after activation...')
-try:
-    require_activation_before_color_gateway()
-    print('✅ PASSED: Gate passed after activation')
-except ExecutionGateError as e:
-    print(f'❌ FAILED: {e}')
-    exit(1)
+          # Test 2: Gate passes after activation validated
+          reset_execution_gates()
+          mark_activation_validated()
+          print("Test 2: Color gateway after activation...")
+          try:
+              require_activation_before_color_gateway()
+              print("✅ PASSED: Gate passed after activation")
+          except ExecutionGateError as e:
+              print(f"❌ FAILED: {e}")
+              sys.exit(1)
 
-# Test 3: Full validation chain
-reset_execution_gates()
-mark_activation_validated()
-mark_color_gateway_validated()
-mark_pac_admission_validated()
-print('Test 3: Full validation chain...')
-try:
-    require_full_validation_chain()
-    print('✅ PASSED: Full chain validated')
-except ExecutionGateError as e:
-    print(f'❌ FAILED: {e}')
-    exit(1)
+          # Test 3: Full validation chain
+          reset_execution_gates()
+          mark_activation_validated()
+          mark_color_gateway_validated()
+          mark_pac_admission_validated()
+          print("Test 3: Full validation chain...")
+          try:
+              require_full_validation_chain()
+              print("✅ PASSED: Full chain validated")
+          except ExecutionGateError as e:
+              print(f"❌ FAILED: {e}")
+              sys.exit(1)
 
-# Test 4: Partial chain fails
-reset_execution_gates()
-mark_activation_validated()
-# Skip color gateway
-mark_pac_admission_validated()
-print('Test 4: Partial chain should fail...')
-try:
-    require_full_validation_chain()
-    print('❌ FAILED: Should have raised ExecutionGateError')
-    exit(1)
-except ExecutionGateError as e:
-    print(f'✅ PASSED: Partial chain rejected - {e.reason}')
+          # Test 4: Partial chain fails
+          reset_execution_gates()
+          mark_activation_validated()
+          # Skip color gateway
+          mark_pac_admission_validated()
+          print("Test 4: Partial chain should fail...")
+          try:
+              require_full_validation_chain()
+              print("❌ FAILED: Should have raised ExecutionGateError")
+              sys.exit(1)
+          except ExecutionGateError as e:
+              print(f"✅ PASSED: Partial chain rejected - {e.reason}")
 
-print('')
-print('════════════════════════════════════════════════════════════════════')
-print('✅ ALL EXECUTION GATE TESTS PASSED')
-print('════════════════════════════════════════════════════════════════════')
-"
+          print("")
+          print("════════════════════════════════════════════════════════════════════")
+          print("✅ ALL EXECUTION GATE TESTS PASSED")
+          print("════════════════════════════════════════════════════════════════════")
+          PYEOF
 
   governance-summary:
     name: "DAN: Governance Summary"
