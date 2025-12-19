@@ -1,0 +1,259 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://chainbridge.io/schemas/agent-registry/v3.0.0",
+  "title": "ChainBridge Agent Registry Schema",
+  "description": "JSON Schema for validating the canonical Agent Registry. NON-AUTHORITATIVE specification document.",
+  "type": "object",
+
+  "_governance_metadata": {
+    "schema_version": "3.0.0",
+    "template_version": "1.0.0",
+    "authorizing_pac": "PAC-ALEX-AGENT-REGISTRY-TEMPLATE-LOCK-01",
+    "effective_date": "2025-12-19",
+    "maintainer": "ALEX (GID-08)",
+    "disclaimer": "This schema is NON-AUTHORITATIVE. It defines validation rules only. Acceptance authority: Benson (GID-00) only."
+  },
+
+  "required": [
+    "registry_version",
+    "last_updated",
+    "change_pac",
+    "description",
+    "governance_invariants",
+    "schema_metadata",
+    "agents",
+    "gid_index",
+    "color_lanes"
+  ],
+
+  "properties": {
+    "registry_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semver version of the registry (MAJOR.MINOR.PATCH)"
+    },
+
+    "last_updated": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "description": "ISO date of last modification (YYYY-MM-DD)"
+    },
+
+    "change_pac": {
+      "type": "string",
+      "pattern": "^PAC-[A-Z]+-[A-Z0-9-]+$",
+      "description": "PAC identifier that authorized the last change"
+    },
+
+    "spec_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Version of the specification this registry conforms to"
+    },
+
+    "canonical_date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "description": "Date registry became canonical"
+    },
+
+    "description": {
+      "type": "string",
+      "minLength": 10,
+      "description": "Description of the registry purpose"
+    },
+
+    "governance_invariants": {
+      "type": "object",
+      "description": "Invariants that must be enforced",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+
+    "schema_metadata": {
+      "type": "object",
+      "required": ["agent_levels", "field_mutability"],
+      "properties": {
+        "agent_levels": {
+          "type": "object",
+          "description": "L0-L3 level definitions",
+          "required": ["L0", "L1", "L2", "L3"],
+          "properties": {
+            "L0": { "type": "string" },
+            "L1": { "type": "string" },
+            "L2": { "type": "string" },
+            "L3": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "field_mutability": {
+          "type": "object",
+          "required": ["always_immutable", "governance_mutable"],
+          "properties": {
+            "always_immutable": {
+              "type": "array",
+              "items": { "type": "string" },
+              "minItems": 1
+            },
+            "governance_mutable": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "never_runtime": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+
+    "agents": {
+      "type": "object",
+      "description": "Agent definitions keyed by agent name",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "#/definitions/AgentEntry"
+      }
+    },
+
+    "gid_index": {
+      "type": "object",
+      "description": "Reverse lookup: GID -> Agent Name",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+
+    "color_lanes": {
+      "type": "object",
+      "description": "Color lane definitions",
+      "additionalProperties": {
+        "$ref": "#/definitions/ColorLane"
+      }
+    },
+
+    "forbidden_aliases": {
+      "type": "array",
+      "description": "Agent name aliases that are explicitly forbidden",
+      "items": { "type": "string" }
+    },
+
+    "cross_references": {
+      "type": "object",
+      "description": "References to related governance documents",
+      "additionalProperties": { "type": "string" }
+    }
+  },
+
+  "definitions": {
+    "AgentEntry": {
+      "type": "object",
+      "required": [
+        "gid",
+        "lane",
+        "color",
+        "emoji_primary",
+        "agent_level",
+        "diversity_profile",
+        "role",
+        "mutable_fields",
+        "immutable_fields"
+      ],
+      "properties": {
+        "gid": {
+          "type": "string",
+          "pattern": "^GID-\\d{2}$",
+          "description": "Global Identifier (IMMUTABLE)"
+        },
+        "lane": {
+          "type": "string",
+          "description": "Color lane assignment (IMMUTABLE)"
+        },
+        "color": {
+          "type": "string",
+          "description": "Primary color (IMMUTABLE, must match lane)"
+        },
+        "emoji_primary": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Primary emoji(s) (IMMUTABLE)"
+        },
+        "emoji_aliases": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Secondary emojis (MUTABLE, cosmetic only)"
+        },
+        "agent_level": {
+          "type": "string",
+          "enum": ["L0", "L1", "L2", "L3"],
+          "description": "Seniority level (GOVERNANCE-MUTABLE)"
+        },
+        "diversity_profile": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "maxItems": 8,
+          "description": "Specialization domains (GOVERNANCE-MUTABLE)"
+        },
+        "role": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Full role description (GOVERNANCE-MUTABLE)"
+        },
+        "role_short": {
+          "type": "string",
+          "maxLength": 30,
+          "description": "Brief role label (GOVERNANCE-MUTABLE)"
+        },
+        "reserved_color": {
+          "type": "boolean",
+          "description": "Whether color is reserved (TEAL only)"
+        },
+        "aliases": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Legacy agent name aliases"
+        },
+        "mutable_fields": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Fields that may change without version bump"
+        },
+        "immutable_fields": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "description": "Fields that require version bump to change"
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "ColorLane": {
+      "type": "object",
+      "required": ["lane"],
+      "properties": {
+        "lane": {
+          "type": "string",
+          "description": "Lane name/purpose"
+        },
+        "reserved_gids": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "GIDs with exclusive access to this lane"
+        }
+      }
+    }
+  },
+
+  "_forbidden_interpretations": [
+    "This schema does NOT authorize registry modifications",
+    "This schema does NOT define a roadmap for future features",
+    "This schema does NOT permit implicit field additions",
+    "This schema does NOT allow alternative registry creation",
+    "This schema does NOT justify backward-compatible changes"
+  ]
+}
