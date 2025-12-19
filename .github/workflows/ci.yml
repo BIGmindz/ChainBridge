@@ -1,4 +1,7 @@
 name: CI/CD
+# Governance ID: GID-07-CI | Classification: CRITICAL | Owner: DAN (GID-07)
+# PAC Reference: PAC-DAN-CI-GOVERNANCE-HARDENING-02
+# ENFORCEMENT: All jobs require activation-gate to pass first
 
 on:
   push:
@@ -12,8 +15,48 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # GATE 0: Activation Gate (MANDATORY - MUST PASS FIRST)
+  # ═══════════════════════════════════════════════════════════════════════════
+  activation-gate:
+    name: "🚦 DAN: Activation Gate (MANDATORY)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: "🚦 CI Activation Gate (HARD FAIL)"
+        run: |
+          echo "════════════════════════════════════════════════════════════════════"
+          echo "🟢 DAN (GID-07) — CI ACTIVATION GATE"
+          echo "════════════════════════════════════════════════════════════════════"
+          echo "PAC: PAC-DAN-CI-GOVERNANCE-HARDENING-02"
+          echo "ENFORCEMENT: No CI job executes without activation"
+          echo "BYPASS: NONE"
+          echo ""
+          python scripts/ci/activation_gate.py --base ${{ github.event.pull_request.base.ref || 'main' }} --verbose
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Build & Test (requires activation-gate)
+  # ═══════════════════════════════════════════════════════════════════════════
   build-test:
     runs-on: ubuntu-latest
+    needs: activation-gate  # MANDATORY: Must pass activation gate first
     timeout-minutes: 10
     steps:
       - name: Checkout repository
@@ -33,14 +76,25 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
 
+      - name: Run governance tests first
+        run: |
+          source .venv/bin/activate
+          echo "════════════════════════════════════════════════════════════════════"
+          echo "🟢 DAN (GID-07) — Running Governance Tests (MUST PASS)"
+          echo "════════════════════════════════════════════════════════════════════"
+          pytest tests/governance/ tests/agents/test_activation_block.py -q --tb=short
+
       - name: Run unit tests
         run: |
           source .venv/bin/activate
           pytest -q
 
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Deploy (requires build-test, which requires activation-gate)
+  # ═══════════════════════════════════════════════════════════════════════════
   deploy:
     runs-on: ubuntu-latest
-    needs: build-test
+    needs: build-test  # Transitively requires activation-gate
     if: github.ref == 'refs/heads/main'
     timeout-minutes: 10
     steps:
@@ -65,3 +119,31 @@ jobs:
         run: |
           source .venv/bin/activate
           echo "Deploy step placeholder - configure for ChainBridge services"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # MERGE GATE: Required status check for branch protection
+  # ═══════════════════════════════════════════════════════════════════════════
+  merge-gate:
+    name: "🚦 Merge Gate (Branch Protection)"
+    runs-on: ubuntu-latest
+    needs: [activation-gate, build-test]
+    if: always()
+
+    steps:
+      - name: Check All Gates
+        run: |
+          echo "════════════════════════════════════════════════════════════════════"
+          echo "🟢 DAN (GID-07) — MERGE GATE CHECK"
+          echo "════════════════════════════════════════════════════════════════════"
+          if [[ "${{ needs.activation-gate.result }}" != "success" ]]; then
+            echo "❌ DENIED: Activation Gate failed"
+            exit 1
+          fi
+          if [[ "${{ needs.build-test.result }}" != "success" ]]; then
+            echo "❌ DENIED: Build/Test failed"
+            exit 1
+          fi
+          echo "✅ All gates passed — merge permitted"
+          echo "════════════════════════════════════════════════════════════════════"
+          echo "🟢 END — DAN (GID-07) — MERGE GATE"
+          echo "════════════════════════════════════════════════════════════════════"

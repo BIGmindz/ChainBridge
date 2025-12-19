@@ -518,6 +518,149 @@ jobs:
           scan-type: 'fs'
           scan-ref: '.'
           format: 'sarif'
+
+  # ============================================================================
+  # 🔵 ATLAS (GID-11) PAC LINT — PAC-BENSON-ATLAS-GOVERNANCE-HARDENING-01
+  # Color Gateway Enforcement + PAC Structure Validation
+  # ============================================================================
+  governance-pac-lint:
+    name: "ATLAS PAC Lint: Color Gateway Enforcement"
+    runs-on: ubuntu-latest
+    needs: governance-pre-check
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Run PAC Linter (check mode)
+        id: pac_lint
+        run: |
+          echo "🔵 ATLAS (GID-11) — Running PAC Linter..."
+          echo ""
+          
+          # Run linter in check mode - exits non-zero on errors
+          python tools/pac_linter.py --check --verbose 2>&1 | tee pac_lint_output.txt
+          
+          # Capture exit code
+          LINT_EXIT_CODE=${PIPESTATUS[0]}
+          
+          if [ $LINT_EXIT_CODE -ne 0 ]; then
+            echo ""
+            echo "❌ PAC LINT FAILED — Merge blocked"
+            echo "Fix violations before merging."
+            exit 1
+          fi
+          
+          echo ""
+          echo "✅ PAC lint passed — All governance checks satisfied"
+
+      - name: Verify Color Gateway Compliance
+        run: |
+          echo "🔵 ATLAS (GID-11) — Verifying Color Gateway spec compliance..."
+          
+          # Check that color_gateway_spec.json exists and is valid
+          if [ ! -f "docs/governance/color_gateway_spec.json" ]; then
+            echo "❌ GOVERNANCE ERROR: color_gateway_spec.json not found"
+            exit 1
+          fi
+          
+          # Validate JSON structure
+          python3 << 'EOF'
+          import json
+          import sys
+          
+          with open('docs/governance/color_gateway_spec.json') as f:
+              spec = json.load(f)
+          
+          # Required fields
+          required = ['spec_version', 'lanes', 'rules']
+          missing = [f for f in required if f not in spec]
+          
+          if missing:
+              print(f"❌ Color Gateway spec missing: {missing}")
+              sys.exit(1)
+          
+          # Verify TEAL is reserved for GID-00
+          teal = spec.get('lanes', {}).get('TEAL', {})
+          if teal.get('reserved_gid') != 'GID-00':
+              print("❌ TEAL lane must be reserved for GID-00")
+              sys.exit(1)
+          
+          # Verify rules are strict
+          rules = spec.get('rules', {})
+          strict_rules = [
+              'require_executing_agent',
+              'require_executing_gid',
+              'require_executing_color',
+              'deny_color_agent_mismatch',
+              'deny_teal_as_executing'
+          ]
+          
+          for rule in strict_rules:
+              if not rules.get(rule, False):
+                  print(f"❌ Color Gateway rule must be enabled: {rule}")
+                  sys.exit(1)
+          
+          print("✅ Color Gateway spec validated")
+          EOF
+
+      - name: Check AGENT_REGISTRY.json integrity
+        run: |
+          echo "🔵 ATLAS (GID-11) — Verifying agent registry integrity..."
+          
+          if [ ! -f "docs/governance/AGENT_REGISTRY.json" ]; then
+            echo "❌ GOVERNANCE ERROR: AGENT_REGISTRY.json not found"
+            exit 1
+          fi
+          
+          python3 << 'EOF'
+          import json
+          import sys
+          
+          with open('docs/governance/AGENT_REGISTRY.json') as f:
+              registry = json.load(f)
+          
+          agents = registry.get('agents', {})
+          
+          # Verify GID-00 through GID-11 exist
+          gid_index = registry.get('gid_index', {})
+          for i in range(12):
+              gid = f"GID-{i:02d}"
+              if gid not in gid_index:
+                  print(f"❌ Missing agent for {gid}")
+                  sys.exit(1)
+          
+          # Verify BENSON is GID-00
+          if gid_index.get('GID-00') != 'BENSON':
+              print("❌ GID-00 must be BENSON")
+              sys.exit(1)
+          
+          # Verify TEAL is exclusive to GID-00
+          for name, agent in agents.items():
+              if agent.get('color') == 'TEAL' and agent.get('gid') != 'GID-00':
+                  print(f"❌ TEAL color reserved for GID-00, found on {name}")
+                  sys.exit(1)
+          
+          print(f"✅ Agent registry validated ({len(agents)} agents)")
+          EOF
+
+      - name: Upload PAC lint output
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pac-lint-output
+          path: pac_lint_output.txt
           output: 'trivy-results.sarif'
 
       - name: Upload Trivy results to GitHub Security
@@ -542,7 +685,7 @@ jobs:
   governance-test-coverage:
     name: "ALEX Test Coverage: Minimum 80%"
     runs-on: ubuntu-latest
-    needs: governance-pre-check
+    needs: [governance-pre-check, governance-pac-lint]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
