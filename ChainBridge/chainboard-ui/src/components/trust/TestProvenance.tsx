@@ -20,8 +20,8 @@ export interface TestSuite {
   name: string;
   /** Directory path */
   path: string;
-  /** Pass status — boolean only */
-  passed: boolean;
+  /** Recorded status — boolean only, no interpretation */
+  recorded: boolean;
 }
 
 export interface TestProvenanceProps {
@@ -32,15 +32,16 @@ export interface TestProvenanceProps {
 }
 
 /**
- * Default test suites.
+ * Default test suites — UNLINKED / DEMO DATA.
+ * In production, these must be fetched from backend.
  */
 const DEFAULT_SUITES: TestSuite[] = [
-  { name: 'Governance', path: 'tests/governance/', passed: true },
-  { name: 'Security', path: 'tests/security/', passed: true },
-  { name: 'Scope Guard', path: 'tests/scope_guard/', passed: true },
-  { name: 'OCC', path: 'tests/occ/', passed: true },
-  { name: 'ChainBoard', path: 'tests/chainboard/', passed: true },
-  { name: 'Agents', path: 'tests/agents/', passed: true },
+  { name: 'Governance', path: 'tests/governance/', recorded: true },
+  { name: 'Security', path: 'tests/security/', recorded: true },
+  { name: 'Scope Guard', path: 'tests/scope_guard/', recorded: true },
+  { name: 'OCC', path: 'tests/occ/', recorded: true },
+  { name: 'ChainBoard', path: 'tests/chainboard/', recorded: true },
+  { name: 'Agents', path: 'tests/agents/', recorded: true },
 ];
 
 /**
@@ -70,9 +71,16 @@ export function TestProvenance({
             What this shows
           </p>
           <p className="text-sm text-slate-400">
-            Test suite pass status at build time.
+            Test suite record status at build time.
           </p>
         </div>
+
+        {/* UNLINKED warning for demo data */}
+        {!suites && (
+          <div className="border border-slate-600 bg-slate-900/50 px-3 py-2 text-xs text-slate-400 font-mono">
+            UNLINKED / DEMO DATA — Not linked to live backend
+          </div>
+        )}
 
         {/* Test suite list — boolean status only */}
         <ul className="space-y-2 pt-2">
@@ -87,8 +95,8 @@ export function TestProvenance({
                   {suite.path}
                 </span>
               </div>
-              <span className="text-slate-500 text-xs">
-                {suite.passed ? 'passed' : 'failed'}
+              <span className="text-slate-500 text-xs font-mono">
+                {suite.recorded ? 'recorded' : 'absent'}
               </span>
             </li>
           ))}

@@ -3,6 +3,13 @@
  *
  * Central routing configuration for the ChainBoard UI.
  * All components rendered here are within BrowserRouter context.
+ *
+ * NAVIGATION BOUNDARY RULES (PAC-BENSON-LIRA-PROOF-NAV-BOUNDARY-01):
+ * - Routes are static declarations only — no conditional routing
+ * - No validation logic in routing layer
+ * - ProofPack routes treat data as opaque — existence only, not validity
+ * - All routes are bookmarkable and work via direct URL entry
+ * - Trust pages and Proof pages are fully decoupled
  */
 
 import { Route, Routes } from "react-router-dom";
@@ -22,6 +29,8 @@ import ShadowPage from "./pages/ShadowPage";
 import ShipmentsPage from "./pages/ShipmentsPage";
 import TriagePage from "./pages/TriagePage";
 import GovernancePage from "./pages/GovernancePage";
+import ProofArtifactsPage from "./pages/ProofArtifactsPage";
+import ProofPackDetailPage from "./pages/ProofPackDetailPage";
 import RiskConsolePage from "./pages/RiskConsolePage";
 
 export function AppRoutes() {
@@ -45,6 +54,8 @@ export function AppRoutes() {
         <Route path="shadow" element={<ShadowPage />} />
         <Route path="shadow-pilot" element={<ShadowPilotPage />} />
         <Route path="sandbox" element={<SandboxPage />} />
+        <Route path="proof-artifacts" element={<ProofArtifactsPage />} />
+        <Route path="proof-artifacts/:artifactId" element={<ProofPackDetailPage />} />
       </Route>
     </Routes>
   );
