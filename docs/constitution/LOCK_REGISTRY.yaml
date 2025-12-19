@@ -1,0 +1,674 @@
+# ChainBridge Constitution: Lock Registry
+# ════════════════════════════════════════════════════════════════
+# AUTHORITATIVE SOURCE OF TRUTH FOR ALL PLATFORM LOCKS
+# Version: 1.0
+# Status: LOCKED
+# PAC Reference: PAC-BENSON-CONSTITUTION-ENGINE-01
+# Effective Date: 2025-12-18
+# ════════════════════════════════════════════════════════════════
+#
+# RULES:
+#   1. If a lock exists, enforcement MUST exist
+#   2. If enforcement is missing, CI fails
+#   3. Locks cannot be modified without a new PAC
+#   4. Locks only grow stricter
+#
+# LOCK SCHEMA:
+#   lock_id: Unique identifier (LOCK-{DOMAIN}-{TYPE}-{NNN})
+#   description: Human-readable description
+#   scope: List of affected domains
+#   type: invariant | constraint | boundary | gate
+#   source_invariants: Mapping to existing INV-* identifiers
+#   enforcement: List of enforcement mechanisms
+#   severity: CRITICAL | HIGH | MEDIUM
+#   violation_policy:
+#     action: HARD_FAIL | SOFT_FAIL
+#     telemetry: REQUIRED | OPTIONAL
+# ════════════════════════════════════════════════════════════════
+
+version: "1.0"
+pac_reference: PAC-BENSON-CONSTITUTION-ENGINE-01
+effective_date: "2025-12-18"
+
+# ════════════════════════════════════════════════════════════════
+# GATEWAY LOCKS
+# ════════════════════════════════════════════════════════════════
+
+locks:
+  # ──────────────────────────────────────────────────────────────
+  # GATEWAY ENVELOPE IMMUTABILITY
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-GW-IMMUTABILITY-001
+    description: Gateway decision envelope is immutable after creation
+    scope:
+      - gateway
+      - occ
+      - proofpack
+    type: invariant
+    source_invariants:
+      - INV-GW-L2-004
+      - INV-GW-L6-004
+    enforcement:
+      - test_required: tests/gateway/test_envelope_immutability.py
+      - runtime_assert: "@dataclass(frozen=True) on GatewayDecisionEnvelope"
+      - lint_rule: "no mutation of envelope fields"
+      - pac_gate: true
+    severity: CRITICAL
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+  # ──────────────────────────────────────────────────────────────
+  # GATEWAY BINARY DECISION
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-GW-BINARY-DECISION-001
+    description: Gateway decision is exactly ALLOW or DENY (no third state)
+    scope:
+      - gateway
+    type: invariant
+    source_invariants:
+      - INV-GW-L2-003
+    enforcement:
+      - test_required: tests/gateway/test_decision_enum.py
+      - runtime_assert: "GatewayDecision enum has exactly 2 values"
+      - pac_gate: true
+    severity: CRITICAL
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+  # ──────────────────────────────────────────────────────────────
+  # GATEWAY AUDIT REF REQUIREMENT
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-GW-AUDIT-REF-001
+    description: All envelopes must have non-empty audit_ref
+    scope:
+      - gateway
+      - occ
+    type: invariant
+    source_invariants:
+      - INV-GW-L2-005
+    enforcement:
+      - test_required: tests/gateway/test_envelope_validation.py
+      - runtime_assert: "__post_init__ raises EnvelopeMalformedError"
+      - pac_gate: true
+    severity: CRITICAL
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+  # ──────────────────────────────────────────────────────────────
+  # PDO GATE ENFORCEMENT
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-PDO-GATE-001
+    description: No execution without valid PDO in DECIDED/APPROVED state
+    scope:
+      - gateway
+      - occ
+      - proofpack
+    type: gate
+    source_invariants:
+      - INV-GW-L3-001
+      - INV-GW-L3-002
+      - INV-GW-L3-003
+      - INV-GW-L3-004
+    enforcement:
+      - test_required: tests/gateway/test_pdo_gate.py
+      - runtime_assert: "require_pdo() at all execution entry points"
+      - pac_gate: true
+    severity: CRITICAL
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+  # ──────────────────────────────────────────────────────────────
+  # PDO IMMUTABILITY
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-PDO-IMMUTABILITY-001
+    description: PDO fields are frozen after creation
+    scope:
+      - occ
+      - proofpack
+    type: invariant
+    source_invariants:
+      - INV-PDO-001
+    enforcement:
+      - test_required: tests/occ/test_pdo_immutability.py
+      - runtime_assert: "@dataclass(frozen=True) on ProvableDecisionObject"
+      - pac_gate: true
+    severity: CRITICAL
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+# ════════════════════════════════════════════════════════════════
+# VERIFICATION SEMANTICS LOCKS
+# ════════════════════════════════════════════════════════════════
+
+  # ──────────────────────────────────────────────────────────────
+  # VERIFICATION ORDER
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-VERIFY-ORDER-001
+    description: Gateway layers must execute in fixed order (L1→L2→L3→L4→L5→L6)
+    scope:
+      - gateway
+    type: constraint
+    source_invariants:
+      - INT-COMP-001
+      - INT-COMP-002
+    enforcement:
+      - test_required: tests/gateway/test_layer_ordering.py
+      - runtime_assert: "Layer sequence enforced in middleware"
+      - pac_gate: true
+    severity: CRITICAL
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+  # ──────────────────────────────────────────────────────────────
+  # PROOF BEFORE EXECUTION
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-VERIFY-PROOF-FIRST-001
+    description: Proof must exist before execution (no retrofit)
+    scope:
+      - gateway
+      - occ
+      - proofpack
+    type: invariant
+    source_invariants:
+      - INT-PAT-001
+      - INT-PAT-003
+    enforcement:
+      - test_required: tests/gateway/test_proof_before_execution.py
+      - runtime_assert: "PDO timestamp < execution timestamp"
+      - pac_gate: true
+    severity: CRITICAL
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+# ════════════════════════════════════════════════════════════════
+# AUTHORITY BOUNDARY LOCKS
+# ════════════════════════════════════════════════════════════════
+
+  # ──────────────────────────────────────────────────────────────
+  # ALEX AUTHORITY
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-AUTH-ALEX-001
+    description: Only ALEX rules determine ALLOW/DENY decision
+    scope:
+      - gateway
+      - governance
+    type: boundary
+    source_invariants:
+      - AUTH-001
+      - AUTH-002
+    enforcement:
+      - test_required: tests/governance/test_alex_authority.py
+      - runtime_assert: "Decision only from ACMEvaluator.evaluate()"
+      - ci_workflow: governance_check.yml
+      - pac_gate: true
+    severity: CRITICAL
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+  # ──────────────────────────────────────────────────────────────
+  # ATLAS DOMAIN BOUNDARY
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-AUTH-ATLAS-001
+    description: Atlas (GID-11) has ZERO domain authority over runtime code
+    scope:
+      - governance
+      - agents
+    type: boundary
+    source_invariants:
+      - INV-GOV-SCOPE-001
+      - INV-GW-L4-007
+    enforcement:
+      - test_required: tests/governance/test_atlas_scope.py
+      - runtime_assert: "AtlasScope.is_path_forbidden()"
+      - ci_workflow: scope-guard.yml
+      - pac_gate: true
+    severity: CRITICAL
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+  # ──────────────────────────────────────────────────────────────
+  # DIGGY FORBIDDEN VERBS
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-AUTH-DIGGY-001
+    description: Diggy (GID-00) cannot EXECUTE, BLOCK, or APPROVE
+    scope:
+      - governance
+      - agents
+    type: boundary
+    source_invariants:
+      - INV-GOV-COC-002
+      - INV-GW-L4-005
+    enforcement:
+      - test_required: tests/governance/test_diggy_forbidden_verbs.py
+      - runtime_assert: "DIGGY_FORBIDDEN_VERBS constant in drcp.py"
+      - pac_gate: true
+    severity: CRITICAL
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+# ════════════════════════════════════════════════════════════════
+# DENIAL IRREVERSIBILITY LOCKS
+# ════════════════════════════════════════════════════════════════
+
+  # ──────────────────────────────────────────────────────────────
+  # NO RETRY AFTER DENIAL
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-DENY-NO-RETRY-001
+    description: Agents cannot retry after denial without material change
+    scope:
+      - gateway
+      - governance
+    type: invariant
+    source_invariants:
+      - INV-GOV-DENY-001
+      - INV-GW-L4-006
+    enforcement:
+      - test_required: tests/governance/test_denial_registry.py
+      - runtime_assert: "DenialRegistry.is_denied() check"
+      - pac_gate: true
+    severity: CRITICAL
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+  # ──────────────────────────────────────────────────────────────
+  # DRCP ROUTING
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-DENY-DRCP-001
+    description: All DENY decisions route through DRCP to Diggy
+    scope:
+      - gateway
+      - governance
+    type: invariant
+    source_invariants:
+      - INV-GOV-COC-001
+      - ESC-001
+    enforcement:
+      - test_required: tests/governance/test_drcp_routing.py
+      - runtime_assert: "DenialRecord.next_hop always set"
+      - pac_gate: true
+    severity: HIGH
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+  # ──────────────────────────────────────────────────────────────
+  # DENIAL PERSISTENCE
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-DENY-PERSIST-001
+    description: Denials survive process restarts (SQLite backed)
+    scope:
+      - governance
+    type: invariant
+    source_invariants:
+      - INV-GOV-DENY-002
+    enforcement:
+      - test_required: tests/governance/test_denial_persistence.py
+      - runtime_assert: "DenialPersistenceError blocks on failure"
+      - pac_gate: true
+    severity: HIGH
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+# ════════════════════════════════════════════════════════════════
+# GOVERNANCE INTEGRITY LOCKS
+# ════════════════════════════════════════════════════════════════
+
+  # ──────────────────────────────────────────────────────────────
+  # GOVERNANCE FINGERPRINT
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-GOV-FINGERPRINT-001
+    description: Governance fingerprint computed at boot, drift causes error
+    scope:
+      - governance
+      - boot
+    type: invariant
+    source_invariants:
+      - INV-GOV-FP-001
+      - INV-GOV-FP-002
+    enforcement:
+      - test_required: tests/governance/test_governance_fingerprint.py
+      - runtime_assert: "GovernanceDriftError on hash mismatch"
+      - pac_gate: true
+    severity: CRITICAL
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+  # ──────────────────────────────────────────────────────────────
+  # FAIL-CLOSED BOOT
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-GOV-BOOT-001
+    description: Any governance violation raises fatal error at boot
+    scope:
+      - governance
+      - boot
+    type: gate
+    source_invariants:
+      - INV-GOV-BOOT-001
+      - INV-GOV-BOOT-002
+    enforcement:
+      - test_required: tests/governance/test_boot_checks.py
+      - runtime_assert: "GovernanceBootError halts startup"
+      - pac_gate: true
+    severity: CRITICAL
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+  # ──────────────────────────────────────────────────────────────
+  # GLASS-BOX ML ONLY
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-GOV-GLASSBOX-001
+    description: Only explainable, monotonic ML models permitted
+    scope:
+      - governance
+      - chainiq
+    type: constraint
+    source_invariants:
+      - INV-GOV-ALEX-002
+    enforcement:
+      - test_required: tests/governance/test_model_types.py
+      - ci_workflow: governance_check.yml
+      - pac_gate: true
+    severity: CRITICAL
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+# ════════════════════════════════════════════════════════════════
+# INTEGRATION DISCIPLINE LOCKS
+# ════════════════════════════════════════════════════════════════
+
+  # ──────────────────────────────────────────────────────────────
+  # GATEWAY-FIRST ACTUATION
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-INT-GATEWAY-FIRST-001
+    description: All governed actions must route through Gateway first
+    scope:
+      - gateway
+      - chainpay
+      - chainiq
+      - occ
+    type: constraint
+    source_invariants:
+      - INT-PAT-001
+      - INT-COMP-001
+    enforcement:
+      - test_required: tests/integration/test_gateway_first.py
+      - lint_rule: "no direct model-to-actuation paths"
+      - pac_gate: true
+    severity: CRITICAL
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+  # ──────────────────────────────────────────────────────────────
+  # ENVELOPE-BEFORE-EXECUTION
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-INT-ENVELOPE-FIRST-001
+    description: No downstream execution without valid envelope
+    scope:
+      - gateway
+      - chainpay
+      - chainiq
+      - occ
+    type: constraint
+    source_invariants:
+      - INT-PAT-002
+      - DEL-PRE-001
+    enforcement:
+      - test_required: tests/integration/test_envelope_before_execution.py
+      - runtime_assert: "Envelope validation at entry points"
+      - pac_gate: true
+    severity: CRITICAL
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+  # ──────────────────────────────────────────────────────────────
+  # HUMAN ESCALATION BLOCKING
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-INT-HUMAN-BLOCK-001
+    description: human_required=True blocks execution until human decision
+    scope:
+      - gateway
+      - occ
+    type: gate
+    source_invariants:
+      - ESC-002
+      - DEL-PRE-003
+    enforcement:
+      - test_required: tests/integration/test_human_escalation.py
+      - runtime_assert: "ToolExecutionDenied(HUMAN_REQUIRED)"
+      - pac_gate: true
+    severity: HIGH
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+# ════════════════════════════════════════════════════════════════
+# EXTENSION BOUNDARY LOCKS
+# ════════════════════════════════════════════════════════════════
+
+  # ──────────────────────────────────────────────────────────────
+  # FORBIDDEN ZONE PROTECTION
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-EXT-FORBIDDEN-ZONE-001
+    description: Core Gateway components cannot be extended without PAC
+    scope:
+      - gateway
+      - governance
+    type: boundary
+    forbidden_zones:
+      - gateway/decision_envelope.py (core logic)
+      - gateway/pdo_gate.py (require_pdo)
+      - core/governance/drcp.py (routing logic)
+      - GatewayDecision enum
+      - PDO state machine
+    enforcement:
+      - ci_workflow: forbidden_regions_check.yml
+      - pac_gate: true
+    severity: CRITICAL
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+  # ──────────────────────────────────────────────────────────────
+  # ALEX RULE MONOTONICITY
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-EXT-ALEX-MONOTONIC-001
+    description: ALEX rules may only become stricter, never looser
+    scope:
+      - governance
+    type: constraint
+    source_invariants:
+      - EXT-ALEX-001
+      - EXT-ALEX-002
+    enforcement:
+      - test_required: tests/governance/test_alex_rule_monotonicity.py
+      - ci_workflow: governance_check.yml
+      - pac_gate: true
+    severity: CRITICAL
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+# ════════════════════════════════════════════════════════════════
+# PROOFPACK LOCKS
+# ════════════════════════════════════════════════════════════════
+
+  # ──────────────────────────────────────────────────────────────
+  # PROOFPACK CHAIN INTEGRITY
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-PP-CHAIN-001
+    description: ProofPack must contain all PDOs in chain
+    scope:
+      - proofpack
+      - occ
+    type: invariant
+    source_invariants:
+      - INV-PP-001
+    enforcement:
+      - test_required: tests/proofpack/test_chain_integrity.py
+      - runtime_assert: "ProofPack validation checks parent_pdo_id links"
+      - pac_gate: true
+    severity: HIGH
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+  # ──────────────────────────────────────────────────────────────
+  # CORRELATION ID PRESERVATION
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-PP-CORRELATION-001
+    description: Correlation ID must be preserved across entire workflow
+    scope:
+      - gateway
+      - proofpack
+      - chainpay
+      - chainiq
+    type: invariant
+    source_invariants:
+      - INT-PAT-005
+    enforcement:
+      - test_required: tests/proofpack/test_correlation_preservation.py
+      - runtime_assert: "Correlation ID validation in ProofPack"
+      - pac_gate: true
+    severity: HIGH
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+# ════════════════════════════════════════════════════════════════
+# AGENT GOVERNANCE LOCKS
+# ════════════════════════════════════════════════════════════════
+
+  # ──────────────────────────────────────────────────────────────
+  # AGENT ACM REGISTRATION
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-AGENT-ACM-001
+    description: Unknown agents are DENIED; all agents must be in ACM
+    scope:
+      - gateway
+      - agents
+    type: gate
+    source_invariants:
+      - INV-GW-L4-001
+    enforcement:
+      - test_required: tests/agents/test_acm_registration.py
+      - runtime_assert: "UNKNOWN_AGENT denial code"
+      - pac_gate: true
+    severity: CRITICAL
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+  # ──────────────────────────────────────────────────────────────
+  # ALEX OVERRIDE AUTHORITY
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-AGENT-ALEX-OVERRIDE-001
+    description: ALEX (GID-08) has veto power over all agents
+    scope:
+      - governance
+      - agents
+    type: boundary
+    source_invariants:
+      - INV-GOV-ALEX-001
+    enforcement:
+      - test_required: tests/agents/test_alex_override.py
+      - ci_workflow: governance_check.yml
+      - pac_gate: true
+    severity: CRITICAL
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+# ════════════════════════════════════════════════════════════════
+# META-LOCKS (LOCK SYSTEM ITSELF)
+# ════════════════════════════════════════════════════════════════
+
+  # ──────────────────────────────────────────────────────────────
+  # LOCK REGISTRY IMMUTABILITY
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-META-REGISTRY-001
+    description: Lock registry can only be modified by PAC
+    scope:
+      - constitution
+      - governance
+    type: boundary
+    enforcement:
+      - ci_workflow: constitution_check.yml
+      - pac_gate: true
+    severity: CRITICAL
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+  # ──────────────────────────────────────────────────────────────
+  # LOCK ENFORCEMENT COVERAGE
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-META-COVERAGE-001
+    description: Every lock must have at least one enforcement mechanism
+    scope:
+      - constitution
+    type: constraint
+    enforcement:
+      - ci_workflow: constitution_check.yml
+      - pac_gate: true
+    severity: CRITICAL
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+  # ──────────────────────────────────────────────────────────────
+  # LOCK MONOTONICITY
+  # ──────────────────────────────────────────────────────────────
+  - lock_id: LOCK-META-MONOTONIC-001
+    description: Locks only grow stricter; weakening is forbidden
+    scope:
+      - constitution
+    type: constraint
+    enforcement:
+      - ci_workflow: constitution_check.yml
+      - pac_gate: true
+    severity: CRITICAL
+    violation_policy:
+      action: HARD_FAIL
+      telemetry: REQUIRED
+
+# ════════════════════════════════════════════════════════════════
+# REGISTRY STATISTICS
+# ════════════════════════════════════════════════════════════════
+
+statistics:
+  total_locks: 27
+  by_severity:
+    CRITICAL: 23
+    HIGH: 4
+  by_type:
+    invariant: 14
+    constraint: 5
+    boundary: 5
+    gate: 3
+  by_scope:
+    gateway: 17
+    governance: 13
+    occ: 8
+    proofpack: 5
+    agents: 4
+    chainpay: 3
+    chainiq: 3
+    boot: 2
+    constitution: 3

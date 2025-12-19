@@ -4,7 +4,9 @@ CALP v1 Agent Identity Validation Tests
 Tests the ChainBridge Agent Launch Pack (CALP) canonical definitions.
 Ensures GID assignments, colors, and roles are consistent across all registry files.
 
-PAC-ALEX-GOV-023: CALP Boot Protocol Enforcement
+PAC-ALEX-CANONICAL-AGENT-COLOR-LOCK-01: Single Source of Truth
+
+CANONICAL SOURCE: docs/governance/AGENT_REGISTRY.json
 """
 
 import json
@@ -19,21 +21,22 @@ AGENT_REGISTRY_PATH = ROOT / "docs" / "governance" / "AGENT_REGISTRY.json"
 ALEX_RULES_PATH = ROOT / ".github" / "ALEX_RULES.json"
 
 
-# CALP v1 Canonical Agent Definitions
-CALP_V1_CANONICAL = {
-    "BENSON": {"gid": "GID-00", "color": "TEAL", "role": "Orchestrator"},
-    "CODY": {"gid": "GID-01", "color": "BLUE", "role": "Backend Engineering"},
-    "SONNY": {"gid": "GID-02", "color": "YELLOW", "role": "Frontend Engineering"},
-    "MIRA_R": {"gid": "GID-03", "color": "PURPLE", "role": "Research"},
-    "CINDY": {"gid": "GID-04", "color": "TEAL", "role": "Backend Expansion"},
-    "PAX": {"gid": "GID-05", "color": "ORANGE", "role": "Product Strategy"},
-    "SAM": {"gid": "GID-06", "color": "DARK RED", "role": "Security"},
-    "DAN": {"gid": "GID-07", "color": "GREEN", "role": "DevOps"},
-    "ALEX": {"gid": "GID-08", "color": "GREY", "role": "Governance"},
-    "LIRA": {"gid": "GID-09", "color": "PINK", "role": "UX"},
-    "MAGGIE": {"gid": "GID-10", "color": "PINK", "role": "ML & Risk"},
-    "ATLAS": {"gid": "GID-11", "color": "BLUE", "role": "Build & Repair"},
-}
+def _load_canonical_registry() -> dict:
+    """Load canonical agent definitions from AGENT_REGISTRY.json."""
+    with open(AGENT_REGISTRY_PATH) as f:
+        data = json.load(f)
+    return data["agents"]
+
+
+# CALP v1 Canonical Agent Definitions — LOADED FROM CANONICAL SOURCE
+CALP_V1_CANONICAL = {}
+_registry = _load_canonical_registry()
+for name, data in _registry.items():
+    CALP_V1_CANONICAL[name] = {
+        "gid": data["gid"],
+        "color": data["color"],
+        "role": data["role_short"],
+    }
 
 # Expected GID range
 EXPECTED_GIDS = [f"GID-{i:02d}" for i in range(12)]
@@ -127,9 +130,9 @@ class TestAgentRegistryConsistency:
             return json.load(f)
 
     def test_calp_version_present(self, agent_registry):
-        """CALP version must be declared."""
-        assert "calp_version" in agent_registry
-        assert agent_registry["calp_version"] == "1.0.0"
+        """Spec version must be declared."""
+        assert "spec_version" in agent_registry
+        assert agent_registry["spec_version"] == "2.0.0"
 
     def test_all_canonical_agents_present(self, agent_registry):
         """All 12 canonical agents must be defined."""

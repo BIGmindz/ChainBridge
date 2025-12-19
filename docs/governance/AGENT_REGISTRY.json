@@ -1,100 +1,467 @@
 {
-  "calp_version": "1.0.0",
-  "canonical_date": "2025-12-17",
-  "description": "CALP v1 Canonical Agent Registry - Source of truth for agent identities",
-
+  "registry_version": "3.0.0",
+  "last_updated": "2025-12-19",
+  "change_pac": "PAC-ALEX-AGENT-REGISTRY-EXTENSION-01",
+  "spec_version": "2.0.0",
+  "canonical_date": "2025-12-19",
+  "description": "GOVERNANCE-CANONICAL Agent Registry — SINGLE SOURCE OF TRUTH for all agent identities, GIDs, colors, and emojis. All enforcement tooling (pac_linter, tests, documentation) MUST reference this file.",
+  "governance_invariants": {
+    "INV-AGENT-01": "No agent may appear in more than one color lane",
+    "INV-AGENT-02": "No color may be claimed without registry match",
+    "INV-AGENT-03": "TEAL is reserved for GID-00 (BENSON) and GID-04 (CINDY) only",
+    "INV-AGENT-04": "GIDs are immutable once assigned",
+    "INV-AGENT-05": "No new agents without explicit registry update",
+    "INV-AGENT-06": "Lane assignments are immutable once assigned"
+  },
+  "schema_metadata": {
+    "agent_levels": {
+      "L0": "Apprentice — Learning phase, supervised execution",
+      "L1": "Specialist — Single-domain execution authority",
+      "L2": "Senior — Multi-domain execution, can mentor L0/L1",
+      "L3": "Principal — Cross-domain authority, architecture decisions"
+    },
+    "field_mutability": {
+      "always_immutable": [
+        "gid",
+        "lane",
+        "color"
+      ],
+      "governance_mutable": [
+        "agent_level",
+        "diversity_profile",
+        "emoji_aliases",
+        "role",
+        "role_short"
+      ],
+      "never_runtime": [
+        "mutable_fields",
+        "immutable_fields"
+      ]
+    }
+  },
   "agents": {
     "BENSON": {
       "gid": "GID-00",
-      "emoji": "🟦🟩",
+      "lane": "TEAL",
       "color": "TEAL",
-      "role": "Chief Architect & Orchestrator",
-      "role_short": "Orchestrator"
+      "emoji_primary": "🟦🟩",
+      "emoji_aliases": [
+        "🧠",
+        "🎛️"
+      ],
+      "agent_level": "L3",
+      "diversity_profile": [
+        "Orchestration",
+        "Architecture",
+        "Governance",
+        "Synthesis"
+      ],
+      "role": "CTO / Chief Architect / Orchestrator",
+      "role_short": "Orchestrator",
+      "reserved_color": true,
+      "aliases": [],
+      "mutable_fields": [
+        "emoji_aliases",
+        "diversity_profile",
+        "role",
+        "role_short"
+      ],
+      "immutable_fields": [
+        "gid",
+        "lane",
+        "color",
+        "emoji_primary",
+        "agent_level"
+      ]
     },
     "CODY": {
       "gid": "GID-01",
-      "emoji": "🔵",
+      "lane": "BLUE",
       "color": "BLUE",
+      "emoji_primary": "🔵",
+      "emoji_aliases": [
+        "💻",
+        "⚙️"
+      ],
+      "agent_level": "L2",
+      "diversity_profile": [
+        "Backend",
+        "APIs",
+        "Persistence",
+        "Systems"
+      ],
       "role": "Senior Backend Engineer",
-      "role_short": "Backend Engineering"
+      "role_short": "Backend Engineering",
+      "reserved_color": false,
+      "aliases": [
+        "CODEX"
+      ],
+      "mutable_fields": [
+        "emoji_aliases",
+        "diversity_profile",
+        "role",
+        "role_short",
+        "aliases"
+      ],
+      "immutable_fields": [
+        "gid",
+        "lane",
+        "color",
+        "emoji_primary"
+      ]
     },
     "SONNY": {
       "gid": "GID-02",
-      "emoji": "🟡",
+      "lane": "YELLOW",
       "color": "YELLOW",
+      "emoji_primary": "🟨",
+      "emoji_aliases": [
+        "🎨",
+        "🖥️"
+      ],
+      "agent_level": "L2",
+      "diversity_profile": [
+        "Frontend",
+        "UI",
+        "Visualization",
+        "React"
+      ],
       "role": "Senior Frontend Engineer",
-      "role_short": "Frontend Engineering"
+      "role_short": "Frontend Engineering",
+      "reserved_color": false,
+      "aliases": [],
+      "mutable_fields": [
+        "emoji_aliases",
+        "diversity_profile",
+        "role",
+        "role_short",
+        "aliases"
+      ],
+      "immutable_fields": [
+        "gid",
+        "lane",
+        "color",
+        "emoji_primary"
+      ]
     },
-    "MIRA_R": {
+    "MIRA-R": {
       "gid": "GID-03",
-      "emoji": "🟣",
+      "lane": "PURPLE",
       "color": "PURPLE",
-      "role": "Research Lead",
-      "role_short": "Research"
+      "emoji_primary": "🟣",
+      "emoji_aliases": [
+        "🔬",
+        "📊"
+      ],
+      "agent_level": "L2",
+      "diversity_profile": [
+        "Research",
+        "Competitive Intelligence",
+        "Analysis",
+        "Validation"
+      ],
+      "role": "Research & Competitive Intelligence Lead",
+      "role_short": "Research",
+      "reserved_color": false,
+      "aliases": [
+        "MIRA",
+        "MIRA_R",
+        "RESEARCH_BENSON"
+      ],
+      "mutable_fields": [
+        "emoji_aliases",
+        "diversity_profile",
+        "role",
+        "role_short",
+        "aliases"
+      ],
+      "immutable_fields": [
+        "gid",
+        "lane",
+        "color",
+        "emoji_primary"
+      ]
     },
     "CINDY": {
       "gid": "GID-04",
-      "emoji": "🔷",
+      "lane": "TEAL",
       "color": "TEAL",
+      "emoji_primary": "🟦",
+      "emoji_aliases": [
+        "📈",
+        "🔧"
+      ],
+      "agent_level": "L2",
+      "diversity_profile": [
+        "Backend",
+        "Scale Patterns",
+        "Expansion"
+      ],
       "role": "Senior Backend Engineer",
-      "role_short": "Backend Expansion"
+      "role_short": "Backend Expansion",
+      "reserved_color": true,
+      "aliases": [],
+      "mutable_fields": [
+        "emoji_aliases",
+        "diversity_profile",
+        "role",
+        "role_short",
+        "aliases"
+      ],
+      "immutable_fields": [
+        "gid",
+        "lane",
+        "color",
+        "emoji_primary"
+      ]
     },
     "PAX": {
       "gid": "GID-05",
-      "emoji": "🟠",
+      "lane": "ORANGE",
       "color": "ORANGE",
+      "emoji_primary": "🟧",
+      "emoji_aliases": [
+        "📋",
+        "💡"
+      ],
+      "agent_level": "L2",
+      "diversity_profile": [
+        "Product Strategy",
+        "Smart Contracts",
+        "Roadmap"
+      ],
       "role": "Product & Smart Contract Strategy",
-      "role_short": "Product Strategy"
+      "role_short": "Product Strategy",
+      "reserved_color": false,
+      "aliases": [],
+      "mutable_fields": [
+        "emoji_aliases",
+        "diversity_profile",
+        "role",
+        "role_short",
+        "aliases"
+      ],
+      "immutable_fields": [
+        "gid",
+        "lane",
+        "color",
+        "emoji_primary"
+      ]
     },
     "SAM": {
       "gid": "GID-06",
-      "emoji": "🔴",
+      "lane": "DARK RED",
       "color": "DARK RED",
+      "emoji_primary": "🟥",
+      "emoji_aliases": [
+        "🔒",
+        "🛡️"
+      ],
+      "agent_level": "L2",
+      "diversity_profile": [
+        "Security",
+        "Threat Modeling",
+        "Audit",
+        "Compliance"
+      ],
       "role": "Security & Threat Engineer",
-      "role_short": "Security"
+      "role_short": "Security",
+      "reserved_color": false,
+      "aliases": [],
+      "mutable_fields": [
+        "emoji_aliases",
+        "diversity_profile",
+        "role",
+        "role_short",
+        "aliases"
+      ],
+      "immutable_fields": [
+        "gid",
+        "lane",
+        "color",
+        "emoji_primary"
+      ]
     },
     "DAN": {
       "gid": "GID-07",
-      "emoji": "🟢",
+      "lane": "GREEN",
       "color": "GREEN",
-      "role": "DevOps & CI/CD",
-      "role_short": "DevOps"
+      "emoji_primary": "🟩",
+      "emoji_aliases": [
+        "🚀",
+        "🔄"
+      ],
+      "agent_level": "L2",
+      "diversity_profile": [
+        "DevOps",
+        "CI/CD",
+        "Infrastructure",
+        "Deployment"
+      ],
+      "role": "DevOps & CI/CD Lead",
+      "role_short": "DevOps",
+      "reserved_color": false,
+      "aliases": [],
+      "mutable_fields": [
+        "emoji_aliases",
+        "diversity_profile",
+        "role",
+        "role_short",
+        "aliases"
+      ],
+      "immutable_fields": [
+        "gid",
+        "lane",
+        "color",
+        "emoji_primary"
+      ]
     },
     "ALEX": {
       "gid": "GID-08",
-      "emoji": "⚪",
-      "color": "GREY",
-      "role": "Governance & Alignment",
-      "role_short": "Governance"
+      "lane": "WHITE",
+      "color": "WHITE",
+      "emoji_primary": "⚪",
+      "emoji_aliases": [
+        "📜",
+        "⚖️"
+      ],
+      "agent_level": "L2",
+      "diversity_profile": [
+        "Governance",
+        "Alignment",
+        "Compliance",
+        "PAC Enforcement"
+      ],
+      "role": "Governance & Alignment Engine",
+      "role_short": "Governance",
+      "reserved_color": false,
+      "aliases": [
+        "GREY"
+      ],
+      "mutable_fields": [
+        "emoji_aliases",
+        "diversity_profile",
+        "role",
+        "role_short"
+      ],
+      "immutable_fields": [
+        "gid",
+        "lane",
+        "color",
+        "emoji_primary",
+        "aliases"
+      ]
     },
     "LIRA": {
       "gid": "GID-09",
-      "emoji": "🩷",
+      "lane": "PINK",
       "color": "PINK",
-      "role": "Frontend / ChainBoard UX",
-      "role_short": "UX"
+      "emoji_primary": "🩷",
+      "emoji_aliases": [
+        "✨",
+        "🎯"
+      ],
+      "agent_level": "L1",
+      "diversity_profile": [
+        "UX",
+        "ChainBoard",
+        "User Experience",
+        "Design"
+      ],
+      "role": "Frontend / ChainBoard Experience",
+      "role_short": "UX",
+      "reserved_color": false,
+      "aliases": [],
+      "mutable_fields": [
+        "emoji_aliases",
+        "diversity_profile",
+        "role",
+        "role_short",
+        "aliases",
+        "agent_level"
+      ],
+      "immutable_fields": [
+        "gid",
+        "lane",
+        "color",
+        "emoji_primary"
+      ]
     },
     "MAGGIE": {
       "gid": "GID-10",
-      "emoji": "💗",
+      "lane": "PINK",
       "color": "PINK",
-      "role": "ML & Applied AI Lead",
-      "role_short": "ML & Risk"
+      "emoji_primary": "🩷",
+      "emoji_aliases": [
+        "🤖",
+        "📉"
+      ],
+      "agent_level": "L2",
+      "diversity_profile": [
+        "ML",
+        "Applied AI",
+        "Risk Scoring",
+        "Glass-Box Models"
+      ],
+      "role": "ML & Applied AI Lead (Glass-Box Only)",
+      "role_short": "ML & Risk",
+      "reserved_color": false,
+      "aliases": [],
+      "mutable_fields": [
+        "emoji_aliases",
+        "diversity_profile",
+        "role",
+        "role_short",
+        "aliases"
+      ],
+      "immutable_fields": [
+        "gid",
+        "lane",
+        "color",
+        "emoji_primary"
+      ]
     },
     "ATLAS": {
       "gid": "GID-11",
-      "emoji": "🔵",
+      "lane": "BLUE",
       "color": "BLUE",
-      "role": "Build / Repair / Refactor",
-      "role_short": "Build & Repair"
+      "emoji_primary": "🔵",
+      "emoji_aliases": [
+        "🔨",
+        "🏗️"
+      ],
+      "agent_level": "L1",
+      "diversity_profile": [
+        "Build",
+        "Repair",
+        "Refactor",
+        "Code Quality"
+      ],
+      "role": "Build / Repair & Refactor Agent",
+      "role_short": "Build & Repair",
+      "reserved_color": false,
+      "aliases": [],
+      "mutable_fields": [
+        "emoji_aliases",
+        "diversity_profile",
+        "role",
+        "role_short",
+        "aliases",
+        "agent_level"
+      ],
+      "immutable_fields": [
+        "gid",
+        "lane",
+        "color",
+        "emoji_primary"
+      ]
     }
   },
-
   "gid_index": {
     "GID-00": "BENSON",
     "GID-01": "CODY",
     "GID-02": "SONNY",
-    "GID-03": "MIRA_R",
+    "GID-03": "MIRA-R",
     "GID-04": "CINDY",
     "GID-05": "PAX",
     "GID-06": "SAM",
@@ -104,8 +471,53 @@
     "GID-10": "MAGGIE",
     "GID-11": "ATLAS"
   },
-
-  "forbidden_aliases": ["DANA"],
-
-  "governance_doc": "docs/governance/CALP_v1.md"
+  "color_lanes": {
+    "TEAL": {
+      "lane": "Orchestration",
+      "reserved_gids": [
+        "GID-00",
+        "GID-04"
+      ]
+    },
+    "BLUE": {
+      "lane": "Backend Engineering",
+      "reserved_gids": []
+    },
+    "YELLOW": {
+      "lane": "Frontend Engineering",
+      "reserved_gids": []
+    },
+    "PURPLE": {
+      "lane": "Research",
+      "reserved_gids": []
+    },
+    "ORANGE": {
+      "lane": "Product Strategy",
+      "reserved_gids": []
+    },
+    "DARK RED": {
+      "lane": "Security",
+      "reserved_gids": []
+    },
+    "GREEN": {
+      "lane": "DevOps",
+      "reserved_gids": []
+    },
+    "WHITE": {
+      "lane": "Governance",
+      "reserved_gids": []
+    },
+    "PINK": {
+      "lane": "UX / ML",
+      "reserved_gids": []
+    }
+  },
+  "forbidden_aliases": [
+    "DANA"
+  ],
+  "cross_references": {
+    "color_gateway_spec": "docs/governance/color_gateway_spec.json",
+    "pac_enforcement": "docs/governance/PAC_ENFORCEMENT.md",
+    "governance_index": "docs/governance/GOVERNANCE_INDEX.md"
+  }
 }

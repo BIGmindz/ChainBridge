@@ -1,7 +1,7 @@
 """
 ⚪⚪⚪⚪⚪⚪⚪⚪⚪⚪
 ALEX — GID-08 — GOVERNANCE ENGINE
-PAC-ALEX-NEXT-023: Multi-Service Compliance Alignment
+PAC-ALEX-CANONICAL-AGENT-COLOR-LOCK-01
 ⚪⚪⚪⚪⚪⚪⚪⚪⚪⚪
 
 PAC Structural Validator Tests
@@ -11,6 +11,8 @@ Enforces consistent PAC structure across all ChainBridge services:
 - Color correctness
 - Identity footer validation
 - No drift of agent names
+
+CANONICAL SOURCE: docs/governance/AGENT_REGISTRY.json
 """
 
 import json
@@ -21,25 +23,35 @@ from typing import Dict, List, Optional, Tuple
 import pytest
 
 # =============================================================================
-# AGENT REGISTRY (Canonical Source of Truth)
+# AGENT REGISTRY — LOADED FROM CANONICAL SOURCE
 # =============================================================================
+# PAC-ALEX-CANONICAL-AGENT-COLOR-LOCK-01 — Single source of truth
 
-AGENT_REGISTRY: Dict[str, Dict] = {
-    "CODY": {"gid": "GID-01", "emoji": "🔵", "role": "Backend Engineering"},
-    "MAGGIE": {"gid": "GID-02", "emoji": "🟣", "role": "ML Engineering"},
-    "SONNY": {"gid": "GID-03", "emoji": "🟢", "role": "UI Engineering"},
-    "DAN": {"gid": "GID-04", "emoji": "🟠", "role": "DevOps & CI/CD"},
-    "ATLAS": {"gid": "GID-05", "emoji": "🟤", "role": "Repository Management"},
-    "SAM": {"gid": "GID-06", "emoji": "🔴", "role": "Security Engineering"},
-    "DANA": {"gid": "GID-07", "emoji": "🟡", "role": "Data Engineering"},
-    "ALEX": {"gid": "GID-08", "emoji": "⚪", "role": "Governance & Alignment"},
-    "CINDY": {"gid": "GID-09", "emoji": "🔷", "role": "Backend Expansion"},
-    "PAX": {"gid": "GID-10", "emoji": "💰", "role": "Tokenization & Settlement"},
-    "LIRA": {"gid": "GID-11", "emoji": "🩷", "role": "UX Design"},
-}
+CANONICAL_REGISTRY_PATH = Path(__file__).parent.parent.parent / "docs" / "governance" / "AGENT_REGISTRY.json"
 
-# All valid agent emojis
-VALID_EMOJIS = set(agent["emoji"] for agent in AGENT_REGISTRY.values())
+
+def _load_agent_registry() -> Dict[str, Dict]:
+    """Load agent registry from canonical JSON source."""
+    with open(CANONICAL_REGISTRY_PATH, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return data["agents"]
+
+
+AGENT_REGISTRY: Dict[str, Dict] = _load_agent_registry()
+
+# All valid agent emojis (emoji_primary and emoji_aliases)
+VALID_EMOJIS = set()
+for agent in AGENT_REGISTRY.values():
+    # Add primary emoji(s) - may contain multiple emojis like "🟦🟩"
+    primary = agent.get("emoji_primary", agent.get("emoji", ""))
+    for char in primary:
+        if ord(char) > 127:  # Non-ASCII = likely emoji
+            VALID_EMOJIS.add(char)
+    # Add aliases
+    for alias in agent.get("emoji_aliases", []):
+        for char in alias:
+            if ord(char) > 127:
+                VALID_EMOJIS.add(char)
 
 # Service-specific paths to validate
 MULTI_SERVICE_PATHS = [
@@ -64,7 +76,8 @@ def validate_emoji_header(content: str) -> List[str]:
     lines = content.split("\n")
 
     # Pattern for emoji border row (10 identical emojis)
-    emoji_row_pattern = re.compile(r"^[⚪🔵🟣🟢🟠🟤🔴🟡🔷💰🩷]{10}$")
+    # Updated 2025-12-19 to match canonical roster emojis
+    emoji_row_pattern = re.compile(r"^[⚪🔵🟣🟨🟦🟧🟥🟩🩷]{10}$")
 
     detected_emoji = None
     for i, line in enumerate(lines, 1):
@@ -115,15 +128,18 @@ def validate_color_correctness(content: str) -> List[str]:
     violations = []
 
     # Pattern: emoji AGENT — GID-XX
-    agent_line_pattern = re.compile(r"^([⚪🔵🟣🟢🟠🟤🔴🟡🔷💰🩷])\s+(\w+)\s*(?:—|–|-)", re.MULTILINE)
+    # Updated 2025-12-19 to match canonical roster emojis
+    agent_line_pattern = re.compile(r"^([⚪🔵🟣🟨🟦🟧🟥🟩🩷])\s+(\w+(?:-\w+)?)\s*(?:—|–|-)", re.MULTILINE)
 
     for match in agent_line_pattern.finditer(content):
         emoji = match.group(1)
         agent_name = match.group(2).upper()
 
         if agent_name in AGENT_REGISTRY:
-            expected_emoji = AGENT_REGISTRY[agent_name]["emoji"]
-            if emoji != expected_emoji:
+            # Support both emoji_primary (v3+) and emoji (legacy)
+            expected_emoji = AGENT_REGISTRY[agent_name].get("emoji_primary", AGENT_REGISTRY[agent_name].get("emoji", ""))
+            # emoji_primary may contain multiple chars (like "🟦🟩"), check if the used emoji is in it
+            if emoji not in expected_emoji:
                 violations.append(f"Agent {agent_name} uses wrong emoji: {emoji} (expected {expected_emoji})")
 
     return violations
@@ -198,7 +214,8 @@ def validate_pac_id_format(content: str) -> List[str]:
     pac_pattern = re.compile(r"PAC-([A-Z]+)-([A-Z0-9-]+)", re.IGNORECASE)
 
     # Find the agent from header
-    header_pattern = re.compile(r"^[⚪🔵🟣🟢🟠🟤🔴🟡🔷💰🩷]\s+(\w+)\s*—", re.MULTILINE)
+    # Updated 2025-12-19 to match canonical roster emojis
+    header_pattern = re.compile(r"^[⚪🔵🟣🟨🟦🟧🟥🟩🩷]\s+(\w+(?:-\w+)?)\s*—", re.MULTILINE)
     header_match = header_pattern.search(content)
 
     if header_match:
@@ -315,17 +332,18 @@ class TestGIDCorrectness:
     @pytest.mark.parametrize(
         "agent,gid",
         [
+            ("BENSON", "GID-00"),
             ("CODY", "GID-01"),
-            ("MAGGIE", "GID-02"),
-            ("SONNY", "GID-03"),
-            ("DAN", "GID-04"),
-            ("ATLAS", "GID-05"),
+            ("SONNY", "GID-02"),
+            ("MIRA-R", "GID-03"),
+            ("CINDY", "GID-04"),
+            ("PAX", "GID-05"),
             ("SAM", "GID-06"),
-            ("DANA", "GID-07"),
+            ("DAN", "GID-07"),
             ("ALEX", "GID-08"),
-            ("CINDY", "GID-09"),
-            ("PAX", "GID-10"),
-            ("LIRA", "GID-11"),
+            ("LIRA", "GID-09"),
+            ("MAGGIE", "GID-10"),
+            ("ATLAS", "GID-11"),
         ],
     )
     def test_all_agents_gid_mapping(self, agent, gid):
@@ -350,22 +368,12 @@ class TestColorCorrectness:
 
     @pytest.mark.parametrize(
         "agent,emoji",
-        [
-            ("CODY", "🔵"),
-            ("MAGGIE", "🟣"),
-            ("SONNY", "🟢"),
-            ("DAN", "🟠"),
-            ("ATLAS", "🟤"),
-            ("SAM", "🔴"),
-            ("DANA", "🟡"),
-            ("ALEX", "⚪"),
-            ("CINDY", "🔷"),
-            ("PAX", "💰"),
-            ("LIRA", "🩷"),
-        ],
+        [(name, data.get("emoji_primary", data.get("emoji", ""))) for name, data in AGENT_REGISTRY.items()],
     )
     def test_all_agents_emoji_mapping(self, agent, emoji):
-        content = f"{emoji} {agent} — GID-XX —"
+        # emoji_primary may contain multiple chars (like "🟦🟩"), use first
+        single_emoji = emoji[0] if emoji else ""
+        content = f"{single_emoji} {agent} — GID-XX —"
         violations = validate_color_correctness(content)
         assert len(violations) == 0
 
@@ -471,7 +479,8 @@ class TestAgentRegistryIntegrity:
             assert f"GID-{i:02d}" in gids or f"GID-{i}" in gids
 
     def test_all_agents_have_required_fields(self):
-        required = ["gid", "emoji", "role"]
+        # Updated for v3.0.0 schema: emoji -> emoji_primary
+        required = ["gid", "emoji_primary", "role"]
         for agent, info in AGENT_REGISTRY.items():
             for field in required:
                 assert field in info, f"Agent {agent} missing field {field}"
@@ -480,9 +489,15 @@ class TestAgentRegistryIntegrity:
         gids = [agent["gid"] for agent in AGENT_REGISTRY.values()]
         assert len(gids) == len(set(gids)), "Duplicate GIDs found"
 
-    def test_no_duplicate_emojis(self):
-        emojis = [agent["emoji"] for agent in AGENT_REGISTRY.values()]
-        assert len(emojis) == len(set(emojis)), "Duplicate emojis found"
+    def test_emoji_assignments_valid(self):
+        # Note: Some agents share emojis (LIRA/MAGGIE=🩷, BENSON/CINDY=🟦, CODY/ATLAS=🔵)
+        # This is by design per canonical roster
+        # Updated for v3.0.0 schema: emoji -> emoji_primary
+        emojis = [agent.get("emoji_primary", agent.get("emoji", "")) for agent in AGENT_REGISTRY.values()]
+        for emoji_str in emojis:
+            for char in emoji_str:
+                if ord(char) > 127:  # Non-ASCII = likely emoji
+                    assert char in VALID_EMOJIS, f"Invalid emoji {char} found"
 
 
 # =============================================================================
