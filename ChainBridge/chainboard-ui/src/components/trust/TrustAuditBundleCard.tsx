@@ -12,8 +12,6 @@
  * @see PAC-TRUST-CENTER-01 — Public Trust Center (Read-Only)
  */
 
-import { Archive, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
-
 import { classNames } from '../../utils/classNames';
 import { Card, CardContent, CardHeader } from '../ui/Card';
 import { TrustEmptyState } from './TrustEmptyState';
@@ -27,24 +25,12 @@ export interface TrustAuditBundleCardProps {
 }
 
 /**
- * Status display configuration.
+ * Status text mapping — neutral, no icons, no semantic colors.
  */
-const statusConfig = {
-  'offline-verifiable': {
-    icon: CheckCircle2,
-    text: 'Offline-verifiable',
-    color: 'text-slate-300',
-  },
-  pending: {
-    icon: Clock,
-    text: 'Pending',
-    color: 'text-slate-400',
-  },
-  unavailable: {
-    icon: AlertCircle,
-    text: 'Unavailable',
-    color: 'text-slate-500',
-  },
+const statusText: Record<string, string> = {
+  'offline-verifiable': 'offline-verifiable',
+  pending: 'pending',
+  unavailable: 'unavailable',
 };
 
 /**
@@ -60,18 +46,12 @@ export function TrustAuditBundleCard({
     return <TrustEmptyState section="Audit Bundle" className={className} />;
   }
 
-  const status = statusConfig[bundle.status];
-  const StatusIcon = status.icon;
-
   return (
     <Card className={classNames('overflow-hidden', className)}>
       <CardHeader className="border-b border-slate-800/50">
-        <div className="flex items-center gap-2">
-          <Archive className="h-5 w-5 text-slate-400" />
-          <h3 className="text-sm font-semibold text-slate-200">
-            Latest Audit Bundle
-          </h3>
-        </div>
+        <p className="text-xs text-slate-600 uppercase tracking-wider">
+          Audit Bundle
+        </p>
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -102,12 +82,9 @@ export function TrustAuditBundleCard({
             <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
               Status
             </p>
-            <div className="flex items-center gap-1.5">
-              <StatusIcon className={classNames('h-4 w-4', status.color)} />
-              <span className={classNames('text-sm', status.color)}>
-                {status.text}
-              </span>
-            </div>
+            <p className="text-sm text-slate-400 font-mono">
+              {statusText[bundle.status] ?? bundle.status}
+            </p>
           </div>
         </div>
 

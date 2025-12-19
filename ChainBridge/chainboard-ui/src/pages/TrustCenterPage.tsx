@@ -26,12 +26,20 @@ import {
 import type { GovernanceFingerprint, AuditBundleMetadata } from '../types/trust';
 import type { PDORecord } from '../components/trust/PDOArtifacts';
 
+/**
+ * UNLINKED / DEMO DATA — Hardcoded fingerprint.
+ * In production, this must be fetched from backend.
+ */
 const FINGERPRINT: GovernanceFingerprint = {
   fingerprint_hash: 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
   timestamp: '2025-12-17T00:00:00Z',
   schema_version: '1.0.0',
 };
 
+/**
+ * UNLINKED / DEMO DATA — Hardcoded audit bundle.
+ * In production, this must be fetched from backend.
+ */
 const AUDIT_BUNDLE: AuditBundleMetadata = {
   bundle_id: 'audit-bundle-2025-12-17-001',
   created_at: '2025-12-17T10:00:00Z',
@@ -40,8 +48,8 @@ const AUDIT_BUNDLE: AuditBundleMetadata = {
 };
 
 /**
- * Sample PDO records for demonstration.
- * In production, these would be fetched from backend.
+ * UNLINKED / DEMO DATA — Hardcoded PDO records.
+ * In production, these must be fetched from backend.
  */
 const PDO_RECORDS: PDORecord[] = [
   {
@@ -83,6 +91,11 @@ export function TrustCenterPage(): JSX.Element {
 
       {/* Main content — strict chronological order, no controls */}
       <main className="max-w-2xl mx-auto px-6 py-4 space-y-3">
+        {/* UNLINKED warning — demo data notice */}
+        <div className="border border-slate-600 bg-slate-900/80 px-4 py-3 text-xs text-slate-400 font-mono">
+          UNLINKED / DEMO DATA — Artifacts below are not linked to live backend
+        </div>
+
         {/* Non-Claims FIRST — legal hard stop, always visible */}
         <NonClaims />
 

@@ -1,15 +1,14 @@
 /**
  * OCIntelligenceWidget - Compact Intelligence Widget for Operator Console
  *
- * Shows Shadow Mode drift status in the OC right panel.
- * Integrates with Cody's /iq/shadow/* endpoints.
+ * NEUTRALIZED: PAC-BENSON-SONNY-ACTIVATION-BLOCK-UI-ENFORCEMENT-02
+ * - No semantic colors
+ * - No icons
+ * - No marketing language ("Excellent", "Good", "Degraded")
  */
-
-import { AlertTriangle, Zap } from "lucide-react";
 
 import { classNames } from "../../utils/classNames";
 import { useShadowStats, useShadowDrift } from "../../hooks/useShadowMode";
-import { DriftSignalBadge, DriftDot } from "../intel/DriftSignalBadge";
 import { Skeleton } from "../ui/Skeleton";
 
 interface OCIntelligenceWidgetProps {
@@ -52,11 +51,10 @@ export function OCIntelligenceWidget({ className }: OCIntelligenceWidgetProps): 
 
   if (isError) {
     return (
-      <div className={classNames("p-3 bg-red-500/5 rounded-lg border border-red-500/30", className)}>
-        <div className="flex items-center gap-2 text-xs text-red-400">
-          <AlertTriangle className="h-4 w-4" />
-          <span>Intelligence feed unavailable</span>
-        </div>
+      <div className={classNames("p-3 bg-slate-900/50 border border-slate-700/50", className)}>
+        <p className="text-xs text-slate-500 font-mono">
+          status: feed_unavailable
+        </p>
       </div>
     );
   }
@@ -66,8 +64,8 @@ export function OCIntelligenceWidget({ className }: OCIntelligenceWidgetProps): 
 
   if (!statsData || !driftData) {
     return (
-      <div className={classNames("p-3 bg-black/40 rounded-lg border border-slate-800", className)}>
-        <div className="text-xs text-slate-500 text-center py-4">Loading intelligence...</div>
+      <div className={classNames("p-3 bg-slate-900/50 border border-slate-700/50", className)}>
+        <p className="text-xs text-slate-600 font-mono text-center py-4">loading...</p>
       </div>
     );
   }
@@ -75,84 +73,56 @@ export function OCIntelligenceWidget({ className }: OCIntelligenceWidgetProps): 
   const p95Pct = statsData.p95_delta * 100;
 
   return (
-    <div className={classNames("p-3 bg-black/40 rounded-lg border border-slate-800", className)}>
+    <div className={classNames("p-3 bg-slate-900/50 border border-slate-700/50 font-mono", className)}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Zap className="h-4 w-4 text-indigo-400" />
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
-            Shadow Intel
-          </span>
-        </div>
-        <DriftSignalBadge
-          driftDetected={driftData.drift_detected}
-          p95Delta={driftData.p95_delta}
-          size="sm"
-        />
+      <div className="border-b border-slate-800/50 pb-2 mb-3">
+        <p className="text-xs text-slate-600 uppercase tracking-wider">
+          shadow_intel
+        </p>
       </div>
 
       {/* Mini KPIs */}
       <div className="grid grid-cols-2 gap-2 mb-3">
-        <div className="bg-slate-900/50 rounded-lg p-2 text-center">
-          <div className="text-lg font-bold tabular-nums text-slate-100">
+        <div className="bg-slate-900/50 border border-slate-800/50 p-2">
+          <p className="text-lg text-slate-400 tabular-nums">
             {statsData.count.toLocaleString()}
-          </div>
-          <div className="text-[10px] text-slate-500">Events (24h)</div>
+          </p>
+          <p className="text-xs text-slate-600">events_24h</p>
         </div>
-        <div className="bg-slate-900/50 rounded-lg p-2 text-center">
-          <div
-            className={classNames(
-              "text-lg font-bold tabular-nums",
-              p95Pct < 15 ? "text-emerald-400" : p95Pct < 25 ? "text-amber-400" : "text-red-400"
-            )}
-          >
+        <div className="bg-slate-900/50 border border-slate-800/50 p-2">
+          <p className="text-lg text-slate-400 tabular-nums">
             {p95Pct.toFixed(1)}%
-          </div>
-          <div className="text-[10px] text-slate-500">P95 Delta</div>
+          </p>
+          <p className="text-xs text-slate-600">p95_delta</p>
         </div>
       </div>
 
-      {/* P95 Progress Bar */}
+      {/* P95 Progress Bar - neutral gray */}
       <div className="space-y-1">
-        <div className="flex items-center justify-between text-[10px]">
-          <span className="text-slate-500">Model Alignment</span>
-          <span
-            className={classNames(
-              "font-medium",
-              p95Pct < 15 ? "text-emerald-400" : p95Pct < 25 ? "text-amber-400" : "text-red-400"
-            )}
-          >
-            {p95Pct < 15 ? "Excellent" : p95Pct < 25 ? "Good" : "Degraded"}
-          </span>
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-slate-600">model_alignment:</span>
+          <span className="text-slate-500">{(100 - p95Pct).toFixed(1)}%</span>
         </div>
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
+        <div className="h-1.5 w-full overflow-hidden bg-slate-800">
           <div
-            className={classNames(
-              "h-full transition-all duration-500 ease-out",
-              p95Pct < 15
-                ? "bg-emerald-500"
-                : p95Pct < 25
-                  ? "bg-amber-500"
-                  : "bg-red-500"
-            )}
+            className="h-full bg-slate-600 transition-all duration-500 ease-out"
             style={{ width: `${Math.min(100 - p95Pct * 4, 100)}%` }}
           />
         </div>
       </div>
 
-      {/* Drift indicator */}
+      {/* Drift indicator - neutral */}
       {driftData.drift_detected && (
-        <div className="mt-3 flex items-center gap-2 rounded-lg bg-red-500/10 border border-red-500/30 px-2 py-1.5">
-          <DriftDot driftDetected={true} p95Delta={driftData.p95_delta} />
-          <span className="text-[10px] text-red-400">
-            {driftData.high_delta_count} high-delta events detected
-          </span>
+        <div className="mt-3 border border-slate-600 bg-slate-900/50 px-2 py-1.5">
+          <p className="text-xs text-slate-500">
+            drift_detected: {driftData.high_delta_count} high_delta_events
+          </p>
         </div>
       )}
 
       {/* Model version */}
-      <div className="mt-3 text-[9px] text-slate-600 text-right">
-        Model {statsData.model_version}
+      <div className="mt-3 text-xs text-slate-600 text-right">
+        model: {statsData.model_version}
       </div>
     </div>
   );

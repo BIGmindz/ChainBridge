@@ -152,19 +152,51 @@ Every PAC **MUST** include:
    Color Tag: <COLOR>
    ```
 
-### Mandatory Sections (1–8)
-All PACs **MUST** include these eight sections in order:
+### Mandatory Sections (1–9)
+All PACs **MUST** include these nine sections in order:
 
 | # | Section | Purpose |
 |---|---------|---------|
 | 1 | **AGENT HEADER** | Agent name, GID, role, authority |
 | 2 | **CONTEXT & GOAL** | Current reality, desired outcome, success definition |
 | 3 | **CONSTRAINTS** | Technical, governance, or timeline constraints |
-| 4 | **TASKS** | Numbered tasks, owners, sequencing |
-| 5 | **FILE TARGETS** | Exact paths to be added/edited |
-| 6 | **CLI** | Shell commands for setup/validation |
-| 7 | **ACCEPTANCE** | Objective tests, linting, reviews for sign-off |
-| 8 | **HANDOFF** | How work is handed to next agent or supervisor |
+| 4 | **LOCKS ACKNOWLEDGED** | Constitutional locks affected by this PAC (see below) |
+| 5 | **TASKS** | Numbered tasks, owners, sequencing |
+| 6 | **FILE TARGETS** | Exact paths to be added/edited |
+| 7 | **CLI** | Shell commands for setup/validation |
+| 8 | **ACCEPTANCE** | Objective tests, linting, reviews for sign-off |
+| 9 | **HANDOFF** | How work is handed to next agent or supervisor |
+
+### Lock Acknowledgment Requirement ⚪ NEW
+
+**Effective:** 2025-12-18
+**Owner:** GID-00 BENSON — Chief Architect & Orchestrator
+**Reference:** PAC-BENSON-CONSTITUTION-ENGINE-01
+
+Every PAC that touches governance-scoped code **MUST** declare which constitutional locks it acknowledges:
+
+```yaml
+locks_acknowledged:
+  - LOCK-GW-IMMUTABILITY-001
+  - LOCK-PDO-IMMUTABILITY-001
+  - LOCK-VERIFY-SEMANTICS-001
+```
+
+**Scope Mapping:**
+| PAC Touches | Must Acknowledge |
+|-------------|------------------|
+| gateway/* | All LOCK-GW-* |
+| occ/* | All LOCK-PDO-*, LOCK-INT-* |
+| proofpack/* | All LOCK-PP-*, LOCK-VERIFY-* |
+| governance/* | All LOCK-GOV-*, LOCK-AUTH-* |
+| agents/* | All LOCK-AGENT-* |
+
+**Enforcement:**
+- Missing lock acknowledgment → PAC returned for correction
+- Scope violation (touched area not acknowledged) → PAC rejected
+- Forbidden zone touched without supersession → PAC blocked
+
+**Reference:** See `docs/constitution/LOCK_REGISTRY.yaml` for all active locks
 
 ### Enforcement
 - PACs missing START/END banners or any of sections 1–8 are **non-compliant**.
