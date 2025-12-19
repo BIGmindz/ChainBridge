@@ -1,0 +1,592 @@
+name: Constitution Check
+# PAC Reference: PAC-BENSON-CONSTITUTION-ENGINE-01
+# Classification: CRITICAL | Owner: BENSON (GID-00)
+# 
+# This workflow enforces the Constitution Engine:
+# - Validates lock registry integrity
+# - Checks enforcement coverage
+# - Validates PAC lock acknowledgments
+# - Detects forbidden zone modifications
+
+on:
+  pull_request:
+    branches: [main, develop, feature/*]
+    paths:
+      - 'docs/constitution/**'
+      - 'core/governance/**'
+      - '.github/workflows/constitution_check.yml'
+      - '**/*.py'
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  constitution-validation:
+    name: "🔒 Constitution Engine Validation"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install pyyaml
+
+      - name: Validate Lock Registry Exists
+        run: |
+          if [ ! -f "docs/constitution/LOCK_REGISTRY.yaml" ]; then
+            echo "❌ CONSTITUTION VIOLATION: Lock registry not found"
+            echo "Required: docs/constitution/LOCK_REGISTRY.yaml"
+            exit 1
+          fi
+          echo "✅ Lock registry exists"
+
+      - name: Validate Lock Registry Schema
+        run: |
+          python3 << 'EOF'
+          import yaml
+          import sys
+
+          REQUIRED_LOCK_FIELDS = ['lock_id', 'description', 'scope', 'type', 'enforcement', 'severity', 'violation_policy']
+          VALID_SEVERITIES = ['CRITICAL', 'HIGH', 'MEDIUM']
+          VALID_TYPES = ['invariant', 'constraint', 'boundary', 'gate']
+          VALID_ACTIONS = ['HARD_FAIL', 'SOFT_FAIL']
+
+          try:
+              with open('docs/constitution/LOCK_REGISTRY.yaml', 'r') as f:
+                  registry = yaml.safe_load(f)
+          except Exception as e:
+              print(f"❌ Failed to parse lock registry: {e}")
+              sys.exit(1)
+
+          if 'locks' not in registry:
+              print("❌ Lock registry missing 'locks' section")
+              sys.exit(1)
+
+          errors = []
+          warnings = []
+
+          for lock in registry['locks']:
+              lock_id = lock.get('lock_id', 'UNKNOWN')
+              
+              # Check required fields
+              for field in REQUIRED_LOCK_FIELDS:
+                  if field not in lock:
+                      errors.append(f"{lock_id}: Missing required field '{field}'")
+              
+              # Validate severity
+              severity = lock.get('severity')
+              if severity and severity not in VALID_SEVERITIES:
+                  errors.append(f"{lock_id}: Invalid severity '{severity}'")
+              
+              # Validate type
+              lock_type = lock.get('type')
+              if lock_type and lock_type not in VALID_TYPES:
+                  errors.append(f"{lock_id}: Invalid type '{lock_type}'")
+              
+              # Check enforcement exists
+              enforcement = lock.get('enforcement', [])
+              if not enforcement:
+                  errors.append(f"{lock_id}: No enforcement mechanism defined")
+              
+              # Validate violation policy
+              policy = lock.get('violation_policy', {})
+              action = policy.get('action')
+              if action and action not in VALID_ACTIONS:
+                  errors.append(f"{lock_id}: Invalid violation action '{action}'")
+              
+              # Check telemetry for CRITICAL locks
+              if severity == 'CRITICAL' and policy.get('telemetry') != 'REQUIRED':
+                  warnings.append(f"{lock_id}: CRITICAL lock should have REQUIRED telemetry")
+
+          if warnings:
+              print("⚠️ Warnings:")
+              for w in warnings:
+                  print(f"   - {w}")
+
+          if errors:
+              print("❌ CONSTITUTION VIOLATIONS:")
+              for e in errors:
+                  print(f"   - {e}")
+              sys.exit(1)
+
+          print(f"✅ Lock registry valid: {len(registry['locks'])} locks defined")
+          EOF
+
+      - name: Validate Enforcement Coverage
+        run: |
+          python3 << 'EOF'
+          import yaml
+          import sys
+
+          with open('docs/constitution/LOCK_REGISTRY.yaml', 'r') as f:
+              registry = yaml.safe_load(f)
+
+          locks_without_enforcement = []
+
+          for lock in registry['locks']:
+              lock_id = lock.get('lock_id', 'UNKNOWN')
+              enforcement = lock.get('enforcement', [])
+              
+              if not enforcement:
+                  locks_without_enforcement.append(lock_id)
+
+          if locks_without_enforcement:
+              print("❌ CONSTITUTION VIOLATION: Locks without enforcement")
+              for lock_id in locks_without_enforcement:
+                  print(f"   - {lock_id}")
+              sys.exit(1)
+
+          print("✅ All locks have enforcement mechanisms")
+          EOF
+
+      - name: Check for Lock Registry Modification
+        if: github.event_name == 'pull_request'
+        run: |
+          python3 << 'EOF'
+          import subprocess
+          import sys
+          import os
+          import re
+
+          # Get changed files
+          result = subprocess.run(
+              ['git', 'diff', '--name-only', 'origin/main...HEAD'],
+              capture_output=True, text=True
+          )
+          changed_files = result.stdout.strip().split('\n')
+
+          LOCK_REGISTRY = 'docs/constitution/LOCK_REGISTRY.yaml'
+          
+          if LOCK_REGISTRY in changed_files:
+              print("⚠️ Lock registry modified - checking for PAC reference...")
+              
+              # Check PR description for PAC reference
+              pr_body = os.environ.get('PR_BODY', '')
+              
+              pac_pattern = re.compile(r'PAC-[A-Z]+-[A-Z0-9-]+', re.IGNORECASE)
+              if not pac_pattern.search(pr_body):
+                  print("❌ CONSTITUTION VIOLATION: Lock registry modified without PAC reference")
+                  print("   Lock registry can only be modified via PAC")
+                  print("   Add PAC reference to PR description")
+                  sys.exit(1)
+              
+              print("✅ PAC reference found for lock registry modification")
+          else:
+              print("✅ Lock registry not modified")
+          EOF
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+
+      - name: Check Forbidden Zone Modifications
+        if: github.event_name == 'pull_request'
+        run: |
+          python3 << 'EOF'
+          import yaml
+          import subprocess
+          import sys
+          import os
+          import re
+
+          # Load lock registry
+          with open('docs/constitution/LOCK_REGISTRY.yaml', 'r') as f:
+              registry = yaml.safe_load(f)
+
+          # Collect all forbidden zones
+          forbidden_zones = []
+          for lock in registry['locks']:
+              zones = lock.get('forbidden_zones', [])
+              for zone in zones:
+                  # Extract path from zone (may have notes in parentheses)
+                  zone_path = zone.split(' ')[0]
+                  forbidden_zones.append({
+                      'path': zone_path,
+                      'lock_id': lock.get('lock_id'),
+                      'full': zone
+                  })
+
+          if not forbidden_zones:
+              print("✅ No forbidden zones defined")
+              sys.exit(0)
+
+          # Get changed files
+          result = subprocess.run(
+              ['git', 'diff', '--name-only', 'origin/main...HEAD'],
+              capture_output=True, text=True
+          )
+          changed_files = result.stdout.strip().split('\n')
+
+          violations = []
+          for changed_file in changed_files:
+              for zone in forbidden_zones:
+                  if zone['path'] in changed_file:
+                      violations.append({
+                          'file': changed_file,
+                          'zone': zone['full'],
+                          'lock_id': zone['lock_id']
+                      })
+
+          if violations:
+              # Check for supersession PAC in PR description
+              pr_body = os.environ.get('PR_BODY', '')
+              supersession_pattern = re.compile(r'SUPERSESSION|LOCK-.*-\d{3}', re.IGNORECASE)
+              
+              if not supersession_pattern.search(pr_body):
+                  print("❌ FORBIDDEN ZONE VIOLATION:")
+                  for v in violations:
+                      print(f"   File: {v['file']}")
+                      print(f"   Zone: {v['zone']}")
+                      print(f"   Protected by: {v['lock_id']}")
+                      print()
+                  print("   Forbidden zones require supersession PAC to modify")
+                  sys.exit(1)
+              else:
+                  print("⚠️ Forbidden zone modified with supersession PAC reference")
+          else:
+              print("✅ No forbidden zone violations")
+          EOF
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+
+      - name: Run Constitution Engine CLI Validation
+        run: |
+          # Run the Constitution Engine's built-in validation
+          python3 -c "
+          import sys
+          sys.path.insert(0, '.')
+          
+          try:
+              from core.governance.constitution_engine import ConstitutionEngine
+              
+              engine = ConstitutionEngine()
+              engine.load_registry()
+              
+              # Validate enforcement coverage
+              missing = engine.validate_enforcement_coverage()
+              if missing:
+                  print('❌ Locks without enforcement:')
+                  for lock_id in missing:
+                      print(f'   - {lock_id}')
+                  sys.exit(1)
+              
+              # Get and print statistics
+              stats = engine.get_statistics()
+              print('✅ Constitution Engine validation passed')
+              print(f'   Total active locks: {stats[\"total_locks\"]}')
+              print(f'   By severity: {stats[\"by_severity\"]}')
+              print(f'   Registry hash: {stats[\"registry_hash\"][:16]}...')
+              
+          except ImportError as e:
+              print(f'⚠️ Could not import Constitution Engine: {e}')
+              print('   Falling back to YAML-only validation')
+          except Exception as e:
+              print(f'❌ Constitution Engine error: {e}')
+              sys.exit(1)
+          "
+
+  pac-lock-acknowledgment:
+    name: "📋 PAC Lock Acknowledgment Check"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install pyyaml
+
+      - name: Check PAC Lock Acknowledgment
+        run: |
+          python3 << 'EOF'
+          import yaml
+          import subprocess
+          import sys
+          import os
+          import re
+
+          # Load lock registry
+          with open('docs/constitution/LOCK_REGISTRY.yaml', 'r') as f:
+              registry = yaml.safe_load(f)
+
+          # Build scope-to-locks mapping
+          scope_locks = {}
+          for lock in registry['locks']:
+              if lock.get('status') == 'SUPERSEDED':
+                  continue
+              lock_id = lock.get('lock_id')
+              for scope in lock.get('scope', []):
+                  if scope not in scope_locks:
+                      scope_locks[scope] = []
+                  # Only include pac_gate locks
+                  enforcement = lock.get('enforcement', [])
+                  has_pac_gate = any('pac_gate' in str(e) for e in enforcement)
+                  if has_pac_gate:
+                      scope_locks[scope].append(lock_id)
+
+          # Get changed files
+          result = subprocess.run(
+              ['git', 'diff', '--name-only', 'origin/main...HEAD'],
+              capture_output=True, text=True
+          )
+          changed_files = result.stdout.strip().split('\n')
+
+          # Determine affected scopes from changed files
+          affected_scopes = set()
+          scope_patterns = {
+              'gateway': ['gateway/', 'core/gateway'],
+              'occ': ['core/occ/', 'occ/'],
+              'proofpack': ['proofpack/', 'proof/'],
+              'governance': ['core/governance/', 'governance/'],
+              'agents': ['agents/', 'tests/agents/'],
+              'chainpay': ['chainpay', 'ChainBridge/chainpay'],
+              'chainiq': ['chainiq', 'ChainBridge/chainiq'],
+              'boot': ['boot/', 'startup/'],
+              'constitution': ['docs/constitution/', 'constitution/'],
+          }
+
+          for changed_file in changed_files:
+              for scope, patterns in scope_patterns.items():
+                  for pattern in patterns:
+                      if pattern in changed_file:
+                          affected_scopes.add(scope)
+
+          if not affected_scopes:
+              print("✅ No governance-scoped files modified")
+              sys.exit(0)
+
+          print(f"📁 Affected scopes: {', '.join(affected_scopes)}")
+
+          # Get required locks for affected scopes
+          required_locks = set()
+          for scope in affected_scopes:
+              if scope in scope_locks:
+                  required_locks.update(scope_locks[scope])
+
+          if not required_locks:
+              print("✅ No pac_gate locks apply to modified files")
+              sys.exit(0)
+
+          print(f"🔒 Required locks: {len(required_locks)}")
+
+          # Check PR description for PAC pattern
+          pr_body = os.environ.get('PR_BODY', '')
+          
+          # Look for PAC reference
+          pac_pattern = re.compile(r'PAC-[A-Z]+-[A-Z0-9-]+', re.IGNORECASE)
+          pac_match = pac_pattern.search(pr_body)
+          
+          if not pac_match:
+              # Not a PAC - check if it's a minor change
+              if len(changed_files) <= 3 and not any(s in ['governance', 'gateway', 'constitution'] for s in affected_scopes):
+                  print("⚠️ Non-PAC change to governance-adjacent files")
+                  print("   Consider adding PAC reference for audit trail")
+                  sys.exit(0)
+              else:
+                  print("ℹ️ No PAC reference found - governance changes may require PAC")
+                  sys.exit(0)
+
+          # Look for locks_acknowledged section
+          ack_pattern = re.compile(r'locks_acknowledged:\s*\n((?:\s*-\s*LOCK-[^\n]+\n?)+)', re.MULTILINE)
+          ack_match = ack_pattern.search(pr_body)
+
+          if not ack_match:
+              print("⚠️ PAC found but no locks_acknowledged section")
+              print("   PACs affecting governance scopes should acknowledge locks:")
+              print()
+              print("   locks_acknowledged:")
+              for lock_id in sorted(required_locks)[:5]:
+                  print(f"     - {lock_id}")
+              if len(required_locks) > 5:
+                  print(f"     ... and {len(required_locks) - 5} more")
+              sys.exit(0)
+
+          # Parse acknowledged locks
+          acknowledged_raw = ack_match.group(1)
+          acknowledged_locks = set(re.findall(r'LOCK-[A-Z]+-[A-Z0-9-]+', acknowledged_raw))
+
+          # Check for missing acknowledgments
+          missing_locks = required_locks - acknowledged_locks
+          
+          if missing_locks:
+              print("⚠️ Missing lock acknowledgments:")
+              for lock_id in sorted(missing_locks):
+                  print(f"   - {lock_id}")
+              print()
+              print("   Add missing locks to locks_acknowledged section")
+              # Warning only, not blocking
+              sys.exit(0)
+
+          print("✅ All required locks acknowledged")
+          EOF
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+
+  lock-monotonicity:
+    name: "📈 Lock Monotonicity Check"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install pyyaml
+
+      - name: Check Lock Monotonicity
+        run: |
+          python3 << 'EOF'
+          import yaml
+          import subprocess
+          import sys
+
+          LOCK_REGISTRY = 'docs/constitution/LOCK_REGISTRY.yaml'
+
+          # Check if lock registry was modified
+          result = subprocess.run(
+              ['git', 'diff', '--name-only', 'origin/main...HEAD'],
+              capture_output=True, text=True
+          )
+          changed_files = result.stdout.strip().split('\n')
+
+          if LOCK_REGISTRY not in changed_files:
+              print("✅ Lock registry not modified - monotonicity check skipped")
+              sys.exit(0)
+
+          # Get current registry
+          with open(LOCK_REGISTRY, 'r') as f:
+              current = yaml.safe_load(f)
+
+          # Get previous registry from main branch
+          try:
+              result = subprocess.run(
+                  ['git', 'show', f'origin/main:{LOCK_REGISTRY}'],
+                  capture_output=True, text=True, check=True
+              )
+              previous = yaml.safe_load(result.stdout)
+          except subprocess.CalledProcessError:
+              print("✅ Lock registry is new - no monotonicity check needed")
+              sys.exit(0)
+
+          # Build lock dictionaries
+          current_locks = {l['lock_id']: l for l in current.get('locks', [])}
+          previous_locks = {l['lock_id']: l for l in previous.get('locks', [])}
+
+          violations = []
+
+          # Check each previous lock
+          for lock_id, prev_lock in previous_locks.items():
+              if lock_id not in current_locks:
+                  # Lock removed - check if it was superseded
+                  superseded = False
+                  for curr_lock in current_locks.values():
+                      if prev_lock.get('lock_id') == curr_lock.get('supersedes'):
+                          superseded = True
+                          break
+                  if not superseded:
+                      violations.append(f"{lock_id}: Lock removed without supersession")
+                  continue
+
+              curr_lock = current_locks[lock_id]
+
+              # Check scope hasn't shrunk
+              prev_scope = set(prev_lock.get('scope', []))
+              curr_scope = set(curr_lock.get('scope', []))
+              if prev_scope - curr_scope:
+                  violations.append(f"{lock_id}: Scope reduced (removed: {prev_scope - curr_scope})")
+
+              # Check severity hasn't weakened
+              severity_order = {'CRITICAL': 3, 'HIGH': 2, 'MEDIUM': 1}
+              prev_sev = severity_order.get(prev_lock.get('severity'), 0)
+              curr_sev = severity_order.get(curr_lock.get('severity'), 0)
+              if curr_sev < prev_sev:
+                  violations.append(f"{lock_id}: Severity weakened ({prev_lock.get('severity')} → {curr_lock.get('severity')})")
+
+              # Check enforcement hasn't been removed
+              prev_enf = len(prev_lock.get('enforcement', []))
+              curr_enf = len(curr_lock.get('enforcement', []))
+              if curr_enf < prev_enf:
+                  violations.append(f"{lock_id}: Enforcement mechanisms reduced ({prev_enf} → {curr_enf})")
+
+          if violations:
+              print("❌ LOCK MONOTONICITY VIOLATIONS:")
+              print("   Locks can only become stricter, never weaker")
+              print()
+              for v in violations:
+                  print(f"   - {v}")
+              sys.exit(1)
+
+          print("✅ Lock monotonicity preserved")
+          EOF
+
+  constitution-summary:
+    name: "📊 Constitution Check Summary"
+    runs-on: ubuntu-latest
+    needs: [constitution-validation, pac-lock-acknowledgment, lock-monotonicity]
+    if: always()
+
+    steps:
+      - name: Check Results
+        run: |
+          echo "═══════════════════════════════════════════════════════════"
+          echo "         CONSTITUTION ENGINE CHECK SUMMARY                  "
+          echo "═══════════════════════════════════════════════════════════"
+          echo ""
+          
+          if [ "${{ needs.constitution-validation.result }}" == "success" ]; then
+            echo "✅ Constitution Validation: PASSED"
+          else
+            echo "❌ Constitution Validation: FAILED"
+          fi
+          
+          if [ "${{ needs.pac-lock-acknowledgment.result }}" == "success" ]; then
+            echo "✅ PAC Lock Acknowledgment: PASSED"
+          elif [ "${{ needs.pac-lock-acknowledgment.result }}" == "skipped" ]; then
+            echo "⏭️ PAC Lock Acknowledgment: SKIPPED (not a PR)"
+          else
+            echo "❌ PAC Lock Acknowledgment: FAILED"
+          fi
+          
+          if [ "${{ needs.lock-monotonicity.result }}" == "success" ]; then
+            echo "✅ Lock Monotonicity: PASSED"
+          elif [ "${{ needs.lock-monotonicity.result }}" == "skipped" ]; then
+            echo "⏭️ Lock Monotonicity: SKIPPED (not a PR)"
+          else
+            echo "❌ Lock Monotonicity: FAILED"
+          fi
+          
+          echo ""
+          echo "═══════════════════════════════════════════════════════════"
+          
+          # Fail if constitution-validation failed (critical)
+          if [ "${{ needs.constitution-validation.result }}" != "success" ]; then
+            exit 1
+          fi

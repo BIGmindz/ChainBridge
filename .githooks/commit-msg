@@ -1,0 +1,117 @@
+#!/bin/sh
+#
+# PAC-DAN-PAC-ENFORCEMENT-01
+# Git commit-msg hook: Enforce PAC ID in commit messages
+#
+# Author: DAN (GID-07)
+# Date: 2025-12-19
+#
+# ENFORCEMENT RULE:
+#   All commits MUST contain a valid PAC ID in the format:
+#   PAC-[A-Z]+-[A-Z0-9-]+
+#
+# ALLOWLIST:
+#   Commits that ONLY touch the following paths bypass enforcement:
+#   - docs/
+#   - .github/
+#   - README.md
+#
+
+set -e
+
+COMMIT_MSG_FILE="$1"
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# PAC ID regex pattern (POSIX extended regex)
+PAC_PATTERN='PAC-[A-Z]+-[A-Z0-9-]+'
+
+# Allowlisted paths (commits touching ONLY these paths bypass)
+ALLOWLIST_PATTERNS='
+^docs/
+^\.github/
+^README\.md$
+'
+
+# =============================================================================
+# FUNCTIONS
+# =============================================================================
+
+check_allowlist() {
+    # Get list of staged files for this commit
+    # For commit-msg hook, we check what's staged
+    STAGED_FILES=$(git diff --cached --name-only 2>/dev/null || echo "")
+    
+    if [ -z "$STAGED_FILES" ]; then
+        # No staged files (e.g., amend with no changes) - require PAC
+        return 1
+    fi
+    
+    # Check if ALL staged files match allowlist
+    for file in $STAGED_FILES; do
+        MATCHED=0
+        
+        # Check against each allowlist pattern
+        if echo "$file" | grep -qE '^docs/'; then
+            MATCHED=1
+        elif echo "$file" | grep -qE '^\.github/'; then
+            MATCHED=1
+        elif echo "$file" | grep -qE '^README\.md$'; then
+            MATCHED=1
+        fi
+        
+        if [ "$MATCHED" -eq 0 ]; then
+            # File not in allowlist - require PAC
+            return 1
+        fi
+    done
+    
+    # All files in allowlist - bypass
+    return 0
+}
+
+print_error() {
+    # Print to stderr with clear formatting
+    echo "" >&2
+    echo "════════════════════════════════════════════════════════════════════" >&2
+    echo "❌ COMMIT BLOCKED: Missing PAC ID" >&2
+    echo "════════════════════════════════════════════════════════════════════" >&2
+    echo "" >&2
+    echo "Your commit message:" >&2
+    echo "  \"$COMMIT_MSG\"" >&2
+    echo "" >&2
+    echo "REQUIRED FORMAT:" >&2
+    echo "  Commit message must contain a PAC ID matching:" >&2
+    echo "  PAC-[AGENT]-[TASK-ID]" >&2
+    echo "" >&2
+    echo "EXAMPLES:" >&2
+    echo "  PAC-CODY-EXEC-SPINE-01: Implement execution spine" >&2
+    echo "  PAC-SONNY-PROOF-VIEWER-01: Add proof artifact viewer" >&2
+    echo "  feat: new feature PAC-DAN-CI-LINT-01" >&2
+    echo "" >&2
+    echo "BYPASS:" >&2
+    echo "  Commits touching ONLY docs/, .github/, or README.md are exempt." >&2
+    echo "" >&2
+    echo "See: docs/governance/PAC_ENFORCEMENT.md" >&2
+    echo "════════════════════════════════════════════════════════════════════" >&2
+    echo "" >&2
+}
+
+# =============================================================================
+# MAIN
+# =============================================================================
+
+# Check if commit is allowlisted (docs-only, etc.)
+if check_allowlist; then
+    # Allowlisted - bypass PAC check
+    exit 0
+fi
+
+# Check for PAC ID in commit message
+if echo "$COMMIT_MSG" | grep -qE "$PAC_PATTERN"; then
+    # Valid PAC ID found
+    exit 0
+fi
+
+# No PAC ID found - FAIL
+print_error
+exit 1

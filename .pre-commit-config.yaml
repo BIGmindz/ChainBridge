@@ -78,3 +78,34 @@ repos:
         language: system
         pass_filenames: false
         stages: [manual]
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # PAC Governance: Activation Block Enforcement
+  # PAC Reference: PAC-DAN-ACTIVATION-GATE-CI-ENFORCEMENT-01
+  # ─────────────────────────────────────────────────────────────────────────────
+  - repo: local
+    hooks:
+      - id: pac-activation-gate
+        name: "🚦 PAC Activation Gate (MANDATORY)"
+        entry: python scripts/ci/activation_gate.py --file
+        language: system
+        files: \.py$
+        pass_filenames: true
+        stages: [commit]
+        description: "Enforces activation block presence and ordering at commit time"
+
+      - id: pac-activation-block-check
+        name: PAC Activation Block Enforcement
+        entry: python tools/pac_linter.py --check
+        language: system
+        files: \.py$
+        pass_filenames: false
+        stages: [commit]
+
+      - id: pac-linter
+        name: PAC Linter (Full)
+        entry: python tools/pac_linter.py --check
+        language: system
+        files: \.py$
+        pass_filenames: false
+        stages: [push]
