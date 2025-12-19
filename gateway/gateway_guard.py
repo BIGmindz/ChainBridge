@@ -1,7 +1,13 @@
-"""Gateway execution guard that applies routing and rate limits before decisions."""
+"""Gateway execution guard that applies routing and rate limits before decisions.
+
+Constitutional Enforcement: PAC-CODY-CONSTITUTION-ENFORCEMENT-02
+- Enforces LOCK-GW-IMMUTABILITY-001, LOCK-GW-BINARY-DECISION-001
+- Emits EXECUTION_BLOCKED telemetry on violation
+"""
 
 from __future__ import annotations
 
+import logging
 from typing import Mapping, Tuple, Union
 
 from gateway.decision_engine import DecisionEngine
@@ -9,6 +15,9 @@ from gateway.model_router import ModelRouter, RouteDecision, TaskProfile
 from gateway.rate_limit import RateLimiter, RateLimitError, RequestContext
 from gateway.validator import GatewayValidator
 from tracking.metrics_collector import MetricsCollector
+
+
+logger = logging.getLogger("gateway.gateway_guard")
 
 
 class GatewayExecutionGuard:

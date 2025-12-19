@@ -281,6 +281,226 @@ class TestEdgeCases:
 # =============================================================================
 
 
+# =============================================================================
+# GAP-V TESTS: VERIFICATION FAILURE PATH COVERAGE (VERIFICATION_INVARIANTS.md)
+# =============================================================================
+
+
+class TestVerificationFailurePaths:
+    """
+    Tests for explicit verification failure paths.
+
+    Per VERIFICATION_INVARIANTS.md:
+    - GAP-V-01: Lineage timestamp non-monotonicity → INVALID_LINEAGE
+    - GAP-V-02: Reference mismatch (input_refs) → INVALID_REFERENCES
+    - GAP-V-03: Decision artifact tamper → INVALID_ARTIFACT_HASH
+    - GAP-V-04: Outcome artifact tamper → INVALID_ARTIFACT_HASH
+    """
+
+    def test_lineage_non_monotonic_timestamp_fails(self, test_artifact_resolver):
+        """
+        GAP-V-01: Non-monotonic lineage timestamps fail at V-STEP-04.
+
+        Per V-INV-008: Lineage chain requires ascending recorded_at.
+        Verification must return INVALID_LINEAGE when timestamps go backward.
+        """
+        store = get_pdo_store()
+        reset_pdo_store()
+
+        # Create first PDO (older timestamp)
+        pdo1_create = PDOCreate(
+            source_system=PDOSourceSystem.OCC,
+            outcome="approved",
+            actor="test-agent",
+            input_refs=["input:lin_001"],
+            decision_ref="decision:lin_001",
+            outcome_ref="outcome:lin_001",
+        )
+        pdo1 = store.create(pdo1_create)
+
+        # Create second PDO linked to first (newer timestamp normally)
+        pdo2_create = PDOCreate(
+            source_system=PDOSourceSystem.OCC,
+            outcome="approved",
+            actor="test-agent",
+            previous_pdo_id=pdo1.pdo_id,
+            input_refs=["input:lin_002"],
+            decision_ref="decision:lin_002",
+            outcome_ref="outcome:lin_002",
+        )
+        pdo2 = store.create(pdo2_create)
+
+        # Generate valid ProofPack
+        generator = ProofPackGenerator(artifact_resolver=test_artifact_resolver)
+        proofpack = generator.generate(pdo2.pdo_id)
+
+        # Tamper: Make lineage PDO's timestamp NEWER than successor
+        # Find lineage entry for pdo1
+        lineage_files = [k for k in proofpack["files"] if k.startswith("lineage/")]
+        if lineage_files:
+            lineage_path = lineage_files[0]
+            lineage_data = json.loads(proofpack["files"][lineage_path])
+
+            # Set timestamp to far future (non-monotonic: older PDO has newer timestamp)
+            lineage_data["recorded_at"] = "2099-12-31T23:59:59.999999Z"
+
+            # Must recompute hash after tampering record
+            canonical_data = {
+                "pdo_id": str(lineage_data.get("pdo_id")),
+                "version": lineage_data.get("version", "1.0"),
+                "input_refs": sorted(lineage_data.get("input_refs", [])),
+                "decision_ref": lineage_data.get("decision_ref"),
+                "outcome_ref": lineage_data.get("outcome_ref"),
+                "outcome": lineage_data.get("outcome"),
+                "source_system": lineage_data.get("source_system"),
+                "actor": lineage_data.get("actor"),
+                "actor_type": lineage_data.get("actor_type", "system"),
+                "recorded_at": lineage_data.get("recorded_at"),
+                "previous_pdo_id": str(lineage_data.get("previous_pdo_id")) if lineage_data.get("previous_pdo_id") else None,
+                "correlation_id": lineage_data.get("correlation_id"),
+            }
+            from core.occ.proofpack.generator import compute_json_hash, compute_sha256
+            lineage_data["hash"] = compute_json_hash(canonical_data)
+            proofpack["files"][lineage_path] = canonical_json(lineage_data)
+
+            # Also update manifest hash for lineage file
+            manifest = json.loads(proofpack["files"]["manifest.json"])
+            for entry in manifest.get("contents", {}).get("lineage", []):
+                if entry.get("path") == lineage_path:
+                    entry["hash"] = compute_sha256(proofpack["files"][lineage_path].encode("utf-8"))
+
+            # Recompute manifest hash
+            manifest_data = {
+                "proofpack_version": manifest.get("proofpack_version"),
+                "pdo_id": manifest.get("pdo_id"),
+                "exported_at": manifest.get("exported_at"),
+                "exporter": manifest.get("exporter"),
+                "contents": manifest.get("contents"),
+            }
+            manifest["integrity"]["manifest_hash"] = compute_json_hash(manifest_data)
+            proofpack["files"]["manifest.json"] = canonical_json(manifest)
+
+        verifier = ProofPackVerifier()
+        result = verifier.verify(proofpack)
+
+        # V-HALT-001: Must halt at V-STEP-04 with INVALID_LINEAGE
+        assert result.outcome == VerificationOutcome.INVALID_LINEAGE
+        assert result.is_valid is False
+        assert "timestamp" in result.error_message.lower() or "lineage" in result.error_message.lower()
+
+    def test_reference_mismatch_input_refs_fails(self, valid_proofpack):
+        """
+        GAP-V-02: Input refs mismatch fails at V-STEP-05.
+
+        Per V-INV-009: Manifest input_refs must equal PDO input_refs (set equality).
+        Verification must return INVALID_REFERENCES when sets differ.
+        """
+        tampered = copy.deepcopy(valid_proofpack)
+
+        # Tamper: Add extra input ref to manifest that PDO doesn't have
+        from core.occ.proofpack.generator import compute_json_hash, compute_sha256
+        manifest = json.loads(tampered["files"]["manifest.json"])
+
+        # Create bogus artifact with proper content and hash
+        bogus_content = canonical_json({"ref": "input:BOGUS_EXTRA_REF", "data": "bogus"})
+        bogus_hash = compute_sha256(bogus_content.encode("utf-8"))
+
+        manifest["contents"]["inputs"].append({
+            "ref": "input:BOGUS_EXTRA_REF",
+            "path": "inputs/bogus.json",
+            "hash": bogus_hash,
+        })
+
+        # Recompute manifest hash
+        manifest_data = {
+            "proofpack_version": manifest.get("proofpack_version"),
+            "pdo_id": manifest.get("pdo_id"),
+            "exported_at": manifest.get("exported_at"),
+            "exporter": manifest.get("exporter"),
+            "contents": manifest.get("contents"),
+        }
+        manifest["integrity"]["manifest_hash"] = compute_json_hash(manifest_data)
+        tampered["files"]["manifest.json"] = canonical_json(manifest)
+
+        # Add dummy file with matching hash so it passes artifact hash check
+        tampered["files"]["inputs/bogus.json"] = bogus_content
+
+        verifier = ProofPackVerifier()
+        result = verifier.verify(tampered)
+
+        # V-HALT-001: Must halt at V-STEP-05 with INVALID_REFERENCES
+        assert result.outcome == VerificationOutcome.INVALID_REFERENCES
+        assert result.is_valid is False
+        assert "input" in result.error_message.lower() or "mismatch" in result.error_message.lower()
+
+    def test_decision_artifact_tamper_fails(self, valid_proofpack):
+        """
+        GAP-V-03: Decision artifact tampering fails at V-STEP-02.
+
+        Per V-INV-005: Artifact hash verification uses SHA-256 of file bytes.
+        Decision artifact modification must return INVALID_ARTIFACT_HASH.
+        """
+        tampered = copy.deepcopy(valid_proofpack)
+
+        # Find decision file
+        decision_path = None
+        manifest = json.loads(tampered["files"]["manifest.json"])
+        decision_entry = manifest.get("contents", {}).get("decision", {})
+        decision_path = decision_entry.get("path")
+
+        if decision_path and decision_path in tampered["files"]:
+            # Tamper: Modify decision artifact content
+            decision_data = json.loads(tampered["files"][decision_path])
+            decision_data["TAMPERED_DECISION"] = "MALICIOUS_CHANGE"
+            tampered["files"][decision_path] = canonical_json(decision_data)
+
+            # DO NOT update manifest hash - this simulates tampering
+
+            verifier = ProofPackVerifier()
+            result = verifier.verify(tampered)
+
+            # V-HALT-001: Must halt at V-STEP-02 with INVALID_ARTIFACT_HASH
+            assert result.outcome == VerificationOutcome.INVALID_ARTIFACT_HASH
+            assert result.is_valid is False
+            assert "hash" in result.error_message.lower() or "decision" in result.error_message.lower()
+
+    def test_outcome_artifact_tamper_fails(self, valid_proofpack):
+        """
+        GAP-V-04: Outcome artifact tampering fails at V-STEP-02.
+
+        Per V-INV-005: Artifact hash verification uses SHA-256 of file bytes.
+        Outcome artifact modification must return INVALID_ARTIFACT_HASH.
+        """
+        tampered = copy.deepcopy(valid_proofpack)
+
+        # Find outcome file
+        outcome_path = None
+        manifest = json.loads(tampered["files"]["manifest.json"])
+        outcome_entry = manifest.get("contents", {}).get("outcome", {})
+        outcome_path = outcome_entry.get("path")
+
+        if outcome_path and outcome_path in tampered["files"]:
+            # Tamper: Modify outcome artifact content
+            outcome_data = json.loads(tampered["files"][outcome_path])
+            outcome_data["TAMPERED_OUTCOME"] = "MALICIOUS_CHANGE"
+            tampered["files"][outcome_path] = canonical_json(outcome_data)
+
+            # DO NOT update manifest hash - this simulates tampering
+
+            verifier = ProofPackVerifier()
+            result = verifier.verify(tampered)
+
+            # V-HALT-001: Must halt at V-STEP-02 with INVALID_ARTIFACT_HASH
+            assert result.outcome == VerificationOutcome.INVALID_ARTIFACT_HASH
+            assert result.is_valid is False
+            assert "hash" in result.error_message.lower() or "outcome" in result.error_message.lower()
+
+
+# =============================================================================
+# ROUND-TRIP TESTS
+# =============================================================================
+
+
 class TestRoundTrip:
     """Tests for generate → verify round trip."""
 
