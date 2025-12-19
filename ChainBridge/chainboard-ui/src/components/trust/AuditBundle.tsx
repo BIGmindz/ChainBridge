@@ -12,17 +12,22 @@
  * @see PAC-SONNY-TRUST-MIN-UI-01
  */
 
+import { Link } from 'react-router-dom';
+
 import { classNames } from '../../utils/classNames';
 import { Card, CardContent } from '../ui/Card';
 import type { AuditBundleMetadata } from '../../types/trust';
 
 export interface AuditBundleProps {
   bundle?: AuditBundleMetadata;
+  /** Optional artifact ID for ProofPack navigation */
+  artifactId?: string;
   className?: string;
 }
 
 export function AuditBundle({
   bundle,
+  artifactId,
   className,
 }: AuditBundleProps): JSX.Element {
   return (
@@ -59,6 +64,21 @@ export function AuditBundle({
             sha256sum proofpacks/audit_bundle.json
           </p>
         </div>
+
+        {artifactId ? (
+          <div className="border-t border-slate-800/50 pt-3">
+            <Link
+              to={`/proof-artifacts/${artifactId}`}
+              className="text-xs text-slate-400 hover:text-slate-200 font-mono"
+            >
+              View Proof →
+            </Link>
+          </div>
+        ) : (
+          <div className="border-t border-slate-800/50 pt-3">
+            <p className="text-xs text-slate-600 font-mono">No ProofPack linked</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

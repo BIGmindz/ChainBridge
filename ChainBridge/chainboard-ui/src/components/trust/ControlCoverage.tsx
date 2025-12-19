@@ -14,8 +14,6 @@
  * @see PAC-TRUST-CENTER-UI-01 — Customer Trust Center (Read-Only)
  */
 
-import { Check, Shield } from 'lucide-react';
-
 import { classNames } from '../../utils/classNames';
 import { Card, CardContent, CardHeader } from '../ui/Card';
 
@@ -41,12 +39,12 @@ export interface ControlCoverageProps {
  * Default coverage items per PAC specification.
  */
 const DEFAULT_COVERAGE: ControlCoverageItem[] = [
-  { id: 'acm', name: 'Access Control (ACM)', status: 'Enforced', active: true },
-  { id: 'drcp', name: 'Decision Routing (DRCP)', status: 'Active', active: true },
-  { id: 'diggi', name: 'Agent Constraints (DIGGI)', status: 'Enabled', active: true },
-  { id: 'artifact', name: 'Artifact Verification', status: 'Required', active: true },
-  { id: 'scope', name: 'Scope Enforcement', status: 'Enforced', active: true },
-  { id: 'failclosed', name: 'Fail-Closed Execution', status: 'Enforced', active: true },
+  { id: 'acm', name: 'Access Control (ACM)', status: 'present', active: true },
+  { id: 'drcp', name: 'Decision Routing (DRCP)', status: 'present', active: true },
+  { id: 'diggi', name: 'Agent Constraints (DIGGI)', status: 'present', active: true },
+  { id: 'artifact', name: 'Artifact Reference', status: 'present', active: true },
+  { id: 'scope', name: 'Scope Enforcement', status: 'present', active: true },
+  { id: 'failclosed', name: 'Fail-Closed Execution', status: 'present', active: true },
 ];
 
 /**
@@ -56,16 +54,9 @@ function ControlRow({ item }: { item: ControlCoverageItem }): JSX.Element {
   return (
     <div className="flex items-center justify-between py-3 border-b border-slate-800/30 last:border-b-0">
       <span className="text-sm text-slate-300">{item.name}</span>
-      <div className="flex items-center gap-2">
-        {item.active ? (
-          <>
-            <Check className="h-4 w-4 text-slate-400" />
-            <span className="text-sm text-slate-400">{item.status}</span>
-          </>
-        ) : (
-          <span className="text-sm text-slate-600">Unavailable</span>
-        )}
-      </div>
+      <span className="text-sm text-slate-400 font-mono">
+        {item.active ? item.status : 'absent'}
+      </span>
     </div>
   );
 }
@@ -79,19 +70,22 @@ export function ControlCoverage({
   className,
 }: ControlCoverageProps): JSX.Element {
   const items = coverage ?? DEFAULT_COVERAGE;
+  const isDemo = !coverage;
 
   return (
     <Card className={classNames('overflow-hidden', className)}>
       <CardHeader className="border-b border-slate-800/50">
-        <div className="flex items-center gap-2">
-          <Shield className="h-5 w-5 text-slate-400" />
-          <h3 className="text-sm font-semibold text-slate-200">
-            Control Coverage
-          </h3>
-        </div>
+        <p className="text-xs text-slate-600 uppercase tracking-wider">
+          control_coverage
+        </p>
       </CardHeader>
 
       <CardContent className="py-2">
+        {isDemo && (
+          <div className="border border-slate-600 bg-slate-900/50 px-3 py-2 text-xs text-slate-400 font-mono mb-3">
+            UNLINKED / DEMO DATA — Not linked to live backend
+          </div>
+        )}
         {items.map((item) => (
           <ControlRow key={item.id} item={item} />
         ))}

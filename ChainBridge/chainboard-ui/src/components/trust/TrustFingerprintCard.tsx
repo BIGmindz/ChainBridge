@@ -12,8 +12,6 @@
  * @see PAC-TRUST-CENTER-01 — Public Trust Center (Read-Only)
  */
 
-import { Fingerprint } from 'lucide-react';
-
 import { classNames } from '../../utils/classNames';
 import { Card, CardContent, CardHeader } from '../ui/Card';
 import { TrustEmptyState } from './TrustEmptyState';
@@ -42,12 +40,9 @@ export function TrustFingerprintCard({
   return (
     <Card className={classNames('overflow-hidden', className)}>
       <CardHeader className="border-b border-slate-800/50">
-        <div className="flex items-center gap-2">
-          <Fingerprint className="h-5 w-5 text-slate-400" />
-          <h3 className="text-sm font-semibold text-slate-200">
-            System Governance Fingerprint
-          </h3>
-        </div>
+        <p className="text-xs text-slate-600 uppercase tracking-wider">
+          Governance Fingerprint
+        </p>
       </CardHeader>
 
       <CardContent className="space-y-4">
