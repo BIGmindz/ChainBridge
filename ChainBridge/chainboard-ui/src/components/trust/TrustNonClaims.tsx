@@ -12,6 +12,7 @@
  * @see PAC-TRUST-CENTER-01 — Public Trust Center (Read-Only)
  */
 
+import { AlertTriangle } from 'lucide-react';
 import { classNames } from '../../utils/classNames';
 import { Card, CardContent, CardHeader } from '../ui/Card';
 
