@@ -1,27 +1,15 @@
 """Phase 2: Hedera ledger integration tests.
 
 These tests validate the Hedera Hashgraph integration for audit logging and RWA minting.
-Due to sys.path conflicts between the monorepo 'app' package and chainiq-service 'app',
-these imports fail when conftest.py loads api.server first.
-
-Status: Deferred to Phase 2 (module exists but import path conflicts with ChainIQ)
 """
 import re
 
 import pytest
 
-# Phase 2: Import guard due to sys.path conflict with chainiq-service
-try:
-    from app.services.ledger.hedera_engine import log_audit_event, mint_rwa_token
-    _HEDERA_ENGINE_AVAILABLE = True
-except ImportError:
-    _HEDERA_ENGINE_AVAILABLE = False
-    log_audit_event = mint_rwa_token = None
+# Namespace isolation handled by conftest.py pre-loading mechanism
+from app.services.ledger.hedera_engine import log_audit_event, mint_rwa_token
 
-pytestmark = [
-    pytest.mark.phase2,
-    pytest.mark.skipif(not _HEDERA_ENGINE_AVAILABLE, reason="Hedera engine module unavailable (sys.path conflict with ChainIQ)"),
-]
+pytestmark = pytest.mark.phase2
 
 
 def test_mint_rwa_token_returns_token_id() -> None:

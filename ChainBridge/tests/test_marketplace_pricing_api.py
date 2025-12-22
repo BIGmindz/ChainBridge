@@ -1,10 +1,6 @@
 """Phase 2: Marketplace pricing API tests.
 
 These tests validate Dutch auction pricing mechanisms via API.
-Due to sys.path conflicts between the monorepo 'app' package and chainiq-service 'app',
-these imports fail when conftest.py loads api.server first.
-
-Status: Deferred to Phase 2 (module exists but import path conflicts with ChainIQ)
 """
 from datetime import datetime, timedelta, timezone
 from typing import Any, Tuple
@@ -17,19 +13,12 @@ from sqlalchemy.pool import StaticPool
 
 from api.database import Base, get_db
 
-# Phase 2: Import guard due to sys.path conflict with chainiq-service
-try:
-    from app.api import app
-    from app.models.marketplace import Listing
-    _MARKETPLACE_PRICING_AVAILABLE = True
-except ImportError:
-    _MARKETPLACE_PRICING_AVAILABLE = False
-    app = Listing = None
+# Namespace isolation: import from app.api.api (module) to avoid collision
+# with chainiq-service's app.api (which is a file, not a package)
+from app.api.api import app
+from app.models.marketplace import Listing
 
-pytestmark = [
-    pytest.mark.phase2,
-    pytest.mark.skipif(not _MARKETPLACE_PRICING_AVAILABLE, reason="Marketplace pricing module unavailable (sys.path conflict with ChainIQ)"),
-]
+pytestmark = pytest.mark.phase2
 
 
 @pytest.fixture(scope="module")

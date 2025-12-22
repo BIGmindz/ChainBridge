@@ -1,10 +1,6 @@
 """Phase 2: Marketplace buy intents API tests.
 
 These tests validate the marketplace API endpoints for buy intent management.
-Due to sys.path conflicts between the monorepo 'app' package and chainiq-service 'app',
-these imports fail when conftest.py loads api.server first.
-
-Status: Deferred to Phase 2 (module exists but import path conflicts with ChainIQ)
 """
 from datetime import datetime, timedelta, timezone
 from typing import Any, Tuple
@@ -17,21 +13,14 @@ from sqlalchemy.pool import StaticPool
 
 from api.database import Base, get_db
 
-# Phase 2: Import guard due to sys.path conflict with chainiq-service
-try:
-    from app.api import app
-    from app.api.endpoints import marketplace as marketplace_api
-    from app.models.marketplace import BuyIntent, Listing
-    from app.services.marketplace import buy_intents, price_proof
-    _MARKETPLACE_AVAILABLE = True
-except ImportError:
-    _MARKETPLACE_AVAILABLE = False
-    app = marketplace_api = BuyIntent = Listing = buy_intents = price_proof = None
+# Namespace isolation: import from app.api.api (module) to avoid collision
+# with chainiq-service's app.api (which is a file, not a package)
+from app.api.api import app
+from app.api.endpoints import marketplace as marketplace_api
+from app.models.marketplace import BuyIntent, Listing
+from app.services.marketplace import buy_intents, price_proof
 
-pytestmark = [
-    pytest.mark.phase2,
-    pytest.mark.skipif(not _MARKETPLACE_AVAILABLE, reason="Marketplace module unavailable (sys.path conflict with ChainIQ)"),
-]
+pytestmark = pytest.mark.phase2
 
 
 @pytest.fixture(scope="module")
