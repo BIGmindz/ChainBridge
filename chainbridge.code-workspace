@@ -1,0 +1,210 @@
+{
+  // ============================================================================
+  // CHAINBRIDGE CANONICAL WORKSPACE
+  // ============================================================================
+  // 
+  // PURPOSE:
+  //   Eliminates VS Code "Unable to find workspace" warnings and standardizes
+
+  //   the developer experience across all ChainBridge contributors.
+  //
+  // USAGE:
+  //   Open this file in VS Code: File → Open Workspace from File...
+  //   Or: code chainbridge.code-workspace
+  //
+  // GOVERNANCE:
+  //   Created by PAC-ATLAS-WORKSPACE-NORMALIZATION-01 (2025-12-22)
+  //   Single source of truth for workspace configuration.
+  //
+  // ============================================================================
+
+  "folders": [
+    {
+      // Root repository - contains pyproject.toml, requirements.txt, .venv
+      "name": "ChainBridge (Root)",
+      "path": "."
+    },
+    {
+      // Core application code - FastAPI backend, tests, services
+      "name": "ChainBridge (Core)",
+      "path": "ChainBridge"
+    },
+    {
+      // Frontend UI - Vite + React + TypeScript
+      // Note: This folder is in .gitignore but tracked via git add -f
+      "name": "ChainBoard UI",
+      "path": "chainboard-ui"
+    }
+  ],
+
+  "settings": {
+    // ========================================================================
+    // PYTHON CONFIGURATION
+    // ========================================================================
+    // 
+    // Points to the canonical virtual environment at repo root.
+    // This prevents interpreter ambiguity across the workspace.
+    //
+    "python.defaultInterpreterPath": "${workspaceFolder:ChainBridge (Root)}/.venv/bin/python",
+    
+    // Use the root .venv for all Python operations
+    "python.terminal.activateEnvironment": true,
+    "python.terminal.activateEnvInCurrentTerminal": true,
+
+    // Pylance settings aligned with pyproject.toml
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.diagnosticSeverityOverrides": {
+      "reportGeneralTypeIssues": false,
+      "reportOptionalMemberAccess": false,
+      "reportOptionalSubscript": false,
+      "reportPrivateImportUsage": false
+    },
+
+    // ========================================================================
+    // TYPESCRIPT / FRONTEND CONFIGURATION
+    // ========================================================================
+    //
+    // Scoped to chainboard-ui folder for frontend development.
+    //
+    "typescript.tsdk": "${workspaceFolder:ChainBoard UI}/node_modules/typescript/lib",
+    
+    // ========================================================================
+    // EDITOR DEFAULTS
+    // ========================================================================
+    //
+    // Consistent formatting across the team.
+    //
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4,
+    "[python]": {
+      "editor.tabSize": 4,
+      "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "[typescript]": {
+      "editor.tabSize": 2,
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescriptreact]": {
+      "editor.tabSize": 2,
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascript]": {
+      "editor.tabSize": 2
+    },
+    "[json]": {
+      "editor.tabSize": 2
+    },
+
+    // ========================================================================
+    // FILE EXCLUSIONS
+    // ========================================================================
+    //
+    // Hide noise from explorer without affecting git.
+    //
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/*.pyc": true,
+      "**/.pytest_cache": true,
+      "**/node_modules": true,
+      "**/.DS_Store": true,
+      "**/htmlcov": true,
+      "**/*.egg-info": true
+    },
+
+    // ========================================================================
+    // SEARCH EXCLUSIONS
+    // ========================================================================
+    //
+    // Improve search performance by excluding build artifacts.
+    //
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/.venv": true,
+      "**/htmlcov": true,
+      "**/build": true,
+      "**/__pycache__": true
+    }
+  },
+
+  "extensions": {
+    // Recommended extensions for ChainBridge development
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.vscode-pylance",
+      "ms-python.black-formatter",
+      "charliermarsh.ruff",
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "bradlc.vscode-tailwindcss"
+    ]
+  },
+
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Python: FastAPI (uvicorn)",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "uvicorn",
+        "args": ["api.server:app", "--reload", "--port", "8000"],
+        "cwd": "${workspaceFolder:ChainBridge (Core)}",
+        "envFile": "${workspaceFolder:ChainBridge (Root)}/.env.dev",
+        "jinja": true
+      },
+      {
+        "name": "Python: Current File",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${file}",
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder:ChainBridge (Root)}"
+      },
+      {
+        "name": "Python: pytest",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "pytest",
+        "args": ["-v", "--tb=short"],
+        "cwd": "${workspaceFolder:ChainBridge (Core)}",
+        "envFile": "${workspaceFolder:ChainBridge (Root)}/.env.dev"
+      }
+    ]
+  },
+
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Backend: Run Tests",
+        "type": "shell",
+        "command": "source ${workspaceFolder:ChainBridge (Root)}/.venv/bin/activate && cd ${workspaceFolder:ChainBridge (Core)} && pytest -v",
+        "group": "test",
+        "presentation": {
+          "reveal": "always",
+          "panel": "new"
+        }
+      },
+      {
+        "label": "Frontend: Dev Server",
+        "type": "shell",
+        "command": "npm run dev",
+        "options": {
+          "cwd": "${workspaceFolder:ChainBoard UI}"
+        },
+        "isBackground": true,
+        "problemMatcher": []
+      },
+      {
+        "label": "Frontend: Build",
+        "type": "shell",
+        "command": "npm run build",
+        "options": {
+          "cwd": "${workspaceFolder:ChainBoard UI}"
+        },
+        "group": "build"
+      }
+    ]
+  }
+}
