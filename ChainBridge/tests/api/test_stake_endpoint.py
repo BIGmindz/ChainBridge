@@ -1,28 +1,16 @@
 """Phase 2: Inventory stake endpoint tests.
 
 These tests validate the stake endpoint for RWA inventory staking.
-Due to sys.path conflicts between the monorepo 'app' package and chainiq-service 'app',
-these imports fail when conftest.py loads api.server first.
-
-Status: Deferred to Phase 2 (module exists but import path conflicts with ChainIQ)
 """
 import pytest
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
-# Phase 2: Import guard due to sys.path conflict with chainiq-service
-try:
-    from app.api.endpoints import stake as stake_endpoint
-    from app.schemas.stake import StakeResponse, StakeStatus
-    _STAKE_ENDPOINT_AVAILABLE = True
-except ImportError:
-    _STAKE_ENDPOINT_AVAILABLE = False
-    stake_endpoint = StakeResponse = StakeStatus = None
+# Namespace isolation handled by conftest.py pre-loading mechanism
+from app.api.endpoints import stake as stake_endpoint
+from app.schemas.stake import StakeResponse, StakeStatus
 
-pytestmark = [
-    pytest.mark.phase2,
-    pytest.mark.skipif(not _STAKE_ENDPOINT_AVAILABLE, reason="Stake endpoint module unavailable (sys.path conflict with ChainIQ)"),
-]
+pytestmark = pytest.mark.phase2
 
 
 class DummyRedis:
@@ -32,7 +20,6 @@ class DummyRedis:
 
 def override_get_arq():
     return DummyRedis()
-
 
 def create_app() -> FastAPI:
     app = FastAPI()
