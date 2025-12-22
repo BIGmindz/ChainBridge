@@ -6,11 +6,12 @@ per PDO Signing Model v1 specification.
 DOCTRINE COMPLIANCE:
 - PDO Enforcement Model v1 (LOCKED)
 - Fail-closed: Invalid signatures block execution
+- Fail-closed: Unsigned PDOs are REJECTED (no legacy mode)
 - Verify-only: No signing operations in this module
 
 SUPPORTED ALGORITHMS:
 - ED25519: EdDSA with Ed25519 curve
-- HMAC-SHA256: HMAC with SHA-256 (for testing/legacy)
+- HMAC-SHA256: HMAC with SHA-256 (for testing)
 
 VERIFICATION OUTCOMES:
 - VALID: Signature is cryptographically valid
@@ -18,7 +19,10 @@ VERIFICATION OUTCOMES:
 - UNSUPPORTED_ALGORITHM: Algorithm not recognized
 - UNKNOWN_KEY_ID: Key ID not in trusted registry
 - MALFORMED_SIGNATURE: Cannot decode signature bytes
-- UNSIGNED_PDO: No signature present (legacy, WARN only)
+- UNSIGNED_PDO: No signature present (REJECTED)
+- EXPIRED_PDO: PDO has expired (expires_at in past)
+- REPLAY_DETECTED: Nonce has been seen before
+- SIGNER_MISMATCH: Signer identity does not match key
 
 Author: Cody (GID-01) — Senior Backend Engineer
 """
@@ -57,7 +61,10 @@ class VerificationOutcome(str, Enum):
     UNSUPPORTED_ALGORITHM = "UNSUPPORTED_ALGORITHM"
     UNKNOWN_KEY_ID = "UNKNOWN_KEY_ID"
     MALFORMED_SIGNATURE = "MALFORMED_SIGNATURE"
-    UNSIGNED_PDO = "UNSIGNED_PDO"
+    UNSIGNED_PDO = "UNSIGNED_PDO"  # FAIL - signature is mandatory
+    EXPIRED_PDO = "EXPIRED_PDO"  # FAIL - expires_at has passed
+    REPLAY_DETECTED = "REPLAY_DETECTED"  # FAIL - nonce already used
+    SIGNER_MISMATCH = "SIGNER_MISMATCH"  # FAIL - key doesn't match agent_id
 
 
 @dataclass(frozen=True)
@@ -127,28 +134,28 @@ class VerificationResult:
     def allows_execution(self) -> bool:
         """Check if this result allows execution.
 
-        DOCTRINE: Unsigned PDOs are TEMPORARILY allowed (legacy mode).
-        TODO: Remove legacy allowance in deprecation PAC.
+        DOCTRINE: Only VALID signatures allow execution.
+        All other outcomes (including UNSIGNED_PDO) are REJECTED.
         """
-        return self.outcome in {
-            VerificationOutcome.VALID,
-            VerificationOutcome.UNSIGNED_PDO,  # TEMPORARY: Legacy compatibility
-        }
+        return self.outcome == VerificationOutcome.VALID
 
 
 # ---------------------------------------------------------------------------
 # Canonical Payload Serialization
 # ---------------------------------------------------------------------------
 
-# Fields included in signature (in canonical order)
+# Fields included in signature (in strict canonical order)
+# Per PDO_SIGNING_MODEL_V1.md - NO optional fields, NO variance allowed
 SIGNATURE_FIELDS = (
     "pdo_id",
-    "inputs_hash",
-    "policy_version",
     "decision_hash",
+    "policy_version",
+    "agent_id",
+    "action",
     "outcome",
     "timestamp",
-    "signer",
+    "nonce",
+    "expires_at",
 )
 
 
@@ -194,7 +201,46 @@ def canonicalize_pdo(pdo_data: dict[str, Any]) -> bytes:
 _TEST_HMAC_KEY = b"test-secret-key-for-unit-tests-only"
 
 # Registry of trusted key IDs to verification functions
-_KEY_REGISTRY: dict[str, tuple[str, Callable[[bytes, bytes], bool]]] = {}
+# Format: key_id -> (algorithm, verify_function, optional_agent_id)
+_KEY_REGISTRY: dict[str, tuple[str, Callable[[bytes, bytes], bool], Optional[str]]] = {}
+
+
+# ---------------------------------------------------------------------------
+# Nonce Registry (Replay Protection)
+# ---------------------------------------------------------------------------
+# In production, this would be backed by persistent storage (Redis, DB).
+# For implementation, we use an in-memory set with size limit.
+# ---------------------------------------------------------------------------
+
+_NONCE_REGISTRY: set[str] = set()
+_NONCE_REGISTRY_MAX_SIZE = 100000  # Limit memory usage
+
+
+def _check_and_record_nonce(nonce: str) -> bool:
+    """Check if nonce is new and record it.
+
+    Args:
+        nonce: The nonce value to check
+
+    Returns:
+        True if nonce is new (first use), False if replay detected
+    """
+    if nonce in _NONCE_REGISTRY:
+        return False
+
+    # Limit registry size (in production, use TTL-based expiry)
+    if len(_NONCE_REGISTRY) >= _NONCE_REGISTRY_MAX_SIZE:
+        # Simple eviction: clear oldest half (not ideal, but bounded)
+        logger.warning("Nonce registry full, clearing old entries")
+        _NONCE_REGISTRY.clear()
+
+    _NONCE_REGISTRY.add(nonce)
+    return True
+
+
+def clear_nonce_registry() -> None:
+    """Clear nonce registry (for testing only)."""
+    _NONCE_REGISTRY.clear()
 
 
 def _hmac_sha256_verify(key: bytes) -> Callable[[bytes, bytes], bool]:
@@ -207,16 +253,22 @@ def _hmac_sha256_verify(key: bytes) -> Callable[[bytes, bytes], bool]:
     return verify
 
 
-def register_trusted_key(key_id: str, algorithm: str, key_material: bytes) -> None:
+def register_trusted_key(
+    key_id: str,
+    algorithm: str,
+    key_material: bytes,
+    agent_id: Optional[str] = None,
+) -> None:
     """Register a trusted key for signature verification.
 
     Args:
         key_id: Unique identifier for the key
         algorithm: Signature algorithm (ED25519, HMAC-SHA256)
         key_material: Key bytes (public key for ED25519, secret for HMAC)
+        agent_id: Optional agent identity bound to this key (for signer verification)
     """
     if algorithm == SignatureAlgorithm.HMAC_SHA256.value:
-        _KEY_REGISTRY[key_id] = (algorithm, _hmac_sha256_verify(key_material))
+        _KEY_REGISTRY[key_id] = (algorithm, _hmac_sha256_verify(key_material), agent_id)
     elif algorithm == SignatureAlgorithm.ED25519.value:
         # ED25519 verification would require cryptography library
         # For now, we don't have production ED25519 keys
@@ -225,11 +277,11 @@ def register_trusted_key(key_id: str, algorithm: str, key_material: bytes) -> No
         logger.warning("Unknown algorithm for key registration: %s", algorithm)
 
 
-def get_trusted_key(key_id: str) -> Optional[tuple[str, Callable[[bytes, bytes], bool]]]:
+def get_trusted_key(key_id: str) -> Optional[tuple[str, Callable[[bytes, bytes], bool], Optional[str]]]:
     """Get verification function for a trusted key.
 
     Returns:
-        Tuple of (algorithm, verify_function) or None if key not found
+        Tuple of (algorithm, verify_function, agent_id) or None if key not found
     """
     return _KEY_REGISTRY.get(key_id)
 
@@ -269,18 +321,28 @@ def extract_signature(pdo_data: Optional[dict]) -> Optional[PDOSignature]:
 
 
 def verify_pdo_signature(pdo_data: Optional[dict]) -> VerificationResult:
-    """Verify PDO signature.
+    """Verify PDO signature with full validation.
 
     This is the main verification entry point. Handles all failure modes
     deterministically and returns structured result.
 
+    VERIFICATION ORDER (fail-closed):
+    1. Check PDO exists and has signature → UNSIGNED_PDO if missing
+    2. Check expires_at → EXPIRED_PDO if past
+    3. Check nonce uniqueness → REPLAY_DETECTED if seen
+    4. Verify algorithm support → UNSUPPORTED_ALGORITHM if unknown
+    5. Verify key exists → UNKNOWN_KEY_ID if not registered
+    6. Verify signer matches key → SIGNER_MISMATCH if wrong
+    7. Verify signature → INVALID_SIGNATURE if mismatch
+    8. Success → VALID
+
     DOCTRINE:
-    - Fail-closed: Invalid signatures block execution
-    - Unsigned PDOs: WARN but allow (legacy compatibility, TEMPORARY)
+    - Fail-closed: ALL failures block execution
+    - Unsigned PDOs are REJECTED (no legacy mode)
     - No exceptions: All failures return VerificationResult
 
     Args:
-        pdo_data: PDO dictionary (must include 'signature' for signed PDOs)
+        pdo_data: PDO dictionary (must include 'signature')
 
     Returns:
         VerificationResult with outcome and details
@@ -302,17 +364,67 @@ def verify_pdo_signature(pdo_data: Optional[dict]) -> VerificationResult:
     # Extract signature envelope
     signature = extract_signature(pdo_data)
 
-    # No signature → UNSIGNED_PDO (legacy, warn)
+    # No signature → UNSIGNED_PDO (FAIL - signature is mandatory)
     if signature is None:
-        logger.warning(
-            "PDO without signature detected (legacy mode): pdo_id=%s",
+        logger.error(
+            "SIGNATURE_REQUIRED: PDO rejected - no signature: pdo_id=%s",
             pdo_id,
         )
         return VerificationResult(
             outcome=VerificationOutcome.UNSIGNED_PDO,
             pdo_id=pdo_id,
-            reason="PDO has no signature (legacy unsigned PDO)",
+            reason="PDO has no signature (signature is mandatory)",
         )
+
+    # Check expiry (expires_at must be in future)
+    expires_at = pdo_data.get("expires_at")
+    if expires_at:
+        try:
+            if isinstance(expires_at, str):
+                expiry_dt = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+            elif isinstance(expires_at, datetime):
+                expiry_dt = expires_at
+            else:
+                expiry_dt = None
+
+            if expiry_dt and expiry_dt <= datetime.now(timezone.utc):
+                logger.error(
+                    "EXPIRED_PDO: PDO rejected - expired: pdo_id=%s expires_at=%s",
+                    pdo_id, expires_at,
+                )
+                return VerificationResult(
+                    outcome=VerificationOutcome.EXPIRED_PDO,
+                    pdo_id=pdo_id,
+                    key_id=signature.key_id,
+                    algorithm=signature.alg,
+                    reason=f"PDO has expired: expires_at={expires_at}",
+                )
+        except (ValueError, TypeError) as e:
+            logger.warning("Could not parse expires_at: %s - %s", expires_at, e)
+            # Invalid expires_at format - treat as expired for safety
+            return VerificationResult(
+                outcome=VerificationOutcome.EXPIRED_PDO,
+                pdo_id=pdo_id,
+                key_id=signature.key_id,
+                algorithm=signature.alg,
+                reason=f"Invalid expires_at format: {expires_at}",
+            )
+
+    # Check nonce uniqueness (replay protection)
+    nonce = pdo_data.get("nonce")
+    if nonce:
+        if not _check_and_record_nonce(str(nonce)):
+            logger.error(
+                "REPLAY_DETECTED: PDO rejected - duplicate nonce: pdo_id=%s nonce=%s",
+                pdo_id, nonce,
+            )
+            return VerificationResult(
+                outcome=VerificationOutcome.REPLAY_DETECTED,
+                pdo_id=pdo_id,
+                key_id=signature.key_id,
+                algorithm=signature.alg,
+                reason=f"Nonce already used (replay detected): nonce={nonce}",
+            )
 
     # Check algorithm support
     try:
@@ -337,7 +449,7 @@ def verify_pdo_signature(pdo_data: Optional[dict]) -> VerificationResult:
             reason=f"Key ID not in trusted registry: {signature.key_id}",
         )
 
-    registered_alg, verify_func = key_info
+    registered_alg, verify_func, bound_agent_id = key_info
 
     # Algorithm mismatch (key registered for different algorithm)
     if registered_alg != signature.alg:
@@ -348,6 +460,23 @@ def verify_pdo_signature(pdo_data: Optional[dict]) -> VerificationResult:
             algorithm=signature.alg,
             reason=f"Key {signature.key_id} registered for {registered_alg}, not {signature.alg}",
         )
+
+    # Verify signer identity matches key (if bound)
+    if bound_agent_id is not None:
+        pdo_agent_id = pdo_data.get("agent_id")
+        if pdo_agent_id != bound_agent_id:
+            logger.error(
+                "SIGNER_MISMATCH: PDO rejected - agent_id mismatch: pdo_id=%s "
+                "expected=%s got=%s",
+                pdo_id, bound_agent_id, pdo_agent_id,
+            )
+            return VerificationResult(
+                outcome=VerificationOutcome.SIGNER_MISMATCH,
+                pdo_id=pdo_id,
+                key_id=signature.key_id,
+                algorithm=signature.alg,
+                reason=f"Signer mismatch: key bound to {bound_agent_id}, PDO has {pdo_agent_id}",
+            )
 
     # Decode signature bytes
     try:
@@ -421,10 +550,9 @@ def log_verification_result(result: VerificationResult, context: str = "") -> No
 
     if result.is_valid:
         logger.info("PDO signature verified: %s", json.dumps(log_data))
-    elif result.is_unsigned:
-        logger.warning("Unsigned PDO detected (legacy): %s", json.dumps(log_data))
     else:
-        logger.error("PDO signature verification failed: %s", json.dumps(log_data))
+        # ALL non-VALID outcomes are logged as errors (fail-closed)
+        logger.error("PDO signature verification FAILED: %s", json.dumps(log_data))
 
 
 # ---------------------------------------------------------------------------

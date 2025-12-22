@@ -66,12 +66,15 @@ class ValidationErrorCode(str, Enum):
     INVALID_TIMESTAMP = "INVALID_TIMESTAMP"
     HASH_MISMATCH = "HASH_MISMATCH"
     INTEGRITY_FAILURE = "INTEGRITY_FAILURE"
-    # Signature verification error codes
+    # Signature verification error codes (fail-closed)
     INVALID_SIGNATURE = "INVALID_SIGNATURE"
     UNSUPPORTED_ALGORITHM = "UNSUPPORTED_ALGORITHM"
     UNKNOWN_KEY_ID = "UNKNOWN_KEY_ID"
     MALFORMED_SIGNATURE = "MALFORMED_SIGNATURE"
-    UNSIGNED_PDO = "UNSIGNED_PDO"  # WARNING only, does not fail validation (legacy)
+    UNSIGNED_PDO = "UNSIGNED_PDO"  # FAIL - signature is mandatory
+    EXPIRED_PDO = "EXPIRED_PDO"  # FAIL - PDO has expired
+    REPLAY_DETECTED = "REPLAY_DETECTED"  # FAIL - nonce already used
+    SIGNER_MISMATCH = "SIGNER_MISMATCH"  # FAIL - key doesn't match agent_id
 
 
 @dataclass(frozen=True)
@@ -228,10 +231,13 @@ class PDOValidator:
 
         DOCTRINE (Fail-Closed):
         - Invalid signature → FAIL (execution blocked)
-        - Unsigned PDO → WARN (legacy mode, TEMPORARILY allowed)
+        - Unsigned PDO → FAIL (signature is mandatory)
+        - Expired PDO → FAIL
+        - Replay detected → FAIL
+        - Signer mismatch → FAIL
 
         Args:
-            pdo_data: Dictionary containing PDO fields (may include signature)
+            pdo_data: Dictionary containing PDO fields (must include signature)
 
         Returns:
             ValidationResult with signature_result attached
@@ -264,8 +270,7 @@ class PDOValidator:
         )
 
         # Determine overall validity
-        # DOCTRINE: Fail-closed for invalid signatures
-        # EXCEPTION: Unsigned PDOs are TEMPORARILY allowed (legacy)
+        # DOCTRINE: Fail-closed for ALL non-VALID outcomes
         errors_list = list(schema_result.errors)
 
         if not sig_result.allows_execution:
@@ -275,6 +280,10 @@ class PDOValidator:
                 VerificationOutcome.UNSUPPORTED_ALGORITHM: ValidationErrorCode.UNSUPPORTED_ALGORITHM,
                 VerificationOutcome.UNKNOWN_KEY_ID: ValidationErrorCode.UNKNOWN_KEY_ID,
                 VerificationOutcome.MALFORMED_SIGNATURE: ValidationErrorCode.MALFORMED_SIGNATURE,
+                VerificationOutcome.UNSIGNED_PDO: ValidationErrorCode.UNSIGNED_PDO,
+                VerificationOutcome.EXPIRED_PDO: ValidationErrorCode.EXPIRED_PDO,
+                VerificationOutcome.REPLAY_DETECTED: ValidationErrorCode.REPLAY_DETECTED,
+                VerificationOutcome.SIGNER_MISMATCH: ValidationErrorCode.SIGNER_MISMATCH,
             }
             error_code = error_code_map.get(
                 sig_result.outcome,
@@ -286,14 +295,6 @@ class PDOValidator:
                     field="signature",
                     message=sig_result.reason,
                 )
-            )
-
-        # Log warning for unsigned PDOs (but still allow)
-        if sig_result.is_unsigned:
-            logger.warning(
-                "UNSIGNED_PDO_WARNING: pdo_id=%s - Unsigned PDO accepted (legacy mode). "
-                "This behavior is DEPRECATED and will be removed.",
-                schema_result.pdo_id,
             )
 
         return ValidationResult(
