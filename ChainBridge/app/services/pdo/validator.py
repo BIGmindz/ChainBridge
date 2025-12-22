@@ -362,3 +362,46 @@ def compute_decision_hash(inputs_hash: str, policy_version: str, outcome: str) -
     """
     binding_data = f"{inputs_hash.lower()}|{policy_version}|{outcome.upper()}"
     return hashlib.sha256(binding_data.encode("utf-8")).hexdigest()
+
+
+# ---------------------------------------------------------------------------
+# Risk-Aware Validation (Infrastructure Only)
+# ---------------------------------------------------------------------------
+# TODO(Ruby): Wire risk thresholds and policy decisions
+# The following functions provide risk metadata extraction during PDO validation.
+# Risk metadata is OPTIONAL — PDOs without risk fields remain fully valid.
+# ---------------------------------------------------------------------------
+
+
+def validate_pdo_with_risk(pdo_data: Optional[dict]) -> tuple["ValidationResult", Optional[Any]]:
+    """Validate PDO and extract risk metadata if present.
+
+    Extended validation that also captures risk metadata for downstream hooks.
+    Risk metadata is OPTIONAL — its absence does not affect validation.
+
+    TODO(Ruby): Integrate with CRO policy engine
+
+    Args:
+        pdo_data: Dictionary containing PDO fields (may include risk fields)
+
+    Returns:
+        Tuple of (ValidationResult, RiskMetadata or None)
+    """
+    # Import here to avoid circular imports
+    from app.services.risk.interface import (
+        RiskMetadata,
+        extract_risk_metadata,
+        log_risk_metadata_with_pdo,
+    )
+
+    # Validate PDO (risk fields are ignored by core validation)
+    result = _validator.validate(pdo_data)
+
+    # Extract risk metadata (optional, never fails validation)
+    risk_metadata: Optional[RiskMetadata] = extract_risk_metadata(pdo_data)
+
+    # Log risk metadata alongside PDO for audit
+    log_risk_metadata_with_pdo(result.pdo_id, risk_metadata, context="pdo_validation")
+
+    return result, risk_metadata
+

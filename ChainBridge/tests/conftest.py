@@ -66,6 +66,9 @@ def _preload_monorepo_app_modules() -> None:
         # PDO enforcement modules (PDO Enforcement Gates)
         import app.services.pdo.validator  # noqa: F401
         import app.middleware.pdo_enforcement  # noqa: F401
+
+        # Risk interface modules (PDO Risk Integration)
+        import app.services.risk.interface  # noqa: F401
     except ImportError:
         # Some modules may not exist; that's fine, they'll be skipped anyway
         pass
