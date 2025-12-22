@@ -1,0 +1,208 @@
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# PDO Enforcement Gate
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# PAC: PAC-DAN-PDO-CI-ENFORCEMENT-GATE-01
+# Author: Dan (GID-07) — DevOps & CI/CD Lead
+# Doctrine: PDO Enforcement Model v1 (LOCKED)
+# Threat Mitigation: PDO-T-014 (CI/CD artifact poisoning)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#
+# PURPOSE:
+# Hard CI enforcement gate that prevents merge/deploy if PDO enforcement
+# invariants are violated. CI is a non-bypassable trust boundary.
+#
+# INVARIANTS ENFORCED:
+# 1. PDO enforcement files must exist and be non-empty
+# 2. PDO enforcement symbols must be present (PDOEnforcementGate, require_valid_pdo, validate_pdo)
+# 3. PDO enforcement tests must exist
+# 4. PDO enforcement tests must pass
+#
+# FAIL-CLOSED DESIGN:
+# - Any invariant violation fails the pipeline
+# - No environment-specific behavior
+# - No dependency on secrets
+# - Deterministic pass/fail outcomes
+#
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+name: PDO Enforcement Gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  pdo-enforcement-gate:
+    name: 🔒 PDO Enforcement Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      # Invariant 1: PDO enforcement files must exist and be non-empty
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      - name: Verify PDO enforcement files exist
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔍 INVARIANT 1: PDO enforcement files exist"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          echo "Checking: app/services/pdo/validator.py"
+          test -s app/services/pdo/validator.py || { echo "❌ FAILED: validator.py missing or empty"; exit 1; }
+          echo "✅ validator.py exists and is non-empty"
+          
+          echo "Checking: app/middleware/pdo_enforcement.py"
+          test -s app/middleware/pdo_enforcement.py || { echo "❌ FAILED: pdo_enforcement.py missing or empty"; exit 1; }
+          echo "✅ pdo_enforcement.py exists and is non-empty"
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ INVARIANT 1 PASSED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      # Invariant 2: PDO enforcement symbols must be present
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      - name: Verify PDO enforcement symbols
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔍 INVARIANT 2: PDO enforcement symbols exist"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          echo "Checking: class PDOEnforcementGate"
+          grep -q "class PDOEnforcementGate" app/middleware/pdo_enforcement.py || { echo "❌ FAILED: PDOEnforcementGate class not found"; exit 1; }
+          echo "✅ PDOEnforcementGate class exists"
+          
+          echo "Checking: require_valid_pdo decorator"
+          grep -q "require_valid_pdo" app/middleware/pdo_enforcement.py || { echo "❌ FAILED: require_valid_pdo not found"; exit 1; }
+          echo "✅ require_valid_pdo exists"
+          
+          echo "Checking: validate_pdo function"
+          grep -q "validate_pdo" app/services/pdo/validator.py || { echo "❌ FAILED: validate_pdo not found"; exit 1; }
+          echo "✅ validate_pdo exists"
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ INVARIANT 2 PASSED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      # Invariant 3: PDO enforcement tests must exist
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      - name: Verify PDO tests exist
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔍 INVARIANT 3: PDO enforcement tests exist"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          echo "Checking: tests/test_pdo_enforcement.py"
+          test -s tests/test_pdo_enforcement.py || { echo "❌ FAILED: test_pdo_enforcement.py missing or empty"; exit 1; }
+          echo "✅ test_pdo_enforcement.py exists and is non-empty"
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ INVARIANT 3 PASSED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      # Invariant 4: PDO enforcement tests must pass
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest fastapi httpx pydantic
+          # Install project dependencies if requirements.txt exists
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+
+      - name: Run PDO enforcement tests only
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔍 INVARIANT 4: PDO enforcement tests pass"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          export PYTHONPATH="${PYTHONPATH}:$(pwd)"
+          
+          # Run PDO enforcement tests - must collect at least 1 test
+          python -m pytest tests/test_pdo_enforcement.py -q --tb=short
+          
+          TEST_EXIT=$?
+          
+          if [ $TEST_EXIT -ne 0 ]; then
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "❌ INVARIANT 4 FAILED: PDO enforcement tests did not pass"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            exit 1
+          fi
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ INVARIANT 4 PASSED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      # Invariant 5: No enforcement bypass patterns
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      - name: Verify no enforcement bypass patterns
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔍 INVARIANT 5: No enforcement bypass patterns"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          # Check enforcement middleware is not stubbed/mocked in production code
+          if grep -rn "Mock.*PDOEnforcementGate\|patch.*pdo_enforcement" app/ 2>/dev/null; then
+            echo "❌ FAILED: Enforcement bypass detected in production code"
+            exit 1
+          fi
+          echo "✅ No mocking/stubbing of enforcement in production code"
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ INVARIANT 5 PASSED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      # Summary
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      - name: Gate Summary
+        if: success()
+        run: |
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔒 PDO ENFORCEMENT GATE: ALL INVARIANTS PASSED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "  ✅ Invariant 1: PDO enforcement files exist"
+          echo "  ✅ Invariant 2: PDO enforcement symbols present"
+          echo "  ✅ Invariant 3: PDO enforcement tests exist"
+          echo "  ✅ Invariant 4: PDO enforcement tests pass"
+          echo "  ✅ Invariant 5: No enforcement bypass patterns"
+          echo ""
+          echo "Doctrine: PDO Enforcement Model v1 (LOCKED)"
+          echo "Threat Mitigated: PDO-T-014 (CI/CD artifact poisoning)"
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+      - name: Generate Summary
+        if: always()
+        run: |
+          echo "# 🔒 PDO Enforcement Gate" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Doctrine:** PDO Enforcement Model v1 (LOCKED)" >> $GITHUB_STEP_SUMMARY
+          echo "**PAC:** PAC-DAN-PDO-CI-ENFORCEMENT-GATE-01" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Invariants Checked" >> $GITHUB_STEP_SUMMARY
+          echo "| Invariant | Description |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|-------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 1 | PDO enforcement files exist and are non-empty |" >> $GITHUB_STEP_SUMMARY
+          echo "| 2 | PDO enforcement symbols present (PDOEnforcementGate, require_valid_pdo, validate_pdo) |" >> $GITHUB_STEP_SUMMARY
+          echo "| 3 | PDO enforcement tests exist |" >> $GITHUB_STEP_SUMMARY
+          echo "| 4 | PDO enforcement tests pass |" >> $GITHUB_STEP_SUMMARY
+          echo "| 5 | No enforcement bypass patterns in production code |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "_This gate is FAIL-CLOSED. Any invariant violation blocks merge._" >> $GITHUB_STEP_SUMMARY
