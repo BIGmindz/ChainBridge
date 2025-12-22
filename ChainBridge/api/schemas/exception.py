@@ -69,7 +69,10 @@ class ExceptionRead(BaseModel):
     created_at: datetime
     updated_at: datetime
     resolved_at: Optional[datetime] = None
-    metadata: Optional[Dict[str, Any]] = None  # Additional details
+    resolution_type: Optional[str] = None
+    resolution_notes: Optional[str] = None
+    # Note: 'metadata' field removed to avoid conflict with SQLAlchemy Base.metadata
+    # Additional details can be retrieved via the 'details' field in the model
 
     model_config = ConfigDict(from_attributes=True)
 

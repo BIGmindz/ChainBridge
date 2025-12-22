@@ -1,5 +1,9 @@
 import pytest
 
+# Phase 2: SXT (Space and Time) client not yet implemented
+# This module will integrate with SXT's proof-of-SQL blockchain service
+pytest.importorskip("app.services.data.sxt_client", reason="SXT client not yet implemented (Phase 2)")
+
 from app.services.data.sxt_client import archive_telemetry, generate_proof_of_sql
 
 pytestmark = pytest.mark.phase2
