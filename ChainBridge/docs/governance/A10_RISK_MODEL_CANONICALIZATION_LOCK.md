@@ -8,8 +8,25 @@
 | **Author** | Maggie (GID-10) — ML & Applied AI Lead |
 | **Authority** | Benson (GID-00) |
 | **Date** | 2025-12-22 |
-| **Status** | 🔒 **LOCKED** |
+| **Status** | 🔒 **LOCKED** / **CANONICAL** |
 | **PAC Reference** | PAC-MAGGIE-A10-RISK-MODEL-CANONICALIZATION-LOCK-01 |
+| **Correction PAC** | PAC-MAGGIE-A10-GOVERNANCE-CORRECTION-01 |
+| **Prerequisites** | A1, A2, A3, A4, A5, A6 |
+
+---
+
+## 0. Canonical Status Declaration
+
+```
+CANONICAL_STATUS:
+  lock_id: "A10_RISK_MODEL_CANONICALIZATION"
+  status: "LOCKED"
+  canonical: true
+  ratified_by: "Benson (GID-00)"
+  ratification_date: "2025-12-22"
+  drift_detected: false
+  governance_compliant: true
+```
 
 ---
 
@@ -457,7 +474,49 @@ DATA_VERSION_POLICY {
 
 ---
 
-## 11. Unlock Authority
+## 11. Explicit Forbidden Actions (NON-GOALS)
+
+The following actions are **explicitly prohibited** under A10:
+
+### 11.1 Model Architecture Violations
+
+| Forbidden Action | Severity | Consequence |
+|------------------|----------|-------------|
+| Black-box models at decision boundary | 🔴 CRITICAL | Immediate halt, rollback required |
+| Neural networks for final risk score | 🔴 CRITICAL | Governance violation, escalate |
+| Adaptive monotonic relaxation | 🔴 CRITICAL | Contract breach |
+| Online learning without governance | 🔴 CRITICAL | Unversioned drift, halt |
+| Runtime model swapping | 🔴 CRITICAL | Non-deterministic, audit fail |
+| Post-hoc explanation models | 🟠 HIGH | Glass-box violation |
+
+### 11.2 Drift & Calibration Violations
+
+| Forbidden Action | Severity | Consequence |
+|------------------|----------|-------------|
+| Auto-correcting drift | 🔴 CRITICAL | Governance bypass |
+| Silent fallback on CRITICAL drift | 🔴 CRITICAL | Settlement risk |
+| Unversioned calibration artifacts | 🟠 HIGH | Audit trail gap |
+| ECE threshold bypass | 🟠 HIGH | Calibration contract breach |
+
+### 11.3 Replay & Audit Violations
+
+| Forbidden Action | Severity | Consequence |
+|------------------|----------|-------------|
+| Non-deterministic replay | 🔴 CRITICAL | Audit failure |
+| Missing input hash on RiskOutput | 🟠 HIGH | Replay contract breach |
+| Incomplete reason codes | 🟠 HIGH | Explainability gap |
+
+### 11.4 Settlement Integration Violations
+
+| Forbidden Action | Severity | Consequence |
+|------------------|----------|-------------|
+| Settlement without risk_verdict | 🔴 CRITICAL | A6 contract breach |
+| Risk downgrade post-PDO | 🔴 CRITICAL | Override governance bypass |
+| CRO override without OverrideProof | 🔴 CRITICAL | Audit gap |
+
+---
+
+## 12. Unlock Authority
 
 This lock may ONLY be modified by:
 - **Benson (GID-00)** — Full authority
@@ -471,7 +530,7 @@ Changes require:
 
 ---
 
-## 12. References
+## 13. References
 
 | Document | Location |
 |----------|----------|
