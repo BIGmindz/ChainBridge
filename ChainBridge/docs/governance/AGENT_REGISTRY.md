@@ -1,25 +1,28 @@
 # ChainBridge Agent Registry
 
-> **Governance Document** — PAC-BENSON-CANONICAL-IDENTITY-RECONCILIATION-01
-> **Version:** 3.0.0
+> **Governance Document** — PAC-BENSON-CANONICAL-AGENT-REGISTRY-RECONCILIATION-01
+> **Version:** 4.0.0
 > **Effective Date:** 2025-12-22
 > **Authority:** BENSON (GID-00)
 > **Status:** LOCKED / CANONICAL
+> **Supersedes:** v3.0.0
 
 ---
 
-## Identity Invariants (NON-NEGOTIABLE)
+## Canonical Identity Rules (NON-NEGOTIABLE)
 
 ```
-IDENTITY_INVARIANTS {
-  one_gid_per_agent: true
-  one_agent_per_gid: true
-  color_denotes_domain: true
-  icon_denotes_role: true
-  registry_is_authoritative: true
-  execution_without_registry_entry: forbidden
+CANONICAL_IDENTITY_RULES {
+  one_agent = one_gid = one_color = one_icon = one_execution_lane
+  no_shared_gids: TRUE
+  no_shared_colors_without_sub_icon: TRUE
+  no_ghost_agents: TRUE
+  registry_is_authority: TRUE
+  directory_mirrors_registry: TRUE
 }
 ```
+
+**Violation → IMMEDIATE HALT**
 
 ---
 
@@ -33,48 +36,71 @@ IDENTITY_INVARIANTS {
 | 4 | ROLE_ICON |
 | 5 | EXECUTION |
 
+### Color Funnel Narrowing Order
+
+```
+ORCHESTRATION → GOVERNANCE → SECURITY → DEVOPS → SYSTEM_STATE → BACKEND → ML_AI → FRONTEND → UX → RESEARCH
+```
+
 ---
 
 ## Agent Directory (CANONICAL)
 
 | Agent | GID | Color | Icon | Role | Execution Lane |
 |-------|-----|-------|------|------|----------------|
-| **BENSON** | GID-00 | TEAL | 🟦🟩 | Chief Architect / Orchestrator | ORCHESTRATION |
+| **BENSON** | GID-00 | TEAL | 🟦🟩 | Chief Architect & Orchestrator | ORCHESTRATION |
 | **CODY** | GID-01 | BLUE | 🔵 | Backend Engineer | BACKEND |
-| **MAGGIE** | GID-02 | PURPLE | 🟣 | ML & Applied AI Lead | ML_AI |
-| **SONNY** | GID-03 | GREEN | 🟢 | Frontend Engineer | FRONTEND |
-| **SAM** | GID-06 | RED | 🛡️ | Security & Threat Engineer | SECURITY |
-| **DAN** | GID-07 | ORANGE | 🟠 | DevOps & CI/CD Lead | DEVOPS |
+| **SONNY** | GID-02 | YELLOW | 🟡 | Frontend Engineer | FRONTEND |
+| **MIRA** | GID-03 | PURPLE | 🟣 | Research Lead | RESEARCH |
+| **CINDY** | GID-04 | CYAN | 🔷 | Backend Scaling Engineer | BACKEND |
+| **ATLAS** | GID-05 | BLUE | 🟦 | System State Engine | SYSTEM_STATE |
+| **SAM** | GID-06 | DARK_RED | 🔴 | Security & Threat Engineer | SECURITY |
+| **DAN** | GID-07 | GREEN | 🟢 | DevOps & CI/CD Lead | DEVOPS |
 | **ALEX** | GID-08 | WHITE | ⚪ | Governance & Alignment Engine | GOVERNANCE |
-| **CINDY** | GID-09 | BLUE | 🔷 | Backend Scaling Engineer | BACKEND |
-| **PAX** | GID-10 | GOLD | 💰 | Payments & Tokenization | PAYMENTS |
-| **ATLAS** | GID-11 | BLUE | 🧭 | System State Engine | SYSTEM_STATE |
-| **RUBY** | GID-12 | RED | ⚖️ | Chief Risk Officer | RISK_POLICY |
+| **LIRA** | GID-09 | PINK | 🩷 | UX Lead | UX |
+| **MAGGIE** | GID-10 | MAGENTA | 💗 | ML & Applied AI Lead | ML_AI |
+| **RUBY** | GID-12 | CRIMSON | ♦️ | Chief Risk Officer | RISK_POLICY |
 
 ---
 
-## Domain Color Mapping (LOCKED)
+## Special Agent Constraints
 
-| Domain | Color | Agents |
-|--------|-------|--------|
-| ORCHESTRATION | TEAL 🟦🟩 | BENSON |
-| BACKEND | BLUE 🔵🔷 | CODY, CINDY |
-| ML_AI | PURPLE 🟣 | MAGGIE |
-| FRONTEND | GREEN 🟢 | SONNY |
-| SECURITY | RED 🛡️ | SAM |
-| DEVOPS | ORANGE 🟠 | DAN |
-| GOVERNANCE | WHITE ⚪ | ALEX |
-| SYSTEM_STATE | BLUE 🧭 | ATLAS |
-| PAYMENTS | GOLD 💰 | PAX |
-| RISK_POLICY | RED ⚖️ | RUBY |
+### ATLAS (GID-05)
+```
+ATLAS_LOCK {
+  gid: "GID-05"
+  role: "System State Engine"
+  write_access: false
+  execution_authority: false
+  output: "FACTS ONLY"
+}
+```
+
+### RUBY (GID-12)
+```
+RUBY_STATUS {
+  gid: "GID-12"
+  role: "Chief Risk Officer"
+  authority: "RISK OVERRIDE ONLY"
+  execution: "POLICY ENFORCEMENT"
+}
+```
+
+---
+
+## Deprecated GIDs
+
+| GID | Prior Agent | Status | Reason |
+|-----|-------------|--------|--------|
+| GID-11 | ATLAS | DEPRECATED | Consolidated to GID-05 |
 
 ---
 
 ## Forbidden Aliases (LOCKED)
 
 The following identities are explicitly forbidden:
-- ❌ **DANA** — Retired, GID reassigned
-- ❌ **LIRA** — Retired, GID reassigned
+- ❌ **DANA** — Retired
+- ❌ **PAX** — Retired
 
 ---
 
@@ -82,19 +108,8 @@ The following identities are explicitly forbidden:
 
 | GID | Status | Notes |
 |-----|--------|-------|
-| GID-04 | RESERVED | Future allocation |
-| GID-05 | RESERVED | Future allocation |
+| GID-11 | DEPRECATED | Do not reuse |
 | GID-13+ | AVAILABLE | Next sequential assignment |
-- ❌ Skipping GID numbers
-- ❌ Modifying colors.json without ALEX approval
-
-### 5. Reserved Color Slots
-
-| Color | Hex | Status | Notes |
-|-------|-----|--------|-------|
-| ⚫ Black | `#000000` | Reserved | Future security/audit expansion |
-| 🟦 Blue Square | `#0000FF` | Reserved | Future distinction from circle blue |
-| 🔶 Orange Diamond | `#FF8C00` | Reserved | Future DevOps expansion |
 
 ---
 
@@ -112,9 +127,9 @@ PAC-CODY-XXX — Task Title
 ```
 
 **Validation Rules:**
-- All 10 emojis in border rows must match agent's assigned color
+- All emojis in border rows must match agent's assigned icon
 - GID must match agent's governance ID
-- PAC prefix must match agent name (PAC-CODY, PAC-MAGGIE, etc.)
+- PAC prefix must match agent name
 
 ---
 
@@ -124,35 +139,35 @@ PAC-CODY-XXX — Task Title
 
 **ALEX (Governance):**
 ```text
-⚪⚪⚪⚪⚪⚪⚪⚪⚪⚪  (10 white circles)
+⚪⚪⚪⚪⚪⚪⚪⚪⚪⚪
 ⚪ ALEX — GID-08 — GOVERNANCE ENGINE
 ⚪⚪⚪⚪⚪⚪⚪⚪⚪⚪
 PAC-ALEX-GOV-024 — Task Title
 ```
 
-**MAGGIE (ML Engineering):**
+**MAGGIE (ML/AI):**
 ```text
-🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣  (10 purple circles)
-🟣 MAGGIE — GID-02 — ML ENGINEERING
-🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣
+💗💗💗💗💗💗💗💗💗💗
+💗 MAGGIE — GID-10 — ML ENGINEERING
+💗💗💗💗💗💗💗💗💗💗
 PAC-MAGGIE-ML-005 — Model Training
 ```
 
-**PAX (Tokenization):**
+**DAN (DevOps):**
 ```text
-💰💰💰💰💰💰💰💰💰💰  (10 money bags)
-💰 PAX — GID-10 — TOKENIZATION & SETTLEMENT
-💰💰💰💰💰💰💰💰💰💰
-PAC-PAX-SETTLE-001 — Settlement Logic
+🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢
+🟢 DAN — GID-07 — DEVOPS
+🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢
+PAC-DAN-DEVOPS-001 — CI Pipeline
 ```
 
 ### ❌ Invalid PAC Headers (Will Be Blocked)
 
 | Error | Example | Issue |
 |-------|---------|-------|
-| Wrong emoji | `[BLUE] MAGGIE — GID-02` | MAGGIE uses 🟣, not 🔵 |
-| Wrong GID | `[PURPLE] MAGGIE — GID-10` | MAGGIE is GID-02, not GID-10 |
-| Mixed border | `[WHITE][WHITE][BLUE]...` | All 10 emojis must match |
+| Wrong icon | `[🟣] MAGGIE — GID-10` | MAGGIE uses 💗, not 🟣 |
+| Wrong GID | `[💗] MAGGIE — GID-02` | MAGGIE is GID-10, not GID-02 |
+| Mixed border | `[⚪][⚪][🔵]...` | All emojis must match |
 | PAC mismatch | `PAC-CODY-...` in MAGGIE PAC | PAC prefix must match agent |
 
 ---
@@ -171,11 +186,11 @@ The color registry is enforced by automated CI:
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 2.1.0 | 2025-12-11 | Added PAC color enforcement examples (PAC-ALEX-GOV-024) |
-| 2.0.0 | 2025-12-11 | Complete rewrite with color philosophy, onboarding rules (PAC-CINDY-GOV-001) |
-| 1.0.0 | 2025-12-11 | Initial color registry (PAC-ALEX-GOV-022) |
+| 4.0.0 | 2025-12-22 | Major reconciliation: GID reassignments, new agents (MIRA, LIRA), deprecated (PAX, GID-11) |
+| 3.0.0 | 2025-12-22 | Directory canonicalization, funnel standard |
+| 2.0.0 | 2025-12-11 | Color philosophy, onboarding rules |
+| 1.0.0 | 2025-12-11 | Initial color registry |
 
 ---
 
-💙 **CINDY** — Senior Backend Engineer
-*Documentation through precision.*
+🟦🟩 **BENSON (GID-00)** — Chief Architect & Orchestrator
