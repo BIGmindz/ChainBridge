@@ -282,16 +282,33 @@ def main() -> int:
     Run all deployment readiness checks.
     Returns 0 if ready, 1 if not.
     """
-    # Find repo root
+    # Find repo root - handle both standalone repo and nested ChainBridge subdir
     script_path = Path(__file__).resolve()
     repo_root = script_path.parent.parent.parent  # scripts/ci/this.py -> repo root
 
-    if not (repo_root / ".git").exists():
-        # Try current directory
-        repo_root = Path.cwd()
-        if not (repo_root / ".git").exists():
-            print("❌ ERROR: Could not find repository root")
-            return 1
+    # Check various possible structures
+    candidates = [
+        repo_root,
+        Path.cwd(),
+        repo_root.parent,  # If ChainBridge is a subdir
+        Path.cwd().parent,
+    ]
+
+    found = False
+    for candidate in candidates:
+        # Look for .git OR docs/governance (ChainBridge workspace indicator)
+        if (candidate / ".git").exists():
+            repo_root = candidate
+            found = True
+            break
+        if (candidate / "docs" / "governance").exists():
+            repo_root = candidate
+            found = True
+            break
+
+    if not found:
+        print("❌ ERROR: Could not find repository root")
+        return 1
 
     print()
     print("╔════════════════════════════════════════════════════════════════════╗")
