@@ -1,0 +1,112 @@
+name: Agent Framework CI
+
+on:
+    push:
+        branches:
+            - main
+            - develop
+            - refactor/enterprise-monorepo
+            - local-backup-api
+    pull_request:
+        branches:
+            - main
+            - develop
+            - refactor/enterprise-monorepo
+
+jobs:
+    agent-validate:
+        name: Validate Agent Configurations
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                python-version:
+                    - "3.11"
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Set up Python ${{ matrix.python-version }}
+              uses: actions/setup-python@v4
+              with:
+                  python-version: ${{ matrix.python-version }}
+
+            - name: Validate agent configurations
+              run: python -m tools.agent_validate
+              continue-on-error: false
+
+            - name: Test agent runtime initialization
+              run: python -m tools.agent_runtime
+              continue-on-error: false
+
+            - name: Run agent runtime tests
+              run: python -m pytest tests/test_agent_runtime.py -q
+              continue-on-error: false
+
+            - name: ALEX Governance Tests
+              run: |
+                  source .venv/bin/activate || true
+                  pytest -q tests/agents
+              continue-on-error: false
+
+            - name: ALEX Gateway Tests
+              run: |
+                  source .venv/bin/activate || true
+                  pytest -q tests/agents/test_alex_gateway.py
+              continue-on-error: false
+
+            - name: Export agent prompts JSON
+              run: python -m tools.agent_cli dump-json agents_export.json
+              continue-on-error: false
+
+            - name: Upload agent artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: agent-prompts-json
+                  path: agents_export.json
+                  retention-days: 90
+
+    lint:
+        name: Lint & Type Check
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                python-version:
+                    - "3.11"
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Set up Python ${{ matrix.python-version }}
+              uses: actions/setup-python@v4
+              with:
+                  python-version: ${{ matrix.python-version }}
+
+            - name: Check Python syntax
+              run: python -m py_compile tools/agent_loader.py tools/agent_runtime.py tools/agent_validate.py
+
+    alex-governance:
+        name: ALEX Governance Gate
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.11"
+
+            - name: Install dependencies
+              run: |
+                  python -m venv .venv
+                  source .venv/bin/activate
+                  pip install --upgrade pip
+                  pip install -r requirements-runtime.txt
+                  pip install -r requirements-dev.txt
+
+            - name: Run ALEX governance tests (tests/agents)
+              run: |
+                  source .venv/bin/activate
+                  pytest -q tests/agents

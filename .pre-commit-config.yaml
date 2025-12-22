@@ -1,21 +1,111 @@
+# DAN GID-04 DevOps PAC - Pre-commit Autofix Pack
+default_language_version:
+  python: python3.11
+
 repos:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Standard pre-commit hooks
+  # ─────────────────────────────────────────────────────────────────────────────
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
       - id: end-of-file-fixer
       - id: trailing-whitespace
       - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: detect-private-key
+      - id: check-merge-conflict
 
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Python: isort (import sorting with autofix)
+  # ─────────────────────────────────────────────────────────────────────────────
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ["--profile=black", "--line-length=140"]
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Python: black (code formatting with autofix)
+  # ─────────────────────────────────────────────────────────────────────────────
+  - repo: https://github.com/psf/black
+    rev: 24.8.0
+    hooks:
+      - id: black
+        args: ["--line-length=140"]
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Python: ruff (fast linting with autofix)
+  # ─────────────────────────────────────────────────────────────────────────────
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.6.9
     hooks:
       - id: ruff
-        args: [--fix]
+        args: [--fix, --exit-non-zero-on-fix]
 
+  # ─────────────────────────────────────────────────────────────────────────────
+  # JavaScript/TypeScript: eslint --fix
+  # ─────────────────────────────────────────────────────────────────────────────
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v9.11.1
+    hooks:
+      - id: eslint
+        args: [--fix]
+        files: \.(js|jsx|ts|tsx)$
+        additional_dependencies:
+          - eslint@9.11.1
+          - typescript
+          - '@typescript-eslint/parser'
+          - '@typescript-eslint/eslint-plugin'
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Alembic: migration revision format check
+  # ─────────────────────────────────────────────────────────────────────────────
   - repo: local
     hooks:
+      - id: alembic-revision-check
+        name: Alembic Migration Format Check
+        entry: bash -c 'find . -path "*/versions/*.py" -name "*.py" | head -20 | xargs -I{} sh -c "grep -q \"revision = \" {} && grep -q \"down_revision = \" {} || (echo \"Missing revision markers in {}\" && exit 1)" || true'
+        language: system
+        files: versions/.*\.py$
+        pass_filenames: false
+
       - id: lean-quick-checks
         name: Lean Quick Checks (RSI + Integrator)
         entry: bash -lc 'make quick-checks'
         language: system
         pass_filenames: false
+        stages: [manual]
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # PAC Governance: Activation Block Enforcement
+  # PAC Reference: PAC-DAN-ACTIVATION-GATE-CI-ENFORCEMENT-01
+  # ─────────────────────────────────────────────────────────────────────────────
+  - repo: local
+    hooks:
+      - id: pac-activation-gate
+        name: "🚦 PAC Activation Gate (MANDATORY)"
+        entry: python scripts/ci/activation_gate.py --file
+        language: system
+        files: \.py$
+        pass_filenames: true
+        stages: [commit]
+        description: "Enforces activation block presence and ordering at commit time"
+
+      - id: pac-activation-block-check
+        name: PAC Activation Block Enforcement
+        entry: python tools/pac_linter.py --check
+        language: system
+        files: \.py$
+        pass_filenames: false
+        stages: [commit]
+
+      - id: pac-linter
+        name: PAC Linter (Full)
+        entry: python tools/pac_linter.py --check
+        language: system
+        files: \.py$
+        pass_filenames: false
+        stages: [push]

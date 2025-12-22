@@ -1,0 +1,39 @@
+{
+  "queueCards": [
+    {
+      "shipmentId": "SHP0001",
+      "corridorId": "USMX-SEA",
+      "mode": "sea",
+      "riskBand": "high",
+      "settlementState": "IN_FLIGHT",
+      "etaIso": "2025-11-27T19:22:00Z",
+      "nearestPort": "LAX"
+    }
+  ],
+  "globalSnapshot": {
+    "corridorKpis": [
+      {
+        "corridorId": "US-MX",
+        "corridorName": "US-Mexico",
+        "stpRate": 95,
+        "avgEtaDeltaMinutes": 30,
+        "highRiskShipments": 5,
+        "atRiskShipments": 10
+      }
+    ],
+    "modeKpis": [],
+    "portHotspots": [],
+    "globalTotals": {
+      "totalShipments": 10,
+      "activeShipments": 8,
+      "blockedShipments": 1,
+      "settlementsInFlight": 50000
+    },
+    "timestamp": "2025-11-24T10:00:00Z"
+  },
+  "livePositionsMeta": {
+    "activeShipments": 10,
+    "corridorsCovered": 3,
+    "portsCovered": 2
+  }
+}

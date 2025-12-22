@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { ExceptionRow } from "../types";
-import { exportToCSV } from "../utils/formatting";
 import { Download } from "lucide-react";
+import { useState } from "react";
+
+import { exportToCSV } from "../lib/formatters";
+import type { ExceptionRow } from "../lib/types";
 
 interface ExceptionsTableProps {
   exceptions: ExceptionRow[];
@@ -34,7 +35,7 @@ export default function ExceptionsTable({
       case "finance":
         return exceptions.filter((e) => e.payment_state === "blocked");
       case "high_risk":
-        return exceptions.filter((e) => e.risk_score >= 70);
+        return exceptions.filter((e) => e.riskScore >= 70);
       default:
         return exceptions;
     }
@@ -107,11 +108,11 @@ export default function ExceptionsTable({
             ) : (
               filtered.map((exception) => (
                 <tr
-                  key={exception.shipment_id}
+                  key={exception.shipmentId}
                   className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                 >
                   <td className="px-4 py-3 font-mono text-primary-600">
-                    {exception.shipment_id}
+                    {exception.shipmentId}
                   </td>
                   <td className="px-4 py-3 text-gray-700">{exception.lane}</td>
                   <td className="px-4 py-3 capitalize text-gray-700">
@@ -119,7 +120,7 @@ export default function ExceptionsTable({
                   </td>
                   <td className="px-4 py-3 text-center">
                     <span className="px-2 py-1 rounded-full font-semibold text-xs bg-warning-100 text-warning-800">
-                      {exception.risk_score}
+                      {exception.riskScore}
                     </span>
                   </td>
                   <td className="px-4 py-3">

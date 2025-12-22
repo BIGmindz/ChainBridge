@@ -16,7 +16,7 @@ venv/
 .DS_Store
 logs/
 *.log
-*.json
+# Specific json files to ignore (not blanket *.json)
 benson_metrics.json
 multi_signal_trades.json
 trading_metrics.json
@@ -26,3 +26,47 @@ local_repo_snapshot.bundle
 Dockerfile.*.local
 docker-compose.override.yml
 .venv-lean/
+
+# UI build artifacts and code dumps
+*.zip
+*-source*.txt
+*-full-source.txt
+
+# Environments
+.env
+.env.local
+.env.*.local
+
+# Data & Logs
+data/
+logs/
+*.log
+
+# Python Artifacts
+__pycache__/
+*.pyc
+.pytest_cache/
+venv/
+
+# Node Artifacts
+node_modules/
+dist/
+build/
+
+# Coverage / reports
+.coverage
+.coverage.*
+**/.coverage
+htmlcov/
+coverage*/
+reports*/
+
+# Local databases
+*.sqlite3
+chainpay-service/chainpay.db
+chainpay-service/settlement_actions.db
+chainpay-service/*.db
+
+# Caches
+cache/
+ChainBridge/cache/

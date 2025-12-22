@@ -1,13 +1,27 @@
-import { useMemo, useCallback, useEffect, useState } from "react";
 import { AlertTriangle, ArrowDownRight, ArrowUpRight } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MOCK_SHIPMENTS } from "../lib/mockData";
-import { CorridorIntelPanel } from "../components/CorridorIntel";
+
+import { AgentHealthCard } from "../components/agent-health/AgentHealthCard";
+import { AgentHealthList } from "../components/agent-health/AgentHealthList";
 import type { CorridorId } from "../components/CorridorIntel";
+import { CorridorIntelPanel } from "../components/CorridorIntel";
+import { EchoEventPanel } from "../components/EchoEventPanel";
+import { HealthStatusCard } from "../components/HealthStatusCard";
+import { InsightsFeed } from "../components/InsightsFeed";
+import { IoTHealthPanel } from "../components/iot/IoTHealthPanel";
+import { PaymentHoldQueueCard } from "../components/PaymentHoldQueueCard";
 import { PaymentRailsIntelPanel } from "../components/PaymentRailsIntel";
-import { IoTHealthPanel } from "../components/IoTHealthPanel";
-import type { GlobalSummary } from "../lib/metrics";
-import { fetchGlobalSummary } from "../services/metricsClient";
+import { ShipmentRiskCard } from "../components/ShipmentRiskCard";
+import { ShipmentRiskHistoryCard } from "../components/ShipmentRiskHistoryCard";
+import { ShipmentRiskReplayPanel } from "../components/ShipmentRiskReplayPanel";
+import { FEATURES } from "../config/env";
+import { useDemo } from "../core/demo/DemoContext";
+import { useNotifications } from "../core/notifications/NotificationContext";
+import { useAgentHealth } from "../hooks/useAgentHealth";
+import { useControlTowerOverview } from "../hooks/useControlTowerOverview";
+import { formatUSD } from "../lib/formatters";
+import { MOCK_SHIPMENTS } from "../lib/mockData";
 import type { Shipment } from "../lib/types";
 
 type Tone = "good" | "warn" | "bad";
@@ -50,29 +64,31 @@ function riskTone(score: number): Tone {
 
 export default function OverviewPage(): JSX.Element {
   const navigate = useNavigate();
-  const [globalSummary, setGlobalSummary] = useState<GlobalSummary | null>(null);
+  const { kpis, loading: kpiLoading, error: kpiError, refreshAll } = useControlTowerOverview();
+  const {
+    data: agentHealthSummary,
+    loading: agentHealthLoading,
+    error: agentHealthError,
+    refetch: refetchAgentHealth,
+  } = useAgentHealth();
+  const { notifySuccess, notifyError } = useNotifications();
 
-  useEffect(() => {
-    let isMounted = true;
+  // Demo mode highlight key
+  const { state: demoState } = useDemo();
+  const highlightKey = demoState.currentStep?.highlightKey;
 
-    (async () => {
-      try {
-        const summary = await fetchGlobalSummary();
-        if (isMounted) {
-          setGlobalSummary(summary);
-        }
-      } catch (error) {
-        if (import.meta.env.DEV) {
-          const message = error instanceof Error ? error.message : String(error);
-          console.error("Failed to load global summary", message);
-        }
-      }
-    })();
+  // Time range filter for insights and events
+  const [timeRange, setTimeRange] = useState<"24h" | "7d" | "30d">("24h");
 
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const handleRefreshAll = useCallback(async () => {
+    try {
+      await refreshAll();
+      notifySuccess("Control Tower data refreshed");
+    } catch {
+      notifyError("Failed to refresh all Control Tower data");
+    }
+  }, [refreshAll, notifySuccess, notifyError]);
+
   const metrics = useMemo(() => {
     const total = MOCK_SHIPMENTS.length;
     const activeShipments = MOCK_SHIPMENTS.filter((s) => ACTIVE_STATUSES.has(s.status)).length;
@@ -92,7 +108,9 @@ export default function OverviewPage(): JSX.Element {
     const paymentHealth = classifyPaymentHealth(MOCK_SHIPMENTS);
     const blockedPayments = MOCK_SHIPMENTS.filter((s) => s.payment.state === "blocked").length;
     const partialPayments = MOCK_SHIPMENTS.filter((s) => s.payment.state === "partially_paid").length;
-    const proofsVerified = MOCK_SHIPMENTS.filter((s) => s.governance.proofpackStatus === "VERIFIED").length;
+    const proofsVerified = MOCK_SHIPMENTS.filter(
+      (s) => s.governance.proofpack_status === "VERIFIED"
+    ).length;
     const highRiskPct = percentage(
       MOCK_SHIPMENTS.filter((s) => s.risk.category !== "low").length,
       total
@@ -135,6 +153,45 @@ export default function OverviewPage(): JSX.Element {
           </p>
         </div>
 
+        <div className="flex flex-col gap-3">
+          {/* Time Range Filter */}
+          <div className="rounded-xl border border-slate-800 bg-slate-900/70 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-2">Time Range</p>
+            <div className="flex gap-1">
+              <button
+                onClick={() => setTimeRange("24h")}
+                className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                  timeRange === "24h"
+                    ? "bg-blue-600 text-white"
+                    : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                }`}
+              >
+                24h
+              </button>
+              <button
+                onClick={() => setTimeRange("7d")}
+                className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                  timeRange === "7d"
+                    ? "bg-blue-600 text-white"
+                    : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                }`}
+              >
+                7d
+              </button>
+              <button
+                onClick={() => setTimeRange("30d")}
+                className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                  timeRange === "30d"
+                    ? "bg-blue-600 text-white"
+                    : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                }`}
+              >
+                30d
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div className="flex flex-wrap gap-3 text-[11px]">
           <div className="rounded-xl border border-slate-800 bg-slate-900/70 px-3 py-2">
             <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Watch Window</p>
@@ -150,6 +207,177 @@ export default function OverviewPage(): JSX.Element {
           </div>
         </div>
       </header>
+
+      {/* Control Tower KPI Strip - Aggregated Metrics */}
+      <section className="rounded-xl border border-slate-800/70 bg-slate-950/60 p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+              Control Tower KPIs
+            </p>
+            <p className="mt-1 text-xs text-slate-400">
+              Real-time aggregation across all modules
+            </p>
+          </div>
+          {kpiError && (
+            <button
+              onClick={handleRefreshAll}
+              className="rounded-lg border border-orange-500/60 bg-orange-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-orange-300 hover:bg-orange-500/20"
+            >
+              Refresh All
+            </button>
+          )}
+        </div>
+
+        {kpiError && (
+          <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3">
+            <p className="text-sm text-red-400">
+              {typeof kpiError === "string" ? kpiError : kpiError.message}
+            </p>
+          </div>
+        )}
+
+        {kpiLoading && !kpis.totalShipments ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="rounded-lg border border-slate-800 bg-slate-900/50 p-4 animate-pulse"
+              >
+                <div className="h-4 bg-slate-700 rounded w-24 mb-2"></div>
+                <div className="h-8 bg-slate-700 rounded w-16"></div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Total Shipments */}
+            <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Shipments
+              </p>
+              <p className="mt-2 text-3xl font-bold text-slate-50">{kpis.totalShipments}</p>
+              <p className="mt-1 text-xs text-slate-400">Total active</p>
+            </div>
+
+            {/* High Risk Count */}
+            <div className="rounded-lg border border-orange-500/30 bg-orange-500/10 p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-orange-400">
+                High Risk
+              </p>
+              <p className="mt-2 text-3xl font-bold text-orange-300">{kpis.highRiskCount}</p>
+              <p className="mt-1 text-xs text-orange-200/70">Requiring review</p>
+            </div>
+
+            {/* Payment Holds */}
+            <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-red-400">
+                Payment Holds
+              </p>
+              <p className="mt-2 text-3xl font-bold text-red-300">{kpis.holdsQueued}</p>
+              <p className="mt-1 text-xs text-red-200/70">{formatUSD(kpis.holdsValue)} locked</p>
+            </div>
+
+            {/* IoT Status */}
+            <div
+              className={`rounded-lg border p-4 ${
+                kpis.iotStatus === "HEALTHY"
+                  ? "border-emerald-500/30 bg-emerald-500/10"
+                  : kpis.iotStatus === "CRITICAL"
+                  ? "border-red-500/30 bg-red-500/10"
+                  : "border-amber-500/30 bg-amber-500/10"
+              }`}
+            >
+              <p
+                className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${
+                  kpis.iotStatus === "HEALTHY"
+                    ? "text-emerald-400"
+                    : kpis.iotStatus === "CRITICAL"
+                    ? "text-red-400"
+                    : "text-amber-400"
+                }`}
+              >
+                IoT Status
+              </p>
+              <p
+                className={`mt-2 text-2xl font-bold ${
+                  kpis.iotStatus === "HEALTHY"
+                    ? "text-emerald-300"
+                    : kpis.iotStatus === "CRITICAL"
+                    ? "text-red-300"
+                    : "text-amber-300"
+                }`}
+              >
+                {kpis.iotStatus}
+              </p>
+              <p
+                className={`mt-1 text-xs ${
+                  kpis.iotStatus === "HEALTHY"
+                    ? "text-emerald-200/70"
+                    : kpis.iotStatus === "CRITICAL"
+                    ? "text-red-200/70"
+                    : "text-amber-200/70"
+                }`}
+              >
+                {kpis.iotCoverage.toFixed(1)}% coverage
+              </p>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Agent Health Observability */}
+      <section className="grid gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <AgentHealthCard
+            summary={agentHealthSummary}
+            loading={agentHealthLoading}
+            error={agentHealthError}
+            onRetry={refetchAgentHealth}
+          />
+        </div>
+        <AgentHealthList
+          invalidRoles={agentHealthSummary?.invalidRoles ?? []}
+          loading={agentHealthLoading}
+          error={agentHealthError}
+          onRetry={refetchAgentHealth}
+        />
+      </section>
+
+      {/* System Health & Echo - Mission Control Diagnostics */}
+      <section className="grid gap-6 lg:grid-cols-3">
+        <HealthStatusCard />
+        <div className="lg:col-span-2">
+          <EchoEventPanel />
+        </div>
+      </section>
+
+      {/* ChainIQ Shipment Risk Scoring - First Intelligence Module */}
+      <section>
+        <ShipmentRiskCard />
+      </section>
+
+      {/* ChainIQ Intelligence Memory - History & Replay */}
+      <section className="grid gap-6 lg:grid-cols-2">
+        <ShipmentRiskHistoryCard />
+        <ShipmentRiskReplayPanel />
+      </section>
+
+      {/* ChainPay Level 1 - Payment Hold Queue (Read-Only Decision Surface) */}
+      <section
+        className={highlightKey === "payment_queue" ? "ring-2 ring-emerald-400 rounded-lg p-2" : ""}
+      >
+        <PaymentHoldQueueCard />
+      </section>
+
+      {/* ChainIQ Risk Insights Feed - AI-Generated Narratives */}
+      {FEATURES.insightsFeed && (
+        <section
+          className={highlightKey === "insights_feed" ? "ring-2 ring-emerald-400 rounded-lg p-2" : ""}
+        >
+          <InsightsFeed />
+        </section>
+      )}
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <KpiCard
@@ -192,7 +420,9 @@ export default function OverviewPage(): JSX.Element {
 
       <PaymentRailsIntelPanel />
 
-      <IoTHealthPanel iot={globalSummary?.iot ?? null} />
+      <div className={highlightKey === "iot_panel" ? "ring-2 ring-emerald-400 rounded-lg p-2" : ""}>
+        <IoTHealthPanel />
+      </div>
 
       <section className="mt-4 rounded-2xl border border-slate-800 bg-slate-950/80 px-3 py-2">
         <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">

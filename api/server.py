@@ -10,17 +10,30 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
+from api.chainboard_stub import router as chainboard_router
+from api.ingress import router as ingress_router
+from api.spine import router as spine_router
+from api.trust import router as trust_router
 from core.data_processor import DataProcessor
 
 # Import core components
 from core.module_manager import ModuleManager
+from core.proof_storage import ProofIntegrityError, init_proof_storage
+from core.occ.api.activities import router as occ_activities_router
+from core.occ.api.artifacts import router as occ_artifacts_router
+from core.occ.api.audit_events import router as occ_audit_events_router
+from core.occ.api.decisions import router as occ_decisions_router
+from core.occ.api.pdo import router as occ_pdo_router
+from core.occ.api.proofpack_v1 import router as occ_proofpack_v1_router
+from core.occ.api.proofpacks import router as occ_proofpacks_router
 from core.pipeline import Pipeline
+from gateway.rate_limit import RateLimitConfig, RateLimiter, RateLimitError, RequestContext
 from tracking.metrics_collector import MetricsCollector
-
 
 # Default module configuration
 DEFAULT_MODULE_IMPORTS = {
@@ -41,6 +54,46 @@ DEFAULT_SIGNAL_MODULES = [
     "VolumeProfileModule",
     "SentimentAnalysisModule",
 ]
+
+
+def _env_bool(name: str, default: bool) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _env_int(name: str, default: int) -> int:
+    raw = os.getenv(name)
+    if raw is None or not raw.strip():
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        return default
+
+
+GATEWAY_ENV = (os.getenv("GATEWAY_ENV") or os.getenv("ENVIRONMENT") or "dev").lower()
+IS_PROD = GATEWAY_ENV in {"prod", "production", "staging-prod", "staging"}
+
+# Sam (GID-06) rate limit baselines (docs/security/gateway_airlock_enforcement.md section 5).
+RATE_LIMIT_CONFIG = RateLimitConfig(
+    per_user=_env_int("GATEWAY_RATE_LIMIT_PER_USER", 60),
+    per_agent=_env_int("GATEWAY_RATE_LIMIT_PER_AGENT", 20),
+    per_endpoint=_env_int("GATEWAY_RATE_LIMIT_PER_ENDPOINT", 50),
+    window_seconds=_env_int("GATEWAY_RATE_LIMIT_WINDOW_SECONDS", 60),
+)
+
+ALLOW_DYNAMIC_MODULES = _env_bool("GATEWAY_ALLOW_DYNAMIC_MODULES", default=not IS_PROD)
+REQUIRE_PDO = _env_bool("GATEWAY_REQUIRE_PDO", default=IS_PROD)
+ENFORCE_RATE_LIMITS = _env_bool("GATEWAY_ENFORCE_RATE_LIMITS", default=IS_PROD)
+
+_default_dev_origins = "http://localhost:3000,http://127.0.0.1:3000"
+_default_prod_origins = "https://chainbridge.app,https://dashboard.chainbridge.app"
+_cors_origins_raw = os.getenv("GATEWAY_CORS_ORIGINS", _default_prod_origins if IS_PROD else _default_dev_origins)
+_cors_origins = [origin.strip() for origin in _cors_origins_raw.split(",") if origin.strip()]
+if IS_PROD and (not _cors_origins or any(origin == "*" for origin in _cors_origins)):
+    raise RuntimeError("CORS '*' is forbidden in prod. Set GATEWAY_CORS_ORIGINS to trusted origins.")
 
 
 # Pydantic models for API
@@ -91,6 +144,7 @@ module_manager = ModuleManager()
 pipelines: Dict[str, Pipeline] = {}
 metrics_collector = MetricsCollector()
 data_processor = DataProcessor()
+rate_limiter = RateLimiter(RATE_LIMIT_CONFIG)
 
 
 def ensure_default_modules_loaded() -> List[str]:
@@ -126,11 +180,71 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    if not ENFORCE_RATE_LIMITS:
+        return await call_next(request)
+
+    context = RequestContext(
+        user_id=request.headers.get("X-User-Id") or request.headers.get("X-User-ID") or "anonymous",
+        agent_id=request.headers.get("X-Agent-Id") or request.headers.get("X-Agent-ID") or "unknown-agent",
+        endpoint=request.url.path,
+    )
+
+    try:
+        rate_limiter.enforce(context)
+    except RateLimitError as exc:
+        if metrics_collector:
+            metrics_collector.track_rate_limit_exhaustion(
+                scope=exc.scope or "unknown",
+                key=exc.key or "unknown",
+                endpoint=context.endpoint,
+                retry_after=exc.retry_after,
+            )
+
+        retry_after = max(int(round(exc.retry_after)), 0)
+        return JSONResponse(
+            status_code=429,
+            content={"error": "rate_limited", "retry_after": round(exc.retry_after, 3)},
+            headers={"Retry-After": str(retry_after)},
+        )
+
+    response = await call_next(request)
+    snapshot = rate_limiter.snapshot(context)
+    response.headers["X-RateLimit-Limit"] = str(RATE_LIMIT_CONFIG.per_user)
+    response.headers["X-RateLimit-Remaining"] = str(max(RATE_LIMIT_CONFIG.per_user - snapshot["user"], 0))
+    response.headers["X-RateLimit-Reset"] = str(RATE_LIMIT_CONFIG.window_seconds)
+    return response
+
+
+@app.middleware("http")
+async def pdo_enforcement_middleware(request: Request, call_next):
+    if REQUIRE_PDO and request.method.upper() in {"POST", "PUT", "PATCH"} and request.url.path.startswith(("/modules", "/pipelines")):
+        if not request.headers.get("X-Gateway-PDO"):
+            return JSONResponse(status_code=400, content={"error": "pdo_missing", "detail": "Gateway PDO required"})
+
+    return await call_next(request)
+
+
+# Mount OCC APIs and ChainBoard projection layer
+app.include_router(occ_activities_router)
+app.include_router(occ_artifacts_router)
+app.include_router(occ_audit_events_router)
+app.include_router(occ_decisions_router)
+app.include_router(occ_pdo_router)
+app.include_router(occ_proofpacks_router)
+app.include_router(occ_proofpack_v1_router)  # PDO-based ProofPack per PROOFPACK_SPEC_v1.md
+app.include_router(chainboard_router)
+app.include_router(trust_router)
+app.include_router(spine_router)  # Minimum Execution Spine (PAC-BENSON-EXEC-SPINE-01)
+app.include_router(ingress_router)  # Event Ingress (PAC-CODY-EXEC-SPINE-01)
 
 
 @app.get("/", response_model=Dict[str, str])
@@ -141,6 +255,7 @@ async def root():
         "version": "1.0.0",
         "docs": "/docs",
         "health": "/health",
+        "governance": "/governance/fingerprint",
     }
 
 
@@ -151,6 +266,39 @@ async def health_check():
         modules_loaded=len(module_manager.list_modules()),
         active_pipelines=len(pipelines),
     )
+
+
+@app.get("/governance/fingerprint")
+async def get_governance_fingerprint():
+    """Get governance fingerprint for audit and verification.
+
+    Returns the cryptographic fingerprint of all governance root files,
+    enabling operators to verify governance state consistency across
+    environments (local, CI, prod).
+
+    This endpoint is read-only and does not modify state.
+    """
+    try:
+        from core.governance.governance_fingerprint import GovernanceBootError, get_fingerprint_engine
+
+        engine = get_fingerprint_engine()
+        if not engine.is_initialized():
+            # Compute on first access if not yet initialized
+            engine.compute_fingerprint()
+
+        fingerprint = engine.get_fingerprint()
+        return fingerprint.to_dict()
+
+    except GovernanceBootError as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Governance fingerprint unavailable: {e}",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to compute governance fingerprint: {e}",
+        )
 
 
 @app.get("/modules", response_model=List[str])
@@ -171,6 +319,9 @@ async def get_module_info(module_name: str):
 @app.post("/modules/register", response_model=Dict[str, str])
 async def register_module(request: ModuleRegistrationRequest):
     """Register a new module."""
+    if not ALLOW_DYNAMIC_MODULES:
+        raise HTTPException(status_code=403, detail="Dynamic module registration is disabled in this environment")
+
     try:
         module_name = module_manager.load_module(request.module_path, request.config)
         metrics_collector.track_module_registration(module_name, request.module_path)
@@ -520,7 +671,26 @@ async def get_available_signals():
 # Load default modules on startup
 @app.on_event("startup")
 async def startup_event():
-    """Initialize default modules and pipelines."""
+    """Initialize proof storage, default modules and pipelines."""
+    # PAC-DAN-PROOF-PERSISTENCE-01: Validate proof integrity on startup
+    # This MUST happen first - if proofs are corrupted, we fail loudly
+    try:
+        proof_report = init_proof_storage()
+        print("=" * 60)
+        print("PROOF STORAGE VALIDATION")
+        print(f"  Status: {proof_report['status']}")
+        print(f"  Proof Count: {proof_report['validated_count']}")
+        print(f"  Last Hash: {proof_report['last_content_hash'][:16]}..." if proof_report['last_content_hash'] != '0' * 64 else "  Last Hash: (empty)")
+        print(f"  Log Path: {proof_report['log_path']}")
+        print("=" * 60)
+    except ProofIntegrityError as e:
+        print("=" * 60)
+        print("CRITICAL: PROOF INTEGRITY VALIDATION FAILED!")
+        print(f"  Error: {e}")
+        print("  Startup ABORTED - proof artifacts may be corrupted")
+        print("=" * 60)
+        raise SystemExit(1)  # Hard crash on integrity failure
+
     try:
         newly_loaded = ensure_default_modules_loaded()
 

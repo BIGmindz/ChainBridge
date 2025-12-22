@@ -27,9 +27,188 @@ body {
   @apply bg-white rounded-lg shadow-sm border border-gray-200;
 }
 
+/* Toast notification animations */
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =============================================================================
+ * CALM UX ANIMATIONS — PAC-06-F
+ * 🩵 LIRA — GID-09 — EXPERIENCE ENGINEER
+ *
+ * Design Philosophy:
+ * - Slow, gentle animations reduce anxiety
+ * - Breathing patterns (3-4s) feel natural and calming
+ * - Avoid rapid flashing that triggers stress responses
+ * - Support reduced-motion preferences
+ * ============================================================================= */
+
+/* Calmer pulse for status indicators - gentle 3s breathing */
+@keyframes calm-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Subtle version for background elements */
+@keyframes calm-pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+/* Stronger version for important alerts */
+@keyframes calm-pulse-strong {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Breathing effect - mimics natural breathing rhythm */
+@keyframes calm-breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 0.9;
+  }
+}
+
+/* Gentle fade-in entry animation */
+@keyframes calm-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Calm glow effect for positive status */
+@keyframes calm-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+  50% {
+    box-shadow: 0 0 12px 2px rgba(16, 185, 129, 0.15);
+  }
+}
+
+/* Slow spin for non-urgent loading */
+@keyframes calm-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Success celebration - subtle shimmer */
+@keyframes calm-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Attention without alarm - gentle bounce */
+@keyframes calm-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.4s ease-out;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-calm-pulse {
+  animation: calm-pulse 3s ease-in-out infinite;
+}
+
+.animate-calm-pulse-subtle {
+  animation: calm-pulse-subtle 4s ease-in-out infinite;
+}
+
+.animate-calm-pulse-strong {
+  animation: calm-pulse-strong 2s ease-in-out infinite;
+}
+
+.animate-calm-breathe {
+  animation: calm-breathe 4s ease-in-out infinite;
+}
+
+.animate-calm-fade-in {
+  animation: calm-fade-in 0.5s ease-out;
+}
+
+.animate-calm-glow {
+  animation: calm-glow 3s ease-in-out infinite;
+}
+
+.animate-calm-spin {
+  animation: calm-spin 2s linear infinite;
+}
+
+.animate-calm-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(16, 185, 129, 0.1),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: calm-shimmer 3s ease-in-out infinite;
+}
+
+.animate-calm-bounce {
+  animation: calm-bounce 2s ease-in-out infinite;
+}
+
+/* Reduced motion support - WCAG 2.1 compliance */
+@media (prefers-reduced-motion: reduce) {
+  .animate-slide-in,
+  .animate-fade-in,
+  .animate-calm-pulse,
+  .animate-calm-pulse-subtle,
+  .animate-calm-pulse-strong,
+  .animate-calm-breathe,
+  .animate-calm-fade-in,
+  .animate-calm-glow,
+  .animate-calm-spin,
+  .animate-calm-shimmer,
+  .animate-calm-bounce {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 .card-hover {
   @apply cursor-pointer transition-shadow hover:shadow-md;
 }
+
+/* Layering Utilities */
+.layer-map { z-index: 0 !important; position: fixed !important; inset: 0; }
+.layer-ui  { z-index: 10 !important; position: relative; pointer-events: none; }
+.layer-interactive { pointer-events: auto; }
+.layer-modal { z-index: 50 !important; }
 
 .button {
   @apply px-4 py-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2;
@@ -77,4 +256,22 @@ body {
 
 .spinner {
   @apply inline-block animate-spin;
+}
+
+/* Intelligence Page - CIA ops grid overlay */
+.intel-map-grid {
+  background-image:
+    linear-gradient(rgba(56, 189, 248, 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.3) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ChainTicker - Hide scrollbar for cleaner ticker display */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

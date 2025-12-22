@@ -1,0 +1,106 @@
+# Forbidden Language Lint — GAP-002 Enforcement
+#
+# PAC-CODY-INVARIANT-ENFORCEMENT-01: Automated Invariant Enforcement
+#
+# Implements INV-GOV-002: Forbidden Language Patterns
+# Per SENSITIVE_DOMAIN_GATEWAY.md Section 3
+#
+# Scans sensitive domain files for:
+# - GATE-003: Marketing language
+# - GATE-004: Probabilistic language
+# - GATE-005: Future guarantee language
+
+name: Forbidden Language Lint
+
+on:
+  push:
+    branches: [main, develop, "fix/**", "feature/**"]
+    paths:
+      - "core/occ/**"
+      - "docs/contracts/**"
+      - "docs/proof/**"
+      - "docs/trust/**"
+      - "docs/governance/**"
+      - "gateway/pdo_*.py"
+      - "src/security/**"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "core/occ/**"
+      - "docs/contracts/**"
+      - "docs/proof/**"
+      - "docs/trust/**"
+      - "docs/governance/**"
+      - "gateway/pdo_*.py"
+      - "src/security/**"
+
+jobs:
+  forbidden-language-lint:
+    name: Forbidden Language Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run Forbidden Language Lint
+        id: lint
+        run: |
+          python scripts/forbidden_language_lint.py . --json > lint_results.json
+          cat lint_results.json
+          
+          # Check if lint passed
+          passed=$(python -c "import json; print(json.load(open('lint_results.json'))['passed'])")
+          if [ "$passed" = "False" ]; then
+            echo "LINT_STATUS=failed" >> $GITHUB_OUTPUT
+            exit 1
+          else
+            echo "LINT_STATUS=passed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload Lint Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: forbidden-language-lint-results
+          path: lint_results.json
+
+      - name: Comment on PR (if violations found)
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const results = JSON.parse(fs.readFileSync('lint_results.json', 'utf8'));
+            
+            if (results.violations.length === 0) return;
+            
+            let body = '## ⚠️ Forbidden Language Lint Failed\n\n';
+            body += `Found **${results.violation_count}** violations in sensitive domain files.\n\n`;
+            body += '### Violations\n\n';
+            body += '| File | Line | Category | Pattern |\n';
+            body += '|------|------|----------|--------|\n';
+            
+            for (const v of results.violations.slice(0, 20)) {
+              body += `| \`${v.file}\` | ${v.line} | ${v.category} | \`${v.pattern}\` |\n`;
+            }
+            
+            if (results.violations.length > 20) {
+              body += `\n*...and ${results.violations.length - 20} more violations.*\n`;
+            }
+            
+            body += '\n### Reference\n';
+            body += 'See [SENSITIVE_DOMAIN_GATEWAY.md](docs/governance/SENSITIVE_DOMAIN_GATEWAY.md) for forbidden patterns.\n';
+            body += '\n**Contract:** INV-GOV-002 (Forbidden Language Patterns)';
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });

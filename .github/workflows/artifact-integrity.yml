@@ -1,0 +1,140 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# ChainBridge Artifact Integrity CI
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# PAC-DAN-04: Build Artifact Immutability & Hash Attestation
+#
+# This workflow ensures:
+#   - Artifact hashes are deterministic
+#   - Code changes require manifest regeneration
+#   - No stale artifact manifests are committed
+#
+# Agent: DAN (GID-07)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+name: Artifact Integrity
+
+on:
+  push:
+    branches: [main, develop, "fix/**", "feature/**"]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  artifact-verification:
+    name: Verify Artifact Integrity
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Verify artifact manifest exists
+        run: |
+          echo "═══════════════════════════════════════════════════════════════"
+          echo "  PAC-DAN-04: Artifact Integrity Check"
+          echo "═══════════════════════════════════════════════════════════════"
+
+          if [ ! -f "build/artifacts.json" ]; then
+            echo "::error::Artifact manifest not found: build/artifacts.json"
+            echo ""
+            echo "Run: python scripts/ci/build_artifacts.py"
+            exit 1
+          fi
+
+          echo "✅ Manifest exists: build/artifacts.json"
+
+      - name: Verify file hashes match manifest
+        run: |
+          echo ""
+          echo "Verifying artifact hashes..."
+          python scripts/ci/artifact_verifier.py --strict
+
+      - name: Check for stale manifest
+        run: |
+          echo ""
+          echo "Checking for stale manifest..."
+
+          # Generate fresh manifest to temp file
+          python scripts/ci/build_artifacts.py --output /tmp/fresh_artifacts.json --quiet
+
+          # Extract aggregate hashes
+          STORED_HASH=$(python -c "import json; print(json.load(open('build/artifacts.json'))['aggregate_hash'])")
+          FRESH_HASH=$(python -c "import json; print(json.load(open('/tmp/fresh_artifacts.json'))['aggregate_hash'])")
+
+          if [ "$STORED_HASH" != "$FRESH_HASH" ]; then
+            echo "::error::Artifact manifest is stale!"
+            echo ""
+            echo "Stored hash:  $STORED_HASH"
+            echo "Current hash: $FRESH_HASH"
+            echo ""
+            echo "Tracked files have changed. Please regenerate:"
+            echo "  python scripts/ci/build_artifacts.py"
+            exit 1
+          fi
+
+          echo "✅ Manifest is current (hash: ${STORED_HASH:0:16}...)"
+
+  artifact-generation-check:
+    name: Validate Artifact Generator
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Test artifact generation
+        run: |
+          echo "═══════════════════════════════════════════════════════════════"
+          echo "  Testing Artifact Generation"
+          echo "═══════════════════════════════════════════════════════════════"
+
+          # Generate to temp location
+          python scripts/ci/build_artifacts.py --output /tmp/test_artifacts.json
+
+          # Validate JSON structure
+          python -c "
+          import json
+          import sys
+
+          with open('/tmp/test_artifacts.json') as f:
+              data = json.load(f)
+
+          required_keys = ['artifact_version', 'artifact_type', 'files', 'aggregate_hash', 'file_count']
+          missing = [k for k in required_keys if k not in data]
+
+          if missing:
+              print(f'::error::Missing required keys: {missing}')
+              sys.exit(1)
+
+          if data['file_count'] == 0:
+              print('::error::No files tracked in manifest')
+              sys.exit(1)
+
+          print(f'✅ Manifest structure valid')
+          print(f'   Files tracked: {data[\"file_count\"]}')
+          print(f'   Artifact type: {data[\"artifact_type\"]}')
+          "
+
+      - name: Test verification roundtrip
+        run: |
+          echo ""
+          echo "Testing verification roundtrip..."
+
+          # Generate fresh
+          python scripts/ci/build_artifacts.py --output /tmp/roundtrip.json --quiet
+
+          # Verify it passes
+          python scripts/ci/artifact_verifier.py --manifest /tmp/roundtrip.json --strict --quiet
+
+          echo "✅ Verification roundtrip passed"

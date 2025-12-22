@@ -1,5 +1,6 @@
-import { useMemo } from "react";
 import { AlertTriangle, ArrowUpRight, Shield, Ship } from "lucide-react";
+import { useMemo } from "react";
+
 import { MOCK_SHIPMENTS } from "../lib/mockData";
 import type { Shipment } from "../lib/types";
 

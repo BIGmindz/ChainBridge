@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "@deck.gl/aggregation-layers": "^9.2.2",
+    "@deck.gl/core": "^9.2.2",
+    "@deck.gl/layers": "^9.2.2",
+    "@deck.gl/react": "^9.2.2",
+    "deck.gl": "^9.2.2",
+    "h3-js": "^4.3.0",
+    "mapbox-gl": "^3.16.0",
+    "react-map-gl": "^8.1.0",
+    "typescript": "^5.9.3"
+  }
+}

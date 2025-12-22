@@ -1,0 +1,80 @@
+# syntax=docker/dockerfile:1.4
+# Enterprise Trading Bot - Multi-stage Production Dockerfile
+# Optimized for security, size, and performance
+# Build with: DOCKER_BUILDKIT=1 docker build --cache-from=type=registry,ref=<registry>/chainbridge:buildcache -f Dockerfile.enterprise .
+
+# Stage 1: Builder
+FROM python:3.11-slim as builder
+
+# Set working directory
+WORKDIR /build
+
+# Install build dependencies with apt cache mount
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    make \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements-enterprise.txt .
+COPY requirements.txt .
+
+# Install Python dependencies with pip cache mount
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --upgrade pip && \
+    pip install -r requirements-enterprise.txt && \
+    pip install -r requirements.txt
+
+# Stage 2: Runtime
+FROM python:3.11-slim
+
+# Metadata
+LABEL maintainer="BIGmindz"
+LABEL description="Enterprise Trading Bot - Production Grade"
+LABEL version="2.0"
+
+# Create non-root user for security
+RUN groupadd -r trading && useradd -r -g trading trading
+
+# Set working directory
+WORKDIR /app
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Python packages from builder
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Copy application code
+COPY --chown=trading:trading . .
+
+# Create necessary directories
+RUN mkdir -p /app/logs /app/cache /app/logs/audit && \
+    chown -R trading:trading /app
+
+# Switch to non-root user
+USER trading
+
+# Environment variables (override in k8s)
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV MODE=paper
+ENV METRICS_PORT=9090
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:${METRICS_PORT}/metrics || exit 1
+
+# Expose metrics port
+EXPOSE 9090
+
+# Default command (override in k8s)
+CMD ["python", "src/bot/main.py", "--mode", "paper", "--once"]

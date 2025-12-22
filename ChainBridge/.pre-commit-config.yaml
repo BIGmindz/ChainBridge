@@ -5,17 +5,59 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
       - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      - id: check-json
+      - id: check-toml
+      - id: detect-private-key
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.6.9
     hooks:
       - id: ruff
         args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
+    hooks:
+      - id: black
+        language_version: python3.11
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.2
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-all]
+        args: [--ignore-missing-imports, --no-strict-optional]
+
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: [--strict]
 
   - repo: local
     hooks:
+      - id: alex-governance
+        name: ALEX Governance Checks
+        entry: python ChainBridge/tools/governance_python.py
+        language: system
+        pass_filenames: false
+        stages: [commit]
       - id: lean-quick-checks
         name: Lean Quick Checks (RSI + Integrator)
-        entry: bash -lc 'make quick-checks'
+        entry: bash -c 'cd "$(git rev-parse --show-toplevel)/ChainBridge" && make quick-checks'
+        language: system
+        pass_filenames: false
+      - id: check-docs-canonical
+        name: Check docs canonical locations
+        entry: bash -c 'cd "$(git rev-parse --show-toplevel)/ChainBridge" && python -m scripts.ci.check_docs_canonical'
         language: system
         pass_filenames: false

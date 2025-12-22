@@ -1,0 +1,310 @@
+name: Activation Gate Enforcement
+# Governance ID: GID-07-CI | Classification: CRITICAL | Owner: DAN (GID-07)
+# PAC Reference: PAC-DAN-ACTIVATION-GATE-CI-ENFORCEMENT-01
+
+on:
+  pull_request:
+    branches: [main, develop, feature/*, release/*]
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.11'
+  FAIL_ON_VIOLATION: true
+
+jobs:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # GATE 0: Activation Block Pre-Check (MUST PASS FIRST)
+  # ═══════════════════════════════════════════════════════════════════════════
+  activation-gate:
+    name: "🚦 DAN: Activation Gate (MANDATORY)"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: "🚦 CI Activation Gate (HARD FAIL)"
+        id: activation_gate
+        run: |
+          echo "════════════════════════════════════════════════════════════════════"
+          echo "🟢 DAN (GID-07) — CI ACTIVATION GATE"
+          echo "════════════════════════════════════════════════════════════════════"
+          echo ""
+          echo "PAC: PAC-DAN-ACTIVATION-GATE-CI-ENFORCEMENT-01"
+          echo "ENFORCEMENT: No CI job executes without activation"
+          echo "BYPASS: NONE"
+          echo ""
+          python scripts/ci/activation_gate.py --base ${{ github.event.pull_request.base.ref || 'main' }} --verbose
+
+      - name: "📋 Gate Result (JSON)"
+        if: always()
+        run: |
+          python scripts/ci/activation_gate.py --base ${{ github.event.pull_request.base.ref || 'main' }} --json > activation_gate_result.json || true
+          cat activation_gate_result.json
+
+      - name: Upload Gate Result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: activation-gate-result
+          path: activation_gate_result.json
+          retention-days: 30
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # GATE 1: Activation Block Validation (requires Gate 0)
+  # ═══════════════════════════════════════════════════════════════════════════
+  activation-block-validation:
+    name: "DAN: Activation Block Validation"
+    runs-on: ubuntu-latest
+    needs: activation-gate  # MUST pass gate first
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run PAC Linter (Activation Gate Rules)
+        run: |
+          echo "════════════════════════════════════════════════════════════════════"
+          echo "🟢 DAN (GID-07) — Activation Gate Enforcement"
+          echo "════════════════════════════════════════════════════════════════════"
+          echo ""
+          echo "PAC Reference: PAC-DAN-ACTIVATION-GATE-CI-ENFORCEMENT-01"
+          echo "Checking: Activation Block presence and registry validation"
+          echo ""
+          python tools/pac_linter.py --check --exclude-tests
+
+      - name: Validate Activation Block Module
+        run: |
+          echo ""
+          echo "════════════════════════════════════════════════════════════════════"
+          echo "Validating core/governance/activation_block.py module"
+          echo "════════════════════════════════════════════════════════════════════"
+          python << 'PYEOF'
+          from core.governance.activation_block import (
+              ActivationBlock,
+              ActivationBlockValidator,
+              ActivationBlockViolationCode,
+              ActivationBlockViolationError,
+              check_activation_block_presence,
+              validate_activation_block_fields,
+              require_activation_before_color_gateway,
+              require_activation_before_pac_admission,
+              require_activation_before_tool_execution,
+              ExecutionGateError,
+          )
+          print("✅ Activation Block module imports successfully")
+          print("✅ Execution gate functions available")
+          PYEOF
+
+      - name: Run Activation Block Tests
+        run: |
+          echo ""
+          echo "════════════════════════════════════════════════════════════════════"
+          echo "Running activation block test suite"
+          echo "════════════════════════════════════════════════════════════════════"
+          pytest tests/agents/test_activation_block.py -v --tb=short
+
+  execution-order-validation:
+    name: "DAN: Execution Order Gates"
+    runs-on: ubuntu-latest
+    needs: activation-block-validation
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Test Execution Gate Order Enforcement
+        run: |
+          echo ""
+          echo "════════════════════════════════════════════════════════════════════"
+          echo "Testing execution order enforcement"
+          echo "════════════════════════════════════════════════════════════════════"
+          python << 'PYEOF'
+          from core.governance.activation_block import (
+              reset_execution_gates,
+              mark_activation_validated,
+              mark_color_gateway_validated,
+              mark_pac_admission_validated,
+              require_activation_before_color_gateway,
+              require_activation_before_pac_admission,
+              require_activation_before_tool_execution,
+              require_full_validation_chain,
+              ExecutionGateError,
+              get_gate_state,
+          )
+          import sys
+
+          # Test 1: Gate violations when activation not validated
+          reset_execution_gates()
+          print("Test 1: Activation required before color gateway...")
+          try:
+              require_activation_before_color_gateway()
+              print("❌ FAILED: Should have raised ExecutionGateError")
+              sys.exit(1)
+          except ExecutionGateError as e:
+              print(f"✅ PASSED: {e.gate_name} raised correctly")
+
+          # Test 2: Gate passes after activation validated
+          reset_execution_gates()
+          mark_activation_validated()
+          print("Test 2: Color gateway after activation...")
+          try:
+              require_activation_before_color_gateway()
+              print("✅ PASSED: Gate passed after activation")
+          except ExecutionGateError as e:
+              print(f"❌ FAILED: {e}")
+              sys.exit(1)
+
+          # Test 3: Full validation chain
+          reset_execution_gates()
+          mark_activation_validated()
+          mark_color_gateway_validated()
+          mark_pac_admission_validated()
+          print("Test 3: Full validation chain...")
+          try:
+              require_full_validation_chain()
+              print("✅ PASSED: Full chain validated")
+          except ExecutionGateError as e:
+              print(f"❌ FAILED: {e}")
+              sys.exit(1)
+
+          # Test 4: Partial chain fails
+          reset_execution_gates()
+          mark_activation_validated()
+          # Skip color gateway
+          mark_pac_admission_validated()
+          print("Test 4: Partial chain should fail...")
+          try:
+              require_full_validation_chain()
+              print("❌ FAILED: Should have raised ExecutionGateError")
+              sys.exit(1)
+          except ExecutionGateError as e:
+              print(f"✅ PASSED: Partial chain rejected - {e.reason}")
+
+          print("")
+          print("════════════════════════════════════════════════════════════════════")
+          print("✅ ALL EXECUTION GATE TESTS PASSED")
+          print("════════════════════════════════════════════════════════════════════")
+          PYEOF
+
+  governance-summary:
+    name: "DAN: Governance Summary"
+    runs-on: ubuntu-latest
+    needs: [activation-gate, activation-block-validation, execution-order-validation]
+    if: always()
+
+    steps:
+      - name: Check Gate Status
+        run: |
+          echo ""
+          echo "════════════════════════════════════════════════════════════════════"
+          echo "🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢"
+          echo "ACTIVATION GATE ENFORCEMENT — SUMMARY"
+          echo "🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢"
+          echo "════════════════════════════════════════════════════════════════════"
+          echo ""
+          echo "PAC: PAC-DAN-ACTIVATION-GATE-CI-ENFORCEMENT-01"
+          echo "Agent: DAN (GID-07)"
+          echo "Lane: 🟢 GREEN — DevOps / CI-CD"
+          echo ""
+          echo "Gate Results:"
+          echo "  activation-gate:            ${{ needs.activation-gate.result }}"
+          echo "  activation-block-validation: ${{ needs.activation-block-validation.result }}"
+          echo "  execution-order-validation:  ${{ needs.execution-order-validation.result }}"
+          echo ""
+
+      - name: Report Final Status
+        run: |
+          GATE_STATUS="${{ needs.activation-gate.result }}"
+          BLOCK_STATUS="${{ needs.activation-block-validation.result }}"
+          ORDER_STATUS="${{ needs.execution-order-validation.result }}"
+
+          if [[ "$GATE_STATUS" == "success" && "$BLOCK_STATUS" == "success" && "$ORDER_STATUS" == "success" ]]; then
+            echo "Enforcement Rules:"
+            echo "  ✅ CI Activation Gate"
+            echo "  ✅ pac-activation-block-present"
+            echo "  ✅ pac-activation-block-registry-valid"
+            echo "  ✅ pac-activation-block-lane-match"
+            echo "  ✅ Execution order gates"
+            echo ""
+            echo "════════════════════════════════════════════════════════════════════"
+            echo "✅ ALL GATES PASSED — MERGE ALLOWED"
+            echo "════════════════════════════════════════════════════════════════════"
+          else
+            echo "❌ GATE FAILURES DETECTED"
+            echo ""
+            echo "════════════════════════════════════════════════════════════════════"
+            echo "🔴 MERGE BLOCKED — Activation violations must be resolved"
+            echo "════════════════════════════════════════════════════════════════════"
+            exit 1
+          fi
+
+          echo ""
+          echo "════════════════════════════════════════════════════════════════════"
+          echo "🟢 END — DAN (GID-07) — ACTIVATION GATE ENFORCEMENT"
+          echo "════════════════════════════════════════════════════════════════════"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # MERGE GATE: Required status check for branch protection
+  # ═══════════════════════════════════════════════════════════════════════════
+  merge-gate:
+    name: "🚦 Merge Gate (Branch Protection)"
+    runs-on: ubuntu-latest
+    needs: [activation-gate, activation-block-validation, execution-order-validation]
+    if: always()
+
+    steps:
+      - name: Check All Gates
+        run: |
+          if [[ "${{ needs.activation-gate.result }}" != "success" ]]; then
+            echo "❌ DENIED: Activation Gate failed"
+            exit 1
+          fi
+          if [[ "${{ needs.activation-block-validation.result }}" != "success" ]]; then
+            echo "❌ DENIED: Activation Block Validation failed"
+            exit 1
+          fi
+          if [[ "${{ needs.execution-order-validation.result }}" != "success" ]]; then
+            echo "❌ DENIED: Execution Order Validation failed"
+            exit 1
+          fi
+          echo "✅ All gates passed — merge permitted"

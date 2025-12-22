@@ -1,0 +1,145 @@
+# =============================================================================
+# ChainBridge Dev Stack - Docker Compose
+# =============================================================================
+# One-command development environment for ChainBridge platform.
+#
+# Services:
+#   - db:       PostgreSQL 15 database
+#   - api:      ChainBridge API Gateway (FastAPI, port 8000)
+#   - chainiq:  ChainIQ ML Risk Service (FastAPI, port 8102)
+#   - ui:       ChainBoard UI (Vite, port 5173)
+#
+# Usage:
+#   cp .env.dev.example .env.dev
+#   docker compose -f docker-compose.dev.yml up --build
+#
+# Dan (GID-07) — DevOps & CI/CD Lead
+# Mantra: "Fast, green, reproducible."
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Database
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:15-alpine
+    container_name: chainbridge-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-chainbridge}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-chainbridge_dev_pwd}
+      POSTGRES_DB: ${POSTGRES_DB:-chainbridge_dev}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - chainbridge_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-chainbridge} -d ${POSTGRES_DB:-chainbridge_dev}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chainbridge-net
+
+  # ---------------------------------------------------------------------------
+  # ChainBridge API Gateway
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: ChainBridge/api/Dockerfile.dev
+    container_name: chainbridge-api
+    env_file:
+      - .env.dev
+    environment:
+      - POSTGRES_HOST=db
+      - CHAINIQ_BASE_URL=http://chainiq:8102
+      - CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://ui:5173
+    depends_on:
+      db:
+        condition: service_healthy
+      chainiq:
+        condition: service_healthy
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      # Mount source for hot-reload in development
+      - ./ChainBridge:/app/ChainBridge:ro
+      - ./api:/app/api:ro
+      - ./core:/app/core:ro
+      - ./modules:/app/modules:ro
+      - ./tracking:/app/tracking:ro
+      - ./utils:/app/utils:ro
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    networks:
+      - chainbridge-net
+
+  # ---------------------------------------------------------------------------
+  # ChainIQ ML Risk Service
+  # ---------------------------------------------------------------------------
+  chainiq:
+    build:
+      context: ./chainiq-service
+      dockerfile: Dockerfile
+    container_name: chainbridge-chainiq
+    env_file:
+      - .env.dev
+    environment:
+      - CHAINIQ_PORT=${CHAINIQ_PORT:-8102}
+      - CHAINIQ_ENV=development
+    ports:
+      - "${CHAINIQ_PORT:-8102}:8102"
+    volumes:
+      # Mount source for hot-reload in development
+      - ./chainiq-service/app:/app/app:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8102/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    networks:
+      - chainbridge-net
+
+  # ---------------------------------------------------------------------------
+  # ChainBoard UI (React + Vite)
+  # ---------------------------------------------------------------------------
+  ui:
+    build:
+      context: ./ChainBridge/chainboard-ui
+      dockerfile: Dockerfile
+    container_name: chainbridge-ui
+    env_file:
+      - .env.dev
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
+      - VITE_CHAINIQ_BASE_URL=http://localhost:8102
+    depends_on:
+      - api
+    ports:
+      - "${UI_PORT:-5173}:5173"
+    volumes:
+      # Mount source for hot-reload in development
+      - ./ChainBridge/chainboard-ui/src:/app/src:ro
+      - ./ChainBridge/chainboard-ui/public:/app/public:ro
+    networks:
+      - chainbridge-net
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  chainbridge-net:
+    driver: bridge
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  chainbridge_db_data:
+    driver: local

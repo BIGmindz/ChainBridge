@@ -10,18 +10,17 @@ Tests:
 """
 
 from datetime import datetime
+
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.models import PaymentIntent, MilestoneSettlement, PaymentStatus, RiskTier
+from app.models import MilestoneSettlement, PaymentIntent, PaymentStatus, RiskTier
 
 
 class TestAuditShipmentsEndpoint:
     """Test GET /audit/shipments/{shipment_id} endpoint."""
 
-    def test_audit_shipments_returns_200_for_existing_shipment(
-        self, client: TestClient, db_session: Session
-    ):
+    def test_audit_shipments_returns_200_for_existing_shipment(self, client: TestClient, db_session: Session):
         """Audit shipments endpoint should return 200 for existing shipment."""
         # Create payment intent (representing a shipment in ChainPay)
         intent = PaymentIntent(
@@ -38,16 +37,12 @@ class TestAuditShipmentsEndpoint:
         response = client.get(f"/audit/shipments/{intent.freight_token_id}")
         assert response.status_code == 200
 
-    def test_audit_shipments_returns_404_for_nonexistent_shipment(
-        self, client: TestClient
-    ):
+    def test_audit_shipments_returns_404_for_nonexistent_shipment(self, client: TestClient):
         """Audit shipments endpoint should return 404 for nonexistent shipment."""
         response = client.get("/audit/shipments/99999")
         assert response.status_code == 404
 
-    def test_audit_shipments_response_structure(
-        self, client: TestClient, db_session: Session
-    ):
+    def test_audit_shipments_response_structure(self, client: TestClient, db_session: Session):
         """Audit shipments response should have expected structure."""
         intent = PaymentIntent(
             freight_token_id=102,
@@ -67,9 +62,7 @@ class TestAuditShipmentsEndpoint:
         assert "milestones" in data
         assert "summary" in data
 
-    def test_audit_shipments_includes_all_milestones(
-        self, client: TestClient, db_session: Session
-    ):
+    def test_audit_shipments_includes_all_milestones(self, client: TestClient, db_session: Session):
         """Audit shipments should include all milestones for shipment."""
         intent = PaymentIntent(
             freight_token_id=103,
@@ -83,9 +76,7 @@ class TestAuditShipmentsEndpoint:
         db_session.commit()
 
         # Add multiple milestones
-        for i, event in enumerate(
-            ["PICKUP_CONFIRMED", "POD_CONFIRMED", "CLAIM_WINDOW_CLOSED"]
-        ):
+        for i, event in enumerate(["PICKUP_CONFIRMED", "POD_CONFIRMED", "CLAIM_WINDOW_CLOSED"]):
             milestone = MilestoneSettlement(
                 payment_intent_id=intent.id,
                 event_type=event,
@@ -102,9 +93,7 @@ class TestAuditShipmentsEndpoint:
 
         assert len(data["milestones"]) == 3
 
-    def test_audit_shipments_summary_calculations(
-        self, client: TestClient, db_session: Session
-    ):
+    def test_audit_shipments_summary_calculations(self, client: TestClient, db_session: Session):
         """Audit shipments summary should correctly calculate amounts."""
         intent = PaymentIntent(
             freight_token_id=104,
@@ -156,9 +145,7 @@ class TestAuditShipmentsEndpoint:
 class TestAuditPaymentIntentsEndpoint:
     """Test GET /audit/payment_intents/{payment_id}/milestones endpoint."""
 
-    def test_audit_payment_intents_returns_200_for_existing_intent(
-        self, client: TestClient, db_session: Session
-    ):
+    def test_audit_payment_intents_returns_200_for_existing_intent(self, client: TestClient, db_session: Session):
         """Audit payment intents endpoint should return 200 for existing intent."""
         intent = PaymentIntent(
             freight_token_id=201,
@@ -174,16 +161,12 @@ class TestAuditPaymentIntentsEndpoint:
         response = client.get(f"/audit/payment_intents/{intent.id}/milestones")
         assert response.status_code == 200
 
-    def test_audit_payment_intents_returns_404_for_nonexistent_intent(
-        self, client: TestClient
-    ):
+    def test_audit_payment_intents_returns_404_for_nonexistent_intent(self, client: TestClient):
         """Audit payment intents endpoint should return 404 for nonexistent intent."""
         response = client.get("/audit/payment_intents/99999/milestones")
         assert response.status_code == 404
 
-    def test_audit_payment_intents_response_structure(
-        self, client: TestClient, db_session: Session
-    ):
+    def test_audit_payment_intents_response_structure(self, client: TestClient, db_session: Session):
         """Audit payment intents response should have expected structure."""
         intent = PaymentIntent(
             freight_token_id=202,
@@ -203,9 +186,7 @@ class TestAuditPaymentIntentsEndpoint:
         assert "milestones" in data
         assert "summary" in data
 
-    def test_audit_payment_intents_includes_intent_details(
-        self, client: TestClient, db_session: Session
-    ):
+    def test_audit_payment_intents_includes_intent_details(self, client: TestClient, db_session: Session):
         """Audit payment intents response should include payment intent details."""
         intent = PaymentIntent(
             freight_token_id=203,
@@ -226,9 +207,7 @@ class TestAuditPaymentIntentsEndpoint:
         assert payment_intent["amount"] == 3000.0
         assert payment_intent["currency"] == "EUR"
 
-    def test_audit_payment_intents_includes_all_milestones(
-        self, client: TestClient, db_session: Session
-    ):
+    def test_audit_payment_intents_includes_all_milestones(self, client: TestClient, db_session: Session):
         """Audit payment intents should include all milestones."""
         intent = PaymentIntent(
             freight_token_id=204,
@@ -242,9 +221,7 @@ class TestAuditPaymentIntentsEndpoint:
         db_session.commit()
 
         # Add multiple milestones
-        for i, event in enumerate(
-            ["PICKUP_CONFIRMED", "POD_CONFIRMED", "CLAIM_WINDOW_CLOSED"]
-        ):
+        for i, event in enumerate(["PICKUP_CONFIRMED", "POD_CONFIRMED", "CLAIM_WINDOW_CLOSED"]):
             milestone = MilestoneSettlement(
                 payment_intent_id=intent.id,
                 event_type=event,
@@ -261,9 +238,7 @@ class TestAuditPaymentIntentsEndpoint:
 
         assert len(data["milestones"]) == 3
 
-    def test_audit_payment_intents_summary_calculations(
-        self, client: TestClient, db_session: Session
-    ):
+    def test_audit_payment_intents_summary_calculations(self, client: TestClient, db_session: Session):
         """Audit payment intents summary should correctly calculate amounts."""
         intent = PaymentIntent(
             freight_token_id=205,
@@ -315,9 +290,7 @@ class TestAuditPaymentIntentsEndpoint:
 class TestAuditEndpointsEmptyStates:
     """Test audit endpoints with empty/zero data."""
 
-    def test_audit_shipments_with_no_milestones(
-        self, client: TestClient, db_session: Session
-    ):
+    def test_audit_shipments_with_no_milestones(self, client: TestClient, db_session: Session):
         """Audit shipments should handle shipment with no milestones."""
         intent = PaymentIntent(
             freight_token_id=301,
@@ -335,9 +308,7 @@ class TestAuditEndpointsEmptyStates:
         data = response.json()
         assert len(data["milestones"]) == 0
 
-    def test_audit_payment_intents_with_no_milestones(
-        self, client: TestClient, db_session: Session
-    ):
+    def test_audit_payment_intents_with_no_milestones(self, client: TestClient, db_session: Session):
         """Audit payment intents should handle intent with no milestones."""
         intent = PaymentIntent(
             freight_token_id=302,
@@ -355,9 +326,7 @@ class TestAuditEndpointsEmptyStates:
         data = response.json()
         assert len(data["milestones"]) == 0
 
-    def test_audit_shipments_all_pending_status(
-        self, client: TestClient, db_session: Session
-    ):
+    def test_audit_shipments_all_pending_status(self, client: TestClient, db_session: Session):
         """Audit shipments should handle all milestones with PENDING status."""
         intent = PaymentIntent(
             freight_token_id=303,
@@ -393,9 +362,7 @@ class TestAuditEndpointsEmptyStates:
 class TestAuditEndpointsCrossCurrency:
     """Test audit endpoints with mixed currencies."""
 
-    def test_audit_shipments_mixed_currencies(
-        self, client: TestClient, db_session: Session
-    ):
+    def test_audit_shipments_mixed_currencies(self, client: TestClient, db_session: Session):
         """Audit shipments should handle milestones with different currencies."""
         intent = PaymentIntent(
             freight_token_id=401,

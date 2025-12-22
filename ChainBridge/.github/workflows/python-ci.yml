@@ -1,0 +1,76 @@
+name: Python CI
+
+on:
+  push:
+    branches: [ main, feature/* ]
+  pull_request:
+    branches: [ main, feature/* ]
+
+jobs:
+  governance:
+    name: ALEX Governance Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 10
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run governance checks
+        run: |
+          echo "🟩 ALEX Governance gate (fast check)"
+          python tools/governance_python.py
+
+  validate-imports:
+    name: Validate Python Environment
+    needs: governance
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+      - name: Install dependencies
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Validate Python import environment
+        run: |
+          source .venv/bin/activate
+          python scripts/validate_imports.py
+
+  tests:
+    name: Test Suite
+    needs: [governance, validate-imports]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+      - name: Install dependencies
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+      - name: Run tests (maxfail=1)
+        run: |
+          source .venv/bin/activate
+          cd chainiq-service
+          PYTHONPATH=.. pytest -vv --maxfail=1 --tb=short

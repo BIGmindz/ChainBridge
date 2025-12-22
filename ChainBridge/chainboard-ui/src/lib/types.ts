@@ -43,29 +43,32 @@ export interface RiskProfile {
   score: number; // 0-100
   category: RiskCategory;
   drivers: string[];
-  assessedAt: ISODateString;
+  assessed_at: ISODateString;
   watchlisted?: boolean;
 }
 
 export interface PaymentMilestone {
+  milestone_id: string;
   label: string;
   percentage: number; // 0-100
   state: "pending" | "released" | "blocked";
-  releasedAt?: ISODateString;
+  released_at?: ISODateString;
+  freight_token_id?: number;
 }
 
 export interface PaymentProfile {
   state: PaymentState;
-  totalValueUsd: number;
-  releasedPercentage: number;
-  holdsUsd: number;
+  total_valueUsd: number;
+  released_usd: number;
+  released_percentage: number;
+  holds_usd: number;
   milestones: PaymentMilestone[];
   updatedAt: ISODateString;
 }
 
 export interface GovernanceSnapshot {
-  proofpackStatus: "VERIFIED" | "FAILED" | "PENDING";
-  lastAudit: ISODateString;
+  proofpack_status: "VERIFIED" | "FAILED" | "PENDING";
+  last_audit: ISODateString;
   exceptions: ExceptionCode[];
 }
 
@@ -86,6 +89,7 @@ export interface Shipment {
   status: ShipmentStatus;
   origin: string;
   destination: string;
+  corridor: string;
   carrier: string;
   customer: string;
   freight: FreightDetail;
@@ -111,6 +115,8 @@ export type IoTSensorType = "temperature" | "humidity" | "door" | "shock" | "gps
 
 export type Severity = "info" | "warn" | "critical";
 
+export type IoTAnomalySeverity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+
 export interface IoTSensorReading {
   sensor_type: IoTSensorType;
   value: number | string;
@@ -119,17 +125,51 @@ export interface IoTSensorReading {
   status: Severity;
 }
 
+export interface IoTDeviceAnomaly {
+  deviceId: string;
+  severity: IoTAnomalySeverity;
+  label: string;
+  lastSeen: ISODateString;
+  shipmentReference?: string;
+  lane?: string;
+}
+
 export interface IoTHealthSummary {
-  shipments_with_iot: number;
-  active_sensors: number;
-  alerts_last_24h: number;
-  critical_alerts_last_24h: number;
-  coverage_percent: number;
+  fleetId: string;
+  asOf: ISODateString;
+  deviceCount: number;
+  online: number;
+  offline: number;
+  degraded: number;
+  anomalies: IoTDeviceAnomaly[];
+  latencySeconds?: number;
+}
+
+export interface IoTHealthSummaryResponse {
+  summary: IoTHealthSummary;
 }
 
 export interface ShipmentIoTSnapshot {
-  shipment_id: string;
+  shipmentId: string;
   latest_readings: IoTSensorReading[];
   alert_count_24h: number;
   critical_alerts_24h: number;
+}
+
+export interface ExceptionRow {
+  shipmentId: string;
+  lane: string;
+  current_status: ShipmentStatus;
+  riskScore: number;
+  payment_state: PaymentState;
+  age_of_issue: string;
+  issue_types: ExceptionCode[];
+  last_update: string;
+}
+
+export interface NetworkVitals {
+  active_shipments: number;
+  on_time_percent: number;
+  at_risk_shipments: number;
+  open_payment_holds: number;
 }

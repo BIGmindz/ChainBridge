@@ -1,0 +1,48 @@
+# ChainBridge Code Ownership
+# ALEX Governance Layer (PAC-A by DAN-GID-07)
+
+# Documentation
+/docs/architecture/ @johnbozza
+/docs/product/ @johnbozza
+/docs/ops/ @johnbozza
+/docs/governance/ @johnbozza
+
+# Legacy
+/AGENTS 2/ @johnbozza
+/legacy/ @johnbozza
+
+# ChainIQ Service (ML & Risk Scoring)
+/chainiq-service/app/ml/ @johnbozza  # Maggie (GID-03) - ML models
+/chainiq-service/app/risk/ @johnbozza  # Maggie/Cody - Risk engine
+/chainiq-service/app/api*.py @johnbozza  # Cody (GID-02) - API layer
+/chainiq-service/tests/ @johnbozza  # All team - test coverage
+
+# ChainPay Service (Payment/Settlement)
+/chainpay-service/ @johnbozza  # Cody (GID-02) - Payment logic
+/chainpay-service/app/api/ @johnbozza
+/chainpay-service/app/services/ @johnbozza
+
+# ChainBoard UI (Frontend)
+/chainboard-ui/ @johnbozza  # Sonny (GID-04) - React/TypeScript
+
+# ChainBoard Service (Backend for UI)
+/chainboard-service/ @johnbozza  # Sonny (GID-04) - UI backend
+
+# CI/CD & DevOps
+/.github/workflows/ @johnbozza  # Dan (GID-07) - GitHub Actions
+/tools/ @johnbozza  # Dan (GID-07) - DevOps tooling
+/scripts/ci/ @johnbozza  # Dan (GID-07) - CI scripts
+/Dockerfile* @johnbozza
+/docker-compose*.yml @johnbozza
+/.pre-commit-config.yaml @johnbozza
+
+# Governance & Security
+/tools/governance_python.py @johnbozza  # ALEX/Dan - Governance enforcement
+/GOVERNANCE.md @johnbozza  # ALEX oversight
+/SECURITY.md @johnbozza
+
+# Configuration
+/config/ @johnbozza
+/.env.example @johnbozza
+/requirements*.txt @johnbozza
+/pyproject.toml @johnbozza

@@ -1,0 +1,122 @@
+{
+  "spec_version": "2.0.0",
+  "spec_date": "2025-12-19",
+  "pac_reference": "PAC-ALEX-CANONICAL-AGENT-COLOR-LOCK-01",
+  "description": "Machine-readable Color Gateway specification — MUST align with AGENT_REGISTRY.json",
+  "canonical_source": "docs/governance/AGENT_REGISTRY.json",
+
+  "lanes": {
+    "TEAL": {
+      "emoji": "🟦🟩",
+      "color_name": "TEAL",
+      "role": "Orchestration / Control Plane",
+      "reserved_gids": ["GID-00", "GID-04"],
+      "reserved_agents": ["BENSON", "CINDY"],
+      "exclusive": true,
+      "execution_permitted": false,
+      "notes": "Orchestration only. Cannot appear as executing lane."
+    },
+    "BLUE": {
+      "emoji": "🔵",
+      "color_name": "BLUE",
+      "role": "Backend / Systems",
+      "allowed_gids": ["GID-01", "GID-11"],
+      "allowed_agents": ["CODY", "ATLAS"],
+      "exclusive": false,
+      "execution_permitted": true
+    },
+    "YELLOW": {
+      "emoji": "🟨",
+      "color_name": "YELLOW",
+      "role": "Frontend Engineering",
+      "allowed_gids": ["GID-02"],
+      "allowed_agents": ["SONNY"],
+      "exclusive": false,
+      "execution_permitted": true
+    },
+    "PURPLE": {
+      "emoji": "🟣",
+      "color_name": "PURPLE",
+      "role": "Research",
+      "allowed_gids": ["GID-03"],
+      "allowed_agents": ["MIRA-R"],
+      "exclusive": false,
+      "execution_permitted": true
+    },
+    "ORANGE": {
+      "emoji": "🟧",
+      "color_name": "ORANGE",
+      "role": "Product Strategy",
+      "allowed_gids": ["GID-05"],
+      "allowed_agents": ["PAX"],
+      "exclusive": false,
+      "execution_permitted": true
+    },
+    "DARK RED": {
+      "emoji": "🟥",
+      "color_name": "DARK RED",
+      "role": "Security",
+      "allowed_gids": ["GID-06"],
+      "allowed_agents": ["SAM"],
+      "exclusive": false,
+      "execution_permitted": true
+    },
+    "GREEN": {
+      "emoji": "🟩",
+      "color_name": "GREEN",
+      "role": "DevOps / CI/CD",
+      "allowed_gids": ["GID-07"],
+      "allowed_agents": ["DAN"],
+      "exclusive": false,
+      "execution_permitted": true
+    },
+    "WHITE": {
+      "emoji": "⚪",
+      "color_name": "WHITE",
+      "role": "Governance / Alignment",
+      "allowed_gids": ["GID-08"],
+      "allowed_agents": ["ALEX"],
+      "color_aliases": ["GREY"],
+      "exclusive": false,
+      "execution_permitted": true
+    },
+    "PINK": {
+      "emoji": "🩷",
+      "color_name": "PINK",
+      "role": "UX / ML",
+      "allowed_gids": ["GID-09", "GID-10"],
+      "allowed_agents": ["LIRA", "MAGGIE"],
+      "exclusive": false,
+      "execution_permitted": true
+    }
+  },
+
+  "rules": {
+    "require_executing_agent": true,
+    "require_executing_gid": true,
+    "require_executing_color": true,
+    "deny_color_agent_mismatch": true,
+    "deny_color_gid_mismatch": true,
+    "deny_teal_as_executing": true,
+    "deny_multiple_colors_in_execution": true,
+    "require_emoji_consistency": true
+  },
+
+  "validation": {
+    "pac_header_required_fields": [
+      "EXECUTING AGENT",
+      "EXECUTING GID",
+      "EXECUTING COLOR"
+    ],
+    "mismatch_action": "reject",
+    "teal_execution_action": "reject",
+    "missing_field_action": "reject"
+  },
+
+  "cross_references": {
+    "agent_registry": "docs/governance/AGENT_REGISTRY.json",
+    "pac_enforcement": "docs/governance/PAC_ENFORCEMENT.md",
+    "stop_the_line": "docs/governance/STOP_THE_LINE.md",
+    "color_gateway_doctrine": "docs/governance/COLOR_GATEWAY_DOCTRINE.md"
+  }
+}

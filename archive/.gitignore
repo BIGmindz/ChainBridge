@@ -1,0 +1,51 @@
+# Archive Directory - Inert Code
+# This directory contains archived legacy code that is NOT part of ChainBridge.
+#
+# Purpose of this .gitignore:
+# - Prevent tooling (IDEs, linters, test runners) from auto-discovering these files
+# - Signal to developers that this directory is intentionally excluded
+#
+# The files ARE tracked in git for historical purposes, but should not be:
+# - Imported
+# - Executed
+# - Linted
+# - Tested
+#
+# See: archive/ARCHIVE_CONTRACT.md
+
+# Prevent Python package discovery
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Prevent IDE indexing
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Prevent test discovery
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Signal: Do not add __init__.py here
+# Adding __init__.py would make this directory importable

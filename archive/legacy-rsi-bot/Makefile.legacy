@@ -1,0 +1,151 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# Makefile.legacy — RSI / Crypto Bot Targets (Historical)
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# WARNING: These targets are from the original Benson RSI trading bot.
+# They are NOT part of ChainBridge governance/gateway functionality.
+#
+# To use these targets, run:
+#   make -f Makefile.legacy <target>
+#
+# Or include in main Makefile with:
+#   INCLUDE_LEGACY=1 make <target>
+#
+# These targets reference:
+#   - benson_rsi_bot.py
+#   - benson_system.py
+#   - dynamic_crypto_selector.py
+#   - RSI trading workflows
+#
+# DO NOT USE for ChainBridge development unless you know what you're doing.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+PY=python
+COMPOSE?=docker compose
+
+.PHONY: run api-server rsi-compat system-test up-legacy up-rsi \
+        venv-lean install-lean run-lean run-integrator-lean quick-checks \
+        run-once-paper run-once-live run-live select-dynamic refresh-and-preflight \
+        preflight-order legacy-help
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# LEGACY HELP
+# ═══════════════════════════════════════════════════════════════════════════════
+
+legacy-help:
+	@echo "══════════════════════════════════════════════════════════════════"
+	@echo "  LEGACY RSI / CRYPTO BOT TARGETS"
+	@echo "══════════════════════════════════════════════════════════════════"
+	@echo ""
+	@echo "  WARNING: These targets are from the original Benson RSI bot."
+	@echo "  They are NOT part of ChainBridge governance/gateway."
+	@echo ""
+	@echo "  Usage: make -f Makefile.legacy <target>"
+	@echo ""
+	@echo "  RSI Bot Targets:"
+	@echo "    run              - Run legacy RSI bot (benson_rsi_bot.py)"
+	@echo "    run-once-paper   - Run RSI bot once (PAPER=true)"
+	@echo "    run-once-live    - Run RSI bot once (PAPER=false)"
+	@echo "    run-live         - Run RSI bot continuously (PAPER=false)"
+	@echo ""
+	@echo "  System Targets:"
+	@echo "    api-server       - Start legacy API server (benson_system.py)"
+	@echo "    rsi-compat       - Run RSI bot in compatibility mode"
+	@echo "    system-test      - Run legacy system tests"
+	@echo ""
+	@echo "  Lean Runtime:"
+	@echo "    venv-lean        - Create lean runtime venv"
+	@echo "    install-lean     - Install minimal runtime deps"
+	@echo "    run-lean         - Run multi-signal test via lean env"
+	@echo "    run-integrator-lean - Run integrator smoke test"
+	@echo "    quick-checks     - Run lean quick checks"
+	@echo ""
+	@echo "  Dynamic Selection:"
+	@echo "    select-dynamic   - Select top volatile USD symbols"
+	@echo "    refresh-and-preflight - Refresh symbols and preflight"
+	@echo "    preflight-order  - Preview normalized order params"
+	@echo ""
+	@echo "  Docker (Legacy Profiles):"
+	@echo "    up-legacy        - Start legacy Docker profile"
+	@echo "    up-rsi           - Start RSI-only Docker profile"
+	@echo ""
+	@echo "══════════════════════════════════════════════════════════════════"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# RSI BOT TARGETS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+run:
+	@. .venv/bin/activate && $(PY) benson_rsi_bot.py
+
+run-once-paper: install-lean
+	@. .venv-lean/bin/activate && export PAPER=true && export EXCHANGE=$${EXCHANGE:-kraken} && python benson_rsi_bot.py --once
+
+run-once-live: install-lean
+	@. .venv-lean/bin/activate && export PAPER=false && export EXCHANGE=$${EXCHANGE:-kraken} && python benson_rsi_bot.py --once
+
+run-live: install-lean
+	@. .venv-lean/bin/activate && export PAPER=false && export EXCHANGE=$${EXCHANGE:-kraken} && python benson_rsi_bot.py
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SYSTEM TARGETS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+api-server:
+	@. .venv/bin/activate && $(PY) benson_system.py --mode api-server
+
+rsi-compat:
+	@. .venv/bin/activate && $(PY) benson_system.py --mode rsi-compat --once
+
+system-test:
+	$(PY) benson_system.py --mode test
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# LEAN RUNTIME ENVIRONMENT
+# ═══════════════════════════════════════════════════════════════════════════════
+
+venv-lean:
+	@[ -d .venv-lean ] || python3 -m venv .venv-lean
+	@. .venv-lean/bin/activate && pip install -U pip
+
+install-lean: venv-lean
+	@. .venv-lean/bin/activate && pip install -r requirements-runtime.txt
+
+run-lean: install-lean
+	@chmod +x scripts/run_multi_signal_lean.sh 2>/dev/null || true
+	@./scripts/run_multi_signal_lean.sh || true
+
+run-integrator-lean: install-lean
+	@. .venv-lean/bin/activate && python scripts/integrator_smoke_test.py
+
+quick-checks: install-lean
+	@. .venv-lean/bin/activate && \
+	  python -m pip install -q pytest && \
+	  python -c "import yaml, os; print('PyYAML import OK')" && \
+	  pytest -q tests/test_rsi_scenarios.py && \
+	  python scripts/integrator_smoke_test.py
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# DYNAMIC SELECTION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+select-dynamic: install-lean
+	@. .venv-lean/bin/activate && python dynamic_crypto_selector.py --exchange $${EXCHANGE:-kraken} --base USD --top-n 30 --timeframe 1h --lookback 24 --config-path config/config.yaml
+
+refresh-and-preflight: install-lean
+	@. .venv-lean/bin/activate && \
+	  python dynamic_crypto_selector.py --exchange $${EXCHANGE:-kraken} --base USD --top-n $${TOP_N:-30} --timeframe $${TF:-1h} --lookback $${LB:-24} --config-path config/config.yaml && \
+	  python scripts/preflight_config_symbols.py
+
+preflight-order: install-lean
+	@. .venv-lean/bin/activate && python scripts/preflight_order.py
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# DOCKER (LEGACY PROFILES)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+up-legacy:
+	$(COMPOSE) --profile legacy up -d --build benson-legacy
+
+up-rsi:
+	$(COMPOSE) --profile rsi-only up --build benson-rsi
