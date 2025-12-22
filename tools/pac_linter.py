@@ -148,12 +148,25 @@ def lint_emoji_border_consistency(content: str, file_path: Path) -> List[LintVio
     return violations
 
 
+# Test files with intentional invalid GIDs for testing guard behavior
+TEST_FILES_WITH_INVALID_GIDS = {
+    "test_pdo_guards.py",
+    "test_lane_enforcement.py",
+    "test_settlement_guards.py",
+}
+
+
 def lint_gid_validity(content: str, file_path: Path) -> List[LintViolation]:
     """
     RULE: pac-gid-valid
     All GID references must exist in the canonical roster.
     """
     violations = []
+    
+    # Skip GID validation for test files with intentional invalid GIDs
+    if file_path.name in TEST_FILES_WITH_INVALID_GIDS:
+        return violations
+    
     lines = content.split("\n")
     
     for i, line in enumerate(lines, 1):
@@ -1025,7 +1038,8 @@ def lint_activation_block_lane_match(content: str, file_path: Path) -> List[Lint
         return violations
     
     # Look for LANE declaration (LANE: VALUE or LANE — VALUE)
-    lane_pattern = re.compile(r"(?<!\w)LANE\s*[:\-—]\s*([^\n/]+)", re.IGNORECASE)
+    # Case-sensitive to avoid matching docstrings like "lane: description"
+    lane_pattern = re.compile(r"(?<!\w)LANE\s*[:\-—]\s*([^\n/]+)")
     lane_match = lane_pattern.search(content)
     
     if not lane_match:
