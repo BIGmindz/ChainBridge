@@ -34,6 +34,7 @@ from app.services.pdo.validator import (
     PDOValidator,
     ValidationErrorCode,
     ValidationResult,
+    SignatureVerificationResult,
 )
 
 logger = logging.getLogger(__name__)
@@ -96,6 +97,13 @@ def _log_enforcement_event(
         "request_method": request_method,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
+
+    # Include signature verification info if present
+    if result.signature_result is not None:
+        log_data["signature_verified"] = result.signature_result.verified
+        log_data["signature_outcome"] = result.signature_result.outcome
+        log_data["signature_is_unsigned"] = result.signature_result.is_unsigned
+        log_data["signature_key_id"] = result.signature_result.key_id
 
     if result.errors:
         log_data["errors"] = [
@@ -309,6 +317,134 @@ webhook_actuation_gate = PDOEnforcementGate("webhook_actuation")
 
 # External chain call enforcement
 chain_call_gate = PDOEnforcementGate("chain_call")
+
+
+# ---------------------------------------------------------------------------
+# Signature-Enforcing Gate (FAIL-CLOSED)
+# ---------------------------------------------------------------------------
+# This gate validates both PDO schema AND cryptographic signature.
+# Invalid signatures block execution (fail-closed).
+# Unsigned PDOs emit WARNING but are TEMPORARILY allowed (legacy mode).
+# ---------------------------------------------------------------------------
+
+
+class SignatureEnforcementGate:
+    """PDO enforcement gate with signature verification.
+
+    Extends PDOEnforcementGate to include cryptographic signature verification.
+    This gate enforces FAIL-CLOSED behavior for signature verification.
+
+    DOCTRINE:
+    - Invalid signature → BLOCK (HTTP 403)
+    - Unsigned PDO → WARN + ALLOW (legacy mode, TEMPORARY)
+    - All failures logged for audit
+
+    USAGE:
+        gate = SignatureEnforcementGate("settlement_initiation")
+
+        @router.post("/settlements/initiate")
+        async def initiate_settlement(
+            request: Request,
+            _pdo_enforced: None = Depends(gate.enforce),
+        ):
+            # Only executes if PDO is valid AND signature verifies
+            ...
+    """
+
+    def __init__(self, enforcement_point: str):
+        """Initialize signature enforcement gate.
+
+        Args:
+            enforcement_point: Name identifying this enforcement boundary
+        """
+        self.enforcement_point = enforcement_point
+        self._validator = PDOValidator()
+
+    async def enforce(self, request: Request) -> None:
+        """FastAPI Dependency with signature-verified PDO enforcement.
+
+        Validates PDO schema AND cryptographic signature.
+        Raises HTTPException if either check fails.
+
+        Args:
+            request: FastAPI Request object
+
+        Raises:
+            HTTPException: 403 if PDO missing, invalid, or signature fails
+            HTTPException: 409 if PDO hash integrity check fails
+        """
+        # Extract PDO from request body
+        pdo_data = await self._extract_pdo(request)
+
+        # Validate PDO WITH signature verification
+        result = self._validator.validate_with_signature(pdo_data)
+
+        # Log enforcement decision with signature info
+        _log_enforcement_event(
+            enforcement_point=self.enforcement_point,
+            result=result,
+            request_path=str(request.url.path),
+            request_method=request.method,
+            outcome="ALLOWED" if result.valid else "BLOCKED",
+        )
+
+        # Block if invalid
+        if not result.valid:
+            self._raise_enforcement_error(result, request)
+
+    async def _extract_pdo(self, request: Request) -> Optional[dict]:
+        """Extract PDO from request body."""
+        try:
+            body = await request.json()
+            if isinstance(body, dict):
+                return body.get("pdo")
+            return None
+        except Exception:
+            return None
+
+    def _raise_enforcement_error(
+        self, result: ValidationResult, request: Request
+    ) -> None:
+        """Raise HTTPException for enforcement failure.
+
+        Chooses appropriate status code:
+        - 409 Conflict for hash/integrity failures
+        - 403 Forbidden for all other validation failures (including signature)
+        """
+        integrity_codes = {
+            ValidationErrorCode.HASH_MISMATCH,
+            ValidationErrorCode.INTEGRITY_FAILURE,
+        }
+        has_integrity_error = any(e.code in integrity_codes for e in result.errors)
+
+        status_code = (
+            status.HTTP_409_CONFLICT if has_integrity_error
+            else status.HTTP_403_FORBIDDEN
+        )
+
+        error_response = PDOEnforcementError(
+            message=f"PDO enforcement failed at {self.enforcement_point}",
+            pdo_id=result.pdo_id,
+            errors=[
+                {"code": e.code.value, "field": e.field, "message": e.message}
+                for e in result.errors
+            ],
+            enforcement_point=self.enforcement_point,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+        )
+
+        raise HTTPException(
+            status_code=status_code,
+            detail=error_response.model_dump(),
+        )
+
+
+# Pre-configured Signature Enforcement Gates
+# Use these for endpoints requiring cryptographic verification
+signature_agent_execution_gate = SignatureEnforcementGate("agent_execution")
+signature_settlement_gate = SignatureEnforcementGate("settlement_initiation")
+signature_webhook_gate = SignatureEnforcementGate("webhook_actuation")
+signature_chain_call_gate = SignatureEnforcementGate("chain_call")
 
 
 # ---------------------------------------------------------------------------

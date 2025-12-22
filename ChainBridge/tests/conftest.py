@@ -67,6 +67,9 @@ def _preload_monorepo_app_modules() -> None:
         import app.services.pdo.validator  # noqa: F401
         import app.middleware.pdo_enforcement  # noqa: F401
 
+        # PDO signature verification (PDO Signing)
+        import app.services.pdo.signing  # noqa: F401
+
         # Risk interface modules (PDO Risk Integration)
         import app.services.risk.interface  # noqa: F401
     except ImportError:
