@@ -1,0 +1,219 @@
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Governance Check Workflow
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# PAC: PAC-DAN-RUNTIME-IDENTITY-LINT-ENFORCEMENT-01
+# Author: Dan (GID-07) — DevOps & CI/CD Lead
+# Authority: Benson (GID-00)
+# Mode: FAIL-CLOSED
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#
+# PURPOSE:
+# Enforce governance rules including runtime/agent identity separation.
+# This workflow runs BEFORE deployment and PAC validation gates.
+#
+# INVARIANTS ENFORCED:
+# - runtime_has_gid: false
+# - runtime_uses_agent_name: false
+# - agent_has_gid: true
+# - agent_uses_runtime_block: false
+#
+# FAIL-CLOSED: Any violation fails the pipeline. No warnings. No soft failures.
+#
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+name: Governance Check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Gate 1: Runtime vs Agent Identity Lint (MUST PASS FIRST)
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  identity-lint:
+    name: 🔒 Runtime/Agent Identity Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Runtime vs Agent Identity Lint
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔒 RUNTIME vs AGENT IDENTITY LINT"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "PAC: PAC-DAN-RUNTIME-IDENTITY-LINT-ENFORCEMENT-01"
+          echo "Mode: FAIL-CLOSED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          python scripts/lint_identity_blocks.py .
+          
+          LINT_EXIT=$?
+          
+          if [ $LINT_EXIT -ne 0 ]; then
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "❌ IDENTITY LINT FAILED"
+            echo "Runtime/Agent identity boundary violated"
+            echo "Fix activation blocks to canonical standard"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            exit 1
+          fi
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Gate 2: Agent Registry Validation
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  registry-check:
+    name: 📋 Agent Registry Validation
+    needs: identity-lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify registry files exist
+        run: |
+          echo "Checking agent registry files..."
+          
+          test -s docs/governance/AGENT_REGISTRY.json || { echo "❌ AGENT_REGISTRY.json missing"; exit 1; }
+          echo "✅ AGENT_REGISTRY.json exists"
+          
+          test -s docs/governance/AGENT_REGISTRY.md || { echo "❌ AGENT_REGISTRY.md missing"; exit 1; }
+          echo "✅ AGENT_REGISTRY.md exists"
+
+      - name: Validate registry JSON
+        run: |
+          echo "Validating AGENT_REGISTRY.json..."
+          python -c "
+          import json
+          import sys
+          
+          with open('docs/governance/AGENT_REGISTRY.json') as f:
+              registry = json.load(f)
+          
+          # Required top-level keys
+          required = ['meta', 'agents', 'special_constraints', 'forbidden_aliases']
+          for key in required:
+              if key not in registry:
+                  print(f'❌ Missing required key: {key}')
+                  sys.exit(1)
+          
+          # Validate each agent has required fields
+          for agent in registry['agents']:
+              for field in ['gid', 'name', 'color', 'role']:
+                  if field not in agent:
+                      print(f'❌ Agent missing field: {field}')
+                      sys.exit(1)
+          
+          print(f'✅ Registry valid: {len(registry[\"agents\"])} agents')
+          "
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Gate 3: GID Consistency Check
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  gid-consistency:
+    name: 🆔 GID Consistency Check
+    needs: registry-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for GID conflicts
+        run: |
+          echo "Checking for GID conflicts..."
+          python -c "
+          import json
+          import sys
+          
+          with open('docs/governance/AGENT_REGISTRY.json') as f:
+              registry = json.load(f)
+          
+          gids = {}
+          conflicts = []
+          
+          for agent in registry['agents']:
+              gid = agent['gid']
+              name = agent['name']
+              
+              if gid in gids:
+                  conflicts.append(f'GID {gid} claimed by both {gids[gid]} and {name}')
+              else:
+                  gids[gid] = name
+          
+          if conflicts:
+              print('❌ GID CONFLICTS DETECTED:')
+              for c in conflicts:
+                  print(f'   {c}')
+              sys.exit(1)
+          
+          print(f'✅ No GID conflicts ({len(gids)} unique GIDs)')
+          "
+
+      - name: Check for forbidden aliases
+        run: |
+          echo "Checking for forbidden alias usage..."
+          python -c "
+          import json
+          import sys
+          import re
+          from pathlib import Path
+          
+          with open('docs/governance/AGENT_REGISTRY.json') as f:
+              registry = json.load(f)
+          
+          forbidden = registry.get('forbidden_aliases', [])
+          violations = []
+          
+          # Check AGENTS directory for forbidden aliases
+          agents_dir = Path('AGENTS')
+          if agents_dir.exists():
+              for md_file in agents_dir.glob('*.md'):
+                  content = md_file.read_text()
+                  for alias in forbidden:
+                      if re.search(rf'\\b{alias}\\b', content, re.IGNORECASE):
+                          violations.append(f'{md_file.name} uses forbidden alias: {alias}')
+          
+          if violations:
+              print('❌ FORBIDDEN ALIAS VIOLATIONS:')
+              for v in violations:
+                  print(f'   {v}')
+              sys.exit(1)
+          
+          print(f'✅ No forbidden alias usage (checked {len(forbidden)} aliases)')
+          "
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Summary
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  governance-summary:
+    name: 📊 Governance Summary
+    needs: [identity-lint, registry-check, gid-consistency]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Generate Summary
+        run: |
+          echo "# 🔒 Governance Check Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**PAC:** PAC-DAN-RUNTIME-IDENTITY-LINT-ENFORCEMENT-01" >> $GITHUB_STEP_SUMMARY
+          echo "**Authority:** Benson (GID-00)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Gates" >> $GITHUB_STEP_SUMMARY
+          echo "| Gate | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔒 Identity Lint | ${{ needs.identity-lint.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📋 Registry Check | ${{ needs.registry-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🆔 GID Consistency | ${{ needs.gid-consistency.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "_FAIL-CLOSED: Any gate failure blocks merge._" >> $GITHUB_STEP_SUMMARY
