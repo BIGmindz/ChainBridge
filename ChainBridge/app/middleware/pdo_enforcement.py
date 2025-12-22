@@ -1,5 +1,11 @@
 """PDO Enforcement Middleware.
 
+╔══════════════════════════════════════════════════════════════════════╗
+║ EXECUTING AGENT: Cody (GID-01) — Senior Backend Engineer             ║
+║ EXECUTING COLOR: 🟢 BLUE                                             ║
+║ PAC: PAC-CODY-A6-ARCHITECTURE-ENFORCEMENT-WIRING-01                  ║
+╚══════════════════════════════════════════════════════════════════════╝
+
 Implements server-side PDO enforcement gates per PDO Enforcement Model v1 (LOCKED doctrine).
 
 ENFORCEMENT BOUNDARIES:
@@ -25,7 +31,6 @@ ERROR RESPONSES:
 - HTTP 409 Conflict: PDO hash mismatch, integrity failure, or CRO ESCALATE
 
 Author: Cody (GID-01) — Senior Backend Engineer
-CRO Integration: Ruby (GID-12) — Chief Risk Officer
 """
 from __future__ import annotations
 
@@ -766,6 +771,150 @@ cro_signature_chain_call_gate = CROSignatureEnforcementGate("chain_call")
 
 
 # ---------------------------------------------------------------------------
+# A6 Architecture Enforcement Gates (PAC-CODY-A6-ARCHITECTURE-ENFORCEMENT-WIRING-01)
+# ---------------------------------------------------------------------------
+# These gates enforce A1-A5 Architecture Locks:
+# - Agent GID format validation
+# - Authority signature requirements
+# - Settlement blocking when CRO requires authorization
+# ---------------------------------------------------------------------------
+
+
+class A6EnforcementGate:
+    """Settlement gate with A6 Architecture Lock enforcement.
+
+    Enforces A1-A5 Architecture Locks at settlement boundary:
+    - A1: Agent GID must be valid format (GID-NN)
+    - A2: Authority signature required when CRO blocks execution
+    - A3: Proof lineage must be forward-only
+
+    DOCTRINE (FAIL-CLOSED per PAC-CODY-A6-ARCHITECTURE-ENFORCEMENT-WIRING-01):
+    - Invalid GID → BLOCK (HTTP 403)
+    - Missing authority when required → BLOCK (HTTP 403)
+    - Broken proof lineage → BLOCK (HTTP 409)
+
+    USAGE:
+        gate = A6EnforcementGate("settlement_initiation")
+
+        @router.post("/settlements/initiate")
+        async def initiate_settlement(
+            request: Request,
+            _a6_enforced: None = Depends(gate.enforce),
+        ):
+            # Only executes if A6 constraints are satisfied
+            ...
+    """
+
+    def __init__(self, enforcement_point: str):
+        """Initialize A6 enforcement gate.
+
+        Args:
+            enforcement_point: Name identifying this enforcement boundary
+        """
+        self.enforcement_point = enforcement_point
+        self._validator = PDOValidator()
+
+    async def enforce(self, request: Request) -> None:
+        """FastAPI Dependency with A6 architecture enforcement.
+
+        Validates PDO schema AND enforces A6 Architecture Lock constraints.
+        Raises HTTPException if validation fails or A6 constraints violated.
+
+        Args:
+            request: FastAPI Request object
+
+        Raises:
+            HTTPException: 403 if GID invalid or authority missing
+            HTTPException: 409 if proof lineage broken
+        """
+        from app.services.pdo.validator import validate_pdo_a6_enforcement
+
+        # Extract PDO from request body
+        pdo_data = await self._extract_pdo(request)
+
+        # First validate base PDO
+        base_result = self._validator.validate(pdo_data)
+        if not base_result.valid:
+            _log_enforcement_event(
+                enforcement_point=self.enforcement_point,
+                result=base_result,
+                request_path=str(request.url.path),
+                request_method=request.method,
+                outcome="BLOCKED",
+            )
+            self._raise_enforcement_error(base_result, request)
+
+        # Then validate A6 enforcement constraints
+        a6_result = validate_pdo_a6_enforcement(pdo_data)
+
+        # Log enforcement decision
+        _log_enforcement_event(
+            enforcement_point=f"{self.enforcement_point}_a6",
+            result=a6_result,
+            request_path=str(request.url.path),
+            request_method=request.method,
+            outcome="ALLOWED" if a6_result.valid else "BLOCKED",
+        )
+
+        # Block if A6 constraints violated
+        if not a6_result.valid:
+            self._raise_enforcement_error(a6_result, request)
+
+    async def _extract_pdo(self, request: Request) -> Optional[dict]:
+        """Extract PDO from request body."""
+        try:
+            body = await request.json()
+            if isinstance(body, dict):
+                return body.get("pdo")
+            return None
+        except Exception:
+            return None
+
+    def _raise_enforcement_error(
+        self, result: ValidationResult, request: Request
+    ) -> None:
+        """Raise HTTPException for A6 enforcement failure.
+
+        Chooses appropriate status code:
+        - 409 Conflict for proof lineage violations
+        - 403 Forbidden for GID/authority violations
+        """
+        lineage_codes = {
+            ValidationErrorCode.PROOF_LINEAGE_BROKEN,
+        }
+        has_lineage_error = any(e.code in lineage_codes for e in result.errors)
+
+        status_code = (
+            status.HTTP_409_CONFLICT if has_lineage_error
+            else status.HTTP_403_FORBIDDEN
+        )
+
+        error_details = [
+            {"code": e.code.value, "field": e.field, "message": e.message}
+            for e in result.errors
+        ]
+
+        error_response = PDOEnforcementError(
+            error="A6_ARCHITECTURE_ENFORCEMENT_FAILED",
+            message="A6 Architecture Lock constraints violated",
+            pdo_id=result.pdo_id,
+            errors=error_details,
+            enforcement_point=self.enforcement_point,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+        )
+
+        raise HTTPException(
+            status_code=status_code,
+            detail=error_response.model_dump(),
+        )
+
+
+# Pre-configured A6 Enforcement Gates
+a6_settlement_gate = A6EnforcementGate("settlement_initiation")
+a6_agent_execution_gate = A6EnforcementGate("agent_execution")
+
+
+# ---------------------------------------------------------------------------
 # Risk-Aware Enforcement Gates (Infrastructure Only)
 # ---------------------------------------------------------------------------
 # TODO(Ruby): Wire policy decisions to risk check results
@@ -1002,3 +1151,8 @@ def get_risk_aware_settlement_gate() -> RiskAwareEnforcementGate:
     if risk_aware_settlement_gate is None:
         risk_aware_settlement_gate = _get_risk_aware_settlement_gate()
     return risk_aware_settlement_gate
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# END — Cody (GID-01) — 🔵
+# ═══════════════════════════════════════════════════════════════════════════

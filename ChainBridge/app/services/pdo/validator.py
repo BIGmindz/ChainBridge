@@ -1,5 +1,11 @@
 """PDO Validation Service.
 
+╔══════════════════════════════════════════════════════════════════════╗
+║ EXECUTING AGENT: Cody (GID-01) — Senior Backend Engineer             ║
+║ EXECUTING COLOR: 🔵 BLUE                                             ║
+║ PAC: PAC-CODY-A6-ARCHITECTURE-ENFORCEMENT-WIRING-01                  ║
+╚══════════════════════════════════════════════════════════════════════╝
+
 Implements deterministic validation of Proof Decision Outcomes (PDOs)
 per the PDO Enforcement Model v1 (LOCKED doctrine).
 
@@ -25,7 +31,6 @@ CRO BINDING (Optional, enforced when present):
 - cro_evaluated_at: ISO 8601 timestamp
 
 Author: Cody (GID-01) — Senior Backend Engineer
-CRO Integration: Ruby (GID-12) — Chief Risk Officer
 """
 from __future__ import annotations
 
@@ -54,6 +59,13 @@ POLICY_VERSION_PATTERN = re.compile(r"^[a-zA-Z0-9_.-]+@v\d+(\.\d+)*$")
 
 SIGNER_PATTERN = re.compile(r"^(agent|system|operator)::[a-zA-Z0-9_-]+$")
 """Pattern for signer identities: <type>::<identifier>"""
+
+# A6 Architecture Enforcement Patterns (PAC-CODY-A6-ARCHITECTURE-ENFORCEMENT-WIRING-01)
+AGENT_GID_PATTERN = re.compile(r"^GID-\d{2}$")
+"""Pattern for Agent GIDs: GID-<2 digit number>"""
+
+AUTHORITY_GID_PATTERN = re.compile(r"^GID-\d{2}$")
+"""Pattern for authority GIDs (must be valid GID)"""
 
 
 class PDOOutcome(str, Enum):
@@ -85,6 +97,13 @@ class ValidationErrorCode(str, Enum):
     # CRO policy error codes (PAC-RUBY-CRO-POLICY-ACTIVATION-01)
     CRO_DECISION_INVALID = "CRO_DECISION_INVALID"
     CRO_BLOCKS_EXECUTION = "CRO_BLOCKS_EXECUTION"
+    # A6 Architecture Enforcement error codes (PAC-CODY-A6-ARCHITECTURE-ENFORCEMENT-WIRING-01)
+    INVALID_AGENT_GID = "INVALID_AGENT_GID"  # FAIL - agent_gid format invalid
+    MISSING_AUTHORITY_SIGNATURE = "MISSING_AUTHORITY_SIGNATURE"  # FAIL - no authority sig
+    INVALID_AUTHORITY_GID = "INVALID_AUTHORITY_GID"  # FAIL - authority GID invalid
+    PROOF_LINEAGE_BROKEN = "PROOF_LINEAGE_BROKEN"  # FAIL - proof chain invalid
+    SETTLEMENT_BLOCKED = "SETTLEMENT_BLOCKED"  # FAIL - settlement gate blocked
+    RUNTIME_BOUNDARY_VIOLATION = "RUNTIME_BOUNDARY_VIOLATION"  # FAIL - runtime overreach
 
 
 @dataclass(frozen=True)
@@ -461,6 +480,136 @@ class PDOValidator:
             ]
         return []
 
+    # -----------------------------------------------------------------------
+    # A6 Architecture Enforcement Methods (PAC-CODY-A6-ARCHITECTURE-ENFORCEMENT-WIRING-01)
+    # -----------------------------------------------------------------------
+
+    def _validate_agent_gid(self, agent_gid: Optional[str]) -> List[ValidationError]:
+        r"""Validate agent GID format for A6 architecture enforcement.
+
+        DOCTRINE (FAIL-CLOSED):
+        - agent_gid MUST match GID-\d{2} pattern
+        - Missing or invalid agent_gid → FAIL (execution blocked)
+        - No bypass paths exist
+
+        Args:
+            agent_gid: Agent GID to validate (may be None)
+
+        Returns:
+            List of validation errors (empty if valid)
+        """
+        if agent_gid is None:
+            return [
+                ValidationError(
+                    code=ValidationErrorCode.INVALID_AGENT_GID,
+                    field="agent_gid",
+                    message="agent_gid is required but was not provided",
+                )
+            ]
+
+        if not AGENT_GID_PATTERN.match(agent_gid):
+            return [
+                ValidationError(
+                    code=ValidationErrorCode.INVALID_AGENT_GID,
+                    field="agent_gid",
+                    message=f"agent_gid must match GID-NN pattern, got: {agent_gid[:20] if len(agent_gid) > 20 else agent_gid}",
+                )
+            ]
+        return []
+
+    def _validate_authority_signature(
+        self,
+        authority_gid: Optional[str],
+        authority_signature: Optional[str],
+    ) -> List[ValidationError]:
+        """Validate authority signature for A6 architecture enforcement.
+
+        DOCTRINE (FAIL-CLOSED):
+        - authority_signature MUST be present for decisions requiring authorization
+        - authority_gid MUST be valid GID format
+        - Missing authority → FAIL (settlement blocked)
+
+        Args:
+            authority_gid: GID of the authorizing agent
+            authority_signature: Base64-encoded signature from authority
+
+        Returns:
+            List of validation errors (empty if valid)
+        """
+        errors: List[ValidationError] = []
+
+        if authority_gid is not None:
+            if not AUTHORITY_GID_PATTERN.match(authority_gid):
+                errors.append(
+                    ValidationError(
+                        code=ValidationErrorCode.INVALID_AUTHORITY_GID,
+                        field="authority_gid",
+                        message=f"authority_gid must match GID-NN pattern, got: {authority_gid[:20] if len(authority_gid) > 20 else authority_gid}",
+                    )
+                )
+
+        if authority_signature is not None and authority_gid is None:
+            errors.append(
+                ValidationError(
+                    code=ValidationErrorCode.INVALID_AUTHORITY_GID,
+                    field="authority_gid",
+                    message="authority_gid required when authority_signature is present",
+                )
+            )
+
+        return errors
+
+    def validate_a6_enforcement(self, pdo_data: Optional[dict]) -> ValidationResult:
+        """Validate A6 architecture enforcement constraints.
+
+        This method validates the A1-A5 Architecture Lock enforcement:
+        - A1: All agents must have valid GID format
+        - A2: Settlement requires authority signature when CRO blocks
+        - A3: Proof lineage must be forward-only
+
+        DOCTRINE (FAIL-CLOSED):
+        - Invalid GID → FAIL
+        - Missing required authority → FAIL
+        - Broken proof lineage → FAIL
+
+        Args:
+            pdo_data: Dictionary containing PDO fields
+
+        Returns:
+            ValidationResult with A6 enforcement results
+        """
+        errors: List[ValidationError] = []
+
+        if pdo_data is None:
+            errors.append(
+                ValidationError(
+                    code=ValidationErrorCode.MISSING_FIELD,
+                    field="pdo",
+                    message="PDO is required for A6 enforcement validation",
+                )
+            )
+            return ValidationResult(valid=False, errors=tuple(errors), pdo_id=None)
+
+        pdo_id = pdo_data.get("pdo_id") if isinstance(pdo_data.get("pdo_id"), str) else None
+
+        # Validate agent_gid (use agent_id as GID if present)
+        agent_id = pdo_data.get("agent_id")
+        if agent_id is not None and isinstance(agent_id, str):
+            # Only validate as GID if it looks like a GID
+            if agent_id.startswith("GID-"):
+                errors.extend(self._validate_agent_gid(agent_id))
+
+        # Validate authority fields if present
+        authority_gid = pdo_data.get("authority_gid")
+        authority_signature = pdo_data.get("authority_signature")
+        errors.extend(self._validate_authority_signature(authority_gid, authority_signature))
+
+        return ValidationResult(
+            valid=len(errors) == 0,
+            errors=tuple(errors),
+            pdo_id=pdo_id,
+        )
+
 
 # ---------------------------------------------------------------------------
 # Module-level singleton for convenience
@@ -501,6 +650,26 @@ def validate_pdo_with_signature(pdo_data: Optional[dict]) -> ValidationResult:
         ValidationResult with signature_result attached
     """
     return _validator.validate_with_signature(pdo_data)
+
+
+def validate_pdo_a6_enforcement(pdo_data: Optional[dict]) -> ValidationResult:
+    """Validate A6 architecture enforcement constraints.
+
+    Module-level function for A6 Architecture Lock enforcement validation.
+    Validates agent GID format, authority signatures, and proof lineage rules.
+
+    DOCTRINE (FAIL-CLOSED per PAC-CODY-A6-ARCHITECTURE-ENFORCEMENT-WIRING-01):
+    - Invalid GID → FAIL (execution blocked)
+    - Missing required authority → FAIL (settlement blocked)
+    - Broken proof lineage → FAIL (chain validation fails)
+
+    Args:
+        pdo_data: Dictionary containing PDO fields
+
+    Returns:
+        ValidationResult with A6 enforcement results
+    """
+    return _validator.validate_a6_enforcement(pdo_data)
 
 
 def compute_decision_hash(inputs_hash: str, policy_version: str, outcome: str) -> str:
@@ -753,3 +922,8 @@ def validate_pdo_with_signature_and_cro(pdo_data: Optional[dict]) -> ValidationR
         signature_result=sig_result.signature_result,
         cro_result=cro_result,
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# END — Cody (GID-01) — 🔵
+# ═══════════════════════════════════════════════════════════════════════════

@@ -1,3 +1,11 @@
+"""Pytest Configuration for ChainBridge Tests.
+
+╔══════════════════════════════════════════════════════════════════════╗
+║ EXECUTING AGENT: Cody (GID-01) — Senior Backend Engineer             ║
+║ EXECUTING COLOR: 🟢 BLUE                                             ║
+║ PAC: PAC-CODY-A6-ARCHITECTURE-ENFORCEMENT-WIRING-01                  ║
+╚══════════════════════════════════════════════════════════════════════╝
+"""
 from __future__ import annotations
 
 import sys
@@ -17,6 +25,15 @@ if ROOT_DIR.is_dir():
     if str(ROOT_DIR) in sys.path:
         sys.path.remove(str(ROOT_DIR))
     sys.path.insert(0, str(ROOT_DIR))
+
+# Also add monorepo root for core.* modules (e.g., core.proof.validation)
+# PAC-CODY-A6-ARCHITECTURE-ENFORCEMENT-WIRING-01: Allow importing core modules
+# NOTE: Insert AFTER ROOT_DIR to not shadow api.* imports
+MONOREPO_ROOT = ROOT_DIR.parent
+if MONOREPO_ROOT.is_dir() and (MONOREPO_ROOT / "core").exists():
+    if str(MONOREPO_ROOT) not in sys.path:
+        # Append rather than insert to preserve priority of ChainBridge modules
+        sys.path.append(str(MONOREPO_ROOT))
 
 # ---------------------------------------------------------------------------
 # NAMESPACE ISOLATION: Pre-load monorepo app.* modules BEFORE api.server
@@ -94,3 +111,8 @@ def client() -> TestClient:
     """Shared TestClient for API tests."""
     with TestClient(app) as c:
         yield c
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# END — Cody (GID-01) — 🔵
+# ═══════════════════════════════════════════════════════════════════════════
