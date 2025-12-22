@@ -1,10 +1,19 @@
 {
   "_metadata": {
-    "version": "3.0.0",
-    "ratified_by": "PAC-BENSON-CANONICAL-IDENTITY-RECONCILIATION-01",
+    "version": "4.0.0",
+    "ratified_by": "PAC-BENSON-CANONICAL-AGENT-REGISTRY-RECONCILIATION-01",
     "authority": "Benson (GID-00)",
     "ratification_date": "2025-12-22",
-    "status": "LOCKED"
+    "status": "LOCKED",
+    "supersedes": "v3.0.0"
+  },
+  "canonical_identity_rules": {
+    "one_agent_one_gid_one_color_one_icon_one_lane": true,
+    "no_shared_gids": true,
+    "no_shared_colors_without_sub_icon": true,
+    "no_ghost_agents": true,
+    "registry_is_authority": true,
+    "directory_mirrors_registry": true
   },
   "funnel_standard": {
     "level_1": "CONTEXT",
@@ -13,25 +22,26 @@
     "level_4": "ROLE_ICON",
     "level_5": "EXECUTION"
   },
-  "domain_colors": {
-    "ORCHESTRATION": "TEAL",
-    "BACKEND": "BLUE",
-    "ML_AI": "PURPLE",
-    "FRONTEND": "GREEN",
-    "SECURITY": "RED",
-    "DEVOPS": "ORANGE",
-    "GOVERNANCE": "WHITE",
-    "SYSTEM_STATE": "BLUE",
-    "PAYMENTS": "GOLD",
-    "RISK_POLICY": "RED"
-  },
+  "color_funnel_narrowing_order": [
+    "ORCHESTRATION",
+    "GOVERNANCE",
+    "SECURITY",
+    "DEVOPS",
+    "SYSTEM_STATE",
+    "BACKEND",
+    "ML_AI",
+    "FRONTEND",
+    "UX",
+    "RESEARCH"
+  ],
   "agents": {
     "BENSON": {
       "gid": "GID-00",
       "color": "TEAL",
       "icon": "🟦🟩",
-      "role": "Chief Architect / Orchestrator",
-      "execution_lane": "ORCHESTRATION"
+      "role": "Chief Architect & Orchestrator",
+      "execution_lane": "ORCHESTRATION",
+      "authority": "ROOT"
     },
     "CODY": {
       "gid": "GID-01",
@@ -40,31 +50,48 @@
       "role": "Backend Engineer",
       "execution_lane": "BACKEND"
     },
-    "MAGGIE": {
-      "gid": "GID-02",
-      "color": "PURPLE",
-      "icon": "🟣",
-      "role": "ML & Applied AI Lead",
-      "execution_lane": "ML_AI"
-    },
     "SONNY": {
-      "gid": "GID-03",
-      "color": "GREEN",
-      "icon": "🟢",
+      "gid": "GID-02",
+      "color": "YELLOW",
+      "icon": "🟡",
       "role": "Frontend Engineer",
       "execution_lane": "FRONTEND"
     },
+    "MIRA": {
+      "gid": "GID-03",
+      "color": "PURPLE",
+      "icon": "🟣",
+      "role": "Research Lead",
+      "execution_lane": "RESEARCH"
+    },
+    "CINDY": {
+      "gid": "GID-04",
+      "color": "CYAN",
+      "icon": "🔷",
+      "role": "Backend Scaling Engineer",
+      "execution_lane": "BACKEND"
+    },
+    "ATLAS": {
+      "gid": "GID-05",
+      "color": "BLUE",
+      "icon": "🟦",
+      "role": "System State Engine",
+      "execution_lane": "SYSTEM_STATE",
+      "write_access": false,
+      "execution_authority": false,
+      "output": "FACTS_ONLY"
+    },
     "SAM": {
       "gid": "GID-06",
-      "color": "RED",
-      "icon": "🛡️",
+      "color": "DARK_RED",
+      "icon": "🔴",
       "role": "Security & Threat Engineer",
       "execution_lane": "SECURITY"
     },
     "DAN": {
       "gid": "GID-07",
-      "color": "ORANGE",
-      "icon": "🟠",
+      "color": "GREEN",
+      "icon": "🟢",
       "role": "DevOps & CI/CD Lead",
       "execution_lane": "DEVOPS"
     },
@@ -75,36 +102,38 @@
       "role": "Governance & Alignment Engine",
       "execution_lane": "GOVERNANCE"
     },
-    "CINDY": {
+    "LIRA": {
       "gid": "GID-09",
-      "color": "BLUE",
-      "icon": "🔷",
-      "role": "Backend Scaling Engineer",
-      "execution_lane": "BACKEND"
+      "color": "PINK",
+      "icon": "🩷",
+      "role": "UX Lead",
+      "execution_lane": "UX"
     },
-    "PAX": {
+    "MAGGIE": {
       "gid": "GID-10",
-      "color": "GOLD",
-      "icon": "💰",
-      "role": "Payments & Tokenization",
-      "execution_lane": "PAYMENTS"
-    },
-    "ATLAS": {
-      "gid": "GID-11",
-      "color": "BLUE",
-      "icon": "🧭",
-      "role": "System State Engine",
-      "execution_lane": "SYSTEM_STATE"
+      "color": "MAGENTA",
+      "icon": "💗",
+      "role": "ML & Applied AI Lead",
+      "execution_lane": "ML_AI"
     },
     "RUBY": {
       "gid": "GID-12",
-      "color": "RED",
-      "icon": "⚖️",
+      "color": "CRIMSON",
+      "icon": "♦️",
       "role": "Chief Risk Officer",
-      "execution_lane": "RISK_POLICY"
+      "execution_lane": "RISK_POLICY",
+      "authority": "RISK_OVERRIDE_ONLY"
     }
   },
-  "forbidden_aliases": ["DANA", "LIRA"],
+  "deprecated_gids": {
+    "GID-11": {
+      "prior_agent": "ATLAS",
+      "status": "DEPRECATED",
+      "action": "REMOVED",
+      "reason": "Consolidated to GID-05"
+    }
+  },
+  "forbidden_aliases": ["DANA", "PAX"],
   "identity_invariants": {
     "one_gid_per_agent": true,
     "one_agent_per_gid": true,
