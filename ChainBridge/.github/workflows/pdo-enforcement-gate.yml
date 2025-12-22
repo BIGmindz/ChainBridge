@@ -2,25 +2,34 @@
 # PDO Enforcement Gate
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # PAC: PAC-DAN-PDO-CI-ENFORCEMENT-GATE-01
+# PAC: PAC-DAN-PDO-SIGNING-CI-CD-INTEGRATION-01 (EXTENDED)
 # Author: Dan (GID-07) — DevOps & CI/CD Lead
-# Doctrine: PDO Enforcement Model v1 (LOCKED)
+# Doctrine: PDO Enforcement Model v1 (LOCKED) + PDO Signing Model v1 (LOCKED)
 # Threat Mitigation: PDO-T-014 (CI/CD artifact poisoning)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #
 # PURPOSE:
 # Hard CI enforcement gate that prevents merge/deploy if PDO enforcement
-# invariants are violated. CI is a non-bypassable trust boundary.
+# OR SIGNING invariants are violated. CI is a non-bypassable trust boundary.
 #
-# INVARIANTS ENFORCED:
+# INVARIANTS ENFORCED (ENFORCEMENT):
 # 1. PDO enforcement files must exist and be non-empty
 # 2. PDO enforcement symbols must be present (PDOEnforcementGate, require_valid_pdo, validate_pdo)
 # 3. PDO enforcement tests must exist
 # 4. PDO enforcement tests must pass
+# 5. No enforcement bypass patterns
+#
+# INVARIANTS ENFORCED (SIGNING - PAC-DAN-PDO-SIGNING-CI-CD-INTEGRATION-01):
+# 6. PDO signing modules exist and non-empty
+# 7. PDO signing symbols present (verify_pdo_signature, create_test_signature, etc.)
+# 8. PDO signing tests exist and run
+# 9. PDO signing negative tests exist (unsigned rejection, mismatch rejection)
+# 10. No signing bypass patterns (ALLOW_UNSIGNED, skip_signature, etc.)
 #
 # FAIL-CLOSED DESIGN:
 # - Any invariant violation fails the pipeline
 # - No environment-specific behavior
-# - No dependency on secrets
+# - No dependency on secrets (NO PRIVATE KEYS IN CI)
 # - Deterministic pass/fail outcomes
 #
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -166,6 +175,184 @@ jobs:
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
       # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      # SIGNING INVARIANTS (PAC-DAN-PDO-SIGNING-CI-CD-INTEGRATION-01)
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      # Invariant 6: PDO signing modules must exist
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      - name: Verify PDO signing modules exist
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔏 INVARIANT 6: PDO signing modules exist"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          echo "Checking: app/services/pdo/signing.py"
+          test -s app/services/pdo/signing.py || { echo "❌ FAILED: signing.py missing or empty"; exit 1; }
+          echo "✅ signing.py exists and is non-empty"
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ INVARIANT 6 PASSED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      # Invariant 7: PDO signing symbols must be present
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      - name: Verify PDO signing symbols
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔏 INVARIANT 7: PDO signing symbols present"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          echo "Checking: verify_pdo_signature function"
+          grep -q "def verify_pdo_signature" app/services/pdo/signing.py || { echo "❌ FAILED: verify_pdo_signature not found"; exit 1; }
+          echo "✅ verify_pdo_signature exists"
+          
+          echo "Checking: PDOSignature class"
+          grep -q "class PDOSignature" app/services/pdo/signing.py || { echo "❌ FAILED: PDOSignature class not found"; exit 1; }
+          echo "✅ PDOSignature class exists"
+          
+          echo "Checking: VerificationOutcome enum"
+          grep -q "class VerificationOutcome" app/services/pdo/signing.py || { echo "❌ FAILED: VerificationOutcome not found"; exit 1; }
+          echo "✅ VerificationOutcome exists"
+          
+          echo "Checking: signature field in validator"
+          grep -q "signature" app/services/pdo/validator.py || { echo "❌ FAILED: signature references missing from validator"; exit 1; }
+          echo "✅ signature referenced in validator"
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ INVARIANT 7 PASSED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      # Invariant 8: PDO signing tests must exist and run
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      - name: Verify PDO signing tests exist
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔏 INVARIANT 8: PDO signing tests exist"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          echo "Checking: tests/test_pdo_signing.py"
+          test -s tests/test_pdo_signing.py || { echo "❌ FAILED: test_pdo_signing.py missing or empty"; exit 1; }
+          echo "✅ test_pdo_signing.py exists and is non-empty"
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ INVARIANT 8 PASSED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      # Invariant 9: PDO signing NEGATIVE tests must exist
+      # Unsigned rejection + Signature mismatch rejection MANDATORY
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      - name: Verify PDO signing negative tests exist
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔏 INVARIANT 9: PDO signing negative tests exist"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          echo "Checking: test for unsigned PDO rejection"
+          grep -q "test_unsigned_pdo" tests/test_pdo_signing.py || { echo "❌ FAILED: Unsigned PDO rejection test not found"; exit 1; }
+          echo "✅ Unsigned PDO rejection test exists"
+          
+          echo "Checking: test for tampered/invalid signature rejection"
+          grep -qE "test_tampered|test_.*mismatch|test_.*invalid" tests/test_pdo_signing.py || { echo "❌ FAILED: Signature mismatch/invalid test not found"; exit 1; }
+          echo "✅ Signature mismatch/invalid test exists"
+          
+          echo "Checking: test for expired PDO rejection"
+          grep -q "test_expired" tests/test_pdo_signing.py || { echo "❌ FAILED: Expired PDO rejection test not found"; exit 1; }
+          echo "✅ Expired PDO rejection test exists"
+          
+          echo "Checking: test for replay attack rejection"
+          grep -qE "test_.*replay|test_duplicate_nonce" tests/test_pdo_signing.py || { echo "❌ FAILED: Replay attack rejection test not found"; exit 1; }
+          echo "✅ Replay attack rejection test exists"
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ INVARIANT 9 PASSED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+      - name: Run PDO signing tests
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔏 RUNNING PDO signing tests"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          export PYTHONPATH="${PYTHONPATH}:$(pwd)"
+          
+          # Run signing tests - MUST pass
+          python -m pytest tests/test_pdo_signing.py -q --tb=short
+          
+          SIGN_EXIT=$?
+          
+          if [ $SIGN_EXIT -ne 0 ]; then
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "❌ FAILED: PDO signing tests did not pass"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            exit 1
+          fi
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ PDO signing tests PASSED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      # Invariant 10: No signing bypass patterns
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      - name: Verify no signing bypass patterns
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔏 INVARIANT 10: No signing bypass patterns"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          BYPASS_FOUND=0
+          
+          # Check for ALLOW_UNSIGNED pattern
+          if grep -rn "ALLOW_UNSIGNED" app/ 2>/dev/null; then
+            echo "❌ BYPASS DETECTED: ALLOW_UNSIGNED in production code"
+            BYPASS_FOUND=1
+          fi
+          
+          # Check for skip_signature pattern
+          if grep -rn "skip_signature\|skip_signing" app/ 2>/dev/null; then
+            echo "❌ BYPASS DETECTED: skip_signature/skip_signing in production code"
+            BYPASS_FOUND=1
+          fi
+          
+          # Check for DEBUG-conditional signature skipping
+          if grep -rn "if DEBUG.*signature\|if.*DEBUG.*sign" app/ 2>/dev/null | grep -v "#"; then
+            echo "❌ BYPASS DETECTED: DEBUG-conditional signature skipping"
+            BYPASS_FOUND=1
+          fi
+          
+          # Check for mocking of signing in production code (not tests/)
+          if grep -rn "Mock.*verify_pdo_signature\|patch.*signing" app/ 2>/dev/null; then
+            echo "❌ BYPASS DETECTED: Mocking of signing in production code"
+            BYPASS_FOUND=1
+          fi
+          
+          # Check for monkeypatch of signing
+          if grep -rn "monkeypatch.*sign\|setattr.*sign" app/ 2>/dev/null; then
+            echo "❌ BYPASS DETECTED: Monkeypatching of signing"
+            BYPASS_FOUND=1
+          fi
+          
+          if [ $BYPASS_FOUND -ne 0 ]; then
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "❌ INVARIANT 10 FAILED: Signing bypass patterns detected"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            exit 1
+          fi
+          
+          echo "✅ No ALLOW_UNSIGNED patterns"
+          echo "✅ No skip_signature patterns"
+          echo "✅ No DEBUG-conditional signing skips"
+          echo "✅ No mocking of signing in production code"
+          echo "✅ No monkeypatching of signing"
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ INVARIANT 10 PASSED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
       # Summary
       # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
       - name: Gate Summary
@@ -173,16 +360,24 @@ jobs:
         run: |
           echo ""
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "🔒 PDO ENFORCEMENT GATE: ALL INVARIANTS PASSED"
+          echo "🔒 PDO ENFORCEMENT + SIGNING GATE: ALL INVARIANTS PASSED"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo ""
+          echo "  ENFORCEMENT INVARIANTS:"
           echo "  ✅ Invariant 1: PDO enforcement files exist"
           echo "  ✅ Invariant 2: PDO enforcement symbols present"
           echo "  ✅ Invariant 3: PDO enforcement tests exist"
           echo "  ✅ Invariant 4: PDO enforcement tests pass"
           echo "  ✅ Invariant 5: No enforcement bypass patterns"
           echo ""
-          echo "Doctrine: PDO Enforcement Model v1 (LOCKED)"
+          echo "  SIGNING INVARIANTS (PDO_SIGNING_MODEL_V1):"
+          echo "  ✅ Invariant 6: PDO signing modules exist"
+          echo "  ✅ Invariant 7: PDO signing symbols present"
+          echo "  ✅ Invariant 8: PDO signing tests exist"
+          echo "  ✅ Invariant 9: PDO signing negative tests exist"
+          echo "  ✅ Invariant 10: No signing bypass patterns"
+          echo ""
+          echo "Doctrine: PDO Enforcement Model v1 + PDO Signing Model v1 (LOCKED)"
           echo "Threat Mitigated: PDO-T-014 (CI/CD artifact poisoning)"
           echo ""
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -190,12 +385,12 @@ jobs:
       - name: Generate Summary
         if: always()
         run: |
-          echo "# 🔒 PDO Enforcement Gate" >> $GITHUB_STEP_SUMMARY
+          echo "# 🔒 PDO Enforcement + Signing Gate" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Doctrine:** PDO Enforcement Model v1 (LOCKED)" >> $GITHUB_STEP_SUMMARY
-          echo "**PAC:** PAC-DAN-PDO-CI-ENFORCEMENT-GATE-01" >> $GITHUB_STEP_SUMMARY
+          echo "**Doctrine:** PDO Enforcement Model v1 + PDO Signing Model v1 (LOCKED)" >> $GITHUB_STEP_SUMMARY
+          echo "**PAC:** PAC-DAN-PDO-CI-ENFORCEMENT-GATE-01, PAC-DAN-PDO-SIGNING-CI-CD-INTEGRATION-01" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Invariants Checked" >> $GITHUB_STEP_SUMMARY
+          echo "## Enforcement Invariants" >> $GITHUB_STEP_SUMMARY
           echo "| Invariant | Description |" >> $GITHUB_STEP_SUMMARY
           echo "|-----------|-------------|" >> $GITHUB_STEP_SUMMARY
           echo "| 1 | PDO enforcement files exist and are non-empty |" >> $GITHUB_STEP_SUMMARY
@@ -204,5 +399,14 @@ jobs:
           echo "| 4 | PDO enforcement tests pass |" >> $GITHUB_STEP_SUMMARY
           echo "| 5 | No enforcement bypass patterns in production code |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Signing Invariants (PDO_SIGNING_MODEL_V1)" >> $GITHUB_STEP_SUMMARY
+          echo "| Invariant | Description |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|-------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 6 | PDO signing modules exist |" >> $GITHUB_STEP_SUMMARY
+          echo "| 7 | PDO signing symbols present (verify_pdo_signature, PDOSignature, etc.) |" >> $GITHUB_STEP_SUMMARY
+          echo "| 8 | PDO signing tests exist |" >> $GITHUB_STEP_SUMMARY
+          echo "| 9 | PDO signing negative tests exist (unsigned rejection, mismatch rejection, etc.) |" >> $GITHUB_STEP_SUMMARY
+          echo "| 10 | No signing bypass patterns (ALLOW_UNSIGNED, skip_signature, DEBUG conditionals) |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY
-          echo "_This gate is FAIL-CLOSED. Any invariant violation blocks merge._" >> $GITHUB_STEP_SUMMARY
+          echo "_This gate is FAIL-CLOSED. Any invariant violation blocks merge. NO SECRETS IN CI._" >> $GITHUB_STEP_SUMMARY
