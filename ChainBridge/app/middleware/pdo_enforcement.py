@@ -7,6 +7,12 @@ ENFORCEMENT BOUNDARIES:
 2. ChainPay settlement initiation
 3. External actuation endpoints (webhooks, chain calls)
 
+CRO POLICY ENFORCEMENT (PAC-RUBY-CRO-POLICY-ACTIVATION-01):
+- CRO decisions are bound to PDO and enforced at execution
+- HOLD → HTTP 403 + CRO_HOLD reason
+- ESCALATE → HTTP 409 + escalation_code
+- All CRO decisions are logged for audit
+
 INVARIANTS (non-negotiable):
 - Validate PDO BEFORE any side effects
 - Fail closed (no soft bypasses)
@@ -15,9 +21,11 @@ INVARIANTS (non-negotiable):
 
 ERROR RESPONSES:
 - HTTP 403 Forbidden: PDO validation failed (enforcement block)
-- HTTP 409 Conflict: PDO hash mismatch or integrity failure
+- HTTP 403 Forbidden: CRO HOLD decision
+- HTTP 409 Conflict: PDO hash mismatch, integrity failure, or CRO ESCALATE
 
 Author: Cody (GID-01) — Senior Backend Engineer
+CRO Integration: Ruby (GID-12) — Chief Risk Officer
 """
 from __future__ import annotations
 
@@ -35,6 +43,9 @@ from app.services.pdo.validator import (
     ValidationErrorCode,
     ValidationResult,
     SignatureVerificationResult,
+    CROValidationResult,
+    validate_pdo_with_cro,
+    validate_pdo_with_signature_and_cro,
 )
 
 logger = logging.getLogger(__name__)
@@ -78,6 +89,7 @@ def _log_enforcement_event(
     """Log PDO enforcement event for audit trail.
 
     All enforcement decisions (pass or fail) are logged with structured data.
+    Includes CRO decision data when present (PAC-RUBY-CRO-POLICY-ACTIVATION-01).
 
     Args:
         enforcement_point: Name of the enforcement boundary
@@ -105,6 +117,13 @@ def _log_enforcement_event(
         log_data["signature_outcome"] = result.signature_result.outcome
         log_data["signature_is_unsigned"] = result.signature_result.is_unsigned
         log_data["signature_key_id"] = result.signature_result.key_id
+
+    # Include CRO decision info if present (PAC-RUBY-CRO-POLICY-ACTIVATION-01)
+    if result.cro_result is not None:
+        log_data["cro_decision"] = result.cro_result.decision
+        log_data["cro_reasons"] = list(result.cro_result.reasons)
+        log_data["cro_blocks_execution"] = result.cro_result.blocks_execution
+        log_data["cro_policy_version"] = result.cro_result.policy_version
 
     if result.errors:
         log_data["errors"] = [
@@ -325,7 +344,7 @@ chain_call_gate = PDOEnforcementGate("chain_call")
 # ---------------------------------------------------------------------------
 # This gate validates both PDO schema AND cryptographic signature.
 # Invalid signatures block execution (fail-closed).
-# Unsigned PDOs emit WARNING but are TEMPORARILY allowed (legacy mode).
+# Unsigned PDOs are REJECTED (no legacy mode).
 # ---------------------------------------------------------------------------
 
 
@@ -449,6 +468,301 @@ signature_agent_execution_gate = SignatureEnforcementGate("agent_execution")
 signature_settlement_gate = SignatureEnforcementGate("settlement_initiation")
 signature_webhook_gate = SignatureEnforcementGate("webhook_actuation")
 signature_chain_call_gate = SignatureEnforcementGate("chain_call")
+
+
+# ---------------------------------------------------------------------------
+# CRO Policy Enforcement Gates (PAC-RUBY-CRO-POLICY-ACTIVATION-01)
+# ---------------------------------------------------------------------------
+# These gates enforce CRO policy decisions bound to PDO.
+# HOLD and ESCALATE decisions block execution (fail-closed).
+# ---------------------------------------------------------------------------
+
+
+class CROEnforcementGate:
+    """PDO enforcement gate with CRO policy enforcement.
+
+    Validates PDO schema AND enforces CRO policy decisions.
+    HOLD and ESCALATE decisions block execution (fail-closed).
+
+    DOCTRINE (PAC-RUBY-CRO-POLICY-ACTIVATION-01):
+    - HOLD → BLOCK (HTTP 403)
+    - ESCALATE → BLOCK (HTTP 409 with escalation_code)
+    - TIGHTEN_TERMS → ALLOW (with modified terms)
+    - APPROVE → ALLOW (normal execution)
+    - All decisions logged for audit
+
+    USAGE:
+        gate = CROEnforcementGate("settlement_initiation")
+
+        @router.post("/settlements/initiate")
+        async def initiate_settlement(
+            request: Request,
+            _pdo_enforced: None = Depends(gate.enforce),
+        ):
+            # Only executes if PDO is valid AND CRO allows
+            ...
+    """
+
+    def __init__(self, enforcement_point: str):
+        """Initialize CRO enforcement gate.
+
+        Args:
+            enforcement_point: Name identifying this enforcement boundary
+        """
+        self.enforcement_point = enforcement_point
+        self._validator = PDOValidator()
+
+    async def enforce(self, request: Request) -> None:
+        """FastAPI Dependency with CRO policy-enforced PDO validation.
+
+        Validates PDO schema AND enforces CRO policy decisions.
+        Raises HTTPException if validation fails or CRO blocks execution.
+
+        Args:
+            request: FastAPI Request object
+
+        Raises:
+            HTTPException: 403 if PDO missing, invalid, or CRO HOLD
+            HTTPException: 409 if PDO hash integrity fails or CRO ESCALATE
+        """
+        # Extract PDO from request body
+        pdo_data = await self._extract_pdo(request)
+
+        # Validate PDO WITH CRO enforcement
+        result = validate_pdo_with_cro(pdo_data)
+
+        # Log enforcement decision with CRO info
+        _log_enforcement_event(
+            enforcement_point=self.enforcement_point,
+            result=result,
+            request_path=str(request.url.path),
+            request_method=request.method,
+            outcome="ALLOWED" if result.valid else "BLOCKED",
+        )
+
+        # Block if invalid
+        if not result.valid:
+            self._raise_enforcement_error(result, request)
+
+    async def _extract_pdo(self, request: Request) -> Optional[dict]:
+        """Extract PDO from request body."""
+        try:
+            body = await request.json()
+            if isinstance(body, dict):
+                return body.get("pdo")
+            return None
+        except Exception:
+            return None
+
+    def _raise_enforcement_error(
+        self, result: ValidationResult, request: Request
+    ) -> None:
+        """Raise HTTPException for enforcement failure.
+
+        Chooses appropriate status code:
+        - 409 Conflict for hash/integrity failures or CRO ESCALATE
+        - 403 Forbidden for all other failures (including CRO HOLD)
+        """
+        integrity_codes = {
+            ValidationErrorCode.HASH_MISMATCH,
+            ValidationErrorCode.INTEGRITY_FAILURE,
+        }
+        has_integrity_error = any(e.code in integrity_codes for e in result.errors)
+
+        # CRO ESCALATE maps to 409 Conflict
+        has_escalate = (
+            result.cro_result is not None
+            and result.cro_result.decision == "ESCALATE"
+        )
+
+        status_code = (
+            status.HTTP_409_CONFLICT if (has_integrity_error or has_escalate)
+            else status.HTTP_403_FORBIDDEN
+        )
+
+        # Build error response with CRO details
+        error_details = [
+            {"code": e.code.value, "field": e.field, "message": e.message}
+            for e in result.errors
+        ]
+
+        # Add CRO-specific fields to response
+        cro_info = {}
+        if result.cro_result is not None:
+            cro_info = {
+                "cro_decision": result.cro_result.decision,
+                "cro_reasons": list(result.cro_result.reasons),
+                "escalation_code": (
+                    f"CRO-{result.cro_result.decision}-{result.pdo_id or 'UNKNOWN'}"
+                    if result.cro_result.decision == "ESCALATE"
+                    else None
+                ),
+            }
+
+        error_response = PDOEnforcementError(
+            message=f"PDO enforcement failed at {self.enforcement_point}",
+            pdo_id=result.pdo_id,
+            errors=error_details,
+            enforcement_point=self.enforcement_point,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+        )
+
+        # Merge CRO info into response
+        response_dict = error_response.model_dump()
+        response_dict.update(cro_info)
+
+        raise HTTPException(
+            status_code=status_code,
+            detail=response_dict,
+        )
+
+
+class CROSignatureEnforcementGate:
+    """PDO enforcement gate with both signature verification AND CRO policy enforcement.
+
+    Full enforcement including:
+    1. PDO schema validation
+    2. Cryptographic signature verification (fail-closed)
+    3. CRO policy enforcement (fail-closed for HOLD/ESCALATE)
+
+    DOCTRINE:
+    - Invalid signature → BLOCK (HTTP 403)
+    - Unsigned PDO → BLOCK (HTTP 403)
+    - CRO HOLD → BLOCK (HTTP 403)
+    - CRO ESCALATE → BLOCK (HTTP 409)
+    - All decisions logged for audit
+
+    USAGE:
+        gate = CROSignatureEnforcementGate("settlement_initiation")
+
+        @router.post("/settlements/initiate")
+        async def initiate_settlement(
+            request: Request,
+            _pdo_enforced: None = Depends(gate.enforce),
+        ):
+            # Only executes if PDO valid, signature verified, AND CRO allows
+            ...
+    """
+
+    def __init__(self, enforcement_point: str):
+        """Initialize CRO + signature enforcement gate.
+
+        Args:
+            enforcement_point: Name identifying this enforcement boundary
+        """
+        self.enforcement_point = enforcement_point
+        self._validator = PDOValidator()
+
+    async def enforce(self, request: Request) -> None:
+        """FastAPI Dependency with signature + CRO policy enforcement.
+
+        Validates PDO schema, signature, AND CRO policy decisions.
+        Raises HTTPException if any check fails.
+
+        Args:
+            request: FastAPI Request object
+
+        Raises:
+            HTTPException: 403 if PDO/signature invalid or CRO HOLD
+            HTTPException: 409 if integrity fails or CRO ESCALATE
+        """
+        # Extract PDO from request body
+        pdo_data = await self._extract_pdo(request)
+
+        # Validate PDO WITH signature AND CRO enforcement
+        result = validate_pdo_with_signature_and_cro(pdo_data)
+
+        # Log enforcement decision
+        _log_enforcement_event(
+            enforcement_point=self.enforcement_point,
+            result=result,
+            request_path=str(request.url.path),
+            request_method=request.method,
+            outcome="ALLOWED" if result.valid else "BLOCKED",
+        )
+
+        # Block if invalid
+        if not result.valid:
+            self._raise_enforcement_error(result, request)
+
+    async def _extract_pdo(self, request: Request) -> Optional[dict]:
+        """Extract PDO from request body."""
+        try:
+            body = await request.json()
+            if isinstance(body, dict):
+                return body.get("pdo")
+            return None
+        except Exception:
+            return None
+
+    def _raise_enforcement_error(
+        self, result: ValidationResult, request: Request
+    ) -> None:
+        """Raise HTTPException for enforcement failure."""
+        integrity_codes = {
+            ValidationErrorCode.HASH_MISMATCH,
+            ValidationErrorCode.INTEGRITY_FAILURE,
+        }
+        has_integrity_error = any(e.code in integrity_codes for e in result.errors)
+
+        # CRO ESCALATE maps to 409 Conflict
+        has_escalate = (
+            result.cro_result is not None
+            and result.cro_result.decision == "ESCALATE"
+        )
+
+        status_code = (
+            status.HTTP_409_CONFLICT if (has_integrity_error or has_escalate)
+            else status.HTTP_403_FORBIDDEN
+        )
+
+        # Build error response with CRO details
+        error_details = [
+            {"code": e.code.value, "field": e.field, "message": e.message}
+            for e in result.errors
+        ]
+
+        cro_info = {}
+        if result.cro_result is not None:
+            cro_info = {
+                "cro_decision": result.cro_result.decision,
+                "cro_reasons": list(result.cro_result.reasons),
+                "escalation_code": (
+                    f"CRO-{result.cro_result.decision}-{result.pdo_id or 'UNKNOWN'}"
+                    if result.cro_result.decision == "ESCALATE"
+                    else None
+                ),
+            }
+
+        error_response = PDOEnforcementError(
+            message=f"PDO enforcement failed at {self.enforcement_point}",
+            pdo_id=result.pdo_id,
+            errors=error_details,
+            enforcement_point=self.enforcement_point,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+        )
+
+        response_dict = error_response.model_dump()
+        response_dict.update(cro_info)
+
+        raise HTTPException(
+            status_code=status_code,
+            detail=response_dict,
+        )
+
+
+# Pre-configured CRO Enforcement Gates
+# Use these for endpoints requiring CRO policy enforcement
+cro_agent_execution_gate = CROEnforcementGate("agent_execution")
+cro_settlement_gate = CROEnforcementGate("settlement_initiation")
+cro_webhook_gate = CROEnforcementGate("webhook_actuation")
+cro_chain_call_gate = CROEnforcementGate("chain_call")
+
+# Full enforcement gates (signature + CRO)
+cro_signature_agent_gate = CROSignatureEnforcementGate("agent_execution")
+cro_signature_settlement_gate = CROSignatureEnforcementGate("settlement_initiation")
+cro_signature_webhook_gate = CROSignatureEnforcementGate("webhook_actuation")
+cro_signature_chain_call_gate = CROSignatureEnforcementGate("chain_call")
 
 
 # ---------------------------------------------------------------------------
