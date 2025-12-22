@@ -256,8 +256,11 @@ class PDOValidator:
             VerificationOutcome,
         )
 
+        # Extract agent_id for audit logging
+        agent_id = pdo_data.get("agent_id") if pdo_data else None
+
         sig_result = verify_pdo_signature(pdo_data)
-        log_verification_result(sig_result, context="pdo_validation")
+        log_verification_result(sig_result, context="pdo_validation", agent_id=agent_id)
 
         # Build signature summary for result
         sig_summary = SignatureVerificationResult(
