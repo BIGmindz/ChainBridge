@@ -1,45 +1,74 @@
-"""Risk scoring service orchestration for ChainIQ."""
+"""Risk scoring service orchestration for ChainIQ.
+
+Integrates CRO Policy Enforcement per PAC-RUBY-CRO-POLICY-ACTIVATION-01.
+
+DOCTRINE:
+- CRO decision overrides base RiskBand if more restrictive
+- CRO decision is recorded in response metadata
+- All decisions are auditable and deterministic
+"""
 
 import datetime
 import json
 import uuid
-from typing import Any
+from typing import Any, Optional
 
 from sqlalchemy.orm import Session
 
 from app.risk.engine import compute_risk_score
 from app.risk.schemas import CarrierProfile, LaneProfile, RiskBand, ShipmentFeatures, ShipmentRiskRequest, ShipmentRiskResponse
+from app.risk.cro_policy import (
+    CROPolicyEvaluator,
+    CRORiskMetadata,
+    CROPolicyResult,
+    CRODecision,
+    apply_cro_override,
+)
 
 DEFAULT_MODEL_VERSION = "chainiq_v1_maggie"
 LOG_EVENT_TYPE = "RISK_EVALUATION"
 MAX_EVALUATIONS_LIMIT = 200
 
+# Module-level CRO evaluator
+_cro_evaluator = CROPolicyEvaluator()
 
-async def load_carrier_profile(carrier_id: str, db: Any) -> CarrierProfile:
-    """Return a safe default carrier profile until a real lookup is wired."""
-    return CarrierProfile(
+
+async def load_carrier_profile(carrier_id: str, db: Any) -> tuple[CarrierProfile, int]:
+    """Return a safe default carrier profile until a real lookup is wired.
+
+    Returns:
+        Tuple of (CarrierProfile, tenure_days) for CRO evaluation.
+    """
+    profile = CarrierProfile(
         carrier_id=carrier_id,
         incident_rate_90d=0.02,
         tenure_days=400,
         on_time_rate=0.95,
     )
+    return profile, profile.tenure_days
 
 
-async def load_lane_profile(origin: str, destination: str, db: Any) -> LaneProfile:
+async def load_lane_profile(origin: str, destination: str, db: Any) -> tuple[LaneProfile, int]:
     """Return a safe default lane profile until a real lookup is wired.
 
     Deterministic heuristic for testing:
     - Treat US-MX corridors as high risk (0.8) to exercise HIGH band tests.
     - Otherwise default to low risk (0.1).
+
+    Returns:
+        Tuple of (LaneProfile, lane_history_days) for CRO evaluation.
     """
     lane_risk_index = 0.8 if {origin, destination} & {"MX"} else 0.1
     border_crossing_count = 1 if origin != destination else 0
-    return LaneProfile(
+    lane_history_days = 180  # Default established lane
+
+    profile = LaneProfile(
         origin=origin,
         destination=destination,
         lane_risk_index=lane_risk_index,
         border_crossing_count=border_crossing_count,
     )
+    return profile, lane_history_days
 
 
 def log_risk_decision(
@@ -76,10 +105,34 @@ async def score_shipment(
     *,
     request: ShipmentRiskRequest,
     db: Any,
+    data_quality_score: Optional[float] = None,
+    has_iot_events: bool = True,
+    iot_event_count: int = 0,
 ) -> ShipmentRiskResponse:
-    """Load profiles, invoke the risk engine, and return a structured response."""
-    carrier_profile = await load_carrier_profile(carrier_id=request.carrier_id, db=db)
-    lane_profile = await load_lane_profile(origin=request.origin, destination=request.destination, db=db)
+    """Load profiles, invoke the risk engine, apply CRO policy, and return a structured response.
+
+    CRO Policy Integration (PAC-RUBY-CRO-POLICY-ACTIVATION-01):
+    - Evaluates CRO thresholds after base risk scoring
+    - CRO decision overrides base RiskBand if more restrictive
+    - CRO decision is recorded in response for PDO binding
+
+    Args:
+        request: Shipment risk scoring request
+        db: Database session
+        data_quality_score: Optional data quality score (0.0-1.0)
+        has_iot_events: Whether IoT events are available for this shipment
+        iot_event_count: Count of IoT events
+
+    Returns:
+        ShipmentRiskResponse with CRO policy evaluation included
+    """
+    # Load profiles with tenure/history for CRO evaluation
+    carrier_profile, carrier_tenure_days = await load_carrier_profile(
+        carrier_id=request.carrier_id, db=db
+    )
+    lane_profile, lane_history_days = await load_lane_profile(
+        origin=request.origin, destination=request.destination, db=db
+    )
 
     shipment_features = ShipmentFeatures(
         value_usd=request.value_usd,
@@ -90,21 +143,53 @@ async def score_shipment(
         recent_delay_events=request.recent_delay_events,
     )
 
+    # Compute base risk score
     result = compute_risk_score(
         shipment=shipment_features,
         carrier_profile=carrier_profile,
         lane_profile=lane_profile,
     )
 
+    # Build CRO metadata for policy evaluation
+    cro_metadata = CRORiskMetadata(
+        data_quality_score=data_quality_score,
+        has_carrier_profile=True,
+        carrier_tenure_days=carrier_tenure_days,
+        has_lane_profile=True,
+        lane_history_days=lane_history_days,
+        has_iot_events=has_iot_events,
+        iot_event_count=iot_event_count,
+        is_temp_control=request.is_temp_control,
+        is_hazmat=request.is_hazmat,
+        value_usd=request.value_usd,
+        risk_band=result.band.value,
+        risk_score=result.score / 100.0,  # Normalize to 0-1
+    )
+
+    # Evaluate CRO policy
+    cro_result = _cro_evaluator.evaluate(cro_metadata)
+
+    # Apply CRO override to risk band
+    final_risk_band_str, cro_decision = apply_cro_override(
+        base_risk_band=result.band.value,
+        cro_result=cro_result,
+    )
+    final_risk_band = RiskBand(final_risk_band_str)
+
     evaluation_id = str(uuid.uuid4())
     timestamp = datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
     model_version = result.model_version or DEFAULT_MODEL_VERSION
 
+    # Build explanation including CRO reasons if applicable
+    explanation = list(result.reasons)
+    if cro_decision != CRODecision.APPROVE:
+        explanation.extend([f"CRO: {r}" for r in cro_result.human_readable_reasons])
+
     response = ShipmentRiskResponse(
         shipment_id=request.shipment_id,
         risk_score=result.score,
-        risk_band=result.band,
-        explanation=result.reasons,
+        risk_band=final_risk_band,  # CRO-adjusted band
+        explanation=explanation,
         model_version=model_version,
         timestamp=timestamp,
         evaluation_id=evaluation_id,
@@ -122,6 +207,12 @@ async def score_shipment(
         "border_crossing_count": lane_profile.border_crossing_count,
         "carrier_incident_rate_90d": carrier_profile.incident_rate_90d,
         "carrier_tenure_days": carrier_profile.tenure_days,
+        # CRO policy fields
+        "cro_decision": cro_decision.value,
+        "cro_reasons": [r.value for r in cro_result.reasons],
+        "cro_blocks_execution": cro_result.blocks_execution,
+        "original_risk_band": result.band.value,
+        "data_quality_score": data_quality_score,
     }
 
     log_risk_decision(
@@ -130,8 +221,8 @@ async def score_shipment(
         carrier_id=request.carrier_id,
         lane_id=lane_id,
         risk_score=result.score,
-        risk_band=result.band,
-        primary_reasons=result.reasons,
+        risk_band=final_risk_band,
+        primary_reasons=explanation,
         model_version=model_version,
         timestamp=timestamp,
         features_snapshot=features_snapshot,

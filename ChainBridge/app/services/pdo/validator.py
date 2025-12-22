@@ -7,6 +7,7 @@ DOCTRINE COMPLIANCE:
 - No execution without PDO creation
 - PDOs are immutable after execution
 - A missing PDO implies an unauthorized decision
+- CRO decisions are bound to PDO (PAC-RUBY-CRO-POLICY-ACTIVATION-01)
 
 VALIDATION RULES:
 A valid PDO must include ALL required fields:
@@ -18,7 +19,13 @@ A valid PDO must include ALL required fields:
 - timestamp: ISO 8601 UTC timestamp
 - signer: Identity of decision maker (agent or system)
 
+CRO BINDING (Optional, enforced when present):
+- cro_decision: APPROVE | TIGHTEN_TERMS | HOLD | ESCALATE
+- cro_reasons: List of reason codes
+- cro_evaluated_at: ISO 8601 timestamp
+
 Author: Cody (GID-01) — Senior Backend Engineer
+CRO Integration: Ruby (GID-12) — Chief Risk Officer
 """
 from __future__ import annotations
 
@@ -75,6 +82,9 @@ class ValidationErrorCode(str, Enum):
     EXPIRED_PDO = "EXPIRED_PDO"  # FAIL - PDO has expired
     REPLAY_DETECTED = "REPLAY_DETECTED"  # FAIL - nonce already used
     SIGNER_MISMATCH = "SIGNER_MISMATCH"  # FAIL - key doesn't match agent_id
+    # CRO policy error codes (PAC-RUBY-CRO-POLICY-ACTIVATION-01)
+    CRO_DECISION_INVALID = "CRO_DECISION_INVALID"
+    CRO_BLOCKS_EXECUTION = "CRO_BLOCKS_EXECUTION"
 
 
 @dataclass(frozen=True)
@@ -95,12 +105,14 @@ class ValidationResult:
         errors: List of validation errors (empty if valid)
         pdo_id: The PDO ID that was validated (for audit logging)
         signature_result: Signature verification result (if verification was performed)
+        cro_result: CRO policy evaluation result (if CRO validation was performed)
     """
 
     valid: bool
     errors: tuple[ValidationError, ...]
     pdo_id: Optional[str]
     signature_result: Optional["SignatureVerificationResult"] = None
+    cro_result: Optional["CROValidationResult"] = None
 
     def __bool__(self) -> bool:
         """Allow truthiness check: if validation_result: ..."""
@@ -120,6 +132,21 @@ class SignatureVerificationResult:
     allows_execution: bool
     key_id: Optional[str]
     reason: str
+
+
+@dataclass(frozen=True)
+class CROValidationResult:
+    """Summary of CRO policy evaluation outcome.
+
+    Attached to ValidationResult when CRO validation is performed.
+    PAC-RUBY-CRO-POLICY-ACTIVATION-01
+    """
+
+    decision: str  # CRODecision value
+    reasons: tuple[str, ...]
+    blocks_execution: bool
+    policy_version: str
+    evaluated_at: str
 
 
 # ---------------------------------------------------------------------------
@@ -460,12 +487,15 @@ def validate_pdo(pdo_data: Optional[dict]) -> ValidationResult:
 def validate_pdo_with_signature(pdo_data: Optional[dict]) -> ValidationResult:
     """Validate a PDO with signature verification.
 
-    DOCTRINE (Fail-Closed):
+    DOCTRINE (Fail-Closed per PDO_SIGNING_MODEL_V1 - LOCKED):
     - Invalid signature → FAIL (execution blocked)
-    - Unsigned PDO → WARN + PASS (legacy mode, TEMPORARY)
+    - Unsigned PDO → FAIL (signature is MANDATORY)
+    - Expired PDO → FAIL
+    - Replay detected → FAIL
+    - Signer mismatch → FAIL
 
     Args:
-        pdo_data: Dictionary containing PDO fields (may include signature)
+        pdo_data: Dictionary containing PDO fields (must include signature)
 
     Returns:
         ValidationResult with signature_result attached
@@ -531,3 +561,195 @@ def validate_pdo_with_risk(pdo_data: Optional[dict]) -> tuple["ValidationResult"
 
     return result, risk_metadata
 
+
+# ---------------------------------------------------------------------------
+# CRO Policy Validation (PAC-RUBY-CRO-POLICY-ACTIVATION-01)
+# ---------------------------------------------------------------------------
+# CRO policy decisions are bound to PDO and enforced at execution time.
+# HOLD and ESCALATE decisions block execution (fail-closed).
+# ---------------------------------------------------------------------------
+
+
+def validate_pdo_with_cro(pdo_data: Optional[dict]) -> ValidationResult:
+    """Validate PDO and enforce CRO policy decisions.
+
+    CRO policy decisions are bound to PDO metadata and enforced deterministically.
+    HOLD and ESCALATE decisions block execution (fail-closed).
+
+    DOCTRINE (PAC-RUBY-CRO-POLICY-ACTIVATION-01):
+    - CRO decision overrides base RiskBand if more restrictive
+    - HOLD → execution blocked
+    - ESCALATE → execution blocked
+    - TIGHTEN_TERMS → execution with modified terms
+    - APPROVE → execution proceeds normally
+
+    Args:
+        pdo_data: Dictionary containing PDO fields (may include CRO decision)
+
+    Returns:
+        ValidationResult with cro_result attached
+    """
+    # First perform base validation
+    base_result = _validator.validate(pdo_data)
+
+    if not base_result.valid:
+        return base_result
+
+    # Extract CRO decision from PDO if present
+    cro_decision = pdo_data.get("cro_decision") if pdo_data else None
+    cro_reasons = pdo_data.get("cro_reasons", []) if pdo_data else []
+    cro_evaluated_at = pdo_data.get("cro_evaluated_at") if pdo_data else None
+
+    # If no CRO decision present, return base result (pass-through)
+    if cro_decision is None:
+        return base_result
+
+    # Valid CRO decisions
+    valid_cro_decisions = {"APPROVE", "TIGHTEN_TERMS", "HOLD", "ESCALATE"}
+
+    errors_list = list(base_result.errors)
+
+    # Validate CRO decision format
+    if cro_decision not in valid_cro_decisions:
+        errors_list.append(
+            ValidationError(
+                code=ValidationErrorCode.CRO_DECISION_INVALID,
+                field="cro_decision",
+                message=f"Invalid CRO decision: {cro_decision}. Must be one of: {valid_cro_decisions}",
+            )
+        )
+        return ValidationResult(
+            valid=False,
+            errors=tuple(errors_list),
+            pdo_id=base_result.pdo_id,
+            signature_result=base_result.signature_result,
+        )
+
+    # Check if CRO decision blocks execution
+    blocks_execution = cro_decision in ("HOLD", "ESCALATE")
+
+    if blocks_execution:
+        reason_str = ", ".join(cro_reasons) if cro_reasons else "CRO policy violation"
+        errors_list.append(
+            ValidationError(
+                code=ValidationErrorCode.CRO_BLOCKS_EXECUTION,
+                field="cro_decision",
+                message=f"CRO decision '{cro_decision}' blocks execution: {reason_str}",
+            )
+        )
+
+    # Build CRO validation result
+    cro_result = CROValidationResult(
+        decision=cro_decision,
+        reasons=tuple(cro_reasons) if cro_reasons else (),
+        blocks_execution=blocks_execution,
+        policy_version=pdo_data.get("cro_policy_version", "cro_policy@v1.0.0") if pdo_data else "cro_policy@v1.0.0",
+        evaluated_at=cro_evaluated_at or "",
+    )
+
+    # Log CRO validation
+    logger.info(
+        "CRO validation: pdo_id=%s decision=%s blocks=%s reasons=%s",
+        base_result.pdo_id,
+        cro_decision,
+        blocks_execution,
+        cro_reasons,
+    )
+
+    return ValidationResult(
+        valid=len(errors_list) == 0,
+        errors=tuple(errors_list),
+        pdo_id=base_result.pdo_id,
+        signature_result=base_result.signature_result,
+        cro_result=cro_result,
+    )
+
+
+def validate_pdo_with_signature_and_cro(pdo_data: Optional[dict]) -> ValidationResult:
+    """Validate PDO with both signature verification and CRO policy enforcement.
+
+    Full validation including:
+    1. Schema validation
+    2. Signature verification (fail-closed)
+    3. CRO policy enforcement (fail-closed for HOLD/ESCALATE)
+
+    Args:
+        pdo_data: Dictionary containing PDO fields
+
+    Returns:
+        ValidationResult with signature_result and cro_result attached
+    """
+    # First validate with signature
+    sig_result = _validator.validate_with_signature(pdo_data)
+
+    if not sig_result.valid:
+        return sig_result
+
+    # Extract CRO decision from PDO if present
+    cro_decision = pdo_data.get("cro_decision") if pdo_data else None
+    cro_reasons = pdo_data.get("cro_reasons", []) if pdo_data else []
+    cro_evaluated_at = pdo_data.get("cro_evaluated_at") if pdo_data else None
+
+    # If no CRO decision present, return signature result
+    if cro_decision is None:
+        return sig_result
+
+    # Valid CRO decisions
+    valid_cro_decisions = {"APPROVE", "TIGHTEN_TERMS", "HOLD", "ESCALATE"}
+
+    errors_list = list(sig_result.errors)
+
+    # Validate CRO decision format
+    if cro_decision not in valid_cro_decisions:
+        errors_list.append(
+            ValidationError(
+                code=ValidationErrorCode.CRO_DECISION_INVALID,
+                field="cro_decision",
+                message=f"Invalid CRO decision: {cro_decision}. Must be one of: {valid_cro_decisions}",
+            )
+        )
+        return ValidationResult(
+            valid=False,
+            errors=tuple(errors_list),
+            pdo_id=sig_result.pdo_id,
+            signature_result=sig_result.signature_result,
+        )
+
+    # Check if CRO decision blocks execution
+    blocks_execution = cro_decision in ("HOLD", "ESCALATE")
+
+    if blocks_execution:
+        reason_str = ", ".join(cro_reasons) if cro_reasons else "CRO policy violation"
+        errors_list.append(
+            ValidationError(
+                code=ValidationErrorCode.CRO_BLOCKS_EXECUTION,
+                field="cro_decision",
+                message=f"CRO decision '{cro_decision}' blocks execution: {reason_str}",
+            )
+        )
+
+    # Build CRO validation result
+    cro_result = CROValidationResult(
+        decision=cro_decision,
+        reasons=tuple(cro_reasons) if cro_reasons else (),
+        blocks_execution=blocks_execution,
+        policy_version=pdo_data.get("cro_policy_version", "cro_policy@v1.0.0") if pdo_data else "cro_policy@v1.0.0",
+        evaluated_at=cro_evaluated_at or "",
+    )
+
+    # Log CRO validation
+    logger.info(
+        "CRO validation (with signature): pdo_id=%s decision=%s blocks=%s reasons=%s",
+        sig_result.pdo_id,
+        cro_decision,
+        blocks_execution,
+        cro_reasons,
+    )
+
+    return ValidationResult(
+        valid=len(errors_list) == 0,
+        errors=tuple(errors_list),
+        pdo_id=sig_result.pdo_id,
+        signature_result=sig_result.signature_result,
+        cro_result=cro_result,
+    )

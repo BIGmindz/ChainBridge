@@ -36,6 +36,9 @@ from app.middleware.pdo_enforcement import (
     settlement_initiation_gate,
     agent_execution_gate,
     webhook_actuation_gate,
+    CROEnforcementGate,
+    CROSignatureEnforcementGate,
+    cro_settlement_gate,
 )
 from app.services.pdo.validator import (
     PDOOutcome,
@@ -43,6 +46,7 @@ from app.services.pdo.validator import (
     ValidationErrorCode,
     ValidationResult,
     compute_decision_hash,
+    validate_pdo_with_cro,
 )
 
 
@@ -596,3 +600,228 @@ class TestComputeDecisionHash:
         hash_rejected = compute_decision_hash(inputs_hash, policy_version, "REJECTED")
 
         assert hash_approved != hash_rejected
+
+# ---------------------------------------------------------------------------
+# CRO Enforcement Gate Tests (PAC-RUBY-CRO-POLICY-ACTIVATION-01)
+# ---------------------------------------------------------------------------
+
+
+def _make_valid_pdo_with_cro(
+    pdo_id: str = "PDO-CROTEST12345",
+    outcome: str = "APPROVED",
+    cro_decision: str = "APPROVE",
+    cro_reasons: list[str] = None,
+) -> dict[str, Any]:
+    """Create a valid PDO with CRO decision fields."""
+    pdo = _make_valid_pdo(pdo_id=pdo_id, outcome=outcome)
+    pdo["cro_decision"] = cro_decision
+    pdo["cro_reasons"] = cro_reasons or ["ALL_CHECKS_PASSED"]
+    pdo["cro_evaluated_at"] = datetime.now(timezone.utc).isoformat()
+    pdo["cro_policy_version"] = "cro_policy@v1.0.0"
+    return pdo
+
+
+def create_cro_test_app() -> FastAPI:
+    """Create FastAPI app with CRO-enforced endpoints."""
+    app = FastAPI()
+
+    # Test endpoint using CRO enforcement gate
+    @app.post("/cro/settlement/initiate")
+    async def cro_initiate_settlement(
+        request: Request,
+        _pdo_enforced: None = Depends(cro_settlement_gate.enforce),
+    ) -> dict:
+        return {"status": "settlement_initiated", "cro_enforced": True}
+
+    return app
+
+
+@pytest.fixture
+def cro_test_client() -> TestClient:
+    """Test client for CRO-enforced app."""
+    app = create_cro_test_app()
+    return TestClient(app)
+
+
+class TestCROEnforcementGate:
+    """Integration tests for CRO enforcement gates."""
+
+    def test_cro_approve_allows_execution(self, cro_test_client: TestClient):
+        """PAC Requirement: CRO APPROVE allows execution."""
+        pdo = _make_valid_pdo_with_cro(cro_decision="APPROVE")
+        response = cro_test_client.post(
+            "/cro/settlement/initiate",
+            json={"action": "initiate", "pdo": pdo}
+        )
+
+        assert response.status_code == 200
+        assert response.json()["cro_enforced"] is True
+
+    def test_cro_tighten_terms_allows_execution(self, cro_test_client: TestClient):
+        """PAC Requirement: CRO TIGHTEN_TERMS allows execution."""
+        pdo = _make_valid_pdo_with_cro(
+            cro_decision="TIGHTEN_TERMS",
+            cro_reasons=["NEW_CARRIER_INSUFFICIENT_TENURE"],
+        )
+        response = cro_test_client.post(
+            "/cro/settlement/initiate",
+            json={"action": "initiate", "pdo": pdo}
+        )
+
+        assert response.status_code == 200
+
+    def test_cro_hold_blocks_execution_403(self, cro_test_client: TestClient):
+        """PAC Requirement: CRO HOLD blocks execution (HTTP 403)."""
+        pdo = _make_valid_pdo_with_cro(
+            cro_decision="HOLD",
+            cro_reasons=["MISSING_CARRIER_PROFILE"],
+        )
+        response = cro_test_client.post(
+            "/cro/settlement/initiate",
+            json={"action": "initiate", "pdo": pdo}
+        )
+
+        assert response.status_code == 403
+        data = response.json()["detail"]
+        assert data["cro_decision"] == "HOLD"
+        assert "MISSING_CARRIER_PROFILE" in data["cro_reasons"]
+
+    def test_cro_escalate_blocks_execution_409(self, cro_test_client: TestClient):
+        """PAC Requirement: CRO ESCALATE blocks execution (HTTP 409)."""
+        pdo = _make_valid_pdo_with_cro(
+            cro_decision="ESCALATE",
+            cro_reasons=["DATA_QUALITY_BELOW_THRESHOLD"],
+        )
+        response = cro_test_client.post(
+            "/cro/settlement/initiate",
+            json={"action": "initiate", "pdo": pdo}
+        )
+
+        assert response.status_code == 409
+        data = response.json()["detail"]
+        assert data["cro_decision"] == "ESCALATE"
+        assert "escalation_code" in data
+        assert data["escalation_code"].startswith("CRO-ESCALATE-")
+
+    def test_cro_invalid_decision_blocked(self, cro_test_client: TestClient):
+        """Invalid CRO decision is blocked."""
+        pdo = _make_valid_pdo_with_cro(cro_decision="INVALID_DECISION")
+        response = cro_test_client.post(
+            "/cro/settlement/initiate",
+            json={"action": "initiate", "pdo": pdo}
+        )
+
+        assert response.status_code == 403
+        data = response.json()["detail"]
+        assert any(e["code"] == "CRO_DECISION_INVALID" for e in data["errors"])
+
+    def test_pdo_without_cro_decision_passes(self, cro_test_client: TestClient):
+        """PDO without CRO decision passes (backward compatible)."""
+        pdo = _make_valid_pdo()  # No CRO fields
+        response = cro_test_client.post(
+            "/cro/settlement/initiate",
+            json={"action": "initiate", "pdo": pdo}
+        )
+
+        assert response.status_code == 200
+
+
+class TestCROValidation:
+    """Tests for CRO validation functions."""
+
+    def test_validate_pdo_with_cro_approve(self):
+        """PAC Requirement: validate_pdo_with_cro returns valid for APPROVE."""
+        pdo = _make_valid_pdo_with_cro(cro_decision="APPROVE")
+
+        result = validate_pdo_with_cro(pdo)
+
+        assert result.valid is True
+        assert result.cro_result is not None
+        assert result.cro_result.decision == "APPROVE"
+        assert result.cro_result.blocks_execution is False
+
+    def test_validate_pdo_with_cro_hold(self):
+        """PAC Requirement: validate_pdo_with_cro returns invalid for HOLD."""
+        pdo = _make_valid_pdo_with_cro(
+            cro_decision="HOLD",
+            cro_reasons=["MISSING_LANE_PROFILE"],
+        )
+
+        result = validate_pdo_with_cro(pdo)
+
+        assert result.valid is False
+        assert result.cro_result is not None
+        assert result.cro_result.decision == "HOLD"
+        assert result.cro_result.blocks_execution is True
+        assert any(e.code == ValidationErrorCode.CRO_BLOCKS_EXECUTION for e in result.errors)
+
+    def test_validate_pdo_with_cro_escalate(self):
+        """PAC Requirement: validate_pdo_with_cro returns invalid for ESCALATE."""
+        pdo = _make_valid_pdo_with_cro(
+            cro_decision="ESCALATE",
+            cro_reasons=["DATA_QUALITY_BELOW_THRESHOLD"],
+        )
+
+        result = validate_pdo_with_cro(pdo)
+
+        assert result.valid is False
+        assert result.cro_result is not None
+        assert result.cro_result.decision == "ESCALATE"
+        assert result.cro_result.blocks_execution is True
+
+    def test_validate_pdo_with_cro_tighten(self):
+        """PAC Requirement: validate_pdo_with_cro returns valid for TIGHTEN_TERMS."""
+        pdo = _make_valid_pdo_with_cro(
+            cro_decision="TIGHTEN_TERMS",
+            cro_reasons=["NEW_CARRIER_INSUFFICIENT_TENURE"],
+        )
+
+        result = validate_pdo_with_cro(pdo)
+
+        assert result.valid is True
+        assert result.cro_result is not None
+        assert result.cro_result.decision == "TIGHTEN_TERMS"
+        assert result.cro_result.blocks_execution is False
+
+    def test_cro_result_includes_policy_version(self):
+        """PAC Requirement: CRO decision includes policy version in result."""
+        pdo = _make_valid_pdo_with_cro(cro_decision="APPROVE")
+
+        result = validate_pdo_with_cro(pdo)
+
+        assert result.cro_result is not None
+        assert result.cro_result.policy_version == "cro_policy@v1.0.0"
+
+
+class TestCROAuditLogging:
+    """Tests for CRO enforcement audit logging."""
+
+    def test_cro_blocked_logged(self, cro_test_client: TestClient, caplog):
+        """PAC Requirement: CRO blocking decisions are logged."""
+        pdo = _make_valid_pdo_with_cro(
+            cro_decision="HOLD",
+            cro_reasons=["MISSING_CARRIER_PROFILE"],
+        )
+
+        with caplog.at_level(logging.WARNING):
+            response = cro_test_client.post(
+                "/cro/settlement/initiate",
+                json={"action": "initiate", "pdo": pdo}
+            )
+
+        assert response.status_code == 403
+        # Check CRO decision is logged
+        assert any("cro_decision" in record.message.lower() for record in caplog.records)
+
+    def test_cro_allowed_logged(self, cro_test_client: TestClient, caplog):
+        """CRO allowing decisions are logged at INFO level."""
+        pdo = _make_valid_pdo_with_cro(cro_decision="APPROVE")
+
+        with caplog.at_level(logging.INFO):
+            response = cro_test_client.post(
+                "/cro/settlement/initiate",
+                json={"action": "initiate", "pdo": pdo}
+            )
+
+        assert response.status_code == 200
+        assert any("pdo_enforcement" in record.message for record in caplog.records)
