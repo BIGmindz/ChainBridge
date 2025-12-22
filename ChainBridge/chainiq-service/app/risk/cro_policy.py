@@ -4,7 +4,7 @@ Implements deterministic, table-driven CRO policy thresholds that
 convert advisory risk signals into enforceable gates.
 
 DOCTRINE COMPLIANCE:
-- PAC-RUBY-CRO-POLICY-ACTIVATION-01
+- PAC-RUBY-CRO-POLICY-ACTIVATION-01 (REFINED)
 - PDO Enforcement Model v1 (LOCKED)
 - Zero drift tolerance
 - Fail-closed semantics
@@ -18,8 +18,11 @@ DESIGN PRINCIPLES:
 - No runtime bypass flags
 - All policy decisions are PDO-bound and auditable
 
-Author: Ruby (GID-12) — Chief Risk Officer
+ChainIQ recommends. Ruby decides.
+
+Author: Ruby (GID-05) — Chief Risk Officer / Policy Authority
 Authority: Benson (GID-00)
+Policy Version: CRO-POLICY-V1
 """
 from __future__ import annotations
 
@@ -33,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
-# CRO Decision Types
+# CRO Decision Types (PAC-RUBY-CRO-POLICY-ACTIVATION-01)
 # ---------------------------------------------------------------------------
 
 
@@ -41,21 +44,23 @@ class CRODecision(str, Enum):
     """CRO policy decision outcomes.
 
     These decisions are final and deterministic:
-    - APPROVE: Execution may proceed
-    - TIGHTEN_TERMS: Execution with modified (more conservative) terms
+    - ALLOW: Execution may proceed normally
+    - ALLOW_WITH_CONSTRAINTS: Execution with modified (more conservative) terms
     - HOLD: Execution blocked, requires manual review
     - ESCALATE: Execution blocked, requires senior escalation
+    - DENY: Execution permanently blocked
     """
 
-    APPROVE = "APPROVE"
-    TIGHTEN_TERMS = "TIGHTEN_TERMS"
+    ALLOW = "ALLOW"
+    ALLOW_WITH_CONSTRAINTS = "ALLOW_WITH_CONSTRAINTS"
     HOLD = "HOLD"
     ESCALATE = "ESCALATE"
+    DENY = "DENY"
 
     @property
     def blocks_execution(self) -> bool:
         """Returns True if this decision blocks execution."""
-        return self in (CRODecision.HOLD, CRODecision.ESCALATE)
+        return self in (CRODecision.HOLD, CRODecision.ESCALATE, CRODecision.DENY)
 
 
 class CROReasonCode(str, Enum):
@@ -66,6 +71,13 @@ class CROReasonCode(str, Enum):
 
     # Data quality reasons
     DATA_QUALITY_BELOW_THRESHOLD = "DATA_QUALITY_BELOW_THRESHOLD"
+    DATA_QUALITY_CRITICAL = "DATA_QUALITY_CRITICAL"  # < 0.60 override
+    DATA_QUALITY_INSUFFICIENT_FOR_BAND = "DATA_QUALITY_INSUFFICIENT_FOR_BAND"
+
+    # Risk band reasons
+    CRITICAL_RISK_BAND = "CRITICAL_RISK_BAND"
+    HIGH_RISK_BAND_REQUIRES_HOLD = "HIGH_RISK_BAND_REQUIRES_HOLD"
+    MEDIUM_RISK_BAND_CONSTRAINED = "MEDIUM_RISK_BAND_CONSTRAINED"
 
     # Profile reasons
     MISSING_CARRIER_PROFILE = "MISSING_CARRIER_PROFILE"
@@ -76,12 +88,17 @@ class CROReasonCode(str, Enum):
     # IoT reasons
     MISSING_IOT_EVENTS_WHEN_REQUIRED = "MISSING_IOT_EVENTS_WHEN_REQUIRED"
 
+    # Missing metadata
+    MISSING_RISK_METADATA = "MISSING_RISK_METADATA"
+
     # Pass-through
     ALL_CHECKS_PASSED = "ALL_CHECKS_PASSED"
+    LOW_RISK_APPROVED = "LOW_RISK_APPROVED"
 
 
 # ---------------------------------------------------------------------------
 # CRO Threshold Policy Table (LOCKED - No runtime modification)
+# PAC-RUBY-CRO-POLICY-ACTIVATION-01 Section 4.2
 # ---------------------------------------------------------------------------
 
 
@@ -91,12 +108,26 @@ class CROThresholdPolicy:
 
     These thresholds are LOCKED and deterministic.
     No environment variables or runtime overrides.
+
+    CRO_POLICY_THRESHOLDS:
+      LOW:      data_quality >= 0.70 → ALLOW
+      MEDIUM:   data_quality >= 0.75 → ALLOW_WITH_CONSTRAINTS
+      HIGH:     data_quality >= 0.80 → HOLD
+      CRITICAL: ALWAYS → ESCALATE
+
+    DATA_QUALITY_OVERRIDE:
+      if data_quality < 0.60 → ESCALATE (regardless of band)
     """
 
-    # Data quality threshold
-    data_quality_min_score: float = 0.70
+    # Data quality thresholds per risk band
+    data_quality_low_band_min: float = 0.70
+    data_quality_medium_band_min: float = 0.75
+    data_quality_high_band_min: float = 0.80
 
-    # Tenure thresholds
+    # Critical override threshold
+    data_quality_critical_override: float = 0.60
+
+    # Tenure thresholds (retained from previous implementation)
     new_carrier_tenure_days_min: int = 90
     new_lane_history_days_min: int = 60
 
@@ -109,9 +140,12 @@ class CROThresholdPolicy:
 # Module-level policy instance (immutable, no modification)
 CRO_POLICY = CROThresholdPolicy()
 
+# Policy version identifier
+CRO_POLICY_VERSION = "CRO-POLICY-V1"
+
 
 # ---------------------------------------------------------------------------
-# Risk Metadata Input Schema
+# Risk Metadata Input Schema (PAC Section 4.1)
 # ---------------------------------------------------------------------------
 
 
@@ -119,11 +153,28 @@ CRO_POLICY = CROThresholdPolicy()
 class CRORiskMetadata:
     """Risk metadata consumed by CRO Policy Evaluator.
 
-    All fields are READ-ONLY inputs for deterministic evaluation.
+    MANDATORY INPUT (PAC Section 4.1):
+    - risk_score: float (0–1 normalized)
+    - risk_band: LOW | MEDIUM | HIGH | CRITICAL
+    - confidence: float (0–1)
+    - top_factors: list
+    - model_version: string
+    - assessed_at: timestamp
+    - data_quality_score: float (0–1)
+
+    Absence of RiskMetadata → FAIL CLOSED
     """
 
-    # Data quality
+    # Core risk fields (MANDATORY)
+    risk_score: Optional[float] = None
+    risk_band: Optional[str] = None
     data_quality_score: Optional[float] = None
+
+    # Extended risk fields
+    confidence: Optional[float] = None
+    top_factors: Optional[list[str]] = None
+    model_version: Optional[str] = None
+    assessed_at: Optional[str] = None
 
     # Carrier profile presence and attributes
     has_carrier_profile: bool = True
@@ -142,29 +193,72 @@ class CRORiskMetadata:
     is_hazmat: bool = False
     value_usd: float = 0.0
 
-    # Risk band from upstream scoring
-    risk_band: Optional[str] = None
-    risk_score: Optional[float] = None
-
 
 # ---------------------------------------------------------------------------
-# CRO Policy Result Schema
+# CRO Policy Result Schema (PAC Section 5)
 # ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True)
-class CROPolicyResult:
-    """Result from CRO Policy Evaluator.
+class RiskPolicyDecision:
+    """Risk Policy Decision output contract.
 
-    Immutable, auditable decision record.
+    Ruby MUST emit this structure (PAC Section 5).
+    This is the signed, auditable policy decision.
+
+    Attributes:
+        policy_decision: ALLOW | ALLOW_WITH_CONSTRAINTS | HOLD | ESCALATE | DENY
+        policy_reason: Human-readable reason string
+        applied_threshold: Threshold rule that was applied
+        risk_band: The risk band from input
+        data_quality_score: The data quality score from input
+        issued_by: Always "Ruby (GID-05)"
+        issued_at: UTC timestamp
+        policy_version: Always "CRO-POLICY-V1"
+    """
+
+    policy_decision: CRODecision
+    policy_reason: str
+    applied_threshold: str
+    risk_band: Optional[str]
+    data_quality_score: Optional[float]
+    issued_by: str = "Ruby (GID-05)"
+    issued_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    policy_version: str = CRO_POLICY_VERSION
+
+    @property
+    def blocks_execution(self) -> bool:
+        """Returns True if execution should be blocked."""
+        return self.policy_decision.blocks_execution
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary for PDO embedding."""
+        return {
+            "policy_decision": self.policy_decision.value,
+            "policy_reason": self.policy_reason,
+            "applied_threshold": self.applied_threshold,
+            "risk_band": self.risk_band,
+            "data_quality_score": self.data_quality_score,
+            "issued_by": self.issued_by,
+            "issued_at": self.issued_at,
+            "policy_version": self.policy_version,
+        }
+
+
+@dataclass(frozen=True)
+class CROPolicyResult:
+    """Full result from CRO Policy Evaluator.
+
+    Immutable, auditable decision record with full context.
     """
 
     decision: CRODecision
     reasons: tuple[CROReasonCode, ...]
+    policy_decision: RiskPolicyDecision
     evaluated_at: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
-    policy_version: str = "cro_policy@v1.0.0"
+    policy_version: str = CRO_POLICY_VERSION
 
     # Original risk band (before CRO override)
     original_risk_band: Optional[str] = None
@@ -182,7 +276,17 @@ class CROPolicyResult:
         """Return human-readable reason strings."""
         reason_messages = {
             CROReasonCode.DATA_QUALITY_BELOW_THRESHOLD:
-                f"Data quality score below threshold ({CRO_POLICY.data_quality_min_score})",
+                "Data quality score below threshold for risk band",
+            CROReasonCode.DATA_QUALITY_CRITICAL:
+                f"Data quality score below critical threshold ({CRO_POLICY.data_quality_critical_override})",
+            CROReasonCode.DATA_QUALITY_INSUFFICIENT_FOR_BAND:
+                "Data quality insufficient for automated decision at this risk level",
+            CROReasonCode.CRITICAL_RISK_BAND:
+                "CRITICAL risk band always requires escalation",
+            CROReasonCode.HIGH_RISK_BAND_REQUIRES_HOLD:
+                "HIGH risk band requires manual review (HOLD)",
+            CROReasonCode.MEDIUM_RISK_BAND_CONSTRAINED:
+                "MEDIUM risk band requires constrained execution",
             CROReasonCode.MISSING_CARRIER_PROFILE:
                 "Carrier profile is missing",
             CROReasonCode.MISSING_LANE_PROFILE:
@@ -193,22 +297,40 @@ class CROPolicyResult:
                 f"New lane with history < {CRO_POLICY.new_lane_history_days_min} days",
             CROReasonCode.MISSING_IOT_EVENTS_WHEN_REQUIRED:
                 "IoT events missing when required for shipment type",
+            CROReasonCode.MISSING_RISK_METADATA:
+                "Risk metadata is missing - fail closed",
             CROReasonCode.ALL_CHECKS_PASSED:
                 "All CRO policy checks passed",
+            CROReasonCode.LOW_RISK_APPROVED:
+                "LOW risk band with sufficient data quality - approved",
         }
         return [reason_messages.get(r, r.value) for r in self.reasons]
 
 
 # ---------------------------------------------------------------------------
-# CRO Policy Evaluator
+# CRO Policy Evaluator (PAC Section 4.2 & 4.3)
 # ---------------------------------------------------------------------------
 
 
 class CROPolicyEvaluator:
     """Deterministic CRO policy evaluator.
 
+    ChainIQ recommends. Ruby decides.
+
     Evaluates risk metadata against CRO thresholds and returns
     an enforceable decision. All decisions are deterministic and auditable.
+
+    CRO_POLICY_THRESHOLDS (PAC Section 4.2):
+      LOW:      data_quality >= 0.70 → ALLOW
+      MEDIUM:   data_quality >= 0.75 → ALLOW_WITH_CONSTRAINTS
+      HIGH:     data_quality >= 0.80 → HOLD
+      CRITICAL: ALWAYS → ESCALATE
+
+    DATA_QUALITY_OVERRIDE (PAC Section 4.3):
+      if data_quality < 0.60 → ESCALATE (regardless of band)
+
+    FAIL-CLOSED:
+      Absence of RiskMetadata → ESCALATE
 
     INVARIANTS:
     - evaluate() always returns CROPolicyResult
@@ -216,14 +338,6 @@ class CROPolicyEvaluator:
     - No soft influence paths
     - No environment-based overrides
     - Decision is MORE RESTRICTIVE than base RiskBand when triggered
-
-    USAGE:
-        evaluator = CROPolicyEvaluator()
-        result = evaluator.evaluate(risk_metadata)
-        if result.blocks_execution:
-            # Block the operation
-        elif result.decision == CRODecision.TIGHTEN_TERMS:
-            # Apply tightened settlement terms
     """
 
     def __init__(self, policy: CROThresholdPolicy = CRO_POLICY):
@@ -237,11 +351,14 @@ class CROPolicyEvaluator:
     def evaluate(self, metadata: CRORiskMetadata) -> CROPolicyResult:
         """Evaluate risk metadata against CRO policy thresholds.
 
-        Returns decision in order of severity:
-        1. ESCALATE (most restrictive)
-        2. HOLD
-        3. TIGHTEN_TERMS
-        4. APPROVE (least restrictive)
+        PAC Section 4.2 - CRO THRESHOLD TABLE:
+        - LOW + data_quality >= 0.70 → ALLOW
+        - MEDIUM + data_quality >= 0.75 → ALLOW_WITH_CONSTRAINTS
+        - HIGH + data_quality >= 0.80 → HOLD
+        - CRITICAL → ESCALATE (always)
+
+        PAC Section 4.3 - DATA QUALITY OVERRIDE:
+        - data_quality < 0.60 → ESCALATE (regardless of band)
 
         Args:
             metadata: Risk metadata to evaluate
@@ -250,78 +367,200 @@ class CROPolicyEvaluator:
             CROPolicyResult with decision and reasons
         """
         reasons: list[CROReasonCode] = []
-        escalate_reasons: list[CROReasonCode] = []
-        hold_reasons: list[CROReasonCode] = []
-        tighten_reasons: list[CROReasonCode] = []
 
         # Capture metadata snapshot for audit
         metadata_snapshot = self._capture_metadata_snapshot(metadata)
 
         # ------------------------------------
-        # ESCALATE triggers
+        # FAIL-CLOSED: Missing risk metadata
         # ------------------------------------
+        if metadata.risk_band is None or metadata.data_quality_score is None:
+            return self._build_fail_closed_result(
+                metadata=metadata,
+                reason=CROReasonCode.MISSING_RISK_METADATA,
+                metadata_snapshot=metadata_snapshot,
+            )
 
-        # Data quality score < threshold → ESCALATE
-        if metadata.data_quality_score is not None:
-            if metadata.data_quality_score < self._policy.data_quality_min_score:
-                escalate_reasons.append(CROReasonCode.DATA_QUALITY_BELOW_THRESHOLD)
-
-        # Missing IoT events when required → ESCALATE
-        if self._is_iot_required(metadata) and not metadata.has_iot_events:
-            escalate_reasons.append(CROReasonCode.MISSING_IOT_EVENTS_WHEN_REQUIRED)
-
-        # ------------------------------------
-        # HOLD triggers
-        # ------------------------------------
-
-        # Missing carrier profile → HOLD
-        if not metadata.has_carrier_profile:
-            hold_reasons.append(CROReasonCode.MISSING_CARRIER_PROFILE)
-
-        # Missing lane profile → HOLD
-        if not metadata.has_lane_profile:
-            hold_reasons.append(CROReasonCode.MISSING_LANE_PROFILE)
+        risk_band = metadata.risk_band.upper()
+        data_quality = metadata.data_quality_score
 
         # ------------------------------------
-        # TIGHTEN_TERMS triggers
+        # DATA QUALITY OVERRIDE (PAC Section 4.3)
+        # if data_quality < 0.60 → ESCALATE
+        # ------------------------------------
+        if data_quality < self._policy.data_quality_critical_override:
+            return self._build_result(
+                decision=CRODecision.ESCALATE,
+                reasons=[CROReasonCode.DATA_QUALITY_CRITICAL],
+                metadata=metadata,
+                applied_threshold=f"data_quality < {self._policy.data_quality_critical_override}",
+                metadata_snapshot=metadata_snapshot,
+            )
+
+        # ------------------------------------
+        # BAND-BASED THRESHOLDS (PAC Section 4.2)
         # ------------------------------------
 
-        # New carrier (tenure < threshold) → TIGHTEN_TERMS
+        if risk_band == "CRITICAL":
+            # CRITICAL → ESCALATE (always)
+            return self._build_result(
+                decision=CRODecision.ESCALATE,
+                reasons=[CROReasonCode.CRITICAL_RISK_BAND],
+                metadata=metadata,
+                applied_threshold="CRITICAL band → ESCALATE (always)",
+                metadata_snapshot=metadata_snapshot,
+            )
+
+        if risk_band == "HIGH":
+            # HIGH + data_quality >= 0.80 → HOLD
+            if data_quality >= self._policy.data_quality_high_band_min:
+                return self._build_result(
+                    decision=CRODecision.HOLD,
+                    reasons=[CROReasonCode.HIGH_RISK_BAND_REQUIRES_HOLD],
+                    metadata=metadata,
+                    applied_threshold=f"HIGH band + data_quality >= {self._policy.data_quality_high_band_min} → HOLD",
+                    metadata_snapshot=metadata_snapshot,
+                )
+            else:
+                # HIGH band but data quality below threshold → ESCALATE
+                return self._build_result(
+                    decision=CRODecision.ESCALATE,
+                    reasons=[CROReasonCode.DATA_QUALITY_INSUFFICIENT_FOR_BAND],
+                    metadata=metadata,
+                    applied_threshold=f"HIGH band + data_quality < {self._policy.data_quality_high_band_min} → ESCALATE",
+                    metadata_snapshot=metadata_snapshot,
+                )
+
+        if risk_band == "MEDIUM":
+            # MEDIUM + data_quality >= 0.75 → ALLOW_WITH_CONSTRAINTS
+            if data_quality >= self._policy.data_quality_medium_band_min:
+                # Check for additional constraints
+                constraint_reasons = self._check_constraints(metadata)
+                if constraint_reasons:
+                    reasons.extend(constraint_reasons)
+                reasons.append(CROReasonCode.MEDIUM_RISK_BAND_CONSTRAINED)
+                return self._build_result(
+                    decision=CRODecision.ALLOW_WITH_CONSTRAINTS,
+                    reasons=reasons,
+                    metadata=metadata,
+                    applied_threshold=f"MEDIUM band + data_quality >= {self._policy.data_quality_medium_band_min} → ALLOW_WITH_CONSTRAINTS",
+                    metadata_snapshot=metadata_snapshot,
+                )
+            else:
+                # MEDIUM band but data quality below threshold → HOLD
+                return self._build_result(
+                    decision=CRODecision.HOLD,
+                    reasons=[CROReasonCode.DATA_QUALITY_INSUFFICIENT_FOR_BAND],
+                    metadata=metadata,
+                    applied_threshold=f"MEDIUM band + data_quality < {self._policy.data_quality_medium_band_min} → HOLD",
+                    metadata_snapshot=metadata_snapshot,
+                )
+
+        if risk_band == "LOW":
+            # LOW + data_quality >= 0.70 → ALLOW
+            if data_quality >= self._policy.data_quality_low_band_min:
+                return self._build_result(
+                    decision=CRODecision.ALLOW,
+                    reasons=[CROReasonCode.LOW_RISK_APPROVED],
+                    metadata=metadata,
+                    applied_threshold=f"LOW band + data_quality >= {self._policy.data_quality_low_band_min} → ALLOW",
+                    metadata_snapshot=metadata_snapshot,
+                )
+            else:
+                # LOW band but data quality below threshold → ALLOW_WITH_CONSTRAINTS
+                return self._build_result(
+                    decision=CRODecision.ALLOW_WITH_CONSTRAINTS,
+                    reasons=[CROReasonCode.DATA_QUALITY_BELOW_THRESHOLD],
+                    metadata=metadata,
+                    applied_threshold=f"LOW band + data_quality < {self._policy.data_quality_low_band_min} → ALLOW_WITH_CONSTRAINTS",
+                    metadata_snapshot=metadata_snapshot,
+                )
+
+        # Unknown band → fail closed
+        return self._build_fail_closed_result(
+            metadata=metadata,
+            reason=CROReasonCode.MISSING_RISK_METADATA,
+            metadata_snapshot=metadata_snapshot,
+        )
+
+    def _check_constraints(self, metadata: CRORiskMetadata) -> list[CROReasonCode]:
+        """Check for constraint-triggering conditions.
+
+        Returns list of reasons that warrant constrained execution.
+        """
+        constraints: list[CROReasonCode] = []
+
+        # New carrier (tenure < threshold)
         if (
             metadata.has_carrier_profile
             and metadata.carrier_tenure_days is not None
             and metadata.carrier_tenure_days < self._policy.new_carrier_tenure_days_min
         ):
-            tighten_reasons.append(CROReasonCode.NEW_CARRIER_INSUFFICIENT_TENURE)
+            constraints.append(CROReasonCode.NEW_CARRIER_INSUFFICIENT_TENURE)
 
-        # New lane (history < threshold) → TIGHTEN_TERMS
+        # New lane (history < threshold)
         if (
             metadata.has_lane_profile
             and metadata.lane_history_days is not None
             and metadata.lane_history_days < self._policy.new_lane_history_days_min
         ):
-            tighten_reasons.append(CROReasonCode.NEW_LANE_INSUFFICIENT_HISTORY)
+            constraints.append(CROReasonCode.NEW_LANE_INSUFFICIENT_HISTORY)
 
-        # ------------------------------------
-        # Determine final decision (most restrictive wins)
-        # ------------------------------------
+        # Missing IoT when required
+        if self._is_iot_required(metadata) and not metadata.has_iot_events:
+            constraints.append(CROReasonCode.MISSING_IOT_EVENTS_WHEN_REQUIRED)
 
-        if escalate_reasons:
-            decision = CRODecision.ESCALATE
-            reasons = escalate_reasons
-        elif hold_reasons:
-            decision = CRODecision.HOLD
-            reasons = hold_reasons
-        elif tighten_reasons:
-            decision = CRODecision.TIGHTEN_TERMS
-            reasons = tighten_reasons
-        else:
-            decision = CRODecision.APPROVE
-            reasons = [CROReasonCode.ALL_CHECKS_PASSED]
+        return constraints
+
+    def _build_result(
+        self,
+        decision: CRODecision,
+        reasons: list[CROReasonCode],
+        metadata: CRORiskMetadata,
+        applied_threshold: str,
+        metadata_snapshot: dict[str, Any],
+    ) -> CROPolicyResult:
+        """Build a CROPolicyResult with RiskPolicyDecision."""
+        policy_decision = RiskPolicyDecision(
+            policy_decision=decision,
+            policy_reason="; ".join(r.value for r in reasons),
+            applied_threshold=applied_threshold,
+            risk_band=metadata.risk_band,
+            data_quality_score=metadata.data_quality_score,
+        )
 
         result = CROPolicyResult(
             decision=decision,
             reasons=tuple(reasons),
+            policy_decision=policy_decision,
+            original_risk_band=metadata.risk_band,
+            metadata_snapshot=metadata_snapshot,
+        )
+
+        # Log the evaluation for audit
+        self._log_evaluation(result)
+
+        return result
+
+    def _build_fail_closed_result(
+        self,
+        metadata: CRORiskMetadata,
+        reason: CROReasonCode,
+        metadata_snapshot: dict[str, Any],
+    ) -> CROPolicyResult:
+        """Build a fail-closed ESCALATE result."""
+        policy_decision = RiskPolicyDecision(
+            policy_decision=CRODecision.ESCALATE,
+            policy_reason="Insufficient data quality for automated decision",
+            applied_threshold="FAIL_CLOSED: missing required metadata",
+            risk_band=metadata.risk_band,
+            data_quality_score=metadata.data_quality_score,
+        )
+
+        result = CROPolicyResult(
+            decision=CRODecision.ESCALATE,
+            reasons=(reason,),
+            policy_decision=policy_decision,
             original_risk_band=metadata.risk_band,
             metadata_snapshot=metadata_snapshot,
         )
@@ -423,11 +662,12 @@ def apply_cro_override(
 
     CRO decision overrides base RiskBand if more restrictive.
 
-    Decision hierarchy (most to least restrictive):
-    1. ESCALATE → maps to CRITICAL risk band
-    2. HOLD → maps to CRITICAL risk band
-    3. TIGHTEN_TERMS → maps to HIGH risk band (minimum)
-    4. APPROVE → preserves base risk band
+    Decision hierarchy (most to least restrictive) per PAC Section 4.2:
+    1. DENY → maps to CRITICAL risk band (blocks execution)
+    2. ESCALATE → maps to CRITICAL risk band (manual review)
+    3. HOLD → maps to CRITICAL risk band (pending additional info)
+    4. ALLOW_WITH_CONSTRAINTS → maps to HIGH risk band (minimum)
+    5. ALLOW → preserves base risk band
 
     Args:
         base_risk_band: Risk band from upstream scoring
@@ -447,17 +687,20 @@ def apply_cro_override(
     base_level = band_hierarchy.get(base_risk_band.upper(), 0)
     final_band = base_risk_band.upper()
 
-    if cro_result.decision == CRODecision.ESCALATE:
+    if cro_result.decision == CRODecision.DENY:
+        # Deny implies CRITICAL (hard block)
+        final_band = "CRITICAL"
+    elif cro_result.decision == CRODecision.ESCALATE:
         # Always escalate to CRITICAL
         final_band = "CRITICAL"
     elif cro_result.decision == CRODecision.HOLD:
         # Hold implies CRITICAL
         final_band = "CRITICAL"
-    elif cro_result.decision == CRODecision.TIGHTEN_TERMS:
-        # Tighten implies at least HIGH
+    elif cro_result.decision == CRODecision.ALLOW_WITH_CONSTRAINTS:
+        # Constrained implies at least HIGH
         if base_level < band_hierarchy["HIGH"]:
             final_band = "HIGH"
-    # APPROVE preserves base band
+    # ALLOW preserves base band
 
     return final_band, cro_result.decision
 

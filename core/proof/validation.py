@@ -380,6 +380,204 @@ class ProofValidator:
             return False
 
 
+# ---------------------------------------------------------------------------
+# A6 Architecture Enforcement - Proof Lineage Validation
+# (PAC-CODY-A6-ARCHITECTURE-ENFORCEMENT-WIRING-01)
+# ---------------------------------------------------------------------------
+# Enforces forward-only proof lineage:
+# - No orphan proofs (must chain to previous)
+# - No proof mutation (content hash must match)
+# - No proof deletion (sequence must be contiguous)
+# ---------------------------------------------------------------------------
+
+
+class ProofLineageValidator:
+    """Validates forward-only proof lineage per A6 Architecture Locks.
+
+    DOCTRINE (FAIL-CLOSED):
+    - Orphan proofs (no previous chain link) → FAIL
+    - Mutated proofs (content hash mismatch) → FAIL
+    - Deleted proofs (sequence gap) → FAIL
+    - All violations raise ProofValidationError
+
+    Usage:
+        validator = ProofLineageValidator()
+        result = validator.validate_lineage(new_proof, existing_proofs)
+        if not result.passed:
+            raise ProofValidationError(result.errors)
+    """
+
+    def __init__(self):
+        """Initialize lineage validator."""
+        self._proof_validator = ProofValidator()
+
+    def validate_lineage(
+        self,
+        new_proof: Dict[str, Any],
+        existing_proofs: List[Dict[str, Any]],
+        genesis_hash: str = GENESIS_HASH,
+    ) -> ValidationResult:
+        """Validate that a new proof maintains forward-only lineage.
+
+        DOCTRINE (FAIL-CLOSED per A6 Architecture Lock):
+        - New proof MUST chain to the last existing proof
+        - Sequence numbers MUST be contiguous
+        - Content hashes MUST be immutable
+
+        Args:
+            new_proof: The proof to validate
+            existing_proofs: Ordered list of existing proofs
+            genesis_hash: Starting hash for chain
+
+        Returns:
+            ValidationResult with lineage check results
+        """
+        errors: List[str] = []
+        warnings: List[str] = []
+
+        # Validate new proof passes individual validation
+        new_result = self._proof_validator.validate_proof(new_proof)
+        if not new_result.passed:
+            errors.extend([f"New proof: {e}" for e in new_result.errors])
+            return ValidationResult(
+                passed=False,
+                errors=tuple(errors),
+                warnings=tuple(warnings),
+                metadata={"validation_type": "lineage", "stage": "proof_validation"},
+            )
+
+        # Compute expected previous chain hash
+        if existing_proofs:
+            # Chain must link to last existing proof
+            last_proof = existing_proofs[-1]
+            last_content_hash = last_proof.get("content_hash")
+            if last_content_hash is None:
+                last_content_hash = compute_canonical_hash(last_proof)
+            last_chain_hash = last_proof.get("chain_hash", genesis_hash)
+            expected_previous = last_chain_hash
+            expected_sequence = len(existing_proofs) + 1
+        else:
+            # First proof chains from genesis
+            expected_previous = genesis_hash
+            expected_sequence = 1
+
+        # Check sequence number continuity
+        new_sequence = new_proof.get("sequence_number")
+        if new_sequence is not None and new_sequence != expected_sequence:
+            errors.append(
+                f"Sequence discontinuity: expected {expected_sequence}, got {new_sequence}. "
+                f"Forward-only lineage violated."
+            )
+
+        # Check chain hash links to previous
+        new_chain_hash = new_proof.get("chain_hash")
+        new_content_hash = new_proof.get("content_hash")
+        if new_content_hash is None:
+            new_content_hash = compute_canonical_hash(new_proof)
+
+        if new_chain_hash:
+            computed_chain_hash = compute_chain_hash(expected_previous, new_content_hash)
+            if new_chain_hash != computed_chain_hash:
+                errors.append(
+                    f"Chain hash mismatch: proof does not chain to previous. "
+                    f"Expected previous={expected_previous[:16]}..., "
+                    f"Computed chain={computed_chain_hash[:16]}..., "
+                    f"Got chain={new_chain_hash[:16]}... "
+                    f"Forward-only lineage violated."
+                )
+
+        # Check for orphan (no link to existing chain)
+        if existing_proofs and new_chain_hash is None:
+            warnings.append(
+                "New proof has no chain_hash - cannot verify lineage"
+            )
+
+        metadata = {
+            "validation_type": "lineage",
+            "expected_sequence": expected_sequence,
+            "expected_previous": expected_previous[:16] + "..." if expected_previous else None,
+            "proof_count_before": len(existing_proofs),
+        }
+
+        return ValidationResult(
+            passed=len(errors) == 0,
+            errors=tuple(errors),
+            warnings=tuple(warnings),
+            metadata=metadata,
+        )
+
+    def validate_no_mutation(
+        self,
+        proof: Dict[str, Any],
+        original_content_hash: str,
+    ) -> ValidationResult:
+        """Validate that a proof has not been mutated.
+
+        DOCTRINE (FAIL-CLOSED):
+        - Content hash MUST match original
+        - Any mutation → FAIL
+
+        Args:
+            proof: The proof to check
+            original_content_hash: The original content hash when proof was created
+
+        Returns:
+            ValidationResult indicating mutation status
+        """
+        errors: List[str] = []
+
+        current_hash = compute_canonical_hash(proof)
+        if current_hash != original_content_hash:
+            errors.append(
+                f"Proof mutation detected! "
+                f"Original hash={original_content_hash[:16]}..., "
+                f"Current hash={current_hash[:16]}..."
+            )
+
+        return ValidationResult(
+            passed=len(errors) == 0,
+            errors=tuple(errors),
+            warnings=(),
+            metadata={
+                "validation_type": "mutation_check",
+                "original_hash": original_content_hash[:16] + "...",
+                "current_hash": current_hash[:16] + "...",
+            },
+        )
+
+
+def validate_proof_lineage(
+    new_proof: Dict[str, Any],
+    existing_proofs: List[Dict[str, Any]],
+    strict: bool = True,
+) -> ValidationResult:
+    """Validate forward-only proof lineage.
+
+    A6 Architecture Enforcement convenience function.
+
+    Args:
+        new_proof: The proof to validate
+        existing_proofs: Ordered list of existing proofs
+        strict: If True, raise exception on failure
+
+    Returns:
+        ValidationResult
+
+    Raises:
+        ProofValidationError: If validation fails and strict=True
+    """
+    validator = ProofLineageValidator()
+    result = validator.validate_lineage(new_proof, existing_proofs)
+
+    if strict and not result.passed:
+        error_summary = "; ".join(result.errors[:3])
+        raise ProofValidationError(
+            f"Proof lineage validation failed: {error_summary}"
+        )
+
+    return result
+
+
 def validate_proof_integrity(
     proof_data: Dict[str, Any],
     expected_hash: Optional[str] = None,

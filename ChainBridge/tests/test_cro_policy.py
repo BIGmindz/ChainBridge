@@ -1,25 +1,25 @@
 """CRO Policy Enforcement Tests.
 
 Tests the CRO Policy Evaluator and enforcement integration per
-PAC-RUBY-CRO-POLICY-ACTIVATION-01.
+PAC-RUBY-CRO-POLICY-ACTIVATION-01 (REFINED).
 
-Requirements validated:
-1. data_quality_score < threshold → ESCALATE
-2. missing carrier profile → HOLD
-3. missing lane profile → HOLD
-4. new carrier (tenure < 90 days) → TIGHTEN_TERMS
-5. new lane (history < 60 days) → TIGHTEN_TERMS
-6. missing IoT events when required → ESCALATE
-7. CRO override beats RiskBand (more restrictive wins)
-8. CRO decision included in signed PDO
-9. CRO decision logged in enforcement audit
+Requirements validated per PAC Section 4.2 (CRO THRESHOLD TABLE):
+1. LOW + data_quality >= 0.70 → ALLOW
+2. MEDIUM + data_quality >= 0.75 → ALLOW_WITH_CONSTRAINTS
+3. HIGH + data_quality >= 0.80 → HOLD
+4. CRITICAL → ESCALATE (always)
+5. Data quality < 0.60 override → ESCALATE (PAC Section 4.3)
+6. CRO override beats RiskBand (more restrictive wins)
+7. CRO decision included in RiskPolicyDecision (PAC Section 5)
+8. Fail-closed semantics for missing metadata
 
-DOCTRINE: PAC-RUBY-CRO-POLICY-ACTIVATION-01
+DOCTRINE: PAC-RUBY-CRO-POLICY-ACTIVATION-01 (REFINED)
+- Band-based threshold enforcement
 - Deterministic, table-driven thresholds only
 - Fail-closed semantics
 - All decisions are PDO-bound and auditable
 
-Author: Ruby (GID-12) — Chief Risk Officer
+Author: Ruby (GID-05) — Chief Risk Officer
 """
 from __future__ import annotations
 
@@ -45,6 +45,7 @@ from app.risk.cro_policy import (
     CROReasonCode,
     CROThresholdPolicy,
     CRO_POLICY,
+    RiskPolicyDecision,
     evaluate_cro_policy,
     apply_cro_override,
     build_cro_metadata_from_pdo,
@@ -63,10 +64,10 @@ def evaluator() -> CROPolicyEvaluator:
 
 
 @pytest.fixture
-def metadata_all_good() -> CRORiskMetadata:
-    """Create metadata that passes all CRO checks."""
+def metadata_low_risk_good_quality() -> CRORiskMetadata:
+    """Create metadata for LOW risk band with good data quality."""
     return CRORiskMetadata(
-        data_quality_score=0.95,
+        data_quality_score=0.85,
         has_carrier_profile=True,
         carrier_tenure_days=200,
         has_lane_profile=True,
@@ -94,11 +95,18 @@ class TestCROThresholdPolicy:
         with pytest.raises(Exception):  # FrozenInstanceError
             CRO_POLICY.data_quality_min_score = 0.5
 
-    def test_default_thresholds(self):
-        """Default thresholds match PAC specification."""
-        assert CRO_POLICY.data_quality_min_score == 0.70
+    def test_default_thresholds_match_pac(self):
+        """Default thresholds match PAC Section 4.2 specification."""
+        # Band-specific thresholds
+        assert CRO_POLICY.data_quality_low_band_min == 0.70
+        assert CRO_POLICY.data_quality_medium_band_min == 0.75
+        assert CRO_POLICY.data_quality_high_band_min == 0.80
+        # Critical override
+        assert CRO_POLICY.data_quality_critical_override == 0.60
+        # Constraint thresholds
         assert CRO_POLICY.new_carrier_tenure_days_min == 90
         assert CRO_POLICY.new_lane_history_days_min == 60
+        # IoT requirements
         assert CRO_POLICY.iot_required_for_temp_control is True
         assert CRO_POLICY.iot_required_for_hazmat is True
         assert CRO_POLICY.iot_required_for_high_value_threshold_usd == 100_000.0
@@ -113,25 +121,194 @@ class TestCRODecision:
     """Tests for CRO decision enum."""
 
     def test_decision_blocks_execution(self):
-        """HOLD and ESCALATE block execution."""
-        assert CRODecision.HOLD.blocks_execution is True
+        """HOLD, ESCALATE, and DENY block execution."""
+        assert CRODecision.DENY.blocks_execution is True
         assert CRODecision.ESCALATE.blocks_execution is True
-        assert CRODecision.TIGHTEN_TERMS.blocks_execution is False
-        assert CRODecision.APPROVE.blocks_execution is False
+        assert CRODecision.HOLD.blocks_execution is True
+        assert CRODecision.ALLOW_WITH_CONSTRAINTS.blocks_execution is False
+        assert CRODecision.ALLOW.blocks_execution is False
+
+    def test_decision_values(self):
+        """Decision values match PAC specification."""
+        assert CRODecision.ALLOW.value == "ALLOW"
+        assert CRODecision.ALLOW_WITH_CONSTRAINTS.value == "ALLOW_WITH_CONSTRAINTS"
+        assert CRODecision.HOLD.value == "HOLD"
+        assert CRODecision.ESCALATE.value == "ESCALATE"
+        assert CRODecision.DENY.value == "DENY"
 
 
 # ---------------------------------------------------------------------------
-# CROPolicyEvaluator Tests — ESCALATE Triggers
+# CROPolicyEvaluator Tests — LOW Band (PAC Section 4.2)
 # ---------------------------------------------------------------------------
 
 
-class TestCROEscalateTriggers:
-    """Tests for conditions that trigger ESCALATE decision."""
+class TestCROLowBand:
+    """Tests for LOW risk band evaluation per PAC Section 4.2."""
 
-    def test_data_quality_below_threshold_escalates(self, evaluator: CROPolicyEvaluator):
-        """PAC Requirement: data_quality_score < 0.70 → ESCALATE."""
+    def test_low_band_high_quality_allows(self, evaluator: CROPolicyEvaluator):
+        """PAC 4.2: LOW + data_quality >= 0.70 → ALLOW."""
         metadata = CRORiskMetadata(
-            data_quality_score=0.65,  # Below 0.70 threshold
+            data_quality_score=0.85,
+            risk_band="LOW",
+            has_carrier_profile=True,
+            carrier_tenure_days=200,
+            has_lane_profile=True,
+            lane_history_days=120,
+            has_iot_events=True,
+        )
+
+        result = evaluator.evaluate(metadata)
+
+        assert result.decision == CRODecision.ALLOW
+        assert CROReasonCode.LOW_RISK_APPROVED in result.reasons
+        assert result.blocks_execution is False
+
+    def test_low_band_at_threshold_allows(self, evaluator: CROPolicyEvaluator):
+        """PAC 4.2: LOW + data_quality == 0.70 → ALLOW (boundary)."""
+        metadata = CRORiskMetadata(
+            data_quality_score=0.70,
+            risk_band="LOW",
+            has_carrier_profile=True,
+            carrier_tenure_days=200,
+            has_lane_profile=True,
+            lane_history_days=120,
+            has_iot_events=True,
+        )
+
+        result = evaluator.evaluate(metadata)
+
+        assert result.decision == CRODecision.ALLOW
+
+    def test_low_band_below_threshold_constrains(self, evaluator: CROPolicyEvaluator):
+        """PAC 4.2: LOW + data_quality < 0.70 → ALLOW_WITH_CONSTRAINTS."""
+        metadata = CRORiskMetadata(
+            data_quality_score=0.65,  # Below 0.70, above 0.60
+            risk_band="LOW",
+            has_carrier_profile=True,
+            carrier_tenure_days=200,
+            has_lane_profile=True,
+            lane_history_days=120,
+            has_iot_events=True,
+        )
+
+        result = evaluator.evaluate(metadata)
+
+        assert result.decision == CRODecision.ALLOW_WITH_CONSTRAINTS
+        assert CROReasonCode.DATA_QUALITY_BELOW_THRESHOLD in result.reasons
+
+
+# ---------------------------------------------------------------------------
+# CROPolicyEvaluator Tests — MEDIUM Band (PAC Section 4.2)
+# ---------------------------------------------------------------------------
+
+
+class TestCROMediumBand:
+    """Tests for MEDIUM risk band evaluation per PAC Section 4.2."""
+
+    def test_medium_band_high_quality_allows_constrained(
+        self, evaluator: CROPolicyEvaluator
+    ):
+        """PAC 4.2: MEDIUM + data_quality >= 0.75 → ALLOW_WITH_CONSTRAINTS."""
+        metadata = CRORiskMetadata(
+            data_quality_score=0.80,
+            risk_band="MEDIUM",
+            has_carrier_profile=True,
+            carrier_tenure_days=200,
+            has_lane_profile=True,
+            lane_history_days=120,
+            has_iot_events=True,
+        )
+
+        result = evaluator.evaluate(metadata)
+
+        assert result.decision == CRODecision.ALLOW_WITH_CONSTRAINTS
+        assert CROReasonCode.MEDIUM_RISK_BAND_CONSTRAINED in result.reasons
+        assert result.blocks_execution is False
+
+    def test_medium_band_at_threshold_allows_constrained(
+        self, evaluator: CROPolicyEvaluator
+    ):
+        """PAC 4.2: MEDIUM + data_quality == 0.75 → ALLOW_WITH_CONSTRAINTS."""
+        metadata = CRORiskMetadata(
+            data_quality_score=0.75,
+            risk_band="MEDIUM",
+            has_carrier_profile=True,
+            carrier_tenure_days=200,
+            has_lane_profile=True,
+            lane_history_days=120,
+            has_iot_events=True,
+        )
+
+        result = evaluator.evaluate(metadata)
+
+        assert result.decision == CRODecision.ALLOW_WITH_CONSTRAINTS
+
+    def test_medium_band_below_threshold_holds(self, evaluator: CROPolicyEvaluator):
+        """PAC 4.2: MEDIUM + data_quality < 0.75 → HOLD."""
+        metadata = CRORiskMetadata(
+            data_quality_score=0.72,  # Below 0.75, above 0.60
+            risk_band="MEDIUM",
+            has_carrier_profile=True,
+            carrier_tenure_days=200,
+            has_lane_profile=True,
+            lane_history_days=120,
+            has_iot_events=True,
+        )
+
+        result = evaluator.evaluate(metadata)
+
+        assert result.decision == CRODecision.HOLD
+        assert CROReasonCode.DATA_QUALITY_INSUFFICIENT_FOR_BAND in result.reasons
+        assert result.blocks_execution is True
+
+
+# ---------------------------------------------------------------------------
+# CROPolicyEvaluator Tests — HIGH Band (PAC Section 4.2)
+# ---------------------------------------------------------------------------
+
+
+class TestCROHighBand:
+    """Tests for HIGH risk band evaluation per PAC Section 4.2."""
+
+    def test_high_band_high_quality_holds(self, evaluator: CROPolicyEvaluator):
+        """PAC 4.2: HIGH + data_quality >= 0.80 → HOLD."""
+        metadata = CRORiskMetadata(
+            data_quality_score=0.85,
+            risk_band="HIGH",
+            has_carrier_profile=True,
+            carrier_tenure_days=200,
+            has_lane_profile=True,
+            lane_history_days=120,
+            has_iot_events=True,
+        )
+
+        result = evaluator.evaluate(metadata)
+
+        assert result.decision == CRODecision.HOLD
+        assert CROReasonCode.HIGH_RISK_BAND_REQUIRES_HOLD in result.reasons
+        assert result.blocks_execution is True
+
+    def test_high_band_at_threshold_holds(self, evaluator: CROPolicyEvaluator):
+        """PAC 4.2: HIGH + data_quality == 0.80 → HOLD (boundary)."""
+        metadata = CRORiskMetadata(
+            data_quality_score=0.80,
+            risk_band="HIGH",
+            has_carrier_profile=True,
+            carrier_tenure_days=200,
+            has_lane_profile=True,
+            lane_history_days=120,
+            has_iot_events=True,
+        )
+
+        result = evaluator.evaluate(metadata)
+
+        assert result.decision == CRODecision.HOLD
+
+    def test_high_band_below_threshold_escalates(self, evaluator: CROPolicyEvaluator):
+        """PAC 4.2: HIGH + data_quality < 0.80 → ESCALATE."""
+        metadata = CRORiskMetadata(
+            data_quality_score=0.75,  # Below 0.80, above 0.60
+            risk_band="HIGH",
             has_carrier_profile=True,
             carrier_tenure_days=200,
             has_lane_profile=True,
@@ -142,13 +319,23 @@ class TestCROEscalateTriggers:
         result = evaluator.evaluate(metadata)
 
         assert result.decision == CRODecision.ESCALATE
-        assert CROReasonCode.DATA_QUALITY_BELOW_THRESHOLD in result.reasons
+        assert CROReasonCode.DATA_QUALITY_INSUFFICIENT_FOR_BAND in result.reasons
         assert result.blocks_execution is True
 
-    def test_data_quality_at_threshold_approves(self, evaluator: CROPolicyEvaluator):
-        """data_quality_score == 0.70 should NOT escalate (boundary test)."""
+
+# ---------------------------------------------------------------------------
+# CROPolicyEvaluator Tests — CRITICAL Band (PAC Section 4.2)
+# ---------------------------------------------------------------------------
+
+
+class TestCROCriticalBand:
+    """Tests for CRITICAL risk band evaluation per PAC Section 4.2."""
+
+    def test_critical_band_always_escalates(self, evaluator: CROPolicyEvaluator):
+        """PAC 4.2: CRITICAL → ESCALATE (always, regardless of data quality)."""
         metadata = CRORiskMetadata(
-            data_quality_score=0.70,  # Exactly at threshold
+            data_quality_score=0.95,  # Even with perfect quality
+            risk_band="CRITICAL",
             has_carrier_profile=True,
             carrier_tenure_days=200,
             has_lane_profile=True,
@@ -158,13 +345,206 @@ class TestCROEscalateTriggers:
 
         result = evaluator.evaluate(metadata)
 
-        assert result.decision == CRODecision.APPROVE
-        assert CROReasonCode.DATA_QUALITY_BELOW_THRESHOLD not in result.reasons
+        assert result.decision == CRODecision.ESCALATE
+        assert CROReasonCode.CRITICAL_RISK_BAND in result.reasons
+        assert result.blocks_execution is True
 
-    def test_missing_iot_for_temp_control_escalates(self, evaluator: CROPolicyEvaluator):
-        """PAC Requirement: Missing IoT when required for temp control → ESCALATE."""
+    def test_critical_band_with_low_quality_escalates(
+        self, evaluator: CROPolicyEvaluator
+    ):
+        """PAC 4.2: CRITICAL + low quality → ESCALATE (still critical reason)."""
+        metadata = CRORiskMetadata(
+            data_quality_score=0.55,  # Below critical override
+            risk_band="CRITICAL",
+            has_carrier_profile=True,
+            carrier_tenure_days=200,
+            has_lane_profile=True,
+            lane_history_days=120,
+            has_iot_events=True,
+        )
+
+        result = evaluator.evaluate(metadata)
+
+        # Data quality override fires first, but decision is same
+        assert result.decision == CRODecision.ESCALATE
+        assert result.blocks_execution is True
+
+
+# ---------------------------------------------------------------------------
+# CROPolicyEvaluator Tests — Data Quality Override (PAC Section 4.3)
+# ---------------------------------------------------------------------------
+
+
+class TestCRODataQualityOverride:
+    """Tests for data quality critical override per PAC Section 4.3."""
+
+    def test_data_quality_below_critical_escalates(self, evaluator: CROPolicyEvaluator):
+        """PAC 4.3: data_quality < 0.60 → ESCALATE (regardless of band)."""
+        # Even LOW band with very low quality should escalate
+        metadata = CRORiskMetadata(
+            data_quality_score=0.55,
+            risk_band="LOW",
+            has_carrier_profile=True,
+            carrier_tenure_days=200,
+            has_lane_profile=True,
+            lane_history_days=120,
+            has_iot_events=True,
+        )
+
+        result = evaluator.evaluate(metadata)
+
+        assert result.decision == CRODecision.ESCALATE
+        assert CROReasonCode.DATA_QUALITY_CRITICAL in result.reasons
+        assert result.blocks_execution is True
+
+    def test_data_quality_at_critical_boundary_no_override(
+        self, evaluator: CROPolicyEvaluator
+    ):
+        """PAC 4.3: data_quality == 0.60 should NOT trigger critical override."""
+        metadata = CRORiskMetadata(
+            data_quality_score=0.60,
+            risk_band="LOW",
+            has_carrier_profile=True,
+            carrier_tenure_days=200,
+            has_lane_profile=True,
+            lane_history_days=120,
+            has_iot_events=True,
+        )
+
+        result = evaluator.evaluate(metadata)
+
+        # Should proceed to band evaluation (LOW + 0.60 < 0.70 → ALLOW_WITH_CONSTRAINTS)
+        assert result.decision == CRODecision.ALLOW_WITH_CONSTRAINTS
+        assert CROReasonCode.DATA_QUALITY_CRITICAL not in result.reasons
+
+    def test_data_quality_override_beats_any_band(self, evaluator: CROPolicyEvaluator):
+        """PAC 4.3: Critical override applies to ALL bands."""
+        for band in ["LOW", "MEDIUM", "HIGH"]:
+            metadata = CRORiskMetadata(
+                data_quality_score=0.50,  # Below 0.60
+                risk_band=band,
+                has_carrier_profile=True,
+                carrier_tenure_days=200,
+                has_lane_profile=True,
+                lane_history_days=120,
+                has_iot_events=True,
+            )
+
+            result = evaluator.evaluate(metadata)
+
+            assert result.decision == CRODecision.ESCALATE
+            assert CROReasonCode.DATA_QUALITY_CRITICAL in result.reasons
+
+
+# ---------------------------------------------------------------------------
+# CROPolicyEvaluator Tests — Fail-Closed Semantics
+# ---------------------------------------------------------------------------
+
+
+class TestCROFailClosed:
+    """Tests for fail-closed semantics."""
+
+    def test_missing_risk_band_escalates(self, evaluator: CROPolicyEvaluator):
+        """FAIL-CLOSED: Missing risk_band → ESCALATE."""
         metadata = CRORiskMetadata(
             data_quality_score=0.90,
+            risk_band=None,  # Missing
+            has_carrier_profile=True,
+            carrier_tenure_days=200,
+            has_lane_profile=True,
+            lane_history_days=120,
+            has_iot_events=True,
+        )
+
+        result = evaluator.evaluate(metadata)
+
+        assert result.decision == CRODecision.ESCALATE
+        assert CROReasonCode.MISSING_RISK_METADATA in result.reasons
+        assert result.blocks_execution is True
+
+    def test_missing_data_quality_escalates(self, evaluator: CROPolicyEvaluator):
+        """FAIL-CLOSED: Missing data_quality_score → ESCALATE."""
+        metadata = CRORiskMetadata(
+            data_quality_score=None,  # Missing
+            risk_band="LOW",
+            has_carrier_profile=True,
+            carrier_tenure_days=200,
+            has_lane_profile=True,
+            lane_history_days=120,
+            has_iot_events=True,
+        )
+
+        result = evaluator.evaluate(metadata)
+
+        assert result.decision == CRODecision.ESCALATE
+        assert CROReasonCode.MISSING_RISK_METADATA in result.reasons
+
+    def test_unknown_band_escalates(self, evaluator: CROPolicyEvaluator):
+        """FAIL-CLOSED: Unknown risk band → ESCALATE."""
+        metadata = CRORiskMetadata(
+            data_quality_score=0.90,
+            risk_band="INVALID_BAND",  # Unknown
+            has_carrier_profile=True,
+            carrier_tenure_days=200,
+            has_lane_profile=True,
+            lane_history_days=120,
+            has_iot_events=True,
+        )
+
+        result = evaluator.evaluate(metadata)
+
+        assert result.decision == CRODecision.ESCALATE
+
+
+# ---------------------------------------------------------------------------
+# CROPolicyEvaluator Tests — Constraints (Additional factors)
+# ---------------------------------------------------------------------------
+
+
+class TestCROConstraints:
+    """Tests for constraint-triggering conditions."""
+
+    def test_new_carrier_adds_constraint(self, evaluator: CROPolicyEvaluator):
+        """New carrier (tenure < 90 days) adds constraint to decision."""
+        metadata = CRORiskMetadata(
+            data_quality_score=0.80,
+            risk_band="MEDIUM",
+            has_carrier_profile=True,
+            carrier_tenure_days=60,  # Below 90 day threshold
+            has_lane_profile=True,
+            lane_history_days=120,
+            has_iot_events=True,
+        )
+
+        result = evaluator.evaluate(metadata)
+
+        assert result.decision == CRODecision.ALLOW_WITH_CONSTRAINTS
+        assert CROReasonCode.NEW_CARRIER_INSUFFICIENT_TENURE in result.reasons
+
+    def test_new_lane_adds_constraint(self, evaluator: CROPolicyEvaluator):
+        """New lane (history < 60 days) adds constraint to decision."""
+        metadata = CRORiskMetadata(
+            data_quality_score=0.80,
+            risk_band="MEDIUM",
+            has_carrier_profile=True,
+            carrier_tenure_days=200,
+            has_lane_profile=True,
+            lane_history_days=30,  # Below 60 day threshold
+            has_iot_events=True,
+        )
+
+        result = evaluator.evaluate(metadata)
+
+        assert result.decision == CRODecision.ALLOW_WITH_CONSTRAINTS
+        assert CROReasonCode.NEW_LANE_INSUFFICIENT_HISTORY in result.reasons
+
+    def test_missing_iot_for_temp_control_adds_constraint(
+        self, evaluator: CROPolicyEvaluator
+    ):
+        """Missing IoT for temp control adds constraint."""
+        metadata = CRORiskMetadata(
+            data_quality_score=0.80,
+            risk_band="MEDIUM",
             has_carrier_profile=True,
             carrier_tenure_days=200,
             has_lane_profile=True,
@@ -175,243 +555,60 @@ class TestCROEscalateTriggers:
 
         result = evaluator.evaluate(metadata)
 
-        assert result.decision == CRODecision.ESCALATE
-        assert CROReasonCode.MISSING_IOT_EVENTS_WHEN_REQUIRED in result.reasons
-        assert result.blocks_execution is True
-
-    def test_missing_iot_for_hazmat_escalates(self, evaluator: CROPolicyEvaluator):
-        """PAC Requirement: Missing IoT when required for hazmat → ESCALATE."""
-        metadata = CRORiskMetadata(
-            data_quality_score=0.90,
-            has_carrier_profile=True,
-            carrier_tenure_days=200,
-            has_lane_profile=True,
-            lane_history_days=120,
-            has_iot_events=False,  # Missing IoT
-            is_hazmat=True,  # Requires IoT
-        )
-
-        result = evaluator.evaluate(metadata)
-
-        assert result.decision == CRODecision.ESCALATE
-        assert CROReasonCode.MISSING_IOT_EVENTS_WHEN_REQUIRED in result.reasons
-
-    def test_missing_iot_for_high_value_escalates(self, evaluator: CROPolicyEvaluator):
-        """PAC Requirement: Missing IoT for high-value shipment → ESCALATE."""
-        metadata = CRORiskMetadata(
-            data_quality_score=0.90,
-            has_carrier_profile=True,
-            carrier_tenure_days=200,
-            has_lane_profile=True,
-            lane_history_days=120,
-            has_iot_events=False,  # Missing IoT
-            value_usd=150_000.0,  # Above 100k threshold
-        )
-
-        result = evaluator.evaluate(metadata)
-
-        assert result.decision == CRODecision.ESCALATE
+        assert result.decision == CRODecision.ALLOW_WITH_CONSTRAINTS
         assert CROReasonCode.MISSING_IOT_EVENTS_WHEN_REQUIRED in result.reasons
 
 
 # ---------------------------------------------------------------------------
-# CROPolicyEvaluator Tests — HOLD Triggers
+# RiskPolicyDecision Tests (PAC Section 5)
 # ---------------------------------------------------------------------------
 
 
-class TestCROHoldTriggers:
-    """Tests for conditions that trigger HOLD decision."""
+class TestRiskPolicyDecision:
+    """Tests for RiskPolicyDecision output contract per PAC Section 5."""
 
-    def test_missing_carrier_profile_holds(self, evaluator: CROPolicyEvaluator):
-        """PAC Requirement: Missing carrier_profile → HOLD."""
+    def test_policy_decision_included_in_result(self, evaluator: CROPolicyEvaluator):
+        """CROPolicyResult includes RiskPolicyDecision."""
         metadata = CRORiskMetadata(
-            data_quality_score=0.90,
-            has_carrier_profile=False,  # Missing carrier profile
-            carrier_tenure_days=None,
-            has_lane_profile=True,
-            lane_history_days=120,
-            has_iot_events=True,
-        )
-
-        result = evaluator.evaluate(metadata)
-
-        assert result.decision == CRODecision.HOLD
-        assert CROReasonCode.MISSING_CARRIER_PROFILE in result.reasons
-        assert result.blocks_execution is True
-
-    def test_missing_lane_profile_holds(self, evaluator: CROPolicyEvaluator):
-        """PAC Requirement: Missing lane_profile → HOLD."""
-        metadata = CRORiskMetadata(
-            data_quality_score=0.90,
-            has_carrier_profile=True,
-            carrier_tenure_days=200,
-            has_lane_profile=False,  # Missing lane profile
-            lane_history_days=None,
-            has_iot_events=True,
-        )
-
-        result = evaluator.evaluate(metadata)
-
-        assert result.decision == CRODecision.HOLD
-        assert CROReasonCode.MISSING_LANE_PROFILE in result.reasons
-        assert result.blocks_execution is True
-
-    def test_missing_both_profiles_holds_with_both_reasons(self, evaluator: CROPolicyEvaluator):
-        """Missing both profiles → HOLD with both reasons."""
-        metadata = CRORiskMetadata(
-            data_quality_score=0.90,
-            has_carrier_profile=False,
-            carrier_tenure_days=None,
-            has_lane_profile=False,
-            lane_history_days=None,
-            has_iot_events=True,
-        )
-
-        result = evaluator.evaluate(metadata)
-
-        assert result.decision == CRODecision.HOLD
-        assert CROReasonCode.MISSING_CARRIER_PROFILE in result.reasons
-        assert CROReasonCode.MISSING_LANE_PROFILE in result.reasons
-
-
-# ---------------------------------------------------------------------------
-# CROPolicyEvaluator Tests — TIGHTEN_TERMS Triggers
-# ---------------------------------------------------------------------------
-
-
-class TestCROTightenTermsTriggers:
-    """Tests for conditions that trigger TIGHTEN_TERMS decision."""
-
-    def test_new_carrier_tightens_terms(self, evaluator: CROPolicyEvaluator):
-        """PAC Requirement: New carrier (tenure < 90 days) → TIGHTEN_TERMS."""
-        metadata = CRORiskMetadata(
-            data_quality_score=0.90,
-            has_carrier_profile=True,
-            carrier_tenure_days=60,  # Below 90 day threshold
-            has_lane_profile=True,
-            lane_history_days=120,
-            has_iot_events=True,
-        )
-
-        result = evaluator.evaluate(metadata)
-
-        assert result.decision == CRODecision.TIGHTEN_TERMS
-        assert CROReasonCode.NEW_CARRIER_INSUFFICIENT_TENURE in result.reasons
-        assert result.blocks_execution is False
-
-    def test_carrier_at_threshold_approves(self, evaluator: CROPolicyEvaluator):
-        """Carrier tenure == 90 days should NOT trigger tightening."""
-        metadata = CRORiskMetadata(
-            data_quality_score=0.90,
-            has_carrier_profile=True,
-            carrier_tenure_days=90,  # Exactly at threshold
-            has_lane_profile=True,
-            lane_history_days=120,
-            has_iot_events=True,
-        )
-
-        result = evaluator.evaluate(metadata)
-
-        assert result.decision == CRODecision.APPROVE
-        assert CROReasonCode.NEW_CARRIER_INSUFFICIENT_TENURE not in result.reasons
-
-    def test_new_lane_tightens_terms(self, evaluator: CROPolicyEvaluator):
-        """PAC Requirement: New lane (history < 60 days) → TIGHTEN_TERMS."""
-        metadata = CRORiskMetadata(
-            data_quality_score=0.90,
+            data_quality_score=0.85,
+            risk_band="LOW",
             has_carrier_profile=True,
             carrier_tenure_days=200,
             has_lane_profile=True,
-            lane_history_days=30,  # Below 60 day threshold
-            has_iot_events=True,
-        )
-
-        result = evaluator.evaluate(metadata)
-
-        assert result.decision == CRODecision.TIGHTEN_TERMS
-        assert CROReasonCode.NEW_LANE_INSUFFICIENT_HISTORY in result.reasons
-        assert result.blocks_execution is False
-
-    def test_lane_at_threshold_approves(self, evaluator: CROPolicyEvaluator):
-        """Lane history == 60 days should NOT trigger tightening."""
-        metadata = CRORiskMetadata(
-            data_quality_score=0.90,
-            has_carrier_profile=True,
-            carrier_tenure_days=200,
-            has_lane_profile=True,
-            lane_history_days=60,  # Exactly at threshold
-            has_iot_events=True,
-        )
-
-        result = evaluator.evaluate(metadata)
-
-        assert result.decision == CRODecision.APPROVE
-
-    def test_new_carrier_and_lane_tightens_with_both_reasons(self, evaluator: CROPolicyEvaluator):
-        """New carrier AND new lane → TIGHTEN_TERMS with both reasons."""
-        metadata = CRORiskMetadata(
-            data_quality_score=0.90,
-            has_carrier_profile=True,
-            carrier_tenure_days=60,  # New carrier
-            has_lane_profile=True,
-            lane_history_days=30,  # New lane
-            has_iot_events=True,
-        )
-
-        result = evaluator.evaluate(metadata)
-
-        assert result.decision == CRODecision.TIGHTEN_TERMS
-        assert CROReasonCode.NEW_CARRIER_INSUFFICIENT_TENURE in result.reasons
-        assert CROReasonCode.NEW_LANE_INSUFFICIENT_HISTORY in result.reasons
-
-
-# ---------------------------------------------------------------------------
-# CROPolicyEvaluator Tests — Decision Priority
-# ---------------------------------------------------------------------------
-
-
-class TestCRODecisionPriority:
-    """Tests for decision priority (more restrictive wins)."""
-
-    def test_escalate_beats_hold(self, evaluator: CROPolicyEvaluator):
-        """ESCALATE (data quality) should beat HOLD (missing profile)."""
-        metadata = CRORiskMetadata(
-            data_quality_score=0.50,  # Triggers ESCALATE
-            has_carrier_profile=False,  # Would trigger HOLD
-            carrier_tenure_days=None,
-            has_lane_profile=True,
             lane_history_days=120,
             has_iot_events=True,
         )
 
         result = evaluator.evaluate(metadata)
 
-        assert result.decision == CRODecision.ESCALATE
-        assert CROReasonCode.DATA_QUALITY_BELOW_THRESHOLD in result.reasons
+        assert result.policy_decision is not None
+        assert isinstance(result.policy_decision, RiskPolicyDecision)
+        assert result.policy_decision.policy_decision == CRODecision.ALLOW
+        assert result.policy_decision.risk_band == "LOW"
+        assert result.policy_decision.data_quality_score == 0.85
 
-    def test_hold_beats_tighten(self, evaluator: CROPolicyEvaluator):
-        """HOLD (missing profile) should beat TIGHTEN_TERMS (new carrier)."""
+    def test_policy_decision_to_dict(self, evaluator: CROPolicyEvaluator):
+        """RiskPolicyDecision.to_dict() produces correct structure."""
         metadata = CRORiskMetadata(
-            data_quality_score=0.90,
-            has_carrier_profile=False,  # Triggers HOLD
-            carrier_tenure_days=None,
+            data_quality_score=0.80,
+            risk_band="HIGH",
+            has_carrier_profile=True,
+            carrier_tenure_days=200,
             has_lane_profile=True,
-            lane_history_days=30,  # Would trigger TIGHTEN_TERMS
+            lane_history_days=120,
             has_iot_events=True,
         )
 
         result = evaluator.evaluate(metadata)
+        pd_dict = result.policy_decision.to_dict()
 
-        assert result.decision == CRODecision.HOLD
-        assert CROReasonCode.MISSING_CARRIER_PROFILE in result.reasons
-
-    def test_approve_when_all_checks_pass(self, evaluator: CROPolicyEvaluator, metadata_all_good: CRORiskMetadata):
-        """PAC Requirement: APPROVE when all checks pass."""
-        result = evaluator.evaluate(metadata_all_good)
-
-        assert result.decision == CRODecision.APPROVE
-        assert CROReasonCode.ALL_CHECKS_PASSED in result.reasons
-        assert result.blocks_execution is False
+        assert "policy_decision" in pd_dict
+        assert "policy_reason" in pd_dict
+        assert "applied_threshold" in pd_dict
+        assert "risk_band" in pd_dict
+        assert "data_quality_score" in pd_dict
+        assert "issued_at" in pd_dict
+        assert pd_dict["policy_decision"] == "HOLD"
 
 
 # ---------------------------------------------------------------------------
@@ -422,11 +619,39 @@ class TestCRODecisionPriority:
 class TestCROOverride:
     """Tests for CRO override logic (more restrictive band wins)."""
 
+    def test_deny_overrides_any_band(self):
+        """PAC: CRO DENY overrides any risk band to CRITICAL."""
+        policy_decision = RiskPolicyDecision(
+            policy_decision=CRODecision.DENY,
+            policy_reason="test",
+            applied_threshold="test",
+            risk_band="LOW",
+            data_quality_score=0.5,
+        )
+        cro_result = CROPolicyResult(
+            decision=CRODecision.DENY,
+            reasons=(CROReasonCode.DATA_QUALITY_CRITICAL,),
+            policy_decision=policy_decision,
+        )
+
+        final_band, decision = apply_cro_override("LOW", cro_result)
+
+        assert final_band == "CRITICAL"
+        assert decision == CRODecision.DENY
+
     def test_escalate_overrides_low_band(self):
-        """PAC Requirement: CRO ESCALATE overrides LOW risk band to CRITICAL."""
+        """PAC: CRO ESCALATE overrides LOW risk band to CRITICAL."""
+        policy_decision = RiskPolicyDecision(
+            policy_decision=CRODecision.ESCALATE,
+            policy_reason="test",
+            applied_threshold="test",
+            risk_band="LOW",
+            data_quality_score=0.5,
+        )
         cro_result = CROPolicyResult(
             decision=CRODecision.ESCALATE,
-            reasons=(CROReasonCode.DATA_QUALITY_BELOW_THRESHOLD,),
+            reasons=(CROReasonCode.DATA_QUALITY_CRITICAL,),
+            policy_decision=policy_decision,
         )
 
         final_band, decision = apply_cro_override("LOW", cro_result)
@@ -435,10 +660,18 @@ class TestCROOverride:
         assert decision == CRODecision.ESCALATE
 
     def test_hold_overrides_medium_band(self):
-        """PAC Requirement: CRO HOLD overrides MEDIUM risk band to CRITICAL."""
+        """PAC: CRO HOLD overrides MEDIUM risk band to CRITICAL."""
+        policy_decision = RiskPolicyDecision(
+            policy_decision=CRODecision.HOLD,
+            policy_reason="test",
+            applied_threshold="test",
+            risk_band="MEDIUM",
+            data_quality_score=0.8,
+        )
         cro_result = CROPolicyResult(
             decision=CRODecision.HOLD,
-            reasons=(CROReasonCode.MISSING_CARRIER_PROFILE,),
+            reasons=(CROReasonCode.HIGH_RISK_BAND_REQUIRES_HOLD,),
+            policy_decision=policy_decision,
         )
 
         final_band, decision = apply_cro_override("MEDIUM", cro_result)
@@ -446,40 +679,64 @@ class TestCROOverride:
         assert final_band == "CRITICAL"
         assert decision == CRODecision.HOLD
 
-    def test_tighten_terms_raises_low_to_high(self):
-        """PAC Requirement: TIGHTEN_TERMS raises LOW band to HIGH."""
+    def test_allow_with_constraints_raises_low_to_high(self):
+        """PAC: ALLOW_WITH_CONSTRAINTS raises LOW band to HIGH."""
+        policy_decision = RiskPolicyDecision(
+            policy_decision=CRODecision.ALLOW_WITH_CONSTRAINTS,
+            policy_reason="test",
+            applied_threshold="test",
+            risk_band="LOW",
+            data_quality_score=0.75,
+        )
         cro_result = CROPolicyResult(
-            decision=CRODecision.TIGHTEN_TERMS,
-            reasons=(CROReasonCode.NEW_CARRIER_INSUFFICIENT_TENURE,),
+            decision=CRODecision.ALLOW_WITH_CONSTRAINTS,
+            reasons=(CROReasonCode.MEDIUM_RISK_BAND_CONSTRAINED,),
+            policy_decision=policy_decision,
         )
 
         final_band, decision = apply_cro_override("LOW", cro_result)
 
         assert final_band == "HIGH"
-        assert decision == CRODecision.TIGHTEN_TERMS
+        assert decision == CRODecision.ALLOW_WITH_CONSTRAINTS
 
-    def test_tighten_terms_preserves_critical(self):
-        """TIGHTEN_TERMS should preserve CRITICAL band (already high enough)."""
+    def test_allow_with_constraints_preserves_critical(self):
+        """ALLOW_WITH_CONSTRAINTS should preserve CRITICAL band."""
+        policy_decision = RiskPolicyDecision(
+            policy_decision=CRODecision.ALLOW_WITH_CONSTRAINTS,
+            policy_reason="test",
+            applied_threshold="test",
+            risk_band="CRITICAL",
+            data_quality_score=0.75,
+        )
         cro_result = CROPolicyResult(
-            decision=CRODecision.TIGHTEN_TERMS,
-            reasons=(CROReasonCode.NEW_CARRIER_INSUFFICIENT_TENURE,),
+            decision=CRODecision.ALLOW_WITH_CONSTRAINTS,
+            reasons=(CROReasonCode.MEDIUM_RISK_BAND_CONSTRAINED,),
+            policy_decision=policy_decision,
         )
 
         final_band, decision = apply_cro_override("CRITICAL", cro_result)
 
         assert final_band == "CRITICAL"
 
-    def test_approve_preserves_original_band(self):
-        """APPROVE should preserve original risk band."""
+    def test_allow_preserves_original_band(self):
+        """ALLOW should preserve original risk band."""
+        policy_decision = RiskPolicyDecision(
+            policy_decision=CRODecision.ALLOW,
+            policy_reason="test",
+            applied_threshold="test",
+            risk_band="LOW",
+            data_quality_score=0.85,
+        )
         cro_result = CROPolicyResult(
-            decision=CRODecision.APPROVE,
-            reasons=(CROReasonCode.ALL_CHECKS_PASSED,),
+            decision=CRODecision.ALLOW,
+            reasons=(CROReasonCode.LOW_RISK_APPROVED,),
+            policy_decision=policy_decision,
         )
 
         final_band, decision = apply_cro_override("LOW", cro_result)
 
         assert final_band == "LOW"
-        assert decision == CRODecision.APPROVE
+        assert decision == CRODecision.ALLOW
 
 
 # ---------------------------------------------------------------------------
@@ -550,6 +807,7 @@ class TestCROPolicyResult:
         """Human-readable reasons are properly formatted."""
         metadata = CRORiskMetadata(
             data_quality_score=0.50,
+            risk_band="LOW",  # Required for evaluation
             has_carrier_profile=True,
             carrier_tenure_days=200,
             has_lane_profile=True,
@@ -561,21 +819,21 @@ class TestCROPolicyResult:
 
         reasons = result.human_readable_reasons
         assert len(reasons) > 0
-        assert any("quality" in r.lower() for r in reasons)
+        assert any("quality" in r.lower() or "critical" in r.lower() for r in reasons)
 
-    def test_result_includes_metadata_snapshot(self, evaluator: CROPolicyEvaluator, metadata_all_good: CRORiskMetadata):
+    def test_result_includes_metadata_snapshot(self, evaluator: CROPolicyEvaluator, metadata_low_risk_good_quality: CRORiskMetadata):
         """Result includes metadata snapshot for audit."""
-        result = evaluator.evaluate(metadata_all_good)
+        result = evaluator.evaluate(metadata_low_risk_good_quality)
 
         assert result.metadata_snapshot is not None
         assert "data_quality_score" in result.metadata_snapshot
         assert "carrier_tenure_days" in result.metadata_snapshot
 
-    def test_result_includes_policy_version(self, evaluator: CROPolicyEvaluator, metadata_all_good: CRORiskMetadata):
+    def test_result_includes_policy_version(self, evaluator: CROPolicyEvaluator, metadata_low_risk_good_quality: CRORiskMetadata):
         """Result includes policy version."""
-        result = evaluator.evaluate(metadata_all_good)
+        result = evaluator.evaluate(metadata_low_risk_good_quality)
 
-        assert result.policy_version == "cro_policy@v1.0.0"
+        assert result.policy_version == "CRO-POLICY-V1"
 
 
 # ---------------------------------------------------------------------------
@@ -603,10 +861,10 @@ class TestCROAuditLogging:
         assert result.blocks_execution is True
         assert any("cro_policy" in r.message.lower() for r in caplog.records)
 
-    def test_evaluation_logs_info_when_allowed(self, evaluator: CROPolicyEvaluator, metadata_all_good: CRORiskMetadata, caplog):
+    def test_evaluation_logs_info_when_allowed(self, evaluator: CROPolicyEvaluator, metadata_low_risk_good_quality: CRORiskMetadata, caplog):
         """Allowing decisions log at INFO level."""
         with caplog.at_level(logging.INFO):
-            result = evaluator.evaluate(metadata_all_good)
+            result = evaluator.evaluate(metadata_low_risk_good_quality)
 
         assert result.blocks_execution is False
         assert any("cro_policy" in r.message.lower() for r in caplog.records)
@@ -620,12 +878,12 @@ class TestCROAuditLogging:
 class TestModuleFunctions:
     """Tests for module-level convenience functions."""
 
-    def test_evaluate_cro_policy_function(self, metadata_all_good: CRORiskMetadata):
+    def test_evaluate_cro_policy_function(self, metadata_low_risk_good_quality: CRORiskMetadata):
         """evaluate_cro_policy() returns valid result."""
-        result = evaluate_cro_policy(metadata_all_good)
+        result = evaluate_cro_policy(metadata_low_risk_good_quality)
 
         assert isinstance(result, CROPolicyResult)
-        assert result.decision == CRODecision.APPROVE
+        assert result.decision == CRODecision.ALLOW
 
 
 # ---------------------------------------------------------------------------
@@ -636,10 +894,11 @@ class TestModuleFunctions:
 class TestCROEdgeCases:
     """Edge case tests for CRO policy evaluation."""
 
-    def test_none_data_quality_score_passes(self, evaluator: CROPolicyEvaluator):
-        """None data_quality_score should not trigger escalation."""
+    def test_none_data_quality_score_fails_closed(self, evaluator: CROPolicyEvaluator):
+        """None data_quality_score should trigger fail-closed (ESCALATE)."""
         metadata = CRORiskMetadata(
             data_quality_score=None,  # Not provided
+            risk_band="LOW",  # Required for new logic
             has_carrier_profile=True,
             carrier_tenure_days=200,
             has_lane_profile=True,
@@ -649,12 +908,15 @@ class TestCROEdgeCases:
 
         result = evaluator.evaluate(metadata)
 
-        assert CROReasonCode.DATA_QUALITY_BELOW_THRESHOLD not in result.reasons
+        # Per fail-closed semantics, missing data_quality triggers ESCALATE
+        assert result.decision == CRODecision.ESCALATE
+        assert CROReasonCode.MISSING_RISK_METADATA in result.reasons
 
-    def test_none_tenure_days_does_not_tighten(self, evaluator: CROPolicyEvaluator):
-        """None tenure_days (with profile present) should not trigger tightening."""
+    def test_none_tenure_days_does_not_add_constraint(self, evaluator: CROPolicyEvaluator):
+        """None tenure_days (with profile present) should not add constraint."""
         metadata = CRORiskMetadata(
-            data_quality_score=0.90,
+            data_quality_score=0.80,
+            risk_band="MEDIUM",
             has_carrier_profile=True,
             carrier_tenure_days=None,  # Not provided
             has_lane_profile=True,
@@ -669,7 +931,8 @@ class TestCROEdgeCases:
     def test_iot_not_required_for_low_value_normal_shipment(self, evaluator: CROPolicyEvaluator):
         """IoT not required for low-value, non-hazmat, non-temp-control shipment."""
         metadata = CRORiskMetadata(
-            data_quality_score=0.90,
+            data_quality_score=0.85,
+            risk_band="LOW",
             has_carrier_profile=True,
             carrier_tenure_days=200,
             has_lane_profile=True,
@@ -683,4 +946,4 @@ class TestCROEdgeCases:
         result = evaluator.evaluate(metadata)
 
         assert CROReasonCode.MISSING_IOT_EVENTS_WHEN_REQUIRED not in result.reasons
-        assert result.decision == CRODecision.APPROVE
+        assert result.decision == CRODecision.ALLOW

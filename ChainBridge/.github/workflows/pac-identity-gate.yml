@@ -1,0 +1,112 @@
+# PAC Identity Gate — CI Enforcement
+#
+# Authority: PAC-BENSON-FUNNEL-ENFORCEMENT-CI-GATE-01
+# Owner: Benson (GID-00)
+# Mode: FAIL_CLOSED
+#
+# This workflow enforces the identity funnel at CI time.
+# Non-compliant PACs cannot land. Drift is not a discussion.
+
+name: PAC Identity Gate
+
+on:
+  pull_request:
+    paths:
+      - 'docs/governance/**'
+      - '**/PAC-*.md'
+      - '**/WRAP-*.md'
+      - 'AGENTS/**'
+      - '.github/workflows/pac-identity-gate.yml'
+      - 'scripts/ci/validate_pac_identity.py'
+  push:
+    branches:
+      - main
+      - 'fix/**'
+      - 'feature/**'
+    paths:
+      - 'docs/governance/**'
+      - '**/PAC-*.md'
+      - '**/WRAP-*.md'
+      - 'AGENTS/**'
+
+jobs:
+  validate-pac-identity:
+    name: Validate PAC/WRAP Identity Compliance
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Validate Registry Exists
+        run: |
+          if [ ! -f "docs/governance/AGENT_REGISTRY.json" ]; then
+            echo "✗ FATAL: AGENT_REGISTRY.json not found"
+            exit 2
+          fi
+          echo "✓ Registry found"
+
+      - name: Validate PAC/WRAP Identity Compliance
+        run: |
+          echo "=============================================="
+          echo "PAC Identity Gate — CI Enforcement"
+          echo "Authority: Benson (GID-00)"
+          echo "Failure Mode: FAIL_CLOSED"
+          echo "=============================================="
+          
+          python scripts/ci/validate_pac_identity.py docs/governance/
+          
+          exit_code=$?
+          if [ $exit_code -ne 0 ]; then
+            echo ""
+            echo "=============================================="
+            echo "✗ MERGE BLOCKED — Identity violations detected"
+            echo "=============================================="
+            echo "Drift is not a discussion. Fix violations before merge."
+            exit $exit_code
+          fi
+
+      - name: Verify Funnel Stage Declarations
+        run: |
+          echo "Checking for PAC files missing Funnel Stage..."
+          
+          # Find PAC files and check for Funnel Stage
+          missing_funnel=()
+          while IFS= read -r -d '' file; do
+            if ! grep -qi "Funnel Stage:" "$file"; then
+              missing_funnel+=("$file")
+            fi
+          done < <(find . -name "PAC-*.md" -print0 2>/dev/null)
+          
+          if [ ${#missing_funnel[@]} -gt 0 ]; then
+            echo "✗ PAC files missing Funnel Stage declaration:"
+            printf '  - %s\n' "${missing_funnel[@]}"
+            # Note: This is a warning for now, validator handles enforcement
+          else
+            echo "✓ All PAC files have Funnel Stage declarations (or no PAC files found)"
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          echo ""
+          echo "=============================================="
+          echo "PAC Identity Gate — Summary"
+          echo "=============================================="
+          echo "Registry: docs/governance/AGENT_REGISTRY.json"
+          echo "Validator: scripts/ci/validate_pac_identity.py"
+          echo ""
+          echo "Enforced Invariants:"
+          echo "  - RUNTIME_ACTIVATION_ACK block required"
+          echo "  - AGENT_ACTIVATION_ACK block required"
+          echo "  - Block order enforced"
+          echo "  - Agent identity validated against registry"
+          echo "  - Runtime GID usage forbidden"
+          echo "  - Funnel Stage declaration required"
+          echo ""
+          echo "Governance maxim: No identity, no ship."
