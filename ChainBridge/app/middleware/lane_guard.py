@@ -1,25 +1,49 @@
 """Lane Guard Middleware — Service Boundary Protection.
 
-╔══════════════════════════════════════════════════════════════════════╗
-║ EXECUTING AGENT: Cody (GID-01) — Senior Backend Engineer             ║
-║ EXECUTING COLOR: 🔵 BLUE                                             ║
-║ PAC: PAC-CODY-A6-BACKEND-GUARDRAILS-01                               ║
-╚══════════════════════════════════════════════════════════════════════╝
+════════════════════════════════════════════════════════════════════════════════
+🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵
+GID-01 — CODY (BACKEND ENGINEERING)
+PAC-CODY-A6-BACKEND-GUARDRAILS-CORRECTION-AND-REALIGNMENT-01
+🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵
+════════════════════════════════════════════════════════════════════════════════
 
-DOCTRINE (FAIL-CLOSED):
+I. EXECUTING AGENT (MANDATORY)
+
+EXECUTING AGENT: CODY
+GID: GID-01
+EXECUTING COLOR: 🔵 BLUE — Backend Engineering Lane
+
+⸻
+
+II. DOCTRINE (FAIL-CLOSED)
+
 Service boundaries MUST be enforced at the middleware layer:
 1. Runtime → Agent methods: BLOCKED
 2. Agent → Agent-only methods: ALLOWED
 3. Public → Protected methods: BLOCKED
 4. Settlement → Unvalidated PDOs: BLOCKED
 
-INVARIANTS (NON-NEGOTIABLE):
+⸻
+
+III. INVARIANTS (NON-NEGOTIABLE)
+
 - Lane violations fail immediately
 - No soft bypasses
 - All violations logged for audit
 - Defense in depth (multiple gates)
 
-Author: Cody (GID-01) — Senior Backend Engineer
+⸻
+
+PROHIBITED:
+- Identity drift
+- Color violation
+- Lane bypass
+
+⸻
+
+Original PAC: PAC-CODY-A6-BACKEND-GUARDRAILS-01
+
+════════════════════════════════════════════════════════════════════════════════
 """
 from __future__ import annotations
 
@@ -551,6 +575,7 @@ def get_lane_guard() -> LaneGuard:
     return _get_lane_guard()
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-# END — Cody (GID-01) — 🔵
-# ═══════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════════
+# END — CODY (GID-01) — 🔵 BLUE
+# 🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵
+# ════════════════════════════════════════════════════════════════════════════════
