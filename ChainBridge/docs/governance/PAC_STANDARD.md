@@ -1,24 +1,130 @@
 # ChainBridge PAC Standard
 
-**Owner:** GID-08 ALEX — Governance & Alignment Engine
+**Owner:** GID-00 BENSON — Chief Architect & Orchestrator
+**Version:** 4.2.0
+**Last Updated:** 2025-12-22
+**Canonical Templates:** [PAC_TEMPLATE_V1.md](PAC_TEMPLATE_V1.md), [WRAP_TEMPLATE_V1.md](WRAP_TEMPLATE_V1.md)
+**CI Enforcement:** [pac-identity-gate.yml](../../.github/workflows/pac-identity-gate.yml)
+**Amended By:** PAC-BENSON-IDENTITY-DRIFT-ELIMINATION-01
 
-## Visual Agent Legend (Canonical Color Map)
+---
 
-| GID | Agent | Role | Color | Emoji | Hex |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **GID-01** | **CODY** | Backend Engineering | Blue | 🔵 | `#0066CC` |
-| **GID-02** | **MAGGIE** | ML Engineering | Purple | 🟣 | `#9933FF` |
-| **GID-03** | **SONNY** | UI Engineering | Green | 🟢 | `#00CC66` |
-| **GID-04** | **DAN** | DevOps & CI/CD | Orange | 🟠 | `#FF6600` |
-| **GID-05** | **ATLAS** | Repository Management | Brown | 🟤 | `#8B4513` |
-| **GID-06** | **SAM** | Security Engineering | Red | 🔴 | `#CC0000` |
-| **GID-07** | **DANA** | Data Engineering | Yellow | 🟡 | `#FFCC00` |
-| **GID-08** | **ALEX** | Governance & Alignment | White | ⚪ | `#FFFFFF` |
-| **GID-09** | **CINDY** | Backend Expansion | Diamond Blue | 🔷 | `#1E90FF` |
-| **GID-10** | **PAX** | Tokenization & Settlement | Gold | 💰 | `#FFD700` |
-| **GID-11** | **LIRA** | UX Design | Pink | 🩷 | `#FF69B4` |
+## Identity Drift Elimination — HARD INVARIANTS
 
-> **Source of Truth:** `.github/agents/colors.json` — Colors are **governance-locked** and immutable.
+**Authority:** PAC-BENSON-IDENTITY-DRIFT-ELIMINATION-01
+**Drift Class Eliminated:** IDENTITY_PRESENTATION_DRIFT
+**Enforcement:** HARD_FAIL
+
+```yaml
+INVARIANT_SET IDENTITY_RESOLUTION {
+  INVARIANT_01: "AGENT_COLOR_MUST_MATCH_REGISTRY" → HARD_FAIL
+  INVARIANT_02: "AGENT_ICON_MUST_MATCH_REGISTRY" → HARD_FAIL
+  INVARIANT_03: "NO_FREE_TEXT_AGENT_IDENTITY_FIELDS" → HARD_FAIL
+  INVARIANT_04: "AUTHORITY_DOES_NOT_IMPLY_NEW_COLOR" → HARD_FAIL
+  INVARIANT_05: "BLACK_RESERVED_FOR_UI_ONLY" → HARD_FAIL
+}
+
+REGISTRY_BINDING {
+  source_of_truth: "docs/governance/AGENT_REGISTRY.json"
+  lookup_required: true
+  cache_allowed: false
+  mismatch_action: "EXECUTION_ABORT"
+}
+```
+
+### FORBIDDEN — Will Cause HARD_FAIL
+
+- ❌ Free-text color values (e.g., "Black", "Navy", "Aqua")
+- ❌ Implied colors from authority level (ROOT ≠ BLACK)
+- ❌ Runtime using agent identity fields
+- ❌ Manual color/icon override
+- ❌ Fallback identity when registry lookup fails
+- ❌ BLACK for any agent (reserved for UI only)
+
+---
+
+## CI Enforcement — MANDATORY
+
+**Authority:** PAC-BENSON-FUNNEL-ENFORCEMENT-CI-GATE-01
+**Failure Mode:** FAIL_CLOSED
+
+All PACs and WRAPs are validated by CI before merge. Non-compliant documents **cannot land**.
+
+### CI-Enforced Invariants
+
+```yaml
+CI_INVARIANTS {
+  pac_must_contain_blocks: [
+    "RUNTIME_ACTIVATION_ACK",
+    "AGENT_ACTIVATION_ACK"
+  ]
+  block_order_enforced: true
+  agent_identity_required: [
+    "gid",
+    "color",
+    "icon",
+    "execution_lane"
+  ]
+  runtime_identity_constraints: {
+    gid_forbidden: true
+    agent_name_forbidden: true
+  }
+  wrap_identity_echo_required: true
+  registry_source_of_truth: "docs/governance/AGENT_REGISTRY.json"
+  failure_mode: "FAIL_CLOSED"
+}
+```
+
+### Funnel Stage Declaration
+
+Every PAC **MUST** include:
+
+```
+Funnel Stage: <STAGE>
+```
+
+**Allowed values:**
+- `CANONICAL` — Canonical document creation/update
+- `IDENTITY` — Identity reconciliation
+- `TEMPLATE` — Template definition/lock
+- `CI_ENFORCEMENT` — CI/Automation enforcement
+- `EXECUTION` — Normal execution work
+
+**Invalid or missing Funnel Stage → CI FAIL**
+
+### Validator Location
+
+- **Script:** `scripts/ci/validate_pac_identity.py`
+- **Workflow:** `.github/workflows/pac-identity-gate.yml`
+
+Governance maxim: **Drift is not a discussion — it's a blocked merge.**
+
+---
+
+## Visual Agent Legend (Canonical Color Map v4.0.0)
+
+**⚠️ ALL COLORS MUST BE RESOLVED FROM AGENT_REGISTRY.json — NO FREE TEXT**
+
+| GID | Agent | Role | Color | Emoji |
+| :--- | :--- | :--- | :--- | :--- |
+| **GID-00** | **BENSON** | Chief Architect & Orchestrator | TEAL | 🟦🟩 |
+| **GID-01** | **CODY** | Backend Engineer | BLUE | 🔵 |
+| **GID-02** | **SONNY** | Frontend Engineer | YELLOW | 🟡 |
+| **GID-03** | **MIRA** | Research Lead | PURPLE | 🟣 |
+| **GID-04** | **CINDY** | Backend Scaling Engineer | CYAN | 🔷 |
+| **GID-05** | **ATLAS** | System State Engine | BLUE | 🟦 |
+| **GID-06** | **SAM** | Security & Threat Engineer | DARK_RED | 🔴 |
+| **GID-07** | **DAN** | DevOps & CI/CD Lead | GREEN | 🟢 |
+| **GID-08** | **ALEX** | Governance & Alignment Engine | WHITE | ⚪ |
+| **GID-09** | **LIRA** | UX Lead | PINK | 🩷 |
+| **GID-10** | **MAGGIE** | ML & Applied AI Lead | MAGENTA | 💗 |
+| **GID-12** | **RUBY** | Chief Risk Officer | CRIMSON | ♦️ |
+
+> **GID-11:** DEPRECATED — Do not use
+> **Forbidden Aliases:** DANA, PAX — These are NOT agents
+> **BLACK:** Reserved for UI only — NOT an agent color
+>
+> **Source of Truth:** `docs/governance/AGENT_REGISTRY.json` (v4.0.0) — Colors are **governance-locked** and immutable.
 
 ## Purpose
 This document defines the canonical Planning & Alignment Cycle (PAC) structure for every ChainBridge agent. It establishes the sections, WRAP requirements, and post-PAC logging discipline that Benson (GID-00) and the rest of the command stack rely on for governance truth.
@@ -35,18 +141,29 @@ In a multi-agent environment, context switching is the primary risk. Colors prov
 2.  **Drift Warning:** If a "Blue" backend agent starts discussing "Green" UI components, the visual mismatch triggers an immediate correction.
 3.  **Session Hygiene:** Scrolling through a chat history becomes a color-coded map of the session's evolution.
 
-## Color Logic
-- **🔵 Blue (CODY):** Stability, logic, "blue chip" reliability (Backend Engineering).
-- **🟣 Purple (MAGGIE):** Wisdom, deep ML intelligence, AI-driven insight.
-- **🟢 Green (SONNY):** Growth, user-facing, "go" signal (Frontend/UI).
-- **🟠 Orange (DAN):** Construction, safety gear, infrastructure (DevOps).
-- **🟤 Brown (ATLAS):** Solid foundation, structure (Repository Management).
-- **🔴 Red (SAM):** Alert, critical defense, stop signal (Security).
-- **🟡 Yellow (DANA):** Data flow, analytics, ETL pipelines.
-- **⚪ White (ALEX):** Neutrality, blank slate, pure governance truth.
-- **🔷 Diamond Blue (CINDY):** Distinct but related to Blue; backend expansion.
-- **💰 Gold (PAX):** Value, finance, settlement, currency (Tokenization).
-- **🩷 Pink (LIRA):** Creativity, human-centered design (UX).
+## Color Logic — REGISTRY BOUND
+
+**All colors MUST be resolved from AGENT_REGISTRY.json. No free-text interpretation.**
+
+| Color | Agent | Semantic Meaning |
+|-------|-------|------------------|
+| **TEAL** | BENSON | Orchestration, executive authority |
+| **BLUE** | CODY, ATLAS | Backend stability, system state |
+| **YELLOW** | SONNY | Frontend, user-facing |
+| **PURPLE** | MIRA | Research, analysis |
+| **CYAN** | CINDY | Backend scaling |
+| **DARK_RED** | SAM | Security, threat defense |
+| **GREEN** | DAN | DevOps, CI/CD |
+| **WHITE** | ALEX | Governance, neutrality |
+| **PINK** | LIRA | UX, human-centered design |
+| **MAGENTA** | MAGGIE | ML/AI intelligence |
+| **CRIMSON** | RUBY | Risk, critical decisions |
+
+### FORBIDDEN Colors
+
+- **BLACK** — Reserved for UI only, not agent identity
+- **GOLD** — No agent assigned (PAX is forbidden alias)
+- **BROWN** — No agent currently uses (ATLAS is BLUE)
 
 ## PAC Color Enforcement Example
 
@@ -90,14 +207,58 @@ PAC-CODY-API-015 — API REFACTOR
 ```
 
 ## PAC Section Order (Template)
-Copy the skeleton below and replace the placeholder text with the specifics for the current PAC.
-**IMPORTANT:** Replace the ⚪ emojis with YOUR agent's specific color emoji.
 
-````markdown
-██████████████████████████████████████████████████████████████████
-🔵🔵🔵 GID-01 // CODY – BACKEND MIGRATION 🔵🔵🔵
-Title: <Concise PAC title>
-Target: <System/component impacted>
+**CANONICAL TEMPLATE:** See [PAC_TEMPLATE_V1.md](PAC_TEMPLATE_V1.md) for the authoritative structure.
+
+All PACs **MUST** use the locked template structure:
+
+| Section | Name | Required |
+|---------|------|----------|
+| 0 | AGENT_ACTIVATION_ACK | ✅ MANDATORY FIRST |
+| 1 | HEADER | ✅ |
+| 2 | CONTEXT & GOAL | ✅ |
+| 3 | CONSTRAINTS | ✅ |
+| 4 | LOCKS ACKNOWLEDGED | ✅ |
+| 5 | TASKS | ✅ |
+| 6 | FILE TARGETS | ✅ |
+| 7 | CLI | ✅ |
+| 8 | ACCEPTANCE | ✅ |
+| 9 | LOCK STATEMENT | ✅ |
+
+**Section 0 is MANDATORY FIRST.** No exceptions.
+
+---
+
+## Runtime vs Agent Separation
+
+**Critical Rule:** Runtimes (GitHub Copilot, ChatGPT, Claude, etc.) are NOT agents.
+
+| Property | Agent | Runtime |
+|----------|-------|---------|
+| Has GID | ✅ Yes | ❌ No |
+| Has Color | ✅ Yes | ❌ No |
+| Has Authority | ✅ Yes | ❌ Delegated only |
+| Identity | Unique | "Executing for Agent X" |
+| Can self-identify | ✅ Yes | ❌ FORBIDDEN |
+
+**Runtime MUST use:**
+```
+RUNTIME_ACTIVATION_ACK {
+  runtime_name: "GitHub Copilot"
+  gid: "N/A (RUNTIME)"
+  executing_for_agent: "CODY (GID-01)"
+  ...
+}
+```
+
+**Runtime MUST NOT claim:**
+- A GID
+- A color
+- Agent identity
+
+---
+
+## PAC Example (CODY)
 ██████████████████████████████████████████████████████████████████
 1) AGENT HEADER
 Agent: <Name + GID>
@@ -261,11 +422,26 @@ Every incident or failure **MUST** produce a training artifact.
 ---
 
 ## WRAP Requirements
-Every PAC concludes with a WRAP block that must include:
-- **Files touched:** Explicit list of paths (docs/, src/, scripts/, etc.).
-- **Tests / commands run:** Name the command(s) and whether they passed (e.g., `python benson_rsi_bot.py --test ✔`).
-- **Outcome summary:** Short paragraph that states completion status, partials, or blockers.
-- **Follow-ups:** Link to the next PAC or TODO items if work remains.
+
+**CANONICAL TEMPLATE:** See [WRAP_TEMPLATE_V1.md](WRAP_TEMPLATE_V1.md) for the authoritative structure.
+
+All WRAPs **MUST** include these sections in order:
+
+| Section | Name | Required |
+|---------|------|----------|
+| 0 | AGENT_ACTIVATION_ACK | ✅ MANDATORY FIRST |
+| 1 | EXECUTION_SUMMARY | ✅ |
+| 2 | TASK_STATUS | ✅ (PASS/FAIL only) |
+| 3 | ARTIFACTS_TOUCHED | ✅ |
+| 4 | TESTS_RUN | ✅ |
+| 5 | DEVIATIONS | ✅ (even if none) |
+| 6 | TRAINING_SIGNAL | ✅ |
+| 7 | FINAL_STATE | ✅ |
+
+**Narrative prose is FORBIDDEN inside WRAPs.**
+**Task status must be PASS or FAIL only — no partial, no ambiguous.**
+
+---
 
 ## Activity Log Rule
 After the WRAP is written, immediately update `docs/governance/AGENT_ACTIVITY_LOG.md` with a new bullet under your GID. Use the exact format below so Benson can parse updates programmatically:
@@ -284,7 +460,9 @@ Governance maxim: **If work is not recorded in `AGENT_ACTIVITY_LOG.md`, it did n
 - Failing to follow the standard or log updates means Benson will assume no progress occurred; such work may be reprioritized or reassigned.
 
 ## References
-- `docs/governance/PAC_STANDARD.md` (this file)
-- `docs/governance/AGENT_ACTIVITY_LOG.md`
-- `docs/product/AGENT_REGISTRY.md`
+- [PAC_TEMPLATE_V1.md](PAC_TEMPLATE_V1.md) — Canonical PAC structure (LOCKED)
+- [WRAP_TEMPLATE_V1.md](WRAP_TEMPLATE_V1.md) — Canonical WRAP structure (LOCKED)
+- [AGENT_REGISTRY.json](AGENT_REGISTRY.json) — Canonical agent identities (v4.0.0)
+- [AGENT_REGISTRY.md](AGENT_REGISTRY.md) — Human-readable registry
+- `docs/governance/AGENT_ACTIVITY_LOG.md` — Activity tracking
 - Related domain specs (API contracts, architecture docs, dashboards) as referenced per PAC.
