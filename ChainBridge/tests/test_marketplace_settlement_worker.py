@@ -1,28 +1,20 @@
 """Phase 2: Marketplace settlement worker tests.
 
 These tests validate the background worker for processing marketplace settlements.
-Due to sys.path conflicts between the monorepo 'app' package and chainiq-service 'app',
-these imports fail when conftest.py loads api.server first.
-
-Status: Deferred to Phase 2 (module exists but import path conflicts with ChainIQ)
 """
 import asyncio
 from datetime import datetime, timedelta, timezone
 from typing import Any, Tuple
 
 import pytest
-
-# Phase 2: This entire module requires marketplace imports that conflict with ChainIQ.
-# The conftest loads api.server which replaces app.* with chainiq-service's app package.
-# We use importorskip for the schema that definitely won't exist after conftest runs.
-pytest.importorskip("app.schemas.marketplace", reason="Marketplace schemas unavailable (sys.path conflict with ChainIQ)")
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from api.database import Base
 from api.eventbus import dispatcher
+
+# Namespace isolation handled by conftest.py pre-loading mechanism
 from app.models.marketplace import BuyIntent, Listing, SettlementRecord
 from app.schemas.marketplace import BuyIntentStatus
 from app.worker import settlement
