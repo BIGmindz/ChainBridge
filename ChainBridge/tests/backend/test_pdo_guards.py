@@ -1,10 +1,19 @@
 """Backend PDO Guards Test Suite.
 
-╔══════════════════════════════════════════════════════════════════════╗
-║ EXECUTING AGENT: Cody (GID-01) — Senior Backend Engineer             ║
-║ EXECUTING COLOR: 🔵 BLUE                                             ║
-║ PAC: PAC-CODY-A6-BACKEND-GUARDRAILS-01                               ║
-╚══════════════════════════════════════════════════════════════════════╝
+════════════════════════════════════════════════════════════════════════════════
+🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵
+GID-01 — CODY (BACKEND ENGINEERING)
+PAC-CODY-A6-BACKEND-GUARDRAILS-CORRECTION-AND-REALIGNMENT-01
+🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵
+════════════════════════════════════════════════════════════════════════════════
+
+I. EXECUTING AGENT (MANDATORY)
+
+EXECUTING AGENT: CODY
+GID: GID-01
+EXECUTING COLOR: 🔵 BLUE — Backend Engineering Lane
+
+⸻
 
 Tests backend PDO guards - no bypass paths at service layer:
 - PDO validation is mandatory
@@ -16,7 +25,14 @@ DOCTRINE (FAIL-CLOSED):
 All tests verify FAIL-CLOSED behavior.
 No soft bypasses allowed.
 
-Author: Cody (GID-01) — Senior Backend Engineer
+⸻
+
+PROHIBITED:
+- Identity drift
+- Color violation
+- Lane bypass
+
+════════════════════════════════════════════════════════════════════════════════
 """
 from __future__ import annotations
 
@@ -277,6 +293,7 @@ class TestDeterministicGuards:
         assert result1.valid == result2.valid
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-# END — Cody (GID-01) — 🔵
-# ═══════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════════
+# END — CODY (GID-01) — 🔵 BLUE
+# 🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵
+# ════════════════════════════════════════════════════════════════════════════════
