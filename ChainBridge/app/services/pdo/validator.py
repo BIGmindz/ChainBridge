@@ -66,6 +66,12 @@ class ValidationErrorCode(str, Enum):
     INVALID_TIMESTAMP = "INVALID_TIMESTAMP"
     HASH_MISMATCH = "HASH_MISMATCH"
     INTEGRITY_FAILURE = "INTEGRITY_FAILURE"
+    # Signature verification error codes
+    INVALID_SIGNATURE = "INVALID_SIGNATURE"
+    UNSUPPORTED_ALGORITHM = "UNSUPPORTED_ALGORITHM"
+    UNKNOWN_KEY_ID = "UNKNOWN_KEY_ID"
+    MALFORMED_SIGNATURE = "MALFORMED_SIGNATURE"
+    UNSIGNED_PDO = "UNSIGNED_PDO"  # WARNING only, does not fail validation (legacy)
 
 
 @dataclass(frozen=True)
@@ -85,15 +91,32 @@ class ValidationResult:
         valid: True if PDO passed all validation checks
         errors: List of validation errors (empty if valid)
         pdo_id: The PDO ID that was validated (for audit logging)
+        signature_result: Signature verification result (if verification was performed)
     """
 
     valid: bool
     errors: tuple[ValidationError, ...]
     pdo_id: Optional[str]
+    signature_result: Optional["SignatureVerificationResult"] = None
 
     def __bool__(self) -> bool:
         """Allow truthiness check: if validation_result: ..."""
         return self.valid
+
+
+@dataclass(frozen=True)
+class SignatureVerificationResult:
+    """Summary of signature verification outcome.
+
+    Attached to ValidationResult when signature verification is performed.
+    """
+
+    verified: bool
+    outcome: str  # VerificationOutcome value
+    is_unsigned: bool
+    allows_execution: bool
+    key_id: Optional[str]
+    reason: str
 
 
 # ---------------------------------------------------------------------------
@@ -195,6 +218,89 @@ class PDOValidator:
             valid=len(errors) == 0,
             errors=tuple(errors),
             pdo_id=pdo_id,
+        )
+
+    def validate_with_signature(self, pdo_data: Optional[dict]) -> ValidationResult:
+        """Validate a PDO including signature verification.
+
+        Extends validate() to include cryptographic signature verification.
+        Signature verification runs AFTER schema validation passes.
+
+        DOCTRINE (Fail-Closed):
+        - Invalid signature → FAIL (execution blocked)
+        - Unsigned PDO → WARN (legacy mode, TEMPORARILY allowed)
+
+        Args:
+            pdo_data: Dictionary containing PDO fields (may include signature)
+
+        Returns:
+            ValidationResult with signature_result attached
+        """
+        # First, perform schema validation
+        schema_result = self.validate(pdo_data)
+
+        # If schema validation failed, return immediately (no signature check)
+        if not schema_result.valid:
+            return schema_result
+
+        # Perform signature verification
+        from app.services.pdo.signing import (
+            verify_pdo_signature,
+            log_verification_result,
+            VerificationOutcome,
+        )
+
+        sig_result = verify_pdo_signature(pdo_data)
+        log_verification_result(sig_result, context="pdo_validation")
+
+        # Build signature summary for result
+        sig_summary = SignatureVerificationResult(
+            verified=sig_result.is_valid,
+            outcome=sig_result.outcome.value,
+            is_unsigned=sig_result.is_unsigned,
+            allows_execution=sig_result.allows_execution,
+            key_id=sig_result.key_id,
+            reason=sig_result.reason,
+        )
+
+        # Determine overall validity
+        # DOCTRINE: Fail-closed for invalid signatures
+        # EXCEPTION: Unsigned PDOs are TEMPORARILY allowed (legacy)
+        errors_list = list(schema_result.errors)
+
+        if not sig_result.allows_execution:
+            # Map verification outcome to validation error
+            error_code_map = {
+                VerificationOutcome.INVALID_SIGNATURE: ValidationErrorCode.INVALID_SIGNATURE,
+                VerificationOutcome.UNSUPPORTED_ALGORITHM: ValidationErrorCode.UNSUPPORTED_ALGORITHM,
+                VerificationOutcome.UNKNOWN_KEY_ID: ValidationErrorCode.UNKNOWN_KEY_ID,
+                VerificationOutcome.MALFORMED_SIGNATURE: ValidationErrorCode.MALFORMED_SIGNATURE,
+            }
+            error_code = error_code_map.get(
+                sig_result.outcome,
+                ValidationErrorCode.INVALID_SIGNATURE,
+            )
+            errors_list.append(
+                ValidationError(
+                    code=error_code,
+                    field="signature",
+                    message=sig_result.reason,
+                )
+            )
+
+        # Log warning for unsigned PDOs (but still allow)
+        if sig_result.is_unsigned:
+            logger.warning(
+                "UNSIGNED_PDO_WARNING: pdo_id=%s - Unsigned PDO accepted (legacy mode). "
+                "This behavior is DEPRECATED and will be removed.",
+                schema_result.pdo_id,
+            )
+
+        return ValidationResult(
+            valid=len(errors_list) == 0,
+            errors=tuple(errors_list),
+            pdo_id=schema_result.pdo_id,
+            signature_result=sig_summary,
         )
 
     def _validate_pdo_id(self, pdo_id: str) -> List[ValidationError]:
@@ -345,6 +451,22 @@ def validate_pdo(pdo_data: Optional[dict]) -> ValidationResult:
         ValidationResult indicating pass/fail with any errors
     """
     return _validator.validate(pdo_data)
+
+
+def validate_pdo_with_signature(pdo_data: Optional[dict]) -> ValidationResult:
+    """Validate a PDO with signature verification.
+
+    DOCTRINE (Fail-Closed):
+    - Invalid signature → FAIL (execution blocked)
+    - Unsigned PDO → WARN + PASS (legacy mode, TEMPORARY)
+
+    Args:
+        pdo_data: Dictionary containing PDO fields (may include signature)
+
+    Returns:
+        ValidationResult with signature_result attached
+    """
+    return _validator.validate_with_signature(pdo_data)
 
 
 def compute_decision_hash(inputs_hash: str, policy_version: str, outcome: str) -> str:
