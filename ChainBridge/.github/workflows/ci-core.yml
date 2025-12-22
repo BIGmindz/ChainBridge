@@ -2,7 +2,9 @@
 # CI-CORE: Unified ChainBridge Python CI Pipeline
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # PAC: DAN-PAC-031 - CI/CD Normalization
+# PAC: PAC-DAN-PDO-SIGNING-CI-CD-INTEGRATION-01 (SIGNING GATE)
 # Author: DAN (GID-07) - DevOps & CI/CD Lead
+# Doctrine: PDO Signing Model v1 (LOCKED)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 name: CI-Core
@@ -49,11 +51,83 @@ jobs:
           echo "Governance-tagged commits: $TAGGED/5"
 
   # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Gate 1.5: PDO Signing Security Gate (PAC-DAN-PDO-SIGNING-CI-CD-INTEGRATION-01)
+  # MANDATORY: Pipeline fails if signing integrity is compromised
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  pdo-signing-gate:
+    name: 🔏 PDO Signing Security Gate
+    needs: alex-governance
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify signing modules exist
+        run: |
+          echo "🔏 PDO Signing Security Gate"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          # Signing module must exist
+          test -s app/services/pdo/signing.py || { echo "❌ FAIL: signing.py missing"; exit 1; }
+          echo "✅ signing.py exists"
+          
+          # Signing tests must exist
+          test -s tests/test_pdo_signing.py || { echo "❌ FAIL: test_pdo_signing.py missing"; exit 1; }
+          echo "✅ test_pdo_signing.py exists"
+
+      - name: Verify signing symbols
+        run: |
+          # Required signing symbols
+          grep -q "def verify_pdo_signature" app/services/pdo/signing.py || { echo "❌ FAIL: verify_pdo_signature missing"; exit 1; }
+          grep -q "class PDOSignature" app/services/pdo/signing.py || { echo "❌ FAIL: PDOSignature missing"; exit 1; }
+          grep -q "UNSIGNED_PDO" app/services/pdo/validator.py || { echo "❌ FAIL: UNSIGNED_PDO error code missing"; exit 1; }
+          echo "✅ All signing symbols present"
+
+      - name: Verify negative tests exist
+        run: |
+          # Mandatory negative tests
+          grep -q "test_unsigned_pdo" tests/test_pdo_signing.py || { echo "❌ FAIL: unsigned rejection test missing"; exit 1; }
+          grep -qE "test_tampered|test_.*mismatch" tests/test_pdo_signing.py || { echo "❌ FAIL: signature mismatch test missing"; exit 1; }
+          echo "✅ Negative security tests exist"
+
+      - name: Scan for bypass patterns
+        run: |
+          echo "Scanning for signing bypass patterns..."
+          BYPASS=0
+          
+          # ALLOW_UNSIGNED = instant fail
+          if grep -rn "ALLOW_UNSIGNED" app/ 2>/dev/null; then
+            echo "❌ BYPASS: ALLOW_UNSIGNED detected"
+            BYPASS=1
+          fi
+          
+          # skip_signature = instant fail
+          if grep -rn "skip_signature\|skip_signing" app/ 2>/dev/null; then
+            echo "❌ BYPASS: skip_signature detected"
+            BYPASS=1
+          fi
+          
+          # Mock signing in production = instant fail
+          if grep -rn "Mock.*verify_pdo_signature\|patch.*signing" app/ 2>/dev/null; then
+            echo "❌ BYPASS: Mocked signing in production"
+            BYPASS=1
+          fi
+          
+          if [ $BYPASS -ne 0 ]; then
+            echo "❌ PDO Signing Security Gate FAILED"
+            exit 1
+          fi
+          
+          echo "✅ No bypass patterns detected"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ PDO Signing Security Gate PASSED"
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   # Gate 2: Lint & Format
   # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   lint:
     name: 🔍 Lint & Format
-    needs: alex-governance
+    needs: [alex-governance, pdo-signing-gate]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -421,7 +495,7 @@ jobs:
   # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   ci-summary:
     name: 📊 CI Summary
-    needs: [alex-governance, lint, test-chainiq, test-chainpay, test-chainboard, test-fusion, perf-regression, integration]
+    needs: [alex-governance, pdo-signing-gate, lint, test-chainiq, test-chainpay, test-chainboard, test-fusion, perf-regression, integration]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -433,6 +507,7 @@ jobs:
           echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| ALEX Governance | ${{ needs.alex-governance.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔏 PDO Signing Gate | ${{ needs.pdo-signing-gate.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Lint & Format | ${{ needs.lint.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ChainIQ Tests | ${{ needs.test-chainiq.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ChainPay Tests | ${{ needs.test-chainpay.result }} |" >> $GITHUB_STEP_SUMMARY
@@ -444,6 +519,8 @@ jobs:
 
           if [ "${{ needs.alex-governance.result }}" == "failure" ]; then
             echo "❌ **ALEX Governance failed - PR BLOCKED**" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.pdo-signing-gate.result }}" == "failure" ]; then
+            echo "❌ **PDO Signing Security Gate failed - PR BLOCKED (Security)**" >> $GITHUB_STEP_SUMMARY
           elif [ "${{ needs.test-chainiq.result }}" == "failure" ] || [ "${{ needs.test-chainpay.result }}" == "failure" ]; then
             echo "❌ **Tests failed - PR BLOCKED**" >> $GITHUB_STEP_SUMMARY
           elif [ "${{ needs.perf-regression.result }}" == "failure" ]; then
@@ -454,4 +531,4 @@ jobs:
 
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY
-          echo "_PAC: DAN-PAC-033 | CI-Core v1.2 (Fusion)_" >> $GITHUB_STEP_SUMMARY
+          echo "_PAC: DAN-PAC-033, PAC-DAN-PDO-SIGNING-CI-CD-INTEGRATION-01 | CI-Core v1.3 (Signing)_" >> $GITHUB_STEP_SUMMARY
