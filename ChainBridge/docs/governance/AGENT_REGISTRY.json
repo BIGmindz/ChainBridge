@@ -1,55 +1,116 @@
 {
+  "_metadata": {
+    "version": "3.0.0",
+    "ratified_by": "PAC-BENSON-CANONICAL-IDENTITY-RECONCILIATION-01",
+    "authority": "Benson (GID-00)",
+    "ratification_date": "2025-12-22",
+    "status": "LOCKED"
+  },
+  "funnel_standard": {
+    "level_1": "CONTEXT",
+    "level_2": "ORCHESTRATION",
+    "level_3": "DOMAIN_COLOR",
+    "level_4": "ROLE_ICON",
+    "level_5": "EXECUTION"
+  },
+  "domain_colors": {
+    "ORCHESTRATION": "TEAL",
+    "BACKEND": "BLUE",
+    "ML_AI": "PURPLE",
+    "FRONTEND": "GREEN",
+    "SECURITY": "RED",
+    "DEVOPS": "ORANGE",
+    "GOVERNANCE": "WHITE",
+    "SYSTEM_STATE": "BLUE",
+    "PAYMENTS": "GOLD",
+    "RISK_POLICY": "RED"
+  },
   "agents": {
+    "BENSON": {
+      "gid": "GID-00",
+      "color": "TEAL",
+      "icon": "🟦🟩",
+      "role": "Chief Architect / Orchestrator",
+      "execution_lane": "ORCHESTRATION"
+    },
     "CODY": {
       "gid": "GID-01",
-      "emoji": "🔵",
-      "role": "Backend development, API design, database architecture"
+      "color": "BLUE",
+      "icon": "🔵",
+      "role": "Backend Engineer",
+      "execution_lane": "BACKEND"
     },
     "MAGGIE": {
       "gid": "GID-02",
-      "emoji": "🟣",
-      "role": "Machine learning, model development, ChainIQ"
+      "color": "PURPLE",
+      "icon": "🟣",
+      "role": "ML & Applied AI Lead",
+      "execution_lane": "ML_AI"
     },
     "SONNY": {
       "gid": "GID-03",
-      "emoji": "🟢",
-      "role": "Frontend development, React/TypeScript, ChainBoard UI"
-    },
-    "DAN": {
-      "gid": "GID-07",
-      "emoji": "🟠",
-      "role": "DevOps, CI/CD pipelines, infrastructure"
-    },
-    "ATLAS": {
-      "gid": "GID-05",
-      "emoji": "🟤",
-      "role": "Repository structure, documentation, organization"
+      "color": "GREEN",
+      "icon": "🟢",
+      "role": "Frontend Engineer",
+      "execution_lane": "FRONTEND"
     },
     "SAM": {
       "gid": "GID-06",
-      "emoji": "🔴",
-      "role": "Security review, threat detection, incident response"
+      "color": "RED",
+      "icon": "🛡️",
+      "role": "Security & Threat Engineer",
+      "execution_lane": "SECURITY"
+    },
+    "DAN": {
+      "gid": "GID-07",
+      "color": "ORANGE",
+      "icon": "🟠",
+      "role": "DevOps & CI/CD Lead",
+      "execution_lane": "DEVOPS"
     },
     "ALEX": {
       "gid": "GID-08",
-      "emoji": "⚪",
-      "role": "Master governance, rule enforcement, multi-agent alignment"
+      "color": "WHITE",
+      "icon": "⚪",
+      "role": "Governance & Alignment Engine",
+      "execution_lane": "GOVERNANCE"
     },
     "CINDY": {
       "gid": "GID-09",
-      "emoji": "🔷",
-      "role": "Service expansion, API integrations, backend scaling"
+      "color": "BLUE",
+      "icon": "🔷",
+      "role": "Backend Scaling Engineer",
+      "execution_lane": "BACKEND"
     },
     "PAX": {
       "gid": "GID-10",
-      "emoji": "💰",
-      "role": "CB-USDx tokenization, settlement logic, ChainPay"
+      "color": "GOLD",
+      "icon": "💰",
+      "role": "Payments & Tokenization",
+      "execution_lane": "PAYMENTS"
     },
-    "LIRA": {
+    "ATLAS": {
       "gid": "GID-11",
-      "emoji": "🩷",
-      "role": "User experience, design systems, accessibility"
+      "color": "BLUE",
+      "icon": "🧭",
+      "role": "System State Engine",
+      "execution_lane": "SYSTEM_STATE"
+    },
+    "RUBY": {
+      "gid": "GID-12",
+      "color": "RED",
+      "icon": "⚖️",
+      "role": "Chief Risk Officer",
+      "execution_lane": "RISK_POLICY"
     }
   },
-  "forbidden_aliases": ["DANA"]
+  "forbidden_aliases": ["DANA", "LIRA"],
+  "identity_invariants": {
+    "one_gid_per_agent": true,
+    "one_agent_per_gid": true,
+    "color_denotes_domain": true,
+    "icon_denotes_role": true,
+    "registry_is_authoritative": true,
+    "execution_without_registry_entry": "forbidden"
+  }
 }

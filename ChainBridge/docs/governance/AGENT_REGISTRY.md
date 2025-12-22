@@ -1,103 +1,90 @@
 # ChainBridge Agent Registry
 
-> **Governance Document** — PAC-CINDY-GOV-001
-> **Version:** 2.0.0
-> **Effective Date:** 2025-12-11
-> **Owner:** ALEX (GID-08)
-> **Cross-validated with:** `.github/agents/colors.json`
+> **Governance Document** — PAC-BENSON-CANONICAL-IDENTITY-RECONCILIATION-01
+> **Version:** 3.0.0
+> **Effective Date:** 2025-12-22
+> **Authority:** BENSON (GID-00)
+> **Status:** LOCKED / CANONICAL
 
 ---
 
-## Agent Directory
+## Identity Invariants (NON-NEGOTIABLE)
 
-| Agent | GID | Emoji | Color | Role Summary | Domain |
-|-------|-----|-------|-------|--------------|--------|
-| CODY | GID-01 | 🔵 | Blue (`#0066CC`) | Backend development, API design, database architecture | Backend |
-| MAGGIE | GID-02 | 🟣 | Purple (`#9933FF`) | Machine learning, model development, ChainIQ | ML Engineering |
-| SONNY | GID-03 | 🟢 | Green (`#00CC66`) | Frontend development, React/TypeScript, ChainBoard UI | Frontend |
-| DAN | GID-04 | 🟠 | Orange (`#FF6600`) | DevOps, CI/CD pipelines, infrastructure | DevOps |
-| ATLAS | GID-05 | 🟤 | Brown (`#8B4513`) | Repository structure, documentation, organization | Repository Management |
-| SAM | GID-06 | 🔴 | Red (`#CC0000`) | Security review, threat detection, incident response | Security |
-| DANA | GID-07 | 🟡 | Yellow (`#FFCC00`) | Data pipelines, ETL, analytics infrastructure | Data Engineering |
-| ALEX | GID-08 | ⚪ | White (`#FFFFFF`) | Master governance, rule enforcement, multi-agent alignment | Governance |
-| CINDY | GID-09 | 🔷 | Diamond Blue (`#1E90FF`) | Service expansion, API integrations, backend scaling | Backend |
-| PAX | GID-10 | 💰 | Gold (`#FFD700`) | CB-USDx tokenization, settlement logic, ChainPay | Tokenization & Settlement |
-| LIRA | GID-11 | 🩷 | Pink (`#FF69B4`) | User experience, design systems, accessibility | UX Design |
+```
+IDENTITY_INVARIANTS {
+  one_gid_per_agent: true
+  one_agent_per_gid: true
+  color_denotes_domain: true
+  icon_denotes_role: true
+  registry_is_authoritative: true
+  execution_without_registry_entry: forbidden
+}
+```
 
 ---
 
-## Color Philosophy
+## Funnel Standard (LOCKED)
 
-The ChainBridge agent color system uses **departmental grouping** to visually identify agent specializations at a glance. Colors are governance-locked and immutable once assigned.
-
-### Departmental Color Mapping
-
-| Department | Colors | Rationale |
-|------------|--------|-----------|
-| **Backend Engineering** | 🔵 Blue, 🔷 Diamond Blue | Blue tones represent the foundational backend services that power ChainBridge. CODY (primary) and CINDY (expansion) share the blue family to indicate their collaborative backend mandate. |
-| **Frontend Engineering** | 🟢 Green | Green symbolizes growth and user-facing vitality. SONNY owns all ChainBoard UI and dashboard surfaces. |
-| **ML & Data** | 🟣 Purple, 🟡 Yellow | Purple (MAGGIE) represents AI/ML intelligence; Yellow (DANA) represents data flow and analytics pipelines. Both work with data but from different angles. |
-| **DevOps & Infrastructure** | 🟠 Orange | Orange signals operational alertness and CI/CD automation. DAN keeps the build pipelines running. |
-| **Repository & Documentation** | 🟤 Brown | Brown represents the solid, foundational structure of the codebase. ATLAS maintains repository organization. |
-| **Security** | 🔴 Red | Red is the universal color for alerts and security. SAM handles threat detection and zero-trust enforcement. |
-| **Governance** | ⚪ White | White represents neutrality and oversight. ALEX enforces rules without domain bias. |
-| **Product & Settlement** | 💰 Gold | Gold represents financial value and tokenization. PAX owns CB-USDx and ChainPay settlement logic. |
-| **UX Design** | 🩷 Pink | Pink represents creativity and human-centered design. LIRA focuses on accessibility and design systems. |
-
-### Visual Identification Benefits
-
-1. **Instant Recognition** — PAC headers display 10 colored emojis, immediately identifying the responsible agent
-2. **Domain Clustering** — Related agents share color families (e.g., blue backend tones)
-3. **Conflict Prevention** — Unique colors prevent agent confusion in logs and dashboards
-4. **Governance Traceability** — CI validates emoji colors match the canonical registry
+| Level | Purpose |
+|-------|---------|
+| 1 | CONTEXT |
+| 2 | ORCHESTRATION |
+| 3 | DOMAIN_COLOR |
+| 4 | ROLE_ICON |
+| 5 | EXECUTION |
 
 ---
 
-## New Agent Onboarding: Color Assignment Rules
+## Agent Directory (CANONICAL)
 
-When onboarding a new ChainBridge agent, follow these governance-enforced rules:
+| Agent | GID | Color | Icon | Role | Execution Lane |
+|-------|-----|-------|------|------|----------------|
+| **BENSON** | GID-00 | TEAL | 🟦🟩 | Chief Architect / Orchestrator | ORCHESTRATION |
+| **CODY** | GID-01 | BLUE | 🔵 | Backend Engineer | BACKEND |
+| **MAGGIE** | GID-02 | PURPLE | 🟣 | ML & Applied AI Lead | ML_AI |
+| **SONNY** | GID-03 | GREEN | 🟢 | Frontend Engineer | FRONTEND |
+| **SAM** | GID-06 | RED | 🛡️ | Security & Threat Engineer | SECURITY |
+| **DAN** | GID-07 | ORANGE | 🟠 | DevOps & CI/CD Lead | DEVOPS |
+| **ALEX** | GID-08 | WHITE | ⚪ | Governance & Alignment Engine | GOVERNANCE |
+| **CINDY** | GID-09 | BLUE | 🔷 | Backend Scaling Engineer | BACKEND |
+| **PAX** | GID-10 | GOLD | 💰 | Payments & Tokenization | PAYMENTS |
+| **ATLAS** | GID-11 | BLUE | 🧭 | System State Engine | SYSTEM_STATE |
+| **RUBY** | GID-12 | RED | ⚖️ | Chief Risk Officer | RISK_POLICY |
 
-### 1. GID Assignment
+---
 
-- New agents receive the next sequential GID (e.g., GID-12 follows GID-11)
-- GID-00 is reserved for human oversight (CTO/Benson)
-- GIDs are permanent and never reassigned
+## Domain Color Mapping (LOCKED)
 
-### 2. Color Selection Criteria
+| Domain | Color | Agents |
+|--------|-------|--------|
+| ORCHESTRATION | TEAL 🟦🟩 | BENSON |
+| BACKEND | BLUE 🔵🔷 | CODY, CINDY |
+| ML_AI | PURPLE 🟣 | MAGGIE |
+| FRONTEND | GREEN 🟢 | SONNY |
+| SECURITY | RED 🛡️ | SAM |
+| DEVOPS | ORANGE 🟠 | DAN |
+| GOVERNANCE | WHITE ⚪ | ALEX |
+| SYSTEM_STATE | BLUE 🧭 | ATLAS |
+| PAYMENTS | GOLD 💰 | PAX |
+| RISK_POLICY | RED ⚖️ | RUBY |
 
-| Rule | Description |
-|------|-------------|
-| **Uniqueness** | The emoji/color combination MUST NOT duplicate any existing agent |
-| **Domain Alignment** | Select a color that aligns with the agent's primary domain (see Departmental Color Mapping) |
-| **Visual Distinctiveness** | The color must be easily distinguishable from existing colors in both light and dark themes |
-| **Emoji Availability** | Use standard Unicode emoji circles (🔵🟣🟢🟠🟤🔴🟡⚪) or distinctive symbols (🔷💰🩷) |
+---
 
-### 3. Registration Process
+## Forbidden Aliases (LOCKED)
 
-1. **Propose** — Submit a PAC to ALEX (GID-08) with:
-   - Proposed agent name
-   - Proposed GID
-   - Proposed emoji and color (name + hex)
-   - Role summary and domain classification
+The following identities are explicitly forbidden:
+- ❌ **DANA** — Retired, GID reassigned
+- ❌ **LIRA** — Retired, GID reassigned
 
-2. **Validate** — ALEX verifies:
-   - No color/emoji conflicts with existing agents
-   - Domain alignment is logical
-   - Hex value renders correctly across platforms
+---
 
-3. **Register** — Upon approval:
-   - Add entry to `.github/agents/colors.json`
-   - Update this registry (AGENT_REGISTRY.md)
-   - Add PAC header pattern for CI validation
+## Reserved GIDs
 
-4. **Lock** — Once registered:
-   - Colors are **immutable** (cannot be changed without governance override)
-   - CI will block any PAC with mismatched agent/emoji combinations
-
-### 4. Prohibited Actions
-
-- ❌ Reassigning colors from inactive agents
-- ❌ Using similar shades that cause visual confusion
+| GID | Status | Notes |
+|-----|--------|-------|
+| GID-04 | RESERVED | Future allocation |
+| GID-05 | RESERVED | Future allocation |
+| GID-13+ | AVAILABLE | Next sequential assignment |
 - ❌ Skipping GID numbers
 - ❌ Modifying colors.json without ALEX approval
 
