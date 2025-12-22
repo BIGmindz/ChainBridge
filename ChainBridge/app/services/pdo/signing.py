@@ -529,23 +529,29 @@ def verify_pdo_signature(pdo_data: Optional[dict]) -> VerificationResult:
 # ---------------------------------------------------------------------------
 
 
-def log_verification_result(result: VerificationResult, context: str = "") -> None:
+def log_verification_result(result: VerificationResult, context: str = "", agent_id: Optional[str] = None) -> None:
     """Log signature verification result for audit trail.
+
+    AUDIT COMPLETENESS (PAC-CODY-PDO-POST-ENFORCEMENT-HARDENING-01):
+    All enforcement failures MUST log: pdo_id, agent_id, verification_outcome,
+    failure_reason, timestamp (UTC).
 
     Args:
         result: Verification result to log
         context: Optional context string (e.g., "settlement_initiation")
+        agent_id: Optional agent identifier for audit trail
     """
     log_data = {
         "event": "pdo_signature_verification",
         "pdo_id": result.pdo_id,
-        "outcome": result.outcome.value,
+        "agent_id": agent_id,
+        "verification_outcome": result.outcome.value,
+        "failure_reason": result.reason if not result.is_valid else None,
         "key_id": result.key_id,
         "algorithm": result.algorithm,
-        "reason": result.reason,
         "allows_execution": result.allows_execution,
         "context": context,
-        "verified_at": result.verified_at,
+        "timestamp": result.verified_at,  # Already UTC ISO format
     }
 
     if result.is_valid:

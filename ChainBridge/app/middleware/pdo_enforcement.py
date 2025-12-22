@@ -90,6 +90,7 @@ def _log_enforcement_event(
         "event": "pdo_enforcement",
         "enforcement_point": enforcement_point,
         "pdo_id": result.pdo_id,
+        "agent_id": result.agent_id if hasattr(result, 'agent_id') else None,
         "outcome": outcome,
         "valid": result.valid,
         "error_count": len(result.errors),
@@ -332,11 +333,14 @@ class SignatureEnforcementGate:
     """PDO enforcement gate with signature verification.
 
     Extends PDOEnforcementGate to include cryptographic signature verification.
-    This gate enforces FAIL-CLOSED behavior for signature verification.
+    This gate enforces FAIL-CLOSED behavior for ALL signature verification failures.
 
-    DOCTRINE:
+    DOCTRINE (PDO_SIGNING_MODEL_V1 - LOCKED):
     - Invalid signature → BLOCK (HTTP 403)
-    - Unsigned PDO → WARN + ALLOW (legacy mode, TEMPORARY)
+    - Unsigned PDO → BLOCK (HTTP 403) - NO legacy pass-through
+    - Expired PDO → BLOCK (HTTP 403)
+    - Replayed nonce → BLOCK (HTTP 403)
+    - Signer mismatch → BLOCK (HTTP 403)
     - All failures logged for audit
 
     USAGE:
