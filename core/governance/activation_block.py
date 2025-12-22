@@ -214,9 +214,9 @@ ROLE_PATTERN = re.compile(
 )
 
 # Pattern for LANE declaration (separate from ROLE)
+# Case-sensitive to avoid matching docstrings like "lane: description"
 LANE_PATTERN = re.compile(
-    r"LANE\s*[:\-—]\s*(.+?)(?:\n|$)",
-    re.IGNORECASE
+    r"LANE\s*[:\-—]\s*(.+?)(?:\n|$)"
 )
 
 # Pattern for prohibited actions section

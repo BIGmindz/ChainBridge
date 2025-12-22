@@ -45,6 +45,38 @@ from .state_replay import (
     replay_artifact_events,
     verify_replay_determinism,
 )
+from .state_machine import (
+    StateMachine,
+    TransitionRule,
+    ProofState,
+    DeploymentState,
+    RiskDecisionState,
+    STATE_MACHINES,
+    PDO_STATE_MACHINE,
+    SETTLEMENT_STATE_MACHINE,
+    PROOF_STATE_MACHINE,
+    DEPLOYMENT_STATE_MACHINE,
+    RISK_DECISION_STATE_MACHINE,
+    SHIPMENT_STATE_MACHINE,
+    get_state_machine,
+    validate_all_state_machines,
+)
+from .transition_validator import (
+    TransitionValidator,
+    TransitionRequest,
+    TransitionResult,
+    TransitionValidationResult,
+    validate_transition,
+    is_transition_allowed,
+    get_allowed_transitions,
+)
+from .transition_proof import (
+    StateTransitionProof,
+    TransitionProofEmitter,
+    verify_transition_proof,
+    verify_proof_chain,
+    create_transition_proof,
+)
 
 __all__ = [
     # Schema
@@ -81,4 +113,33 @@ __all__ = [
     "StateReplayEngine",
     "replay_artifact_events",
     "verify_replay_determinism",
+    # State Machines (A12)
+    "StateMachine",
+    "TransitionRule",
+    "ProofState",
+    "DeploymentState",
+    "RiskDecisionState",
+    "STATE_MACHINES",
+    "PDO_STATE_MACHINE",
+    "SETTLEMENT_STATE_MACHINE",
+    "PROOF_STATE_MACHINE",
+    "DEPLOYMENT_STATE_MACHINE",
+    "RISK_DECISION_STATE_MACHINE",
+    "SHIPMENT_STATE_MACHINE",
+    "get_state_machine",
+    "validate_all_state_machines",
+    # Transition Validator (A12)
+    "TransitionValidator",
+    "TransitionRequest",
+    "TransitionResult",
+    "TransitionValidationResult",
+    "validate_transition",
+    "is_transition_allowed",
+    "get_allowed_transitions",
+    # Transition Proof (A12)
+    "StateTransitionProof",
+    "TransitionProofEmitter",
+    "verify_transition_proof",
+    "verify_proof_chain",
+    "create_transition_proof",
 ]
