@@ -1,0 +1,123 @@
+{
+  "drill_ref": "ATLAS-G1-PHASE-2-GOVERNANCE-INVARIANT-FAILURE-DRILLS-01",
+  "executed_at": "2025-12-23T19:16:47.803726",
+  "total_drills": 5,
+  "passed_drills": 5,
+  "failed_drills": 0,
+  "success_metrics": {
+    "invariant_violations_allowed": 0,
+    "silent_failures": 0,
+    "replay_divergence_tolerated": false,
+    "deterministic_errors": true,
+    "bypass_paths_detected": 0
+  },
+  "success_metrics_met": true,
+  "drills": [
+    {
+      "drill_id": "SD-01",
+      "drill_name": "Undefined Transition Requested",
+      "scenario": "Attempt CREATED \u2192 ACCEPTED (bypassing required intermediate states)",
+      "expected_outcome": "RUNTIME_BLOCK",
+      "actual_outcome": "RUNTIME_BLOCK",
+      "passed": true,
+      "error_code": "REJECTED_UNDEFINED",
+      "rejection_reason": "Transition CREATED \u2192 ACCEPTED not declared. Allowed: {'SIGNED', 'EXPIRED'}",
+      "state_hash": null,
+      "elapsed_ms": 0.029,
+      "evidence": {
+        "artifact_type": "PDO",
+        "from_state": "CREATED",
+        "to_state": "ACCEPTED",
+        "validation_result": "REJECTED_UNDEFINED",
+        "is_allowed": false
+      }
+    },
+    {
+      "drill_id": "SD-02",
+      "drill_name": "Terminal State Mutation",
+      "scenario": "Attempt ACCEPTED \u2192 CREATED (mutating finalized artifact)",
+      "expected_outcome": "RUNTIME_BLOCK",
+      "actual_outcome": "RUNTIME_BLOCK",
+      "passed": true,
+      "error_code": "REJECTED_TERMINAL",
+      "rejection_reason": "Cannot transition from terminal state: ACCEPTED",
+      "state_hash": null,
+      "elapsed_ms": 0.005,
+      "evidence": {
+        "artifact_type": "PDO",
+        "from_state": "ACCEPTED",
+        "to_state": "CREATED",
+        "terminal_states": [
+          "REJECTED",
+          "ACCEPTED",
+          "EXPIRED"
+        ],
+        "validation_result": "REJECTED_TERMINAL",
+        "is_allowed": false
+      }
+    },
+    {
+      "drill_id": "SD-03",
+      "drill_name": "Missing Transition Proof",
+      "scenario": "Attempt CREATED \u2192 SIGNED without proof_id",
+      "expected_outcome": "RUNTIME_BLOCK",
+      "actual_outcome": "RUNTIME_BLOCK",
+      "passed": true,
+      "error_code": "REJECTED_MISSING_PROOF",
+      "rejection_reason": "Transition requires proof_id but none provided",
+      "state_hash": null,
+      "elapsed_ms": 0.006,
+      "evidence": {
+        "artifact_type": "PDO",
+        "from_state": "CREATED",
+        "to_state": "SIGNED",
+        "proof_id_provided": false,
+        "validation_result": "REJECTED_MISSING_PROOF",
+        "is_allowed": false
+      }
+    },
+    {
+      "drill_id": "SD-04",
+      "drill_name": "Invalid Authority on Transition",
+      "scenario": "Attempt PENDING \u2192 APPROVED with unauthorized GID",
+      "expected_outcome": "RUNTIME_BLOCK",
+      "actual_outcome": "RUNTIME_BLOCK",
+      "passed": true,
+      "error_code": "REJECTED_AUTHORITY_MISMATCH",
+      "rejection_reason": "Authority mismatch: required CRO, provided GID-INVALID-TEST",
+      "state_hash": null,
+      "elapsed_ms": 0.008,
+      "evidence": {
+        "artifact_type": "SETTLEMENT",
+        "from_state": "PENDING",
+        "to_state": "APPROVED",
+        "authority_provided": "GID-INVALID-TEST",
+        "required_authority": "CRO",
+        "validation_result": "REJECTED_AUTHORITY_MISMATCH",
+        "is_allowed": false
+      }
+    },
+    {
+      "drill_id": "SD-05",
+      "drill_name": "Replay Divergence Detection",
+      "scenario": "Replay events expecting VERIFIED but actual state is SIGNED",
+      "expected_outcome": "CI_BLOCK",
+      "actual_outcome": "CI_BLOCK",
+      "passed": true,
+      "error_code": "REPLAY_DIVERGENCE",
+      "rejection_reason": "State mismatch: expected VERIFIED, computed SIGNED",
+      "state_hash": "d82606080d2f245d28848634e040d7493bd91b834286cc29555db75284f1ed3a",
+      "elapsed_ms": 0.128,
+      "evidence": {
+        "expected_state": "VERIFIED",
+        "computed_state": "SIGNED",
+        "is_deterministic": false,
+        "events_processed": 2,
+        "transitions_applied": 1,
+        "validation_errors": [
+          "State mismatch: expected VERIFIED, computed SIGNED"
+        ]
+      }
+    }
+  ]
+}
