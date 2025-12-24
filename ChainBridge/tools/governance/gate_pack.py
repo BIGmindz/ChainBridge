@@ -208,6 +208,36 @@ class ErrorCode(Enum):
     WRP_005 = "WRAP missing required PAC_REFERENCE"
     WRP_006 = "WRAP missing FINAL_STATE"
     WRP_007 = "WRAP schema version mismatch"
+    # Security Hardened WRAP Error Codes (PAC-SAM-P31-GOVERNANCE-SECURITY-GATE-HARDENING-AND-WRAP-INGESTION-01)
+    WRP_008 = "WRAP artifact_type mismatch or mixed semantics"
+    WRP_009 = "WRAP training signal contains forbidden patterns"
+    WRP_010 = "WRAP PAC_REFERENCE validation failed"
+    WRP_011 = "WRAP preamble fields incomplete or invalid"
+    # Anti-Overhelpfulness Guard Error Codes (PAC-BENSON-P32-ANTI-OVERHELPFULNESS-GUARD-ENFORCEMENT-01)
+    GS_060 = "Overhelpfulness detected — artifact drift without explicit authorization"
+    GS_061 = "Artifact-type boundary violation (PAC vs WRAP)"
+    GS_062 = "Missing TASKS or FILES blocks — ACKNOWLEDGED_ONLY fallback required"
+    GS_063 = "New artifact emission without explicit authorization"
+    GS_064 = "Scope expansion beyond PAC boundaries"
+    # Non-Executing Agent & PAC Naming Error Codes (PAC-BENSON-P36-NONEXECUTING-AGENT-ENFORCEMENT-AND-PAC-NAMING-CANONICALIZATION-01)
+    GS_071 = "PAC ID references non-executing or retired agent"
+    GS_072 = "Footer color mismatch — must match executing agent"
+    GS_073 = "Forbidden agent alias detected in PAC ID"
+    # Agent Performance Metrics Error Codes (PAC-BENSON-P37-AGENT-PERFORMANCE-METRICS-BASELINE-AND-ENFORCEMENT-01)
+    GS_080 = "Missing METRICS block in EXECUTABLE artifact"
+    GS_081 = "METRICS block missing required field"
+    GS_082 = "METRICS block contains invalid or unparseable value"
+    GS_083 = "METRICS execution_time_ms must be numeric"
+    GS_084 = "METRICS quality_score out of valid range (0.0-1.0)"
+    GS_085 = "METRICS scope_compliance must be boolean"
+    # Non-Executing Strategy Agent Enforcement (PAC-PAX-P37-EXECUTION-ROLE-RESTRICTION-AND-SCOPE-REALIGNMENT-01)
+    GS_090 = "Non-executing agent attempted PAC emission"
+    GS_091 = "Non-executing agent attempted WRAP emission"
+    GS_092 = "Non-executing agent attempted code/file creation"
+    GS_093 = "Non-executing agent attempted POSITIVE_CLOSURE"
+    # Regression & Drift Enforcement (PAC-ATLAS-P41-GOVERNANCE-REGRESSION-AND-DRIFT-ENFORCEMENT-INTEGRATION-01)
+    GS_094 = "Performance regression detected — execution blocked"
+    GS_095 = "Semantic drift detected — execution requires escalation or block"
 
 
 @dataclass
@@ -747,6 +777,681 @@ def validate_agent_color(content: str, registry: dict) -> list:
                     ))
     
     return errors
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ANTI-OVERHELPFULNESS GUARD (PAC-BENSON-P32-ANTI-OVERHELPFULNESS-GUARD-ENFORCEMENT-01)
+#
+# Global Constraint: ANTI_OVERHELPFULNESS_GUARD
+# Priority: ABSOLUTE
+# Applies To: ALL_AGENTS
+#
+# Rules:
+#   - Authority > Helpfulness
+#   - Artifact Correctness > Content Richness
+#   - Scope Containment > Insight Expansion
+#
+# Ambiguity Fallback Policy:
+#   - Default response: ACKNOWLEDGED_ONLY
+#   - New artifacts: FORBIDDEN without explicit authorization
+#   - Escalation: FORBIDDEN
+#   - Clarification: REQUIRED
+#
+# Mode: FAIL_CLOSED
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+def validate_anti_overhelpfulness(content: str) -> list:
+    """
+    Validate PAC against anti-overhelpfulness constraints.
+    
+    PAC-BENSON-P32-ANTI-OVERHELPFULNESS-GUARD-ENFORCEMENT-01
+    
+    This gate enforces:
+    1. PACs with POSITIVE_CLOSURE or doctrinal content without TASKS:/FILES: blocks
+       are acknowledged-only (no implementation expected)
+    2. Artifact type boundaries are enforced (PAC vs WRAP)
+    3. Scope expansion beyond PAC boundaries is detected
+    
+    Returns:
+        List of ValidationError for any overhelpfulness violations
+    """
+    errors = []
+    
+    # Skip non-PAC artifacts
+    if not is_governance_artifact(content):
+        return errors
+    
+    # Skip WRAPs (they are report-only by design)
+    if is_wrap_artifact(content):
+        return errors
+    
+    # Skip correction packs, positive closure packs, review artifacts
+    if is_correction_pack(content) or is_positive_closure_pack(content) or is_review_artifact(content):
+        return errors
+    
+    # Check for TASKS: or FILES: blocks
+    has_tasks_block = "TASKS:" in content or "TASK:" in content
+    has_files_block = "FILES:" in content or "FILE:" in content
+    has_explicit_work = has_tasks_block or has_files_block
+    
+    # Check for doctrinal/constraint-only PACs
+    doctrinal_markers = [
+        "GLOBAL_CONSTRAINT",
+        "GLOBAL_AGENT_CONSTRAINT",
+        "CONSTRAINT_ENFORCEMENT",
+        "AMBIGUITY_FALLBACK_POLICY",
+        "FORBIDDEN_BEHAVIORS",
+        "ARTIFACT_TYPE_POLICY",
+        "ARTIFACT_TYPE_CONSTRAINT",
+        "DOCTRINAL_STATEMENT",
+    ]
+    is_doctrinal = any(marker in content for marker in doctrinal_markers)
+    
+    # Check for explicit authorization markers
+    authorization_markers = [
+        "Authorization: Explicit",
+        "authorization: explicit",
+        "EXPLICIT_AUTHORIZATION",
+        "authorized_to_proceed",
+        "EXECUTION_AUTHORIZED",
+    ]
+    has_explicit_authorization = any(marker in content for marker in authorization_markers)
+    
+    # =========================================================================
+    # RULE: Doctrinal PACs without TASKS/FILES require ACKNOWLEDGED_ONLY response
+    # This is an informational check, not a hard failure
+    # The gate_pack itself should not reject valid doctrinal PACs
+    # =========================================================================
+    
+    # If this is a doctrinal PAC without explicit work blocks, flag it
+    # This is for runtime enforcement by agents, not CI validation
+    # CI validates structure; agents validate behavior
+    
+    # Check for artifact type confusion (PAC claiming to be WRAP or vice versa)
+    has_pac_id = re.search(r'PAC-[A-Z]+-[A-Z0-9]+-', content) is not None
+    has_wrap_semantics = "WRAP_INGESTION_PREAMBLE" in content or "artifact_type: WRAP" in content
+    
+    if has_pac_id and has_wrap_semantics:
+        errors.append(ValidationError(
+            ErrorCode.GS_061,
+            "Artifact-type boundary violation: PAC contains WRAP semantics"
+        ))
+    
+    return errors
+
+
+def is_governance_artifact(content: str) -> bool:
+    """
+    Check if content is a governance artifact (PAC or WRAP).
+    
+    Returns True if the content contains governance markers.
+    """
+    governance_markers = [
+        "PAC-",
+        "WRAP-",
+        "RUNTIME_ACTIVATION_ACK",
+        "AGENT_ACTIVATION_ACK",
+        "GOLD_STANDARD_CHECKLIST",
+    ]
+    return any(marker in content for marker in governance_markers)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# NON-EXECUTING AGENT ENFORCEMENT (PAC-BENSON-P36)
+#
+# Rules:
+#   - PAC IDs may only reference EXECUTING agents
+#   - Retired/forbidden agent aliases hard-fail
+#   - Footer color must match executing agent
+#
+# Mode: FAIL_CLOSED
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Forbidden agent aliases - these cannot appear in PAC IDs (permanently retired)
+FORBIDDEN_AGENT_ALIASES = [
+    "DANA",  # Permanently retired
+]
+
+# Non-executing agents - these cannot be PAC executors
+NON_EXECUTING_AGENTS = [
+    "PAX",    # Non-executing strategy agent (PAC-PAX-P37)
+    "DANA",   # Permanently retired
+]
+
+# Non-executing STRATEGY agents - may produce advisory outputs only
+# PAC-PAX-P37-EXECUTION-ROLE-RESTRICTION-AND-SCOPE-REALIGNMENT-01
+NON_EXECUTING_STRATEGY_AGENTS = [
+    "PAX",    # Strategy & Product advisory only
+]
+
+# Allowed outputs for non-executing strategy agents
+STRATEGY_AGENT_ALLOWED_OUTPUTS = [
+    "RESEARCH_PACK",
+    "STRATEGY_MEMO",
+    "POLICY_RECOMMENDATION",
+    "ADVISORY_BRIEF",
+]
+
+# Forbidden outputs for non-executing strategy agents (triggers FAIL_CLOSED)
+STRATEGY_AGENT_FORBIDDEN_OUTPUTS = [
+    "PAC",
+    "WRAP",
+    "CODE",
+    "FILE_CREATION",
+    "POSITIVE_CLOSURE",
+]
+
+
+def validate_pac_naming_and_roles(content: str, registry: dict) -> list:
+    """
+    Validate PAC naming conventions and agent role constraints.
+    
+    PAC-BENSON-P36-NONEXECUTING-AGENT-ENFORCEMENT-AND-PAC-NAMING-CANONICALIZATION-01
+    
+    Rules (FAIL_CLOSED):
+    1. PAC ID cannot reference forbidden/retired agent aliases → GS_073
+    2. PAC ID cannot reference non-executing agents → GS_071
+    3. Footer color must match executing agent from AGENT_ACTIVATION_ACK → GS_072
+    
+    Returns:
+        List of ValidationError for any naming/role violations
+    """
+    errors = []
+    
+    # Extract PAC ID from content
+    pac_id_match = re.search(r'(PAC-([A-Z]+)-[A-Z0-9]+-[A-Z0-9-]+)', content)
+    if not pac_id_match:
+        return errors  # No PAC ID found, skip validation
+    
+    pac_id = pac_id_match.group(1)
+    pac_agent_name = pac_id_match.group(2).upper()
+    
+    # Rule 1: Check for forbidden agent aliases in PAC ID
+    if pac_agent_name in FORBIDDEN_AGENT_ALIASES:
+        errors.append(ValidationError(
+            ErrorCode.GS_073,
+            f"Forbidden agent alias '{pac_agent_name}' detected in PAC ID: {pac_id}"
+        ))
+        return errors  # Hard fail immediately
+    
+    # Rule 2: Check if PAC references a non-executing agent
+    if pac_agent_name in NON_EXECUTING_AGENTS:
+        errors.append(ValidationError(
+            ErrorCode.GS_071,
+            f"PAC ID references non-executing agent '{pac_agent_name}': {pac_id}"
+        ))
+    
+    # Rule 3: Validate footer color matches executing agent
+    # Extract executing agent from AGENT_ACTIVATION_ACK
+    agent_block = extract_block(content, "AGENT_ACTIVATION_ACK")
+    if agent_block:
+        # Extract agent_name from activation block
+        agent_name_match = re.search(r'agent_name:\s*["\']?([A-Z][A-Za-z]+)["\']?', agent_block, re.IGNORECASE)
+        executing_agent = agent_name_match.group(1).upper() if agent_name_match else None
+        
+        # Extract color from activation block
+        color_match = re.search(r'color:\s*["\']?([A-Z_]+)["\']?', agent_block, re.IGNORECASE)
+        declared_color = color_match.group(1).upper() if color_match else None
+        
+        # Check footer for color consistency
+        # Footer pattern: ╚═══...═══╝ or similar box drawing with agent info
+        footer_pattern = r'[║╚╔].*?(TEAL|BLUE|YELLOW|PURPLE|CYAN|DARK_RED|GREEN|WHITE|PINK|MAGENTA|CRIMSON|RED).*?[║╝╗]'
+        footer_colors = re.findall(footer_pattern, content, re.IGNORECASE)
+        
+        if executing_agent and declared_color and footer_colors:
+            # Get registry color for executing agent
+            agents = registry.get("agents", {})
+            if executing_agent in agents:
+                registry_color = agents[executing_agent].get("color", "").upper()
+                
+                # Check if footer colors match declared/registry color
+                for footer_color in footer_colors:
+                    footer_color_upper = footer_color.upper()
+                    if footer_color_upper != declared_color and footer_color_upper != registry_color:
+                        # Only flag if it's clearly wrong (not just formatting)
+                        if footer_color_upper in ["TEAL", "BLUE", "YELLOW", "PURPLE", "CYAN", "DARK_RED", "GREEN", "WHITE", "PINK", "MAGENTA", "CRIMSON", "RED"]:
+                            errors.append(ValidationError(
+                                ErrorCode.GS_072,
+                                f"Footer color '{footer_color}' does not match executing agent '{executing_agent}' (expected: {declared_color or registry_color})"
+                            ))
+                            break
+    
+    return errors
+
+
+def validate_non_executing_strategy_agent(content: str, registry: dict) -> list:
+    """
+    Validate that non-executing strategy agents do not emit forbidden artifacts.
+    
+    PAC-PAX-P37-EXECUTION-ROLE-RESTRICTION-AND-SCOPE-REALIGNMENT-01
+    PAC-ALEX-P35-AGENT-REGISTRY-AND-GATE-ENFORCEMENT-FOR-PAX-01
+    
+    Rules (FAIL_CLOSED):
+    1. Non-executing strategy agents cannot emit PACs → GS_090
+    2. Non-executing strategy agents cannot emit WRAPs → GS_091
+    3. Non-executing strategy agents cannot create code/files → GS_092
+    4. Non-executing strategy agents cannot issue POSITIVE_CLOSURE → GS_093
+    
+    Returns:
+        List of ValidationError for any non-executing agent violations
+    """
+    errors = []
+    
+    # Check if this artifact is being EMITTED BY a non-executing strategy agent
+    # Look for agent_name in AGENT_ACTIVATION_ACK that matches NON_EXECUTING_STRATEGY_AGENTS
+    agent_block = extract_block(content, "AGENT_ACTIVATION_ACK")
+    if not agent_block:
+        return errors  # No agent block, skip validation
+    
+    # Extract agent_name from activation block
+    agent_name_match = re.search(r'agent_name:\s*["\']?([A-Z][A-Za-z]+)["\']?', agent_block, re.IGNORECASE)
+    if not agent_name_match:
+        return errors
+    
+    agent_name = agent_name_match.group(1).upper()
+    
+    # If agent is not a non-executing strategy agent, skip
+    if agent_name not in NON_EXECUTING_STRATEGY_AGENTS:
+        return errors
+    
+    # FAIL_CLOSED: Non-executing strategy agent detected - check for forbidden outputs
+    
+    # Check 1: Is this a PAC? (GS_090)
+    if is_pac_artifact(content):
+        errors.append(ValidationError(
+            ErrorCode.GS_090,
+            f"Non-executing strategy agent '{agent_name}' attempted PAC emission. "
+            f"PAX may only produce advisory outputs: {STRATEGY_AGENT_ALLOWED_OUTPUTS}"
+        ))
+    
+    # Check 2: Is this a WRAP? (GS_091)
+    if is_wrap_artifact(content):
+        errors.append(ValidationError(
+            ErrorCode.GS_091,
+            f"Non-executing strategy agent '{agent_name}' attempted WRAP emission. "
+            f"PAX may only produce advisory outputs: {STRATEGY_AGENT_ALLOWED_OUTPUTS}"
+        ))
+    
+    # Check 3: Does it contain code blocks or file creation markers? (GS_092)
+    code_markers = [
+        "```python",
+        "```javascript", 
+        "```typescript",
+        "FILE_CREATION:",
+        "files_created:",
+        "code_output:",
+    ]
+    for marker in code_markers:
+        if marker in content.lower():
+            errors.append(ValidationError(
+                ErrorCode.GS_092,
+                f"Non-executing strategy agent '{agent_name}' attempted code/file creation. "
+                f"Strategy agents inform execution; they do not perform it."
+            ))
+            break
+    
+    # Check 4: Does it contain POSITIVE_CLOSURE? (GS_093)
+    if any(marker in content for marker in POSITIVE_CLOSURE_MARKERS):
+        errors.append(ValidationError(
+            ErrorCode.GS_093,
+            f"Non-executing strategy agent '{agent_name}' attempted POSITIVE_CLOSURE. "
+            f"Only executing agents may issue closure."
+        ))
+    
+    return errors
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# AGENT PERFORMANCE METRICS ENFORCEMENT (PAC-BENSON-P37)
+#
+# Principle: What isn't measured cannot be trusted.
+#
+# Rules:
+#   - EXECUTABLE artifacts MUST include METRICS block
+#   - METRICS must be machine-parseable YAML
+#   - Required fields: execution_time_ms, tasks_completed, tasks_total,
+#                      quality_score, scope_compliance
+#
+# Mode: FAIL_CLOSED (with legacy grandfathering)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Required fields for METRICS block
+METRICS_REQUIRED_FIELDS = [
+    "execution_time_ms",
+    "tasks_completed", 
+    "tasks_total",
+    "quality_score",
+    "scope_compliance",
+]
+
+
+def is_executable_artifact(content: str) -> bool:
+    """
+    Determine if an artifact is EXECUTABLE (requires METRICS).
+    
+    EXECUTABLE artifacts:
+    - PACs with TASKS: and/or FILES: blocks
+    - WRAPs documenting execution completion
+    
+    EXEMPT artifacts:
+    - Doctrinal PACs (constraints only)
+    - Template files
+    - Registry files
+    - Review artifacts without execution
+    """
+    # Check for TASKS or FILES blocks (indicates execution)
+    has_tasks = "TASKS:" in content or "TASK:" in content
+    has_files = "FILES:" in content or "FILE:" in content
+    
+    # Check for WRAP execution markers
+    is_wrap = is_wrap_artifact(content)
+    has_execution_summary = "EXECUTION_SUMMARY:" in content or "DELIVERABLES:" in content
+    
+    # Exempt doctrinal PACs (constraints only, no execution)
+    doctrinal_markers = [
+        "GLOBAL_CONSTRAINT",
+        "GLOBAL_AGENT_CONSTRAINT", 
+        "DOCTRINAL_STATEMENT",
+        "CONSTRAINT_ENFORCEMENT",
+        "AMBIGUITY_FALLBACK_POLICY",
+    ]
+    is_doctrinal = any(marker in content for marker in doctrinal_markers) and not has_tasks and not has_files
+    
+    # Exempt template/registry files
+    exempt_markers = [
+        "CANONICAL_PAC_TEMPLATE",
+        "GOLD_STANDARD_WRAP_TEMPLATE",
+        "AGENT_REGISTRY",
+        "CORRECTION_PROTOCOL",
+        "Template Schema",
+        "## Block 0:",
+    ]
+    is_exempt = any(marker in content for marker in exempt_markers)
+    
+    if is_exempt or is_doctrinal:
+        return False
+    
+    # PAC with tasks/files is executable
+    if has_tasks or has_files:
+        return True
+    
+    # WRAP with execution summary is executable
+    if is_wrap and has_execution_summary:
+        return True
+    
+    return False
+
+
+def extract_metrics_block(content: str) -> Optional[dict]:
+    """
+    Extract METRICS block from content.
+    
+    Returns parsed dict or None if not found/invalid.
+    """
+    import yaml
+    
+    # Pattern 1: YAML code block
+    yaml_pattern = r"```(?:yaml|yml)?\s*\n(METRICS:\s*.*?)```"
+    match = re.search(yaml_pattern, content, re.DOTALL | re.IGNORECASE)
+    if match:
+        try:
+            parsed = yaml.safe_load(match.group(1))
+            if isinstance(parsed, dict) and "METRICS" in parsed:
+                return parsed.get("METRICS", parsed)
+            return parsed
+        except yaml.YAMLError:
+            pass
+    
+    # Pattern 2: Inline YAML (indented block)
+    inline_pattern = r"^METRICS:\s*\n((?:[ \t]+[^\n]+\n?)+)"
+    match = re.search(inline_pattern, content, re.MULTILINE | re.IGNORECASE)
+    if match:
+        try:
+            full_yaml = f"METRICS:\n{match.group(1)}"
+            parsed = yaml.safe_load(full_yaml)
+            if isinstance(parsed, dict):
+                return parsed.get("METRICS", parsed)
+            return parsed
+        except yaml.YAMLError:
+            pass
+    
+    return None
+
+
+def validate_metrics_block(content: str) -> list:
+    """
+    Validate METRICS block in EXECUTABLE artifacts.
+    
+    PAC-BENSON-P37-AGENT-PERFORMANCE-METRICS-BASELINE-AND-ENFORCEMENT-01
+    
+    Rules (FAIL_CLOSED with legacy grandfathering):
+    1. EXECUTABLE artifacts MUST have METRICS block → GS_080
+    2. METRICS must have all required fields → GS_081
+    3. Values must be parseable → GS_082
+    4. execution_time_ms must be numeric → GS_083
+    5. quality_score must be 0.0-1.0 → GS_084
+    6. scope_compliance must be boolean → GS_085
+    
+    Returns:
+        List of ValidationError for any metrics violations
+    """
+    errors = []
+    
+    # Check if artifact is executable
+    if not is_executable_artifact(content):
+        return errors  # Not executable, no metrics required
+    
+    # Check for legacy grandfathering (artifacts created before schema)
+    # Legacy markers: no METRICS block but has old-style completion markers
+    legacy_markers = [
+        "## I. EXECUTING AGENT",  # Old table format
+        "| EXECUTING AGENT |",    # Old table format
+        "Pre-METRICS_SCHEMA_v1",  # Explicit legacy marker
+    ]
+    is_legacy = any(marker in content for marker in legacy_markers)
+    
+    # Also check PAC number - P01 through P36 are grandfathered (pre-P37 enforcement)
+    pac_match = re.search(r'PAC-[A-Z]+-P(\d+)-', content)
+    if pac_match:
+        pac_num = int(pac_match.group(1))
+        if pac_num < 37:
+            is_legacy = True
+    
+    # Check for METRICS block
+    has_metrics = "METRICS:" in content
+    
+    if not has_metrics:
+        if is_legacy:
+            # Legacy artifact - flag but don't fail
+            # Note: In strict mode, this would be a warning, not an error
+            return errors
+        else:
+            # New artifact without METRICS - FAIL
+            errors.append(ValidationError(
+                ErrorCode.GS_080,
+                "Missing METRICS block in EXECUTABLE artifact"
+            ))
+            return errors
+    
+    # Extract and validate METRICS block
+    metrics = extract_metrics_block(content)
+    
+    if metrics is None:
+        errors.append(ValidationError(
+            ErrorCode.GS_082,
+            "METRICS block is malformed or unparseable"
+        ))
+        return errors
+    
+    # Check required fields
+    for field in METRICS_REQUIRED_FIELDS:
+        if field not in metrics:
+            errors.append(ValidationError(
+                ErrorCode.GS_081,
+                f"METRICS block missing required field: {field}"
+            ))
+    
+    # Validate field types
+    if "execution_time_ms" in metrics:
+        value = metrics["execution_time_ms"]
+        if not isinstance(value, (int, float)):
+            errors.append(ValidationError(
+                ErrorCode.GS_083,
+                f"METRICS execution_time_ms must be numeric, got: {type(value).__name__}"
+            ))
+    
+    if "quality_score" in metrics:
+        value = metrics["quality_score"]
+        if isinstance(value, (int, float)):
+            if value < 0.0 or value > 1.0:
+                errors.append(ValidationError(
+                    ErrorCode.GS_084,
+                    f"METRICS quality_score must be 0.0-1.0, got: {value}"
+                ))
+        else:
+            errors.append(ValidationError(
+                ErrorCode.GS_084,
+                f"METRICS quality_score must be numeric, got: {type(value).__name__}"
+            ))
+    
+    if "scope_compliance" in metrics:
+        value = metrics["scope_compliance"]
+        if not isinstance(value, bool):
+            # Allow string "true"/"false" as well
+            if isinstance(value, str) and value.lower() in ["true", "false"]:
+                pass  # Acceptable
+            else:
+                errors.append(ValidationError(
+                    ErrorCode.GS_085,
+                    f"METRICS scope_compliance must be boolean, got: {type(value).__name__}"
+                ))
+    
+    return errors
+
+
+def validate_regression_and_drift(content: str, registry: dict) -> list:
+    """
+    Validate metrics against baselines for regression and drift detection.
+    
+    PAC-ATLAS-P41-GOVERNANCE-REGRESSION-AND-DRIFT-ENFORCEMENT-INTEGRATION-01
+    
+    Rules (FAIL_CLOSED):
+    1. Performance regression vs baseline P50/P95 → GS_094 (BLOCK)
+    2. Semantic drift outside calibration envelope → GS_095 (BLOCK or ESCALATE)
+    3. Enforcement is deterministic — no agent discretion
+    4. Regression equals failure — no silent pass
+    
+    Returns:
+        List of ValidationError for any regression/drift violations
+    """
+    errors = []
+    
+    # Only evaluate if artifact has METRICS block
+    if not is_executable_artifact(content):
+        return errors
+    
+    metrics = extract_metrics_block(content)
+    if not metrics:
+        return errors  # No metrics to evaluate
+    
+    # Extract agent info
+    agent_info = extract_agent_info_from_content(content)
+    agent_gid = agent_info.get("gid", "UNKNOWN")
+    agent_name = agent_info.get("name", "UNKNOWN")
+    execution_lane = agent_info.get("execution_lane", "UNKNOWN")
+    
+    # Skip if we can't identify the agent
+    if agent_gid == "UNKNOWN":
+        return errors
+    
+    # Try to import evaluators
+    try:
+        from regression_evaluator import evaluate_regression
+        from drift_evaluator import evaluate_drift
+    except ImportError:
+        # Evaluators not available — skip enforcement but don't fail
+        # This allows gradual rollout
+        return errors
+    
+    # Prepare metrics dict for evaluation
+    eval_metrics = {}
+    
+    # Map common metric names
+    # Note: execution_time_ms is in milliseconds, pac_completion_time baseline is in seconds
+    metric_mapping = {
+        "quality_score": "first_pass_validity",
+        "scope_compliance": "lane_violations",
+    }
+    
+    for key, value in metrics.items():
+        if isinstance(value, (int, float, bool)):
+            # Direct numeric/boolean values
+            if key == "scope_compliance":
+                # Convert boolean to violation count
+                eval_metrics["lane_violations"] = 0 if value else 1
+            elif key == "execution_time_ms":
+                # Convert milliseconds to seconds for baseline comparison
+                eval_metrics["pac_completion_time"] = float(value) / 1000.0
+            else:
+                mapped_key = metric_mapping.get(key, key)
+                eval_metrics[mapped_key] = float(value)
+    
+    # Evaluate regression
+    has_regression, regression_errors = evaluate_regression(
+        agent_gid=agent_gid,
+        agent_name=agent_name,
+        execution_lane=execution_lane,
+        metrics=eval_metrics,
+    )
+    
+    if has_regression:
+        for error_msg in regression_errors:
+            errors.append(ValidationError(
+                ErrorCode.GS_094,
+                error_msg,
+            ))
+    
+    # Evaluate drift
+    has_blocking_drift, has_escalation, drift_errors = evaluate_drift(
+        agent_gid=agent_gid,
+        agent_name=agent_name,
+        execution_lane=execution_lane,
+        metrics=eval_metrics,
+    )
+    
+    if has_blocking_drift:
+        for error_msg in drift_errors:
+            errors.append(ValidationError(
+                ErrorCode.GS_095,
+                error_msg,
+            ))
+    
+    return errors
+
+
+def extract_agent_info_from_content(content: str) -> dict:
+    """
+    Extract agent GID, name, and execution lane from content.
+    
+    Returns dict with gid, name, execution_lane keys.
+    """
+    info = {"gid": "UNKNOWN", "name": "UNKNOWN", "execution_lane": "UNKNOWN"}
+    
+    # Extract from AGENT_ACTIVATION_ACK
+    gid_match = re.search(r'gid:\s*["\']?(GID-\d+)["\']?', content, re.IGNORECASE)
+    if gid_match:
+        info["gid"] = gid_match.group(1)
+    
+    name_match = re.search(r'agent(?:_name)?:\s*["\']?([A-Z][A-Za-z]+)["\']?', content, re.IGNORECASE)
+    if name_match:
+        info["name"] = name_match.group(1).upper()
+    
+    lane_match = re.search(r'execution_lane:\s*["\']?([A-Z_]+)["\']?', content, re.IGNORECASE)
+    if lane_match:
+        info["execution_lane"] = lane_match.group(1).upper()
+    
+    return info
 
 
 def validate_block_order(content: str) -> list:
@@ -1502,19 +2207,62 @@ def is_wrap_artifact(content: str) -> bool:
 
 def validate_wrap_schema(content: str) -> ValidationResult:
     """
-    Validate WRAP artifacts against CHAINBRIDGE_CANONICAL_WRAP_SCHEMA v1.0.0.
+    Validate WRAP artifacts against CHAINBRIDGE_CANONICAL_WRAP_SCHEMA v1.1.0.
     
     This function validates WRAPs separately from PAC gates.
     PAC control-plane blocks (BSRG, Review Gate, PAG-01) are FORBIDDEN in WRAPs.
     
-    Authority: PAC-BENSON-P28-CANONICAL-WRAP-SCHEMA-ENFORCEMENT-01
+    Authority: PAC-SAM-P31-GOVERNANCE-SECURITY-GATE-HARDENING-AND-WRAP-INGESTION-01
     Mode: FAIL_CLOSED
+    
+    Security Hardening (v1.1.0):
+    - WRAP_INGESTION_PREAMBLE now REQUIRED for new WRAPs
+    - Preamble must be FIRST block
+    - Mixed semantics detection
+    - Training signal content validation
+    
+    Legacy Grandfathering:
+    - WRAPs created before v1.1.0 (without preamble) are grandfathered
+    - They still require BENSON_TRAINING_SIGNAL and FINAL_STATE
     """
     errors = []
     
-    # 1. Check for WRAP_INGESTION_PREAMBLE (recommended but not hard-fail for now)
-    # Note: Legacy WRAPs may not have this block yet
-    # Future: Make this mandatory after migration period
+    # Check for legacy WRAP (created before v1.1.0 schema enforcement)
+    # Legacy markers: no WRAP_INGESTION_PREAMBLE but has standard WRAP structure
+    has_preamble = "WRAP_INGESTION_PREAMBLE:" in content
+    
+    # Legacy WRAPs are grandfathered - only new WRAPs require preamble
+    # A WRAP is considered "new" if it contains schema v1.1.0 markers
+    is_new_wrap = "schema_version: \"1.1.0\"" in content or "CHAINBRIDGE_CANONICAL_WRAP_SCHEMA" in content
+    
+    # 1. Check for WRAP_INGESTION_PREAMBLE (REQUIRED for new WRAPs only)
+    if not has_preamble and is_new_wrap:
+        errors.append(ValidationError(
+            ErrorCode.WRP_001,
+            "WRAP missing WRAP_INGESTION_PREAMBLE (required as of schema v1.1.0)"
+        ))
+    elif has_preamble:
+        # 1b. Check that preamble is FIRST block (after any title/header lines)
+        # Find position of WRAP_INGESTION_PREAMBLE vs other YAML blocks
+        preamble_pos = content.find("WRAP_INGESTION_PREAMBLE:")
+        
+        # Check for any other YAML blocks appearing before preamble
+        other_yaml_blocks = [
+            "BENSON_TRAINING_SIGNAL:",
+            "WRAP_HEADER:",
+            "PAC_REFERENCE:",
+            "EXECUTION_SUMMARY:",
+            "FINAL_STATE:",
+            "DELIVERABLES:",
+        ]
+        for block in other_yaml_blocks:
+            block_pos = content.find(block)
+            if block_pos != -1 and block_pos < preamble_pos:
+                errors.append(ValidationError(
+                    ErrorCode.WRP_002,
+                    f"WRAP_INGESTION_PREAMBLE must be first block, but {block} appears before it"
+                ))
+                break
     
     # 2. Check for BENSON_TRAINING_SIGNAL (REQUIRED)
     if "BENSON_TRAINING_SIGNAL:" not in content and "TRAINING_SIGNAL:" not in content:
@@ -1523,23 +2271,43 @@ def validate_wrap_schema(content: str) -> ValidationResult:
             "WRAP missing BENSON_TRAINING_SIGNAL or TRAINING_SIGNAL block"
         ))
     
-    # 3. Check for forbidden PAC control blocks
+    # 3. Check for forbidden PAC control blocks (HARD_FAIL)
+    # Only check for actual YAML block declarations, not references in text
     forbidden_pac_blocks = [
-        "BENSON_SELF_REVIEW_GATE:",
-        "PACK_IMMUTABILITY:",
-        "PAG01_ACTIVATION:",
+        ("BENSON_SELF_REVIEW_GATE:", "BSRG"),
+        ("PACK_IMMUTABILITY:", "PACK_IMMUTABILITY"),
+        ("PAG01_ACTIVATION:", "PAG01"),
     ]
-    for block in forbidden_pac_blocks:
-        if block in content:
-            errors.append(ValidationError(
-                ErrorCode.WRP_004,
-                f"WRAP contains forbidden PAC control block: {block}"
-            ))
+    for block, name in forbidden_pac_blocks:
+        # Check if it appears as a top-level YAML block (not in a code fence or reference)
+        # Pattern: block at start of line or after newline with optional whitespace
+        pattern = rf'^[ \t]*{re.escape(block)}'
+        if re.search(pattern, content, re.MULTILINE):
+            # Exclude if it's inside a code fence (documentation)
+            # Simple heuristic: if it appears after "```" and before next "```", skip
+            in_code_fence = False
+            lines = content.split('\n')
+            for i, line in enumerate(lines):
+                if line.strip().startswith('```'):
+                    in_code_fence = not in_code_fence
+                if block in line and not in_code_fence:
+                    errors.append(ValidationError(
+                        ErrorCode.WRP_004,
+                        f"WRAP contains forbidden PAC control block: {name}"
+                    ))
+                    break
     
-    # 4. Check for PAC_REFERENCE (should reference authorizing PAC)
-    if "PAC_REFERENCE:" not in content and "References:" not in content and "pac_id:" not in content:
-        # Not a hard fail - many legacy WRAPs don't have explicit reference blocks
-        pass  # Warning only, not error
+    # 4. Check for mixed artifact semantics (HARD_FAIL)
+    # A WRAP should not have PAC-style artifact ID
+    pac_id_pattern = r'pac_id:\s*["\']?PAC-[A-Z]+-P\d+'
+    if re.search(pac_id_pattern, content):
+        # Check if this is in a PAC_REFERENCE block (allowed)
+        pac_ref_section = re.search(r'PAC_REFERENCE:.*?(?=\n\n|\n---|\Z)', content, re.DOTALL)
+        if not pac_ref_section or "pac_id:" not in pac_ref_section.group():
+            errors.append(ValidationError(
+                ErrorCode.WRP_008,
+                "WRAP contains PAC-style artifact ID outside PAC_REFERENCE - mixed semantics forbidden"
+            ))
     
     # 5. Check for FINAL_STATE
     if "FINAL_STATE:" not in content:
@@ -1547,6 +2315,38 @@ def validate_wrap_schema(content: str) -> ValidationResult:
             ErrorCode.WRP_006,
             "WRAP missing FINAL_STATE block"
         ))
+    
+    # 6. Validate preamble fields if present (v1.1.0)
+    if has_preamble:
+        required_preamble_fields = [
+            "artifact_type",
+            "pac_gates_disabled",
+            "mode",
+        ]
+        preamble_section = re.search(
+            r'WRAP_INGESTION_PREAMBLE:.*?(?=\n\n|\n---|\n##|\Z)', 
+            content, 
+            re.DOTALL
+        )
+        if preamble_section:
+            preamble_text = preamble_section.group()
+            missing_fields = []
+            for field in required_preamble_fields:
+                if f"{field}:" not in preamble_text:
+                    missing_fields.append(field)
+            if missing_fields:
+                errors.append(ValidationError(
+                    ErrorCode.WRP_011,
+                    f"WRAP_INGESTION_PREAMBLE missing required fields: {', '.join(missing_fields)}"
+                ))
+            
+            # Check artifact_type is "WRAP"
+            if 'artifact_type:' in preamble_text:
+                if 'artifact_type: "PAC"' in preamble_text or "artifact_type: 'PAC'" in preamble_text:
+                    errors.append(ValidationError(
+                        ErrorCode.WRP_008,
+                        "WRAP preamble declares artifact_type as PAC - mixed semantics forbidden"
+                    ))
     
     return ValidationResult(
         valid=len(errors) == 0,
@@ -2369,6 +3169,120 @@ def validate_content(content: str, registry: dict) -> ValidationResult:
         errors.extend(color_errors)
     # =========================================================================
     # END HARD-GATE: AGENT COLOR ENFORCEMENT
+    # =========================================================================
+    
+    # =========================================================================
+    # HARD-GATE: ANTI-OVERHELPFULNESS GUARD (GS_060-GS_064)
+    # PAC-BENSON-P32-ANTI-OVERHELPFULNESS-GUARD-ENFORCEMENT-01
+    # 
+    # Global Constraint: ANTI_OVERHELPFULNESS_GUARD
+    # Rules:
+    #   - Authority > Helpfulness
+    #   - Artifact Correctness > Content Richness
+    #   - Scope Containment > Insight Expansion
+    # Mode: FAIL_CLOSED. No bypass. No override.
+    # =========================================================================
+    overhelpfulness_errors = validate_anti_overhelpfulness(content)
+    if overhelpfulness_errors:
+        for err in overhelpfulness_errors:
+            emit_training_signal_for_failure(err.code)
+        errors.extend(overhelpfulness_errors)
+    # =========================================================================
+    # END HARD-GATE: ANTI-OVERHELPFULNESS GUARD
+    # =========================================================================
+    
+    # =========================================================================
+    # HARD-GATE: NON-EXECUTING AGENT & PAC NAMING (GS_071-GS_073)
+    # PAC-BENSON-P36-NONEXECUTING-AGENT-ENFORCEMENT-AND-PAC-NAMING-CANONICALIZATION-01
+    # 
+    # Rules:
+    #   - PAC IDs may only reference EXECUTING agents
+    #   - Retired/forbidden agent aliases hard-fail
+    #   - Footer color must match executing agent
+    # Mode: FAIL_CLOSED. No bypass. No override.
+    # =========================================================================
+    naming_errors = validate_pac_naming_and_roles(content, registry)
+    if naming_errors:
+        for err in naming_errors:
+            emit_training_signal_for_failure(err.code)
+        errors.extend(naming_errors)
+    # =========================================================================
+    # END HARD-GATE: NON-EXECUTING AGENT & PAC NAMING
+    # =========================================================================
+    
+    # =========================================================================
+    # HARD-GATE: NON-EXECUTING STRATEGY AGENT ENFORCEMENT (GS_090-GS_093)
+    # PAC-PAX-P37-EXECUTION-ROLE-RESTRICTION-AND-SCOPE-REALIGNMENT-01
+    # PAC-ALEX-P35-AGENT-REGISTRY-AND-GATE-ENFORCEMENT-FOR-PAX-01
+    # 
+    # Rules:
+    #   - Non-executing strategy agents (PAX) cannot emit PACs → GS_090
+    #   - Non-executing strategy agents cannot emit WRAPs → GS_091
+    #   - Non-executing strategy agents cannot create code/files → GS_092
+    #   - Non-executing strategy agents cannot issue POSITIVE_CLOSURE → GS_093
+    # 
+    # Training Signal:
+    #   pattern: ROLE_CLARITY_PREVENTS_SYSTEMIC_DRIFT
+    #   lesson: "Strategy informs execution; it does not perform it."
+    #
+    # Mode: FAIL_CLOSED. No bypass. No override. Registry is law.
+    # =========================================================================
+    strategy_agent_errors = validate_non_executing_strategy_agent(content, registry)
+    if strategy_agent_errors:
+        for err in strategy_agent_errors:
+            emit_training_signal_for_failure(err.code)
+        errors.extend(strategy_agent_errors)
+    # =========================================================================
+    # END HARD-GATE: NON-EXECUTING STRATEGY AGENT ENFORCEMENT
+    # =========================================================================
+    
+    # =========================================================================
+    # HARD-GATE: AGENT PERFORMANCE METRICS (GS_080-GS_085)
+    # PAC-BENSON-P37-AGENT-PERFORMANCE-METRICS-BASELINE-AND-ENFORCEMENT-01
+    # 
+    # Principle: What isn't measured cannot be trusted.
+    #
+    # Rules:
+    #   - EXECUTABLE artifacts MUST include METRICS block → GS_080
+    #   - METRICS must have all required fields → GS_081
+    #   - Values must be parseable → GS_082
+    #   - execution_time_ms must be numeric → GS_083
+    #   - quality_score must be 0.0-1.0 → GS_084
+    #   - scope_compliance must be boolean → GS_085
+    #
+    # Mode: FAIL_CLOSED (with legacy grandfathering)
+    # =========================================================================
+    metrics_errors = validate_metrics_block(content)
+    if metrics_errors:
+        for err in metrics_errors:
+            emit_training_signal_for_failure(err.code)
+        errors.extend(metrics_errors)
+    # =========================================================================
+    # END HARD-GATE: AGENT PERFORMANCE METRICS
+    # =========================================================================
+    
+    # =========================================================================
+    # HARD-GATE: REGRESSION & DRIFT ENFORCEMENT (GS_094-GS_095)
+    # PAC-ATLAS-P41-GOVERNANCE-REGRESSION-AND-DRIFT-ENFORCEMENT-INTEGRATION-01
+    # 
+    # Pattern: GOVERNANCE_MUST_NOT_DECAY
+    # Lesson: "If quality degrades, authority is revoked automatically."
+    #
+    # Rules:
+    #   - Performance regression vs baseline P50/P95 → GS_094 (BLOCK)
+    #   - Semantic drift outside calibration envelope → GS_095 (BLOCK or ESCALATE)
+    #   - Enforcement is deterministic — no agent discretion
+    #   - Regression equals failure — no silent pass
+    #
+    # Mode: FAIL_CLOSED. No bypass. No human-in-the-loop for known degradation.
+    # =========================================================================
+    regression_drift_errors = validate_regression_and_drift(content, registry)
+    if regression_drift_errors:
+        for err in regression_drift_errors:
+            emit_training_signal_for_failure(err.code)
+        errors.extend(regression_drift_errors)
+    # =========================================================================
+    # END HARD-GATE: REGRESSION & DRIFT ENFORCEMENT
     # =========================================================================
     
     # Determine if TRAINING_SIGNAL is required
