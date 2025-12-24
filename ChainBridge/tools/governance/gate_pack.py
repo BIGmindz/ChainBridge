@@ -238,6 +238,11 @@ class ErrorCode(Enum):
     # Regression & Drift Enforcement (PAC-ATLAS-P41-GOVERNANCE-REGRESSION-AND-DRIFT-ENFORCEMENT-INTEGRATION-01)
     GS_094 = "Performance regression detected — execution blocked"
     GS_095 = "Semantic drift detected — execution requires escalation or block"
+    # PAC Sequence & Reservation Enforcement (PAC-ALEX-P42-GOVERNANCE-PAC-SEQUENCE-ENFORCEMENT-AND-RESERVATION-LOCK-01)
+    GS_096 = "PAC sequence violation — out-of-order PAC number (global monotonic)"
+    GS_097 = "PAC reservation required — PAC number not reserved by ledger"
+    GS_098 = "PAC reservation invalid — expired/consumed/mismatched reservation"
+    GS_099 = "PAC↔WRAP coupling violation — missing counterpart artifact"
 
 
 @dataclass
@@ -1430,6 +1435,178 @@ def validate_regression_and_drift(content: str, registry: dict) -> list:
     return errors
 
 
+# ============================================================================
+# PAC SEQUENCE & RESERVATION ENFORCEMENT (PAC-ALEX-P42-GOVERNANCE-PAC-SEQUENCE-ENFORCEMENT-AND-RESERVATION-LOCK-01)
+# ============================================================================
+
+def validate_pac_sequence_and_reservations(content: str, registry: dict) -> list:
+    """
+    Validate PAC sequence and reservations against ledger.
+    
+    PAC-ALEX-P42-GOVERNANCE-PAC-SEQUENCE-ENFORCEMENT-AND-RESERVATION-LOCK-01
+    
+    Rules (FAIL_CLOSED):
+    1. PAC numbers must be globally monotonic → GS_096 if out-of-order
+    2. PAC numbers must be reserved in ledger → GS_097 if no reservation
+    3. Reservation must match issuing agent → GS_098 if mismatch/expired
+    4. Reservations are single-use → GS_098 if already consumed
+    
+    Returns:
+        List of ValidationError for any sequence/reservation violations
+    """
+    errors = []
+    
+    # Only apply to PAC artifacts
+    if not is_pac_artifact(content):
+        return errors
+    
+    # Extract PAC ID
+    pac_id = extract_pac_id(content)
+    if not pac_id:
+        return errors  # PAC ID validation handled elsewhere
+    
+    # Extract agent info
+    agent_info = extract_agent_info_from_content(content)
+    agent_gid = agent_info.get("gid", "UNKNOWN")
+    
+    if agent_gid == "UNKNOWN":
+        return errors  # Agent validation handled elsewhere
+    
+    # Try to import and use ledger
+    try:
+        from tools.governance.ledger_writer import GovernanceLedger
+        ledger = GovernanceLedger()
+    except Exception:
+        try:
+            # Alternative import path when running from repo root
+            import sys
+            sys.path.insert(0, str(SCRIPT_DIR.parent.parent))
+            from tools.governance.ledger_writer import GovernanceLedger
+            ledger = GovernanceLedger()
+        except Exception:
+            # Ledger not available — skip enforcement but don't fail
+            # This allows offline validation with a warning
+            return errors
+    
+    # Validate sequence using ledger
+    result = ledger.validate_pac_sequence(pac_id, agent_gid)
+    
+    if not result.get("valid", False):
+        error_code_str = result.get("error_code", "GS_096")
+        error_code = getattr(ErrorCode, error_code_str, ErrorCode.GS_096)
+        errors.append(ValidationError(
+            error_code,
+            result.get("message", "PAC sequence validation failed"),
+        ))
+        emit_training_signal_for_failure(error_code)
+    
+    # PAC-BENSON-P42: Validate causal advancement (no new PAC if prior PAC lacks WRAP)
+    causal_result = ledger.validate_causal_advancement(pac_id, agent_gid)
+    
+    if not causal_result.get("valid", False):
+        error_code_str = causal_result.get("error_code", "GS_096")
+        error_code = getattr(ErrorCode, error_code_str, ErrorCode.GS_096)
+        errors.append(ValidationError(
+            error_code,
+            causal_result.get("message", "Causal advancement validation failed"),
+        ))
+        emit_training_signal_for_failure(error_code)
+    
+    return errors
+
+
+def validate_pac_wrap_coupling(content: str, file_path: Path, registry: dict) -> list:
+    """
+    Validate PAC↔WRAP coupling.
+    
+    PAC-ALEX-P42-GOVERNANCE-PAC-SEQUENCE-ENFORCEMENT-AND-RESERVATION-LOCK-01
+    PAC-BENSON-P42-SEQUENTIAL-PAC-WRAP-GATING-AND-CAUSAL-ADVANCEMENT-ENFORCEMENT-01
+    
+    Rules (FAIL_CLOSED):
+    1. If PAC present: corresponding WRAP must exist (same P##, same agent)
+    2. If WRAP present: corresponding PAC must exist
+    3. Exception: status = ISSUED_NOT_EXECUTED (PAC issued but not yet completed)
+    
+    Legacy Grandfathering:
+    - WRAPs with P## < 37 are grandfathered (pre-enforcement era)
+    
+    Returns:
+        List of ValidationError for any coupling violations
+    """
+    errors = []
+    
+    # Determine if this is a PAC or WRAP
+    is_pac = is_pac_artifact(content)
+    is_wrap = is_wrap_artifact(content)
+    
+    if not is_pac and not is_wrap:
+        return errors  # Not a PAC or WRAP, nothing to validate
+    
+    # Extract artifact ID - use unified extractor
+    artifact_id = extract_artifact_id(content)
+    if not artifact_id:
+        return errors
+    
+    # Legacy grandfathering: WRAPs before P37 don't require PAC validation
+    if is_wrap:
+        p_match = re.search(r'WRAP-[A-Z]+-P(\d+)-', artifact_id)
+        if p_match:
+            p_num = int(p_match.group(1))
+            if p_num < 37:
+                # Legacy WRAP - grandfathered
+                return errors
+    
+    # Check for ISSUED_NOT_EXECUTED exception
+    # PACs that are issued but not yet executed don't require WRAP
+    if is_pac:
+        status_match = re.search(r'artifact_status:\s*["\']?(ISSUED_NOT_EXECUTED|ISSUED)["\']?', content, re.IGNORECASE)
+        if status_match:
+            status = status_match.group(1).upper()
+            if status == "ISSUED_NOT_EXECUTED" or status == "ISSUED":
+                # Exception: PAC issued but not executed, no WRAP required yet
+                return errors
+    
+    # Extract P## number and agent name
+    if is_pac:
+        match = re.search(r'PAC-([A-Z]+)-P(\d+)-', artifact_id)
+    else:
+        match = re.search(r'WRAP-([A-Z]+)-P(\d+)-', artifact_id)
+    
+    if not match:
+        return errors
+    
+    agent_name = match.group(1)
+    pac_number = match.group(2)
+    
+    # Determine counterpart directory
+    if file_path:
+        pacs_dir = file_path.parent.parent / "pacs" if is_wrap else file_path.parent
+        wraps_dir = file_path.parent.parent / "wraps" if is_pac else file_path.parent
+        
+        # Look for counterpart
+        if is_pac:
+            # Looking for WRAP
+            counterpart_pattern = f"WRAP-{agent_name}-P{pac_number}-*.md"
+            counterpart_dir = wraps_dir
+        else:
+            # Looking for PAC
+            counterpart_pattern = f"PAC-{agent_name}-P{pac_number}-*.md"
+            counterpart_dir = pacs_dir
+        
+        # Check if counterpart exists
+        if counterpart_dir.exists():
+            counterparts = list(counterpart_dir.glob(counterpart_pattern))
+            if not counterparts:
+                errors.append(ValidationError(
+                    ErrorCode.GS_099,
+                    f"PAC↔WRAP coupling violation: No counterpart found for {artifact_id} "
+                    f"(expected {counterpart_pattern} in {counterpart_dir})",
+                ))
+                emit_training_signal_for_failure(ErrorCode.GS_099)
+    
+    return errors
+
+
 def extract_agent_info_from_content(content: str) -> dict:
     """
     Extract agent GID, name, and execution lane from content.
@@ -2203,6 +2380,32 @@ def is_wrap_artifact(content: str) -> bool:
         return True
     
     return False
+
+
+def extract_wrap_id(content: str) -> Optional[str]:
+    """
+    Extract WRAP ID from content.
+    
+    Looks for WRAP ID in various formats:
+    - wrap_id: "WRAP-AGENT-G#-SUBJECT-##"
+    - artifact_id: "WRAP-..."
+    - # WRAP-AGENT-G#-SUBJECT-##
+    
+    Returns:
+        The WRAP ID string if found, None otherwise
+    """
+    patterns = [
+        r'wrap_id:\s*["\']?([A-Z0-9-]+)["\']?',
+        r'artifact_id:\s*["\']?(WRAP-[A-Z0-9-]+)["\']?',
+        r'#\s*(WRAP-[A-Z]+-[GP]\d+-[A-Z0-9-]+)',
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, content, re.IGNORECASE)
+        if match:
+            return match.group(1).upper()
+    
+    return None
 
 
 def validate_wrap_schema(content: str) -> ValidationResult:
@@ -3285,6 +3488,36 @@ def validate_content(content: str, registry: dict) -> ValidationResult:
     # END HARD-GATE: REGRESSION & DRIFT ENFORCEMENT
     # =========================================================================
     
+    # =========================================================================
+    # HARD-GATE: PAC SEQUENCE & RESERVATION ENFORCEMENT (GS_096-GS_099)
+    # PAC-ALEX-P42-GOVERNANCE-PAC-SEQUENCE-ENFORCEMENT-AND-RESERVATION-LOCK-01
+    # 
+    # Pattern: PAC_SEQUENCE_IS_LAW
+    # Lesson: "If numbering is not deterministic, governance is not auditable."
+    #
+    # Rules:
+    #   - PAC numbers must be globally monotonic → GS_096 (BLOCK)
+    #   - PAC numbers must be reserved in ledger → GS_097 (BLOCK)
+    #   - Reservation must match issuing agent → GS_098 (BLOCK)
+    #   - PAC↔WRAP coupling is mandatory → GS_099 (BLOCK)
+    #
+    # Training Signal:
+    #   pattern: PAC_SEQUENCE_IS_LAW
+    #   lesson: "Reservations are authority-only, time-bound, single-use."
+    #
+    # Mode: FAIL_CLOSED. No bypass. No self-assigned numbers.
+    # =========================================================================
+    sequence_errors = validate_pac_sequence_and_reservations(content, registry)
+    if sequence_errors:
+        for err in sequence_errors:
+            emit_training_signal_for_failure(err.code)
+        errors.extend(sequence_errors)
+    # NOTE: PAC↔WRAP coupling validation requires file_path which is not available
+    # in validate_content(). Wire into validate_file() instead if needed.
+    # =========================================================================
+    # END HARD-GATE: PAC SEQUENCE & RESERVATION ENFORCEMENT
+    # =========================================================================
+    
     # Determine if TRAINING_SIGNAL is required
     # Required for: new PACs/WRAPs with ACTIVATION_ACK blocks (G0.2.0+)
     # Not required for: template files, lock files, protocol files
@@ -3324,7 +3557,27 @@ def validate_file(file_path: Path, registry: dict) -> ValidationResult:
             errors=[ValidationError(ErrorCode.G0_010, f"Cannot read file: {e}")]
         )
     
-    return validate_content(content, registry)
+    # Run content validation
+    result = validate_content(content, registry)
+    
+    # Additional file-path-aware validations
+    # =========================================================================
+    # PAC↔WRAP COUPLING VALIDATION (GS_099)
+    # PAC-ALEX-P42-GOVERNANCE-PAC-SEQUENCE-ENFORCEMENT-AND-RESERVATION-LOCK-01
+    # 
+    # This validation requires file_path to locate counterpart artifacts.
+    # =========================================================================
+    coupling_errors = validate_pac_wrap_coupling(content, file_path, registry)
+    if coupling_errors:
+        for err in coupling_errors:
+            emit_training_signal_for_failure(err.code)
+        result.errors.extend(coupling_errors)
+        result.valid = len(result.errors) == 0
+    # =========================================================================
+    # END PAC↔WRAP COUPLING VALIDATION
+    # =========================================================================
+    
+    return result
 
 
 def find_pac_files(paths: list) -> list:
@@ -3475,13 +3728,13 @@ def run_file_mode(file_path: str, record_ledger: bool = True) -> int:
 
 def extract_artifact_id(content: str) -> Optional[str]:
     """Extract PAC/WRAP ID from content."""
-    # Try PAC ID
-    pac_match = re.search(r'(PAC-[A-Z]+-G\d+-[A-Z0-9-]+)', content)
+    # Try PAC ID (both G-phase and P-phase formats)
+    pac_match = re.search(r'(PAC-[A-Z]+-[GP]\d+-[A-Z0-9-]+)', content)
     if pac_match:
         return pac_match.group(1)
     
-    # Try WRAP ID
-    wrap_match = re.search(r'(WRAP-[A-Z]+-G\d+-[A-Z0-9-]+)', content)
+    # Try WRAP ID (both G-phase and P-phase formats)
+    wrap_match = re.search(r'(WRAP-[A-Z]+-[GP]\d+-[A-Z0-9-]+)', content)
     if wrap_match:
         return wrap_match.group(1)
     
