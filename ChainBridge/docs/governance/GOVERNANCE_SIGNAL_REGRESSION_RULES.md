@@ -586,9 +586,211 @@ FIX_PROTOCOL:
 
 ---
 
-## 11. Execution Rules
+## 11. WARN Boundary Regression Rules
 
-### 11.1 CI Integration
+> **Added by:** PAC-MAGGIE-P41-GOVERNANCE-SIGNAL-AUTHORITY-BOUNDARIES-AND-WARN-PROPAGATION-LOCKDOWN-01
+
+### 11.1 WARN Settlement Boundary Rules
+
+```yaml
+WARN_SETTLEMENT_BOUNDARY_RULES:
+  rule_id: "RUL_WARN_001"
+  description: "WARN signals must never reach settlement layer"
+  
+  invariant: "COUNT(WARN at settlement boundary) == 0"
+  
+  detection:
+    method: "BOUNDARY_CHECKPOINT_AUDIT"
+    checkpoint: "GOVERNANCE → SETTLEMENT"
+    
+  thresholds:
+    warn_at_boundary:
+      baseline: 0
+      acceptable: 0  # ZERO TOLERANCE
+      regression: 1  # Any WARN at boundary is regression
+      
+  severity_on_violation: CATASTROPHIC
+  error_code: "GS_098"
+  action: "EMERGENCY_HALT"
+  
+  machine_readable_rule: |
+    def check_warn_settlement_boundary(audit_log):
+        boundary_events = filter_boundary_events(audit_log, "GOVERNANCE", "SETTLEMENT")
+        warn_at_boundary = [e for e in boundary_events if e.signal == WARN]
+        
+        if len(warn_at_boundary) > 0:
+            return RegressionResult(
+                severity=CATASTROPHIC,
+                rule="RUL_WARN_001",
+                count=len(warn_at_boundary),
+                error_code="GS_098"
+            )
+        return RegressionResult(severity=NONE)
+```
+
+### 11.2 WARN Authority Boundary Rules
+
+```yaml
+WARN_AUTHORITY_BOUNDARY_RULES:
+  rule_id: "RUL_WARN_002"
+  description: "WARN signals cannot grant authority or closure"
+  
+  invariants:
+    - "WARN → POSITIVE_CLOSURE: impossible"
+    - "WARN → AUTHORITY_TOKEN: impossible"
+    - "WARN → PASS: requires HUMAN_REVIEW"
+    
+  detection:
+    method: "STATE_TRANSITION_AUDIT"
+    
+  thresholds:
+    warn_to_closure:
+      baseline: 0
+      acceptable: 0
+      regression: 1
+      
+    warn_to_authority:
+      baseline: 0
+      acceptable: 0
+      regression: 1
+      
+  severity_on_violation: CRITICAL
+  error_codes:
+    closure: "GS_097"
+    authority: "GS_099"
+    pass_upgrade: "GS_100"
+```
+
+### 11.3 WARN Cascade Detection Rules
+
+```yaml
+WARN_CASCADE_RULES:
+  rule_id: "RUL_WARN_003"
+  description: "Detect and block WARN cascade attacks"
+  
+  attack_patterns:
+    chain_attack:
+      pattern: "WARN → WARN → ... → AUTHORITY"
+      detection: "CHAIN_DEPTH_MONITOR"
+      threshold: 3
+      error_code: "GS_101"
+      
+    fanout_attack:
+      pattern: "WARN → [WARN×N] → MERGE → CLAIM"
+      detection: "FANOUT_MONITOR"
+      threshold: 2
+      error_code: "GS_102"
+      
+    timing_attack:
+      pattern: "WARN(t) → WARN(t+ε) where ε < MIN_INTERVAL"
+      detection: "RATE_LIMIT_MONITOR"
+      min_interval_ms: 100
+      error_code: "GS_103"
+      
+  severity_on_detection: CRITICAL
+  action: "BLOCK_AND_ALERT"
+```
+
+### 11.4 WARN Determinism Rules
+
+```yaml
+WARN_DETERMINISM_RULES:
+  rule_id: "RUL_WARN_004"
+  description: "WARN handling must be 100% deterministic"
+  
+  requirements:
+    - "Same input → same WARN decision"
+    - "Replay produces identical results"
+    - "No probabilistic WARN resolution"
+    
+  verification:
+    method: "REPLAY_HASH_COMPARISON"
+    required_replays: 100
+    required_match_rate: 1.0
+    
+  severity_on_nondeterminism: CRITICAL
+  error_code: "GS_107"
+  
+  machine_readable_rule: |
+    def check_warn_determinism(input_set, replays=100):
+        results = []
+        for _ in range(replays):
+            result = evaluate_warn_handling(input_set)
+            results.append(hash(result))
+        
+        if len(set(results)) != 1:
+            return RegressionResult(
+                severity=CRITICAL,
+                rule="RUL_WARN_004",
+                unique_results=len(set(results)),
+                error_code="GS_107"
+            )
+        return RegressionResult(severity=NONE)
+```
+
+### 11.5 Signal → Outcome Mapping Rules
+
+```yaml
+SIGNAL_OUTCOME_MAPPING_RULES:
+  rule_id: "RUL_WARN_005"
+  description: "Enforce signal to economic outcome mapping"
+  
+  proof_table:
+    PASS:
+      settlement: ALLOW
+      release: ALLOW
+      closure: ALLOW
+      
+    WARN:
+      settlement: BLOCK
+      release: BLOCK
+      closure: BLOCK
+      override: BLOCK
+      
+    FAIL:
+      settlement: BLOCK
+      release: BLOCK
+      closure: BLOCK
+      
+    SKIP:
+      settlement: BLOCK
+      release: BLOCK
+      closure: BLOCK
+      
+  enforcement: "IMMUTABLE_GATE"
+  
+  violation_severity: CATASTROPHIC
+  error_code: "GS_108"
+  
+  machine_readable_rule: |
+    SIGNAL_OUTCOME_MAP = {
+        (PASS, "settlement"): True,
+        (PASS, "release"): True,
+        (PASS, "closure"): True,
+        (WARN, "settlement"): False,
+        (WARN, "release"): False,
+        (WARN, "closure"): False,
+        (WARN, "override"): False,
+        (FAIL, "settlement"): False,
+        (FAIL, "release"): False,
+        (FAIL, "closure"): False,
+        (SKIP, "settlement"): False,
+        (SKIP, "release"): False,
+        (SKIP, "closure"): False,
+    }
+    
+    def check_signal_outcome(signal, outcome):
+        allowed = SIGNAL_OUTCOME_MAP.get((signal, outcome), False)
+        if not allowed:
+            return Block(error_code=f"GS_108:{signal}:{outcome}")
+        return Allow()
+```
+
+---
+
+## 12. Execution Rules
+
+### 12.1 CI Integration
 
 ```yaml
 CI_INTEGRATION:
@@ -613,6 +815,27 @@ CI_INTEGRATION:
     - rule: "RUL_ROB_001"
       weight: 4
       
+    # WARN Boundary Rules (PAC-MAGGIE-P41)
+    - rule: "RUL_WARN_001"
+      weight: 10  # HIGHEST — settlement boundary
+      description: "WARN settlement boundary check"
+      
+    - rule: "RUL_WARN_002"
+      weight: 8
+      description: "WARN authority boundary check"
+      
+    - rule: "RUL_WARN_003"
+      weight: 7
+      description: "WARN cascade detection"
+      
+    - rule: "RUL_WARN_004"
+      weight: 9
+      description: "WARN determinism verification"
+      
+    - rule: "RUL_WARN_005"
+      weight: 10  # HIGHEST — signal outcome mapping
+      description: "Signal to outcome mapping enforcement"
+      
   fail_condition: "Any rule returns MODERATE or higher"
   
   output_format: |
@@ -621,12 +844,13 @@ CI_INTEGRATION:
       rules_checked: N
       regressions_found: N
       highest_severity: NONE | MINOR | MODERATE | CRITICAL | CATASTROPHIC
+      warn_boundary_violations: N
       details: [...]
 ```
 
 ---
 
-## 12. Attestation
+## 13. Attestation
 
 ```yaml
 ATTESTATION:
@@ -638,8 +862,19 @@ ATTESTATION:
     to detect performance degradation in the governance signal system. The
     rules are machine-readable, enforceable via CI, and aligned with the
     principle that regression must block the build.
+    
+    PAC-MAGGIE-P41 ADDENDUM: I further certify that WARN boundary rules
+    (RUL_WARN_001 through RUL_WARN_005) are correctly configured to prevent
+    advisory signals from reaching settlement actions. The principle
+    WARN_IS_NOT_AUTHORITY is enforced at all boundaries.
   timestamp: "2025-12-24T00:00:00Z"
   signature: "💗 MAGGIE-P40-REGRESSION-ATTESTATION"
+  
+  p41_addendum:
+    added_by: "PAC-MAGGIE-P41"
+    date: "2025-12-24"
+    rules_added: ["RUL_WARN_001", "RUL_WARN_002", "RUL_WARN_003", "RUL_WARN_004", "RUL_WARN_005"]
+    training_signal: "WARN_IS_NOT_AUTHORITY"
 ```
 
 ---
