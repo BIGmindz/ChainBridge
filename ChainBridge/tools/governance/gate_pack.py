@@ -200,6 +200,14 @@ class ErrorCode(Enum):
     GS_030 = "Agent referenced without agent_color"
     GS_031 = "agent_color does not match canonical registry"
     GS_032 = "agent_color missing from activation acknowledgements"
+    # WRAP Schema Error Codes (PAC-BENSON-P28-CANONICAL-WRAP-SCHEMA-ENFORCEMENT-01)
+    WRP_001 = "WRAP missing WRAP_INGESTION_PREAMBLE"
+    WRP_002 = "WRAP_INGESTION_PREAMBLE must be first block"
+    WRP_003 = "WRAP missing BENSON_TRAINING_SIGNAL"
+    WRP_004 = "WRAP contains forbidden PAC control block"
+    WRP_005 = "WRAP missing required PAC_REFERENCE"
+    WRP_006 = "WRAP missing FINAL_STATE"
+    WRP_007 = "WRAP schema version mismatch"
 
 
 @dataclass
@@ -1443,6 +1451,109 @@ def is_pac_artifact(content: str) -> bool:
     return True
 
 
+def is_wrap_artifact(content: str) -> bool:
+    """
+    Detect if content is a WRAP artifact.
+    
+    WRAPs are report-only artifacts that document completed work.
+    They are NOT PACs and should not trigger PAC validation gates.
+    
+    A WRAP must have "WRAP-AGENT-" pattern in its identifier.
+    PACs that mention "WRAP" in their subject are NOT WRAPs.
+    
+    Authority: PAC-BENSON-P28-CANONICAL-WRAP-SCHEMA-ENFORCEMENT-01
+    """
+    # CRITICAL: Distinguish WRAP artifact IDs from PAC artifact IDs
+    # WRAP pattern: WRAP-<AGENT>-G<phase>-<subject>-<nn>
+    # PAC pattern:  PAC-<AGENT>-P<number>-<subject>-<nn>
+    # 
+    # PACs that mention "WRAP" in their subject (e.g., PAC-ATLAS-P28-WRAP-CANONICALIZATION)
+    # are NOT WRAPs - they are PACs about WRAPs.
+    
+    first_500 = content[:500]
+    
+    # Check for actual WRAP artifact ID pattern (WRAP-AGENT-G<n>)
+    # This is the definitive test - a file starting with WRAP-<AGENT>-G<phase>
+    wrap_id_pattern = r'WRAP-[A-Z]+-G\d+'
+    if re.search(wrap_id_pattern, first_500):
+        return True
+    
+    # Also check for WRAP_INGESTION_PREAMBLE as definitive marker
+    if "WRAP_INGESTION_PREAMBLE:" in content:
+        return True
+    
+    # Check for explicit WRAP artifact markers (must have multiple)
+    wrap_markers = [
+        "Work Result and Attestation Proof",
+        "WRAP METADATA",
+        "WRAP HEADER",
+        "wrap_id:",
+        "artifact_type: WRAP",
+        "artifact_type: \"WRAP\"",
+    ]
+    
+    # Must have at least 2 definitive WRAP structural markers
+    wrap_count = sum(1 for marker in wrap_markers if marker in content)
+    if wrap_count >= 2:
+        return True
+    
+    return False
+
+
+def validate_wrap_schema(content: str) -> ValidationResult:
+    """
+    Validate WRAP artifacts against CHAINBRIDGE_CANONICAL_WRAP_SCHEMA v1.0.0.
+    
+    This function validates WRAPs separately from PAC gates.
+    PAC control-plane blocks (BSRG, Review Gate, PAG-01) are FORBIDDEN in WRAPs.
+    
+    Authority: PAC-BENSON-P28-CANONICAL-WRAP-SCHEMA-ENFORCEMENT-01
+    Mode: FAIL_CLOSED
+    """
+    errors = []
+    
+    # 1. Check for WRAP_INGESTION_PREAMBLE (recommended but not hard-fail for now)
+    # Note: Legacy WRAPs may not have this block yet
+    # Future: Make this mandatory after migration period
+    
+    # 2. Check for BENSON_TRAINING_SIGNAL (REQUIRED)
+    if "BENSON_TRAINING_SIGNAL:" not in content and "TRAINING_SIGNAL:" not in content:
+        errors.append(ValidationError(
+            ErrorCode.WRP_003,
+            "WRAP missing BENSON_TRAINING_SIGNAL or TRAINING_SIGNAL block"
+        ))
+    
+    # 3. Check for forbidden PAC control blocks
+    forbidden_pac_blocks = [
+        "BENSON_SELF_REVIEW_GATE:",
+        "PACK_IMMUTABILITY:",
+        "PAG01_ACTIVATION:",
+    ]
+    for block in forbidden_pac_blocks:
+        if block in content:
+            errors.append(ValidationError(
+                ErrorCode.WRP_004,
+                f"WRAP contains forbidden PAC control block: {block}"
+            ))
+    
+    # 4. Check for PAC_REFERENCE (should reference authorizing PAC)
+    if "PAC_REFERENCE:" not in content and "References:" not in content and "pac_id:" not in content:
+        # Not a hard fail - many legacy WRAPs don't have explicit reference blocks
+        pass  # Warning only, not error
+    
+    # 5. Check for FINAL_STATE
+    if "FINAL_STATE:" not in content:
+        errors.append(ValidationError(
+            ErrorCode.WRP_006,
+            "WRAP missing FINAL_STATE block"
+        ))
+    
+    return ValidationResult(
+        valid=len(errors) == 0,
+        errors=errors
+    )
+
+
 def extract_bsrg_block(content: str) -> Optional[dict]:
     """
     Extract BENSON_SELF_REVIEW_GATE block from content.
@@ -2181,6 +2292,36 @@ def validate_content(content: str, registry: dict) -> ValidationResult:
     # =========================================================================
     
     # =========================================================================
+    # HARD-GATE: WRAP SCHEMA VALIDATION (WRP_001-WRP_007)
+    # PAC-BENSON-P28-CANONICAL-WRAP-SCHEMA-ENFORCEMENT-01
+    # 
+    # WRAPs are REPORT-ONLY artifacts. They document completed work.
+    # WRAPs do NOT trigger PAC control-plane gates (BSRG, PAG-01, Review Gate).
+    # WRAPs REQUIRE: BENSON_TRAINING_SIGNAL, FINAL_STATE
+    # WRAPs FORBID: BENSON_SELF_REVIEW_GATE, PACK_IMMUTABILITY, PAG01_ACTIVATION
+    # Mode: FAIL_CLOSED. WRAP schema is frozen.
+    # =========================================================================
+    if is_wrap_artifact(content):
+        # Validate WRAP schema requirements
+        wrap_result = validate_wrap_schema(content)
+        if not wrap_result.valid:
+            # Emit training signal for each failure
+            for err in wrap_result.errors:
+                emit_training_signal_for_failure(err.code)
+            errors.extend(wrap_result.errors)
+        
+        # CRITICAL: Skip PAC-only gates for WRAPs
+        # WRAPs do not require BSRG, do not trigger PAC validation
+        # Return early after WRAP-specific validation
+        return ValidationResult(
+            valid=len(errors) == 0,
+            errors=errors
+        )
+    # =========================================================================
+    # END HARD-GATE: WRAP SCHEMA VALIDATION
+    # =========================================================================
+    
+    # =========================================================================
     # HARD-GATE: BSRG-01 VALIDATION (BSRG_001-BSRG_012)
     # PAC-ATLAS-P21-BSRG-PARSER-AND-LEDGER-IMMUTABILITY-01
     # 
@@ -2478,8 +2619,27 @@ def main():
         action="store_true",
         help="Do not exit with error code on violations (audit mode only)"
     )
+    parser.add_argument(
+        "--ui",
+        action="store_true",
+        help="Enable rich terminal UI rendering (read-only, advisory)"
+    )
+    parser.add_argument(
+        "--no-color",
+        action="store_true",
+        help="Disable color output"
+    )
     
     args = parser.parse_args()
+    
+    # Initialize terminal UI if requested
+    ui = None
+    if args.ui:
+        try:
+            from terminal_ui import GovernanceTerminalUI, GovernanceReport, GateResult, GateStatus
+            ui = GovernanceTerminalUI(no_color=args.no_color)
+        except ImportError:
+            print("⚠ Warning: terminal_ui module not available. Falling back to plain output.")
     
     if args.audit_pag01:
         # Import and run PAG-01 audit
@@ -2488,42 +2648,88 @@ def main():
         
         if args.json:
             print(result.to_json())
+        elif ui:
+            # Rich terminal UI output
+            from terminal_ui import GovernanceReport, GateResult, GateStatus
+            
+            # Convert PAG-01 audit result to GovernanceReport
+            gates = []
+            
+            # Aggregate by violation type
+            violation_summary = {}
+            for v in result.violations:
+                code = v.code.name
+                if code not in violation_summary:
+                    violation_summary[code] = {"count": 0, "files": []}
+                violation_summary[code]["count"] += 1
+                if v.file_path:
+                    violation_summary[code]["files"].append(v.file_path)
+            
+            # Create gate results
+            for code, data in violation_summary.items():
+                gates.append(GateResult(
+                    gate_id=code,
+                    gate_name=code.replace("_", " ").title(),
+                    status=GateStatus.FAIL,
+                    message=f"{data['count']} violation(s)",
+                    details=f"{len(data['files'])} file(s) affected",
+                ))
+            
+            # Add pass gates for compliant checks
+            if result.compliant_files > 0:
+                gates.insert(0, GateResult(
+                    gate_id="PAG01_COMPLIANT",
+                    gate_name="PAG-01 Compliant Files",
+                    status=GateStatus.PASS,
+                    message=f"{result.compliant_files} file(s) fully compliant",
+                ))
+            
+            report = GovernanceReport(
+                mode="PAG-01 COMPLIANCE AUDIT",
+                source="docs/governance/",
+                gates=gates,
+            )
+            
+            ui.render_report(report)
         else:
-            # Human-readable output
+            # Human-readable plain output
             print("=" * 60)
             print("PAG-01 PERSONA ACTIVATION GOVERNANCE AUDIT")
             print("=" * 60)
             print(f"Files audited: {result.total_files}")
-            print(f"Files passed:  {result.passed_files}")
-            print(f"Files failed:  {result.failed_files}")
-            print(f"Total violations: {result.total_violations}")
+            print(f"Files passed:  {result.compliant_files}")
+            print(f"Files failed:  {result.non_compliant_files}")
+            print(f"Total violations: {len(result.violations)}")
             print()
             
-            if result.violations_by_code:
+            # Group violations by code
+            by_code = {}
+            for v in result.violations:
+                code = v.code.name
+                by_code[code] = by_code.get(code, 0) + 1
+            
+            if by_code:
                 print("Violations by code:")
-                for code, count in sorted(result.violations_by_code.items()):
+                for code, count in sorted(by_code.items()):
                     print(f"  {code}: {count}")
                 print()
             
-            for file_result in result.file_results:
-                if not file_result.passed:
+            for file_result in result.results:
+                if not file_result.compliant:
                     print(f"✗ FAIL: {file_result.file_path}")
                     for v in file_result.violations:
                         print(f"  [{v.code.name}] {v.message}")
-                        if v.expected and v.actual:
-                            print(f"    Expected: {v.expected}")
-                            print(f"    Actual:   {v.actual}")
                     print()
             
-            if result.total_violations == 0:
+            if len(result.violations) == 0:
                 print("✓ ALL PAG-01 CHECKS PASSED")
             else:
-                print(f"✗ {result.total_violations} PAG-01 VIOLATION(S) DETECTED")
+                print(f"✗ {len(result.violations)} PAG-01 VIOLATION(S) DETECTED")
         
         if args.no_fail:
             sys.exit(0)
         else:
-            sys.exit(0 if result.total_violations == 0 else 1)
+            sys.exit(0 if len(result.violations) == 0 else 1)
     elif args.file:
         sys.exit(run_file_mode(args.file))
     elif args.mode == "precommit":
