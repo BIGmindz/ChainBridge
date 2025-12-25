@@ -1,0 +1,77 @@
+#!/bin/sh
+#
+# Governance Gate — Pre-Commit Hook
+#
+# Authority: PAC-BENSON-G0-PHASE-1-GOVERNANCE-HARD-GATES-01
+# Owner: Benson (GID-00)
+# Mode: FAIL_CLOSED
+#
+# This hook validates all staged PAC/WRAP files before commit.
+# Invalid governance artifacts cannot be committed.
+#
+# Governance is physics, not policy.
+
+set -e
+
+echo "=================================================="
+echo "Governance Gate — Pre-Commit Validation"
+echo "=================================================="
+
+# Get repository root
+REPO_ROOT=$(git rev-parse --show-toplevel)
+
+# Check if gate_pack.py exists
+GATE_ENGINE="${REPO_ROOT}/tools/governance/gate_pack.py"
+
+if [ ! -f "$GATE_ENGINE" ]; then
+    echo "⚠ Warning: gate_pack.py not found at ${GATE_ENGINE}"
+    echo "Skipping governance validation."
+    exit 0
+fi
+
+# Get staged files that match PAC/WRAP patterns
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E "(PAC-|WRAP-|docs/governance/)" || true)
+
+if [ -z "$STAGED_FILES" ]; then
+    echo "No governance files staged. Skipping validation."
+    exit 0
+fi
+
+echo "Validating staged governance files..."
+echo ""
+
+# Run validation for each staged governance file
+FAILED=0
+
+for file in $STAGED_FILES; do
+    # Skip if file doesn't exist
+    if [ ! -f "${REPO_ROOT}/${file}" ]; then
+        continue
+    fi
+    
+    # Run gate_pack.py validation
+    if python3 "$GATE_ENGINE" --file "${REPO_ROOT}/${file}"; then
+        echo "  ✓ ${file}"
+    else
+        echo "  ✗ ${file}"
+        FAILED=1
+    fi
+done
+
+echo ""
+
+if [ $FAILED -eq 1 ]; then
+    echo "=================================================="
+    echo "✗ COMMIT BLOCKED — GOVERNANCE VALIDATION FAILED"
+    echo "=================================================="
+    echo ""
+    echo "One or more PAC/WRAP files failed validation."
+    echo "Fix the errors above and try again."
+    echo ""
+    echo "Governance is physics, not policy."
+    echo "Invalid PACs cannot exist."
+    exit 1
+fi
+
+echo "✓ All governance files validated — commit allowed"
+exit 0

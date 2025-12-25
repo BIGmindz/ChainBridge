@@ -96,11 +96,72 @@ RUBY_STATUS {
 
 ---
 
+## Non-Executing Strategy Agents (LOCKED)
+
+The following agents exist for **advisory purposes only**. They may NOT execute PACs, WRAPs, or create artifacts.
+
+### PAX — NON_EXECUTING_STRATEGY
+
+```yaml
+PAX_CONSTRAINTS:
+  status: "NON_EXECUTING_STRATEGY"
+  execution_enabled: false
+  execution_lane: "STRATEGY_ONLY"
+  execution_mode: "ANALYSIS_ONLY"
+  allowed_outputs:
+    - "RESEARCH_PACK"
+    - "STRATEGY_MEMO"
+    - "POLICY_RECOMMENDATION"
+    - "ADVISORY_BRIEF"
+  forbidden_outputs:
+    - "PAC"
+    - "WRAP"
+    - "CODE"
+    - "FILE_CREATION"
+    - "POSITIVE_CLOSURE"
+  authority: "PAC-PAX-P37-EXECUTION-ROLE-RESTRICTION-AND-SCOPE-REALIGNMENT-01"
+  enforcement: "FAIL_CLOSED"
+  error_codes:
+    GS_090: "Non-executing agent attempted PAC emission"
+    GS_091: "Non-executing agent attempted WRAP emission"
+    GS_092: "Non-executing agent attempted code/file creation"
+    GS_093: "Non-executing agent attempted POSITIVE_CLOSURE"
+```
+
+---
+
 ## Forbidden Aliases (LOCKED)
 
-The following identities are explicitly forbidden:
-- ❌ **DANA** — Retired
-- ❌ **PAX** — Retired
+The following identities are explicitly forbidden and CANNOT appear in PAC IDs:
+
+- ❌ **DANA** — Retired (PERMANENTLY_FORBIDDEN)
+
+```yaml
+FORBIDDEN_AGENT_ENFORCEMENT:
+  authority: "PAC-BENSON-P36-NONEXECUTING-AGENT-ENFORCEMENT-AND-PAC-NAMING-CANONICALIZATION-01"
+  mode: "FAIL_CLOSED"
+  error_codes:
+    GS_071: "PAC ID references non-executing or retired agent"
+    GS_072: "Footer color mismatch — must match executing agent"
+    GS_073: "Forbidden agent alias detected in PAC ID"
+    GS_090: "Non-executing agent attempted PAC emission"
+    GS_091: "Non-executing agent attempted WRAP emission"
+    GS_092: "Non-executing agent attempted code/file creation"
+    GS_093: "Non-executing agent attempted POSITIVE_CLOSURE"
+  forbidden_aliases:
+    - "DANA"
+  non_executing_agents:
+    - "PAX"
+  non_executing_strategy_agents:
+    - "PAX"
+  rules:
+    - "PAC IDs may ONLY reference EXECUTING agents"
+    - "Footer color MUST match executing agent from AGENT_ACTIVATION_ACK"
+    - "Persona memory is SUBORDINATE to registry role"
+    - "Non-executing agents may only produce advisory outputs"
+    - "Strategy agents inform execution; they do not perform it"
+    - "Ambiguity → FAIL_CLOSED"
+```
 
 ---
 

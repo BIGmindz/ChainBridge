@@ -225,7 +225,48 @@ I, 🔵 Atlas (GID-05), System State Engine, attest that:
 
 ---
 
-## 9. Final State
+## 9. Gold Standard Checklist
+
+```yaml
+GOLD_STANDARD_CHECKLIST:
+  identity_correct: true
+  agent_color_correct: true
+  execution_lane_correct: true
+  canonical_headers_present: true
+  block_order_correct: true
+  agent_activation_ack_present: true
+  runtime_activation_ack_present: true
+  training_signal_present: true
+  final_state_declared: true
+  forbidden_actions_section_present: true
+  scope_lock_present: true
+  wrap_schema_valid: true
+  no_extra_content: true
+  no_scope_drift: true
+  self_certification_present: true
+  checklist_terminal: true
+  checklist_all_items_passed: true
+```
+
+---
+
+## 10. Self-Certification
+
+```yaml
+SELF_CERTIFICATION:
+  certifier: "Atlas"
+  gid: "GID-05"
+  certification:
+    - "All required sections are present"
+    - "Correction documents linter exception formally"
+    - "Original work is functionally complete"
+    - "Zero code changes required"
+  certified: true
+```
+
+---
+
+## 11. Final State
 
 ```yaml
 FINAL_STATE:

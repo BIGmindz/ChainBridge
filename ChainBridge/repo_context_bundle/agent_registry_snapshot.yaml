@@ -1,0 +1,81 @@
+metadata:
+  version: 4.0.0
+  ratified_by: PAC-BENSON-CANONICAL-AGENT-REGISTRY-RECONCILIATION-01
+  authority: Benson (GID-00)
+  ratification_date: '2025-12-22'
+  status: LOCKED
+  supersedes: v3.0.0
+agents:
+  BENSON:
+    gid: GID-00
+    color: TEAL
+    icon: 🟦🟩
+    role: Chief Architect & Orchestrator
+    execution_lane: ORCHESTRATION
+  CODY:
+    gid: GID-01
+    color: BLUE
+    icon: 🔵
+    role: Backend Engineer
+    execution_lane: BACKEND
+  SONNY:
+    gid: GID-02
+    color: YELLOW
+    icon: 🟡
+    role: Frontend Engineer
+    execution_lane: FRONTEND
+  MIRA:
+    gid: GID-03
+    color: PURPLE
+    icon: 🟣
+    role: Research Lead
+    execution_lane: RESEARCH
+  CINDY:
+    gid: GID-04
+    color: CYAN
+    icon: 🔷
+    role: Backend Scaling Engineer
+    execution_lane: BACKEND
+  ATLAS:
+    gid: GID-05
+    color: BLUE
+    icon: 🟦
+    role: System State Engine
+    execution_lane: SYSTEM_STATE
+  SAM:
+    gid: GID-06
+    color: DARK_RED
+    icon: 🔴
+    role: Security & Threat Engineer
+    execution_lane: SECURITY
+  DAN:
+    gid: GID-07
+    color: GREEN
+    icon: 🟢
+    role: DevOps & CI/CD Lead
+    execution_lane: DEVOPS
+  ALEX:
+    gid: GID-08
+    color: WHITE
+    icon: ⚪
+    role: Governance & Alignment Engine
+    execution_lane: GOVERNANCE
+  LIRA:
+    gid: GID-09
+    color: PINK
+    icon: 🩷
+    role: UX Lead
+    execution_lane: UX
+  MAGGIE:
+    gid: GID-10
+    color: MAGENTA
+    icon: 💗
+    role: ML & Applied AI Lead
+    execution_lane: ML_AI
+  RUBY:
+    gid: GID-12
+    color: CRIMSON
+    icon: ♦️
+    role: Chief Risk Officer
+    execution_lane: RISK_POLICY
+

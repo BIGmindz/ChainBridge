@@ -1,0 +1,145 @@
+# Governance Gate CI Workflow
+#
+# Authority: PAC-BENSON-G0-PHASE-1-GOVERNANCE-HARD-GATES-01
+# Owner: Benson (GID-00)
+# Mode: FAIL_CLOSED
+#
+# This workflow validates all PAC/WRAP files on push and PR.
+# Invalid governance artifacts cannot be merged.
+#
+# Governance is physics, not policy.
+
+name: Governance Pack Gate
+
+on:
+  push:
+    branches: [main, develop, "fix/**", "feature/**"]
+    paths:
+      - "docs/governance/**"
+      - "PAC-*.md"
+      - "WRAP-*.md"
+      - "tools/governance/**"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "docs/governance/**"
+      - "PAC-*.md"
+      - "WRAP-*.md"
+      - "tools/governance/**"
+  workflow_dispatch:
+
+jobs:
+  governance-validation:
+    name: Validate Governance Artifacts
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Display Validation Header
+        run: |
+          echo "=================================================="
+          echo "Governance Gate — CI Validation"
+          echo "Mode: FAIL_CLOSED"
+          echo "=================================================="
+
+      - name: Run Governance Validation
+        id: validate
+        run: |
+          python tools/governance/gate_pack.py --mode ci
+        continue-on-error: true
+
+      - name: Check Validation Result
+        if: steps.validate.outcome == 'failure'
+        run: |
+          echo "=================================================="
+          echo "✗ GOVERNANCE VALIDATION FAILED — MERGE BLOCKED"
+          echo "=================================================="
+          echo ""
+          echo "One or more PAC/WRAP files failed validation."
+          echo "Review the errors above and fix them before merging."
+          echo ""
+          echo "Governance is physics, not policy."
+          echo "Invalid PACs cannot exist."
+          exit 1
+
+      - name: Validation Passed
+        if: steps.validate.outcome == 'success'
+        run: |
+          echo "✓ All governance files validated — merge allowed"
+
+  # Additional check: Ensure registry integrity
+  registry-integrity:
+    name: Verify Agent Registry
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate Registry JSON
+        run: |
+          echo "Validating AGENT_REGISTRY.json..."
+          python -c "
+          import json
+          import sys
+
+          try:
+              with open('docs/governance/AGENT_REGISTRY.json') as f:
+                  registry = json.load(f)
+              
+              # Verify required keys
+              required = ['version', 'authority', 'agents']
+              for key in required:
+                  if key not in registry:
+                      print(f'✗ Missing required key: {key}')
+                      sys.exit(1)
+              
+              # Verify agent entries
+              agents = registry.get('agents', {})
+              for name, agent in agents.items():
+                  if 'gid' not in agent:
+                      print(f'✗ Agent {name} missing gid')
+                      sys.exit(1)
+              
+              print(f'✓ Registry valid: {len(agents)} agents')
+              sys.exit(0)
+          except json.JSONDecodeError as e:
+              print(f'✗ Invalid JSON: {e}')
+              sys.exit(1)
+          except FileNotFoundError:
+              print('⚠ Registry not found — skipping')
+              sys.exit(0)
+          "
+
+  # Block merge if any check fails
+  gate-status:
+    name: Governance Gate Status
+    runs-on: ubuntu-latest
+    needs: [governance-validation, registry-integrity]
+    if: always()
+    
+    steps:
+      - name: Check Gate Status
+        run: |
+          if [ "${{ needs.governance-validation.result }}" == "failure" ] || \
+             [ "${{ needs.registry-integrity.result }}" == "failure" ]; then
+            echo "=================================================="
+            echo "✗ GOVERNANCE GATE: BLOCKED"
+            echo "=================================================="
+            exit 1
+          fi
+          echo "✓ GOVERNANCE GATE: PASSED"

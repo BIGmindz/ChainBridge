@@ -296,7 +296,26 @@ I, 🟥 Sam (GID-06), Security & Threat Engineer, attest that:
 
 ---
 
-## 12. Final State
+## 12. Training Signal
+
+```yaml
+TRAINING_SIGNAL:
+  program: "Agent University"
+  level: "L7"
+  domain: "Security Assurance & Verification"
+  competencies:
+    - Adversarial verification
+    - Bypass path analysis
+    - Cryptographic soundness validation
+    - Fail-closed architecture audit
+  evaluation: "BINARY"
+  retention: "PERMANENT"
+  outcome: "PASS"
+```
+
+---
+
+## 13. Final State
 
 ```yaml
 FINAL_STATE:

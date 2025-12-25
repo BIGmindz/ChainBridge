@@ -1,0 +1,162 @@
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Security Invariant Enforcement Gate
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# PAC: PAC-SAM-G1-PHASE-2-SECURITY-INVARIANT-HARDENING-01
+# Author: Sam (GID-06) — Security & Threat Engineer
+# Mode: FAIL-CLOSED (Blocking Gate)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#
+# PURPOSE:
+# Enforce security invariants at CI level. This is a BLOCKING gate - no merge
+# can proceed if any security invariant drill passes (meaning violation succeeded).
+#
+# SECURITY INVARIANTS:
+#   SI-01: No unauthorized state mutation
+#   SI-02: All authority claims must be verifiable
+#   SI-03: No replay without detection
+#   SI-04: No downgrade of governance state
+#   SI-05: No unsigned correction closure
+#   SI-06: No PAC execution without registry match
+#   SI-07: No bypass of hard gates
+#   SI-08: No mixed-authority execution
+#
+# DOCTRINE:
+# - All invariant drills MUST be blocked
+# - Any drill that passes = SECURITY VULNERABILITY
+# - FAIL-CLOSED: CI fails if any violation path exists
+# - No warnings, no advisory mode
+#
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+name: Security Invariant Gate
+
+on:
+  pull_request:
+    paths:
+      - 'chainbridge/**'
+      - 'tools/**'
+      - 'tests/**'
+      - 'core/**'
+      - '*.py'
+  push:
+    branches: [main]
+    paths:
+      - 'chainbridge/**'
+      - 'tools/**'
+      - 'tests/**'
+      - 'core/**'
+      - '*.py'
+
+env:
+  FAIL_CLOSED: "true"
+  SECURITY_GATE_VERSION: "G1-INVARIANT-01"
+
+jobs:
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Security Invariant Drills
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  security-invariant-drills:
+    name: "🔐 Security Invariant Drills"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt || pip install pytest
+      
+      - name: Run Security Invariant Drills
+        id: invariant-drills
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔐 SECURITY INVARIANT DRILLS"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          # Run the security drills module directly
+          python -m tools.security.security_drills
+          DRILL_EXIT_CODE=$?
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          if [ $DRILL_EXIT_CODE -eq 0 ]; then
+            echo "✅ All security drills BLOCKED (SECURE)"
+            echo "drills_passed=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ SECURITY VULNERABILITY DETECTED"
+            echo "drills_passed=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+      
+      - name: Run Security Test Suite
+        id: security-tests
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔒 SECURITY TEST SUITE"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          pytest tests/security/ -v --tb=short
+          
+      - name: Run PDO Enforcement Tests
+        id: pdo-tests
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🛡️ PDO ENFORCEMENT TESTS"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          pytest tests/security/test_pdo_enforcement.py tests/security/test_adversarial_pdo.py -v --tb=short
+      
+      - name: Security Gate Summary
+        if: always()
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📊 SECURITY GATE SUMMARY"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Gate Version: $SECURITY_GATE_VERSION"
+          echo "Fail-Closed Mode: $FAIL_CLOSED"
+          echo ""
+          echo "Security Invariants Enforced:"
+          echo "  SI-01: No unauthorized state mutation"
+          echo "  SI-02: All authority claims must be verifiable"
+          echo "  SI-03: No replay without detection"
+          echo "  SI-04: No downgrade of governance state"
+          echo "  SI-05: No unsigned correction closure"
+          echo "  SI-06: No PAC execution without registry match"
+          echo "  SI-07: No bypass of hard gates"
+          echo "  SI-08: No mixed-authority execution"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Final Security Gate
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  security-gate-final:
+    name: "🔐 Security Gate FINAL"
+    runs-on: ubuntu-latest
+    needs: [security-invariant-drills]
+    if: always()
+    
+    steps:
+      - name: Check Gate Status
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔐 SECURITY GATE FINAL STATUS"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          if [ "${{ needs.security-invariant-drills.result }}" != "success" ]; then
+            echo "❌ SECURITY GATE FAILED"
+            echo "   Security drills result: ${{ needs.security-invariant-drills.result }}"
+            exit 1
+          fi
+          
+          echo "✅ SECURITY GATE PASSED"
+          echo "   All security invariants enforced"
+          echo "   All adversarial drills blocked"
+          echo "   System is SECURE"

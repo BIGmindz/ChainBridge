@@ -72,7 +72,7 @@ STAGED_PY_FILES=$(echo "$STAGED_FILES" | grep -E '\.py$' || true)
 
 PAC_VIOLATIONS=0
 if [ -n "$STAGED_PY_FILES" ]; then
-    echo "${BLUE}[1/4] Running PAC linter on staged Python files...${NC}"
+    echo "${BLUE}[1/5] Running PAC linter on staged Python files...${NC}"
     
     # Create temp file list
     TEMP_FILE_LIST=$(mktemp)
@@ -105,7 +105,7 @@ if [ -n "$STAGED_PY_FILES" ]; then
     
     rm -f "$TEMP_FILE_LIST" "$LINT_OUTPUT"
 else
-    echo "${BLUE}[1/4] No Python files staged. Skipping PAC lint.${NC}"
+    echo "${BLUE}[1/5] No Python files staged. Skipping PAC lint.${NC}"
 fi
 
 # =============================================================================
@@ -113,7 +113,7 @@ fi
 # =============================================================================
 
 echo ""
-echo "${BLUE}[2/4] Checking PAC structure requirements...${NC}"
+echo "${BLUE}[2/5] Checking PAC structure requirements...${NC}"
 
 STRUCTURE_VIOLATIONS=0
 for file in $STAGED_PY_FILES; do
@@ -151,7 +151,7 @@ fi
 # =============================================================================
 
 echo ""
-echo "${BLUE}[3/4] Checking GID/Color alignment...${NC}"
+echo "${BLUE}[3/5] Checking GID/Color alignment...${NC}"
 
 GID_COLOR_VIOLATIONS=0
 for file in $STAGED_PY_FILES; do
@@ -183,7 +183,7 @@ fi
 # =============================================================================
 
 echo ""
-echo "${BLUE}[4/4] Checking for hybrid artifact violations...${NC}"
+echo "${BLUE}[4/5] Checking for hybrid artifact violations...${NC}"
 
 HYBRID_VIOLATIONS=0
 for file in $STAGED_PY_FILES; do
@@ -211,13 +211,71 @@ if [ $HYBRID_VIOLATIONS -eq 0 ]; then
 fi
 
 # =============================================================================
+# TASK 5: HARD-GATE — Correction Pack Gold Standard Checklist Validation
+# PAC-ATLAS-G2-GOVERNANCE-CORRECTION-HARD-GATE-IMPLEMENTATION-01
+# =============================================================================
+
+echo ""
+echo "${BLUE}[5/5] 🔒 HARD-GATE: Correction Pack Validation...${NC}"
+
+CORRECTION_VIOLATIONS=0
+GATE_PACK="$REPO_ROOT/ChainBridge/tools/governance/gate_pack.py"
+
+# Find staged PAC/WRAP files
+STAGED_PAC_WRAPS=$(echo "$STAGED_FILES" | grep -E "(PAC-|WRAP-).*\.(md|py|txt)$" || true)
+
+if [ -n "$STAGED_PAC_WRAPS" ] && [ -f "$GATE_PACK" ]; then
+    for file in $STAGED_PAC_WRAPS; do
+        if [ -f "$file" ]; then
+            # Check if this is a correction pack
+            IS_CORRECTION=$(grep -cE "(CORRECTION|GOVERNANCE_CORRECTION|MODE: GOVERNANCE_CORRECTION|VIOLATIONS_ADDRESSED|correction_type:)" "$file" 2>/dev/null || echo "0")
+            
+            if [ "$IS_CORRECTION" -gt 0 ]; then
+                echo "${YELLOW}   🔍 Detected correction pack: $file${NC}"
+                
+                # Run gate_pack.py validation
+                VALIDATION_OUTPUT=$(mktemp)
+                if ! python3 "$GATE_PACK" --validate "$REPO_ROOT/$file" 2>&1 > "$VALIDATION_OUTPUT"; then
+                    echo "${RED}   ❌ HARD-GATE FAILURE: $file${NC}"
+                    cat "$VALIDATION_OUTPUT"
+                    CORRECTION_VIOLATIONS=1
+                    
+                    # Check for specific Gold Standard Checklist failures
+                    if grep -qE "(G0_020|G0_021|G0_022|G0_023|G0_024)" "$VALIDATION_OUTPUT" 2>/dev/null; then
+                        echo ""
+                        echo "${RED}   ┌──────────────────────────────────────────────────────────────┐${NC}"
+                        echo "${RED}   │ GOLD STANDARD CHECKLIST VIOLATION DETECTED                   │${NC}"
+                        echo "${RED}   │ Correction packs MUST have ALL 13 checklist items checked.   │${NC}"
+                        echo "${RED}   │ NO PARTIAL CHECKLISTS. NO MANUAL OVERRIDES. NO EXCEPTIONS.   │${NC}"
+                        echo "${RED}   └──────────────────────────────────────────────────────────────┘${NC}"
+                    fi
+                else
+                    echo "${GREEN}   ✅ Correction pack validated: $file${NC}"
+                fi
+                rm -f "$VALIDATION_OUTPUT"
+            fi
+        fi
+    done
+else
+    echo "${GREEN}   ✅ No correction packs staged (or gate_pack.py not found)${NC}"
+fi
+
+if [ $CORRECTION_VIOLATIONS -gt 0 ]; then
+    echo ""
+    echo "${RED}   ═══════════════════════════════════════════════════════════════${NC}"
+    echo "${RED}   CORRECTION PACK HARD-GATE: FAILED${NC}"
+    echo "${RED}   Training signal injected: NEGATIVE (G0_020-G0_024)${NC}"
+    echo "${RED}   ═══════════════════════════════════════════════════════════════${NC}"
+fi
+
+# =============================================================================
 # FINAL VERDICT
 # =============================================================================
 
 echo ""
 echo "${BLUE}════════════════════════════════════════════════════════════════════${NC}"
 
-TOTAL_VIOLATIONS=$((PAC_VIOLATIONS + STRUCTURE_VIOLATIONS + GID_COLOR_VIOLATIONS + HYBRID_VIOLATIONS))
+TOTAL_VIOLATIONS=$((PAC_VIOLATIONS + STRUCTURE_VIOLATIONS + GID_COLOR_VIOLATIONS + HYBRID_VIOLATIONS + CORRECTION_VIOLATIONS))
 
 if [ $TOTAL_VIOLATIONS -gt 0 ]; then
     echo "${RED}❌ GOVERNANCE CHECK FAILED${NC}"

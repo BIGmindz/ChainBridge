@@ -243,6 +243,14 @@ class ErrorCode(Enum):
     GS_097 = "PAC reservation required — PAC number not reserved by ledger"
     GS_098 = "PAC reservation invalid — expired/consumed/mismatched reservation"
     GS_099 = "PAC↔WRAP coupling violation — missing counterpart artifact"
+    # Strict PAC↔WRAP Dependency Enforcement (PAC-BENSON-P42-PAC-WRAP-SEQUENCING-AND-LEDGER-ENFORCEMENT-01)
+    GS_110 = "PAC_WRAP_MISSING — Previous PAC has no corresponding WRAP. Sequencing halted."
+    GS_111 = "PAC issuance blocked — prior WRAP not accepted"
+    GS_112 = "WRAP/PAC mismatch — invalid binding"
+    # Ledger WRAP Binding & State Lock (PAC-BENSON-P44-GOVERNANCE-LEDGER-WRAP-BINDING-AND-STATE-LOCK-01)
+    GS_113 = "PAC_NOT_CLOSED_NO_WRAP — PAC cannot close without a valid WRAP."
+    GS_114 = "WRAP_PAC_HASH_MISMATCH — WRAP does not cryptographically bind to PAC."
+    GS_115 = "PAC_STATE_REGRESSION — Illegal PAC state transition detected."
 
 
 @dataclass
@@ -1444,12 +1452,15 @@ def validate_pac_sequence_and_reservations(content: str, registry: dict) -> list
     Validate PAC sequence and reservations against ledger.
     
     PAC-ALEX-P42-GOVERNANCE-PAC-SEQUENCE-ENFORCEMENT-AND-RESERVATION-LOCK-01
+    PAC-BENSON-P42-PAC_SEQUENCE_AND_WRAP_DEPENDENCY_ENFORCEMENT-01
     
     Rules (FAIL_CLOSED):
-    1. PAC numbers must be globally monotonic → GS_096 if out-of-order
+    1. PAC numbers must be globally monotonic → GS_096/GS_110 if out-of-order
     2. PAC numbers must be reserved in ledger → GS_097 if no reservation
     3. Reservation must match issuing agent → GS_098 if mismatch/expired
     4. Reservations are single-use → GS_098 if already consumed
+    5. Prior WRAP must be accepted → GS_111 if prior WRAP not accepted
+    6. WRAP/PAC binding must match → GS_112 if mismatch
     
     Returns:
         List of ValidationError for any sequence/reservation violations
@@ -1461,7 +1472,7 @@ def validate_pac_sequence_and_reservations(content: str, registry: dict) -> list
         return errors
     
     # Extract PAC ID
-    pac_id = extract_pac_id(content)
+    pac_id = extract_artifact_id(content)
     if not pac_id:
         return errors  # PAC ID validation handled elsewhere
     
@@ -1488,7 +1499,7 @@ def validate_pac_sequence_and_reservations(content: str, registry: dict) -> list
             # This allows offline validation with a warning
             return errors
     
-    # Validate sequence using ledger
+    # Validate sequence using ledger (original)
     result = ledger.validate_pac_sequence(pac_id, agent_gid)
     
     if not result.get("valid", False):
@@ -1511,6 +1522,100 @@ def validate_pac_sequence_and_reservations(content: str, registry: dict) -> list
             causal_result.get("message", "Causal advancement validation failed"),
         ))
         emit_training_signal_for_failure(error_code)
+    
+    # PAC-BENSON-P42: Strict PAC issuance validation with GS_110/GS_111
+    issuance_result = ledger.validate_pac_issuance_allowed(pac_id, agent_gid)
+    
+    if not issuance_result.get("allowed", False):
+        error_code_str = issuance_result.get("error_code", "GS_110")
+        error_code = getattr(ErrorCode, error_code_str, ErrorCode.GS_110)
+        errors.append(ValidationError(
+            error_code,
+            issuance_result.get("message", "PAC issuance not allowed"),
+        ))
+        emit_training_signal_for_failure(error_code)
+    
+    # =========================================================================
+    # PAC-ALEX-P43: PAC↔WRAP Sequential Dependency Validation
+    #
+    # Rule: PAC P(N) requires WRAP P(N-1) to be ACCEPTED in ledger.
+    # Exceptions:
+    #   - First PAC (P1) for an agent
+    #   - BENSON (GID-00) override
+    #
+    # Error: GS_111 — PAC issuance blocked — prior WRAP not accepted
+    # =========================================================================
+    sequential_result = ledger.validate_pac_wrap_sequential(pac_id, agent_gid)
+    
+    if not sequential_result.get("valid", False):
+        error_code_str = sequential_result.get("error_code", "GS_111")
+        error_code = getattr(ErrorCode, error_code_str, ErrorCode.GS_111)
+        errors.append(ValidationError(
+            error_code,
+            sequential_result.get("message", "PAC↔WRAP sequential dependency not satisfied"),
+        ))
+        emit_training_signal_for_failure(error_code)
+    # =========================================================================
+    # END PAC-ALEX-P43 VALIDATION
+    # =========================================================================
+    
+    # =========================================================================
+    # PAC-BENSON-P44: State Machine & WRAP Binding Validation
+    #
+    # Rule: PAC state transitions are ONE-WAY (ISSUED → EXECUTED → CLOSED)
+    # Rule: PAC cannot close without valid WRAP binding
+    #
+    # Errors:
+    #   GS_113 — PAC_NOT_CLOSED_NO_WRAP
+    #   GS_114 — WRAP_PAC_HASH_MISMATCH
+    #   GS_115 — PAC_STATE_REGRESSION
+    # =========================================================================
+    
+    # Extract artifact status from content to determine target state
+    status_match = re.search(
+        r'artifact_status:\s*["\']?(\w+)["\']?', 
+        content, 
+        re.IGNORECASE
+    )
+    if status_match:
+        target_status = status_match.group(1).upper()
+        
+        # Map artifact_status to PacState
+        status_to_state = {
+            "ISSUED": "ISSUED",
+            "EXECUTED": "EXECUTED",
+            "CLOSED": "CLOSED",
+            "POSITIVE_CLOSURE": "CLOSED",
+        }
+        target_state = status_to_state.get(target_status)
+        
+        if target_state:
+            state_result = ledger.validate_pac_state_transition(pac_id, target_state)
+            
+            if not state_result.get("valid", False):
+                error_code_str = state_result.get("error_code", "GS_115")
+                error_code = getattr(ErrorCode, error_code_str, ErrorCode.GS_115)
+                errors.append(ValidationError(
+                    error_code,
+                    state_result.get("message", "PAC state transition invalid"),
+                ))
+                emit_training_signal_for_failure(error_code)
+            
+            # If transitioning to CLOSED, verify WRAP binding
+            if target_state == "CLOSED":
+                closure_result = ledger.validate_pac_closure(pac_id)
+                
+                if not closure_result.get("can_close", False):
+                    error_code_str = closure_result.get("error_code", "GS_113")
+                    error_code = getattr(ErrorCode, error_code_str, ErrorCode.GS_113)
+                    errors.append(ValidationError(
+                        error_code,
+                        closure_result.get("message", "PAC cannot close without WRAP"),
+                    ))
+                    emit_training_signal_for_failure(error_code)
+    # =========================================================================
+    # END PAC-BENSON-P44 VALIDATION
+    # =========================================================================
     
     return errors
 
@@ -1547,14 +1652,8 @@ def validate_pac_wrap_coupling(content: str, file_path: Path, registry: dict) ->
     if not artifact_id:
         return errors
     
-    # Legacy grandfathering: WRAPs before P37 don't require PAC validation
-    if is_wrap:
-        p_match = re.search(r'WRAP-[A-Z]+-P(\d+)-', artifact_id)
-        if p_match:
-            p_num = int(p_match.group(1))
-            if p_num < 37:
-                # Legacy WRAP - grandfathered
-                return errors
+    # PAC-BENSON-P42: No grandfathering — all PAC↔WRAP must be coupled
+    # Exception: status = ISSUED_NOT_EXECUTED (PAC issued but not yet completed)
     
     # Check for ISSUED_NOT_EXECUTED exception
     # PACs that are issued but not yet executed don't require WRAP
@@ -1577,6 +1676,54 @@ def validate_pac_wrap_coupling(content: str, file_path: Path, registry: dict) ->
     
     agent_name = match.group(1)
     pac_number = match.group(2)
+    
+    # PAC-BENSON-P42: Validate WRAP↔PAC binding (GS_112)
+    # PAC-BENSON-P44: Validate cryptographic hash binding (GS_114)
+    if is_wrap:
+        # Extract pac_reference from WRAP content
+        pac_ref_match = re.search(r'pac_reference:\s*["\']?([^"\'\n]+)["\']?', content, re.IGNORECASE)
+        if pac_ref_match:
+            pac_reference = pac_ref_match.group(1).strip()
+            # Try to import ledger for binding validation
+            try:
+                from tools.governance.ledger_writer import GovernanceLedger
+                ledger = GovernanceLedger()
+                binding_result = ledger.validate_wrap_binding(artifact_id, pac_reference)
+                if not binding_result.get("valid", False):
+                    errors.append(ValidationError(
+                        ErrorCode.GS_112,
+                        binding_result.get("message", "WRAP/PAC mismatch — invalid binding"),
+                    ))
+                    emit_training_signal_for_failure(ErrorCode.GS_112)
+                
+                # PAC-BENSON-P44: Validate cryptographic hash binding
+                pac_hash_match = re.search(r'pac_hash:\s*["\']?([a-fA-F0-9]{64})["\']?', content)
+                wrap_hash = None
+                if file_path and file_path.exists():
+                    import hashlib
+                    wrap_hash = hashlib.sha256(content.encode()).hexdigest()
+                
+                if pac_hash_match and wrap_hash:
+                    pac_hash = pac_hash_match.group(1)
+                    hash_binding_result = ledger.validate_wrap_hash_binding(
+                        artifact_id, wrap_hash, pac_reference, pac_hash
+                    )
+                    if not hash_binding_result.get("valid", False):
+                        errors.append(ValidationError(
+                            ErrorCode.GS_114,
+                            hash_binding_result.get("message", "WRAP does not cryptographically bind to PAC"),
+                        ))
+                        emit_training_signal_for_failure(ErrorCode.GS_114)
+                
+                # Check for duplicate binding
+                if ledger.is_wrap_already_bound(artifact_id):
+                    errors.append(ValidationError(
+                        ErrorCode.GS_114,
+                        f"WRAP {artifact_id} is already bound — duplicate binding rejected (replay attack blocked)",
+                    ))
+                    emit_training_signal_for_failure(ErrorCode.GS_114)
+            except Exception:
+                pass  # Ledger not available, skip binding validation
     
     # Determine counterpart directory
     if file_path:

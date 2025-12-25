@@ -66,6 +66,17 @@ ledger.reserve_pac_number(
 | GS_097 | PAC reservation required — PAC number not reserved | HARD_FAIL |
 | GS_098 | PAC reservation invalid — expired/consumed/mismatched | HARD_FAIL |
 | GS_099 | PAC↔WRAP coupling violation — missing counterpart | HARD_FAIL |
+| GS_110 | PAC sequence violation — non-sequential PAC number | HARD_FAIL |
+| GS_111 | PAC issuance blocked — prior WRAP not accepted | HARD_FAIL |
+| GS_112 | WRAP/PAC mismatch — invalid binding | HARD_FAIL |
+
+### 3.1 GS_110-112 Strict Enforcement (PAC-BENSON-P42)
+
+**GS_110** — Non-sequential PAC numbers are blocked. Expected P[n+1], got P[m] where m ≠ n+1.
+
+**GS_111** — Cannot issue new PAC if prior PAC's WRAP is not yet accepted. No "in-flight" PACs.
+
+**GS_112** — WRAP must bind to exact PAC ID. Agent mismatch or P## mismatch = HARD_FAIL.
 
 ---
 
@@ -145,7 +156,56 @@ This function enforces:
 
 ---
 
-## 6. Ledger Entry Types
+## 6. PAC_SEQUENCE_STATE Registry (PAC-BENSON-P42)
+
+### 6.1 Overview
+
+The `PacSequenceState` registry tracks per-agent PAC/WRAP state:
+
+```python
+@dataclass
+class PacSequenceState:
+    agent_gid: str
+    agent_name: str
+    last_issued_pac: Optional[str]       # e.g., "PAC-BENSON-P41-..."
+    last_issued_pac_number: Optional[int] # e.g., 41
+    last_closed_wrap: Optional[str]       # e.g., "WRAP-BENSON-P41-..."
+    last_closed_wrap_number: Optional[int] # e.g., 41
+    wrap_pending: bool                    # True if last PAC has no WRAP
+    sequence_valid: bool                  # False if out-of-sync
+```
+
+### 6.2 Query State
+
+```python
+from tools.governance.ledger_writer import GovernanceLedger
+
+ledger = GovernanceLedger()
+state = ledger.get_pac_sequence_state("GID-00")
+
+print(f"Agent: {state.agent_name}")
+print(f"Last PAC: {state.last_issued_pac}")
+print(f"Last WRAP: {state.last_closed_wrap}")
+print(f"WRAP Pending: {state.wrap_pending}")
+```
+
+### 6.3 Validate Issuance
+
+```python
+result = ledger.validate_pac_issuance_allowed(
+    pac_id="PAC-BENSON-P43-...",
+    agent_gid="GID-00"
+)
+
+if result["allowed"]:
+    print("PAC issuance allowed")
+else:
+    print(f"BLOCKED: {result['error_code']} — {result['message']}")
+```
+
+---
+
+## 7. Ledger Entry Types
 
 | Entry Type | Description |
 |------------|-------------|
