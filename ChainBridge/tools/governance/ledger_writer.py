@@ -91,6 +91,28 @@ class ArtifactStatus(Enum):
     REJECTED = "REJECTED"
 
 
+class PacState(Enum):
+    """
+    PAC State Machine (PAC-BENSON-P44).
+    
+    State transitions are ONE-WAY:
+    ISSUED → EXECUTED → CLOSED
+    
+    A PAC cannot reach CLOSED without a valid WRAP binding.
+    """
+    ISSUED = "ISSUED"      # PAC created, not yet executed
+    EXECUTED = "EXECUTED"  # PAC execution complete, awaiting WRAP
+    CLOSED = "CLOSED"      # PAC has WRAP bound, immutable
+
+
+# Valid PAC state transitions (one-way only)
+VALID_PAC_TRANSITIONS = {
+    PacState.ISSUED: [PacState.EXECUTED],
+    PacState.EXECUTED: [PacState.CLOSED],
+    PacState.CLOSED: [],  # Terminal state — no transitions allowed
+}
+
+
 class ClosureType(Enum):
     """Types of closure."""
     NONE = "NONE"
@@ -134,6 +156,9 @@ class LedgerEntry:
     bsrg_failed_items: Optional[list] = None
     bsrg_checklist_results: Optional[dict] = None
     validation_version: Optional[str] = None
+    # PAC-BENSON-P44: State Lock & WRAP Binding fields
+    pac_state: Optional[str] = None  # ISSUED | EXECUTED | CLOSED
+    wrap_binding: Optional[dict] = None  # {wrap_id, wrap_hash, pac_hash, bound_at}
 
 
 @dataclass
@@ -152,6 +177,28 @@ class SequenceState:
     next_sequence: int
     last_entry_timestamp: Optional[str]
     total_entries: int
+
+
+@dataclass
+class PacSequenceState:
+    """
+    PAC Sequence State Registry.
+    
+    PAC-BENSON-P42-PAC_SEQUENCE_AND_WRAP_DEPENDENCY_ENFORCEMENT-01
+    
+    Tracks:
+    - last_issued_pac: Most recent PAC issued per agent
+    - last_closed_wrap: Most recent WRAP accepted per agent
+    - Enforces: P[n+1] can only be issued if WRAP-P[n] is accepted
+    """
+    agent_gid: str
+    agent_name: str
+    last_issued_pac: Optional[str] = None  # e.g., "PAC-BENSON-P41-..."
+    last_issued_pac_number: Optional[int] = None  # e.g., 41
+    last_closed_wrap: Optional[str] = None  # e.g., "WRAP-BENSON-P41-..."
+    last_closed_wrap_number: Optional[int] = None  # e.g., 41
+    wrap_pending: bool = False  # True if last PAC has no WRAP yet
+    sequence_valid: bool = True  # False if out-of-sync
 
 
 # ============================================================================
@@ -1440,6 +1487,684 @@ class GovernanceLedger:
             "error_code": None,
             "message": f"WRAP {wrap_id} successfully bound to PAC {pac_id}"
         }
+    
+    # ========================================================================
+    # PAC SEQUENCE STATE REGISTRY
+    # PAC-BENSON-P42-PAC_SEQUENCE_AND_WRAP_DEPENDENCY_ENFORCEMENT-01
+    # ========================================================================
+    
+    def get_pac_sequence_state(self, agent_gid: str) -> PacSequenceState:
+        """
+        Get the PAC sequence state for an agent.
+        
+        PAC-BENSON-P42-PAC_SEQUENCE_AND_WRAP_DEPENDENCY_ENFORCEMENT-01
+        
+        Computes:
+        - last_issued_pac: Most recent PAC issued
+        - last_closed_wrap: Most recent WRAP accepted
+        - wrap_pending: Whether last PAC needs WRAP
+        
+        Args:
+            agent_gid: Agent GID
+            
+        Returns:
+            PacSequenceState dataclass
+        """
+        import re
+        
+        agent_name = AGENT_REGISTRY.get(agent_gid, "UNKNOWN")
+        
+        # Scan ledger for this agent's PACs and WRAPs
+        last_pac_id = None
+        last_pac_num = None
+        last_wrap_id = None
+        last_wrap_num = None
+        
+        for entry in self.ledger_data["entries"]:
+            if entry.get("agent_gid") != agent_gid:
+                continue
+            
+            artifact_id = entry.get("artifact_id", "")
+            entry_type = entry.get("entry_type", "")
+            
+            # Track PACs
+            if entry_type in [EntryType.PAC_ISSUED.value, EntryType.PAC_EXECUTED.value]:
+                match = re.search(r'PAC-[A-Z]+-P(\d+)-', artifact_id)
+                if match:
+                    pac_num = int(match.group(1))
+                    if last_pac_num is None or pac_num > last_pac_num:
+                        last_pac_num = pac_num
+                        last_pac_id = artifact_id
+            
+            # Track WRAPs (only ACCEPTED count as closed)
+            if entry_type == EntryType.WRAP_ACCEPTED.value:
+                match = re.search(r'WRAP-[A-Z]+-P(\d+)-', artifact_id)
+                if match:
+                    wrap_num = int(match.group(1))
+                    if last_wrap_num is None or wrap_num > last_wrap_num:
+                        last_wrap_num = wrap_num
+                        last_wrap_id = artifact_id
+        
+        # Determine if WRAP is pending
+        wrap_pending = False
+        if last_pac_num is not None:
+            if last_wrap_num is None or last_wrap_num < last_pac_num:
+                wrap_pending = True
+        
+        # Validate sequence
+        sequence_valid = True
+        if last_pac_num is not None and last_wrap_num is not None:
+            # Allow 0 or 1 gap (current PAC may be awaiting WRAP)
+            if last_pac_num - last_wrap_num > 1:
+                sequence_valid = False
+        
+        return PacSequenceState(
+            agent_gid=agent_gid,
+            agent_name=agent_name,
+            last_issued_pac=last_pac_id,
+            last_issued_pac_number=last_pac_num,
+            last_closed_wrap=last_wrap_id,
+            last_closed_wrap_number=last_wrap_num,
+            wrap_pending=wrap_pending,
+            sequence_valid=sequence_valid
+        )
+    
+    def validate_pac_issuance_allowed(self, pac_id: str, agent_gid: str) -> dict:
+        """
+        Validate if a new PAC can be issued per strict sequence rules.
+        
+        PAC-BENSON-P42-PAC_SEQUENCE_AND_WRAP_DEPENDENCY_ENFORCEMENT-01
+        
+        Rules:
+        1. PAC numbers MUST be strictly sequential (P[n] → P[n+1])
+        2. PAC issuance is BLOCKED if prior PAC WRAP not accepted
+        3. No manual override except BENSON (GID-00)
+        
+        Args:
+            pac_id: The PAC ID being issued
+            agent_gid: The issuing agent's GID
+            
+        Returns:
+            dict with 'allowed', 'error_code', 'message'
+        """
+        import re
+        
+        # Extract P## from PAC ID
+        match = re.search(r'PAC-([A-Z]+)-P(\d+)-', pac_id)
+        if not match:
+            return {
+                "allowed": False,
+                "error_code": "GS_110",
+                "message": f"Cannot extract PAC number from ID: {pac_id}"
+            }
+        
+        pac_agent = match.group(1)
+        pac_number = int(match.group(2))
+        
+        # Get current sequence state
+        state = self.get_pac_sequence_state(agent_gid)
+        
+        # Rule 1: Sequential numbering
+        if state.last_issued_pac_number is not None:
+            expected_next = state.last_issued_pac_number + 1
+            if pac_number != expected_next:
+                return {
+                    "allowed": False,
+                    "error_code": "GS_110",
+                    "message": (
+                        f"PAC sequence violation — non-sequential PAC number. "
+                        f"Expected P{expected_next}, got P{pac_number}. "
+                        f"Last issued: {state.last_issued_pac}"
+                    )
+                }
+        
+        # Rule 2: Prior WRAP must be accepted
+        if state.wrap_pending:
+            # Check if BENSON (GID-00) override
+            if agent_gid != "GID-00":
+                return {
+                    "allowed": False,
+                    "error_code": "GS_111",
+                    "message": (
+                        f"PAC issuance blocked — prior WRAP not accepted. "
+                        f"Last PAC: {state.last_issued_pac} (P{state.last_issued_pac_number}) "
+                        f"requires WRAP before P{pac_number} can be issued."
+                    )
+                }
+        
+        return {
+            "allowed": True,
+            "error_code": None,
+            "message": f"PAC issuance allowed: P{pac_number}"
+        }
+    
+    def validate_wrap_binding(self, wrap_id: str, pac_reference: str) -> dict:
+        """
+        Validate WRAP↔PAC binding per strict rules.
+        
+        PAC-BENSON-P42-PAC_SEQUENCE_AND_WRAP_DEPENDENCY_ENFORCEMENT-01
+        
+        Rules:
+        1. WRAP must reference exact PAC ID
+        2. One PAC ↔ One WRAP (1:1)
+        3. Numbers must match (WRAP-P## ↔ PAC-P##)
+        
+        Args:
+            wrap_id: The WRAP artifact ID
+            pac_reference: The PAC ID referenced by the WRAP
+            
+        Returns:
+            dict with 'valid', 'error_code', 'message'
+        """
+        import re
+        
+        # Extract P## from both
+        wrap_match = re.search(r'WRAP-([A-Z]+)-P(\d+)-', wrap_id)
+        pac_match = re.search(r'PAC-([A-Z]+)-P(\d+)-', pac_reference)
+        
+        if not wrap_match:
+            return {
+                "valid": False,
+                "error_code": "GS_112",
+                "message": f"Cannot extract WRAP number from ID: {wrap_id}"
+            }
+        
+        if not pac_match:
+            return {
+                "valid": False,
+                "error_code": "GS_112",
+                "message": f"Cannot extract PAC number from reference: {pac_reference}"
+            }
+        
+        wrap_agent = wrap_match.group(1)
+        wrap_num = int(wrap_match.group(2))
+        pac_agent = pac_match.group(1)
+        pac_num = int(pac_match.group(2))
+        
+        # Validate agent match
+        if wrap_agent != pac_agent:
+            return {
+                "valid": False,
+                "error_code": "GS_112",
+                "message": (
+                    f"WRAP/PAC mismatch — invalid binding. "
+                    f"Agent mismatch: WRAP={wrap_agent}, PAC={pac_agent}"
+                )
+            }
+        
+        # Validate number match
+        if wrap_num != pac_num:
+            return {
+                "valid": False,
+                "error_code": "GS_112",
+                "message": (
+                    f"WRAP/PAC mismatch — invalid binding. "
+                    f"Number mismatch: WRAP=P{wrap_num}, PAC=P{pac_num}"
+                )
+            }
+        
+        return {
+            "valid": True,
+            "error_code": None,
+            "message": f"WRAP {wrap_id} validly binds to PAC {pac_reference}"
+        }
+    
+    # ========================================================================
+    # PAC↔WRAP SEQUENTIAL DEPENDENCY VALIDATION
+    # PAC-ALEX-P43-PAC-WRAP-SEQUENTIAL-GATE-IMPLEMENTATION-01
+    # ========================================================================
+    
+    def validate_pac_wrap_sequential(self, pac_id: str, agent_gid: str) -> dict:
+        """
+        Validate PAC↔WRAP sequential dependency.
+        
+        PAC-ALEX-P43-PAC-WRAP-SEQUENTIAL-GATE-IMPLEMENTATION-01
+        
+        Rule: PAC P(N) requires WRAP P(N-1) to be ACCEPTED in the ledger.
+        
+        Exceptions:
+        1. First PAC for an agent (N=1 or no prior PACs) is allowed
+        2. BENSON (GID-00) can bypass this check
+        
+        Args:
+            pac_id: The PAC ID being validated (e.g., "PAC-ALEX-P43-...")
+            agent_gid: The GID of the agent issuing the PAC
+            
+        Returns:
+            dict with keys:
+            - 'valid': bool — True if sequential dependency satisfied
+            - 'error_code': str or None — GS_111 on violation
+            - 'message': str — Human-readable explanation
+            - 'required_wrap_number': int or None — P## of required WRAP
+        """
+        import re
+        
+        # Extract P## from PAC ID
+        match = re.search(r'PAC-([A-Z]+)-P(\d+)-', pac_id)
+        if not match:
+            return {
+                "valid": False,
+                "error_code": "GS_111",
+                "message": f"Cannot extract PAC number from ID: {pac_id}",
+                "required_wrap_number": None
+            }
+        
+        agent_name = match.group(1)
+        pac_number = int(match.group(2))
+        
+        # Exception 1: First PAC for agent (no prior WRAP required)
+        # If pac_number == 1, this is the first PAC
+        if pac_number == 1:
+            return {
+                "valid": True,
+                "error_code": None,
+                "message": f"First PAC (P1) for agent {agent_name} — no prior WRAP required",
+                "required_wrap_number": None
+            }
+        
+        # Exception 2: BENSON (GID-00) override
+        if agent_gid == "GID-00":
+            return {
+                "valid": True,
+                "error_code": None,
+                "message": f"BENSON (GID-00) override — sequential check bypassed",
+                "required_wrap_number": None
+            }
+        
+        # Rule: PAC P(N) requires WRAP P(N-1) to be ACCEPTED
+        required_wrap_number = pac_number - 1
+        
+        # Query ledger for WRAP_ACCEPTED entries for this agent with P(N-1)
+        wrap_accepted = False
+        for entry in self.ledger_data["entries"]:
+            if entry.get("entry_type") != EntryType.WRAP_ACCEPTED.value:
+                continue
+            if entry.get("agent_gid") != agent_gid:
+                continue
+            
+            artifact_id = entry.get("artifact_id", "")
+            wrap_match = re.search(r'WRAP-[A-Z]+-P(\d+)-', artifact_id)
+            if wrap_match:
+                wrap_num = int(wrap_match.group(1))
+                if wrap_num == required_wrap_number:
+                    wrap_accepted = True
+                    break
+        
+        if not wrap_accepted:
+            return {
+                "valid": False,
+                "error_code": "GS_111",
+                "message": (
+                    f"PAC issuance blocked — prior WRAP not accepted. "
+                    f"PAC P{pac_number} requires WRAP P{required_wrap_number} to be ACCEPTED. "
+                    f"Agent: {agent_name} ({agent_gid})"
+                ),
+                "required_wrap_number": required_wrap_number
+            }
+        
+        return {
+            "valid": True,
+            "error_code": None,
+            "message": f"Sequential dependency satisfied — WRAP P{required_wrap_number} is ACCEPTED",
+            "required_wrap_number": required_wrap_number
+        }
+    
+    def get_all_pac_sequence_states(self) -> dict:
+        """
+        Get PAC sequence state for all agents.
+        
+        Returns:
+            dict mapping agent_gid → PacSequenceState
+        """
+        states = {}
+        for gid in AGENT_REGISTRY:
+            state = self.get_pac_sequence_state(gid)
+            # Only include agents with activity
+            if state.last_issued_pac_number is not None:
+                states[gid] = {
+                    "agent_name": state.agent_name,
+                    "last_issued_pac": state.last_issued_pac,
+                    "last_issued_pac_number": state.last_issued_pac_number,
+                    "last_closed_wrap": state.last_closed_wrap,
+                    "last_closed_wrap_number": state.last_closed_wrap_number,
+                    "wrap_pending": state.wrap_pending,
+                    "sequence_valid": state.sequence_valid
+                }
+        return states
+    
+    # ========================================================================
+    # PAC STATE MACHINE & WRAP BINDING
+    # PAC-BENSON-P44-GOVERNANCE-LEDGER-WRAP-BINDING-AND-STATE-LOCK-01
+    # ========================================================================
+    
+    def get_pac_state(self, pac_id: str) -> Optional[str]:
+        """
+        Get the current state of a PAC from the ledger.
+        
+        Returns:
+            PacState value (ISSUED, EXECUTED, CLOSED) or None if not found
+        """
+        # Find latest entry for this PAC
+        latest_entry = None
+        latest_seq = -1
+        
+        for entry in self.ledger_data["entries"]:
+            if entry.get("artifact_id") == pac_id:
+                seq = entry.get("sequence", 0)
+                if seq > latest_seq:
+                    latest_seq = seq
+                    latest_entry = entry
+        
+        if not latest_entry:
+            return None
+        
+        # Determine state from entry type
+        entry_type = latest_entry.get("entry_type", "")
+        pac_state = latest_entry.get("pac_state")
+        
+        if pac_state:
+            return pac_state
+        
+        # Infer from entry type
+        if entry_type == EntryType.PAC_ISSUED.value:
+            return PacState.ISSUED.value
+        elif entry_type == EntryType.PAC_EXECUTED.value:
+            return PacState.EXECUTED.value
+        elif entry_type == EntryType.POSITIVE_CLOSURE_ACKNOWLEDGED.value:
+            return PacState.CLOSED.value
+        
+        return PacState.ISSUED.value
+    
+    def validate_pac_state_transition(self, pac_id: str, new_state: str) -> dict:
+        """
+        Validate a PAC state transition.
+        
+        PAC-BENSON-P44: State transitions are ONE-WAY:
+        ISSUED → EXECUTED → CLOSED
+        
+        Args:
+            pac_id: The PAC artifact ID
+            new_state: The proposed new state
+            
+        Returns:
+            dict with 'valid', 'error_code', 'message', 'current_state'
+        """
+        current_state = self.get_pac_state(pac_id)
+        
+        if current_state is None:
+            # New PAC — only ISSUED is valid
+            if new_state != PacState.ISSUED.value:
+                return {
+                    "valid": False,
+                    "error_code": "GS_115",
+                    "message": f"New PAC must start in ISSUED state, not {new_state}",
+                    "current_state": None
+                }
+            return {
+                "valid": True,
+                "error_code": None,
+                "message": "New PAC can be created in ISSUED state",
+                "current_state": None
+            }
+        
+        # Get valid transitions
+        try:
+            current_state_enum = PacState(current_state)
+        except ValueError:
+            return {
+                "valid": False,
+                "error_code": "GS_115",
+                "message": f"Invalid current state: {current_state}",
+                "current_state": current_state
+            }
+        
+        try:
+            new_state_enum = PacState(new_state)
+        except ValueError:
+            return {
+                "valid": False,
+                "error_code": "GS_115",
+                "message": f"Invalid target state: {new_state}",
+                "current_state": current_state
+            }
+        
+        valid_transitions = VALID_PAC_TRANSITIONS.get(current_state_enum, [])
+        
+        if new_state_enum not in valid_transitions:
+            return {
+                "valid": False,
+                "error_code": "GS_115",
+                "message": (
+                    f"PAC_STATE_REGRESSION — Illegal PAC state transition detected. "
+                    f"Cannot transition from {current_state} to {new_state}. "
+                    f"Valid transitions: {[s.value for s in valid_transitions] or 'NONE (terminal)'}"
+                ),
+                "current_state": current_state
+            }
+        
+        return {
+            "valid": True,
+            "error_code": None,
+            "message": f"State transition {current_state} → {new_state} is valid",
+            "current_state": current_state
+        }
+    
+    def get_wrap_binding_for_pac(self, pac_id: str) -> Optional[dict]:
+        """
+        Get the WRAP binding for a PAC if one exists.
+        
+        Returns:
+            dict with wrap_id, wrap_hash, pac_hash, bound_at or None
+        """
+        for entry in self.ledger_data["entries"]:
+            if entry.get("parent_artifact") == pac_id:
+                entry_type = entry.get("entry_type", "")
+                if entry_type == EntryType.WRAP_ACCEPTED.value:
+                    return {
+                        "wrap_id": entry.get("artifact_id"),
+                        "wrap_hash": entry.get("artifact_sha256"),
+                        "pac_hash": entry.get("wrap_binding", {}).get("pac_hash") if entry.get("wrap_binding") else None,
+                        "bound_at": entry.get("timestamp")
+                    }
+        return None
+    
+    def is_wrap_already_bound(self, wrap_id: str) -> bool:
+        """
+        Check if a WRAP is already bound to a PAC.
+        
+        Prevents duplicate bindings (one WRAP ↔ one PAC).
+        """
+        for entry in self.ledger_data["entries"]:
+            if entry.get("artifact_id") == wrap_id:
+                entry_type = entry.get("entry_type", "")
+                if entry_type == EntryType.WRAP_ACCEPTED.value:
+                    return True
+        return False
+    
+    def validate_pac_closure(self, pac_id: str) -> dict:
+        """
+        Validate if a PAC can be closed.
+        
+        PAC-BENSON-P44: PAC cannot reach CLOSED without valid WRAP binding.
+        
+        Args:
+            pac_id: The PAC artifact ID
+            
+        Returns:
+            dict with 'can_close', 'error_code', 'message', 'wrap_binding'
+        """
+        # Check current state
+        current_state = self.get_pac_state(pac_id)
+        
+        if current_state != PacState.EXECUTED.value:
+            return {
+                "can_close": False,
+                "error_code": "GS_115",
+                "message": (
+                    f"PAC cannot close from state {current_state}. "
+                    f"Must be in EXECUTED state first."
+                ),
+                "wrap_binding": None
+            }
+        
+        # Check for WRAP binding
+        wrap_binding = self.get_wrap_binding_for_pac(pac_id)
+        
+        if not wrap_binding:
+            return {
+                "can_close": False,
+                "error_code": "GS_113",
+                "message": "PAC_NOT_CLOSED_NO_WRAP — PAC cannot close without a valid WRAP.",
+                "wrap_binding": None
+            }
+        
+        return {
+            "can_close": True,
+            "error_code": None,
+            "message": f"PAC can close. WRAP binding: {wrap_binding['wrap_id']}",
+            "wrap_binding": wrap_binding
+        }
+    
+    def validate_wrap_hash_binding(
+        self, 
+        wrap_id: str, 
+        wrap_hash: str, 
+        pac_id: str, 
+        pac_hash: str
+    ) -> dict:
+        """
+        Validate cryptographic binding between WRAP and PAC.
+        
+        PAC-BENSON-P44: WRAP must reference PAC_ID, PAC_HASH, and SEQUENCE.
+        
+        Args:
+            wrap_id: The WRAP artifact ID
+            wrap_hash: SHA256 of WRAP content
+            pac_id: The PAC artifact ID
+            pac_hash: SHA256 of PAC content (from WRAP's pac_hash field)
+            
+        Returns:
+            dict with 'valid', 'error_code', 'message'
+        """
+        import re
+        
+        # Validate IDs match
+        wrap_match = re.search(r'WRAP-([A-Z]+)-P(\d+)-', wrap_id)
+        pac_match = re.search(r'PAC-([A-Z]+)-P(\d+)-', pac_id)
+        
+        if not wrap_match or not pac_match:
+            return {
+                "valid": False,
+                "error_code": "GS_114",
+                "message": "Cannot extract agent/sequence from WRAP or PAC ID"
+            }
+        
+        wrap_agent, wrap_num = wrap_match.group(1), int(wrap_match.group(2))
+        pac_agent, pac_num = pac_match.group(1), int(pac_match.group(2))
+        
+        if wrap_agent != pac_agent or wrap_num != pac_num:
+            return {
+                "valid": False,
+                "error_code": "GS_114",
+                "message": (
+                    f"WRAP_PAC_HASH_MISMATCH — WRAP does not cryptographically bind to PAC. "
+                    f"Agent/sequence mismatch: WRAP={wrap_agent}-P{wrap_num}, PAC={pac_agent}-P{pac_num}"
+                )
+            }
+        
+        # Verify PAC exists in ledger with matching hash
+        pac_entries = self.get_entries_by_artifact(pac_id)
+        if not pac_entries:
+            return {
+                "valid": False,
+                "error_code": "GS_114",
+                "message": f"PAC {pac_id} not found in ledger — cannot bind WRAP"
+            }
+        
+        # Check if WRAP references correct PAC hash (if provided)
+        if pac_hash:
+            ledger_pac_hash = None
+            for entry in pac_entries:
+                if entry.get("artifact_sha256"):
+                    ledger_pac_hash = entry.get("artifact_sha256")
+                    break
+            
+            if ledger_pac_hash and pac_hash != ledger_pac_hash:
+                return {
+                    "valid": False,
+                    "error_code": "GS_114",
+                    "message": (
+                        f"WRAP_PAC_HASH_MISMATCH — WRAP does not cryptographically bind to PAC. "
+                        f"Hash mismatch: WRAP claims {pac_hash[:16]}..., ledger has {ledger_pac_hash[:16]}..."
+                    )
+                }
+        
+        # Check for duplicate binding
+        if self.is_wrap_already_bound(wrap_id):
+            return {
+                "valid": False,
+                "error_code": "GS_114",
+                "message": f"WRAP {wrap_id} is already bound — duplicate binding rejected"
+            }
+        
+        return {
+            "valid": True,
+            "error_code": None,
+            "message": f"WRAP {wrap_id} cryptographically binds to PAC {pac_id}"
+        }
+    
+    def record_wrap_binding(
+        self,
+        wrap_id: str,
+        wrap_hash: str,
+        pac_id: str,
+        pac_hash: str,
+        agent_gid: str,
+        agent_name: str
+    ) -> Optional[LedgerEntry]:
+        """
+        Record a WRAP binding to PAC in the ledger.
+        
+        This atomically:
+        1. Validates the binding
+        2. Records WRAP_ACCEPTED entry
+        3. Updates PAC state to CLOSED
+        
+        Returns:
+            LedgerEntry if successful, None if validation fails
+        """
+        # Validate binding first
+        binding_result = self.validate_wrap_hash_binding(wrap_id, wrap_hash, pac_id, pac_hash)
+        if not binding_result["valid"]:
+            return None
+        
+        # Create binding entry
+        entry = self.record_wrap(
+            artifact_id=wrap_id,
+            agent_gid=agent_gid,
+            agent_name=agent_name,
+            parent_pac=pac_id,
+            status="accepted",
+            ratified_by="BENSON (GID-00)"
+        )
+        
+        # Update entry with binding info
+        if entry and entry.sequence:
+            # Find and update the entry in ledger_data
+            for ledger_entry in self.ledger_data["entries"]:
+                if ledger_entry.get("sequence") == entry.sequence:
+                    ledger_entry["wrap_binding"] = {
+                        "wrap_id": wrap_id,
+                        "wrap_hash": wrap_hash,
+                        "pac_hash": pac_hash,
+                        "bound_at": entry.timestamp
+                    }
+                    ledger_entry["pac_state"] = PacState.CLOSED.value
+                    break
+            
+            self._save_ledger()
+        
+        return entry
     
     # ========================================================================
     # QUERY OPERATIONS

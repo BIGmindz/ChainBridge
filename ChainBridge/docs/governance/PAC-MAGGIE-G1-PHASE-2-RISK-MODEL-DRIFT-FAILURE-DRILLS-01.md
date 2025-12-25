@@ -4,6 +4,34 @@
 
 ---
 
+## 0. Runtime & Agent Activation
+
+```yaml
+RUNTIME_ACTIVATION_ACK:
+  runtime_name: "GitHub Copilot"
+  runtime_type: "EXECUTION_RUNTIME"
+  gid: "N/A"
+  authority: "DELEGATED"
+  execution_lane: "EXECUTION"
+  mode: "EXECUTABLE"
+  executes_for_agent: "Maggie (GID-10)"
+  status: "ACTIVE"
+```
+
+```yaml
+AGENT_ACTIVATION_ACK:
+  agent_name: "MAGGIE"
+  gid: "GID-10"
+  role: "ML & Applied AI Engineer"
+  color: "MAGENTA"
+  icon: "🩷"
+  execution_lane: "ML_AI"
+  mode: "AUTHORITATIVE"
+  status: "ACTIVE"
+```
+
+---
+
 ## Metadata
 
 | Field | Value |

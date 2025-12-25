@@ -10,6 +10,8 @@
  * - ProofPack routes treat data as opaque — existence only, not validity
  * - All routes are bookmarkable and work via direct URL entry
  * - Trust pages and Proof pages are fully decoupled
+ *
+ * @see PAC-SONNY-G2-PHASE-2-GOVERNANCE-LEDGER-VISIBILITY-AND-OC-INTEGRATION-01 — OC Governance route
  */
 
 import { Route, Routes } from "react-router-dom";
@@ -20,6 +22,7 @@ import ExceptionsPage from "./pages/ExceptionsPage";
 import IntelligencePage from "./pages/IntelligencePage";
 import IqLabPage from "./pages/IqLabPage";
 import OCExceptionCockpitPage from "./pages/OCExceptionCockpitPage";
+import OCGovernancePage from "./pages/OCGovernancePage";
 import OperatorConsolePage from "./pages/OperatorConsolePage";
 import OverviewPage from "./pages/OverviewPage";
 import SandboxPage from "./pages/SandboxPage";
@@ -45,6 +48,7 @@ export function AppRoutes() {
         <Route path="overview" element={<OverviewPage />} />
         <Route path="shipments" element={<ShipmentsPage />} />
         <Route path="oc" element={<OperatorConsolePage />} />
+        <Route path="oc/governance" element={<OCGovernancePage />} />
         <Route path="oc-exceptions" element={<OCExceptionCockpitPage />} />
         <Route path="operator" element={<OperatorConsolePage />} />
         <Route path="chainpay" element={<ChainPayPage />} />

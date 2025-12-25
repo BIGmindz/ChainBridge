@@ -1,0 +1,114 @@
+# Repository Context Bundle Manifest
+# Generated: 2025-12-24
+# PAC: PAC-ATLAS-P23-REPO-CONTEXT-EXTRACTION-AND-TRANSFER-01
+
+manifest:
+  version: "1.0.0"
+  generated_by: ATLAS
+  generated_gid: GID-05
+  timestamp: "2025-12-24T16:30:00Z"
+  pac_reference: PAC-ATLAS-P23-REPO-CONTEXT-EXTRACTION-AND-TRANSFER-01
+
+repository:
+  name: ChainBridge
+  owner: BIGmindz
+  branch: worktree-2025-12-11T14-34-55
+  default_branch: main
+
+bundle_contents:
+  - file: repo_tree.txt
+    description: Full repository file listing (filtered)
+    type: TEXT
+    entries: ~2500
+    
+  - file: README_CONTEXT.md
+    description: System overview and architectural synthesis
+    type: MARKDOWN
+    sections:
+      - System Overview
+      - Governance Architecture
+      - Review / Correction / Closure Flow
+      - Ledger & Immutability Model
+      - Agent Model & Color Governance
+      - Directory Structure
+      - Key Commands
+      
+  - file: agent_registry_snapshot.yaml
+    description: Canonical agent registry extract
+    type: YAML
+    agents_count: 12
+    
+  - directory: governance_core_bundle/
+    description: Core governance system files
+    files:
+      - name: gate_pack.py
+        description: Governance validation engine
+        size_kb: 91
+        lines: ~2500
+        
+      - name: ledger_writer.py
+        description: Immutable governance ledger
+        size_kb: 54
+        lines: ~1400
+        
+      - name: AGENT_REGISTRY.json
+        description: Canonical agent identity registry
+        size_kb: 4
+        version: "4.0.0"
+        
+      - name: CANONICAL_CORRECTION_PACK_TEMPLATE.md
+        description: Gold Standard correction template
+        size_kb: 8
+        version: "G2.0.0"
+
+validation_criteria:
+  upload_size_limit: "< 50MB"
+  actual_size: "< 1MB"
+  files_are_text_only: true
+  governance_files_present: true
+  agent_color_registry_consistent: true
+  secrets_excluded: true
+  binary_artifacts_excluded: true
+
+excluded:
+  - node_modules/
+  - .git/
+  - .venv/
+  - __pycache__/
+  - htmlcov/
+  - dist/
+  - build/
+  - "*.pyc"
+  - .env*
+  - secrets/
+  - credentials/
+
+governance:
+  mode: FAIL_CLOSED
+  review_gate: REQUIRED
+  bsrg_review: REQUIRED
+  ledger_recording: ENABLED
+
+usage_instructions:
+  purpose: >
+    This bundle provides sufficient context for external architectural review,
+    governance understanding, and system comprehension without requiring
+    full repository access or large file transfers.
+    
+  contents_summary: >
+    - repo_tree.txt: Navigate the full project structure
+    - README_CONTEXT.md: Understand architecture and governance
+    - agent_registry_snapshot.yaml: Review agent identities
+    - governance_core_bundle/: Examine core validation logic
+    
+  review_focus:
+    - Governance validation flow
+    - Agent identity model
+    - Ledger immutability design
+    - Error code taxonomy
+    - Correction/closure lifecycle
+
+training_signal:
+  signal_type: POSITIVE_INSTRUCTION_REINFORCEMENT
+  pattern: REPO_CONTEXT_MINIMAL_TRANSFER
+  lesson: "Large repos require structured context extraction, not raw transfer."

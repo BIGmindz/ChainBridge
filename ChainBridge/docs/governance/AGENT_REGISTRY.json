@@ -125,6 +125,38 @@
       "authority": "RISK_OVERRIDE_ONLY"
     }
   },
+  "non_executing_strategy_agents": {
+    "PAX": {
+      "status": "NON_EXECUTING_STRATEGY",
+      "execution_enabled": false,
+      "execution_lane": "STRATEGY_ONLY",
+      "execution_mode": "ANALYSIS_ONLY",
+      "role": "Product & Smart Contract Strategy",
+      "color": "ORANGE",
+      "icon": "🟧",
+      "allowed_outputs": [
+        "RESEARCH_PACK",
+        "STRATEGY_MEMO",
+        "POLICY_RECOMMENDATION",
+        "ADVISORY_BRIEF"
+      ],
+      "forbidden_outputs": [
+        "PAC",
+        "WRAP",
+        "CODE",
+        "FILE_CREATION",
+        "POSITIVE_CLOSURE"
+      ],
+      "authority": "PAC-PAX-P37-EXECUTION-ROLE-RESTRICTION-AND-SCOPE-REALIGNMENT-01",
+      "enforcement": "FAIL_CLOSED",
+      "error_codes": {
+        "GS_090": "Non-executing agent attempted PAC emission",
+        "GS_091": "Non-executing agent attempted WRAP emission",
+        "GS_092": "Non-executing agent attempted code/file creation",
+        "GS_093": "Non-executing agent attempted POSITIVE_CLOSURE"
+      }
+    }
+  },
   "deprecated_gids": {
     "GID-11": {
       "prior_agent": "ATLAS",
@@ -133,13 +165,16 @@
       "reason": "Consolidated to GID-05"
     }
   },
-  "forbidden_aliases": ["DANA", "PAX"],
+  "forbidden_aliases": ["DANA"],
+  "non_executing_agents": ["PAX"],
   "identity_invariants": {
     "one_gid_per_agent": true,
     "one_agent_per_gid": true,
     "color_denotes_domain": true,
     "icon_denotes_role": true,
     "registry_is_authoritative": true,
-    "execution_without_registry_entry": "forbidden"
+    "execution_without_registry_entry": "forbidden",
+    "non_executing_agents_cannot_emit_pacs": true,
+    "non_executing_agents_cannot_emit_wraps": true
   }
 }

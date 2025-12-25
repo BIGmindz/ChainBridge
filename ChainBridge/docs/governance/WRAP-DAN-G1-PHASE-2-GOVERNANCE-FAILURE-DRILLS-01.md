@@ -48,7 +48,57 @@ CORRECTION_HISTORY:
 
 ---
 
-## 0.B RUNTIME_ACTIVATION_ACK
+## 0.B CLOSURE_CLASS
+
+```yaml
+CLOSURE_CLASS:
+  type: "POSITIVE_CLOSURE"
+  terminal: true
+  requires_correction_lineage: true
+  requires_authority: true
+```
+
+---
+
+## 0.C CLOSURE_AUTHORITY
+
+```yaml
+CLOSURE_AUTHORITY:
+  authority_gid: "GID-00"
+  authority_name: "BENSON"
+  closure_granted: true
+  closure_date: "2025-12-23"
+```
+
+---
+
+## 0.D VIOLATIONS_ADDRESSED
+
+```yaml
+VIOLATIONS_ADDRESSED:
+  total_violations: 5
+  all_resolved: true
+  violations:
+    - code: "G0_020"
+      description: "Gold Standard Checklist missing"
+      resolution: "Added GOLD_STANDARD_CHECKLIST section"
+    - code: "G0_021"
+      description: "No explicit correction classification"
+      resolution: "Added correction cycle tracking"
+    - code: "G0_022"
+      description: "Missing self-certification"
+      resolution: "Added SELF_CERTIFICATION section"
+    - code: "G0_023"
+      description: "Incorrect training signal"
+      resolution: "Fixed training signal semantics"
+    - code: "G0_030"
+      description: "Invalid closure semantics"
+      resolution: "Added CLOSURE_CLASS and CLOSURE_AUTHORITY"
+```
+
+---
+
+## 0.E RUNTIME_ACTIVATION_ACK
 
 ```yaml
 RUNTIME_ACTIVATION_ACK:
