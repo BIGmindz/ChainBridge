@@ -339,6 +339,43 @@ class CIRenderer:
             for error in errors[:3]:
                 print(f"    {self._color('│', color)} {error}")
 
+    def end_run_with_failure_classification(self, error_codes: List[str] = None) -> Dict[str, any]:
+        """
+        Print run summary with failure classification and remediation hints.
+        
+        PAC-DAN-P44: Integrates ci_failure_classifier for zero silent failures.
+        
+        Args:
+            error_codes: Optional list of error codes to classify
+            
+        Returns:
+            Dict with counts and failure summary
+        """
+        from ci_failure_classifier import (
+            FailureClassifier, 
+            format_failure_summary, 
+            format_failure_json
+        )
+        
+        # First do standard summary
+        counts = self.end_run()
+        
+        # If we have error codes, add classified failure summary
+        if error_codes:
+            classifier = FailureClassifier()
+            summary = classifier.classify_multiple(error_codes)
+            
+            # Print failure classification
+            print(format_failure_summary(summary, use_color=self._use_color))
+            
+            return {
+                "counts": counts,
+                "failure_summary": format_failure_json(summary),
+                "exit_code": summary.exit_code,
+            }
+        
+        return {"counts": counts, "exit_code": 1 if counts.get("FAIL", 0) > 0 else 0}
+
 
 def create_renderer_from_args(args) -> CIRenderer:
     """
