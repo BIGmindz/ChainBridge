@@ -762,6 +762,268 @@ def lint_end_banner_color_match(content: str, file_path: Path) -> List[LintViola
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# GOLD STANDARD CHECKLIST ENFORCEMENT — PAC-BENSON-P74-GOLD-STANDARD-CHECKLIST-01
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Canonical Gold Standard Checklist items (13 items, immutable)
+# PAC-BENSON-P74: These are the exact items required for POSITIVE_CLOSURE
+GOLD_STANDARD_CHECKLIST_ITEMS = [
+    "Canonical PAC template used",
+    "All gateways (G0–G7) executed in order",
+    "Execution lane explicitly declared",
+    "Agent activation acknowledged (PAG-01)",
+    "Runtime activation acknowledged",
+    "Constraints & guardrails declared",
+    "Tasks scoped and non-expansive",
+    "File scope explicitly bounded",
+    "Fail-closed posture enforced",
+    "WRAP requirement declared",
+    "BER requirement declared (if applicable)",
+    "Human review gate declared (if applicable)",
+    "Ledger mutation explicitly attested",
+]
+
+GOLD_STANDARD_CHECKLIST_COUNT = 13  # Canonical count, immutable
+
+# Pattern for GOLD_STANDARD_CHECKLIST header
+GOLD_STANDARD_CHECKLIST_HEADER_PATTERN = re.compile(
+    r"(?:GOLD[_\s-]?STANDARD[_\s-]?CHECKLIST|Gold\s+Standard\s+Checklist)",
+    re.IGNORECASE
+)
+
+# Pattern for CHECKLIST_STATUS: PASS (13/13)
+CHECKLIST_STATUS_PATTERN = re.compile(
+    r"CHECKLIST[_\s-]?STATUS\s*:\s*(?:PASS|✅)\s*\(?\s*(\d+)\s*/\s*(\d+)\s*\)?",
+    re.IGNORECASE
+)
+
+# Pattern for checked checkbox items [✓] or [x] or [X]
+CHECKLIST_ITEM_CHECKED_PATTERN = re.compile(
+    r"^\s*\[(?:✓|x|X|✅)\]\s*(.+)$",
+    re.MULTILINE
+)
+
+# Pattern for any checkbox item (checked or unchecked)
+CHECKLIST_ITEM_ANY_PATTERN = re.compile(
+    r"^\s*\[(?:✓|x|X|✅|\s|✗|❌)?\]\s*(.+)$",
+    re.MULTILINE
+)
+
+
+def lint_gold_standard_checklist_present(content: str, file_path: Path) -> List[LintViolation]:
+    """
+    RULE: pac-gold-standard-checklist-present
+    All PACs MUST have a Gold Standard Checklist section.
+
+    PAC-BENSON-P74: The checklist is a mandatory terminal artifact.
+    No PAC can achieve POSITIVE_CLOSURE without it.
+    """
+    violations = []
+
+    # Check if this looks like a PAC file
+    if "PAC-" not in content.upper():
+        return violations
+
+    # Check for Gold Standard Checklist header
+    has_checklist_header = GOLD_STANDARD_CHECKLIST_HEADER_PATTERN.search(content) is not None
+
+    if not has_checklist_header:
+        # Find appropriate line number (end of file or near POSITIVE_CLOSURE)
+        lines = content.split("\n")
+        line_num = len(lines)
+
+        for i, line in enumerate(lines, 1):
+            if "POSITIVE_CLOSURE" in line.upper() or "END" in line.upper():
+                line_num = i
+                break
+
+        violations.append(LintViolation(
+            file=file_path,
+            line=line_num,
+            severity=ViolationSeverity.ERROR,
+            rule="pac-gold-standard-checklist-present",
+            message="PAC missing GOLD_STANDARD_CHECKLIST section. Required for POSITIVE_CLOSURE.",
+        ))
+
+    return violations
+
+
+def lint_gold_standard_checklist_status(content: str, file_path: Path) -> List[LintViolation]:
+    """
+    RULE: pac-gold-standard-checklist-status
+    Checklist must have CHECKLIST_STATUS: PASS (13/13) for POSITIVE_CLOSURE.
+
+    PAC-BENSON-P74: PASS (13/13) is the ONLY valid closure state.
+    """
+    violations = []
+
+    # Check if this looks like a PAC file
+    if "PAC-" not in content.upper():
+        return violations
+
+    # If no checklist header, skip (caught by other rule)
+    if not GOLD_STANDARD_CHECKLIST_HEADER_PATTERN.search(content):
+        return violations
+
+    lines = content.split("\n")
+
+    # Look for CHECKLIST_STATUS
+    status_match = CHECKLIST_STATUS_PATTERN.search(content)
+
+    if not status_match:
+        # Find checklist section line
+        line_num = len(lines)
+        for i, line in enumerate(lines, 1):
+            if GOLD_STANDARD_CHECKLIST_HEADER_PATTERN.search(line):
+                line_num = i
+                break
+
+        violations.append(LintViolation(
+            file=file_path,
+            line=line_num,
+            severity=ViolationSeverity.ERROR,
+            rule="pac-gold-standard-checklist-status",
+            message="GOLD_STANDARD_CHECKLIST missing CHECKLIST_STATUS. Required: PASS (13/13).",
+        ))
+        return violations
+
+    # Validate pass count
+    passed_count = int(status_match.group(1))
+    total_count = int(status_match.group(2))
+
+    # Find line number of status
+    line_num = len(lines)
+    for i, line in enumerate(lines, 1):
+        if CHECKLIST_STATUS_PATTERN.search(line):
+            line_num = i
+            break
+
+    # Must be 13/13
+    if total_count != GOLD_STANDARD_CHECKLIST_COUNT:
+        violations.append(LintViolation(
+            file=file_path,
+            line=line_num,
+            severity=ViolationSeverity.ERROR,
+            rule="pac-gold-standard-checklist-status",
+            message=f"CHECKLIST_STATUS has {total_count} total items, expected {GOLD_STANDARD_CHECKLIST_COUNT}.",
+        ))
+
+    if passed_count != GOLD_STANDARD_CHECKLIST_COUNT:
+        violations.append(LintViolation(
+            file=file_path,
+            line=line_num,
+            severity=ViolationSeverity.ERROR,
+            rule="pac-gold-standard-checklist-status",
+            message=f"CHECKLIST_STATUS shows {passed_count}/{total_count}. PASS ({GOLD_STANDARD_CHECKLIST_COUNT}/{GOLD_STANDARD_CHECKLIST_COUNT}) required for POSITIVE_CLOSURE.",
+        ))
+
+    return violations
+
+
+def lint_gold_standard_checklist_items(content: str, file_path: Path) -> List[LintViolation]:
+    """
+    RULE: pac-gold-standard-checklist-items
+    All 13 canonical checklist items must be present and checked.
+
+    PAC-BENSON-P74: Checklist items are immutable learning substrate.
+    """
+    violations = []
+
+    # Check if this looks like a PAC file
+    if "PAC-" not in content.upper():
+        return violations
+
+    # If no checklist header, skip (caught by other rule)
+    if not GOLD_STANDARD_CHECKLIST_HEADER_PATTERN.search(content):
+        return violations
+
+    lines = content.split("\n")
+
+    # Find checklist section
+    checklist_start = -1
+    checklist_end = -1
+
+    for i, line in enumerate(lines):
+        if GOLD_STANDARD_CHECKLIST_HEADER_PATTERN.search(line):
+            checklist_start = i
+        elif checklist_start >= 0 and ("═" in line or "CHECKLIST_STATUS" in line.upper()):
+            checklist_end = i
+            break
+
+    if checklist_start < 0:
+        return violations
+
+    if checklist_end < 0:
+        checklist_end = len(lines)
+
+    # Extract checklist section
+    checklist_section = "\n".join(lines[checklist_start:checklist_end])
+
+    # Find all checked items
+    checked_items = CHECKLIST_ITEM_CHECKED_PATTERN.findall(checklist_section)
+    checked_items_normalized = [item.strip().lower() for item in checked_items]
+
+    # Verify all canonical items are present and checked
+    for canonical_item in GOLD_STANDARD_CHECKLIST_ITEMS:
+        item_normalized = canonical_item.lower()
+
+        # Check if this canonical item is present (with some flexibility)
+        item_found = False
+        for checked in checked_items_normalized:
+            # Allow some variation in wording
+            if (item_normalized in checked or
+                checked in item_normalized or
+                _checklist_item_matches(canonical_item, checked)):
+                item_found = True
+                break
+
+        if not item_found:
+            violations.append(LintViolation(
+                file=file_path,
+                line=checklist_start + 1,
+                severity=ViolationSeverity.ERROR,
+                rule="pac-gold-standard-checklist-items",
+                message=f"Missing or unchecked checklist item: '{canonical_item}'",
+            ))
+
+    return violations
+
+
+def _checklist_item_matches(canonical: str, actual: str) -> bool:
+    """
+    Check if actual checklist item matches canonical item.
+    Allows for minor wording variations while enforcing key concepts.
+    """
+    canonical_lower = canonical.lower()
+    actual_lower = actual.lower()
+
+    # Key phrase matching for each canonical item
+    key_phrases = {
+        "canonical pac template used": ["canonical", "pac", "template"],
+        "all gateways (g0–g7) executed in order": ["gateway", "g0", "g7", "order"],
+        "execution lane explicitly declared": ["execution", "lane", "declared"],
+        "agent activation acknowledged (pag-01)": ["agent", "activation", "pag-01"],
+        "runtime activation acknowledged": ["runtime", "activation"],
+        "constraints & guardrails declared": ["constraint", "guardrail"],
+        "tasks scoped and non-expansive": ["task", "scope", "non-expansive"],
+        "file scope explicitly bounded": ["file", "scope", "bound"],
+        "fail-closed posture enforced": ["fail", "closed"],
+        "wrap requirement declared": ["wrap", "requirement", "declared"],
+        "ber requirement declared (if applicable)": ["ber", "requirement"],
+        "human review gate declared (if applicable)": ["human", "review", "gate"],
+        "ledger mutation explicitly attested": ["ledger", "mutation", "attest"],
+    }
+
+    if canonical_lower in key_phrases:
+        required_phrases = key_phrases[canonical_lower]
+        matches = sum(1 for phrase in required_phrases if phrase in actual_lower)
+        # Require at least 2/3 of key phrases to match
+        return matches >= (len(required_phrases) * 2 // 3)
+
+    return False
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # ACTIVATION BLOCK ENFORCEMENT — PAC-BENSON-ACTIVATION-BLOCK-IMPLEMENTATION-01
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -1194,6 +1456,10 @@ ALL_LINT_RULES = [
     lint_end_banner_agent_match,
     lint_end_banner_gid_match,
     lint_end_banner_color_match,
+    # Gold Standard Checklist Enforcement (PAC-BENSON-P74-GOLD-STANDARD-CHECKLIST-01)
+    lint_gold_standard_checklist_present,
+    lint_gold_standard_checklist_status,
+    lint_gold_standard_checklist_items,
     # Activation Block Enforcement (PAC-BENSON-ACTIVATION-BLOCK-IMPLEMENTATION-01)
     lint_activation_block_present,
     lint_activation_block_prohibited_actions,
