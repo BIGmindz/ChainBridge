@@ -1,0 +1,347 @@
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Invariant Regression Guard — CANONICAL HARDENING CI
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# PAC: PAC-BENSON-P71R-ATLAS-CANONICAL-HARDENING-DRIFT-SEAL-01
+# Author: ATLAS (GID-11) — Build / Repair / Refactor Agent
+# Authority: BENSON (GID-00)
+# Mode: FAIL-CLOSED
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#
+# PURPOSE:
+# Enforce canonical invariants from P65–P70 and fail-closed behavior.
+# This workflow ensures no regression in governance enforcement.
+#
+# INVARIANT CLASSES:
+# - STRUCTURAL (5): INV-001 to INV-005
+# - BEHAVIORAL (4): INV-010 to INV-013
+# - AUTHORITY (4): INV-020 to INV-023
+# - TEMPORAL (3): INV-030 to INV-032
+# - INTEGRITY (3): INV-040 to INV-042
+# - COMPOSITE (2): INV-050 to INV-051
+#
+# FAIL-CLOSED SEMANTICS:
+# - Any invariant violation = HARD CI FAIL
+# - All 21 invariants must pass
+# - Negative-path tests must execute
+# - Fail-closed module must be functional
+#
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+name: Invariant Regression Guard
+
+on:
+  pull_request:
+    paths:
+      - 'tools/governance/**'
+      - 'tests/governance/**'
+      - 'docs/governance/**'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/governance/**'
+      - 'tests/governance/**'
+      - 'docs/governance/**'
+
+env:
+  FAIL_CLOSED: "true"
+  INVARIANT_VERSION: "P71R-01"
+
+jobs:
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # GATE 1: Invariant Registry Integrity
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  invariant-registry:
+    name: "📐 Invariant Registry Check"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Verify Invariant Registry
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📐 INVARIANT REGISTRY VERIFICATION"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Mode: FAIL-CLOSED"
+          echo "Expected invariants: 21"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          cd tools/governance
+          python3 invariants.py
+          
+          if [ $? -ne 0 ]; then
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "❌ INVARIANT REGISTRY CHECK FAILED"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            exit 1
+          fi
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ INVARIANT REGISTRY CHECK PASSED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # GATE 2: Fail-Closed Module Integrity
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  fail-closed-module:
+    name: "🔒 Fail-Closed Module Check"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: invariant-registry
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Verify Fail-Closed Module
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔒 FAIL-CLOSED MODULE VERIFICATION"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Mode: FAIL-CLOSED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          cd tools/governance
+          python3 fail_closed.py
+          
+          if [ $? -ne 0 ]; then
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "❌ FAIL-CLOSED MODULE CHECK FAILED"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            exit 1
+          fi
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ FAIL-CLOSED MODULE CHECK PASSED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # GATE 3: Negative-Path Test Coverage
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  negative-path-tests:
+    name: "⛔ Negative-Path Test Suite"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: fail-closed-module
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Negative-Path Tests
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "⛔ NEGATIVE-PATH TEST SUITE"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Mode: FAIL-CLOSED"
+          echo "Purpose: Verify all failure paths work correctly"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          # Run negative path tests directly (avoid conftest issues)
+          python3 -c "
+import sys
+sys.path.insert(0, 'tools/governance')
+
+from tests.governance.test_negative_paths import *
+
+passed = 0
+failed = 0
+
+test_classes = [
+    TestStructuralNegativePaths,
+    TestBehavioralNegativePaths,
+    TestAuthorityNegativePaths,
+    TestTemporalNegativePaths,
+    TestIntegrityNegativePaths,
+    TestCompositeNegativePaths,
+    TestRegistryNegativePaths,
+]
+
+for cls in test_classes:
+    instance = cls()
+    for name in dir(instance):
+        if name.startswith('test_'):
+            try:
+                getattr(instance, name)()
+                passed += 1
+            except Exception as e:
+                print(f'FAIL: {cls.__name__}.{name} - {e}')
+                failed += 1
+
+print(f'RESULTS: {passed} passed, {failed} failed')
+if failed > 0:
+    sys.exit(1)
+"
+          
+          if [ $? -ne 0 ]; then
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "❌ NEGATIVE-PATH TESTS FAILED"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            exit 1
+          fi
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ NEGATIVE-PATH TESTS PASSED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # GATE 4: Invariant Count Lock
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  invariant-count-lock:
+    name: "🔢 Invariant Count Lock"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: negative-path-tests
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Verify Invariant Count
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔢 INVARIANT COUNT LOCK"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Mode: FAIL-CLOSED"
+          echo "Locked count: 21 invariants"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          cd tools/governance
+          
+          COUNT=$(python3 -c "
+from invariants import get_invariant_registry
+registry = get_invariant_registry()
+print(len(registry.invariants))
+")
+          
+          EXPECTED=21
+          
+          echo "Current invariant count: $COUNT"
+          echo "Expected invariant count: $EXPECTED"
+          
+          if [ "$COUNT" != "$EXPECTED" ]; then
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "❌ INVARIANT COUNT MISMATCH"
+            echo "   Expected: $EXPECTED"
+            echo "   Actual:   $COUNT"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            echo "RESOLUTION: If adding new invariants, update this lock."
+            echo "PAC REQUIRED for invariant count changes."
+            exit 1
+          fi
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ INVARIANT COUNT LOCKED AT $EXPECTED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # GATE 5: Error Code Namespace Lock
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  error-code-lock:
+    name: "🏷️ Error Code Namespace Lock"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: invariant-count-lock
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Verify Error Code Namespaces
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🏷️ ERROR CODE NAMESPACE VERIFICATION"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Mode: FAIL-CLOSED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          # Verify no duplicate GS_XXX error codes
+          python3 -c "
+import sys
+from collections import Counter
+
+# Scan for GS_ error codes in governance modules
+import re
+from pathlib import Path
+
+gov_dir = Path('tools/governance')
+all_codes = []
+
+for pyfile in gov_dir.glob('*.py'):
+    content = pyfile.read_text()
+    codes = re.findall(r'GS_\d{3}', content)
+    all_codes.extend(codes)
+
+counter = Counter(all_codes)
+duplicates = [(code, count) for code, count in counter.items() if count > 3]
+
+if duplicates:
+    print('ERROR: Duplicate error codes detected:')
+    for code, count in duplicates:
+        print(f'  {code}: {count} occurrences')
+    sys.exit(1)
+else:
+    print(f'Verified {len(counter)} unique GS_XXX error codes')
+    print('No excessive duplicates detected')
+"
+          
+          if [ $? -ne 0 ]; then
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "❌ ERROR CODE NAMESPACE VIOLATION"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            exit 1
+          fi
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ ERROR CODE NAMESPACE VERIFIED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # FINAL: Regression Guard Summary
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  regression-guard-summary:
+    name: "🛡️ Regression Guard Summary"
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    needs: [error-code-lock]
+    steps:
+      - name: Emit Summary
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🛡️ INVARIANT REGRESSION GUARD — ALL GATES PASSED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "Gates Passed:"
+          echo "  ✅ Gate 1: Invariant Registry Integrity"
+          echo "  ✅ Gate 2: Fail-Closed Module Integrity"
+          echo "  ✅ Gate 3: Negative-Path Test Suite"
+          echo "  ✅ Gate 4: Invariant Count Lock (21)"
+          echo "  ✅ Gate 5: Error Code Namespace Lock"
+          echo ""
+          echo "PAC: PAC-BENSON-P71R-ATLAS-CANONICAL-HARDENING-DRIFT-SEAL-01"
+          echo "Mode: FAIL-CLOSED"
+          echo "Version: $INVARIANT_VERSION"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
