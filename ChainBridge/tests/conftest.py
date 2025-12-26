@@ -35,6 +35,13 @@ if MONOREPO_ROOT.is_dir() and (MONOREPO_ROOT / "core").exists():
         # Append rather than insert to preserve priority of ChainBridge modules
         sys.path.append(str(MONOREPO_ROOT))
 
+# PAC-BENSON-P74: Add monorepo tools path for pac_linter imports
+# This enables Gold Standard Checklist tests to import pac_linter
+MONOREPO_TOOLS = MONOREPO_ROOT / "tools"
+if MONOREPO_TOOLS.is_dir():
+    if str(MONOREPO_TOOLS) not in sys.path:
+        sys.path.append(str(MONOREPO_TOOLS))
+
 # ---------------------------------------------------------------------------
 # NAMESPACE ISOLATION: Pre-load monorepo app.* modules BEFORE api.server
 # ---------------------------------------------------------------------------

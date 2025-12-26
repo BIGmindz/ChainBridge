@@ -28,8 +28,8 @@ Invalid PACs cannot exist.
 
 ```yaml
 CANONICAL_PAC_SCHEMA:
-  version: "G0.2.0"
-  
+  version: "G0.3.0"  # PAC-BENSON-P74: Added GOLD_STANDARD_CHECKLIST
+
   required_blocks:
     - RUNTIME_ACTIVATION_ACK
     - AGENT_ACTIVATION_ACK
@@ -44,13 +44,22 @@ CANONICAL_PAC_SCHEMA:
     - ACCEPTANCE
     - TRAINING_SIGNAL
     - FINAL_STATE
-  
+    - GOLD_STANDARD_CHECKLIST  # PAC-BENSON-P74: MANDATORY TERMINAL
+
   block_order: STRICT
   missing_block: HARD_FAIL
   extra_blocks: ALLOWED_IF_AFTER_REQUIRED
-  
+
   validation_mode: FAIL_CLOSED
   bypass_paths: 0
+
+  # PAC-BENSON-P74: Gold Standard Checklist enforcement
+  checklist_enforcement:
+    required: true
+    item_count: 13
+    pass_threshold: "13/13"
+    partial_pass: false
+    missing_checklist: HARD_FAIL
 ```
 
 ---
@@ -318,6 +327,48 @@ FINAL_STATE {
 
 ---
 
+## Block 12: GOLD_STANDARD_CHECKLIST (MANDATORY TERMINAL)
+
+```yaml
+GOLD_STANDARD_CHECKLIST {
+  # PAC-BENSON-P74: This block is MANDATORY for POSITIVE_CLOSURE
+  # All 13 items must be checked [✓] for PAC to be valid
+
+  items: [
+    "[✓] Canonical PAC template used",
+    "[✓] All gateways (G0–G7) executed in order",
+    "[✓] Execution lane explicitly declared",
+    "[✓] Agent activation acknowledged (PAG-01)",
+    "[✓] Runtime activation acknowledged",
+    "[✓] Constraints & guardrails declared",
+    "[✓] Tasks scoped and non-expansive",
+    "[✓] File scope explicitly bounded",
+    "[✓] Fail-closed posture enforced",
+    "[✓] WRAP requirement declared",
+    "[✓] BER requirement declared (if applicable)",
+    "[✓] Human review gate declared (if applicable)",
+    "[✓] Ledger mutation explicitly attested"
+  ]
+
+  status: "PASS (13/13)"         # Required: Must be PASS (13/13)
+}
+```
+
+**Validation Rules:**
+- All 13 checklist items MUST be present
+- All 13 items MUST be checked [✓]
+- `CHECKLIST_STATUS` MUST be "PASS (13/13)"
+- No items may be removed or modified
+- No partial compliance (12/13 = FAIL)
+
+**Enforcement:**
+- Missing checklist: HARD_FAIL
+- Missing items: HARD_FAIL
+- Wrong count: HARD_FAIL
+- Unchecked items: HARD_FAIL
+
+---
+
 ## Validation Modes
 
 | Mode | Trigger | Failure Response |
@@ -344,6 +395,10 @@ FINAL_STATE {
 | `G0-010` | Constraint violation |
 | `G0-011` | Missing FORBIDDEN_ACTIONS |
 | `G0-012` | Missing SCOPE |
+| `G0-013` | Missing GOLD_STANDARD_CHECKLIST (PAC-BENSON-P74) |
+| `G0-014` | Checklist incomplete (not 13/13) |
+| `G0-015` | Checklist item unchecked |
+| `G0-016` | CHECKLIST_STATUS missing or invalid |
 
 ---
 
