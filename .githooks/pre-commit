@@ -65,28 +65,22 @@ echo "Checking staged files for governance compliance..."
 echo ""
 
 # =============================================================================
-# TASK 1: Run PAC linter on staged Python files
+# TASK 1: Run PAC linter on staged PAC markdown files (NOT Python files)
+# PAC-BENSON-P73: Scope correction - PAC lint only on canonical PAC paths
 # =============================================================================
 
-STAGED_PY_FILES=$(echo "$STAGED_FILES" | grep -E '\.py$' || true)
+# P73: Only lint actual PAC markdown files, not Python files
+STAGED_PAC_FILES=$(echo "$STAGED_FILES" | grep -E 'docs/governance/pacs/PAC-.*\.md$' || true)
 
 PAC_VIOLATIONS=0
-if [ -n "$STAGED_PY_FILES" ]; then
-    echo "${BLUE}[1/5] Running PAC linter on staged Python files...${NC}"
-    
-    # Create temp file list
-    TEMP_FILE_LIST=$(mktemp)
-    echo "$STAGED_PY_FILES" | while read -r file; do
-        if [ -f "$file" ]; then
-            echo "$REPO_ROOT/$file" >> "$TEMP_FILE_LIST"
-        fi
-    done
-    
-    # Run linter on each file
+if [ -n "$STAGED_PAC_FILES" ]; then
+    echo "${BLUE}[1/5] Running PAC linter on staged PAC markdown files...${NC}"
+
+    # Run linter on each PAC file
     LINT_OUTPUT=$(mktemp)
     LINT_FAILED=0
-    
-    for file in $STAGED_PY_FILES; do
+
+    for file in $STAGED_PAC_FILES; do
         if [ -f "$file" ]; then
             # Run linter in check mode
             if ! python3 "$PAC_LINTER" "$REPO_ROOT/$file" --check 2>&1 >> "$LINT_OUTPUT"; then
@@ -94,7 +88,7 @@ if [ -n "$STAGED_PY_FILES" ]; then
             fi
         fi
     done
-    
+
     if [ $LINT_FAILED -eq 1 ]; then
         echo "${RED}❌ PAC lint violations detected:${NC}"
         cat "$LINT_OUTPUT"
@@ -102,64 +96,58 @@ if [ -n "$STAGED_PY_FILES" ]; then
     else
         echo "${GREEN}   ✅ PAC lint passed${NC}"
     fi
-    
-    rm -f "$TEMP_FILE_LIST" "$LINT_OUTPUT"
+
+    rm -f "$LINT_OUTPUT"
 else
-    echo "${BLUE}[1/5] No Python files staged. Skipping PAC lint.${NC}"
+    echo "${BLUE}[1/5] No PAC markdown files staged. Skipping PAC lint.${NC}"
 fi
 
 # =============================================================================
-# TASK 2: Check for EXECUTING AGENT / EXECUTING COLOR in PAC-like files
+# TASK 2: Check for EXECUTING AGENT / EXECUTING COLOR in PAC markdown files
+# PAC-BENSON-P73: Only check actual PAC files, not Python source
 # =============================================================================
 
 echo ""
 echo "${BLUE}[2/5] Checking PAC structure requirements...${NC}"
 
 STRUCTURE_VIOLATIONS=0
-for file in $STAGED_PY_FILES; do
+for file in $STAGED_PAC_FILES; do
     if [ -f "$file" ]; then
-        # Check if file looks like a PAC (has PAC- reference and governance markers)
-        if grep -q "PAC-" "$file" 2>/dev/null; then
-            # Check for required fields
-            HAS_INDICATORS=$(grep -cE "(EXECUTING AGENT|EXECUTING COLOR|END OF PAC)" "$file" 2>/dev/null || echo "0")
-            
-            if [ "$HAS_INDICATORS" -gt 0 ]; then
-                # This is a PAC file - verify structure
-                HAS_AGENT=$(grep -c "EXECUTING AGENT" "$file" 2>/dev/null || echo "0")
-                HAS_COLOR=$(grep -c "EXECUTING COLOR" "$file" 2>/dev/null || echo "0")
-                
-                if [ "$HAS_AGENT" -eq 0 ]; then
-                    echo "${RED}   ❌ $file: Missing EXECUTING AGENT${NC}"
-                    STRUCTURE_VIOLATIONS=1
-                fi
-                
-                if [ "$HAS_COLOR" -eq 0 ]; then
-                    echo "${RED}   ❌ $file: Missing EXECUTING COLOR${NC}"
-                    STRUCTURE_VIOLATIONS=1
-                fi
-            fi
+        # Check for required fields in PAC markdown files
+        HAS_AGENT=$(grep -c "EXECUTING AGENT" "$file" 2>/dev/null || echo "0")
+        HAS_COLOR=$(grep -c "EXECUTING COLOR" "$file" 2>/dev/null || echo "0")
+
+        if [ "$HAS_AGENT" -eq 0 ]; then
+            echo "${RED}   ❌ $file: Missing EXECUTING AGENT${NC}"
+            STRUCTURE_VIOLATIONS=1
+        fi
+
+        if [ "$HAS_COLOR" -eq 0 ]; then
+            echo "${RED}   ❌ $file: Missing EXECUTING COLOR${NC}"
+            STRUCTURE_VIOLATIONS=1
         fi
     fi
 done
 
-if [ $STRUCTURE_VIOLATIONS -eq 0 ]; then
+if [ -z "$STAGED_PAC_FILES" ] || [ $STRUCTURE_VIOLATIONS -eq 0 ]; then
     echo "${GREEN}   ✅ PAC structure check passed${NC}"
 fi
 
 # =============================================================================
-# TASK 3: Check for GID/Color mismatch
+# TASK 3: Check for GID/Color mismatch in PAC files
+# PAC-BENSON-P73: Only check actual PAC files
 # =============================================================================
 
 echo ""
 echo "${BLUE}[3/5] Checking GID/Color alignment...${NC}"
 
 GID_COLOR_VIOLATIONS=0
-for file in $STAGED_PY_FILES; do
+for file in $STAGED_PAC_FILES; do
     if [ -f "$file" ]; then
         # Extract EXECUTING AGENT line
         AGENT_LINE=$(grep -i "EXECUTING AGENT" "$file" 2>/dev/null | head -1 || true)
         COLOR_LINE=$(grep -i "EXECUTING COLOR" "$file" 2>/dev/null | head -1 || true)
-        
+
         if [ -n "$AGENT_LINE" ] && [ -n "$COLOR_LINE" ]; then
             # Check for TEAL usage by non-GID-00
             if echo "$COLOR_LINE" | grep -qi "TEAL"; then
@@ -179,29 +167,24 @@ if [ $GID_COLOR_VIOLATIONS -eq 0 ]; then
 fi
 
 # =============================================================================
-# TASK 4: Check for hybrid artifacts (PAC + Evidence mixed)
+# TASK 4: Check for hybrid artifacts (PAC + Evidence mixed) - REMOVED
+# PAC-BENSON-P73: This check is no longer relevant for PAC markdown files
 # =============================================================================
 
 echo ""
 echo "${BLUE}[4/5] Checking for hybrid artifact violations...${NC}"
 
 HYBRID_VIOLATIONS=0
-for file in $STAGED_PY_FILES; do
+# P73: Hybrid artifact check only applies to staged PAC/WRAP markdown files
+for file in $STAGED_PAC_FILES; do
     if [ -f "$file" ]; then
-        # A file should not contain both PAC and EVIDENCE markers
-        HAS_PAC=$(grep -c "PAC-" "$file" 2>/dev/null || echo "0")
-        HAS_EVIDENCE=$(grep -cE "(EVIDENCE REPORT|EVIDENCE-)" "$file" 2>/dev/null || echo "0")
-        
-        if [ "$HAS_PAC" -gt 0 ] && [ "$HAS_EVIDENCE" -gt 0 ]; then
-            # Check if it's just referencing a PAC in evidence (allowed)
-            # vs actually mixing PAC definition with evidence (not allowed)
-            HAS_PAC_HEADER=$(grep -cE "^(#|//|\*|'''|\"\"\").*PAC-.*-[0-9]+" "$file" 2>/dev/null || echo "0")
-            HAS_EVIDENCE_HEADER=$(grep -cE "EVIDENCE REPORT" "$file" 2>/dev/null || echo "0")
-            
-            if [ "$HAS_PAC_HEADER" -gt 0 ] && [ "$HAS_EVIDENCE_HEADER" -gt 0 ]; then
-                echo "${RED}   ❌ $file: Hybrid artifact detected (PAC + Evidence mixed)${NC}"
-                HYBRID_VIOLATIONS=1
-            fi
+        # Check if file mixes PAC and Evidence content
+        HAS_PAC_HEADER=$(grep -c "^# PAC-" "$file" 2>/dev/null || echo "0")
+        HAS_EVIDENCE=$(grep -cE "EVIDENCE REPORT" "$file" 2>/dev/null || echo "0")
+
+        if [ "$HAS_PAC_HEADER" -gt 0 ] && [ "$HAS_EVIDENCE" -gt 0 ]; then
+            echo "${RED}   ❌ $file: Hybrid artifact detected (PAC + Evidence mixed)${NC}"
+            HYBRID_VIOLATIONS=1
         fi
     fi
 done
@@ -229,17 +212,17 @@ if [ -n "$STAGED_PAC_WRAPS" ] && [ -f "$GATE_PACK" ]; then
         if [ -f "$file" ]; then
             # Check if this is a correction pack
             IS_CORRECTION=$(grep -cE "(CORRECTION|GOVERNANCE_CORRECTION|MODE: GOVERNANCE_CORRECTION|VIOLATIONS_ADDRESSED|correction_type:)" "$file" 2>/dev/null || echo "0")
-            
+
             if [ "$IS_CORRECTION" -gt 0 ]; then
                 echo "${YELLOW}   🔍 Detected correction pack: $file${NC}"
-                
+
                 # Run gate_pack.py validation
                 VALIDATION_OUTPUT=$(mktemp)
                 if ! python3 "$GATE_PACK" --validate "$REPO_ROOT/$file" 2>&1 > "$VALIDATION_OUTPUT"; then
                     echo "${RED}   ❌ HARD-GATE FAILURE: $file${NC}"
                     cat "$VALIDATION_OUTPUT"
                     CORRECTION_VIOLATIONS=1
-                    
+
                     # Check for specific Gold Standard Checklist failures
                     if grep -qE "(G0_020|G0_021|G0_022|G0_023|G0_024)" "$VALIDATION_OUTPUT" 2>/dev/null; then
                         echo ""
