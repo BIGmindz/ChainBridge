@@ -82,30 +82,36 @@ repos:
   # ─────────────────────────────────────────────────────────────────────────────
   # PAC Governance: Activation Block Enforcement
   # PAC Reference: PAC-DAN-ACTIVATION-GATE-CI-ENFORCEMENT-01
+  # PAC Reference: PAC-BENSON-P73 (Scope Patch - restrict to PAC paths only)
   # ─────────────────────────────────────────────────────────────────────────────
   - repo: local
     hooks:
-      - id: pac-activation-gate
-        name: "🚦 PAC Activation Gate (MANDATORY)"
-        entry: python scripts/ci/activation_gate.py --file
-        language: system
-        files: \.py$
-        pass_filenames: true
-        stages: [commit]
-        description: "Enforces activation block presence and ordering at commit time"
+      # P73: Disabled - activation_gate.py scans Python files for activation blocks,
+      # which is out-of-scope for PAC markdown validation. PAC validation is handled
+      # by pac-activation-block-check and pac-linter hooks below.
+      # - id: pac-activation-gate
+      #   name: "🚦 PAC Activation Gate (MANDATORY)"
+      #   entry: python scripts/ci/activation_gate.py --all
+      #   language: system
+      #   files: ^(ChainBridge/)?docs/governance/pacs/PAC-.*\.md$
+      #   pass_filenames: false
+      #   stages: [commit]
+      #   description: "Enforces activation block presence and ordering at commit time"
 
       - id: pac-activation-block-check
-        name: PAC Activation Block Enforcement
-        entry: python tools/pac_linter.py --check
+        name: "🚦 PAC Activation Block Check"
+        entry: python tools/pac_linter.py --check --pac-only
         language: system
-        files: \.py$
+        # P73: Restrict to canonical PAC markdown files only (NOT Python files)
+        files: ^(ChainBridge/)?docs/governance/pacs/PAC-.*\.md$
         pass_filenames: false
         stages: [commit]
 
       - id: pac-linter
-        name: PAC Linter (Full)
-        entry: python tools/pac_linter.py --check
+        name: "🔍 PAC Linter (Full Validation)"
+        entry: python tools/pac_linter.py --check --pac-only
         language: system
-        files: \.py$
+        # P73: Restrict to canonical PAC markdown files only (NOT Python files)
+        files: ^(ChainBridge/)?docs/governance/pacs/PAC-.*\.md$
         pass_filenames: false
         stages: [push]

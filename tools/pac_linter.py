@@ -51,7 +51,7 @@ from core.governance.agent_roster import (
 
 class ViolationSeverity(Enum):
     """Violation severity levels."""
-    
+
     ERROR = "ERROR"      # Blocks merge
     WARNING = "WARNING"  # Requires review
     INFO = "INFO"        # Informational
@@ -60,13 +60,13 @@ class ViolationSeverity(Enum):
 @dataclass
 class LintViolation:
     """A single lint violation."""
-    
+
     file: Path
     line: int
     severity: ViolationSeverity
     rule: str
     message: str
-    
+
     def __str__(self) -> str:
         return f"{self.file}:{self.line} [{self.severity.value}] {self.rule}: {self.message}"
 
@@ -101,16 +101,16 @@ def lint_emoji_border_consistency(content: str, file_path: Path) -> List[LintVio
     """
     violations = []
     lines = content.split("\n")
-    
+
     detected_emoji: Optional[str] = None
-    
+
     for i, line in enumerate(lines, 1):
         stripped = line.strip()
-        
+
         # Check if this looks like an emoji border
         if len(stripped) >= 10 and all(c in "⚪🔵🟣🟨🟦🟧🟥🟩🩷" for c in stripped):
             emojis_in_row = set(stripped)
-            
+
             # Rule: Must be uniform (single emoji type)
             if len(emojis_in_row) > 1:
                 violations.append(LintViolation(
@@ -122,7 +122,7 @@ def lint_emoji_border_consistency(content: str, file_path: Path) -> List[LintVio
                 ))
             else:
                 current_emoji = stripped[0]
-                
+
                 # Rule: Must be a valid registered emoji
                 if current_emoji not in VALID_EMOJIS:
                     violations.append(LintViolation(
@@ -132,7 +132,7 @@ def lint_emoji_border_consistency(content: str, file_path: Path) -> List[LintVio
                         rule="pac-emoji-not-registered",
                         message=f"Emoji '{current_emoji}' is not in canonical agent roster.",
                     ))
-                
+
                 # Track for consistency within file
                 if detected_emoji is None:
                     detected_emoji = current_emoji
@@ -144,7 +144,7 @@ def lint_emoji_border_consistency(content: str, file_path: Path) -> List[LintVio
                         rule="pac-emoji-border-consistency",
                         message=f"Inconsistent emoji '{current_emoji}' (file uses '{detected_emoji}').",
                     ))
-    
+
     return violations
 
 
@@ -162,13 +162,13 @@ def lint_gid_validity(content: str, file_path: Path) -> List[LintViolation]:
     All GID references must exist in the canonical roster.
     """
     violations = []
-    
+
     # Skip GID validation for test files with intentional invalid GIDs
     if file_path.name in TEST_FILES_WITH_INVALID_GIDS:
         return violations
-    
+
     lines = content.split("\n")
-    
+
     for i, line in enumerate(lines, 1):
         for match in GID_REFERENCE_PATTERN.finditer(line):
             gid = match.group(1).upper()
@@ -180,7 +180,7 @@ def lint_gid_validity(content: str, file_path: Path) -> List[LintViolation]:
                     rule="pac-gid-valid",
                     message=f"Unknown GID '{gid}'. Not in canonical roster (GID-00 to GID-11).",
                 ))
-    
+
     return violations
 
 
@@ -191,17 +191,17 @@ def lint_agent_gid_match(content: str, file_path: Path) -> List[LintViolation]:
     """
     violations = []
     lines = content.split("\n")
-    
+
     for i, line in enumerate(lines, 1):
         for match in AGENT_GID_COMBO_PATTERN.finditer(line):
             agent_name = match.group(1).upper()
             gid = match.group(2).upper()
-            
+
             # Skip if agent name is not recognized (could be something else)
             agent = get_agent_by_name(agent_name)
             if agent is None:
                 continue
-            
+
             if agent.gid != gid:
                 violations.append(LintViolation(
                     file=file_path,
@@ -210,7 +210,7 @@ def lint_agent_gid_match(content: str, file_path: Path) -> List[LintViolation]:
                     rule="pac-agent-gid-match",
                     message=f"Agent '{agent_name}' has incorrect GID '{gid}'. Expected '{agent.gid}'.",
                 ))
-    
+
     return violations
 
 
@@ -221,13 +221,13 @@ def lint_agent_emoji_match(content: str, file_path: Path) -> List[LintViolation]
     """
     violations = []
     lines = content.split("\n")
-    
+
     for i, line in enumerate(lines, 1):
         match = AGENT_HEADER_PATTERN.search(line)
         if match:
             emoji = match.group(1)
             agent_name = match.group(2).upper()
-            
+
             agent = get_agent_by_name(agent_name)
             if agent is None:
                 violations.append(LintViolation(
@@ -245,7 +245,7 @@ def lint_agent_emoji_match(content: str, file_path: Path) -> List[LintViolation]
                     rule="pac-agent-emoji-match",
                     message=f"Agent '{agent_name}' uses wrong emoji '{emoji}'. Expected '{agent.emoji}'.",
                 ))
-    
+
     return violations
 
 
@@ -255,25 +255,25 @@ def lint_pac_header_footer_match(content: str, file_path: Path) -> List[LintViol
     PAC headers and footers must match agent identity.
     """
     violations = []
-    
+
     # Find header
     header_match = AGENT_HEADER_PATTERN.search(content)
     if not header_match:
         # No PAC header found - not a PAC file, skip
         return violations
-    
+
     header_agent = header_match.group(2).upper()
     header_gid = header_match.group(3).upper()
-    
+
     # Look for proper footer
     footer_patterns = [
         re.compile(r"END\s+OF\s+PAC", re.IGNORECASE),
         re.compile(rf"{header_agent}.*ENGINE", re.IGNORECASE),
         re.compile(r"[⚪🔵🟣🟨🟦🟧🟥🟩🩷]{10}\s*$"),
     ]
-    
+
     has_proper_footer = any(p.search(content) for p in footer_patterns)
-    
+
     if not has_proper_footer:
         violations.append(LintViolation(
             file=file_path,
@@ -282,7 +282,7 @@ def lint_pac_header_footer_match(content: str, file_path: Path) -> List[LintViol
             rule="pac-header-footer-match",
             message=f"PAC for {header_agent} ({header_gid}) missing proper footer.",
         ))
-    
+
     return violations
 
 
@@ -292,17 +292,17 @@ def lint_no_duplicate_gid_assignment(content: str, file_path: Path) -> List[Lint
     Each GID can only be assigned to one agent in a file.
     """
     violations = []
-    
+
     gid_to_agents: dict[str, set[str]] = {}
-    
+
     for match in AGENT_GID_COMBO_PATTERN.finditer(content):
         agent_name = match.group(1).upper()
         gid = match.group(2).upper()
-        
+
         if gid not in gid_to_agents:
             gid_to_agents[gid] = set()
         gid_to_agents[gid].add(agent_name)
-    
+
     for gid, agents in gid_to_agents.items():
         # Filter to known agents only
         known_agents = {a for a in agents if get_agent_by_name(a) is not None}
@@ -314,7 +314,7 @@ def lint_no_duplicate_gid_assignment(content: str, file_path: Path) -> List[Lint
                 rule="pac-no-duplicate-gid",
                 message=f"GID '{gid}' assigned to multiple agents: {known_agents}.",
             ))
-    
+
     return violations
 
 
@@ -353,30 +353,30 @@ def lint_pac_has_required_fields(content: str, file_path: Path) -> List[LintViol
     PACs must have: EXECUTING AGENT, GID, and EXECUTING COLOR.
     """
     violations = []
-    
+
     # Check if this looks like a PAC file
     if "PAC-" not in content and "GID-" not in content:
         return violations  # Not a PAC file
-    
+
     # Check for EXECUTING AGENT
     has_executing_agent = EXECUTING_AGENT_PATTERN.search(content) is not None
-    
+
     # Check for EXECUTING COLOR
     has_executing_color = EXECUTING_COLOR_PATTERN.search(content) is not None
-    
+
     # Check for GID in header
     has_gid_header = PAC_HEADER_GID_PATTERN.search(content) is not None
-    
+
     # Only flag if it looks like a PAC but is missing fields
     pac_indicators = [
         "EXECUTING AGENT",
-        "EXECUTING COLOR", 
+        "EXECUTING COLOR",
         "END OF PAC",
         "════════",
     ]
-    
+
     is_pac = any(ind in content for ind in pac_indicators)
-    
+
     if is_pac:
         if not has_executing_agent:
             violations.append(LintViolation(
@@ -386,7 +386,7 @@ def lint_pac_has_required_fields(content: str, file_path: Path) -> List[LintViol
                 rule="pac-color-gateway-required-fields",
                 message="PAC missing required field: EXECUTING AGENT",
             ))
-        
+
         if not has_executing_color:
             violations.append(LintViolation(
                 file=file_path,
@@ -395,7 +395,7 @@ def lint_pac_has_required_fields(content: str, file_path: Path) -> List[LintViol
                 rule="pac-color-gateway-required-fields",
                 message="PAC missing required field: EXECUTING COLOR",
             ))
-        
+
         if not has_gid_header:
             violations.append(LintViolation(
                 file=file_path,
@@ -404,7 +404,7 @@ def lint_pac_has_required_fields(content: str, file_path: Path) -> List[LintViol
                 rule="pac-color-gateway-required-fields",
                 message="PAC missing required field: GID in header",
             ))
-    
+
     return violations
 
 
@@ -415,27 +415,27 @@ def lint_agent_color_consistency(content: str, file_path: Path) -> List[LintViol
     """
     violations = []
     lines = content.split("\n")
-    
+
     # Extract executing agent and color
     agent_match = EXECUTING_AGENT_PATTERN.search(content)
     color_match = EXECUTING_COLOR_PATTERN.search(content)
-    
+
     if not agent_match or not color_match:
         return violations  # Can't validate without both
-    
+
     agent_name = agent_match.group(1).upper()
     declared_color = color_match.group(2).strip().upper() if color_match.group(2) else None
-    
+
     if not declared_color:
         return violations
-    
+
     # Get canonical color for agent
     canonical_color = get_agent_color(agent_name)
-    
+
     if canonical_color is None:
         # Agent not in roster - already caught by other rules
         return violations
-    
+
     if canonical_color.upper() != declared_color:
         # Find the line number for the color declaration
         line_num = 1
@@ -443,7 +443,7 @@ def lint_agent_color_consistency(content: str, file_path: Path) -> List[LintViol
             if "EXECUTING COLOR" in line.upper():
                 line_num = i
                 break
-        
+
         violations.append(LintViolation(
             file=file_path,
             line=line_num,
@@ -451,7 +451,7 @@ def lint_agent_color_consistency(content: str, file_path: Path) -> List[LintViol
             rule="pac-color-gateway-agent-color-match",
             message=f"Agent {agent_name} declared color '{declared_color}' but canonical is '{canonical_color}'",
         ))
-    
+
     return violations
 
 
@@ -462,30 +462,30 @@ def lint_teal_reserved(content: str, file_path: Path) -> List[LintViolation]:
     """
     violations = []
     lines = content.split("\n")
-    
+
     # Check for TEAL usage
     color_match = EXECUTING_COLOR_PATTERN.search(content)
     if not color_match:
         return violations
-    
+
     declared_color = color_match.group(2).strip().upper() if color_match.group(2) else None
-    
+
     if declared_color != "TEAL":
         return violations  # Not using TEAL
-    
+
     # Find the GID
     agent_match = EXECUTING_AGENT_PATTERN.search(content)
     gid_match = PAC_HEADER_GID_PATTERN.search(content)
-    
+
     gid = None
     if agent_match and agent_match.group(2):
         gid = agent_match.group(2).upper()
     elif gid_match:
         gid = gid_match.group(1).upper()
-    
+
     if gid is None:
         return violations  # Can't validate without GID
-    
+
     if not is_teal_allowed(gid):
         # Find line number for color declaration
         line_num = 1
@@ -493,7 +493,7 @@ def lint_teal_reserved(content: str, file_path: Path) -> List[LintViolation]:
             if "EXECUTING COLOR" in line.upper() or "TEAL" in line.upper():
                 line_num = i
                 break
-        
+
         agent_name = agent_match.group(1) if agent_match else "unknown"
         violations.append(LintViolation(
             file=file_path,
@@ -502,7 +502,7 @@ def lint_teal_reserved(content: str, file_path: Path) -> List[LintViolation]:
             rule="pac-color-gateway-teal-reserved",
             message=f"TEAL color reserved for GID-00 (Benson). Agent {agent_name} ({gid}) cannot use TEAL.",
         ))
-    
+
     return violations
 
 
@@ -513,19 +513,19 @@ def lint_emoji_color_match(content: str, file_path: Path) -> List[LintViolation]
     """
     violations = []
     lines = content.split("\n")
-    
+
     color_match = EXECUTING_COLOR_PATTERN.search(content)
     if not color_match:
         return violations
-    
+
     emoji = color_match.group(1)
     declared_color = color_match.group(2).strip().upper() if color_match.group(2) else None
-    
+
     if not emoji or not declared_color:
         return violations
-    
+
     emoji_color = EMOJI_TO_COLOR.get(emoji)
-    
+
     if emoji_color and emoji_color.upper() != declared_color:
         # Find line number
         line_num = 1
@@ -533,7 +533,7 @@ def lint_emoji_color_match(content: str, file_path: Path) -> List[LintViolation]
             if "EXECUTING COLOR" in line.upper():
                 line_num = i
                 break
-        
+
         violations.append(LintViolation(
             file=file_path,
             line=line_num,
@@ -541,7 +541,7 @@ def lint_emoji_color_match(content: str, file_path: Path) -> List[LintViolation]
             rule="pac-color-gateway-emoji-color-match",
             message=f"Emoji {emoji} is '{emoji_color}' but declared color is '{declared_color}'",
         ))
-    
+
     return violations
 
 
@@ -578,7 +578,7 @@ def lint_end_banner_present(content: str, file_path: Path) -> List[LintViolation
     All PACs MUST have an END banner.
     """
     violations = []
-    
+
     # Check if this looks like a PAC file
     pac_indicators = [
         "PAC-",
@@ -586,18 +586,18 @@ def lint_end_banner_present(content: str, file_path: Path) -> List[LintViolation
         "EXECUTING COLOR",
         "════════",
     ]
-    
+
     is_pac = any(ind in content for ind in pac_indicators)
-    
+
     if not is_pac:
         return violations  # Not a PAC file
-    
+
     # Look for END banner
     has_end_banner = (
         END_BANNER_PATTERN.search(content) is not None or
         END_BANNER_SIMPLE_PATTERN.search(content) is not None
     )
-    
+
     if not has_end_banner:
         violations.append(LintViolation(
             file=file_path,
@@ -606,7 +606,7 @@ def lint_end_banner_present(content: str, file_path: Path) -> List[LintViolation
             rule="pac-end-banner-present",
             message="PAC missing required END banner (format: END — AGENT (GID) — EMOJI COLOR)",
         ))
-    
+
     return violations
 
 
@@ -617,24 +617,24 @@ def lint_end_banner_agent_match(content: str, file_path: Path) -> List[LintViola
     """
     violations = []
     lines = content.split("\n")
-    
+
     # Get executing agent
     exec_agent_match = EXECUTING_AGENT_PATTERN.search(content)
     if not exec_agent_match:
         return violations  # Can't validate without executing agent
-    
+
     executing_agent = exec_agent_match.group(1).upper()
-    
+
     # Find END banner
     end_match = END_BANNER_PATTERN.search(content)
     if not end_match:
         end_match = END_BANNER_SIMPLE_PATTERN.search(content)
-    
+
     if not end_match:
         return violations  # Missing END banner caught by other rule
-    
+
     end_agent = end_match.group(1).upper()
-    
+
     if end_agent != executing_agent:
         # Find line number
         line_num = len(lines)
@@ -642,7 +642,7 @@ def lint_end_banner_agent_match(content: str, file_path: Path) -> List[LintViola
             if "END" in line and end_agent.lower() in line.lower():
                 line_num = i
                 break
-        
+
         violations.append(LintViolation(
             file=file_path,
             line=line_num,
@@ -650,7 +650,7 @@ def lint_end_banner_agent_match(content: str, file_path: Path) -> List[LintViola
             rule="pac-end-banner-agent-match",
             message=f"END banner agent '{end_agent}' does not match EXECUTING AGENT '{executing_agent}'",
         ))
-    
+
     return violations
 
 
@@ -661,23 +661,23 @@ def lint_end_banner_gid_match(content: str, file_path: Path) -> List[LintViolati
     """
     violations = []
     lines = content.split("\n")
-    
+
     # Find END banner with GID
     end_match = END_BANNER_PATTERN.search(content)
     if not end_match:
         end_match = END_BANNER_SIMPLE_PATTERN.search(content)
-    
+
     if not end_match or not end_match.group(2):
         return violations  # No GID in END banner or no banner
-    
+
     end_agent = end_match.group(1).upper()
     end_gid = end_match.group(2).upper()
-    
+
     # Get canonical GID for agent
     agent = get_agent_by_name(end_agent)
     if agent is None:
         return violations  # Unknown agent caught by other rule
-    
+
     if agent.gid != end_gid:
         # Find line number
         line_num = len(lines)
@@ -685,7 +685,7 @@ def lint_end_banner_gid_match(content: str, file_path: Path) -> List[LintViolati
             if "END" in line and end_agent.lower() in line.lower():
                 line_num = i
                 break
-        
+
         violations.append(LintViolation(
             file=file_path,
             line=line_num,
@@ -693,7 +693,7 @@ def lint_end_banner_gid_match(content: str, file_path: Path) -> List[LintViolati
             rule="pac-end-banner-gid-match",
             message=f"END banner GID '{end_gid}' does not match canonical GID '{agent.gid}' for {end_agent}",
         ))
-    
+
     return violations
 
 
@@ -704,21 +704,21 @@ def lint_end_banner_color_match(content: str, file_path: Path) -> List[LintViola
     """
     violations = []
     lines = content.split("\n")
-    
+
     # Find END banner with color info
     end_match = END_BANNER_PATTERN.search(content)
     if not end_match:
         return violations  # No full END banner
-    
+
     end_agent = end_match.group(1).upper()
     end_emoji = end_match.group(3)  # May be None
     end_color = end_match.group(4).strip().upper() if end_match.group(4) else None
-    
+
     # Get canonical agent info
     agent = get_agent_by_name(end_agent)
     if agent is None:
         return violations  # Unknown agent caught by other rule
-    
+
     # Validate emoji matches agent
     if end_emoji and end_emoji != agent.emoji:
         # Find line number
@@ -727,7 +727,7 @@ def lint_end_banner_color_match(content: str, file_path: Path) -> List[LintViola
             if "END" in line and end_agent.lower() in line.lower():
                 line_num = i
                 break
-        
+
         violations.append(LintViolation(
             file=file_path,
             line=line_num,
@@ -735,13 +735,13 @@ def lint_end_banner_color_match(content: str, file_path: Path) -> List[LintViola
             rule="pac-end-banner-color-match",
             message=f"END banner emoji '{end_emoji}' does not match canonical emoji '{agent.emoji}' for {end_agent}",
         ))
-    
+
     # Validate color matches agent's canonical color
     if end_color and end_color != agent.color.upper():
         # Handle "DARK RED" vs "DARK_RED" normalization
         normalized_end_color = end_color.replace(" ", "_")
         normalized_canonical = agent.color.upper().replace(" ", "_")
-        
+
         if normalized_end_color != normalized_canonical:
             # Find line number
             line_num = len(lines)
@@ -749,7 +749,7 @@ def lint_end_banner_color_match(content: str, file_path: Path) -> List[LintViola
                 if "END" in line and end_agent.lower() in line.lower():
                     line_num = i
                     break
-            
+
             violations.append(LintViolation(
                 file=file_path,
                 line=line_num,
@@ -757,7 +757,7 @@ def lint_end_banner_color_match(content: str, file_path: Path) -> List[LintViola
                 rule="pac-end-banner-color-match",
                 message=f"END banner color '{end_color}' does not match canonical color '{agent.color}' for {end_agent}",
             ))
-    
+
     return violations
 
 
@@ -788,7 +788,7 @@ def lint_activation_block_present(content: str, file_path: Path) -> List[LintVio
     """
     RULE: pac-activation-block-present
     All PACs MUST have an Activation Block with EXECUTING AGENT.
-    
+
     Required elements:
     - EXECUTING AGENT header with (MANDATORY) marker
     - Agent name
@@ -796,7 +796,7 @@ def lint_activation_block_present(content: str, file_path: Path) -> List[LintVio
     - Color/lane
     """
     violations = []
-    
+
     # Check if this looks like a PAC file
     pac_indicators = [
         "PAC-",
@@ -804,12 +804,12 @@ def lint_activation_block_present(content: str, file_path: Path) -> List[LintVio
         "OBJECTIVE",
         "SCOPE",
     ]
-    
+
     is_pac = any(ind in content for ind in pac_indicators)
-    
+
     if not is_pac:
         return violations  # Not a PAC file
-    
+
     # Check for EXECUTING AGENT
     agent_match = EXECUTING_AGENT_PATTERN.search(content)
     if not agent_match:
@@ -821,7 +821,7 @@ def lint_activation_block_present(content: str, file_path: Path) -> List[LintVio
             message="PAC is missing EXECUTING AGENT. No execution without identity.",
         ))
         return violations
-    
+
     # Check for GID
     gid_match = GID_REFERENCE_PATTERN.search(content)
     if not gid_match:
@@ -832,7 +832,7 @@ def lint_activation_block_present(content: str, file_path: Path) -> List[LintVio
             rule="pac-activation-block-present",
             message="PAC is missing GID. Identity incomplete.",
         ))
-    
+
     # Check for EXECUTING COLOR
     color_pattern = re.compile(r"EXECUTING\s+COLOR", re.IGNORECASE)
     if not color_pattern.search(content):
@@ -843,7 +843,7 @@ def lint_activation_block_present(content: str, file_path: Path) -> List[LintVio
             rule="pac-activation-block-present",
             message="PAC is missing EXECUTING COLOR. Lane assignment required.",
         ))
-    
+
     return violations
 
 
@@ -851,18 +851,18 @@ def lint_activation_block_prohibited_actions(content: str, file_path: Path) -> L
     """
     RULE: pac-activation-block-prohibited
     PACs SHOULD declare prohibited actions for the executing agent.
-    
+
     This catches identity drift and unauthorized behavior.
     """
     violations = []
-    
+
     # Check if this looks like a PAC file with Activation Block
     if "EXECUTING AGENT" not in content.upper():
         return violations
-    
+
     # Check for prohibited actions section
     has_prohibited = PROHIBITED_SECTION_PATTERN.search(content)
-    
+
     if not has_prohibited:
         lines = content.split("\n")
         line_num = 1
@@ -870,7 +870,7 @@ def lint_activation_block_prohibited_actions(content: str, file_path: Path) -> L
             if "EXECUTING AGENT" in line.upper():
                 line_num = i
                 break
-        
+
         violations.append(LintViolation(
             file=file_path,
             line=line_num,
@@ -878,7 +878,7 @@ def lint_activation_block_prohibited_actions(content: str, file_path: Path) -> L
             rule="pac-activation-block-prohibited",
             message="PAC should declare prohibited actions for executing agent",
         ))
-    
+
     return violations
 
 
@@ -886,7 +886,7 @@ def lint_activation_block_no_proxy(content: str, file_path: Path) -> List[LintVi
     """
     RULE: pac-activation-block-no-proxy
     PACs MUST NOT use proxy execution or "acting as" patterns.
-    
+
     FORBIDDEN:
     - "Acting as X"
     - "On behalf of X"
@@ -894,7 +894,7 @@ def lint_activation_block_no_proxy(content: str, file_path: Path) -> List[LintVi
     - "Impersonating X"
     """
     violations = []
-    
+
     # Proxy patterns that are FORBIDDEN
     proxy_patterns = [
         r"acting\s+as\s+\w+",
@@ -904,9 +904,9 @@ def lint_activation_block_no_proxy(content: str, file_path: Path) -> List[LintVi
         r"pretending\s+to\s+be",
         r"assuming\s+identity",
     ]
-    
+
     lines = content.split("\n")
-    
+
     for i, line in enumerate(lines, 1):
         for pattern in proxy_patterns:
             if re.search(pattern, line, re.IGNORECASE):
@@ -918,7 +918,7 @@ def lint_activation_block_no_proxy(content: str, file_path: Path) -> List[LintVi
                     message="FORBIDDEN: Proxy execution detected. No 'acting as' or delegation allowed.",
                 ))
                 break  # Only one violation per line
-    
+
     return violations
 
 
@@ -926,33 +926,33 @@ def lint_activation_block_identity_consistency(content: str, file_path: Path) ->
     """
     RULE: pac-activation-block-identity-consistent
     Activation Block identity (agent/GID/color) must be internally consistent.
-    
+
     All references to the executing agent must match the declared identity.
     """
     violations = []
-    
+
     # Extract declared identity
     agent_match = EXECUTING_AGENT_PATTERN.search(content)
     if not agent_match:
         return violations
-    
+
     declared_agent = agent_match.group(1).upper()
     agent = get_agent_by_name(declared_agent)
-    
+
     if agent is None:
         return violations  # Caught by other rules
-    
+
     # Check all GID references in the file match the declared agent
     lines = content.split("\n")
     gid_references = list(GID_REFERENCE_PATTERN.finditer(content))
-    
+
     for gid_match in gid_references:
         gid = gid_match.group(1).upper()
         # Find which line this is on
         pos = gid_match.start()
         line_num = content[:pos].count("\n") + 1
         line = lines[line_num - 1] if line_num <= len(lines) else ""
-        
+
         # Check if this GID is in context with the agent name
         if declared_agent.lower() in line.lower():
             if gid != agent.gid:
@@ -963,7 +963,7 @@ def lint_activation_block_identity_consistency(content: str, file_path: Path) ->
                     rule="pac-activation-block-identity-consistent",
                     message=f"Identity inconsistency: {declared_agent} referenced with {gid}, expected {agent.gid}",
                 ))
-    
+
     return violations
 
 
@@ -971,22 +971,22 @@ def lint_activation_block_registry_validation(content: str, file_path: Path) -> 
     """
     RULE: pac-activation-block-registry-valid
     Activation Block must validate against canonical agent registry.
-    
+
     HARD FAIL enforcement:
     - Agent must exist in registry
     - GID must match canonical
     - Color must match canonical
     - Emoji must match canonical
     - Role must match (partial match allowed)
-    
+
     PAC Reference: PAC-DAN-ACTIVATION-GATE-ENFORCEMENT-01
     """
     violations = []
-    
+
     # Check if this looks like a PAC file
     if "EXECUTING AGENT" not in content.upper():
         return violations
-    
+
     # Import here to avoid circular imports
     try:
         from core.governance.activation_block import (
@@ -995,7 +995,7 @@ def lint_activation_block_registry_validation(content: str, file_path: Path) -> 
         )
     except ImportError:
         return violations  # Module not available
-    
+
     # Step 1: Check presence
     has_block, missing = check_activation_block_presence(content)
     if not has_block:
@@ -1008,7 +1008,7 @@ def lint_activation_block_registry_validation(content: str, file_path: Path) -> 
                 message=f"Activation Block missing: {element}",
             ))
         return violations
-    
+
     # Step 2: Validate fields against registry
     is_valid, errors = validate_activation_block_fields(content)
     if not is_valid:
@@ -1020,7 +1020,7 @@ def lint_activation_block_registry_validation(content: str, file_path: Path) -> 
                 rule="pac-activation-block-registry-valid",
                 message=f"Registry validation failed: {error}",
             ))
-    
+
     return violations
 
 
@@ -1028,48 +1028,48 @@ def lint_activation_block_lane_match(content: str, file_path: Path) -> List[Lint
     """
     RULE: pac-activation-block-lane-match
     LANE declaration (if present) must match the agent's color lane.
-    
+
     Color → Lane mapping is canonical and immutable.
     """
     violations = []
-    
+
     # Check if this looks like a PAC file
     if "EXECUTING AGENT" not in content.upper():
         return violations
-    
+
     # Look for LANE declaration (LANE: VALUE or LANE — VALUE)
     # Case-sensitive to avoid matching docstrings like "lane: description"
     lane_pattern = re.compile(r"(?<!\w)LANE\s*[:\-—]\s*([^\n/]+)")
     lane_match = lane_pattern.search(content)
-    
+
     if not lane_match:
         return violations  # No lane declared, skip
-    
+
     declared_lane = lane_match.group(1).strip()
-    
+
     # Get executing agent
     agent_match = EXECUTING_AGENT_PATTERN.search(content)
     if not agent_match:
         return violations
-    
+
     declared_agent = agent_match.group(1).upper()
     agent = get_agent_by_name(declared_agent)
-    
+
     if agent is None:
         return violations  # Caught by other rules
-    
+
     # Get expected lane for agent's color
     from core.governance.agent_roster import get_lane_for_color
     expected_lane = get_lane_for_color(agent.color)
-    
+
     if expected_lane:
         # Normalize for comparison
         declared_normalized = declared_lane.upper().replace(" ", "_").replace("-", "_")
         expected_normalized = expected_lane.upper().replace(" ", "_").replace("-", "_")
-        
+
         # Also allow color name as lane (e.g., "GREEN" for DevOps lane)
         color_normalized = agent.color.upper().replace(" ", "_")
-        
+
         if declared_normalized != expected_normalized and declared_normalized != color_normalized:
             # Find line number
             lines = content.split("\n")
@@ -1078,7 +1078,7 @@ def lint_activation_block_lane_match(content: str, file_path: Path) -> List[Lint
                 if "LANE" in line.upper() and declared_lane.upper() in line.upper():
                     line_num = i
                     break
-            
+
             violations.append(LintViolation(
                 file=file_path,
                 line=line_num,
@@ -1086,7 +1086,7 @@ def lint_activation_block_lane_match(content: str, file_path: Path) -> List[Lint
                 rule="pac-activation-block-lane-match",
                 message=f"Lane '{declared_lane}' does not match agent {declared_agent}'s color lane '{expected_lane}'",
             ))
-    
+
     return violations
 
 
@@ -1097,24 +1097,24 @@ def lint_agent_level_valid(content: str, file_path: Path) -> List[LintViolation]
     """
     violations = []
     lines = content.split("\n")
-    
+
     # Check if this looks like a PAC file
     if "PAC-" not in content and "EXECUTING AGENT" not in content:
         return violations
-    
+
     agent_match = EXECUTING_AGENT_PATTERN.search(content)
     if not agent_match:
         return violations
-    
+
     agent_name = agent_match.group(1).upper()
-    
+
     # Get agent level from registry
     level = get_agent_level(agent_name)
-    
+
     if level is None:
         # Agent not in registry - caught by other rules
         return violations
-    
+
     if level not in VALID_AGENT_LEVELS:
         # Find line number
         line_num = 1
@@ -1122,7 +1122,7 @@ def lint_agent_level_valid(content: str, file_path: Path) -> List[LintViolation]
             if "EXECUTING AGENT" in line.upper():
                 line_num = i
                 break
-        
+
         violations.append(LintViolation(
             file=file_path,
             line=line_num,
@@ -1130,7 +1130,7 @@ def lint_agent_level_valid(content: str, file_path: Path) -> List[LintViolation]
             rule="pac-agent-level-valid",
             message=f"Agent {agent_name} has invalid level '{level}' (expected L0-L3)",
         ))
-    
+
     return violations
 
 
@@ -1141,17 +1141,17 @@ def lint_deprecated_agent(content: str, file_path: Path) -> List[LintViolation]:
     """
     violations = []
     lines = content.split("\n")
-    
+
     # Check if this looks like a PAC file
     if "PAC-" not in content and "EXECUTING AGENT" not in content:
         return violations
-    
+
     agent_match = EXECUTING_AGENT_PATTERN.search(content)
     if not agent_match:
         return violations
-    
+
     agent_name = agent_match.group(1).upper()
-    
+
     if is_deprecated_agent(agent_name):
         # Find line number
         line_num = 1
@@ -1159,7 +1159,7 @@ def lint_deprecated_agent(content: str, file_path: Path) -> List[LintViolation]:
             if "EXECUTING AGENT" in line.upper():
                 line_num = i
                 break
-        
+
         violations.append(LintViolation(
             file=file_path,
             line=line_num,
@@ -1167,7 +1167,7 @@ def lint_deprecated_agent(content: str, file_path: Path) -> List[LintViolation]:
             rule="pac-deprecated-agent",
             message=f"Agent '{agent_name}' is unknown or deprecated - not in registry",
         ))
-    
+
     return violations
 
 
@@ -1220,18 +1220,38 @@ def lint_file(file_path: Path) -> List[LintViolation]:
             rule="file-read-error",
             message=str(e),
         )]
-    
+
     violations = []
     for rule in ALL_LINT_RULES:
         violations.extend(rule(content, file_path))
-    
+
     return violations
 
 
-def find_pac_files(root: Path, exclude_tests: bool = False) -> List[Path]:
-    """Find all Python files that might contain PAC headers."""
+def find_pac_files(root: Path, exclude_tests: bool = False, pac_only: bool = False) -> List[Path]:
+    """Find all files that might contain PAC headers.
+
+    Args:
+        root: Root directory to search
+        exclude_tests: If True, exclude test files with intentional violations
+        pac_only: If True, only search canonical PAC paths (docs/governance/pacs/*.md)
+                  PAC-BENSON-P73: This is the recommended mode for CI/pre-commit.
+    """
     pac_files = []
-    
+
+    # P73: Canonical PAC paths only mode - restrict to markdown PAC files
+    if pac_only:
+        # Search only canonical PAC directories
+        pac_dirs = [
+            root / "docs" / "governance" / "pacs",
+            root / "ChainBridge" / "docs" / "governance" / "pacs",
+        ]
+        for pac_dir in pac_dirs:
+            if pac_dir.exists():
+                for md_file in pac_dir.glob("PAC-*.md"):
+                    pac_files.append(md_file)
+        return pac_files
+
     # Patterns that indicate PAC content
     pac_indicators = [
         "PAC-",
@@ -1246,7 +1266,7 @@ def find_pac_files(root: Path, exclude_tests: bool = False) -> List[Path]:
         "🟩🟩🟩",
         "🩷🩷🩷",
     ]
-    
+
     # Files that intentionally contain invalid data for testing
     test_exclusions = {
         "test_agent_roster_linter.py",
@@ -1263,25 +1283,36 @@ def find_pac_files(root: Path, exclude_tests: bool = False) -> List[Path]:
         "test_diggi_envelope_handler.py",
         "test_drcp.py",
         "test_intent_schema.py",
+        # P73: Additional test file exclusions for governance tests
+        "test_negative_paths.py",
+        "test_execution_result_contract.py",
+        "test_execution_telemetry.py",
+        "test_orchestrator_discipline.py",
     }
-    
+
+    # P73: Directories to exclude from Python file scanning
+    excluded_dirs = {
+        "__pycache__", "venv", ".venv", "node_modules", "build", "dist",
+        ".git", ".tox", ".pytest_cache", ".mypy_cache", "htmlcov",
+    }
+
     for py_file in root.rglob("*.py"):
         # Skip venv, cache, etc.
-        if any(part.startswith(".") or part in ("__pycache__", "venv", ".venv", "node_modules") 
+        if any(part.startswith(".") or part in excluded_dirs
                for part in py_file.parts):
             continue
-        
+
         # Skip test files with intentional violations
         if exclude_tests and py_file.name in test_exclusions:
             continue
-        
+
         try:
             content = py_file.read_text(encoding="utf-8")
             if any(indicator in content for indicator in pac_indicators):
                 pac_files.append(py_file)
         except Exception:
             continue
-    
+
     return pac_files
 
 
@@ -1295,6 +1326,7 @@ Examples:
   python tools/pac_linter.py                    # Lint all PAC files
   python tools/pac_linter.py path/to/file.py   # Lint specific file
   python tools/pac_linter.py --check           # CI mode (exit 1 on failure)
+  python tools/pac_linter.py --pac-only        # Only lint canonical PAC markdown files
   python tools/pac_linter.py --roster          # Print canonical roster
         """
     )
@@ -1303,9 +1335,11 @@ Examples:
     parser.add_argument("--roster", action="store_true", help="Print canonical agent roster")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
     parser.add_argument("--include-tests", action="store_true", help="Include test files with intentional violations")
-    
+    parser.add_argument("--pac-only", action="store_true",
+                        help="P73: Only lint canonical PAC markdown files in docs/governance/pacs/")
+
     args = parser.parse_args()
-    
+
     if args.roster:
         print("=" * 60)
         print("CHAINBRIDGE AGENT ROSTER — CANONICAL")
@@ -1316,45 +1350,54 @@ Examples:
         print("=" * 60)
         print(f"Total agents: {len(CANONICAL_AGENTS)}")
         return 0
-    
+
     # Determine files to lint
     root = Path(__file__).parent.parent
-    
+
+    # P73: Define canonical PAC path pattern
+    PAC_PATH_PATTERN = re.compile(r"docs/governance/pacs/PAC-.*\.md$")
+
     if args.files:
         files = [Path(f) for f in args.files]
+        # P73: When --pac-only is set, filter out non-PAC files even when explicitly passed
+        if args.pac_only:
+            original_count = len(files)
+            files = [f for f in files if PAC_PATH_PATTERN.search(str(f))]
+            if args.verbose and original_count != len(files):
+                print(f"P73: Filtered {original_count - len(files)} non-PAC files (--pac-only mode)")
     else:
-        files = find_pac_files(root, exclude_tests=not args.include_tests)
-    
+        files = find_pac_files(root, exclude_tests=not args.include_tests, pac_only=args.pac_only)
+
     if args.verbose:
         print(f"Linting {len(files)} files...")
-    
+
     # Run linter
     all_violations: List[LintViolation] = []
-    
+
     for file_path in files:
         violations = lint_file(file_path)
         all_violations.extend(violations)
-    
+
     # Report results
     errors = [v for v in all_violations if v.severity == ViolationSeverity.ERROR]
     warnings = [v for v in all_violations if v.severity == ViolationSeverity.WARNING]
-    
+
     if all_violations:
         print("\n🔴 PAC LINT VIOLATIONS")
         print("=" * 60)
-        
+
         for v in sorted(all_violations, key=lambda x: (str(x.file), x.line)):
             severity_icon = "❌" if v.severity == ViolationSeverity.ERROR else "⚠️"
             print(f"{severity_icon} {v}")
-        
+
         print("=" * 60)
         print(f"Errors: {len(errors)} | Warnings: {len(warnings)}")
     else:
         print("✅ PAC lint passed - no violations found")
-    
+
     if args.check and errors:
         return 1
-    
+
     return 0
 
 
