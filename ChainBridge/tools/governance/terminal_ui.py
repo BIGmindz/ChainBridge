@@ -144,24 +144,24 @@ class GovernanceReport:
     gates: List[GateResult] = field(default_factory=list)
     summary: Dict[str, int] = field(default_factory=dict)
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     @property
     def passed(self) -> bool:
         """Check if all gates passed."""
         return all(g.status in (GateStatus.PASS, GateStatus.SKIP) for g in self.gates)
-    
+
     @property
     def total_gates(self) -> int:
         return len(self.gates)
-    
+
     @property
     def passed_count(self) -> int:
         return sum(1 for g in self.gates if g.status == GateStatus.PASS)
-    
+
     @property
     def failed_count(self) -> int:
         return sum(1 for g in self.gates if g.status == GateStatus.FAIL)
-    
+
     @property
     def warn_count(self) -> int:
         return sum(1 for g in self.gates if g.status == GateStatus.WARN)
@@ -174,21 +174,21 @@ class GovernanceReport:
 class GovernanceTerminalUI:
     """
     Canonical terminal UI renderer for governance output.
-    
+
     Uses Rich library for consistent, accessible rendering.
     All output is read-only and deterministic.
     """
-    
+
     def __init__(self, force_terminal: bool = False, no_color: bool = False):
         """
         Initialize the terminal UI renderer.
-        
+
         Args:
             force_terminal: Force terminal output even if not a TTY
             no_color: Disable color output (for CI/logs)
         """
         self.no_color = no_color
-        
+
         if RICH_AVAILABLE:
             self.console = Console(
                 force_terminal=force_terminal,
@@ -198,7 +198,7 @@ class GovernanceTerminalUI:
             )
         else:
             self.console = None
-    
+
     def _get_status_style(self, status: GateStatus) -> tuple:
         """Get glyph and style for a gate status."""
         mapping = {
@@ -210,13 +210,13 @@ class GovernanceTerminalUI:
             GateStatus.REVIEW: (SystemGlyph.REVIEW.value, SystemColor.REVIEW),
         }
         return mapping.get(status, (SystemGlyph.INFO.value, SystemColor.MUTED))
-    
+
     def render_header(self, report: GovernanceReport) -> None:
         """Render the governance report header."""
         if not self.console:
             self._fallback_header(report)
             return
-        
+
         # Build header content
         header_text = Text()
         header_text.append("GOVERNANCE GATE ENGINE", style=SystemColor.HEADER)
@@ -229,7 +229,7 @@ class GovernanceTerminalUI:
         header_text.append(f"\n")
         header_text.append(f"Timestamp: ", style=SystemColor.MUTED)
         header_text.append(f"{report.timestamp}", style=SystemColor.MUTED)
-        
+
         panel = Panel(
             header_text,
             box=DOUBLE,
@@ -237,13 +237,13 @@ class GovernanceTerminalUI:
             padding=(0, 2),
         )
         self.console.print(panel)
-    
+
     def render_gates(self, report: GovernanceReport) -> None:
         """Render the gate-by-gate checklist."""
         if not self.console:
             self._fallback_gates(report)
             return
-        
+
         table = Table(
             show_header=True,
             header_style=SystemColor.HEADER,
@@ -252,45 +252,45 @@ class GovernanceTerminalUI:
             padding=(0, 1),
             expand=True,
         )
-        
+
         table.add_column("", width=5, justify="center")  # Status glyph
         table.add_column("Gate", style=SystemColor.MUTED, min_width=20)
         table.add_column("Result", min_width=30)
         table.add_column("Details", style=SystemColor.MUTED)
-        
+
         for gate in report.gates:
             glyph, style = self._get_status_style(gate.status)
-            
+
             # Status cell
             status_text = Text(glyph, style=style)
-            
+
             # Gate name
             gate_text = Text(gate.gate_name)
-            
+
             # Result message
             result_text = Text(gate.message, style=style)
-            
+
             # Details (truncated if needed)
             details = gate.details or ""
             if len(details) > 40:
                 details = details[:37] + "..."
             details_text = Text(details)
-            
+
             table.add_row(status_text, gate_text, result_text, details_text)
-            
+
             # Add hint row if present and gate failed
             if gate.hint and gate.status == GateStatus.FAIL:
                 hint_text = Text(f"  └─ Hint: {gate.hint}", style=SystemColor.WARN)
                 table.add_row("", "", hint_text, "")
-        
+
         self.console.print(table)
-    
+
     def render_summary(self, report: GovernanceReport) -> None:
         """Render the summary footer."""
         if not self.console:
             self._fallback_summary(report)
             return
-        
+
         # Determine overall status
         if report.passed:
             overall_glyph = SystemGlyph.PASS.value
@@ -304,7 +304,7 @@ class GovernanceTerminalUI:
             overall_glyph = SystemGlyph.WARN.value
             overall_style = SystemColor.WARN
             overall_text = "REVIEW REQUIRED"
-        
+
         # Build summary text
         summary = Text()
         summary.append(f"\n{overall_glyph} ", style=overall_style)
@@ -317,7 +317,7 @@ class GovernanceTerminalUI:
         summary.append(f"Fail: {report.failed_count}", style=SystemColor.FAIL)
         summary.append(f"  │  ", style=SystemColor.BORDER)
         summary.append(f"Warn: {report.warn_count}", style=SystemColor.WARN)
-        
+
         panel = Panel(
             summary,
             box=ROUNDED,
@@ -325,14 +325,14 @@ class GovernanceTerminalUI:
             padding=(0, 2),
         )
         self.console.print(panel)
-    
+
     def render_report(self, report: GovernanceReport) -> None:
         """Render a complete governance report."""
         self.render_header(report)
         self.console.print() if self.console else print()
         self.render_gates(report)
         self.render_summary(report)
-    
+
     def render_violation(
         self,
         code: str,
@@ -345,25 +345,25 @@ class GovernanceTerminalUI:
         if not self.console:
             self._fallback_violation(code, message, file_path, line_number, hint)
             return
-        
+
         # Build violation text
         text = Text()
         text.append(f"{SystemGlyph.FAIL.value} ", style=SystemColor.FAIL)
         text.append(f"[{code}] ", style=f"bold {SystemColor.FAIL}")
         text.append(message, style=SystemColor.FAIL)
-        
+
         if file_path:
             text.append(f"\n   File: ", style=SystemColor.MUTED)
             text.append(file_path, style=SystemColor.INFO)
             if line_number:
                 text.append(f":{line_number}", style=SystemColor.INFO)
-        
+
         if hint:
             text.append(f"\n   {SystemGlyph.INFO.value} ", style=SystemColor.WARN)
             text.append(hint, style=SystemColor.WARN)
-        
+
         self.console.print(text)
-    
+
     def render_success(self, message: str) -> None:
         """Render a success message."""
         if self.console:
@@ -373,7 +373,7 @@ class GovernanceTerminalUI:
             self.console.print(text)
         else:
             print(f"{SystemGlyph.PASS.value} {message}")
-    
+
     def render_banner(self, title: str, style: str = "info") -> None:
         """Render a section banner."""
         styles = {
@@ -383,7 +383,7 @@ class GovernanceTerminalUI:
             "warn": SystemColor.WARN,
         }
         color = styles.get(style, SystemColor.INFO)
-        
+
         if self.console:
             self.console.print()
             self.console.rule(title, style=color)
@@ -392,11 +392,11 @@ class GovernanceTerminalUI:
             print(f"\n{'=' * 60}")
             print(f" {title}")
             print(f"{'=' * 60}\n")
-    
+
     # =========================================================================
     # FALLBACK RENDERERS (when Rich is not available)
     # =========================================================================
-    
+
     def _fallback_header(self, report: GovernanceReport) -> None:
         """Plain text header fallback."""
         print("=" * 60)
@@ -404,7 +404,7 @@ class GovernanceTerminalUI:
         print(f"Mode: {report.mode}  |  Source: {report.source}")
         print(f"Timestamp: {report.timestamp}")
         print("=" * 60)
-    
+
     def _fallback_gates(self, report: GovernanceReport) -> None:
         """Plain text gates fallback."""
         for gate in report.gates:
@@ -412,7 +412,7 @@ class GovernanceTerminalUI:
             print(f"{glyph} {gate.gate_name}: {gate.message}")
             if gate.hint and gate.status == GateStatus.FAIL:
                 print(f"   └─ Hint: {gate.hint}")
-    
+
     def _fallback_summary(self, report: GovernanceReport) -> None:
         """Plain text summary fallback."""
         print("-" * 60)
@@ -422,7 +422,7 @@ class GovernanceTerminalUI:
             print(f"{SystemGlyph.FAIL.value} {report.failed_count} GATE(S) FAILED")
         print(f"Total: {report.total_gates} | Pass: {report.passed_count} | Fail: {report.failed_count}")
         print("-" * 60)
-    
+
     def _fallback_violation(
         self,
         code: str,
@@ -447,7 +447,7 @@ class GovernanceTerminalUI:
 def run_demo() -> None:
     """Run a demonstration of the terminal UI."""
     ui = GovernanceTerminalUI()
-    
+
     # Create sample report
     report = GovernanceReport(
         mode="PAG-01 COMPLIANCE AUDIT",
@@ -499,13 +499,13 @@ def run_demo() -> None:
             ),
         ],
     )
-    
+
     ui.render_banner("GOVERNANCE TERMINAL UI DEMO", style="info")
     ui.render_report(report)
-    
+
     print("\n")
     ui.render_banner("INDIVIDUAL VIOLATION RENDERING", style="warn")
-    
+
     ui.render_violation(
         code="PAG_006_COLOR_MISMATCH",
         message="Agent color does not match registry",
@@ -513,7 +513,7 @@ def run_demo() -> None:
         line_number=15,
         hint="Expected: BLUE, Found: BUILD / STATE ENGINE",
     )
-    
+
     print("\n")
     ui.render_success("Demonstration complete. No governance state was mutated.")
 
@@ -521,7 +521,7 @@ def run_demo() -> None:
 def main():
     """Main entry point."""
     import argparse
-    
+
     parser = argparse.ArgumentParser(
         description="Terminal Governance UI — Canonical Rendering Layer"
     )
@@ -540,9 +540,9 @@ def main():
         action="store_true",
         help="Check if Rich library is available",
     )
-    
+
     args = parser.parse_args()
-    
+
     if args.check_rich:
         if RICH_AVAILABLE:
             print(f"{SystemGlyph.PASS.value} Rich library is available")
@@ -551,7 +551,7 @@ def main():
             print(f"{SystemGlyph.FAIL.value} Rich library not installed")
             print("Install with: pip install rich")
             sys.exit(1)
-    
+
     if args.demo:
         run_demo()
     else:

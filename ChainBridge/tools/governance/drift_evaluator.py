@@ -61,10 +61,10 @@ class DriftSignal:
 class CalibrationEnvelope:
     """
     Defines acceptable bounds for metric values.
-    
+
     Based on GOVERNANCE_AGENT_BASELINES.md drift detection:
       - MINOR: Below P50 for 3 consecutive PACs
-      - MODERATE: Below P25 for 2 consecutive PACs  
+      - MODERATE: Below P25 for 2 consecutive PACs
       - SEVERE: Below P10 for any PAC
     """
     metric_name: str
@@ -74,17 +74,17 @@ class CalibrationEnvelope:
     p75: float
     p90: float
     is_inverted: bool = False  # True if higher values are worse
-    
+
     def is_within_envelope(self, value: float) -> bool:
         """Check if value is within acceptable envelope (P10-P90)."""
         if self.is_inverted:
             return value <= self.p90
         return value >= self.p10
-    
+
     def get_threshold_violation(self, value: float) -> Tuple[str, float]:
         """
         Determine which threshold is violated.
-        
+
         Returns: (threshold_name, deviation_from_threshold)
         """
         if self.is_inverted:
@@ -119,55 +119,55 @@ class DriftReport:
     has_blocking_drift: bool
     has_escalation_required: bool
     execution_time_ms: int = 0
-    
+
     @property
     def summary(self) -> str:
         """Generate summary string."""
         if not self.drift_signals:
             return f"✓ PASS: {self.agent_name} ({self.agent_gid}) — No drift detected"
-        
+
         blocking = [d for d in self.drift_signals if d.should_block]
         if blocking:
             return f"✗ FAIL: {self.agent_name} ({self.agent_gid}) — {len(blocking)} blocking drift signals (GS_095)"
-        
+
         escalate = [d for d in self.drift_signals if d.should_escalate]
         if escalate:
             return f"⚠ ESCALATE: {self.agent_name} ({self.agent_gid}) — {len(escalate)} drift signals require review"
-        
+
         return f"⚠ WARN: {self.agent_name} ({self.agent_gid}) — {len(self.drift_signals)} minor drift signals"
 
 
 class DriftHistoryTracker:
     """
     Track historical metric values for consecutive violation detection.
-    
+
     Per GOVERNANCE_AGENT_BASELINES.md:
       - MINOR: Below P50 for 3 consecutive PACs
       - MODERATE: Below P25 for 2 consecutive PACs
     """
-    
+
     def __init__(self):
         # Structure: {agent_gid: {metric_name: [recent_values]}}
         self._history: Dict[str, Dict[str, List[float]]] = {}
         self._max_history = 10  # Keep last 10 values per metric
-    
+
     def record(self, agent_gid: str, metric_name: str, value: float) -> None:
         """Record a metric value."""
         if agent_gid not in self._history:
             self._history[agent_gid] = {}
         if metric_name not in self._history[agent_gid]:
             self._history[agent_gid][metric_name] = []
-        
+
         self._history[agent_gid][metric_name].append(value)
-        
+
         # Trim to max history
         if len(self._history[agent_gid][metric_name]) > self._max_history:
             self._history[agent_gid][metric_name] = self._history[agent_gid][metric_name][-self._max_history:]
-    
+
     def get_history(self, agent_gid: str, metric_name: str) -> List[float]:
         """Get historical values for a metric."""
         return self._history.get(agent_gid, {}).get(metric_name, [])
-    
+
     def count_consecutive_violations(
         self,
         agent_gid: str,
@@ -177,20 +177,20 @@ class DriftHistoryTracker:
     ) -> int:
         """
         Count consecutive violations of a threshold (most recent).
-        
+
         Args:
             agent_gid: Agent identifier
             metric_name: Metric name
             threshold: Threshold value
             is_inverted: If True, values above threshold are violations
-            
+
         Returns:
             Number of consecutive violations from most recent
         """
         history = self.get_history(agent_gid, metric_name)
         if not history:
             return 0
-        
+
         consecutive = 0
         for value in reversed(history):
             if is_inverted:
@@ -203,20 +203,20 @@ class DriftHistoryTracker:
                     consecutive += 1
                 else:
                     break
-        
+
         return consecutive
 
 
 class DriftEvaluator:
     """
     Evaluate metrics for drift against calibration envelope.
-    
+
     Enforcement (per GOVERNANCE_AGENT_BASELINES.md):
       - MINOR drift: TRAINING_SIGNAL emitted, non-blocking
       - MODERATE drift: TRAINING_SIGNAL + review, optionally blocking
       - SEVERE drift: FAIL_CLOSED, immediate BENSON review (GS_095)
     """
-    
+
     # Default calibration envelopes (can be overridden per agent)
     DEFAULT_ENVELOPES = {
         # Accuracy metrics (lower is worse)
@@ -224,35 +224,35 @@ class DriftEvaluator:
         "deliverable_completeness": CalibrationEnvelope("deliverable_completeness", 0.90, 0.95, 1.0, 1.0, 1.0, False),
         "test_pass_rate": CalibrationEnvelope("test_pass_rate", 0.80, 0.90, 0.95, 0.98, 1.0, False),
         "gold_standard_compliance": CalibrationEnvelope("gold_standard_compliance", 0.80, 0.90, 0.95, 1.0, 1.0, False),
-        
+
         # Speed metrics (higher is worse)
         "pac_completion_time": CalibrationEnvelope("pac_completion_time", 60, 120, 300, 600, 900, True),
         "iterations_to_valid": CalibrationEnvelope("iterations_to_valid", 1, 1, 2, 3, 5, True),
         "correction_cycles": CalibrationEnvelope("correction_cycles", 0, 1, 2, 4, 6, True),
-        
+
         # Scope metrics (higher is worse, zero-tolerance)
         "lane_violations": CalibrationEnvelope("lane_violations", 0, 0, 0, 0, 0, True),
         "tool_violations": CalibrationEnvelope("tool_violations", 0, 0, 0, 0, 0, True),
         "scope_drift_events": CalibrationEnvelope("scope_drift_events", 0, 0, 0, 1, 2, True),
         "authority_overreach": CalibrationEnvelope("authority_overreach", 0, 0, 0, 0, 0, True),
-        
+
         # Failure quality metrics (lower is worse)
         "failure_explainability": CalibrationEnvelope("failure_explainability", 0.80, 0.90, 1.0, 1.0, 1.0, False),
         "failure_evidence": CalibrationEnvelope("failure_evidence", 0.80, 0.90, 1.0, 1.0, 1.0, False),
-        
+
         # Silent failure rate (higher is worse)
         "silent_failure_rate": CalibrationEnvelope("silent_failure_rate", 0, 0, 0, 0.05, 0.10, True),
     }
-    
+
     def __init__(self, history_tracker: Optional[DriftHistoryTracker] = None):
         """Initialize evaluator with optional history tracker."""
         self.history = history_tracker or DriftHistoryTracker()
         self.envelopes = dict(self.DEFAULT_ENVELOPES)
-    
+
     def add_envelope(self, envelope: CalibrationEnvelope) -> None:
         """Add or override a calibration envelope."""
         self.envelopes[envelope.metric_name] = envelope
-    
+
     def evaluate(
         self,
         agent_gid: str,
@@ -263,29 +263,29 @@ class DriftEvaluator:
     ) -> DriftReport:
         """
         Evaluate metrics for drift.
-        
+
         Args:
             agent_gid: Agent GID
             agent_name: Agent name
             execution_lane: Execution lane
             metrics: Dict of metric_name -> current_value
             record_history: Whether to record values for future consecutive tracking
-            
+
         Returns:
             DriftReport with all evaluation results
         """
         timestamp = datetime.utcnow().isoformat() + "Z"
         drift_signals = []
-        
+
         for metric_name, value in metrics.items():
             envelope = self.envelopes.get(metric_name)
             if not envelope:
                 continue
-            
+
             # Record history first (if enabled)
             if record_history:
                 self.history.record(agent_gid, metric_name, value)
-            
+
             # Get consecutive violations
             p50_violations = self.history.count_consecutive_violations(
                 agent_gid, metric_name, envelope.p50, envelope.is_inverted
@@ -293,7 +293,7 @@ class DriftEvaluator:
             p25_violations = self.history.count_consecutive_violations(
                 agent_gid, metric_name, envelope.p25, envelope.is_inverted
             )
-            
+
             # Evaluate current value
             signal = self._evaluate_metric(
                 metric_name=metric_name,
@@ -302,13 +302,13 @@ class DriftEvaluator:
                 p50_consecutive=p50_violations,
                 p25_consecutive=p25_violations,
             )
-            
+
             if signal.severity != DriftSeverity.NONE:
                 drift_signals.append(signal)
-        
+
         has_blocking = any(d.should_block for d in drift_signals)
         has_escalation = any(d.should_escalate for d in drift_signals)
-        
+
         return DriftReport(
             agent_gid=agent_gid,
             agent_name=agent_name,
@@ -319,7 +319,7 @@ class DriftEvaluator:
             has_blocking_drift=has_blocking,
             has_escalation_required=has_escalation,
         )
-    
+
     def _evaluate_metric(
         self,
         metric_name: str,
@@ -329,10 +329,10 @@ class DriftEvaluator:
         p25_consecutive: int,
     ) -> DriftSignal:
         """Evaluate a single metric for drift."""
-        
+
         # Get threshold violation
         threshold, deviation = envelope.get_threshold_violation(value)
-        
+
         # Determine severity and actions per GOVERNANCE_AGENT_BASELINES.md
         if threshold == "NONE":
             return DriftSignal(
@@ -346,7 +346,7 @@ class DriftEvaluator:
                 should_block=False,
                 should_escalate=False,
             )
-        
+
         # P10 violation = SEVERE (immediate block, GS_095)
         if threshold == "P10":
             return DriftSignal(
@@ -362,7 +362,7 @@ class DriftEvaluator:
                 error_code="GS_095",
                 message=f"{metric_name}: {value} below P10 threshold {envelope.p10} — immediate BENSON review required",
             )
-        
+
         # P25 violation for 2+ consecutive = MODERATE (escalation)
         if threshold == "P25" and p25_consecutive >= 2:
             return DriftSignal(
@@ -378,7 +378,7 @@ class DriftEvaluator:
                 error_code="GS_095",
                 message=f"{metric_name}: {value} below P25 for {p25_consecutive} consecutive PACs — agent review required",
             )
-        
+
         # P50 violation for 3+ consecutive = MINOR (training signal)
         if threshold in ("P50", "P25") and p50_consecutive >= 3:
             return DriftSignal(
@@ -393,7 +393,7 @@ class DriftEvaluator:
                 should_escalate=False,
                 message=f"{metric_name}: {value} below P50 for {p50_consecutive} consecutive PACs — BEHAVIORAL_ADJUSTMENT signal",
             )
-        
+
         # Single P50/P25 violation without consecutive pattern = no drift signal
         return DriftSignal(
             drift_type=DriftType.NONE,
@@ -416,7 +416,7 @@ def evaluate_drift(
 ) -> Tuple[bool, bool, List[str]]:
     """
     Convenience function for gate_pack.py integration.
-    
+
     Returns:
         Tuple of (has_blocking_drift, has_escalation, error_messages)
     """
@@ -427,14 +427,14 @@ def evaluate_drift(
         execution_lane=execution_lane,
         metrics=metrics,
     )
-    
+
     errors = []
     for d in report.drift_signals:
         if d.should_block:
             errors.append(f"[GS_095] {d.message}")
         elif d.should_escalate:
             errors.append(f"[ESCALATE] {d.message}")
-    
+
     return (report.has_blocking_drift, report.has_escalation_required, errors)
 
 
@@ -443,7 +443,7 @@ def main():
     import argparse
     import json
     import time
-    
+
     parser = argparse.ArgumentParser(
         description="Evaluate metrics for drift against calibration envelope"
     )
@@ -460,15 +460,15 @@ def main():
         "--history",
         help="JSON string of historical metrics for consecutive violation detection",
     )
-    
+
     args = parser.parse_args()
-    
+
     try:
         metrics = json.loads(args.metrics)
     except json.JSONDecodeError as e:
         print(f"ERROR: Invalid metrics JSON: {e}")
         return 1
-    
+
     # Pre-populate history if provided
     evaluator = DriftEvaluator()
     if args.history:
@@ -480,9 +480,9 @@ def main():
         except json.JSONDecodeError as e:
             print(f"ERROR: Invalid history JSON: {e}")
             return 1
-    
+
     start_time = time.time()
-    
+
     report = evaluator.evaluate(
         agent_gid=args.gid,
         agent_name=args.name,
@@ -490,7 +490,7 @@ def main():
         metrics=metrics,
     )
     report.execution_time_ms = int((time.time() - start_time) * 1000)
-    
+
     if args.format == "json":
         output = {
             "agent_gid": report.agent_gid,
@@ -529,7 +529,7 @@ def main():
         print(f"Drift Signals: {report.total_signals}")
         print(f"Execution Time: {report.execution_time_ms}ms")
         print("-" * 70)
-        
+
         if not report.drift_signals:
             print("✓ NO DRIFT DETECTED")
         else:
@@ -541,11 +541,11 @@ def main():
                 else:
                     icon = "•"
                 print(f"{icon} [{d.severity.value}] {d.message}")
-        
+
         print("-" * 70)
         print(report.summary)
         print("=" * 70)
-    
+
     return 1 if report.has_blocking_drift else 0
 
 

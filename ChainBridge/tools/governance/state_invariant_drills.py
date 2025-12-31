@@ -114,13 +114,13 @@ class DrillSuiteResult:
 def drill_sd01_undefined_transition() -> DrillResult:
     """
     SD-01: Undefined transition requested → RUNTIME_BLOCK
-    
+
     Attempts a transition that is NOT declared in the state machine.
     Expected: Deterministic rejection with REJECTED_UNDEFINED.
     """
     start = datetime.utcnow()
     validator = TransitionValidator()
-    
+
     # Attempt CREATED → ACCEPTED (bypassing SIGNED → VERIFIED)
     # This transition is NOT declared in PDO_STATE_MACHINE
     request = TransitionRequest(
@@ -131,13 +131,13 @@ def drill_sd01_undefined_transition() -> DrillResult:
         authority_gid="GID-05",
         proof_id="proof-sd01-test",
     )
-    
+
     result = validator.validate_transition(request)
     elapsed = (datetime.utcnow() - start).total_seconds() * 1000
-    
+
     # Expected: REJECTED_UNDEFINED
     is_blocked = result.result == TransitionResult.REJECTED_UNDEFINED
-    
+
     return DrillResult(
         drill_id="SD-01",
         drill_name="Undefined Transition Requested",
@@ -165,13 +165,13 @@ def drill_sd01_undefined_transition() -> DrillResult:
 def drill_sd02_terminal_state_mutation() -> DrillResult:
     """
     SD-02: Terminal state mutation → RUNTIME_BLOCK
-    
+
     Attempts to transition FROM a terminal state.
     Expected: Deterministic rejection with REJECTED_TERMINAL.
     """
     start = datetime.utcnow()
     validator = TransitionValidator()
-    
+
     # Terminal states in PDO: ACCEPTED, REJECTED, EXPIRED
     # Attempt ACCEPTED → CREATED (trying to reset a finalized PDO)
     request = TransitionRequest(
@@ -182,13 +182,13 @@ def drill_sd02_terminal_state_mutation() -> DrillResult:
         authority_gid="GID-00",  # Even Benson cannot mutate terminal state
         proof_id="proof-sd02-test",
     )
-    
+
     result = validator.validate_transition(request)
     elapsed = (datetime.utcnow() - start).total_seconds() * 1000
-    
+
     # Expected: REJECTED_TERMINAL
     is_blocked = result.result == TransitionResult.REJECTED_TERMINAL
-    
+
     return DrillResult(
         drill_id="SD-02",
         drill_name="Terminal State Mutation",
@@ -217,13 +217,13 @@ def drill_sd02_terminal_state_mutation() -> DrillResult:
 def drill_sd03_missing_proof() -> DrillResult:
     """
     SD-03: Missing transition proof → RUNTIME_BLOCK
-    
+
     Attempts a valid transition WITHOUT providing proof_id.
     Expected: Deterministic rejection with REJECTED_MISSING_PROOF.
     """
     start = datetime.utcnow()
     validator = TransitionValidator()
-    
+
     # Valid transition but NO proof_id
     request = TransitionRequest(
         artifact_type="PDO",
@@ -233,13 +233,13 @@ def drill_sd03_missing_proof() -> DrillResult:
         authority_gid="GID-05",
         proof_id=None,  # MISSING PROOF
     )
-    
+
     result = validator.validate_transition(request)
     elapsed = (datetime.utcnow() - start).total_seconds() * 1000
-    
+
     # Expected: REJECTED_MISSING_PROOF
     is_blocked = result.result == TransitionResult.REJECTED_MISSING_PROOF
-    
+
     return DrillResult(
         drill_id="SD-03",
         drill_name="Missing Transition Proof",
@@ -268,13 +268,13 @@ def drill_sd03_missing_proof() -> DrillResult:
 def drill_sd04_invalid_authority() -> DrillResult:
     """
     SD-04: Invalid authority on transition → RUNTIME_BLOCK
-    
+
     Attempts a transition that requires specific authority with wrong GID.
     Expected: Deterministic rejection with REJECTED_AUTHORITY_MISMATCH.
     """
     start = datetime.utcnow()
     validator = TransitionValidator()
-    
+
     # Settlement PENDING → APPROVED requires CRO authority per transition rules
     request = TransitionRequest(
         artifact_type="SETTLEMENT",
@@ -284,16 +284,16 @@ def drill_sd04_invalid_authority() -> DrillResult:
         authority_gid="GID-INVALID-TEST",  # Invalid/unknown authority for testing
         proof_id="proof-sd04-test",
     )
-    
+
     result = validator.validate_transition(request)
     elapsed = (datetime.utcnow() - start).total_seconds() * 1000
-    
+
     # Expected: REJECTED_AUTHORITY_MISMATCH or REJECTED_MISSING_AUTHORITY
     is_blocked = result.result in (
         TransitionResult.REJECTED_AUTHORITY_MISMATCH,
         TransitionResult.REJECTED_MISSING_AUTHORITY,
     )
-    
+
     return DrillResult(
         drill_id="SD-04",
         drill_name="Invalid Authority on Transition",
@@ -323,14 +323,14 @@ def drill_sd04_invalid_authority() -> DrillResult:
 def drill_sd05_replay_divergence() -> DrillResult:
     """
     SD-05: Replay divergence detected → CI_BLOCK
-    
+
     Constructs event log that when replayed produces different state than expected.
     Expected: Deterministic failure of replay verification.
     """
     import hashlib
     start = datetime.utcnow()
     engine = StateReplayEngine()
-    
+
     # Create valid event sequence
     base_time = datetime.utcnow()
     events = [
@@ -353,7 +353,7 @@ def drill_sd05_replay_divergence() -> DrillResult:
             payload_hash=hashlib.sha256(b"event-2-payload").hexdigest(),
         ),
     ]
-    
+
     # Replay with WRONG expected state (claim it should be VERIFIED but actually SIGNED)
     result = engine.replay_events(
         events=events,
@@ -361,12 +361,12 @@ def drill_sd05_replay_divergence() -> DrillResult:
         artifact_id="pdo-sd05-test",
         expected_final_state=PDOState.VERIFIED.value,  # WRONG - should be SIGNED
     )
-    
+
     elapsed = (datetime.utcnow() - start).total_seconds() * 1000
-    
+
     # Expected: is_deterministic = False (divergence detected)
     divergence_detected = not result.is_deterministic
-    
+
     return DrillResult(
         drill_id="SD-05",
         drill_name="Replay Divergence Detection",
@@ -401,14 +401,14 @@ def run_all_drills() -> DrillSuiteResult:
     """Execute all state invariant failure drills."""
     suite = DrillSuiteResult()
     all_results: list[DrillResult] = []
-    
+
     print("=" * 70)
     print("STATE INVARIANT FAILURE DRILLS")
     print(f"Reference: {_DRILL_REF}")
     print("Mode: FAIL_CLOSED")
     print("=" * 70)
     print()
-    
+
     # SD-01: Undefined Transition
     print("SD-01: Undefined Transition Requested")
     print("-" * 40)
@@ -421,7 +421,7 @@ def run_all_drills() -> DrillSuiteResult:
     if result_01.rejection_reason:
         print(f"  Reason: {result_01.rejection_reason}")
     print()
-    
+
     # SD-02: Terminal State Mutation
     print("SD-02: Terminal State Mutation")
     print("-" * 40)
@@ -434,7 +434,7 @@ def run_all_drills() -> DrillSuiteResult:
     if result_02.rejection_reason:
         print(f"  Reason: {result_02.rejection_reason}")
     print()
-    
+
     # SD-03: Missing Proof
     print("SD-03: Missing Transition Proof")
     print("-" * 40)
@@ -447,7 +447,7 @@ def run_all_drills() -> DrillSuiteResult:
     if result_03.rejection_reason:
         print(f"  Reason: {result_03.rejection_reason}")
     print()
-    
+
     # SD-04: Invalid Authority
     print("SD-04: Invalid Authority on Transition")
     print("-" * 40)
@@ -460,7 +460,7 @@ def run_all_drills() -> DrillSuiteResult:
     if result_04.rejection_reason:
         print(f"  Reason: {result_04.rejection_reason}")
     print()
-    
+
     # SD-05: Replay Divergence
     print("SD-05: Replay Divergence Detection")
     print("-" * 40)
@@ -473,7 +473,7 @@ def run_all_drills() -> DrillSuiteResult:
     if result_05.rejection_reason:
         print(f"  Reason: {result_05.rejection_reason}")
     print()
-    
+
     # Calculate metrics
     suite.total_drills = len(all_results)
     suite.passed_drills = sum(1 for r in all_results if r.passed)
@@ -483,7 +483,7 @@ def run_all_drills() -> DrillSuiteResult:
     suite.replay_divergence_tolerated = not result_05.passed
     suite.bypass_paths_detected = suite.invariant_violations_allowed
     suite.results = all_results
-    
+
     return suite
 
 
@@ -499,29 +499,29 @@ def print_summary(suite: DrillSuiteResult) -> bool:
     print()
     print("SUCCESS METRICS VALIDATION:")
     print("-" * 40)
-    
+
     # Metric: invariant_violations_allowed: 0
     m1 = suite.invariant_violations_allowed == 0
     print(f"  invariant_violations_allowed:  {suite.invariant_violations_allowed} (target: 0) {'✓' if m1 else '✗'}")
-    
+
     # Metric: silent_failures: 0
     m2 = suite.silent_failures == 0
     print(f"  silent_failures:               {suite.silent_failures} (target: 0) {'✓' if m2 else '✗'}")
-    
+
     # Metric: replay_divergence_tolerated: false
     m3 = not suite.replay_divergence_tolerated
     print(f"  replay_divergence_tolerated:   {suite.replay_divergence_tolerated} (target: false) {'✓' if m3 else '✗'}")
-    
+
     # Metric: deterministic_errors: true
     m4 = suite.failed_drills == 0  # All drills deterministic if all passed
     print(f"  deterministic_errors:          {m4} (target: true) {'✓' if m4 else '✗'}")
-    
+
     # Metric: bypass_paths_detected: 0
     m5 = suite.bypass_paths_detected == 0
     print(f"  bypass_paths_detected:         {suite.bypass_paths_detected} (target: 0) {'✓' if m5 else '✗'}")
-    
+
     print()
-    
+
     all_passed = m1 and m2 and m3 and m4 and m5
     if all_passed:
         print("=" * 70)
@@ -531,7 +531,7 @@ def print_summary(suite: DrillSuiteResult) -> bool:
         print("=" * 70)
         print("✗ SUCCESS METRICS NOT MET — INVARIANT GAPS DETECTED")
         print("=" * 70)
-    
+
     return all_passed
 
 
@@ -539,7 +539,7 @@ def main():
     """Main entry point."""
     suite = run_all_drills()
     success = print_summary(suite)
-    
+
     # Output JSON for machine processing
     output = {
         "drill_ref": _DRILL_REF,
@@ -557,15 +557,15 @@ def main():
         "success_metrics_met": success,
         "drills": [r.to_dict() for r in suite.results],
     }
-    
+
     # Write results to file
     results_path = REPO_ROOT / "docs" / "governance" / "state_invariant_drill_results.json"
     results_path.parent.mkdir(parents=True, exist_ok=True)
     with open(results_path, "w") as f:
         json.dump(output, f, indent=2)
-    
+
     print(f"\nResults written to: {results_path}")
-    
+
     sys.exit(0 if success else 1)
 
 

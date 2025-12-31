@@ -141,18 +141,18 @@ class MockGovernanceEngine:
     def validate_block_order(self, blocks: List[str]) -> Tuple[bool, str]:
         """Validate block ordering."""
         expected_order = ["RUNTIME_ACTIVATION_ACK", "AGENT_ACTIVATION_ACK"]
-        
+
         positions = {}
         for i, block in enumerate(blocks):
             if block in expected_order:
                 positions[block] = i
-        
+
         if len(positions) < 2:
             return False, "GS_061: Missing required blocks"
-        
+
         if positions.get("RUNTIME_ACTIVATION_ACK", 0) > positions.get("AGENT_ACTIVATION_ACK", 0):
             return False, "GS_061: ORDERING_VIOLATION - RUNTIME must precede AGENT"
-        
+
         return True, "Order valid"
 
     def validate_schema_version(self, version: str, expected: str) -> Tuple[bool, str]:
@@ -176,19 +176,19 @@ class MockGovernanceEngine:
             else:
                 self.ledger_sequence += 1
                 seq = self.ledger_sequence
-            
+
             entry = {
                 "sequence": seq,
                 "artifact_id": artifact_id,
                 "agent": agent.name,
                 "timestamp": time.time(),
             }
-            
+
             # Check for corruption (duplicate sequence)
             existing_seqs = [e["sequence"] for e in self.ledger_entries]
             if seq in existing_seqs:
                 return False, seq, "GS_064: RACE_CORRUPTION - Duplicate sequence detected"
-            
+
             self.ledger_entries.append(entry)
             return True, seq, f"Ledger write successful: #{seq}"
 
@@ -196,7 +196,7 @@ class MockGovernanceEngine:
         """Check UI/Terminal parity."""
         self.terminal_state[artifact_id] = terminal_result
         self.ui_state[artifact_id] = ui_result
-        
+
         if terminal_result != ui_result:
             return False, f"GS_065: PARITY_VIOLATION - Terminal={terminal_result}, UI={ui_result}"
         return True, "Parity maintained"
@@ -379,7 +379,7 @@ class StressOrchestrator:
         def race_worker(iteration: int, agent: Agent) -> StressTestCase:
             test_start = time.time()
             artifact_id = f"PAC-RACE-{iteration:03d}-{agent.name}"
-            
+
             # 30% chance of race injection
             inject_race = random.random() < 0.3
             success, seq, msg = self.engine.ledger_write(artifact_id, agent, inject_race)
@@ -408,20 +408,20 @@ class StressOrchestrator:
                 with results_lock:
                     report.test_cases.append(tc)
                     report.total_tests += 1
-                    
+
                     if tc.detected:
                         report.detected += 1
                         if tc.failure_class and tc.failure_class not in report.failure_classes_triggered:
                             report.failure_classes_triggered.append(tc.failure_class)
-                    
+
                     if tc.result == TestResult.DETECTED:
                         report.hard_fails += 1
 
         report.total_duration_ms = (time.time() - start_time) * 1000
-        
+
         # Verify rollback capability
         report.rollback_verified = True  # In real impl, would verify ledger state
-        
+
         return report
 
     def run_ui_terminal_parity(self) -> StressReport:
@@ -643,7 +643,7 @@ def main() -> int:
 
     for vector in vectors:
         print(f"▶ Running stress vector: {vector.upper()}")
-        
+
         if vector == "ordering":
             report = orchestrator.run_ordering_collision()
         elif vector == "legacy":
@@ -664,12 +664,12 @@ def main() -> int:
 
     # Generate report
     report_content = generate_stress_report(reports)
-    
+
     if args.output:
         output_path = Path(args.output)
     else:
         output_path = Path("docs/governance/GOVERNANCE_STRESS_ORCHESTRATION_REPORT.md")
-    
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(report_content)
     print(f"📄 Report written to: {output_path}")

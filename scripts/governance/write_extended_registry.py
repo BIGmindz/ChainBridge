@@ -262,7 +262,7 @@ registry = {
 if __name__ == "__main__":
     with open(REGISTRY_PATH, 'w', encoding='utf-8') as f:
         json.dump(registry, f, indent=2, ensure_ascii=False)
-    
+
     print(f"Registry written to: {REGISTRY_PATH}")
     print(f"Version: {registry['registry_version']}")
     print(f"Agents: {len(registry['agents'])}")

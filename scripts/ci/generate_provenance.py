@@ -14,17 +14,17 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, Optional
 
 
 class ProvenanceGenerator:
     """Generates build provenance metadata."""
 
-    def __init__(self, repo_root: Path, config_path: Path | None = None):
+    def __init__(self, repo_root: Path, config_path: Optional[Path] = None):
         self.repo_root = repo_root
         self.config = self._load_config(config_path)
 
-    def _load_config(self, config_path: Path | None) -> dict[str, Any]:
+    def _load_config(self, config_path: Optional[Path]) -> Dict[str, Any]:
         """Load configuration."""
         if config_path and config_path.exists():
             with open(config_path) as f:

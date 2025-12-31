@@ -121,7 +121,7 @@ class Violation:
     line_content: str
     matched_pattern: str
     category: str  # "marketing", "probabilistic", "future_guarantee"
-    
+
     def to_dict(self) -> Dict[str, str | int]:
         return {
             "file": self.file_path,
@@ -139,11 +139,11 @@ class LintResult:
     violations: List[Violation] = field(default_factory=list)
     files_scanned: int = 0
     sensitive_files_scanned: int = 0
-    
+
     @property
     def has_violations(self) -> bool:
         return len(self.violations) > 0
-    
+
     def to_dict(self) -> Dict[str, any]:
         return {
             "passed": not self.has_violations,
@@ -179,7 +179,7 @@ class ForbiddenLanguageLinter:
         self.workspace_root = workspace_root
         self.strict_mode = strict_mode
         self.include_all_files = include_all_files
-        
+
         # Compile patterns for efficiency
         self._marketing_patterns = [
             re.compile(p, re.IGNORECASE) for p in MARKETING_TERMS

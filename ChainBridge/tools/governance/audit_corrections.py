@@ -127,30 +127,30 @@ def extract_yaml_block(content: str, block_name: str) -> Optional[dict]:
     """Extract and parse a YAML block from the content."""
     if yaml is None:
         return None
-    
+
     # Pattern: BLOCK_NAME:\n```yaml\n...\n```
     pattern = rf'{block_name}:\s*\n```(?:yaml)?\n(.*?)\n```'
     match = re.search(pattern, content, re.DOTALL | re.IGNORECASE)
-    
+
     if not match:
         # Try alternative format: BLOCK_NAME:\n  key: value
         pattern2 = rf'{block_name}:\s*\n((?:[ \t]+\w+:.*\n?)+)'
         match = re.search(pattern2, content)
-    
+
     if match:
         yaml_content = match.group(1)
         try:
             return yaml.safe_load(yaml_content)
         except yaml.YAMLError:
             return None
-    
+
     return None
 
 
 def validate_gold_standard_checklist(content: str) -> list[ValidationError]:
     """Validate the Gold Standard Checklist in a correction pack."""
     errors = []
-    
+
     # Check for GOLD_STANDARD_CHECKLIST block presence
     if "GOLD_STANDARD_CHECKLIST" not in content:
         errors.append(ValidationError(
@@ -158,14 +158,14 @@ def validate_gold_standard_checklist(content: str) -> list[ValidationError]:
             message="GOLD_STANDARD_CHECKLIST block missing. All correction packs MUST include this block."
         ))
         return errors
-    
+
     # Try to extract and parse the YAML block
     checklist = extract_yaml_block(content, "GOLD_STANDARD_CHECKLIST")
-    
+
     if checklist is None:
         # Fall back to string-based validation
         return validate_gold_standard_checklist_string(content)
-    
+
     # Validate each required key
     for key in GOLD_STANDARD_CHECKLIST_KEYS:
         if key not in checklist:
@@ -193,14 +193,14 @@ def validate_gold_standard_checklist(content: str) -> list[ValidationError]:
                     code=ErrorCode.G0_023,
                     message=f"Checklist item '{key}' has invalid format. Expected dict with 'checked: true'."
                 ))
-    
+
     return errors
 
 
 def validate_gold_standard_checklist_string(content: str) -> list[ValidationError]:
     """Fallback string-based validation for checklist items."""
     errors = []
-    
+
     for key in GOLD_STANDARD_CHECKLIST_KEYS:
         # Check if key exists in content
         if key not in content:
@@ -209,7 +209,7 @@ def validate_gold_standard_checklist_string(content: str) -> list[ValidationErro
                 message=f"Required checklist key '{key}' is missing."
             ))
             continue
-        
+
         # Check for patterns like "key: { checked: true }" or "key:\n  checked: true"
         pattern = rf'{key}:\s*(?:\{{\s*checked:\s*true\s*\}}|true|\n\s+checked:\s*true)'
         if not re.search(pattern, content, re.IGNORECASE):
@@ -217,33 +217,33 @@ def validate_gold_standard_checklist_string(content: str) -> list[ValidationErro
                 code=ErrorCode.G0_023,
                 message=f"Checklist item '{key}' is not marked as checked: true."
             ))
-    
+
     return errors
 
 
 def validate_self_certification(content: str) -> list[ValidationError]:
     """Validate that SELF_CERTIFICATION block is present."""
     errors = []
-    
+
     if "SELF_CERTIFICATION" not in content:
         errors.append(ValidationError(
             code=ErrorCode.G0_021,
             message="SELF_CERTIFICATION block missing. All correction packs MUST include self-certification."
         ))
-    
+
     return errors
 
 
 def validate_violations_addressed(content: str) -> list[ValidationError]:
     """Validate that VIOLATIONS_ADDRESSED section is present."""
     errors = []
-    
+
     if "VIOLATIONS_ADDRESSED" not in content:
         errors.append(ValidationError(
             code=ErrorCode.G0_022,
             message="VIOLATIONS_ADDRESSED section missing. All correction packs MUST document violations addressed."
         ))
-    
+
     return errors
 
 
@@ -262,7 +262,7 @@ def audit_file(file_path: Path) -> AuditResult:
                 file_path=str(file_path)
             )]
         )
-    
+
     # Check if this is a correction pack
     if not is_correction_pack(content):
         return AuditResult(
@@ -270,17 +270,17 @@ def audit_file(file_path: Path) -> AuditResult:
             is_correction_pack=False,
             is_compliant=True
         )
-    
+
     # Validate correction pack requirements
     errors = []
     errors.extend(validate_gold_standard_checklist(content))
     errors.extend(validate_self_certification(content))
     errors.extend(validate_violations_addressed(content))
-    
+
     # Set file path on all errors
     for error in errors:
         error.file_path = str(file_path)
-    
+
     return AuditResult(
         file_path=file_path,
         is_correction_pack=True,
@@ -293,7 +293,7 @@ def audit_file(file_path: Path) -> AuditResult:
 def find_correction_artifacts(paths: list[Path]) -> list[Path]:
     """Find all potential correction artifacts in the given paths."""
     artifacts = []
-    
+
     # File patterns that might contain correction packs
     patterns = [
         "**/CORRECTION*.md",
@@ -303,14 +303,14 @@ def find_correction_artifacts(paths: list[Path]) -> list[Path]:
         "**/*correction*.md",
         "**/*correction*.py",
     ]
-    
+
     for path in paths:
         if path.is_file():
             artifacts.append(path)
         elif path.is_dir():
             for pattern in patterns:
                 artifacts.extend(path.glob(pattern))
-    
+
     # Remove duplicates while preserving order
     seen = set()
     unique_artifacts = []
@@ -318,14 +318,14 @@ def find_correction_artifacts(paths: list[Path]) -> list[Path]:
         if artifact not in seen:
             seen.add(artifact)
             unique_artifacts.append(artifact)
-    
+
     return unique_artifacts
 
 
 def generate_recorrection_pac(result: AuditResult) -> str:
     """Generate a forced re-correction PAC for a non-compliant artifact."""
     error_list = "\n".join([f"  - {e.code.name}: {e.message}" for e in result.errors])
-    
+
     pac_content = f"""
 # ════════════════════════════════════════════════════════════════════════════════
 # 🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵
@@ -419,7 +419,7 @@ def run_audit(
 ) -> AuditReport:
     """Run the full correction pack audit."""
     artifacts = find_correction_artifacts(paths)
-    
+
     report = AuditReport(
         timestamp=datetime.now().isoformat(),
         total_files_scanned=len(artifacts),
@@ -427,24 +427,24 @@ def run_audit(
         compliant_packs=0,
         non_compliant_packs=0
     )
-    
+
     for artifact in artifacts:
         result = audit_file(artifact)
         report.results.append(result)
-        
+
         if result.is_correction_pack:
             report.correction_packs_found += 1
             if result.is_compliant:
                 report.compliant_packs += 1
             else:
                 report.non_compliant_packs += 1
-                
+
                 if generate_pacs and pacs_output_dir:
                     pac_content = generate_recorrection_pac(result)
                     pac_filename = f"PAC-ATLAS-FORCED-RECORRECTION-{artifact.stem}.md"
                     pac_path = pacs_output_dir / pac_filename
                     pac_path.write_text(pac_content, encoding="utf-8")
-    
+
     return report
 
 
@@ -459,17 +459,17 @@ def print_text_report(report: AuditReport) -> None:
     print(f"Compliant packs: {report.compliant_packs}")
     print(f"Non-compliant packs: {report.non_compliant_packs}")
     print("═" * 80)
-    
+
     if report.non_compliant_packs > 0:
         print("\n❌ NON-COMPLIANT ARTIFACTS:")
         print("-" * 80)
-        
+
         for result in report.results:
             if result.is_correction_pack and not result.is_compliant:
                 print(f"\n📄 {result.file_path}")
                 for error in result.errors:
                     print(f"   ├── {error.code.name}: {error.message}")
-        
+
         print("\n" + "=" * 80)
         print("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓")
         print("┃ AUDIT RESULT: VIOLATIONS DETECTED                                        ┃")
@@ -479,7 +479,7 @@ def print_text_report(report: AuditReport) -> None:
     else:
         print("\n✅ ALL CORRECTION PACKS COMPLIANT")
         print("No violations detected.")
-    
+
     print("\n" + "═" * 80)
 
 
@@ -519,7 +519,7 @@ def print_json_report(report: AuditReport) -> None:
 def verify_ledger_consistency() -> dict:
     """
     Verify ledger consistency for learning events.
-    
+
     Returns a dictionary with:
     - valid: bool
     - total_entries: int
@@ -528,13 +528,13 @@ def verify_ledger_consistency() -> dict:
     """
     try:
         from ledger_writer import GovernanceLedger, EntryType
-        
+
         ledger = GovernanceLedger()
         entries = ledger.get_all_entries()
-        
+
         issues = []
         learning_events = 0
-        
+
         # Track sequence continuity
         expected_seq = 1
         for entry in entries:
@@ -546,7 +546,7 @@ def verify_ledger_consistency() -> dict:
                     "entry_id": entry.get("artifact_id")
                 })
             expected_seq = seq + 1
-            
+
             # Count learning events
             entry_type = entry.get("entry_type", "")
             if entry_type in [
@@ -556,7 +556,7 @@ def verify_ledger_consistency() -> dict:
                 "POSITIVE_CLOSURE_ACKNOWLEDGED"
             ]:
                 learning_events += 1
-                
+
                 # Verify authority is present for learning events
                 if entry_type in ["CORRECTION_APPLIED", "BLOCK_ENFORCED", "LEARNING_EVENT"]:
                     authority = entry.get("authority_gid")
@@ -566,14 +566,14 @@ def verify_ledger_consistency() -> dict:
                             "message": f"Learning event missing authority_gid",
                             "entry_id": entry.get("artifact_id")
                         })
-        
+
         return {
             "valid": len(issues) == 0,
             "total_entries": len(entries),
             "learning_events": learning_events,
             "issues": issues
         }
-        
+
     except ImportError:
         return {
             "valid": False,
@@ -595,19 +595,19 @@ def print_ledger_verification(result: dict) -> None:
     print("\n" + "═" * 80)
     print("🩶 GLOBAL AGENT LEARNING LEDGER VERIFICATION")
     print("═" * 80)
-    
+
     status = "✅ VALID" if result["valid"] else "❌ INVALID"
     print(f"\nStatus: {status}")
     print(f"Total Entries: {result['total_entries']}")
     print(f"Learning Events: {result['learning_events']}")
-    
+
     if result["issues"]:
         print(f"\n⚠ Issues Found: {len(result['issues'])}")
         for issue in result["issues"]:
             print(f"  [{issue['code']}] {issue['message']}")
     else:
         print("\n✅ No issues found. Learning ledger is consistent.")
-    
+
     print("\n" + "═" * 80)
 
 
@@ -648,9 +648,9 @@ def main():
         action="store_true",
         help="Verify learning ledger consistency (G2)"
     )
-    
+
     args = parser.parse_args()
-    
+
     # G2: If ledger verification requested, do it first
     if args.verify_ledger:
         result = verify_ledger_consistency()
@@ -660,28 +660,28 @@ def main():
         if not args.paths or args.paths == ["docs/governance", "proofpacks"]:
             # Only ledger verification requested
             sys.exit(0 if result["valid"] else 1)
-    
+
     paths = [Path(p) for p in args.paths]
-    
+
     # Create PACs output directory if generating PACs
     if args.generate_pacs:
         args.pacs_dir.mkdir(parents=True, exist_ok=True)
-    
+
     report = run_audit(
         paths=paths,
         output_format=args.format,
         generate_pacs=args.generate_pacs,
         pacs_output_dir=args.pacs_dir if args.generate_pacs else None
     )
-    
+
     if args.format == "json":
         print_json_report(report)
     else:
         print_text_report(report)
-    
+
     if args.strict and report.non_compliant_packs > 0:
         sys.exit(1)
-    
+
     sys.exit(0)
 
 

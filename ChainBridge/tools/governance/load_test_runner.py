@@ -303,7 +303,7 @@ def generate_pac(test_num: int) -> str:
 def generate_malformed_pac(test_num: int, defect_type: str) -> str:
     """Generate a malformed PAC for failure testing."""
     base = generate_pac(test_num)
-    
+
     if defect_type == "missing_runtime":
         return base.replace("## RUNTIME_ACTIVATION_ACK", "## REMOVED_RUNTIME")
     elif defect_type == "missing_agent":
@@ -320,7 +320,7 @@ def generate_malformed_pac(test_num: int, defect_type: str) -> str:
         return ""
     elif defect_type == "truncated":
         return base[:len(base) // 2]
-    
+
     return base
 
 
@@ -331,32 +331,32 @@ def generate_malformed_pac(test_num: int, defect_type: str) -> str:
 def mock_validate_pac(content: str) -> Tuple[bool, List[str]]:
     """Mock PAC validator for load testing."""
     errors = []
-    
+
     if not content:
         errors.append("[G0_001] Empty content")
         return False, errors
-    
+
     if "RUNTIME_ACTIVATION_ACK" not in content:
         errors.append("[G0_006] Missing RUNTIME_ACTIVATION_ACK")
-    
+
     if "AGENT_ACTIVATION_ACK" not in content:
         errors.append("[G0_006] Missing AGENT_ACTIVATION_ACK")
-    
+
     if 'gid: "GID-99"' in content:
         errors.append("[G0_004] GID mismatch")
-    
+
     if 'color: "PURPLE"' in content:
         errors.append("[GS_031] Invalid agent color")
-    
+
     if "REMOVED_CLOSURE" in content:
         errors.append("[G0_046] Missing CLOSURE")
-    
+
     if "::::" in content:
         errors.append("[G0_001] Invalid YAML syntax")
-    
+
     if len(content) < 1000 and "GOLD_STANDARD_CHECKLIST" not in content:
         errors.append("[G0_001] Truncated content")
-    
+
     return len(errors) == 0, errors
 
 
@@ -364,7 +364,7 @@ def mock_ledger_write(artifact_id: str, inject_failure: bool = False) -> Tuple[b
     """Mock ledger write for load testing."""
     if inject_failure:
         return False, "LEDGER_WRITE_FAILURE: Simulated disk error"
-    
+
     # Simulate write latency
     time.sleep(random.uniform(0.001, 0.01))
     return True, f"Sequence #{random.randint(100, 999)}"
@@ -396,7 +396,7 @@ class LoadTestRunner:
         for i in range(count):
             test_start = time.time()
             pac_content = generate_pac(i)
-            
+
             valid, errors = mock_validate_pac(pac_content)
             duration = (time.time() - test_start) * 1000
 
@@ -410,7 +410,7 @@ class LoadTestRunner:
             )
             report.test_cases.append(tc)
             report.total_tests += 1
-            
+
             if valid:
                 report.passed += 1
             else:
@@ -441,7 +441,7 @@ class LoadTestRunner:
             test_start = time.time()
             defect = random.choice(defect_types)
             pac_content = generate_malformed_pac(i, defect)
-            
+
             valid, errors = mock_validate_pac(pac_content)
             duration = (time.time() - test_start) * 1000
 
@@ -459,7 +459,7 @@ class LoadTestRunner:
             )
             report.test_cases.append(tc)
             report.total_tests += 1
-            
+
             if detected_correctly:
                 report.passed += 1
             else:
@@ -498,12 +498,12 @@ class LoadTestRunner:
 
         with ThreadPoolExecutor(max_workers=workers) as executor:
             futures = {executor.submit(validate_worker, i): i for i in range(count)}
-            
+
             for future in as_completed(futures):
                 tc = future.result()
                 report.test_cases.append(tc)
                 report.total_tests += 1
-                
+
                 if tc.result == TestResult.PASS:
                     report.passed += 1
                 else:
@@ -523,7 +523,7 @@ class LoadTestRunner:
             for i in range(1, len(sorted_order)):
                 gap = sorted_order[i][1] - sorted_order[i-1][1]
                 completion_gaps.append(gap)
-            
+
             if completion_gaps:
                 avg_gap = sum(completion_gaps) / len(completion_gaps)
                 max_gap = max(completion_gaps)
@@ -548,7 +548,7 @@ class LoadTestRunner:
         for i in range(count):
             test_start = time.time()
             inject_failure = random.random() < FAILURE_INJECTION_RATE
-            
+
             success, msg = mock_ledger_write(f"PAC-LEDGER-{i:04d}", inject_failure)
             duration = (time.time() - test_start) * 1000
 
@@ -562,7 +562,7 @@ class LoadTestRunner:
             )
             report.test_cases.append(tc)
             report.total_tests += 1
-            
+
             if success:
                 report.passed += 1
             else:
@@ -725,7 +725,7 @@ def main() -> int:
 
     for scenario in scenarios:
         print(f"▶ Running scenario: {scenario.upper()}")
-        
+
         if scenario == "burst":
             report = runner.run_burst_test()
         elif scenario == "failure":
@@ -743,12 +743,12 @@ def main() -> int:
 
     # Generate report
     report_content = generate_report(reports)
-    
+
     if args.output:
         output_path = Path(args.output)
     else:
         output_path = Path("docs/governance/GOVERNANCE_LOAD_AND_FAILURE_REPORT.md")
-    
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(report_content)
     print(f"📄 Report written to: {output_path}")

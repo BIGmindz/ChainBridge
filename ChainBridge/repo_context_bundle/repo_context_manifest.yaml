@@ -20,7 +20,7 @@ bundle_contents:
     description: Full repository file listing (filtered)
     type: TEXT
     entries: ~2500
-    
+
   - file: README_CONTEXT.md
     description: System overview and architectural synthesis
     type: MARKDOWN
@@ -32,12 +32,12 @@ bundle_contents:
       - Agent Model & Color Governance
       - Directory Structure
       - Key Commands
-      
+
   - file: agent_registry_snapshot.yaml
     description: Canonical agent registry extract
     type: YAML
     agents_count: 12
-    
+
   - directory: governance_core_bundle/
     description: Core governance system files
     files:
@@ -45,17 +45,17 @@ bundle_contents:
         description: Governance validation engine
         size_kb: 91
         lines: ~2500
-        
+
       - name: ledger_writer.py
         description: Immutable governance ledger
         size_kb: 54
         lines: ~1400
-        
+
       - name: AGENT_REGISTRY.json
         description: Canonical agent identity registry
         size_kb: 4
         version: "4.0.0"
-        
+
       - name: CANONICAL_CORRECTION_PACK_TEMPLATE.md
         description: Gold Standard correction template
         size_kb: 8
@@ -94,13 +94,13 @@ usage_instructions:
     This bundle provides sufficient context for external architectural review,
     governance understanding, and system comprehension without requiring
     full repository access or large file transfers.
-    
+
   contents_summary: >
     - repo_tree.txt: Navigate the full project structure
     - README_CONTEXT.md: Understand architecture and governance
     - agent_registry_snapshot.yaml: Review agent identities
     - governance_core_bundle/: Examine core validation logic
-    
+
   review_focus:
     - Governance validation flow
     - Agent identity model

@@ -15,7 +15,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 # ============================================================================
 # GOVERNANCE ROOTS OF TRUST
@@ -49,13 +49,13 @@ IMMUTABLE_CORE = [
 class GovernanceImmutabilityChecker:
     """Checks governance files for unauthorized modifications."""
 
-    def __init__(self, repo_root: Path, config_path: Path | None = None):
+    def __init__(self, repo_root: Path, config_path: Optional[Path] = None):
         self.repo_root = repo_root
         self.config = self._load_config(config_path)
         self.override_enabled = os.environ.get("GOVERNANCE_OVERRIDE", "").lower() == "true"
         self.override_reason = os.environ.get("GOVERNANCE_OVERRIDE_REASON", "")
 
-    def _load_config(self, config_path: Path | None) -> dict[str, Any]:
+    def _load_config(self, config_path: Optional[Path]) -> Dict[str, Any]:
         """Load configuration or use defaults."""
         if config_path and config_path.exists():
             with open(config_path) as f:
@@ -68,7 +68,7 @@ class GovernanceImmutabilityChecker:
             "immutable_core": IMMUTABLE_CORE,
         }
 
-    def _get_protected_files(self) -> list[str]:
+    def _get_protected_files(self) -> List[str]:
         """Get list of all protected files (including directory contents)."""
         protected = list(self.config.get("protected_files", []))
 
@@ -83,7 +83,7 @@ class GovernanceImmutabilityChecker:
 
         return protected
 
-    def _compute_file_hash(self, file_path: Path) -> str | None:
+    def _compute_file_hash(self, file_path: Path) -> Optional[str]:
         """Compute SHA-256 hash of a file."""
         if not file_path.exists():
             return None
@@ -94,7 +94,7 @@ class GovernanceImmutabilityChecker:
                 sha256.update(chunk)
         return sha256.hexdigest()
 
-    def _get_changed_files(self, base_ref: str = "origin/main") -> list[str]:
+    def _get_changed_files(self, base_ref: str = "origin/main") -> List[str]:
         """Get list of files changed compared to base reference."""
         try:
             result = subprocess.run(
@@ -115,7 +115,7 @@ class GovernanceImmutabilityChecker:
         except Exception:
             return []
 
-    def _get_deleted_files(self, base_ref: str = "origin/main") -> list[str]:
+    def _get_deleted_files(self, base_ref: str = "origin/main") -> List[str]:
         """Get list of files deleted compared to base reference."""
         try:
             result = subprocess.run(

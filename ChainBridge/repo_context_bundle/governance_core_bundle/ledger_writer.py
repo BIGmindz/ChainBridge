@@ -142,7 +142,7 @@ class LedgerMetadata:
     schema_version: str
 
 
-@dataclass 
+@dataclass
 class SequenceState:
     """Sequence tracking state."""
     next_sequence: int
@@ -178,7 +178,7 @@ AGENT_REGISTRY = {
 class GovernanceLedger:
     """
     Governance Ledger — Append-only record of all governance artifacts.
-    
+
     Invariants:
     - No deletions
     - No overwrites
@@ -186,22 +186,22 @@ class GovernanceLedger:
     - Every entry timestamped
     - Hash-chained (tamper-evident)
     """
-    
+
     # Validation tool version for audit trail
     VALIDATION_VERSION = "1.1.0-BSRG"
-    
+
     def __init__(self, ledger_path: Optional[Path] = None):
         self.ledger_path = ledger_path or LEDGER_PATH
         self.ledger_data = self._load_ledger()
-    
+
     def _load_ledger(self) -> dict:
         """Load ledger from disk."""
         if not self.ledger_path.exists():
             return self._create_empty_ledger()
-        
+
         with open(self.ledger_path, "r") as f:
             return json.load(f)
-    
+
     def _create_empty_ledger(self) -> dict:
         """Create empty ledger structure."""
         return {
@@ -222,45 +222,45 @@ class GovernanceLedger:
             "agent_sequences": {},
             "entries": []
         }
-    
+
     def _save_ledger(self):
         """Save ledger to disk (append-only semantics enforced)."""
         # Ensure directory exists
         self.ledger_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         with open(self.ledger_path, "w") as f:
             json.dump(self.ledger_data, f, indent=2)
-    
+
     def _get_next_sequence(self) -> int:
         """Get and increment sequence number."""
         seq = self.ledger_data["sequence_state"]["next_sequence"]
         self.ledger_data["sequence_state"]["next_sequence"] = seq + 1
         return seq
-    
+
     def _get_last_entry_hash(self) -> Optional[str]:
         """Get hash of the last entry (for chain linking)."""
         entries = self.ledger_data.get("entries", [])
         if not entries:
             return None
         return entries[-1].get("entry_hash")
-    
+
     def _compute_entry_hash(self, entry_dict: dict) -> str:
         """
         Compute SHA256 hash of entry for chain integrity.
-        
+
         Uses deterministic JSON serialization (sorted keys).
         Excludes entry_hash field from computation.
         """
         import hashlib
-        
+
         # Create copy without entry_hash for hashing
         hash_dict = {k: v for k, v in entry_dict.items() if k != "entry_hash"}
-        
+
         # Deterministic serialization
         canonical_json = json.dumps(hash_dict, sort_keys=True, separators=(',', ':'))
-        
+
         return hashlib.sha256(canonical_json.encode('utf-8')).hexdigest()
-    
+
     def _update_agent_sequences(self, gid: str, artifact_type: str):
         """Update per-agent sequence counters."""
         if gid not in self.ledger_data["agent_sequences"]:
@@ -270,7 +270,7 @@ class GovernanceLedger:
                 "correction_count": 0,
                 "positive_closure_count": 0
             }
-        
+
         if artifact_type == "PAC":
             self.ledger_data["agent_sequences"][gid]["pac_count"] += 1
         elif artifact_type == "WRAP":
@@ -280,11 +280,11 @@ class GovernanceLedger:
         elif artifact_type == "POSITIVE_CLOSURE":
             self.ledger_data["agent_sequences"][gid]["positive_closure_count"] = \
                 self.ledger_data["agent_sequences"][gid].get("positive_closure_count", 0) + 1
-    
+
     # ========================================================================
     # PUBLIC API — WRITE OPERATIONS
     # ========================================================================
-    
+
     def record_pac_issued(
         self,
         artifact_id: str,
@@ -307,7 +307,7 @@ class GovernanceLedger:
         self._append_entry(entry)
         self._update_agent_sequences(agent_gid, "PAC")
         return entry
-    
+
     def record_pac_executed(
         self,
         artifact_id: str,
@@ -329,7 +329,7 @@ class GovernanceLedger:
         )
         self._append_entry(entry)
         return entry
-    
+
     def record_wrap_submitted(
         self,
         artifact_id: str,
@@ -354,7 +354,7 @@ class GovernanceLedger:
         self._append_entry(entry)
         self._update_agent_sequences(agent_gid, "WRAP")
         return entry
-    
+
     def record_wrap_accepted(
         self,
         artifact_id: str,
@@ -377,7 +377,7 @@ class GovernanceLedger:
         )
         self._append_entry(entry)
         return entry
-    
+
     def record_correction_opened(
         self,
         artifact_id: str,
@@ -405,7 +405,7 @@ class GovernanceLedger:
         self._append_entry(entry)
         self._update_agent_sequences(agent_gid, "CORRECTION")
         return entry
-    
+
     def record_correction_closed(
         self,
         artifact_id: str,
@@ -430,7 +430,7 @@ class GovernanceLedger:
         )
         self._append_entry(entry)
         return entry
-    
+
     def record_positive_closure(
         self,
         artifact_id: str,
@@ -457,7 +457,7 @@ class GovernanceLedger:
         self._append_entry(entry)
         self._update_agent_sequences(agent_gid, "POSITIVE_CLOSURE")
         return entry
-    
+
     def record_validation_pass(
         self,
         artifact_id: str,
@@ -481,7 +481,7 @@ class GovernanceLedger:
         )
         self._append_entry(entry)
         return entry
-    
+
     def record_validation_fail(
         self,
         artifact_id: str,
@@ -507,11 +507,11 @@ class GovernanceLedger:
         )
         self._append_entry(entry)
         return entry
-    
+
     # ========================================================================
     # G2 LEARNING LEDGER OPERATIONS
     # ========================================================================
-    
+
     def record_correction_applied(
         self,
         artifact_id: str,
@@ -528,7 +528,7 @@ class GovernanceLedger:
     ) -> LedgerEntry:
         """
         Record a correction being applied — LEARNING EVENT.
-        
+
         This is a learning signal that records when an agent's work
         was corrected and they incorporated the feedback.
         """
@@ -549,7 +549,7 @@ class GovernanceLedger:
         self._append_entry(entry)
         self._update_learning_stats(agent_gid, "corrections_learned")
         return entry
-    
+
     def record_block_enforced(
         self,
         artifact_id: str,
@@ -564,7 +564,7 @@ class GovernanceLedger:
     ) -> LedgerEntry:
         """
         Record a governance block being enforced — LEARNING EVENT.
-        
+
         This is a learning signal that records when an agent's work
         was blocked by governance gates.
         """
@@ -586,7 +586,7 @@ class GovernanceLedger:
         self._append_entry(entry)
         self._update_learning_stats(agent_gid, "blocks_received")
         return entry
-    
+
     def record_learning_event(
         self,
         artifact_id: str,
@@ -603,7 +603,7 @@ class GovernanceLedger:
     ) -> LedgerEntry:
         """
         Record a generic learning event.
-        
+
         This is the universal learning signal that can capture
         any type of governance-triggered learning.
         """
@@ -624,7 +624,7 @@ class GovernanceLedger:
         self._append_entry(entry)
         self._update_learning_stats(agent_gid, "learning_events")
         return entry
-    
+
     def _create_learning_entry(
         self,
         entry_type: str,
@@ -662,7 +662,7 @@ class GovernanceLedger:
             authority_gid=authority_gid,
             violations_resolved=violations_resolved
         )
-    
+
     def _update_learning_stats(self, agent_gid: str, stat_type: str):
         """Update per-agent learning statistics."""
         if agent_gid not in self.ledger_data["agent_sequences"]:
@@ -672,7 +672,7 @@ class GovernanceLedger:
                 "correction_count": 0,
                 "positive_closure_count": 0
             }
-        
+
         # Initialize learning stats if not present
         if "learning_stats" not in self.ledger_data["agent_sequences"][agent_gid]:
             self.ledger_data["agent_sequences"][agent_gid]["learning_stats"] = {
@@ -680,10 +680,10 @@ class GovernanceLedger:
                 "blocks_received": 0,
                 "learning_events": 0
             }
-        
+
         self.ledger_data["agent_sequences"][agent_gid]["learning_stats"][stat_type] = \
             self.ledger_data["agent_sequences"][agent_gid]["learning_stats"].get(stat_type, 0) + 1
-    
+
     def get_learning_events_by_agent(self, agent_gid: str) -> list:
         """Get all learning events for a specific agent."""
         learning_types = [
@@ -696,12 +696,12 @@ class GovernanceLedger:
             e for e in self.ledger_data["entries"]
             if e.get("agent_gid") == agent_gid and e.get("entry_type") in learning_types
         ]
-    
+
     def get_agent_learning_summary(self, agent_gid: str) -> dict:
         """Get learning summary for an agent."""
         events = self.get_learning_events_by_agent(agent_gid)
         stats = self.ledger_data["agent_sequences"].get(agent_gid, {}).get("learning_stats", {})
-        
+
         return {
             "agent_gid": agent_gid,
             "total_learning_events": len(events),
@@ -710,11 +710,11 @@ class GovernanceLedger:
             "positive_closures": len([e for e in events if e.get("entry_type") == EntryType.POSITIVE_CLOSURE_ACKNOWLEDGED.value]),
             "events": events
         }
-    
+
     # ========================================================================
     # INTERNAL HELPERS
     # ========================================================================
-    
+
     def _create_entry(
         self,
         entry_type: str,
@@ -747,11 +747,11 @@ class GovernanceLedger:
             notes=notes,
             file_path=file_path
         )
-    
+
     def _append_entry(self, entry: LedgerEntry):
         """
         Append entry to ledger (immutable, hash-chained).
-        
+
         Hash Chain Implementation:
         1. Get prev_hash from last entry
         2. Create entry dict without entry_hash
@@ -762,26 +762,26 @@ class GovernanceLedger:
         # Get hash of previous entry for chain linking
         prev_hash = self._get_last_entry_hash()
         entry.prev_hash = prev_hash
-        
+
         # Convert to dict
         entry_dict = asdict(entry)
-        
+
         # Compute entry hash (without entry_hash field)
         entry_hash = self._compute_entry_hash(entry_dict)
         entry_dict["entry_hash"] = entry_hash
-        
+
         # Append to ledger
         self.ledger_data["entries"].append(entry_dict)
         self.ledger_data["sequence_state"]["last_entry_timestamp"] = entry.timestamp
         self.ledger_data["sequence_state"]["total_entries"] = len(self.ledger_data["entries"])
         self.ledger_data["sequence_state"]["last_entry_hash"] = entry_hash
-        
+
         self._save_ledger()
-    
+
     # ========================================================================
     # BSRG-01 OPERATIONS (PAC-ATLAS-P21-BSRG-PARSER-AND-LEDGER-IMMUTABILITY-01)
     # ========================================================================
-    
+
     def record_bsrg_review(
         self,
         artifact_id: str,
@@ -797,9 +797,9 @@ class GovernanceLedger:
     ) -> LedgerEntry:
         """
         Record a BSRG (Benson Self-Review Gate) review result.
-        
+
         This creates a tamper-evident audit trail entry for PAC reviews.
-        
+
         Args:
             artifact_id: The PAC ID being reviewed
             artifact_sha256: SHA256 hash of artifact content
@@ -811,7 +811,7 @@ class GovernanceLedger:
             checklist_results: Dict of checklist item results
             file_path: Path to the artifact file
             notes: Optional notes
-        
+
         Returns:
             The created LedgerEntry
         """
@@ -856,11 +856,11 @@ class GovernanceLedger:
             bsrg_checklist_results=checklist_results or {},
             validation_version=self.VALIDATION_VERSION
         )
-        
+
         self._append_entry(entry)
         self._update_bsrg_stats(reviewer_gid, status)
         return entry
-    
+
     def _update_bsrg_stats(self, agent_gid: str, status: str):
         """Update BSRG statistics for agent."""
         if agent_gid not in self.ledger_data["agent_sequences"]:
@@ -870,7 +870,7 @@ class GovernanceLedger:
                 "correction_count": 0,
                 "positive_closure_count": 0
             }
-        
+
         # Initialize BSRG stats if not present
         if "bsrg_stats" not in self.ledger_data["agent_sequences"][agent_gid]:
             self.ledger_data["agent_sequences"][agent_gid]["bsrg_stats"] = {
@@ -878,80 +878,80 @@ class GovernanceLedger:
                 "reviews_failed": 0,
                 "total_reviews": 0
             }
-        
+
         stats = self.ledger_data["agent_sequences"][agent_gid]["bsrg_stats"]
         stats["total_reviews"] += 1
         if status == "PASS":
             stats["reviews_passed"] += 1
         else:
             stats["reviews_failed"] += 1
-    
+
     def get_bsrg_reviews(self, artifact_id: Optional[str] = None) -> list:
         """Get BSRG review entries, optionally filtered by artifact."""
         entries = [
             e for e in self.ledger_data["entries"]
             if e.get("entry_type") == EntryType.BSRG_REVIEW.value
         ]
-        
+
         if artifact_id:
             entries = [e for e in entries if e.get("artifact_id") == artifact_id]
-        
+
         return entries
-    
+
     # ========================================================================
     # QUERY OPERATIONS
     # ========================================================================
-    
+
     def get_all_entries(self) -> list:
         """Get all ledger entries."""
         return self.ledger_data["entries"]
-    
+
     def get_entries_by_agent(self, agent_gid: str) -> list:
         """Get entries for a specific agent."""
         return [
             e for e in self.ledger_data["entries"]
             if e.get("agent_gid") == agent_gid
         ]
-    
+
     def get_entries_by_type(self, entry_type: str) -> list:
         """Get entries by type."""
         return [
             e for e in self.ledger_data["entries"]
             if e.get("entry_type") == entry_type
         ]
-    
+
     def get_entries_by_artifact(self, artifact_id: str) -> list:
         """Get all entries related to an artifact."""
         return [
             e for e in self.ledger_data["entries"]
             if e.get("artifact_id") == artifact_id or e.get("parent_artifact") == artifact_id
         ]
-    
+
     def get_agent_statistics(self) -> dict:
         """Get statistics per agent."""
         return self.ledger_data["agent_sequences"]
-    
+
     def get_sequence_state(self) -> dict:
         """Get current sequence state."""
         return self.ledger_data["sequence_state"]
-    
+
     # ========================================================================
     # VALIDATION OPERATIONS
     # ========================================================================
-    
+
     def validate_sequence_continuity(self) -> dict:
         """
         Validate that sequence numbers are continuous with no gaps.
-        
+
         Returns validation result.
         """
         entries = self.ledger_data["entries"]
         issues = []
-        
+
         for i, entry in enumerate(entries):
             expected_seq = i + 1
             actual_seq = entry.get("sequence", 0)
-            
+
             if actual_seq != expected_seq:
                 issues.append({
                     "type": "SEQUENCE_GAP",
@@ -960,39 +960,39 @@ class GovernanceLedger:
                     "entry_type": entry.get("entry_type"),
                     "artifact_id": entry.get("artifact_id")
                 })
-        
+
         return {
             "valid": len(issues) == 0,
             "total_entries": len(entries),
             "issues": issues
         }
-    
+
     def validate_hash_chain(self) -> dict:
         """
         Validate the integrity of the hash chain.
-        
+
         Detects:
         - Modified entries (hash mismatch)
         - Broken chain (prev_hash mismatch)
         - Missing hashes (legacy entries before hash-chain)
-        
+
         Returns validation result with detailed issues.
         """
         entries = self.ledger_data["entries"]
         issues = []
         prev_hash = None
         entries_with_hashes = 0
-        
+
         for i, entry in enumerate(entries):
             entry_hash = entry.get("entry_hash")
             entry_prev_hash = entry.get("prev_hash")
-            
+
             # Skip entries without hashes (legacy entries before v1.1.0)
             if entry_hash is None:
                 continue
-            
+
             entries_with_hashes += 1
-            
+
             # Recompute hash to verify integrity
             computed_hash = self._compute_entry_hash(entry)
             if computed_hash != entry_hash:
@@ -1005,7 +1005,7 @@ class GovernanceLedger:
                     "artifact_id": entry.get("artifact_id"),
                     "severity": "CRITICAL"
                 })
-            
+
             # Verify chain linkage
             if prev_hash is not None and entry_prev_hash != prev_hash:
                 issues.append({
@@ -1017,9 +1017,9 @@ class GovernanceLedger:
                     "artifact_id": entry.get("artifact_id"),
                     "severity": "CRITICAL"
                 })
-            
+
             prev_hash = entry_hash
-        
+
         return {
             "valid": len(issues) == 0,
             "total_entries": len(entries),
@@ -1028,19 +1028,19 @@ class GovernanceLedger:
             "no_tampering_detected": len([i for i in issues if i["type"] == "HASH_MISMATCH"]) == 0,
             "issues": issues
         }
-    
+
     def validate_ledger_integrity(self) -> dict:
         """
         Comprehensive ledger integrity validation.
-        
+
         Combines sequence continuity and hash chain validation.
         Returns overall integrity status.
         """
         sequence_result = self.validate_sequence_continuity()
         hash_result = self.validate_hash_chain()
-        
+
         overall_valid = sequence_result["valid"] and hash_result["valid"]
-        
+
         return {
             "valid": overall_valid,
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -1053,40 +1053,40 @@ class GovernanceLedger:
                 "verdict": "INTEGRITY_VERIFIED" if overall_valid else "TAMPERING_DETECTED"
             }
         }
-    
+
     def generate_audit_report(self) -> dict:
         """Generate comprehensive audit report."""
         entries = self.ledger_data["entries"]
-        
+
         # Count by type
         type_counts = {}
         for entry in entries:
             t = entry.get("entry_type", "UNKNOWN")
             type_counts[t] = type_counts.get(t, 0) + 1
-        
+
         # Count by agent
         agent_counts = {}
         for entry in entries:
             gid = entry.get("agent_gid", "UNKNOWN")
             agent_counts[gid] = agent_counts.get(gid, 0) + 1
-        
+
         # Count by artifact type
         artifact_counts = {}
         for entry in entries:
             at = entry.get("artifact_type", "UNKNOWN")
             artifact_counts[at] = artifact_counts.get(at, 0) + 1
-        
+
         # Validation results
         validation_pass = len([e for e in entries if e.get("validation_result") == "PASS"])
         validation_fail = len([e for e in entries if e.get("validation_result") == "FAIL"])
-        
+
         # Corrections
         corrections_opened = len([e for e in entries if e.get("entry_type") == "CORRECTION_OPENED"])
         corrections_closed = len([e for e in entries if e.get("entry_type") == "CORRECTION_CLOSED"])
-        
+
         # Positive closures
         positive_closures = len([e for e in entries if e.get("entry_type") == "POSITIVE_CLOSURE_ACKNOWLEDGED"])
-        
+
         return {
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "total_entries": len(entries),
@@ -1115,7 +1115,7 @@ class GovernanceLedger:
 def parse_artifact_id(artifact_id: str) -> dict:
     """
     Parse artifact ID into components.
-    
+
     Format: PAC-{AGENT}-{G{GENERATION}}-{PHASE}-{SEQUENCE}
     Example: PAC-ALEX-G1-PHASE-2-GOVERNANCE-LEDGER-01
     """
@@ -1128,13 +1128,13 @@ def parse_artifact_id(artifact_id: str) -> dict:
         "sequence": None,
         "valid": False
     }
-    
+
     # Try PAC format
     pac_match = re.match(
         r"(PAC|WRAP|CORRECTION)-([A-Z]+)-G(\d+)(?:-PHASE-(\d+))?-(.+?)(?:-(\d+))?$",
         artifact_id
     )
-    
+
     if pac_match:
         result["artifact_type"] = pac_match.group(1)
         result["agent_name"] = pac_match.group(2)
@@ -1143,7 +1143,7 @@ def parse_artifact_id(artifact_id: str) -> dict:
         result["description"] = pac_match.group(5)
         result["sequence"] = int(pac_match.group(6)) if pac_match.group(6) else None
         result["valid"] = True
-    
+
     return result
 
 
@@ -1164,9 +1164,9 @@ def main():
     parser = argparse.ArgumentParser(
         description="Governance Ledger Writer — Append-only governance artifact registry"
     )
-    
+
     subparsers = parser.add_subparsers(dest="command", help="Commands")
-    
+
     # Record PAC
     pac_parser = subparsers.add_parser("record-pac", help="Record a PAC")
     pac_parser.add_argument("--artifact-id", required=True, help="PAC ID")
@@ -1175,7 +1175,7 @@ def main():
     pac_parser.add_argument("--status", choices=["issued", "executed"], default="issued")
     pac_parser.add_argument("--file-path", help="File path")
     pac_parser.add_argument("--notes", help="Notes")
-    
+
     # Record WRAP
     wrap_parser = subparsers.add_parser("record-wrap", help="Record a WRAP")
     wrap_parser.add_argument("--artifact-id", required=True, help="WRAP ID")
@@ -1186,7 +1186,7 @@ def main():
     wrap_parser.add_argument("--ratified-by", help="Ratified by (for accepted)")
     wrap_parser.add_argument("--file-path", help="File path")
     wrap_parser.add_argument("--notes", help="Notes")
-    
+
     # Record validation
     val_parser = subparsers.add_parser("record-validation", help="Record validation result")
     val_parser.add_argument("--artifact-id", required=True, help="Artifact ID")
@@ -1197,7 +1197,7 @@ def main():
     val_parser.add_argument("--error-codes", nargs="*", help="Error codes (for fail)")
     val_parser.add_argument("--file-path", help="File path")
     val_parser.add_argument("--notes", help="Notes")
-    
+
     # Record positive closure
     pc_parser = subparsers.add_parser("record-positive-closure", help="Record positive closure")
     pc_parser.add_argument("--artifact-id", required=True, help="Artifact ID")
@@ -1207,22 +1207,22 @@ def main():
     pc_parser.add_argument("--closure-authority", required=True, help="Closure authority")
     pc_parser.add_argument("--file-path", help="File path")
     pc_parser.add_argument("--notes", help="Notes")
-    
+
     # Query commands
     query_parser = subparsers.add_parser("query", help="Query ledger")
     query_parser.add_argument("--by-agent", help="Filter by agent GID")
     query_parser.add_argument("--by-type", help="Filter by entry type")
     query_parser.add_argument("--by-artifact", help="Filter by artifact ID")
     query_parser.add_argument("--format", choices=["json", "text"], default="text")
-    
+
     # Report command
     report_parser = subparsers.add_parser("report", help="Generate audit report")
     report_parser.add_argument("--format", choices=["json", "text"], default="text")
-    
+
     # Validate command
     validate_parser = subparsers.add_parser("validate", help="Validate ledger integrity")
     validate_parser.add_argument("--format", choices=["json", "text"], default="text")
-    
+
     # Record BSRG command (PAC-ATLAS-P21-BSRG-PARSER-AND-LEDGER-IMMUTABILITY-01)
     bsrg_parser = subparsers.add_parser("record-bsrg", help="Record BSRG review result")
     bsrg_parser.add_argument("--artifact-id", required=True, help="PAC artifact ID")
@@ -1231,11 +1231,11 @@ def main():
     bsrg_parser.add_argument("--failed-items", nargs="*", help="Items that failed (for FAIL status)")
     bsrg_parser.add_argument("--file-path", help="Path to artifact file")
     bsrg_parser.add_argument("--notes", help="Optional notes")
-    
+
     args = parser.parse_args()
-    
+
     ledger = GovernanceLedger()
-    
+
     if args.command == "record-pac":
         if args.status == "issued":
             entry = ledger.record_pac_issued(
@@ -1254,7 +1254,7 @@ def main():
                 notes=args.notes
             )
         print(f"✅ Recorded PAC: {args.artifact_id} (sequence: {entry.sequence})")
-    
+
     elif args.command == "record-wrap":
         if args.status == "submitted":
             entry = ledger.record_wrap_submitted(
@@ -1275,7 +1275,7 @@ def main():
                 notes=args.notes
             )
         print(f"✅ Recorded WRAP: {args.artifact_id} (sequence: {entry.sequence})")
-    
+
     elif args.command == "record-validation":
         if args.result == "pass":
             entry = ledger.record_validation_pass(
@@ -1297,7 +1297,7 @@ def main():
                 notes=args.notes
             )
         print(f"✅ Recorded validation {args.result.upper()}: {args.artifact_id} (sequence: {entry.sequence})")
-    
+
     elif args.command == "record-positive-closure":
         entry = ledger.record_positive_closure(
             artifact_id=args.artifact_id,
@@ -1309,7 +1309,7 @@ def main():
             notes=args.notes
         )
         print(f"✅ Recorded positive closure: {args.artifact_id} (sequence: {entry.sequence})")
-    
+
     elif args.command == "query":
         if args.by_agent:
             entries = ledger.get_entries_by_agent(args.by_agent)
@@ -1319,17 +1319,17 @@ def main():
             entries = ledger.get_entries_by_artifact(args.by_artifact)
         else:
             entries = ledger.get_all_entries()
-        
+
         if args.format == "json":
             print(json.dumps(entries, indent=2))
         else:
             print(f"\n=== LEDGER QUERY RESULTS ({len(entries)} entries) ===\n")
             for entry in entries:
                 print(f"[{entry['sequence']:04d}] {entry['timestamp'][:19]} | {entry['entry_type']:30} | {entry['agent_gid']:7} | {entry['artifact_id']}")
-    
+
     elif args.command == "report":
         report = ledger.generate_audit_report()
-        
+
         if args.format == "json":
             print(json.dumps(report, indent=2))
         else:
@@ -1339,33 +1339,33 @@ def main():
             print(f"\nGenerated: {report['generated_at']}")
             print(f"Total Entries: {report['total_entries']}")
             print(f"\nSequence Continuity: {'✅ VALID' if report['sequence_continuity']['valid'] else '❌ INVALID'}")
-            
+
             print("\n--- Entry Type Distribution ---")
             for t, count in report['entry_type_distribution'].items():
                 print(f"  {t}: {count}")
-            
+
             print("\n--- Agent Distribution ---")
             for gid, count in report['agent_distribution'].items():
                 print(f"  {gid}: {count}")
-            
+
             print("\n--- Validation Summary ---")
             vs = report['validation_summary']
             print(f"  Pass: {vs['pass']}")
             print(f"  Fail: {vs['fail']}")
             print(f"  Pass Rate: {vs['pass_rate']}")
-            
+
             print("\n--- Correction Summary ---")
             cs = report['correction_summary']
             print(f"  Opened: {cs['opened']}")
             print(f"  Closed: {cs['closed']}")
             print(f"  Open: {cs['open']}")
-            
+
             print(f"\n--- Positive Closures: {report['positive_closures']} ---")
             print("=" * 70)
-    
+
     elif args.command == "validate":
         result = ledger.validate_ledger_integrity()
-        
+
         if args.format == "json":
             print(json.dumps(result, indent=2))
         else:
@@ -1376,7 +1376,7 @@ def main():
             print(f"\n--- Overall Status ---")
             print(f"  Verdict: {result['summary']['verdict']}")
             print(f"  Valid: {'✅ YES' if result['valid'] else '❌ NO'}")
-            
+
             print(f"\n--- Sequence Validation ---")
             seq = result['sequence_validation']
             print(f"  Total Entries: {seq['total_entries']}")
@@ -1384,7 +1384,7 @@ def main():
             if seq.get('issues'):
                 for issue in seq['issues'][:5]:
                     print(f"    ⚠ {issue['type']}: seq {issue.get('expected')} expected, got {issue.get('actual')}")
-            
+
             print(f"\n--- Hash Chain Validation ---")
             hc = result['hash_chain_validation']
             print(f"  Entries with Hashes: {hc['entries_with_hashes']}")
@@ -1393,11 +1393,11 @@ def main():
             if hc.get('issues'):
                 for issue in hc['issues'][:5]:
                     print(f"    ⚠ [{issue['severity']}] {issue['type']}: seq {issue.get('sequence')} - {issue.get('artifact_id', 'N/A')}")
-            
+
             print("=" * 70)
-        
+
         sys.exit(0 if result["valid"] else 1)
-    
+
     elif args.command == "record-bsrg":
         entry = ledger.record_bsrg_review(
             artifact_id=args.artifact_id,
@@ -1412,7 +1412,7 @@ def main():
             notes=args.notes
         )
         print(f"✅ Recorded BSRG review: {args.artifact_id} - {args.status} (sequence: {entry.sequence})")
-    
+
     else:
         parser.print_help()
 

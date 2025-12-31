@@ -155,10 +155,10 @@ class DemoRenderer:
         for r in results:
             if r.state in (GovState.FAIL, GovState.REVIEW) and r.next_action:
                 actions.append(f"  → {r.artifact_id}: {r.next_action}")
-        
+
         if not actions:
             return ""
-        
+
         header = f"{self.bold}NEXT ACTIONS{self.reset}" if self.mode != UIMode.PLAIN else "NEXT ACTIONS"
         return header + "\n" + "\n".join(actions)
 
@@ -176,11 +176,11 @@ class DemoRenderer:
         width = 80
         elapsed = time.time() - self.start_time if self.start_time else 0
         elapsed_str = f"Elapsed: {elapsed:.2f}s"
-        
+
         if self.mode == UIMode.PLAIN:
             status = "FAILURES DETECTED" if has_failures else "ALL CHECKS PASSED"
             return f"{'=' * width}\n<<< END | {status} | {elapsed_str} >>>\n{'=' * width}"
-        
+
         border = "═" * width
         if has_failures:
             status = f"\033[91m✖ FAILURES DETECTED{self.reset}"
