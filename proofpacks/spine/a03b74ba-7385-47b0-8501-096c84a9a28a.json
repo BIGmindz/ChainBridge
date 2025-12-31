@@ -1,0 +1,31 @@
+{
+  "action_details": {
+    "action": "rejection_recorded",
+    "decision_outcome": "reject",
+    "event_id": "853d6229-17de-4b95-87d5-5093bab339a5",
+    "payload": {
+      "requestor_id": "r1",
+      "vendor_id": "v1"
+    },
+    "reason": "Payment request missing 'amount' field",
+    "rule_applied": "payment_validation",
+    "timestamp": "2025-12-19T11:53:11.579633+00:00"
+  },
+  "action_error": null,
+  "action_status": "success",
+  "action_type": "record_rejection",
+  "decision_outcome": "reject",
+  "decision_reason": "Payment request missing 'amount' field",
+  "decision_rule": "payment_validation",
+  "event_hash": "3815d5bfcb56afaf62262346a8ff76d559f75e085e1a10d8d8f1fdfc295192c0",
+  "event_id": "853d6229-17de-4b95-87d5-5093bab339a5",
+  "event_payload": {
+    "requestor_id": "r1",
+    "vendor_id": "v1"
+  },
+  "event_timestamp": "2025-12-19T11:53:11.579520+00:00",
+  "event_type": "payment_request",
+  "proof_hash": "db44fa2bac4ee7778a5336904ff886990624f26b3c24dabdc04f3aa976bac1ad",
+  "proof_id": "a03b74ba-7385-47b0-8501-096c84a9a28a",
+  "timestamp": "2025-12-19T11:53:11.579889+00:00"
+}

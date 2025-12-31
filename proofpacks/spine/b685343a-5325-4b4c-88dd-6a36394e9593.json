@@ -1,0 +1,33 @@
+{
+  "action_details": {
+    "action": "escalation_recorded",
+    "decision_outcome": "escalate",
+    "escalation_required": true,
+    "event_id": "6e8469be-2f08-4c3f-82b8-040f29fda98c",
+    "payload_summary": {
+      "amount": 15000.0,
+      "vendor_id": "v1"
+    },
+    "reason": "Payment amount 15000.0 exceeds threshold 10000.0",
+    "rule_applied": "payment_threshold",
+    "timestamp": "2025-12-19T11:53:11.568516+00:00"
+  },
+  "action_error": null,
+  "action_status": "success",
+  "action_type": "record_escalation",
+  "decision_outcome": "escalate",
+  "decision_reason": "Payment amount 15000.0 exceeds threshold 10000.0",
+  "decision_rule": "payment_threshold",
+  "event_hash": "7a1751790dbd10a9f1a8fffc3a2e64d2756be0b12773695f9593a5b12de77a60",
+  "event_id": "6e8469be-2f08-4c3f-82b8-040f29fda98c",
+  "event_payload": {
+    "amount": 15000.0,
+    "requestor_id": "r1",
+    "vendor_id": "v1"
+  },
+  "event_timestamp": "2025-12-19T11:53:11.568494+00:00",
+  "event_type": "payment_request",
+  "proof_hash": "671e8b177eb79f730286a377b33d6f9568a53096188fd067ac27275d57157847",
+  "proof_id": "b685343a-5325-4b4c-88dd-6a36394e9593",
+  "timestamp": "2025-12-19T11:53:11.568685+00:00"
+}

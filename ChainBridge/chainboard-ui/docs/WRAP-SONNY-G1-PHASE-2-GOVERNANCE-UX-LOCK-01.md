@@ -201,7 +201,7 @@ The following actions are **explicitly prohibited** at the UI layer:
 
 ```
  ✓ src/components/governance/__tests__/GovernanceGuard.test.tsx (33 tests) 136ms
- 
+
  Test Files  1 passed (1)
       Tests  33 passed (33)
 ```

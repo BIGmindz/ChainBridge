@@ -1,0 +1,34 @@
+{
+  "action_details": {
+    "action": "escalation_recorded",
+    "decision_outcome": "requires_review",
+    "escalation_required": true,
+    "event_id": "9a82c06a-126e-4900-8d9d-493d6da7f144",
+    "explanation": "Payment of $15,000.00 USD exceeds auto-approval threshold of $10,000.00. Human review required.",
+    "payload_summary": {
+      "amount": 15000.0,
+      "vendor_id": "v1"
+    },
+    "rule_id": "RULE-PAYMENT-THRESHOLD-V1",
+    "timestamp": "2025-12-19T12:57:29.147777+00:00"
+  },
+  "action_error": null,
+  "action_status": "success",
+  "action_type": "record_escalation",
+  "decision_outcome": "requires_review",
+  "decision_reason": "Payment of $15,000.00 USD exceeds auto-approval threshold of $10,000.00. Human review required.",
+  "decision_rule": "RULE-PAYMENT-THRESHOLD-V1",
+  "event_hash": "3596640246b55fb6d42d8541a565fb75f74f9daa052b2d3c19f7db5f733d211b",
+  "event_id": "9a82c06a-126e-4900-8d9d-493d6da7f144",
+  "event_payload": {
+    "amount": 15000.0,
+    "currency": "USD",
+    "requestor_id": "r1",
+    "vendor_id": "v1"
+  },
+  "event_timestamp": "2025-12-19T12:57:29.147741+00:00",
+  "event_type": "payment_request",
+  "proof_hash": "ebe283f83d6beba108887b97d7fe97a36a9449cc076315bf521bc00b550a3c05",
+  "proof_id": "665495a4-f594-404e-96df-1747648ec3f2",
+  "timestamp": "2025-12-19T12:57:29.147862+00:00"
+}

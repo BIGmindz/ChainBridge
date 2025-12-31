@@ -1,0 +1,32 @@
+{
+  "action_details": {
+    "action": "approval_recorded",
+    "decision_outcome": "approve",
+    "event_id": "2169a0f0-8689-4e5f-a674-c0ec8396d082",
+    "payload_summary": {
+      "amount": 7500.0,
+      "vendor_id": "v-test"
+    },
+    "reason": "Payment amount 7500.0 within threshold 10000.0",
+    "rule_applied": "payment_threshold",
+    "timestamp": "2025-12-19T11:53:23.527706+00:00"
+  },
+  "action_error": null,
+  "action_status": "success",
+  "action_type": "record_approval",
+  "decision_outcome": "approve",
+  "decision_reason": "Payment amount 7500.0 within threshold 10000.0",
+  "decision_rule": "payment_threshold",
+  "event_hash": "897b58bcf957cc7b45fe30cccb0457325f0e62de9007d893306892cfe35bee02",
+  "event_id": "2169a0f0-8689-4e5f-a674-c0ec8396d082",
+  "event_payload": {
+    "amount": 7500.0,
+    "requestor_id": "r-test",
+    "vendor_id": "v-test"
+  },
+  "event_timestamp": "2025-12-19T11:53:23.527677+00:00",
+  "event_type": "payment_request",
+  "proof_hash": "1e9253d6472588186c9b1043ff2b11344d4ea15de16dc859cbf6308701656f92",
+  "proof_id": "f9d0487d-a823-48c0-ac84-6b79e9149f94",
+  "timestamp": "2025-12-19T11:53:23.528077+00:00"
+}

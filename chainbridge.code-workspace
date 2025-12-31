@@ -2,7 +2,7 @@
   // ============================================================================
   // CHAINBRIDGE CANONICAL WORKSPACE
   // ============================================================================
-  // 
+  //
   // PURPOSE:
   //   Eliminates VS Code "Unable to find workspace" warnings and standardizes
 
@@ -41,12 +41,12 @@
     // ========================================================================
     // PYTHON CONFIGURATION
     // ========================================================================
-    // 
+    //
     // Points to the canonical virtual environment at repo root.
     // This prevents interpreter ambiguity across the workspace.
     //
     "python.defaultInterpreterPath": "${workspaceFolder:ChainBridge (Root)}/.venv/bin/python",
-    
+
     // Use the root .venv for all Python operations
     "python.terminal.activateEnvironment": true,
     "python.terminal.activateEnvInCurrentTerminal": true,
@@ -67,7 +67,7 @@
     // Scoped to chainboard-ui folder for frontend development.
     //
     "typescript.tsdk": "${workspaceFolder:ChainBoard UI}/node_modules/typescript/lib",
-    
+
     // ========================================================================
     // EDITOR DEFAULTS
     // ========================================================================

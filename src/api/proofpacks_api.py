@@ -4,7 +4,7 @@ import json
 import re
 import uuid
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
@@ -47,7 +47,7 @@ def _safe_pack_path(pack_id: str) -> Path:
 # ---------- MODELS ----------
 class ProofEvent(BaseModel):
     event_type: str
-    timestamp: datetime.datetime | str
+    timestamp: Union[datetime.datetime, str]
     details: Optional[dict] = None
 
 

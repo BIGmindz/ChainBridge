@@ -1,0 +1,31 @@
+{
+  "action_details": {
+    "action": "acknowledgment_recorded",
+    "decision_outcome": "acknowledge",
+    "event_id": "5aca6145-17b1-47bd-be69-6261dc9b3050",
+    "payload_keys": [
+      "item_id",
+      "quantity"
+    ],
+    "reason": "Event type 'inventory_update' acknowledged",
+    "rule_applied": "default_acknowledge",
+    "timestamp": "2025-12-19T11:53:11.575956+00:00"
+  },
+  "action_error": null,
+  "action_status": "success",
+  "action_type": "record_acknowledgment",
+  "decision_outcome": "acknowledge",
+  "decision_reason": "Event type 'inventory_update' acknowledged",
+  "decision_rule": "default_acknowledge",
+  "event_hash": "77e55880fb689dd0f6b12f5d912667149504571c0ac1ac77f0f004d9b4ac8d98",
+  "event_id": "5aca6145-17b1-47bd-be69-6261dc9b3050",
+  "event_payload": {
+    "item_id": "abc",
+    "quantity": 10
+  },
+  "event_timestamp": "2025-12-19T11:53:11.575920+00:00",
+  "event_type": "inventory_update",
+  "proof_hash": "d1351513e0e765fe156ee6eef7786c1ff39e2ab09b593ff92e86c77ed6be7aff",
+  "proof_id": "f8ca82fc-5856-4a06-96ab-7bef99176365",
+  "timestamp": "2025-12-19T11:53:11.576243+00:00"
+}

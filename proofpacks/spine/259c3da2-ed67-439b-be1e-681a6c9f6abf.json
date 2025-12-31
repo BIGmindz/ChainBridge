@@ -1,0 +1,31 @@
+{
+  "action_details": {
+    "action": "error_recorded",
+    "decision_outcome": "error",
+    "event_id": "13feecde-5e6e-48ce-981e-21ab27079c78",
+    "explanation": "Input validation failed: Missing required field: amount",
+    "payload": {
+      "requestor_id": "r1",
+      "vendor_id": "v1"
+    },
+    "rule_id": "RULE-INPUT-VALIDATION-V1",
+    "timestamp": "2025-12-19T12:57:29.146268+00:00"
+  },
+  "action_error": null,
+  "action_status": "success",
+  "action_type": "record_error",
+  "decision_outcome": "error",
+  "decision_reason": "Input validation failed: Missing required field: amount",
+  "decision_rule": "RULE-INPUT-VALIDATION-V1",
+  "event_hash": "16ddf4a91c4bd2f81c1a15ffff1e37f02064e63b1396a7a4122f118d8ed8ef17",
+  "event_id": "13feecde-5e6e-48ce-981e-21ab27079c78",
+  "event_payload": {
+    "requestor_id": "r1",
+    "vendor_id": "v1"
+  },
+  "event_timestamp": "2025-12-19T12:57:29.146249+00:00",
+  "event_type": "payment_request",
+  "proof_hash": "fbac89175d8c99180fc7658a3c95db95ef943745ebf18f4c6a4f74ebdfc771f3",
+  "proof_id": "259c3da2-ed67-439b-be1e-681a6c9f6abf",
+  "timestamp": "2025-12-19T12:57:29.146383+00:00"
+}
