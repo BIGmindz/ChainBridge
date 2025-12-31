@@ -1,7 +1,7 @@
 /**
  * HUDStatCard - Minimal statistical display card for The OC
  * Pure presentational component with no business logic
- * 
+ *
  * NEUTRALIZED: PAC-BENSON-SONNY-ACTIVATION-BLOCK-UI-ENFORCEMENT-02
  * - No semantic colors
  * - No icons

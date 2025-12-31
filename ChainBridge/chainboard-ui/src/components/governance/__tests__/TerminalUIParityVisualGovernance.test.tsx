@@ -354,7 +354,7 @@ describe('GovernanceSignalRow', () => {
   it('calls onClick when clicked', () => {
     const handleClick = vi.fn();
     render(<GovernanceSignalRow {...defaultProps} onClick={handleClick} />);
-    
+
     // Find the clickable header area
     const header = screen.getByTestId('governance-signal-row').querySelector('[role="button"]');
     if (header) {
@@ -526,7 +526,7 @@ describe('Visual Separation - Governance vs Agent Colors', () => {
   it('WARN color is orange, NOT yellow (SONNY)', () => {
     render(<GovernanceSignalBadge status="WARN" />);
     const badge = screen.getByTestId('governance-signal-badge');
-    
+
     // Check that the badge uses orange styling, not yellow
     // The exact class check depends on implementation
     expect(badge.className).toContain('orange');
@@ -536,14 +536,14 @@ describe('Visual Separation - Governance vs Agent Colors', () => {
   it('FAIL color is rose, NOT pure red (BENSON)', () => {
     render(<GovernanceSignalBadge status="FAIL" />);
     const badge = screen.getByTestId('governance-signal-badge');
-    
+
     expect(badge.className).toContain('rose');
   });
 
   it('PASS color is emerald, NOT standard green', () => {
     render(<GovernanceSignalBadge status="PASS" />);
     const badge = screen.getByTestId('governance-signal-badge');
-    
+
     expect(badge.className).toContain('emerald');
   });
 });

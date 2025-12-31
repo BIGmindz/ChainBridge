@@ -36,7 +36,7 @@ export interface PacTimelineViewProps {
  */
 function getEntryIcon(type: LedgerEntryType): React.ReactNode {
   const iconClass = "w-4 h-4";
-  
+
   switch (type) {
     case 'PAC_CREATED':
       return (
@@ -215,7 +215,7 @@ function TimelineNodeItem({
         {!isFirst && (
           <div className="w-0.5 h-4 bg-gray-300 dark:bg-gray-600" />
         )}
-        
+
         {/* Node icon */}
         <div className={`
           w-8 h-8 rounded-full flex items-center justify-center

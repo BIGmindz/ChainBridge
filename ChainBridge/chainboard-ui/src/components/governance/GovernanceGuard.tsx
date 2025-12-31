@@ -83,7 +83,7 @@ export function GovernanceGuard({
   }
 
   return (
-    <div 
+    <div
       className={classNames('relative', disabledClassName)}
       title={showReason ? reason : undefined}
     >

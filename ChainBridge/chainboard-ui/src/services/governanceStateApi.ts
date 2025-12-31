@@ -37,7 +37,7 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8001';
  */
 function getMockGovernanceContext(): GovernanceContext {
   const now = new Date().toISOString();
-  
+
   return {
     state: 'OPEN' as GovernanceUIState,
     escalation_level: 'NONE' as EscalationLevel,
@@ -63,7 +63,7 @@ function getMockGovernanceContext(): GovernanceContext {
  */
 export function getMockBlockedContext(): GovernanceContext {
   const now = new Date().toISOString();
-  
+
   return {
     state: 'BLOCKED' as GovernanceUIState,
     escalation_level: 'L2_GUARDIAN' as EscalationLevel,

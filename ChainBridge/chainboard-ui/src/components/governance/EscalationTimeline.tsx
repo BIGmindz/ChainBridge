@@ -28,7 +28,7 @@ import {
   XCircle,
 } from 'lucide-react';
 
-import type { 
+import type {
   GovernanceEscalation,
   EscalationLevel,
 } from '../../types/governanceState';
@@ -107,10 +107,10 @@ const STATUS_CONFIG: Record<GovernanceEscalation['status'], {
 /**
  * Single escalation event in timeline.
  */
-function EscalationEvent({ 
+function EscalationEvent({
   escalation,
   isLast,
-}: { 
+}: {
   escalation: GovernanceEscalation;
   isLast: boolean;
 }) {
@@ -229,7 +229,7 @@ export function EscalationTimeline({
   className,
 }: EscalationTimelineProps) {
   // Filter if needed
-  let filtered = pendingOnly 
+  let filtered = pendingOnly
     ? escalations.filter(e => e.status === 'PENDING')
     : escalations;
 
@@ -275,7 +275,7 @@ export function EscalationSummaryBadge({
   className?: string;
 }) {
   const pending = escalations.filter(e => e.status === 'PENDING');
-  
+
   if (pending.length === 0) {
     return null;
   }
