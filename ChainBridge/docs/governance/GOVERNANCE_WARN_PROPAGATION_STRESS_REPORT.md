@@ -1,9 +1,9 @@
 # Governance WARN Propagation Stress Report
 
-> **PAC Reference:** PAC-MAGGIE-P41-GOVERNANCE-SIGNAL-AUTHORITY-BOUNDARIES-AND-WARN-PROPAGATION-LOCKDOWN-01  
-> **Author:** Maggie (GID-10) | 💗 MAGENTA  
-> **Authority:** BENSON (GID-00)  
-> **Date:** 2025-12-24  
+> **PAC Reference:** PAC-MAGGIE-P41-GOVERNANCE-SIGNAL-AUTHORITY-BOUNDARIES-AND-WARN-PROPAGATION-LOCKDOWN-01
+> **Author:** Maggie (GID-10) | 💗 MAGENTA
+> **Authority:** BENSON (GID-00)
+> **Date:** 2025-12-24
 > **Status:** STRESS_TESTED
 
 ---
@@ -28,7 +28,7 @@ STRESS_TEST_CONFIG:
   test_id: "WARN_STRESS_001"
   date: "2025-12-24"
   executor: "Maggie (GID-10)"
-  
+
   parameters:
     total_runs: 5000
     adversarial_scenarios: 12
@@ -36,7 +36,7 @@ STRESS_TEST_CONFIG:
     authority_spoofing_attempts: true
     cascade_depth_max: 10
     parallel_warn_injections: 100
-    
+
   environment:
     deterministic_mode: true
     random_seed: 42
@@ -76,28 +76,28 @@ STRESS_TEST_CONFIG:
 SCENARIO_ADV_001:
   name: "Direct WARN to Settlement"
   description: "Attempt to send WARN signal directly to settlement engine"
-  
+
   attack_vector:
     inject_point: "Settlement API endpoint"
     payload: "WARN signal with forged settlement authorization"
-    
+
   results:
     attempts: 500
     blocked: 500
     block_rate: 100.0%
-    
+
   blocking_mechanism:
     checkpoint: "CHECKPOINT_003"
     error_code: "GS_098"
     action: "EMERGENCY_HALT"
-    
+
   sample_block_log:
     timestamp: "2025-12-24T14:32:01.123Z"
     signal: "WARN"
     attempted_destination: "SETTLEMENT_ENGINE"
     result: "BLOCKED"
     error: "GS_098: WARN signal detected in settlement layer"
-    
+
   determinism_check:
     replays: 500
     identical_results: 500
@@ -110,23 +110,23 @@ SCENARIO_ADV_001:
 SCENARIO_ADV_002:
   name: "WARN Chain Authority Accumulation"
   description: "Chain multiple WARNs to attempt authority acquisition"
-  
+
   attack_vector:
     chain_length: 5
     pattern: "WARN → WARN → WARN → WARN → WARN → AUTHORITY_REQUEST"
-    
+
   results:
     attempts: 500
     blocked: 500
     block_rate: 100.0%
-    
+
   blocking_mechanism:
     checkpoint: "CASCADE_DETECTION"
     error_code: "GS_101"
     action: "BLOCK_AND_ALERT"
-    
+
   invariant_held: "SUM(WARN) ≠ AUTHORITY"
-  
+
   determinism_check:
     replays: 500
     identical_results: 500
@@ -139,22 +139,22 @@ SCENARIO_ADV_002:
 SCENARIO_ADV_003:
   name: "WARN Count Overflow"
   description: "Accumulate large number of WARNs to attempt authority"
-  
+
   attack_vector:
     warn_count: 1000
     claim: "1000 WARNs should equal 1 PASS"
-    
+
   results:
     attempts: 500
     blocked: 500
     block_rate: 100.0%
-    
+
   blocking_mechanism:
     rule: "CL_001 - WARN_ACCUMULATION_LOCK"
     invariant: "SUM(WARN, n) = WARN for all n"
-    
+
   monotonic_downgrade_held: true
-  
+
   determinism_check:
     replays: 500
     identical_results: 500
@@ -167,26 +167,26 @@ SCENARIO_ADV_003:
 SCENARIO_ADV_004:
   name: "WARN Timing Race Condition"
   description: "Rapid WARN submission to exploit potential race"
-  
+
   attack_vector:
     warn_burst_rate: "100 per 10ms"
     target: "Settlement boundary gate"
     exploit_theory: "Race between WARN check and settlement action"
-    
+
   results:
     attempts: 500
     blocked: 500
     block_rate: 100.0%
-    
+
   blocking_mechanism:
     rule: "CD_003 - WARN_TIMING_ATTACK_DETECTION"
     error_code: "GS_103"
     action: "RATE_LIMIT_AND_ALERT"
     min_interval_ms: 100
-    
+
   race_condition_possible: false
   reason: "Synchronous gate check before any settlement action"
-  
+
   determinism_check:
     replays: 500
     identical_results: 500
@@ -199,29 +199,29 @@ SCENARIO_ADV_004:
 SCENARIO_ADV_005:
   name: "WARN to PASS Upgrade"
   description: "Attempt to transition WARN to PASS without human review"
-  
+
   attack_vector:
     methods_tried:
       - "Direct state mutation"
       - "Signal field tampering"
       - "Timeout decay claim"
       - "Retry loop until PASS"
-      
+
   results:
     attempts: 500
     blocked: 500
     block_rate: 100.0%
-    
+
   blocking_mechanism:
     rule: "WL_001 - WARN_TO_PASS_LOCK"
     error_code: "GS_100"
     requirement: "HUMAN_REVIEW_APPROVAL"
-    
+
   invariants_held:
     - "WARN(t) → WARN(t+n) without human"
     - "RETRY(WARN) = WARN"
     - "TIMEOUT(WARN) = WARN"
-    
+
   determinism_check:
     replays: 500
     identical_results: 500
@@ -234,23 +234,23 @@ SCENARIO_ADV_005:
 SCENARIO_ADV_006:
   name: "WARN Escalation with Authority"
   description: "Escalate WARN to gain authority token"
-  
+
   attack_vector:
     escalation_path: "WARN → ESCALATE → AUTHORITY_REQUEST"
     claim: "Escalation should grant authority to resolve"
-    
+
   results:
     attempts: 500
     blocked: 500
     block_rate: 100.0%
-    
+
   blocking_mechanism:
     rule: "EL_001 - WARN_NO_ESCALATION_AUTHORITY"
     error_code: "GS_099"
-    
+
   allowed_escalation: ["HUMAN_REVIEW", "NOTIFICATION"]
   blocked_escalation: ["AUTHORITY_GRANT", "PRIVILEGE_ELEVATION"]
-  
+
   determinism_check:
     replays: 500
     identical_results: 500
@@ -263,22 +263,22 @@ SCENARIO_ADV_006:
 SCENARIO_ADV_007:
   name: "WARN Fanout to Merge Authority"
   description: "Split WARN across paths, merge with claimed authority"
-  
+
   attack_vector:
     fanout_count: 10
     pattern: "WARN → [WARN×10] → MERGE → CLAIM_PASS"
-    
+
   results:
     attempts: 400
     blocked: 400
     block_rate: 100.0%
-    
+
   blocking_mechanism:
     rule: "CD_002 - WARN_FANOUT_DETECTION"
     error_code: "GS_102"
-    
+
   merge_rule: "MERGE(WARN, WARN, ...) = WARN"
-  
+
   determinism_check:
     replays: 400
     identical_results: 400
@@ -291,26 +291,26 @@ SCENARIO_ADV_007:
 SCENARIO_ADV_008:
   name: "Deep WARN Cascade"
   description: "Create deep WARN cascade to obscure boundary"
-  
+
   attack_vector:
     cascade_depth: 10
     pattern: "WARN → WARN → ... (10 deep) → SETTLEMENT"
-    
+
   results:
     attempts: 400
     blocked: 400
     block_rate: 100.0%
-    
+
   blocking_mechanism:
     checkpoints: ["Every layer transition"]
     invariant: "WARN taint propagates through all hops"
-    
+
   taint_tracking:
     - "WARN at depth 0: tainted"
     - "WARN at depth 5: tainted"
     - "WARN at depth 10: tainted"
     - "Settlement boundary: BLOCKED (tainted)"
-    
+
   determinism_check:
     replays: 400
     identical_results: 400
@@ -323,26 +323,26 @@ SCENARIO_ADV_008:
 SCENARIO_ADV_009:
   name: "WARN with Spoofed Authority Header"
   description: "Attach forged authority header to WARN signal"
-  
+
   attack_vector:
     spoofed_fields:
       - "authority_token: BENSON_OVERRIDE"
       - "signal_type: PASS"  # Lie about type
       - "settlement_authorized: true"
-      
+
   results:
     attempts: 400
     blocked: 400
     block_rate: 100.0%
-    
+
   blocking_mechanism:
     verification: "Signal type from source, not header"
     cryptographic_check: "Authority token signature validation"
     type_enforcement: "Payload type assertion at runtime"
-    
+
   spoofing_detected: 400
   spoofing_succeeded: 0
-  
+
   determinism_check:
     replays: 400
     identical_results: 400
@@ -355,24 +355,24 @@ SCENARIO_ADV_009:
 SCENARIO_ADV_010:
   name: "WARN Layer Boundary Skip"
   description: "Skip governance layer, WARN direct to settlement"
-  
+
   attack_vector:
     path: "SIGNAL → SETTLEMENT (skip GOVERNANCE)"
-    
+
   results:
     attempts: 400
     blocked: 400
     block_rate: 100.0%
-    
+
   blocking_mechanism:
     rule: "BL_003 - SIGNAL_SETTLEMENT_BOUNDARY"
     error_code: "GS_096"
     enforcement: "HARD_GATE"
-    
+
   all_paths_blocked:
     - "SIGNAL → SETTLEMENT: BLOCKED"
     - "SIGNAL → GOVERNANCE → SETTLEMENT: BLOCKED (for WARN)"
-    
+
   determinism_check:
     replays: 400
     identical_results: 400
@@ -385,25 +385,25 @@ SCENARIO_ADV_010:
 SCENARIO_ADV_011:
   name: "WARN + PASS Composition Attack"
   description: "Combine WARN with PASS to claim PASS authority"
-  
+
   attack_vector:
     claim: "PASS + WARN should retain PASS authority"
     composition: "parallel_validate([PASS, WARN])"
-    
+
   results:
     attempts: 300
     blocked: 300
     block_rate: 100.0%
-    
+
   blocking_mechanism:
     rule: "MONOTONIC_DOWNGRADE"
     result: "PASS + WARN = WARN"
-    
+
   mathematical_proof:
     - "authority(PASS) = 3"
     - "authority(WARN) = 1"
     - "authority(PASS + WARN) = min(3, 1) = 1 = WARN"
-    
+
   determinism_check:
     replays: 300
     identical_results: 300
@@ -416,25 +416,25 @@ SCENARIO_ADV_011:
 SCENARIO_ADV_012:
   name: "WARN Stale Replay Attack"
   description: "Replay old WARN that was once near PASS"
-  
+
   attack_vector:
     old_warn_timestamp: "2025-12-20T00:00:00Z"
     claim: "This WARN was about to become PASS"
-    
+
   results:
     attempts: 300
     blocked: 300
     block_rate: 100.0%
-    
+
   blocking_mechanism:
     replay_detection: "Nonce + timestamp validation"
     rule: "WARN remains WARN regardless of age"
-    
+
   stale_handling:
     - "Old WARN: still WARN"
     - "Very old WARN: still WARN"
     - "Future-dated WARN: BLOCKED + ALERT"
-    
+
   determinism_check:
     replays: 300
     identical_results: 300
@@ -452,16 +452,16 @@ DETERMINISM_VERIFICATION:
   total_replays: 5000
   identical_results: 5000
   determinism_score: 1.0
-  
+
   verification_method:
     - "Hash of (input, output) pairs"
     - "Bit-identical comparison"
     - "Timing-independent verification"
-    
+
   random_seed_variations:
     seeds_tested: [42, 123, 456, 789, 1024]
     all_deterministic: true
-    
+
   parallel_execution:
     threads: 8
     race_conditions_detected: 0
@@ -474,7 +474,7 @@ REPLAY_HASHES:
   run_0001_hash: "a7f3b2c1d4e5f6a7b8c9d0e1f2a3b4c5"
   run_2500_hash: "a7f3b2c1d4e5f6a7b8c9d0e1f2a3b4c5"
   run_5000_hash: "a7f3b2c1d4e5f6a7b8c9d0e1f2a3b4c5"
-  
+
   all_hashes_match: true
 ```
 
@@ -500,20 +500,20 @@ SIGNAL_OUTCOME_PROOF_TABLE:
     release: {allowed: true, error_code: null}
     closure: {allowed: true, error_code: null}
     escalation_authority: {allowed: true, error_code: null}
-    
+
   WARN:
     settlement: {allowed: false, error_code: "GS_098"}
     release: {allowed: false, error_code: "GS_096"}
     closure: {allowed: false, error_code: "GS_097"}
     escalation_authority: {allowed: false, error_code: "GS_099"}
     override_request: {allowed: false, error_code: "GS_104"}
-    
+
   FAIL:
     settlement: {allowed: false, error_code: "TERMINAL"}
     release: {allowed: false, error_code: "TERMINAL"}
     closure: {allowed: false, error_code: "TERMINAL"}
     escalation_authority: {allowed: false, error_code: "TERMINAL"}
-    
+
   SKIP:
     settlement: {allowed: false, error_code: "NO_AUTHORITY"}
     release: {allowed: false, error_code: "NO_AUTHORITY"}
@@ -531,12 +531,12 @@ STRESS_TEST_SUMMARY:
   total_attempts: 5200
   total_blocked: 5200
   overall_block_rate: 100.0%
-  
+
   determinism:
     replays: 5000
     identical: 5000
     score: 1.0
-    
+
   error_codes_emitted:
     GS_096: 900  # Settlement boundary
     GS_097: 300  # Closure attempt
@@ -547,7 +547,7 @@ STRESS_TEST_SUMMARY:
     GS_102: 400  # Fanout attack
     GS_103: 500  # Timing attack
     GS_104: 0    # Override (implicit in other tests)
-    
+
   false_positives: 0
   false_negatives: 0
   silent_failures: 0
@@ -562,21 +562,21 @@ STRESS_TEST_CERTIFICATION:
   certified_by: "Maggie (GID-10)"
   authority: "BENSON (GID-00)"
   date: "2025-12-24"
-  
+
   assertions:
     - "WARN never reaches settlement: PROVEN"
     - "100% deterministic replay: PROVEN"
     - "No WARN→PASS transition: PROVEN"
     - "All violations emit error codes: PROVEN"
-    
+
   acceptance_criteria:
     all_met: true
-    
+
   status: "STRESS_TEST_PASSED"
 ```
 
 ---
 
-**Report Status:** CERTIFIED  
-**Authority:** BENSON (GID-00)  
+**Report Status:** CERTIFIED
+**Authority:** BENSON (GID-00)
 **Training Signal:** WARN_IS_NOT_AUTHORITY — Advisory signals must never move money.

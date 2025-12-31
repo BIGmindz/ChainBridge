@@ -1,9 +1,9 @@
 # Governance Signal Drift Report
 
-> **PAC Reference:** PAC-MAGGIE-P40-GOVERNANCE-SIGNAL-PERFORMANCE-REGRESSION-AND-DRIFT-DETECTION-01  
-> **Author:** Maggie (GID-10) | 💗 MAGENTA  
-> **Authority:** BENSON (GID-00)  
-> **Date:** 2025-12-24  
+> **PAC Reference:** PAC-MAGGIE-P40-GOVERNANCE-SIGNAL-PERFORMANCE-REGRESSION-AND-DRIFT-DETECTION-01
+> **Author:** Maggie (GID-10) | 💗 MAGENTA
+> **Authority:** BENSON (GID-00)
+> **Date:** 2025-12-24
 > **Status:** DRIFT_MONITORING_ACTIVE
 
 ---
@@ -30,13 +30,13 @@ DRIFT_VS_REGRESSION:
     detection: "Immediate (threshold-based)"
     example: "Latency increases from 23ms to 50ms (>100% increase)"
     action: "Block immediately"
-    
+
   drift:
     definition: "Distribution shifts without threshold violation"
     detection: "Statistical (distribution-based)"
     example: "Average latency increases from 23ms to 28ms to 32ms over 30 days"
     action: "Alert and investigate"
-    
+
   key_insight: |
     A system can drift toward regression without ever triggering
     a single regression alarm. By the time thresholds are violated,
@@ -52,25 +52,25 @@ DRIFT_CATEGORIES:
     description: "Signal meanings shift without label changes"
     example: "WARN increasingly used for what should be FAIL"
     detection: "Label distribution analysis"
-    
+
   LATENCY_DRIFT:
     id: "DFT_LAT"
     description: "Gradual latency increase below threshold"
     example: "P50 increases 1-2ms per week"
     detection: "Trend analysis"
-    
+
   DISTRIBUTION_DRIFT:
     id: "DFT_DIST"
     description: "Status/severity ratios shift gradually"
     example: "PASS rate slowly decreases from 46% to 42% to 38%"
     detection: "KS test on rolling windows"
-    
+
   COVERAGE_DRIFT:
     id: "DFT_COV"
     description: "Error codes shift without new validation rules"
     example: "New error codes appear, old ones disappear"
     detection: "Error code entropy analysis"
-    
+
   BOUNDARY_DRIFT:
     id: "DFT_BND"
     description: "Boundary behavior changes without threshold change"
@@ -92,19 +92,19 @@ STATISTICAL_TESTS:
     parameters:
       significance_level: 0.05
       drift_threshold: 0.01  # p-value below this = drift
-    
+
   kolmogorov_smirnov:
     purpose: "Detect continuous distribution shifts"
     applicable_to: ["latency_distribution", "boundary_proximity"]
     parameters:
       statistic_threshold: 0.15
-      
+
   mann_whitney_u:
     purpose: "Detect median shifts"
     applicable_to: ["latency_p50", "error_counts"]
     parameters:
       significance_level: 0.05
-      
+
   jensen_shannon_divergence:
     purpose: "Measure distribution divergence"
     applicable_to: ["severity_distribution", "error_code_distribution"]
@@ -117,24 +117,24 @@ STATISTICAL_TESTS:
 ```yaml
 TREND_ANALYSIS:
   method: "Linear regression on rolling windows"
-  
+
   parameters:
     window_size: 30  # days
     minimum_samples: 100
-    
+
   trend_detection:
     slope_significance: 0.05
     slope_threshold: 0.01  # 1% change per day
-    
+
   application:
     latency_trend:
       metric: "validation_latency_p50"
       alert_if: "slope > 0.5 ms/day"
-      
+
     pass_rate_trend:
       metric: "pass_rate_percentage"
       alert_if: "slope < -0.1 %/day"
-      
+
     critical_rate_trend:
       metric: "critical_severity_percentage"
       alert_if: "slope > 0.05 %/day"
@@ -145,21 +145,21 @@ TREND_ANALYSIS:
 ```yaml
 ENTROPY_ANALYSIS:
   purpose: "Detect information-theoretic shifts"
-  
+
   error_code_entropy:
     baseline_entropy: 2.8  # bits
     warning_if: "entropy_change > 0.3 bits"
     alert_if: "entropy_change > 0.5 bits"
-    
+
   interpretation:
     entropy_increase: "Error codes becoming more uniform (new codes emerging)"
     entropy_decrease: "Error codes concentrating (fewer unique errors)"
-    
+
   machine_readable: |
     def check_entropy_drift(current_distribution, baseline_distribution):
         current_entropy = -sum(p * log2(p) for p in current_distribution if p > 0)
         baseline_entropy = -sum(p * log2(p) for p in baseline_distribution if p > 0)
-        
+
         delta = abs(current_entropy - baseline_entropy)
         if delta > 0.5:
             return DriftResult(severity=ALERT, metric="entropy", delta=delta)
@@ -177,24 +177,24 @@ ENTROPY_ANALYSIS:
 ```yaml
 SEMANTIC_DRIFT_RULES:
   rule_id: "DFT_SEM_001"
-  
+
   detection_method:
     compare: "label_distribution_vs_severity_distribution"
-    
+
     expected_mapping:
       PASS: [NONE]
       WARN: [LOW, MEDIUM]
       FAIL: [HIGH, CRITICAL]
-      
+
     drift_indicators:
       - "WARN with HIGH severity increasing"
       - "FAIL with MEDIUM severity increasing"
       - "PASS with non-NONE severity"
-      
+
   thresholds:
     misalignment_warning: 2.0  # percentage
     misalignment_alert: 5.0  # percentage
-    
+
   machine_readable: |
     def detect_semantic_drift(current, baseline):
         warn_high_pct = count(WARN with HIGH) / total_warn * 100
@@ -213,29 +213,29 @@ SEMANTIC_DRIFT_RULES:
 ```yaml
 LATENCY_DRIFT_RULES:
   rule_id: "DFT_LAT_001"
-  
+
   monitoring:
     metric: "validation_latency_p50"
     window: "30 days rolling"
-    
+
   detection:
     trend_slope_warning: 0.3  # ms/day
     trend_slope_alert: 0.5    # ms/day
-    
+
     cumulative_drift_warning: 5  # ms over window
     cumulative_drift_alert: 10  # ms over window
-    
+
   not_triggered_by:
     single_spike: true
     outliers: true
-    
+
   machine_readable: |
     def detect_latency_drift(measurements, baseline):
         # Linear regression on 30-day window
         slope, intercept, r_value, p_value, std_err = linregress(
             range(len(measurements)), measurements
         )
-        
+
         if p_value < 0.05 and slope > 0.5:
             return DriftResult(
                 type=LATENCY_DRIFT,
@@ -250,25 +250,25 @@ LATENCY_DRIFT_RULES:
 ```yaml
 DISTRIBUTION_DRIFT_RULES:
   rule_id: "DFT_DIST_001"
-  
+
   status_distribution:
     method: "chi_square_rolling"
     window: "7 days"
     compare_to: "baseline"
-    
+
     warning_if: "p_value < 0.10"
     alert_if: "p_value < 0.05"
     drift_confirmed_if: "p_value < 0.01"
-    
+
   severity_distribution:
     method: "jensen_shannon_divergence"
     window: "7 days"
     compare_to: "baseline"
-    
+
     warning_if: "divergence > 0.05"
     alert_if: "divergence > 0.10"
     drift_confirmed_if: "divergence > 0.15"
-    
+
   machine_readable: |
     def detect_distribution_drift(current_dist, baseline_dist):
         # Chi-square test
@@ -276,7 +276,7 @@ DISTRIBUTION_DRIFT_RULES:
             f_obs=current_dist,
             f_exp=baseline_dist
         )
-        
+
         if p_value < 0.01:
             return DriftResult(
                 type=DISTRIBUTION_DRIFT,
@@ -299,28 +299,28 @@ DISTRIBUTION_DRIFT_RULES:
 ```yaml
 BOUNDARY_DRIFT_RULES:
   rule_id: "DFT_BND_001"
-  
+
   monitoring:
     boundary_proximity_distribution: "daily"
-    
+
   drift_indicators:
     clustering_increase:
       description: "More inputs near boundaries than baseline"
       baseline_boundary_pct: 11.0
       warning_if: "boundary_pct > 15.0"
       alert_if: "boundary_pct > 20.0"
-      
+
     clustering_decrease:
       description: "Fewer inputs near boundaries than baseline"
       warning_if: "boundary_pct < 5.0"
       interpretation: "May indicate input distribution shift"
-      
+
   machine_readable: |
     def detect_boundary_drift(current_proximity, baseline_proximity):
         current_boundary_pct = sum(
             p.within_1_field for p in current_proximity
         ) / len(current_proximity) * 100
-        
+
         if current_boundary_pct > 20.0:
             return DriftResult(
                 type=BOUNDARY_DRIFT,
@@ -340,26 +340,26 @@ BOUNDARY_DRIFT_RULES:
 ```yaml
 DRIFT_ALERT_BINDING:
   principle: "Drift detection must produce actionable alerts"
-  
+
   bindings:
     SEMANTIC_DRIFT:
       alert_channel: "governance-drift"
       escalation: AGENT_LEAD
       blocking: false
       action: INVESTIGATE
-      
+
     LATENCY_DRIFT:
       alert_channel: "performance-drift"
       escalation: INFRASTRUCTURE
       blocking: false
       action: INVESTIGATE
-      
+
     DISTRIBUTION_DRIFT:
       alert_channel: "governance-drift"
       escalation: BENSON_IF_CONFIRMED
       blocking: true_if_confirmed
       action: INVESTIGATE_AND_REPORT
-      
+
     BOUNDARY_DRIFT:
       alert_channel: "governance-drift"
       escalation: MAGGIE
@@ -372,25 +372,25 @@ DRIFT_ALERT_BINDING:
 ```yaml
 FAIL_CLOSED_BINDING:
   principle: "Confirmed drift triggers FAIL_CLOSED"
-  
+
   trigger_conditions:
     - condition: "distribution_drift_confirmed"
       action: FAIL_CLOSED
       reason: "Semantic meaning has shifted"
-      
+
     - condition: "latency_drift_slope > 1.0 ms/day"
       action: FAIL_CLOSED
       reason: "Unacceptable latency degradation trend"
-      
+
     - condition: "semantic_drift_misalignment > 10%"
       action: FAIL_CLOSED
       reason: "Label semantics have diverged"
-      
+
   blocking_behavior:
     ci_pipeline: BLOCKED
     merge_requests: BLOCKED
     deployments: BLOCKED
-    
+
   machine_readable: |
     def should_block_on_drift(drift_result):
         if drift_result.type == DISTRIBUTION_DRIFT and drift_result.status == DRIFT_CONFIRMED:
@@ -417,24 +417,24 @@ ESCALATION_CHAIN:
       trigger: "Drift warning (minor shift detected)"
       action: LOG_TO_DASHBOARD
       blocking: false
-      
+
     2:
       trigger: "Drift alert (significant shift detected)"
       action: NOTIFY_TEAM
       blocking: false
-      
+
     3:
       trigger: "Drift confirmed (statistical significance)"
       action: BLOCK_CI
       blocking: true
       escalation: AGENT_LEAD
-      
+
     4:
       trigger: "Drift causes regression threshold breach"
       action: FAIL_CLOSED
       blocking: true
       escalation: BENSON
-      
+
     5:
       trigger: "Drift indicates fundamental degradation"
       action: EMERGENCY_HALT
@@ -451,29 +451,29 @@ ESCALATION_CHAIN:
 ```yaml
 CURRENT_DRIFT_STATUS:
   as_of: "2025-12-24"
-  
+
   semantic_drift:
     status: NONE_DETECTED
     last_check: "2025-12-24T00:00:00Z"
     warn_high_misalignment: 0.0%
-    
+
   latency_drift:
     status: NONE_DETECTED
     last_check: "2025-12-24T00:00:00Z"
     trend_slope: 0.0 ms/day
     cumulative_shift: 0 ms
-    
+
   distribution_drift:
     status: NONE_DETECTED
     last_check: "2025-12-24T00:00:00Z"
     chi_square_p_value: 0.87
     js_divergence: 0.02
-    
+
   boundary_drift:
     status: NONE_DETECTED
     last_check: "2025-12-24T00:00:00Z"
     boundary_clustering: 11.0%
-    
+
   overall_status: STABLE
 ```
 
@@ -483,7 +483,7 @@ CURRENT_DRIFT_STATUS:
 HISTORICAL_DRIFT_EVENTS:
   total_events: 0
   events: []
-  
+
   note: |
     This is the initial baseline capture. No historical drift events
     exist yet. Future drift events will be logged here.
@@ -504,7 +504,7 @@ INVESTIGATION_PROTOCOL:
     4: "Determine if intentional or accidental"
     5: "Document findings in this report"
     6: "Decide: Fix, Accept (with PAC), or Monitor"
-    
+
   on_drift_confirmed:
     1: "Block CI pipeline"
     2: "Page agent lead"
@@ -521,18 +521,18 @@ RESOLUTION_OPTIONS:
     description: "Correct the source of drift"
     when: "Drift is accidental or undesirable"
     action: "Implement fix, verify against baseline"
-    
+
   ACCEPT_WITH_PAC:
     description: "Accept new distribution as intentional"
     when: "Drift is intentional system evolution"
     action: "Create PAC, update baseline, document rationale"
     requires: "BENSON approval"
-    
+
   MONITOR:
     description: "Continue monitoring without immediate action"
     when: "Drift is minor and may self-correct"
     action: "Increase monitoring frequency, set deadline"
-    
+
   ROLLBACK:
     description: "Revert to previous state"
     when: "Drift source identified and revertible"
@@ -550,7 +550,7 @@ EXECUTION_METRICS:
   regressions_detected: 0
   drift_events_detected: 0
   execution_time_ms: 3847
-  
+
   drift_detection_coverage:
     semantic_drift: MONITORED
     latency_drift: MONITORED
@@ -568,13 +568,13 @@ TRAINING_SIGNAL:
   signal_type: POSITIVE_REINFORCEMENT
   pattern: REGRESSION_IS_A_BUG
   lesson: "If performance degrades silently, governance has already failed."
-  
+
   learning_outcomes:
     - "Drift is more dangerous than regression because it avoids alarms"
     - "Statistical detection catches what threshold checks miss"
     - "Early drift detection prevents late-stage catastrophe"
     - "Baseline comparison must be continuous, not periodic"
-    
+
   propagate: true
   mandatory: true
 ```

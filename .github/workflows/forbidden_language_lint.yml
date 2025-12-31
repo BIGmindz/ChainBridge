@@ -53,7 +53,7 @@ jobs:
         run: |
           python scripts/forbidden_language_lint.py . --json > lint_results.json
           cat lint_results.json
-          
+
           # Check if lint passed
           passed=$(python -c "import json; print(json.load(open('lint_results.json'))['passed'])")
           if [ "$passed" = "False" ]; then
@@ -77,27 +77,27 @@ jobs:
           script: |
             const fs = require('fs');
             const results = JSON.parse(fs.readFileSync('lint_results.json', 'utf8'));
-            
+
             if (results.violations.length === 0) return;
-            
+
             let body = '## ⚠️ Forbidden Language Lint Failed\n\n';
             body += `Found **${results.violation_count}** violations in sensitive domain files.\n\n`;
             body += '### Violations\n\n';
             body += '| File | Line | Category | Pattern |\n';
             body += '|------|------|----------|--------|\n';
-            
+
             for (const v of results.violations.slice(0, 20)) {
               body += `| \`${v.file}\` | ${v.line} | ${v.category} | \`${v.pattern}\` |\n`;
             }
-            
+
             if (results.violations.length > 20) {
               body += `\n*...and ${results.violations.length - 20} more violations.*\n`;
             }
-            
+
             body += '\n### Reference\n';
             body += 'See [SENSITIVE_DOMAIN_GATEWAY.md](docs/governance/SENSITIVE_DOMAIN_GATEWAY.md) for forbidden patterns.\n';
             body += '\n**Contract:** INV-GOV-002 (Forbidden Language Patterns)';
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,

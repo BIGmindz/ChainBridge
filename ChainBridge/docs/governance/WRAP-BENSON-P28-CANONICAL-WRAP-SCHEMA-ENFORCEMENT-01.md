@@ -106,7 +106,7 @@ if is_wrap_artifact(content):
 
 This ensures:
 - ✅ WRAPs do NOT trigger BSRG validation
-- ✅ WRAPs do NOT trigger PAG-01 validation  
+- ✅ WRAPs do NOT trigger PAG-01 validation
 - ✅ WRAPs do NOT trigger Review Gate validation
 - ✅ WRAPs DO require BENSON_TRAINING_SIGNAL
 - ✅ WRAPs DO require FINAL_STATE
@@ -137,7 +137,7 @@ FILES_MODIFIED:
   - path: "docs/governance/CHAINBRIDGE_CANONICAL_WRAP_SCHEMA.md"
     action: "CREATED"
     purpose: "Define frozen WRAP schema v1.0.0"
-    
+
   - path: "tools/governance/gate_pack.py"
     action: "MODIFIED"
     changes:
@@ -145,7 +145,7 @@ FILES_MODIFIED:
       - "Added is_wrap_artifact() function"
       - "Added validate_wrap_schema() function"
       - "Added WRAP gate separation in validate_content()"
-      
+
   - path: "docs/governance/WRAP-SAM-G1-PHASE-2-SECURITY-INVARIANTS-01.md"
     action: "FIXED"
     purpose: "Added missing BENSON_TRAINING_SIGNAL"
@@ -178,18 +178,18 @@ FINAL_STATE:
   status: "COMPLETE"
   pac_id: "PAC-BENSON-P28-CANONICAL-WRAP-SCHEMA-ENFORCEMENT-01"
   wrap_id: "WRAP-BENSON-P28-CANONICAL-WRAP-SCHEMA-ENFORCEMENT-01"
-  
+
   schema_status:
     schema_id: "CHAINBRIDGE_CANONICAL_WRAP_SCHEMA"
     version: "1.0.0"
     status: "FROZEN"
     enforcement: "HARD_FAIL"
-    
+
   validation_status:
     files_validated: 46
     errors: 0
     verdict: "PASS"
-    
+
   gate_separation:
     wrap_triggers_bsrg: false
     wrap_triggers_pag01: false

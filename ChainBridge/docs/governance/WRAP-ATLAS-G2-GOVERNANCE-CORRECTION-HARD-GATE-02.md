@@ -81,23 +81,23 @@ VIOLATIONS_ADDRESSED:
   - violation_id: "V-001"
     description: "Correction packs could be submitted without GOLD_STANDARD_CHECKLIST block"
     remediation: "gate_pack.py now validates GOLD_STANDARD_CHECKLIST presence (G0_020)"
-    
+
   - violation_id: "V-002"
     description: "Correction packs could have unchecked checklist items"
     remediation: "All 13 checklist keys must be checked: true (G0_023, G0_024)"
-    
+
   - violation_id: "V-003"
     description: "Self-certification could be omitted"
     remediation: "SELF_CERTIFICATION block now mandatory (G0_021)"
-    
+
   - violation_id: "V-004"
     description: "Violations addressed section could be missing"
     remediation: "VIOLATIONS_ADDRESSED section now mandatory (G0_022)"
-    
+
   - violation_id: "V-005"
     description: "Pre-commit hook did not validate correction packs"
     remediation: "Task [5/5] added for HARD-GATE correction validation"
-    
+
   - violation_id: "V-006"
     description: "CI workflow did not enforce correction pack compliance"
     remediation: "governance-correction-pack-hardgate job added to governance_check.yml"

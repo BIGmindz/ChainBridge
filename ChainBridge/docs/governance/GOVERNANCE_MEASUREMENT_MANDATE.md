@@ -1,10 +1,10 @@
 # Governance Measurement Mandate
 
-> **Governance Document** — PAC-ALEX-P36  
-> **Version:** 1.0.0  
-> **Effective Date:** 2025-12-24  
-> **Authority:** Benson (GID-00)  
-> **Enforced By:** ALEX (GID-08)  
+> **Governance Document** — PAC-ALEX-P36
+> **Version:** 1.0.0
+> **Effective Date:** 2025-12-24
+> **Authority:** Benson (GID-00)
+> **Enforced By:** ALEX (GID-08)
 > **Status:** LOCKED / CANONICAL / MACHINE-ENFORCED
 
 ---
@@ -147,22 +147,22 @@ TRAINING_SIGNAL:
 def validate_measurement_mandate(artifact: dict) -> list[str]:
     """Validate measurement mandate compliance."""
     errors = []
-    
+
     # Check if executable
     is_executable = artifact.get("mode") == "EXECUTABLE"
-    
+
     if is_executable:
         # EXECUTION_METRICS required
         if "EXECUTION_METRICS" not in artifact:
             errors.append("[GS_070] EXECUTION_METRICS block missing")
-        
+
         # If metrics present, TRAINING_SIGNAL required
         has_metrics = "EXECUTION_METRICS" in artifact
         has_signal = "TRAINING_SIGNAL" in artifact
-        
+
         if has_metrics and not has_signal:
             errors.append("[GS_072] TRAINING_SIGNAL required when metrics present")
-    
+
     return errors
 ```
 
@@ -223,6 +223,6 @@ No Metrics = No Completion.
 
 ---
 
-**Authority:** PAC-ALEX-P36-GOVERNANCE-MEASUREMENT-ENFORCEMENT-AND-AGENT-LEARNING-MANDATE-01  
-**Enforced By:** gate_pack.py, pre-commit hooks, CI merge blockers  
+**Authority:** PAC-ALEX-P36-GOVERNANCE-MEASUREMENT-ENFORCEMENT-AND-AGENT-LEARNING-MANDATE-01
+**Enforced By:** gate_pack.py, pre-commit hooks, CI merge blockers
 **Status:** LOCKED — No amendments without BENSON (GID-00) authorization

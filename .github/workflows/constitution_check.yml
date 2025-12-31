@@ -1,7 +1,7 @@
 name: Constitution Check
 # PAC Reference: PAC-BENSON-CONSTITUTION-ENGINE-01
 # Classification: CRITICAL | Owner: BENSON (GID-00)
-# 
+#
 # This workflow enforces the Constitution Engine:
 # - Validates lock registry integrity
 # - Checks enforcement coverage
@@ -79,33 +79,33 @@ jobs:
 
           for lock in registry['locks']:
               lock_id = lock.get('lock_id', 'UNKNOWN')
-              
+
               # Check required fields
               for field in REQUIRED_LOCK_FIELDS:
                   if field not in lock:
                       errors.append(f"{lock_id}: Missing required field '{field}'")
-              
+
               # Validate severity
               severity = lock.get('severity')
               if severity and severity not in VALID_SEVERITIES:
                   errors.append(f"{lock_id}: Invalid severity '{severity}'")
-              
+
               # Validate type
               lock_type = lock.get('type')
               if lock_type and lock_type not in VALID_TYPES:
                   errors.append(f"{lock_id}: Invalid type '{lock_type}'")
-              
+
               # Check enforcement exists
               enforcement = lock.get('enforcement', [])
               if not enforcement:
                   errors.append(f"{lock_id}: No enforcement mechanism defined")
-              
+
               # Validate violation policy
               policy = lock.get('violation_policy', {})
               action = policy.get('action')
               if action and action not in VALID_ACTIONS:
                   errors.append(f"{lock_id}: Invalid violation action '{action}'")
-              
+
               # Check telemetry for CRITICAL locks
               if severity == 'CRITICAL' and policy.get('telemetry') != 'REQUIRED':
                   warnings.append(f"{lock_id}: CRITICAL lock should have REQUIRED telemetry")
@@ -138,7 +138,7 @@ jobs:
           for lock in registry['locks']:
               lock_id = lock.get('lock_id', 'UNKNOWN')
               enforcement = lock.get('enforcement', [])
-              
+
               if not enforcement:
                   locks_without_enforcement.append(lock_id)
 
@@ -168,20 +168,20 @@ jobs:
           changed_files = result.stdout.strip().split('\n')
 
           LOCK_REGISTRY = 'docs/constitution/LOCK_REGISTRY.yaml'
-          
+
           if LOCK_REGISTRY in changed_files:
               print("⚠️ Lock registry modified - checking for PAC reference...")
-              
+
               # Check PR description for PAC reference
               pr_body = os.environ.get('PR_BODY', '')
-              
+
               pac_pattern = re.compile(r'PAC-[A-Z]+-[A-Z0-9-]+', re.IGNORECASE)
               if not pac_pattern.search(pr_body):
                   print("❌ CONSTITUTION VIOLATION: Lock registry modified without PAC reference")
                   print("   Lock registry can only be modified via PAC")
                   print("   Add PAC reference to PR description")
                   sys.exit(1)
-              
+
               print("✅ PAC reference found for lock registry modification")
           else:
               print("✅ Lock registry not modified")
@@ -241,7 +241,7 @@ jobs:
               # Check for supersession PAC in PR description
               pr_body = os.environ.get('PR_BODY', '')
               supersession_pattern = re.compile(r'SUPERSESSION|LOCK-.*-\d{3}', re.IGNORECASE)
-              
+
               if not supersession_pattern.search(pr_body):
                   print("❌ FORBIDDEN ZONE VIOLATION:")
                   for v in violations:
@@ -265,13 +265,13 @@ jobs:
           python3 -c "
           import sys
           sys.path.insert(0, '.')
-          
+
           try:
               from core.governance.constitution_engine import ConstitutionEngine
-              
+
               engine = ConstitutionEngine()
               engine.load_registry()
-              
+
               # Validate enforcement coverage
               missing = engine.validate_enforcement_coverage()
               if missing:
@@ -279,14 +279,14 @@ jobs:
                   for lock_id in missing:
                       print(f'   - {lock_id}')
                   sys.exit(1)
-              
+
               # Get and print statistics
               stats = engine.get_statistics()
               print('✅ Constitution Engine validation passed')
               print(f'   Total active locks: {stats[\"total_locks\"]}')
               print(f'   By severity: {stats[\"by_severity\"]}')
               print(f'   Registry hash: {stats[\"registry_hash\"][:16]}...')
-              
+
           except ImportError as e:
               print(f'⚠️ Could not import Constitution Engine: {e}')
               print('   Falling back to YAML-only validation')
@@ -390,11 +390,11 @@ jobs:
 
           # Check PR description for PAC pattern
           pr_body = os.environ.get('PR_BODY', '')
-          
+
           # Look for PAC reference
           pac_pattern = re.compile(r'PAC-[A-Z]+-[A-Z0-9-]+', re.IGNORECASE)
           pac_match = pac_pattern.search(pr_body)
-          
+
           if not pac_match:
               # Not a PAC - check if it's a minor change
               if len(changed_files) <= 3 and not any(s in ['governance', 'gateway', 'constitution'] for s in affected_scopes):
@@ -426,7 +426,7 @@ jobs:
 
           # Check for missing acknowledgments
           missing_locks = required_locks - acknowledged_locks
-          
+
           if missing_locks:
               print("⚠️ Missing lock acknowledgments:")
               for lock_id in sorted(missing_locks):
@@ -560,13 +560,13 @@ jobs:
           echo "         CONSTITUTION ENGINE CHECK SUMMARY                  "
           echo "═══════════════════════════════════════════════════════════"
           echo ""
-          
+
           if [ "${{ needs.constitution-validation.result }}" == "success" ]; then
             echo "✅ Constitution Validation: PASSED"
           else
             echo "❌ Constitution Validation: FAILED"
           fi
-          
+
           if [ "${{ needs.pac-lock-acknowledgment.result }}" == "success" ]; then
             echo "✅ PAC Lock Acknowledgment: PASSED"
           elif [ "${{ needs.pac-lock-acknowledgment.result }}" == "skipped" ]; then
@@ -574,7 +574,7 @@ jobs:
           else
             echo "❌ PAC Lock Acknowledgment: FAILED"
           fi
-          
+
           if [ "${{ needs.lock-monotonicity.result }}" == "success" ]; then
             echo "✅ Lock Monotonicity: PASSED"
           elif [ "${{ needs.lock-monotonicity.result }}" == "skipped" ]; then
@@ -582,10 +582,10 @@ jobs:
           else
             echo "❌ Lock Monotonicity: FAILED"
           fi
-          
+
           echo ""
           echo "═══════════════════════════════════════════════════════════"
-          
+
           # Fail if constitution-validation failed (critical)
           if [ "${{ needs.constitution-validation.result }}" != "success" ]; then
             exit 1

@@ -1,9 +1,9 @@
 # Governance WARN Lock Rules
 
-> **PAC Reference:** PAC-MAGGIE-P41-GOVERNANCE-SIGNAL-AUTHORITY-BOUNDARIES-AND-WARN-PROPAGATION-LOCKDOWN-01  
-> **Author:** Maggie (GID-10) | 💗 MAGENTA  
-> **Authority:** BENSON (GID-00)  
-> **Date:** 2025-12-24  
+> **PAC Reference:** PAC-MAGGIE-P41-GOVERNANCE-SIGNAL-AUTHORITY-BOUNDARIES-AND-WARN-PROPAGATION-LOCKDOWN-01
+> **Author:** Maggie (GID-10) | 💗 MAGENTA
+> **Authority:** BENSON (GID-00)
+> **Date:** 2025-12-24
 > **Status:** ENFORCED
 
 ---
@@ -23,7 +23,7 @@ WARN_LOCK_SCHEMA:
   version: "1.0.0"
   authority: "BENSON (GID-00)"
   immutable: true
-  
+
   rule_types:
     - "TRANSITION_LOCK"
     - "BOUNDARY_LOCK"
@@ -47,7 +47,7 @@ TRANSITION_LOCKS:
     allowed: false
     requires: "HUMAN_REVIEW_APPROVAL"
     error_code: "GS_100"
-    
+
   WARN_TO_RELEASE_LOCK:
     rule_id: "WL_002"
     description: "WARN cannot authorize fund release"
@@ -56,7 +56,7 @@ TRANSITION_LOCKS:
     allowed: false
     requires: null  # No path exists
     error_code: "GS_096"
-    
+
   WARN_TO_SETTLE_LOCK:
     rule_id: "WL_003"
     description: "WARN cannot authorize settlement"
@@ -65,7 +65,7 @@ TRANSITION_LOCKS:
     allowed: false
     requires: null  # No path exists
     error_code: "GS_098"
-    
+
   WARN_TO_ESCALATION_AUTHORITY_LOCK:
     rule_id: "WL_004"
     description: "WARN cannot grant escalation authority"
@@ -74,7 +74,7 @@ TRANSITION_LOCKS:
     allowed: false
     requires: null  # No path exists
     error_code: "GS_099"
-    
+
   WARN_TO_CLOSURE_LOCK:
     rule_id: "WL_005"
     description: "WARN cannot trigger POSITIVE_CLOSURE"
@@ -93,22 +93,22 @@ WARN_VALID_TRANSITIONS:
     rule_id: "WL_010"
     allowed: true
     destination: "AUDIT_LOG"
-    
+
   WARN_TO_MONITORED:
     rule_id: "WL_011"
     allowed: true
     destination: "MONITORING_SYSTEM"
-    
+
   WARN_TO_QUEUED:
     rule_id: "WL_012"
     allowed: true
     destination: "HUMAN_REVIEW_QUEUE"
-    
+
   WARN_TO_DISPLAYED:
     rule_id: "WL_013"
     allowed: true
     destination: "DASHBOARD"
-    
+
   WARN_TO_REMEDIATED:
     rule_id: "WL_014"
     allowed: true
@@ -131,7 +131,7 @@ BOUNDARY_LOCKS:
     warn_allowed: true
     allowed_purposes: ["LOGGING", "DISPLAY", "METRICS"]
     blocked_purposes: ["AUTHORITY_GRANT", "STATE_CHANGE"]
-    
+
   GOVERNANCE_SETTLEMENT_BOUNDARY:
     rule_id: "BL_002"
     description: "WARN cannot cross into SETTLEMENT layer"
@@ -141,7 +141,7 @@ BOUNDARY_LOCKS:
     blocked_purposes: ["ALL"]
     error_code: "GS_098"
     enforcement: "HARD_GATE"
-    
+
   SIGNAL_SETTLEMENT_BOUNDARY:
     rule_id: "BL_003"
     description: "WARN cannot bypass GOVERNANCE to reach SETTLEMENT"
@@ -158,17 +158,17 @@ BOUNDARY_LOCKS:
 ```yaml
 BOUNDARY_ENFORCEMENT_MATRIX:
   # [Source Layer, Target Layer, Signal] → Decision
-  
+
   SIGNAL_GOVERNANCE_PASS: "ALLOW"
   SIGNAL_GOVERNANCE_WARN: "ALLOW_LIMITED"
   SIGNAL_GOVERNANCE_FAIL: "ALLOW"
   SIGNAL_GOVERNANCE_SKIP: "ALLOW"
-  
+
   GOVERNANCE_SETTLEMENT_PASS: "ALLOW"
   GOVERNANCE_SETTLEMENT_WARN: "BLOCK"
   GOVERNANCE_SETTLEMENT_FAIL: "BLOCK"
   GOVERNANCE_SETTLEMENT_SKIP: "BLOCK"
-  
+
   SIGNAL_SETTLEMENT_PASS: "BLOCK"  # Must go through GOVERNANCE
   SIGNAL_SETTLEMENT_WARN: "BLOCK"
   SIGNAL_SETTLEMENT_FAIL: "BLOCK"
@@ -188,19 +188,19 @@ CASCADE_LOCKS:
     description: "Multiple WARNs cannot accumulate to form authority"
     rule: "SUM(WARN) ≠ PASS"
     enforcement: "INVARIANT"
-    
+
   WARN_MAJORITY_LOCK:
     rule_id: "CL_002"
     description: "Majority WARN cannot override single FAIL"
     rule: "COUNT(WARN) > COUNT(FAIL) ⇏ PASS"
     enforcement: "INVARIANT"
-    
+
   WARN_TIME_DECAY_LOCK:
     rule_id: "CL_003"
     description: "WARN cannot decay into PASS over time"
     rule: "WARN(t) → WARN(t+n) OR HUMAN_REVIEWED"
     enforcement: "STATE_MACHINE"
-    
+
   WARN_RETRY_LOCK:
     rule_id: "CL_004"
     description: "Repeated WARN does not become PASS"
@@ -218,14 +218,14 @@ CASCADE_DETECTION:
     pattern: "WARN → WARN → WARN → {PASS|RELEASE|SETTLE}"
     action: "BLOCK_AND_ALERT"
     alert_code: "GS_101"
-    
+
   WARN_FANOUT_DETECTION:
     rule_id: "CD_002"
     description: "Detect WARN fanout attempting to bypass gates"
     pattern: "WARN → [WARN, WARN, WARN] → MERGE → {PASS}"
     action: "BLOCK_AND_ALERT"
     alert_code: "GS_102"
-    
+
   WARN_TIMING_ATTACK_DETECTION:
     rule_id: "CD_003"
     description: "Detect rapid WARN submission attempting race condition"
@@ -249,14 +249,14 @@ ESCALATION_LOCKS:
     rule: "WARN + ESCALATE ⇏ AUTHORITY_GRANT"
     allowed_escalation_types: ["HUMAN_REVIEW", "NOTIFICATION"]
     blocked_escalation_types: ["AUTHORITY_GRANT", "PRIVILEGE_ELEVATION"]
-    
+
   WARN_ESCALATION_CEILING:
     rule_id: "EL_002"
     description: "WARN escalation has a ceiling"
     max_escalation_level: "AGENT_LEAD"
     cannot_reach: ["BENSON_AUTHORITY", "EXECUTIVE_AUTHORITY"]
     reason: "Advisory signals cannot demand executive attention"
-    
+
   WARN_NO_OVERRIDE_REQUEST:
     rule_id: "EL_003"
     description: "WARN cannot request gate override"
@@ -312,7 +312,7 @@ WARN_TRANSITION_RULES: Tuple[TransitionRule, ...] = (
     TransitionRule(Signal.WARN, Destination.MONITOR, True, None),
     TransitionRule(Signal.WARN, Destination.DASHBOARD, True, None),
     TransitionRule(Signal.WARN, Destination.REVIEW_QUEUE, True, None),
-    
+
     # Blocked transitions
     TransitionRule(Signal.WARN, Destination.RELEASE, False, "GS_096"),
     TransitionRule(Signal.WARN, Destination.SETTLE, False, "GS_098"),
@@ -354,8 +354,8 @@ def check_warn_boundary(source: Layer, target: Layer) -> Tuple[bool, Optional[st
     FAIL_CLOSED: unknown boundary = blocked.
     """
     for rule in WARN_BOUNDARY_RULES:
-        if (rule.source_layer == source and 
-            rule.target_layer == target and 
+        if (rule.source_layer == source and
+            rule.target_layer == target and
             rule.signal == Signal.WARN):
             return (rule.allowed, rule.error_code)
     # FAIL_CLOSED: unknown = blocked
@@ -367,18 +367,18 @@ def validate_warn_cascade(signal_chain: Tuple[Signal, ...]) -> Tuple[bool, Optio
     Returns (valid, error_code).
     """
     warn_count = sum(1 for s in signal_chain if s == Signal.WARN)
-    
+
     # Multiple WARNs cannot combine to form authority
     if warn_count > 1:
         # Check if chain ends in authority-granting state
         # (This would be detected at boundary, but catch early)
         pass
-    
+
     # WARN anywhere in chain taints the chain for settlement
     if Signal.WARN in signal_chain:
         # Chain cannot reach settlement
         return (True, None)  # Valid = stays advisory
-    
+
     return (True, None)
 
 # MONOTONIC DOWNGRADE RULE
@@ -405,30 +405,30 @@ def monotonic_downgrade(signals: Tuple[Signal, ...]) -> Signal:
 ```yaml
 MONOTONIC_DOWNGRADE_RULES:
   definition: "Signal authority can only decrease through composition"
-  
+
   authority_order:
     - PASS: 3  # Highest authority
     - WARN: 1  # Advisory only (not 2, to emphasize gap)
     - FAIL: 0  # Terminal
     - SKIP: 0  # No authority
-    
+
   composition_rules:
     PASS + PASS: PASS
     PASS + WARN: WARN  # Downgrade
     PASS + FAIL: FAIL  # Downgrade
     PASS + SKIP: PASS
-    
+
     WARN + WARN: WARN
     WARN + FAIL: FAIL  # Downgrade
     WARN + SKIP: WARN
-    
+
     FAIL + FAIL: FAIL
     FAIL + SKIP: FAIL
-    
+
     SKIP + SKIP: SKIP
-    
+
   invariant: "For any composition C(a, b): authority(C) <= min(authority(a), authority(b))"
-  
+
   warn_specific_invariant: "WARN + X != PASS for any X"
 ```
 
@@ -457,21 +457,21 @@ ENFORCEMENT_CHECKPOINTS:
   CHECKPOINT_001:
     location: "gate_pack.py validation output"
     check: "WARN signals tagged with ADVISORY_ONLY flag"
-    
+
   CHECKPOINT_002:
     location: "Governance layer entry"
     check: "WARN signals routed to advisory handlers only"
-    
+
   CHECKPOINT_003:
     location: "Settlement boundary gate"
     check: "Assert signal != WARN"
     action_on_fail: "EMERGENCY_HALT + GS_098"
-    
+
   CHECKPOINT_004:
     location: "Authority token issuance"
     check: "Assert source signal != WARN"
     action_on_fail: "BLOCK + GS_099"
-    
+
   CHECKPOINT_005:
     location: "POSITIVE_CLOSURE evaluation"
     check: "Assert all signals == PASS"
@@ -499,7 +499,7 @@ WARN_LOCK_ERROR_CODES:
 
 ---
 
-**Ruleset Status:** ENFORCED  
-**Authority:** BENSON (GID-00)  
-**Immutable:** true  
+**Ruleset Status:** ENFORCED
+**Authority:** BENSON (GID-00)
+**Immutable:** true
 **Replay-Safe:** true

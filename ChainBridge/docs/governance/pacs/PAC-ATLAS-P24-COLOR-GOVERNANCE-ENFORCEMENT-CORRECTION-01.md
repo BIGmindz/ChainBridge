@@ -206,8 +206,8 @@ SELF_CERTIFICATION:
   gid: GID-05
   certified: true
   statement: >
-    I, ATLAS (GID-05), certify that this reissued correction pack fully complies 
-    with the ChainBridge Gold Standard, agent color governance requirements, and 
+    I, ATLAS (GID-05), certify that this reissued correction pack fully complies
+    with the ChainBridge Gold Standard, agent color governance requirements, and
     all enforced hard gates. All violations (GS_030, GS_031, GS_032) have been resolved.
   timestamp: 2025-12-24T17:30:00Z
 ```

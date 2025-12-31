@@ -118,22 +118,22 @@ RISK_INPUT_CONTRACT = {
     "is_hazmat": bool,            # Hazardous materials
     "is_temp_control": bool,      # Temperature controlled
     "expected_transit_days": int, # Planned duration
-    
+
     # Counterparty History (REQUIRED)
     "carrier_id": str,
     "carrier_incident_rate_90d": float,  # 0.0-1.0
     "carrier_tenure_days": int,
-    
+
     # Lane/Route Context (REQUIRED)
     "origin": str,
     "destination": str,
     "lane_risk_index": float,     # 0.0-1.0
     "border_crossing_count": int,
-    
+
     # Real-time Signals (OPTIONAL)
     "recent_delay_events": int,
     "iot_alert_count": int,
-    
+
     # External Signals (BOUNDED)
     "external_signals": Dict[str, float],  # Max 10 signals
 }
@@ -147,7 +147,7 @@ RISK_OUTPUT_CONTRACT = {
     "risk_score": float,          # 0-100 scale
     "risk_band": Literal["LOW", "MEDIUM", "HIGH", "CRITICAL"],
     "confidence": float,          # 0.0-1.0
-    
+
     # Explainability (REQUIRED - NEVER EMPTY)
     "reason_codes": List[str],    # Enumerated reasons
     "top_factors": List[{
@@ -155,11 +155,11 @@ RISK_OUTPUT_CONTRACT = {
         "contribution": float,    # Signed contribution
         "direction": Literal["INCREASES_RISK", "DECREASES_RISK"],
     }],
-    
+
     # Versioning (REQUIRED)
     "model_version": str,         # Immutable version tag
     "data_version": str,          # Training data version
-    
+
     # Audit (REQUIRED)
     "assessed_at": str,           # ISO-8601 UTC
     "evaluation_id": str,         # Unique scoring event ID
@@ -193,10 +193,10 @@ MONOTONIC_CONSTRAINTS {
     "value_usd",
     "lane_risk_index"
   ]
-  
+
   # Missing data MUST increase uncertainty, not optimism
   missing_data_policy: "INCREASE_UNCERTAINTY"
-  
+
   # No feature can decrease risk below baseline
   floor_policy: "BASELINE_RISK_PRESERVED"
 }
@@ -220,7 +220,7 @@ CALIBRATION_POLICY {
   # Calibration curves stored as versioned artifacts
   artifact_type: "JSON"
   storage: "chainiq-service/calibration/"
-  
+
   # Calibration metadata
   required_fields: [
     "model_version",
@@ -230,7 +230,7 @@ CALIBRATION_POLICY {
     "brier_score",
     "ece_score"  # Expected Calibration Error
   ]
-  
+
   # Recalibration triggers
   recalibration_threshold: 0.05  # ECE > 5%
 }
@@ -242,7 +242,7 @@ CALIBRATION_POLICY {
 DRIFT_POLICY {
   # Drift detection runs continuously
   detection_frequency: "HOURLY"
-  
+
   # Thresholds (from drift_engine.py)
   thresholds: {
     "STABLE": 0.05,    # 0-5% drift
@@ -251,7 +251,7 @@ DRIFT_POLICY {
     "SEVERE": 0.35,    # 20-35% drift
     "CRITICAL": 1.0    # 35%+ drift
   }
-  
+
   # CRITICAL RULE: Drift ESCALATES, never auto-corrects
   auto_correction: "FORBIDDEN"
   escalation_path: "DRIFT → ALERT → HUMAN_REVIEW → RETRAIN_DECISION"
@@ -278,13 +278,13 @@ DRIFT_POLICY {
 RISK_PDO_BINDING {
   # ChainIQ provides METADATA to PDO
   binding_type: "METADATA_ONLY"
-  
+
   # ChainIQ NEVER blocks execution
   execution_effect: "NONE"
-  
+
   # Enforcement is Ruby's domain
   enforcement_location: "RUBY_CRO_POLICY_LAYER"
-  
+
   # Risk attached to PDO as metadata
   pdo_fields: [
     "risk_score",
@@ -301,11 +301,11 @@ RISK_PDO_BINDING {
 CRO_OVERRIDE_POLICY {
   # CRO can override risk assessment
   override_allowed: true
-  
+
   # Override MUST emit proof
   override_proof_required: true
   override_proof_type: "OverrideProof"
-  
+
   # Override fields
   override_fields: [
     "original_risk_score",
@@ -324,10 +324,10 @@ CRO_OVERRIDE_POLICY {
 SETTLEMENT_RISK_RULE {
   # No settlement without risk verdict
   risk_verdict_required: true
-  
+
   # Risk downgrade prohibited post-PDO
   post_pdo_downgrade: "FORBIDDEN"
-  
+
   # Risk upgrade triggers re-evaluation
   post_pdo_upgrade: "TRIGGERS_REVIEW"
 }
@@ -343,14 +343,14 @@ SETTLEMENT_RISK_RULE {
 REPLAY_CONTRACT {
   # Determinism requirement
   guarantee: "IDENTICAL_OUTPUT"
-  
+
   # Given:
   inputs: "SAME_INPUTS"
   model_version: "SAME_MODEL_VERSION"
-  
+
   # Then:
   output: "BYTE_FOR_BYTE_IDENTICAL"
-  
+
   # Use cases:
   use_cases: [
     "AUDIT",
@@ -381,15 +381,15 @@ FAILURE_MODES {
   # Missing data: degrade conservatively
   missing_data: "DEGRADE_GRACEFULLY"
   missing_data_effect: "INCREASE_UNCERTAINTY"
-  
+
   # Low confidence: escalate
   low_confidence_threshold: 0.6
   low_confidence_action: "ESCALATE"
-  
+
   # Model error: fail closed
   model_error: "FAIL_CLOSED"
   model_error_effect: "NO_SCORE_EMITTED"
-  
+
   # CRITICAL: No silent fallbacks
   silent_fallback: "FORBIDDEN"
 }
@@ -400,11 +400,11 @@ FAILURE_MODES {
 ```
 1. PRIMARY_MODEL_AVAILABLE
    └── Use primary model
-   
+
 2. PRIMARY_MODEL_UNAVAILABLE
    └── Use fallback model (if approved)
    └── Emit DEGRADED_MODE flag
-   
+
 3. ALL_MODELS_UNAVAILABLE
    └── FAIL_CLOSED
    └── Return error, no score
@@ -422,10 +422,10 @@ MODEL_VERSION_POLICY {
   # Version format
   format: "chainiq_v{major}_{author}"
   example: "chainiq_v1_maggie"
-  
+
   # Immutability
   post_deployment_changes: "FORBIDDEN"
-  
+
   # New version required for:
   requires_new_version: [
     "Weight changes",
@@ -434,7 +434,7 @@ MODEL_VERSION_POLICY {
     "Feature removals",
     "Logic changes"
   ]
-  
+
   # Version registry
   registry_location: "chainiq-service/models/version_registry.json"
 }
@@ -446,7 +446,7 @@ MODEL_VERSION_POLICY {
 DATA_VERSION_POLICY {
   # Training data hash required
   data_hash_algorithm: "SHA-256"
-  
+
   # Data lineage required
   lineage_fields: [
     "source_tables",

@@ -1,9 +1,9 @@
 # Governance Signal Calibration
 
-> **PAC Reference:** PAC-MAGGIE-P33-GOVERNANCE-SIGNAL-STRESS-CALIBRATION-AND-ADVERSARIAL-ROBUSTNESS-01  
-> **Author:** Maggie (GID-10) | 💗 MAGENTA  
-> **Authority:** BENSON (GID-00)  
-> **Date:** 2025-12-24  
+> **PAC Reference:** PAC-MAGGIE-P33-GOVERNANCE-SIGNAL-STRESS-CALIBRATION-AND-ADVERSARIAL-ROBUSTNESS-01
+> **Author:** Maggie (GID-10) | 💗 MAGENTA
+> **Authority:** BENSON (GID-00)
+> **Date:** 2025-12-24
 > **Status:** CALIBRATION_VERIFIED
 
 ---
@@ -24,7 +24,7 @@ CALIBRATION_ANALYSIS:
   critical_severity_false_positives: 0
   acceptable_error_rate: 0.0
   observed_error_rate: 0.0
-  
+
 CALIBRATION_STATUS: OPTIMAL
 ```
 
@@ -39,28 +39,28 @@ The boundary between PASS and WARN is defined by **advisory conditions** that do
 ```yaml
 PASS_WARN_BOUNDARY:
   definition: "WARN triggers when non-blocking issues are detected"
-  
+
   threshold_rules:
     - rule: "Optional field missing"
       status: WARN
       severity: LOW
       blocking: false
-      
+
     - rule: "Deprecated but valid schema"
       status: WARN
       severity: MEDIUM
       blocking: false
-      
+
     - rule: "Non-canonical ordering (non-critical)"
       status: WARN
       severity: LOW
       blocking: false
-      
+
     - rule: "Timestamp > 30 days old"
       status: WARN
       severity: MEDIUM
       blocking: false
-      
+
   boundary_invariant: "WARN never blocks execution"
   calibration_verified: true
 ```
@@ -72,33 +72,33 @@ The boundary between WARN and FAIL is defined by **blocking conditions** that mu
 ```yaml
 WARN_FAIL_BOUNDARY:
   definition: "FAIL triggers when blocking issues are detected"
-  
+
   threshold_rules:
     - rule: "Required field missing"
       status: FAIL
       severity: HIGH
       blocking: true
-      
+
     - rule: "Registry mismatch"
       status: FAIL
       severity: HIGH
       blocking: true
-      
+
     - rule: "Block ordering violation"
       status: FAIL
       severity: HIGH
       blocking: true
-      
+
     - rule: "Authority not declared"
       status: FAIL
       severity: HIGH
       blocking: true
-      
+
     - rule: "FAIL_CLOSED mode violation"
       status: FAIL
       severity: CRITICAL
       blocking: true
-      
+
   boundary_invariant: "FAIL always blocks execution"
   calibration_verified: true
 ```
@@ -110,32 +110,32 @@ The boundary between FAIL and CRITICAL is defined by **system-wide impact**.
 ```yaml
 FAIL_CRITICAL_BOUNDARY:
   definition: "CRITICAL triggers when system-wide integrity is at risk"
-  
+
   threshold_rules:
     - rule: "Registry tampering detected"
       status: FAIL
       severity: CRITICAL
       blocking: true
       escalation: EXECUTIVE
-      
+
     - rule: "Unauthorized agent execution"
       status: FAIL
       severity: CRITICAL
       blocking: true
       escalation: EXECUTIVE
-      
+
     - rule: "FAIL_CLOSED mode breached"
       status: FAIL
       severity: CRITICAL
       blocking: true
       escalation: EXECUTIVE
-      
+
     - rule: "Multiple authority claims"
       status: FAIL
       severity: CRITICAL
       blocking: true
       escalation: EXECUTIVE
-      
+
   boundary_invariant: "CRITICAL escalates to executive review"
   calibration_verified: true
 ```
@@ -205,14 +205,14 @@ FALSE_POSITIVE_ANALYSIS:
   test_corpus: 100 valid PACs
   false_positives_detected: 0
   false_positive_rate: 0.0%
-  
+
   validation_method:
     1. Generate 100 syntactically and semantically valid PACs
     2. Run each through gate_pack.py
     3. Count FAIL results that should have been PASS
-    
+
   root_causes_if_any: []
-  
+
 FALSE_POSITIVE_VERDICT: NONE_DETECTED
 ```
 
@@ -225,12 +225,12 @@ FALSE_NEGATIVE_ANALYSIS:
   test_corpus: 100 invalid PACs (known violations)
   false_negatives_detected: 0
   false_negative_rate: 0.0%
-  
+
   validation_method:
     1. Generate 100 PACs with known violations
     2. Run each through gate_pack.py
     3. Count PASS results that should have been FAIL
-    
+
   violation_types_tested:
     - missing_required_fields: 20
     - registry_mismatches: 15
@@ -238,9 +238,9 @@ FALSE_NEGATIVE_ANALYSIS:
     - authority_missing: 15
     - schema_invalid: 15
     - checklist_failures: 20
-    
+
   root_causes_if_any: []
-  
+
 FALSE_NEGATIVE_VERDICT: NONE_DETECTED
 ```
 
@@ -249,22 +249,22 @@ FALSE_NEGATIVE_VERDICT: NONE_DETECTED
 ```yaml
 CRITICAL_SEVERITY_CALIBRATION:
   definition: "CRITICAL reserved for system-wide impact"
-  
+
   critical_triggers:
     - "Registry tampering"
     - "Unauthorized agent execution"
     - "FAIL_CLOSED breach"
     - "Authority chain compromise"
-    
+
   non_critical_triggers:
     - "Missing optional field" → LOW
     - "Deprecated schema" → MEDIUM
     - "Missing required field" → HIGH
     - "Registry mismatch" → HIGH
-    
+
   false_negatives: 0  # No CRITICAL missed
   false_positives: 0  # No false CRITICAL escalations
-  
+
 CRITICAL_CALIBRATION_VERDICT: OPTIMAL
 ```
 
@@ -292,31 +292,31 @@ Testing against a mixed corpus of 200 documents:
 ```yaml
 OBSERVED_DISTRIBUTION:
   corpus_size: 200
-  
+
   NONE:
     count: 92
     percentage: 46%
     expected_range: "40-50%"
     in_range: true
-    
+
   LOW:
     count: 14
     percentage: 7%
     expected_range: "5-10%"
     in_range: true
-    
+
   MEDIUM:
     count: 26
     percentage: 13%
     expected_range: "10-15%"
     in_range: true
-    
+
   HIGH:
     count: 62
     percentage: 31%
     expected_range: "25-35%"
     in_range: true
-    
+
   CRITICAL:
     count: 6
     percentage: 3%
@@ -335,7 +335,7 @@ DISTRIBUTION_VERDICT: WITHIN_EXPECTED_BOUNDS
 ```yaml
 DRIFT_MONITORING:
   method: "Baseline comparison over time"
-  
+
   baseline_established: "2025-12-24"
   baseline_corpus: 200 documents
   baseline_distribution:
@@ -344,9 +344,9 @@ DRIFT_MONITORING:
     MEDIUM: 13%
     HIGH: 31%
     CRITICAL: 3%
-    
+
   drift_threshold: 5%  # Alert if distribution shifts > 5%
-  
+
   current_drift: 0%
   drift_detected: false
 ```
@@ -361,7 +361,7 @@ DRIFT_PREVENTION:
     - "Severity mappings are immutable after release"
     - "Boundary definitions cannot be relaxed"
     - "CRITICAL escalation rules cannot be modified"
-    
+
   enforcement: FAIL_CLOSED
   last_calibration: "2025-12-24"
   next_calibration: "2026-03-24"  # Quarterly
@@ -378,32 +378,32 @@ When multiple signals are emitted, the final status is determined by:
 ```yaml
 SIGNAL_INTERACTION_MATRIX:
   resolution_rule: "max(all_signal_severities)"
-  
+
   examples:
     - signals: [PASS, PASS]
       result: PASS
       severity: NONE
-      
+
     - signals: [PASS, WARN]
       result: WARN
       severity: max(NONE, LOW/MEDIUM) = LOW or MEDIUM
-      
+
     - signals: [PASS, FAIL]
       result: FAIL
       severity: max(NONE, HIGH) = HIGH
-      
+
     - signals: [WARN, FAIL]
       result: FAIL
       severity: max(MEDIUM, HIGH) = HIGH
-      
+
     - signals: [WARN, WARN, FAIL]
       result: FAIL
       severity: HIGH
-      
+
     - signals: [FAIL, FAIL(CRITICAL)]
       result: FAIL
       severity: CRITICAL
-      
+
   invariant: "FAIL always wins over WARN"
   verified: true
 ```
@@ -420,19 +420,19 @@ These calibration properties are **immutable** and cannot be changed:
 IMMUTABLE_CONSTRAINTS:
   - constraint: "PASS → no blocking action"
     locked: true
-    
+
   - constraint: "WARN → advisory only"
     locked: true
-    
+
   - constraint: "FAIL → execution blocked"
     locked: true
-    
+
   - constraint: "CRITICAL → executive escalation"
     locked: true
-    
+
   - constraint: "max(severities) wins"
     locked: true
-    
+
   - constraint: "Determinism guaranteed"
     locked: true
 ```
@@ -447,12 +447,12 @@ TUNABLE_PARAMETERS:
     current_value: 30 days
     range: "7-90 days"
     requires: "PAC approval"
-    
+
   - parameter: "Advisory checklist tolerance"
     current_value: 1 item
     range: "1-3 items"
     requires: "PAC approval"
-    
+
   - parameter: "Schema deprecation window"
     current_value: 180 days
     range: "90-365 days"
@@ -469,7 +469,7 @@ CALIBRATION_CERTIFICATE:
   issued_by: "Maggie (GID-10)"
   issued_date: "2025-12-24"
   valid_until: "2026-03-24"
-  
+
   calibration_scope:
     - "PASS/WARN boundary"
     - "WARN/FAIL boundary"
@@ -477,20 +477,20 @@ CALIBRATION_CERTIFICATE:
     - "Severity distribution"
     - "False positive rate"
     - "False negative rate"
-    
+
   calibration_results:
     pass_warn_boundary: OPTIMAL
     warn_fail_boundary: OPTIMAL
     false_positive_rate: 0.0%
     false_negative_rate: 0.0%
     severity_distribution: WITHIN_BOUNDS
-    
+
   certification_statement: |
     The ChainBridge governance signal system has been calibrated and verified.
     All thresholds are correctly tuned for business impact. Zero false positives
     and zero false negatives were detected. The system is certified for
     production use.
-    
+
   signature: "💗 MAGGIE-CAL-P33"
 ```
 

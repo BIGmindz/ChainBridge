@@ -1,9 +1,9 @@
 # Governance Signal Stress Report
 
-> **PAC Reference:** PAC-MAGGIE-P33-GOVERNANCE-SIGNAL-STRESS-CALIBRATION-AND-ADVERSARIAL-ROBUSTNESS-01  
-> **Author:** Maggie (GID-10) | 💗 MAGENTA  
-> **Authority:** BENSON (GID-00)  
-> **Date:** 2025-12-24  
+> **PAC Reference:** PAC-MAGGIE-P33-GOVERNANCE-SIGNAL-STRESS-CALIBRATION-AND-ADVERSARIAL-ROBUSTNESS-01
+> **Author:** Maggie (GID-10) | 💗 MAGENTA
+> **Authority:** BENSON (GID-00)
+> **Date:** 2025-12-24
 > **Status:** STRESS_TESTING_COMPLETE
 
 ---
@@ -29,7 +29,7 @@ STRESS_RESULTS:
   warn_masking_failures: 0
   ml_signal_leakage_events: 0
   monotonicity_violations: 0
-  
+
 STRESS_VERDICT: PASS
 ```
 
@@ -159,18 +159,18 @@ OSCILLATION_ANALYSIS:
   total_evaluations: 4800
   status_changes_detected: 0
   severity_changes_detected: 0
-  
+
   boundary_tests:
     pass_warn_boundary:
       evaluations: 1600
       oscillations: 0
       stable: true
-      
+
     warn_fail_boundary:
       evaluations: 1600
       oscillations: 0
       stable: true
-      
+
     fail_block_boundary:
       evaluations: 1600
       oscillations: 0
@@ -189,18 +189,18 @@ OSCILLATION_VERDICT: NONE_DETECTED
 WARN_MASKING_ANALYSIS:
   test_method: "Compound signals with mixed severity"
   total_scenarios: 24
-  
+
   scenarios_tested:
     - "WARN + FAIL → FAIL"
-    - "WARN + WARN → WARN"  
+    - "WARN + WARN → WARN"
     - "PASS + WARN → WARN"
     - "PASS + FAIL → FAIL"
     - "WARN + FAIL + PASS → FAIL"
     - "Multiple WARN, single FAIL → FAIL"
-    
+
   masking_events_detected: 0
   severity_escalation_correct: true
-  
+
   rule_verified: "max(severities) always wins"
 
 WARN_MASKING_VERDICT: NO_MASKING_DETECTED
@@ -215,7 +215,7 @@ WARN_MASKING_VERDICT: NO_MASKING_DETECTED
 ```yaml
 MONOTONICITY_ANALYSIS:
   test_method: "Severity ladder traversal"
-  
+
   severity_ladder:
     NONE:
       level: 0
@@ -237,10 +237,10 @@ MONOTONICITY_ANALYSIS:
       level: 4
       impact_score: 4
       verified: true
-      
+
   monotonicity_property: "level(N) < level(N+1) ∀ N"
   violations_detected: 0
-  
+
   cross_signal_tests:
     - "PAG_001 (HIGH) > GS_001 (MEDIUM)" → true
     - "BSRG_003 (HIGH) > RG_003 (MEDIUM)" → true
@@ -260,14 +260,14 @@ FAILURE_QUALITY:
   misclassified_severity: 0
   fail_not_blocked: 0
   warn_not_escalated: 0
-  
+
   failure_characteristics:
     all_failures_have_code: true
     all_failures_have_title: true
     all_failures_have_description: true
     all_failures_have_evidence: true
     all_failures_have_resolution: true
-    
+
   failure_traceability: COMPLETE
   failure_actionability: COMPLETE
 
@@ -285,31 +285,31 @@ ADVERSARIAL_CLASSES:
     passed: 8
     failed: 0
     verdict: ROBUST
-    
+
   - class: conflicting_authorities
     scenarios: 8
     passed: 8
     failed: 0
     verdict: ROBUST
-    
+
   - class: stale_fresh_conflict
     scenarios: 8
     passed: 8
     failed: 0
     verdict: ROBUST
-    
+
   - class: ml_feature_spoofing
     scenarios: 8
     passed: 8
     failed: 0
     verdict: ROBUST
-    
+
   - class: replay_attack
     scenarios: 8
     passed: 8
     failed: 0
     verdict: ROBUST
-    
+
   - class: override_pressure
     scenarios: 8
     passed: 8
@@ -326,7 +326,7 @@ TOTAL_ADVERSARIAL_COVERAGE: 48/48 (100%)
 ```yaml
 DETERMINISM_PROOF:
   method: "Hash-stable replay verification"
-  
+
   test_procedure:
     1. Generate input document
     2. Compute SHA-256 hash of input
@@ -334,13 +334,13 @@ DETERMINISM_PROOF:
     4. Record output status + severity + signals
     5. Replay N times with identical input
     6. Verify output identical each replay
-    
+
   results:
     total_unique_inputs: 48
     total_replays: 11200
     output_mismatches: 0
     hash_collisions: 0
-    
+
   determinism_formula: "H(input) → deterministic(output)"
   formula_violations: 0
 

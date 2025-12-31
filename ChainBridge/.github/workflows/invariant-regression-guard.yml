@@ -71,17 +71,17 @@ jobs:
           echo "Mode: FAIL-CLOSED"
           echo "Expected invariants: 21"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           cd tools/governance
           python3 invariants.py
-          
+
           if [ $? -ne 0 ]; then
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo "❌ INVARIANT REGISTRY CHECK FAILED"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             exit 1
           fi
-          
+
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "✅ INVARIANT REGISTRY CHECK PASSED"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -110,17 +110,17 @@ jobs:
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "Mode: FAIL-CLOSED"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           cd tools/governance
           python3 fail_closed.py
-          
+
           if [ $? -ne 0 ]; then
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo "❌ FAIL-CLOSED MODULE CHECK FAILED"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             exit 1
           fi
-          
+
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "✅ FAIL-CLOSED MODULE CHECK PASSED"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -150,7 +150,7 @@ jobs:
           echo "Mode: FAIL-CLOSED"
           echo "Purpose: Verify all failure paths work correctly"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           # Run negative path tests directly (avoid conftest issues)
           python3 -c "
 import sys
@@ -186,14 +186,14 @@ print(f'RESULTS: {passed} passed, {failed} failed')
 if failed > 0:
     sys.exit(1)
 "
-          
+
           if [ $? -ne 0 ]; then
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo "❌ NEGATIVE-PATH TESTS FAILED"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             exit 1
           fi
-          
+
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "✅ NEGATIVE-PATH TESTS PASSED"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -223,20 +223,20 @@ if failed > 0:
           echo "Mode: FAIL-CLOSED"
           echo "Locked count: 21 invariants"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           cd tools/governance
-          
+
           COUNT=$(python3 -c "
 from invariants import get_invariant_registry
 registry = get_invariant_registry()
 print(len(registry.invariants))
 ")
-          
+
           EXPECTED=21
-          
+
           echo "Current invariant count: $COUNT"
           echo "Expected invariant count: $EXPECTED"
-          
+
           if [ "$COUNT" != "$EXPECTED" ]; then
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo "❌ INVARIANT COUNT MISMATCH"
@@ -248,7 +248,7 @@ print(len(registry.invariants))
             echo "PAC REQUIRED for invariant count changes."
             exit 1
           fi
-          
+
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "✅ INVARIANT COUNT LOCKED AT $EXPECTED"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -277,7 +277,7 @@ print(len(registry.invariants))
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "Mode: FAIL-CLOSED"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           # Verify no duplicate GS_XXX error codes
           python3 -c "
 import sys
@@ -307,14 +307,14 @@ else:
     print(f'Verified {len(counter)} unique GS_XXX error codes')
     print('No excessive duplicates detected')
 "
-          
+
           if [ $? -ne 0 ]; then
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo "❌ ERROR CODE NAMESPACE VIOLATION"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             exit 1
           fi
-          
+
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "✅ ERROR CODE NAMESPACE VERIFIED"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

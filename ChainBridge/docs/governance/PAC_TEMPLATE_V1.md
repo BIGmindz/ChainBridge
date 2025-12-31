@@ -1,11 +1,11 @@
 # PAC Template V1 — Canonical Structure
 
 > **Governance Document** — PAC-BENSON-CANONICAL-PACK-TEMPLATE-LOCK-01
-> **Version:** 1.1.0
-> **Effective Date:** 2025-12-22
+> **Version:** 1.2.0
+> **Effective Date:** 2025-12-27
 > **Authority:** BENSON (GID-00)
 > **Status:** LOCKED / CANONICAL
-> **Amended By:** PAC-BENSON-IDENTITY-DRIFT-ELIMINATION-01
+> **Amended By:** PAC-BENSON-EXEC-GOVERNANCE-034
 
 ---
 
@@ -71,21 +71,25 @@ ENFORCEMENT {
 ```yaml
 PAC_TEMPLATE_V1:
   sections:
-    - 0: AGENT_ACTIVATION_ACK   # REQUIRED, FIRST BLOCK
+    - 0: AGENT_ACTIVATION_ACK           # REQUIRED, FIRST BLOCK
     - 1: PAC_HEADER
-    - 2: CONTEXT_AND_GOAL
-    - 3: CONSTRAINTS_AND_GUARDRAILS
-    - 4: TASKS_AND_PLAN
-    - 5: FILE_AND_CODE_TARGETS
-    - 6: EXECUTION_RULES
-    - 7: QA_AND_ACCEPTANCE_CRITERIA
-    - 8: OUTPUT_AND_HANDOFF
-    - 9: LOCK_STATEMENT
-  
+    - 2: PRE_FLIGHT_GOVERNANCE_STAMP    # PAC-BENSON-034: MANDATORY
+    - 3: EXECUTION_LOOP_OVERRIDE        # PAC-BENSON-034: MANDATORY
+    - 4: CONTEXT_AND_GOAL
+    - 5: CONSTRAINTS_AND_GUARDRAILS
+    - 6: TASKS_AND_PLAN
+    - 7: FILE_AND_CODE_TARGETS
+    - 8: EXECUTION_RULES
+    - 9: QA_AND_ACCEPTANCE_CRITERIA
+    - 10: OUTPUT_AND_HANDOFF
+    - 11: LOCK_STATEMENT
+
   rules:
     - no_section_may_be_omitted: true
     - no_section_may_be_reordered: true
     - activation_block_must_be_first: true
+    - pre_flight_must_precede_context: true     # PAC-BENSON-034
+    - execution_loop_must_precede_tasks: true   # PAC-BENSON-034
 ```
 
 ---
@@ -163,7 +167,82 @@ PAC-<AGENT>-<DOMAIN>-<SEQUENCE>
 
 ---
 
-## Section 2: CONTEXT & GOAL
+## Section 2: PRE-FLIGHT GOVERNANCE STAMP (MANDATORY)
+
+> **PAC-BENSON-034:** Enforces governance review before execution proceeds.
+
+```
+PRE_FLIGHT_GOVERNANCE_STAMP {
+  pre_flight_status: "<PASS | FAIL>"
+  reviewed_by: "<AGENT (GID-XX)>"
+  review_date: "<YYYY-MM-DD>"
+
+  gate_attestation: {
+    1: intent_and_mode: "<PASS | FAIL>"
+    2: agent_target: "<PASS | FAIL>"
+    3: objective_outcome: "<PASS | FAIL>"
+    4: domain_system_scope: "<PASS | FAIL>"
+    5: execution_class: "<PASS | FAIL>"
+    6: constraints_non_goals: "<PASS | FAIL>"
+    7: readiness_check: "<PASS | FAIL>"
+  }
+}
+```
+
+**Rules:**
+- All 7 gate attestations must PASS
+- Execution PROHIBITED unless `pre_flight_status` = PASS
+- Fail-closed behavior enforced
+
+---
+
+## Section 3: EXECUTION LOOP & OVERRIDE AUTHORITY (MANDATORY)
+
+> **PAC-BENSON-034:** Enforces WRAP → BENSON → BER closure semantics.
+
+```
+EXECUTION_LOOP_OVERRIDE {
+  default_execution_loop: "PAC → Cody Execution → WRAP → Benson Execution Review → BER → Jeffrey Review"
+
+  enforcement_rules: {
+    cody_must_return_wrap: true
+    cody_cannot_declare_closure: true
+    benson_must_receive_wrap: true
+    benson_must_emit_ber: true
+    ber_is_sole_closure: true
+    no_ber_means_incomplete: true
+  }
+
+  benson_execution_bypass: {
+    bypass_authorized: <true | false>  # Default: false
+    canonical_loop_required: true
+  }
+
+  wrap_obligation: {
+    wrap_required: true
+    wrap_schema: "CHAINBRIDGE_CANONICAL_WRAP_SCHEMA v1.0.0"
+    failure_to_wrap: "HARD_FAIL"
+  }
+
+  ber_obligation: {
+    ber_required: true
+    ber_is_authoritative: true
+    positive_closure_via_ber_only: true
+  }
+}
+```
+
+**Rules:**
+- Cody MUST return WRAP
+- Cody MUST NOT declare closure
+- Benson Execution MUST receive WRAP
+- Benson Execution MUST emit BER
+- BER = sole authoritative closure artifact
+- No BER = execution incomplete
+
+---
+
+## Section 4: CONTEXT & GOAL
 
 ```
 CONTEXT {
@@ -181,7 +260,7 @@ GOAL {
 
 ---
 
-## Section 3: CONSTRAINTS & GUARDRAILS
+## Section 5: CONSTRAINTS & GUARDRAILS
 
 ```
 CONSTRAINTS {
@@ -200,7 +279,7 @@ GUARDRAILS {
 
 ---
 
-## Section 4: TASKS & PLAN
+## Section 6: TASKS & PLAN
 
 Tasks must be:
 - **Numbered** (1, 2, 3...)
@@ -222,7 +301,7 @@ TASKS {
 
 ---
 
-## Section 5: FILE & CODE TARGETS
+## Section 7: FILE & CODE TARGETS
 
 All paths must be **explicit** and **absolute from repo root**.
 
@@ -242,7 +321,7 @@ FILE_TARGETS {
 
 ---
 
-## Section 6: EXECUTION RULES
+## Section 8: EXECUTION RULES
 
 ```
 EXECUTION_RULES {
@@ -255,7 +334,7 @@ EXECUTION_RULES {
 
 ---
 
-## Section 7: QA & ACCEPTANCE CRITERIA
+## Section 9: QA & ACCEPTANCE CRITERIA
 
 All criteria must be **binary** (PASS/FAIL only).
 
@@ -272,7 +351,7 @@ ACCEPTANCE_CRITERIA {
 
 ---
 
-## Section 8: OUTPUT / HANDOFF
+## Section 10: OUTPUT / HANDOFF
 
 ```
 OUTPUT {
@@ -287,7 +366,7 @@ OUTPUT {
 
 ---
 
-## Section 9: LOCK STATEMENT
+## Section 11: LOCK STATEMENT
 
 ```
 LOCK_STATEMENT {
@@ -322,12 +401,14 @@ RUNTIME_EXECUTION {
 | Check | Required |
 |-------|----------|
 | Section 0 (Activation) present and first | ✅ |
-| All sections 1-9 present | ✅ |
+| All sections 1-11 present | ✅ |
 | Sections in correct order | ✅ |
 | GID present | ✅ |
 | Color present | ✅ |
 | Icon present | ✅ |
 | Mode is exactly one of allowed values | ✅ |
+| Pre-flight governance stamp present (PAC-BENSON-034) | ✅ |
+| Execution loop override block present (PAC-BENSON-034) | ✅ |
 | Tasks are numbered and deterministic | ✅ |
 | File paths are explicit | ✅ |
 | Acceptance criteria are binary | ✅ |

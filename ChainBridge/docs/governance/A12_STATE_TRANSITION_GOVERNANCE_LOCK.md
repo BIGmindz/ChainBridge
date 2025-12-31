@@ -192,27 +192,27 @@ A12_TRANSITION_INVARIANTS:
   # INV-T01: Explicit definition required
   all_transitions_declared: true
   implicit_transitions_forbidden: true
-  
+
   # INV-T02: Fail-closed semantics
   undefined_transition_result: "REJECT"
   validation_failure_result: "REJECT"
-  
+
   # INV-T03: Proof binding
   governed_transitions_require_proof: true
   proof_must_reference_transition: true
-  
+
   # INV-T04: Authority binding
   transitions_require_authority_gid: true
   authority_must_be_valid_agent: true
-  
+
   # INV-T05: Determinism
   same_input_same_output: true
   no_side_effects_in_validation: true
-  
+
   # INV-T06: Terminal finality
   terminal_states_immutable: true
   no_transitions_from_terminal: true
-  
+
   # INV-T07: Replay safety
   transition_history_preserved: true
   replay_produces_identical_state: true

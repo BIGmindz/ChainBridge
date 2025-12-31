@@ -1,8 +1,8 @@
 # WRAP-DAN-G1-PHASE-2-GOVERNANCE-FAILURE-DRILLS-01
 
-> **WRAP Completion Report — Governance Failure Drills**  
-> **Issued by:** Dan (GID-07) via GitHub Copilot Runtime  
-> **Date:** 2025-12-23  
+> **WRAP Completion Report — Governance Failure Drills**
+> **Issued by:** Dan (GID-07) via GitHub Copilot Runtime
+> **Date:** 2025-12-23
 > **Status:** 🟩 POSITIVE_CLOSURE_ACKNOWLEDGED
 > **Closure Authority:** BENSON (GID-00)
 > **Correction Cycles:** 4
@@ -196,7 +196,7 @@ Per **PAC-DAN-G1-PHASE-2-GOVERNANCE-FAILURE-DRILLS-01**, this WRAP documents the
 
 Validate that the governance infrastructure implemented in Phase G0 correctly:
 - Rejects invalid PAC structures
-- Blocks GID/color registry mismatches  
+- Blocks GID/color registry mismatches
 - Enforces mandatory block presence
 - Enforces block ordering rules
 - Blocks runtime identity spoofing
@@ -326,7 +326,7 @@ EXECUTION_LOG:
       - "tests/governance/failure_drills/FD-03-missing-training-signal.md"
       - "tests/governance/failure_drills/FD-04-block-order-violation.md"
       - "tests/governance/failure_drills/FD-05-runtime-has-gid.md"
-  
+
   - timestamp: "2025-06-23T14:35:00Z"
     action: "Executed all failure drills via gate_pack.py"
     tool: "tools/governance/gate_pack.py"
@@ -335,7 +335,7 @@ EXECUTION_LOG:
       blocked: 4
       passed_unexpectedly: 1
       total_duration: "821ms"
-  
+
   - timestamp: "2025-06-23T14:40:00Z"
     action: "Documented gap analysis for FD-03"
     root_cause: "String matching vs YAML block detection"
@@ -358,7 +358,7 @@ ARTIFACTS:
       status: "BLOCKED"
     - path: "tests/governance/failure_drills/FD-05-runtime-has-gid.md"
       status: "BLOCKED"
-  
+
   wrap_document:
     - path: "docs/governance/WRAP-DAN-G1-PHASE-2-GOVERNANCE-FAILURE-DRILLS-01.md"
 ```
@@ -396,22 +396,22 @@ FINAL_STATE:
   closure_authority: "BENSON (GID-00)"
   correction_cycles: 4
   regressible: false
-  
+
   drill_summary:
     total: 5
     blocked_correctly: 4
     false_pass: 1
     pass_rate: "80%"
-  
+
   gates_validated:
     - "G0_002: Block Order Enforcement"
     - "G0_004: Registry Mismatch Detection"
     - "G0_007: Runtime Identity Protection"
     - "G0_009: Structure Validation (partial)"
-  
+
   gap_documented: true
   gap_acknowledged: true
-  
+
   governance_mode: "FAIL_CLOSED"
   drift_detected: false
   wrap_issued: true
@@ -429,10 +429,10 @@ SELF_CERTIFICATION:
   statement: |
     This WRAP accurately reflects the governance truth of the work performed.
     All correction cycles have been completed and verified.
-    
+
     EXECUTION STATUS: Complete (5/5 drills executed)
     GOVERNANCE STATUS: COMPLETE (all corrections resolved)
-    
+
     I acknowledge that governance truth has been satisfied.
     This PAC is terminal and irreversible.
   certified: true
@@ -494,21 +494,21 @@ GOLD_STANDARD_CHECKLIST:
   execution_lane_correct: true
   canonical_headers_present: true
   block_order_correct: true
-  
+
   # Governance Blocks
   forbidden_actions_section_present: true
   scope_lock_present: true
   final_state_declared: true
   wrap_schema_valid: true
-  
+
   # Content Validation
   no_extra_content: true
   no_scope_drift: true
-  
+
   # Required Keys
   training_signal_present: true
   self_certification_present: true
-  
+
   # Positive Closure Specific
   activation_acks_present: true
   correction_class_declared: true

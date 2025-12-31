@@ -1,9 +1,9 @@
 # Governance Signal Semantics and Explainability
 
-> **Canonical Reference:** PAC-MAGGIE-P30-GOVERNANCE-SIGNAL-SEMANTICS-AND-EXPLAINABILITY-01  
-> **Author:** Maggie (GID-10) | 💗 MAGENTA  
-> **Authority:** BENSON (GID-00)  
-> **Version:** 1.0.0  
+> **Canonical Reference:** PAC-MAGGIE-P30-GOVERNANCE-SIGNAL-SEMANTICS-AND-EXPLAINABILITY-01
+> **Author:** Maggie (GID-10) | 💗 MAGENTA
+> **Authority:** BENSON (GID-00)
+> **Version:** 1.0.0
 > **Status:** CANONICAL
 
 ---
@@ -42,7 +42,7 @@ SEVERITY_TAXONOMY:
       - "Registry tampering detected"
       - "FAIL_CLOSED mode breached"
       - "Unauthorized agent execution"
-    
+
   HIGH:
     level: 3
     description: "Gate-level failure; blocks specific operation"
@@ -51,7 +51,7 @@ SEVERITY_TAXONOMY:
       - "PAG-01 activation missing"
       - "BSRG checklist failed"
       - "Review gate rejected"
-    
+
   MEDIUM:
     level: 2
     description: "Compliance warning; does not block but must be addressed"
@@ -60,7 +60,7 @@ SEVERITY_TAXONOMY:
       - "Deprecated schema version"
       - "Optional field missing"
       - "Non-canonical ordering"
-    
+
   LOW:
     level: 1
     description: "Advisory notice; informational only"
@@ -69,7 +69,7 @@ SEVERITY_TAXONOMY:
       - "Style recommendation"
       - "Documentation suggestion"
       - "Performance hint"
-    
+
   NONE:
     level: 0
     description: "No issue detected"
@@ -92,7 +92,7 @@ CONFIDENCE_CLASSIFICATION:
       - Schema validation
       - Block ordering checks
       - Registry binding verification
-    
+
   HEURISTIC:
     value: 0.95
     description: "Pattern-based check with deterministic rules"
@@ -100,7 +100,7 @@ CONFIDENCE_CLASSIFICATION:
       - Code smell detection
       - Naming convention checks
       - Documentation completeness
-    
+
   ML_ASSISTED:
     value: null
     description: "NOT PERMITTED in governance layer"
@@ -127,7 +127,7 @@ EXPLANATION_SCHEMA:
     - evidence         # Specific data that triggered the signal
     - resolution       # Actionable steps to resolve (if applicable)
     - documentation    # Link to relevant documentation
-    
+
   optional_fields:
     - context          # Additional context about the check
     - related_signals  # Other signals that may be relevant
@@ -350,19 +350,19 @@ FORBIDDEN_ML_PATTERNS:
   - pattern: "Opaque confidence scores"
     example: "confidence: 0.73"
     reason: "Score without explanation provides no actionable insight"
-    
+
   - pattern: "Black-box classification"
     example: "risk_level: HIGH (model output)"
     reason: "Model output without feature attribution is unexplainable"
-    
+
   - pattern: "Aggregated scores"
     example: "governance_score: 85/100"
     reason: "Aggregation obscures individual signal failures"
-    
+
   - pattern: "Relative rankings"
     example: "better than 73% of documents"
     reason: "Relative comparison provides no absolute quality measure"
-    
+
   - pattern: "Threshold-only decisions"
     example: "FAIL: score below 0.5"
     reason: "Threshold without feature explanation is not actionable"
@@ -383,7 +383,7 @@ ML_SIGNAL_WRAPPER:
     - confidence_interval: "Uncertainty bounds (if applicable)"
     - fallback_rule: "Deterministic fallback if confidence < threshold"
     - human_override: "Whether human review is required"
-    
+
   example:
     model_id: "drift_detector_v1"
     model_version: "1.2.0"
@@ -391,7 +391,7 @@ ML_SIGNAL_WRAPPER:
       - feature: "psi_score"
         value: 0.32
         contribution: 0.65
-      - feature: "ks_statistic"  
+      - feature: "ks_statistic"
         value: 0.18
         contribution: 0.25
       - feature: "missing_rate_delta"

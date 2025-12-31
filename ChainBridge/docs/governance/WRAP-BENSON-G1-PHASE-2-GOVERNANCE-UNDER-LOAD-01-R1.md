@@ -272,7 +272,7 @@ FINAL_STATE:
   status: "COMPLETED"
   governance_compliant: true
   hard_gates: "ENFORCED"
-  
+
   drill_results:
     total_drills: 10
     passed_drills: 10
@@ -280,21 +280,21 @@ FINAL_STATE:
     invalid_pac_accepted: 0
     bypass_paths_detected: 0
     correction_cycles: 1
-  
+
   success_metrics:
     invalid_pac_accepted: "0 (target: 0) ✓"
     correction_cycles_max: "1 (target: ≤2) ✓"
     bypass_paths_detected: "0 (target: 0) ✓"
     unresolved_violations: "0 (target: 0) ✓"
-  
+
   test_status: "971 passed, 1 skipped"
   validation_status: "ALL VALIDATIONS PASSED"
-  
+
   governance_gaps_discovered: 1
   governance_gaps_remediated: 1
   gap_details:
     - "TRAINING_SIGNAL not enforced for G0.2.0+ files → Fixed in gate_pack.py"
-  
+
   attestation: |
     I, Benson (GID-00), attest that:
     - Phase 2 governance under load testing is complete

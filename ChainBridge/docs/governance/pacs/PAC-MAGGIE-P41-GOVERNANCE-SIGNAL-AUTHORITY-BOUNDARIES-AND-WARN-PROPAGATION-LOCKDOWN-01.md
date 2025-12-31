@@ -58,13 +58,13 @@ CONTEXT_AND_GOAL:
     - "BP-004 identified WARN ambiguity propagation to settlement layer"
     - "WARN signal authority boundaries undocumented"
     - "No formal proof that advisory signals cannot reach economic actions"
-    
+
   goal:
     - "Eliminate WARN-to-settlement propagation paths"
     - "Enforce hard authority boundaries: SIGNAL → GOVERNANCE → SETTLEMENT"
     - "Prove monotonic downgrade rules under adversarial conditions"
     - "Define explicit WARN handling contract"
-    
+
   pattern: WARN_IS_NOT_AUTHORITY
   principle: "Advisory signals must never move money"
 ```
@@ -93,7 +93,7 @@ CONSTRAINTS_AND_GUARDRAILS:
     warn_cannot_authorize_release: true
     warn_cannot_authorize_escalation: true
     fail_remains_terminal: true
-    
+
   guardrails:
     deterministic_only: true
     glass_box_only: true
@@ -122,13 +122,13 @@ DELIVERABLES:
   files_created:
     - path: "docs/governance/GOVERNANCE_WARN_HANDLING_CONTRACT.md"
       description: "Explicit WARN handling contract with ALLOW/BLOCK/ESCALATE decisions"
-      
+
     - path: "docs/governance/GOVERNANCE_WARN_LOCK_RULES.md"
       description: "Machine-readable WARN_LOCK ruleset with transition and boundary locks"
-      
+
     - path: "docs/governance/GOVERNANCE_WARN_PROPAGATION_STRESS_REPORT.md"
       description: "Adversarial stress test results: 5200 attempts, 100% blocked"
-      
+
   files_modified:
     - path: "docs/governance/GOVERNANCE_SIGNAL_REGRESSION_RULES.md"
       description: "Added Section 11: WARN Boundary Regression Rules (RUL_WARN_001-005)"
@@ -384,13 +384,13 @@ GOLD_STANDARD_CHECKLIST:
   no_extra_content: true
   no_scope_drift: true
   self_certification_present: true
-  
+
   # P41-Specific
   warn_contract_defined: true
   warn_lock_rules_implemented: true
   adversarial_stress_tested: true
   signal_outcome_mapping_proven: true
-  
+
   all_items_checked: true
   checklist_terminal: true
 ```

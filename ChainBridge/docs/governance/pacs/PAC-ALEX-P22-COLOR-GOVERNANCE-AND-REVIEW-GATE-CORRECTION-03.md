@@ -272,7 +272,7 @@ GOLD_STANDARD_CHECKLIST:
   execution_lane_correct: true
   canonical_headers_present: true
   block_order_correct: true
-  
+
   # Governance Blocks
   runtime_activation_ack_present: true
   agent_activation_ack_present: true
@@ -286,21 +286,21 @@ GOLD_STANDARD_CHECKLIST:
   review_gate_declared: true
   review_gate_present: true
   error_codes_declared: true
-  
+
   # BSRG & Closure
   benson_self_review_gate_present: true
   closure_attested: true
-  
+
   # Required Keys
   training_signal_present: true
   final_state_declared: true
   self_certification_present: true
-  
+
   # Content Validation
   wrap_schema_valid: true
   no_extra_content: true
   no_scope_drift: true
-  
+
   # Terminal Position
   checklist_terminal: true
   checklist_at_end: true

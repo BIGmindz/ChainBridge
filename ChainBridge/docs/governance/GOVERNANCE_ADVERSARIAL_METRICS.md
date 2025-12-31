@@ -1,9 +1,9 @@
 # GOVERNANCE_ADVERSARIAL_METRICS.md
 
-> **P34 Adversarial Stress Test Metrics Report**  
-> **Authority:** PAC-SAM-P34-GOVERNANCE-ADVERSARIAL-STRESS-BREAKPOINT-AND-MEASUREMENT-ENFORCEMENT-01  
-> **Agent:** Sam (GID-06) | 🟥 DARK_RED | SECURITY  
-> **Date:** 2025-12-24  
+> **P34 Adversarial Stress Test Metrics Report**
+> **Authority:** PAC-SAM-P34-GOVERNANCE-ADVERSARIAL-STRESS-BREAKPOINT-AND-MEASUREMENT-ENFORCEMENT-01
+> **Agent:** Sam (GID-06) | 🟥 DARK_RED | SECURITY
+> **Date:** 2025-12-24
 > **Status:** ✅ COMPLETE
 
 ---
@@ -119,12 +119,12 @@ DETECTION_METRICS:
   total_tests: 17
   total_blocked: 17
   total_passed_through: 0
-  
+
   # Required Metrics (per ALEX P36 mandate)
   failure_detection_rate: "100.00%"
   false_negative_rate: "0.00%"
   determinism_rate: "100.00%"
-  
+
   # Classification Metrics
   correct_error_category: 17
   errors_per_blocked: 3.4  # avg
@@ -139,11 +139,11 @@ LATENCY_METRICS:
   latency_ms_p50: 0.09
   latency_ms_p95: 16.14
   latency_ms_max: 16.14
-  
+
   # Performance Bounds
   max_acceptable_latency_ms: 100
   within_bounds: true
-  
+
   # By Category
   pac_wrap_confusion_p50: 0.03
   authority_spoofing_p50: 0.11
@@ -159,7 +159,7 @@ COVERAGE_METRICS:
   attack_vectors_tested: 17
   attack_categories: 5
   unique_error_codes_triggered: 14
-  
+
   error_codes_by_frequency:
     G0_006: 60+  # Missing required field (most common)
     BSRG_001: 6  # Missing BSRG
@@ -245,7 +245,7 @@ SECURITY_POSTURE:
   attack_surface: "MINIMAL"
   bypass_paths: 0
   silent_failures: 0
-  
+
   recommendations:
     - "Continue monitoring for new attack vectors"
     - "Maintain test suite with each schema update"

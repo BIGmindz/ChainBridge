@@ -58,13 +58,13 @@ CONTEXT_AND_GOAL:
     - "Prior stress tests showed robustness under known adversarial classes"
     - "Unknown breakpoints remain unproven"
     - "System limits undocumented until deliberately broken"
-    
+
   goal:
     - "Force governance signal failure"
     - "Discover true system breakpoints"
     - "Produce evidence of where guarantees stop holding"
     - "Document reproducible failure traces"
-    
+
   pattern: BREAKPOINTS_CREATE_TRUST
   principle: "A system without known limits is a system without proof"
 ```
@@ -91,7 +91,7 @@ CONSTRAINTS_AND_GUARDRAILS:
     no_threshold_redefinition: true
     no_override_logic_changes: true
     glass_box_only: true
-    
+
   failure_expectation:
     at_least_one_breakpoint_required: true
     zero_silent_failures: REQUIRED
@@ -121,10 +121,10 @@ DELIVERABLES:
   files_created:
     - path: "docs/governance/GOVERNANCE_SIGNAL_BREAKPOINT_REPORT.md"
       description: "Comprehensive breakpoint discovery report with 5 identified breakpoints"
-      
+
     - path: "docs/governance/GOVERNANCE_SIGNAL_FAILURE_TRACES.md"
       description: "Stepwise failure traces for all discovered breakpoints"
-      
+
   files_modified: []
 ```
 
@@ -216,13 +216,13 @@ TRAINING_SIGNAL:
   signal_type: POSITIVE_REINFORCEMENT
   pattern: BREAKPOINTS_CREATE_TRUST
   lesson: "A system without known limits is a system without proof."
-  
+
   learning_outcomes:
     - "Breakpoint discovery is knowledge acquisition, not failure"
     - "5 breakpoints found = 5 limits now documented and addressable"
     - "Known limits create trust; unknown limits create uncertainty"
     - "Adversarial testing that finds nothing proves little"
-    
+
   propagate: true
   mandatory: true
 ```
@@ -236,7 +236,7 @@ VIOLATIONS_ADDRESSED:
   - code: GS_081
     description: "Breakpoints not explicitly discovered"
     resolution: "5 breakpoints identified with reproducible traces"
-    
+
   - code: GS_082
     description: "Failure conditions insufficiently characterized"
     resolution: "All failure conditions documented with stepwise traces"
@@ -280,7 +280,7 @@ BENSON_SELF_REVIEW_GATE:
   reviewer: BENSON
   reviewer_gid: GID-00
   issuance_policy: FAIL_CLOSED
-  
+
   checklist_results:
     identity_correct: PASS
     agent_color_correct: PASS
@@ -298,7 +298,7 @@ BENSON_SELF_REVIEW_GATE:
     checklist_at_end: PASS
     checklist_all_items_checked: PASS
     return_permitted: PASS
-    
+
   failed_items: []
   override_used: false
   status: PASS
@@ -446,12 +446,12 @@ GOLD_STANDARD_CHECKLIST:
   no_extra_content: true
   no_scope_drift: true
   self_certification_present: true
-  
+
   # P39-Specific
   breakpoints_identified: true
   failure_traces_provided: true
   deterministic_replay_verified: true
-  
+
   all_items_checked: true
   checklist_terminal: true
 ```

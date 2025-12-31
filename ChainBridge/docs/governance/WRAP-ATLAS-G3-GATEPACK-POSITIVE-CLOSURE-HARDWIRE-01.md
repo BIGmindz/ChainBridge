@@ -102,15 +102,15 @@ VIOLATIONS_ADDRESSED:
   - violation_id: "V-001"
     description: "Positive Closure was not structurally enforced"
     status: "RESOLVED"
-    
+
   - violation_id: "V-002"
     description: "Implicit success could be mistaken for closure"
     status: "RESOLVED"
-    
+
   - violation_id: "V-003"
     description: "No validation of closure class semantics"
     status: "RESOLVED"
-    
+
   - violation_id: "V-004"
     description: "Missing dedicated error codes for closure violations"
     status: "RESOLVED"
@@ -199,7 +199,7 @@ ACCEPTANCE_VERIFICATION:
     lineage_missing: "VERIFIED — G0_040 raised"
     training_signal_wrong: "VERIFIED — G0_045 raised"
     closure_not_terminal: "VERIFIED — G0_043 raised"
-  
+
   existing_atlas_positive_closure_passes: "VERIFIED"
   ci_blocks_invalid_positive_closure: "VERIFIED"
 ```
@@ -229,7 +229,7 @@ SELF_CERTIFICATION:
   certification_statement: |
     This PAC hard-wires Positive Closure semantics into GatePack
     and makes semantic misuse structurally impossible.
-    
+
     I certify that:
     1. Positive Closure is now a first-class closure class
     2. Validation is structural, not string-based

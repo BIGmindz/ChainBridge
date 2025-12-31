@@ -1,9 +1,9 @@
 # PAC-SAM-P27-CANONICAL-PAC-TEMPLATE-COMPLIANCE-01
 
-> **PAC Canonical Template Compliance — Security Lane (P27)**  
-> **Agent:** Sam (GID-06)  
-> **Color:** 🟥 DARK_RED  
-> **Date:** 2025-12-24  
+> **PAC Canonical Template Compliance — Security Lane (P27)**
+> **Agent:** Sam (GID-06)
+> **Color:** 🟥 DARK_RED
+> **Date:** 2025-12-24
 > **Status:** 🟥 POSITIVE_CLOSURE
 
 ---
@@ -160,13 +160,13 @@ VIOLATIONS_ADDRESSED:
     description: "Persona activation block missing"
     resolution: "AGENT_ACTIVATION_ACK enforced"
     status: "RESOLVED"
-    
+
   - violation_id: "PAG_003"
     code: "PAG_003_REGISTRY_MISMATCH"
     description: "Registry mismatch risk"
     resolution: "Registry-bound validation enforced"
     status: "RESOLVED"
-    
+
   - violation_id: "PAG_005"
     code: "PAG_005_ORDERING_VIOLATION"
     description: "Block ordering violation risk"
@@ -295,8 +295,8 @@ SELF_CERTIFICATION:
     - "permissions_constrained"
   statement: |
     This PAG-01 correction confirms persona activation gate compliance
-    for Sam (GID-06) at P27 stage. Registry binding verified. Execution 
-    lane SECURITY instantiated with explicit path and tool constraints. All 
+    for Sam (GID-06) at P27 stage. Registry binding verified. Execution
+    lane SECURITY instantiated with explicit path and tool constraints. All
     ordering violations resolved. No drift introduced. No implicit privileges.
   certified: true
   timestamp: "2025-12-24T00:00:00Z"
@@ -322,32 +322,32 @@ GOLD_STANDARD_CHECKLIST:
   execution_lane_instantiated: true
   canonical_headers_present: true
   block_order_correct: true
-  
+
   # Activation Blocks
   runtime_activation_ack_present: true
   runtime_activation_present: true
   agent_activation_ack_present: true
   agent_activation_present: true
   persona_activation_present: true
-  
+
   # PAG-01 Enforcement
   pag01_enforcement_present: true
   execution_lane_assignment_present: true
   permissions_explicit: true
   governance_mode_declared: true
-  
+
   # Correction Blocks
   correction_class_declared: true
   violations_addressed_present: true
   error_codes_declared: true
-  
+
   # Review Gates
   benson_self_review_gate_present: true
   review_gate_declared: true
   review_gate_passed: true
   review_gate_terminal: true
   self_review_gate_passed: true
-  
+
   # Governance Blocks
   forbidden_actions_section_present: true
   forbidden_actions_declared: true
@@ -355,19 +355,19 @@ GOLD_STANDARD_CHECKLIST:
   scope_lock_present: true
   final_state_declared: true
   wrap_schema_valid: true
-  
+
   # Closure
   closure_declared: true
   closure_authority_declared: true
-  
+
   # Content Validation
   no_extra_content: true
   no_scope_drift: true
-  
+
   # Required Keys
   training_signal_present: true
   self_certification_present: true
-  
+
   # Terminal
   checklist_terminal: true
   checklist_all_items_passed: true

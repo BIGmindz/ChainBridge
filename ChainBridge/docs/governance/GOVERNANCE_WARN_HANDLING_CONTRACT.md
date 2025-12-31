@@ -1,9 +1,9 @@
 # Governance WARN Handling Contract
 
-> **PAC Reference:** PAC-MAGGIE-P41-GOVERNANCE-SIGNAL-AUTHORITY-BOUNDARIES-AND-WARN-PROPAGATION-LOCKDOWN-01  
-> **Author:** Maggie (GID-10) | 💗 MAGENTA  
-> **Authority:** BENSON (GID-00)  
-> **Date:** 2025-12-24  
+> **PAC Reference:** PAC-MAGGIE-P41-GOVERNANCE-SIGNAL-AUTHORITY-BOUNDARIES-AND-WARN-PROPAGATION-LOCKDOWN-01
+> **Author:** Maggie (GID-10) | 💗 MAGENTA
+> **Authority:** BENSON (GID-00)
+> **Date:** 2025-12-24
 > **Status:** ENFORCED
 
 ---
@@ -24,18 +24,18 @@ This document defines the **explicit handling contract** for WARN signals within
 WARN_SIGNAL_DEFINITION:
   signal_type: "ADVISORY"
   authority_level: "NONE"
-  
+
   semantics:
     description: "Input has deficiencies but is not fundamentally invalid"
     action_required: "Human review or automated remediation"
     blocking: false
-    
+
   key_properties:
     - "WARN is NOT approval"
     - "WARN is NOT rejection"
     - "WARN is NOT deferral"
     - "WARN is OBSERVATION ONLY"
-    
+
   cannot_authorize:
     - "Cash release"
     - "Fund transfer"
@@ -53,17 +53,17 @@ SIGNAL_AUTHORITY_HIERARCHY:
     authority: "FULL"
     can_authorize: ["settlement", "release", "execution"]
     propagates_to: ["SETTLEMENT", "ECONOMIC_ACTIONS"]
-    
+
   WARN:
     authority: "NONE"
     can_authorize: []
     propagates_to: ["LOGGING", "MONITORING", "HUMAN_REVIEW"]
-    
+
   FAIL:
     authority: "TERMINAL_BLOCK"
     can_authorize: []
     propagates_to: ["HALT", "REJECTION", "AUDIT"]
-    
+
   SKIP:
     authority: "NONE"
     can_authorize: []
@@ -85,31 +85,31 @@ WARN_INGRESS_PATHS:
       - "Gold Standard checklist with optional items missing"
       - "Schema validation with deprecated fields"
       - "Agent registry lookup with soft mismatches"
-      
+
     allowed_consumers:
       - "LOGGING_SUBSYSTEM"
       - "MONITORING_DASHBOARD"
       - "AUDIT_TRAIL"
       - "HUMAN_REVIEW_QUEUE"
-      
+
     forbidden_consumers:
       - "SETTLEMENT_ENGINE"
       - "FUND_RELEASE_GATE"
       - "AUTHORITY_ESCALATION_SERVICE"
       - "PRIVILEGE_MANAGER"
-      
+
   GOVERNANCE_LAYER:
     sources:
       - "PAC validation with advisory warnings"
       - "WRAP validation with non-critical issues"
       - "Ledger entries with optional metadata missing"
       - "Sequence checks with soft ordering issues"
-      
+
     allowed_consumers:
       - "GOVERNANCE_DASHBOARD"
       - "AGENT_NOTIFICATION_SERVICE"
       - "CORRECTION_SUGGESTION_ENGINE"
-      
+
     forbidden_consumers:
       - "POSITIVE_CLOSURE_GRANT"
       - "AUTHORITY_TOKEN_ISSUER"
@@ -125,13 +125,13 @@ WARN_EGRESS_BOUNDARIES:
     allows: ["WARN → GOVERNANCE_LOGGING"]
     blocks: ["WARN → AUTHORITY_DECISION"]
     enforcement: "COMPILE_TIME + RUNTIME"
-    
+
   HARD_BOUNDARY_002:
     name: "GOVERNANCE_TO_SETTLEMENT"
     allows: ["PASS → SETTLEMENT"]
     blocks: ["WARN → SETTLEMENT", "FAIL → SETTLEMENT"]
     enforcement: "RUNTIME_INVARIANT"
-    
+
   HARD_BOUNDARY_003:
     name: "WARN_TO_ECONOMIC"
     allows: []
@@ -154,46 +154,46 @@ WARN_HANDLING_CONTRACT:
       - "Increment WARN counter in metrics"
       - "Add to human review queue"
       - "Continue validation pipeline (non-blocking)"
-      
+
     BLOCK:
       - "Propagate to settlement layer"
       - "Issue authority tokens"
       - "Bypass any mandatory gate"
       - "Escalate with authority grant"
-      
+
     ESCALATE:
       - "Route to designated reviewer if WARN count > threshold"
       - "Notify agent lead if WARN pattern detected"
-      
+
   ---
-  
+
   context: "GOVERNANCE_EVALUATION"
   actions:
     ALLOW:
       - "Display in governance dashboard"
       - "Include in PAC/WRAP status reports"
       - "Track in agent learning ledger"
-      
+
     BLOCK:
       - "Grant POSITIVE_CLOSURE"
       - "Issue correction completion"
       - "Authorize PAC sequence advancement"
-      
+
     ESCALATE:
       - "Flag for BENSON review if governance WARN threshold exceeded"
-      
+
   ---
-  
+
   context: "SETTLEMENT_BOUNDARY"
   actions:
     ALLOW: []  # NOTHING ALLOWED
-    
+
     BLOCK:
       - "ANY action at settlement boundary"
       - "Fund release"
       - "Cash movement"
       - "Economic state change"
-      
+
     ESCALATE:
       - "Emergency halt if WARN reaches settlement boundary"
       - "Emit GS_096: WARN_SETTLEMENT_BOUNDARY_VIOLATION"
@@ -204,29 +204,29 @@ WARN_HANDLING_CONTRACT:
 ```yaml
 WARN_DECISION_MATRIX:
   # Signal → Context → Action
-  
+
   WARN + SIGNAL_LAYER + LOGGING:
     decision: "ALLOW"
     reason: "Advisory logging is safe"
-    
+
   WARN + SIGNAL_LAYER + MONITORING:
     decision: "ALLOW"
     reason: "Observability is safe"
-    
+
   WARN + SIGNAL_LAYER + SETTLEMENT:
     decision: "BLOCK"
     reason: "WARN cannot authorize economic action"
     error_code: "GS_096"
-    
+
   WARN + GOVERNANCE_LAYER + DASHBOARD:
     decision: "ALLOW"
     reason: "Display is safe"
-    
+
   WARN + GOVERNANCE_LAYER + CLOSURE:
     decision: "BLOCK"
     reason: "WARN cannot grant closure"
     error_code: "GS_097"
-    
+
   WARN + SETTLEMENT_LAYER + ANY:
     decision: "BLOCK"
     reason: "WARN cannot exist at settlement layer"
@@ -245,17 +245,17 @@ WARN_ERROR_CODES:
     description: "WARN signal attempted to reach settlement boundary"
     severity: "CRITICAL"
     action: "EMERGENCY_HALT"
-    
+
   GS_097:
     description: "WARN signal attempted to grant POSITIVE_CLOSURE"
     severity: "CRITICAL"
     action: "BLOCK_AND_AUDIT"
-    
+
   GS_098:
     description: "WARN signal detected in settlement layer"
     severity: "CATASTROPHIC"
     action: "SYSTEM_LOCKDOWN"
-    
+
   GS_099:
     description: "WARN cascaded through authority escalation path"
     severity: "CRITICAL"
@@ -274,7 +274,7 @@ STATIC_ENFORCEMENT:
     - "Type system prevents WARN → Settlement function calls"
     - "Lint rules flag any WARN in settlement code paths"
     - "Code review gate blocks WARN in economic modules"
-    
+
   pattern_detection:
     forbidden_patterns:
       - "if signal == WARN: release_funds()"
@@ -290,7 +290,7 @@ RUNTIME_ENFORCEMENT:
     - "Assert WARN never reaches SettlementEngine"
     - "Assert WARN never in AuthorityToken payload"
     - "Assert WARN count = 0 at settlement boundary"
-    
+
   audit_logging:
     - "Log all WARN signals with full context"
     - "Log all WARN boundary approach events"
@@ -371,7 +371,7 @@ TRAINING_SIGNAL:
   lesson: "Advisory signals must never move money."
   mandatory: true
   propagate: true
-  
+
   reinforcement:
     - "WARN = observation, not permission"
     - "WARN = logging, not authorization"
@@ -389,7 +389,7 @@ AUDIT_REQUIREMENTS:
     - "Include source context"
     - "Include destination context"
     - "Be traceable in replay"
-    
+
   warn_boundary_events_must:
     - "Emit dedicated boundary event"
     - "Include distance from settlement layer"
@@ -398,6 +398,6 @@ AUDIT_REQUIREMENTS:
 
 ---
 
-**Contract Status:** ENFORCED  
-**Authority:** BENSON (GID-00)  
+**Contract Status:** ENFORCED
+**Authority:** BENSON (GID-00)
 **Immutable:** true

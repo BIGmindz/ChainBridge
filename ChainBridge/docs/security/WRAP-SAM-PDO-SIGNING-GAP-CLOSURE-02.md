@@ -12,11 +12,11 @@
 ╚═══════════════════════════════════════════════════════════════╝
 ```
 
-**AGENT:** Sam — Security & Threat Engineer (GID-06)  
-**DATE:** 2025-12-22  
-**MODE:** Governance / Threat Closure  
-**AUTHORITY:** PDO Enforcement Model v1 (LOCKED)  
-**CLASSIFICATION:** Internal / Security Governance  
+**AGENT:** Sam — Security & Threat Engineer (GID-06)
+**DATE:** 2025-12-22
+**MODE:** Governance / Threat Closure
+**AUTHORITY:** PDO Enforcement Model v1 (LOCKED)
+**CLASSIFICATION:** Internal / Security Governance
 **EXECUTION:** ❌ NONE (Design & Governance Only)
 
 ---

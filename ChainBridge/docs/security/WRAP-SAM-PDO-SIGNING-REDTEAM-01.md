@@ -2,10 +2,10 @@
 ## WRAP — PAC-SAM-PDO-SIGNING-REDTEAM-01
 # 🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥
 
-**AGENT:** Sam — Security & Threat Engineer (GID-06)  
-**DATE:** 2025-12-22  
-**MODE:** Adversarial / Red-Team  
-**AUTHORITY:** PDO Enforcement Model v1 (LOCKED)  
+**AGENT:** Sam — Security & Threat Engineer (GID-06)
+**DATE:** 2025-12-22
+**MODE:** Adversarial / Red-Team
+**AUTHORITY:** PDO Enforcement Model v1 (LOCKED)
 **CLASSIFICATION:** Security Intelligence Artifact
 
 ---
@@ -509,27 +509,27 @@ This is documented as **TEMPORARY LEGACY MODE** in code comments.
 
 ### RR-1: Legacy Unsigned PDO Mode
 
-**Risk:** Unsigned PDOs are currently allowed with warning.  
-**Impact:** Complete bypass of signature enforcement.  
-**Status:** KNOWN — documented as temporary state.  
+**Risk:** Unsigned PDOs are currently allowed with warning.
+**Impact:** Complete bypass of signature enforcement.
+**Status:** KNOWN — documented as temporary state.
 **Tracking:** Comment in `signing.py:VerificationResult.allows_execution`
 
 ### RR-2: Signer↔Key Binding Not Enforced
 
-**Risk:** Verification does not validate that claimed signer matches key_id owner.  
-**Impact:** Information disclosure only (not forgery).  
+**Risk:** Verification does not validate that claimed signer matches key_id owner.
+**Impact:** Information disclosure only (not forgery).
 **Status:** Low severity — signature integrity prevents actual impersonation.
 
 ### RR-3: Expiry Check Not Implemented
 
-**Risk:** `expires_at` field is signed but not checked at verification time.  
-**Impact:** Expired PDOs could be submitted.  
+**Risk:** `expires_at` field is signed but not checked at verification time.
+**Impact:** Expired PDOs could be submitted.
 **Status:** Defense-in-depth gap — signature protects against external modification.
 
 ### RR-4: Nonce Consumption Not Tracked
 
-**Risk:** Same nonce could theoretically be used if same signing service issues it.  
-**Impact:** Internal replay by signing service only.  
+**Risk:** Same nonce could theoretically be used if same signing service issues it.
+**Impact:** Internal replay by signing service only.
 **Status:** Infrastructure control — external attackers cannot forge.
 
 ---

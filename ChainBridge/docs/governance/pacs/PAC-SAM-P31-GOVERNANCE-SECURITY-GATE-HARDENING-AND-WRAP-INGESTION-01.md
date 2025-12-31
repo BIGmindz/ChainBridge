@@ -1,9 +1,9 @@
 # PAC-SAM-P31-GOVERNANCE-SECURITY-GATE-HARDENING-AND-WRAP-INGESTION-01
 
-> **Governance Security Gate Hardening and WRAP Ingestion — P31 Enforcement**  
-> **Agent:** Sam (GID-06)  
-> **Color:** 🟥 DARK_RED  
-> **Date:** 2025-12-24  
+> **Governance Security Gate Hardening and WRAP Ingestion — P31 Enforcement**
+> **Agent:** Sam (GID-06)
+> **Color:** 🟥 DARK_RED
+> **Date:** 2025-12-24
 > **Status:** 🟥 POSITIVE_CLOSURE
 
 ---
@@ -141,7 +141,7 @@ ARTIFACT_TYPE_ENFORCEMENT:
   valid_types:
     - PAC
     - WRAP
-    
+
   PAC_ARTIFACT:
     type: "CONTROL_PLANE"
     authorization_capable: true
@@ -157,7 +157,7 @@ ARTIFACT_TYPE_ENFORCEMENT:
       - PAG-01
       - REVIEW-GATE
       - BSRG-01
-      
+
   WRAP_ARTIFACT:
     type: "REPORT_ONLY"
     authorization_capable: false
@@ -175,7 +175,7 @@ ARTIFACT_TYPE_ENFORCEMENT:
       - REVIEW_GATE
       - PAG01_ACTIVATION
       - PACK_IMMUTABILITY
-      
+
   MIXED_SEMANTICS:
     allowed: false
     enforcement: "FAIL_CLOSED"
@@ -189,7 +189,7 @@ WRAP_INGESTION_PREAMBLE_SPEC:
   position: "FIRST_BLOCK"
   required: true
   enforcement: "HARD_FAIL"
-  
+
   required_fields:
     - artifact_type: "WRAP"
     - schema: "CHAINBRIDGE_CANONICAL_WRAP_SCHEMA"
@@ -199,7 +199,7 @@ WRAP_INGESTION_PREAMBLE_SPEC:
     - review_gate_required: false
     - bsrg_required: false
     - mode: "REPORT_ONLY"
-    
+
   validation_errors:
     missing_preamble: "WRP_001"
     preamble_not_first: "WRP_002"
@@ -218,28 +218,28 @@ THREAT_MODEL:
     vector: "Including PAC control blocks in WRAP"
     mitigation: "Forbidden block detection with HARD_FAIL"
     error_code: "WRP_004"
-    
+
   GATE_CONFUSION:
     threat_id: "WRAP_THREAT_002"
     description: "WRAP triggers PAC validation gates incorrectly"
     vector: "Missing artifact type detection"
     mitigation: "Explicit WRAP_INGESTION_PREAMBLE as first block"
     error_code: "WRP_001"
-    
+
   SCHEMA_POISONING:
     threat_id: "WRAP_THREAT_003"
     description: "Malformed WRAP corrupts schema validation"
     vector: "Invalid schema version or mixed artifact types"
     mitigation: "Strict schema version validation"
     error_code: "WRP_007"
-    
+
   PROMPT_INJECTION_VIA_REPLAY:
     threat_id: "WRAP_THREAT_004"
     description: "WRAP content replayed to inject commands"
     vector: "Training signal contains executable patterns"
     mitigation: "Training signal content validation and isolation"
     error_code: "WRP_009"
-    
+
   IDENTITY_ESCALATION:
     threat_id: "WRAP_THREAT_005"
     description: "WRAP claims higher authority than source PAC"
@@ -257,23 +257,23 @@ FORBIDDEN_ACTIONS:
   - action: "WRAP_TRIGGERING_PAC_GATES"
     description: "WRAPs cannot activate PAG-01, REVIEW-GATE, or BSRG"
     violation_code: "FA_010"
-    
+
   - action: "WRAP_ESCALATING_AUTHORITY"
     description: "WRAPs cannot claim authorization capability"
     violation_code: "FA_011"
-    
+
   - action: "WRAP_MUTATING_GOVERNANCE_STATE"
     description: "WRAPs cannot modify governance ledger entries"
     violation_code: "FA_012"
-    
+
   - action: "MIXED_ARTIFACT_SEMANTICS"
     description: "Single artifact cannot be both PAC and WRAP"
     violation_code: "FA_013"
-    
+
   - action: "LEGACY_EXCEPTION_BYPASS"
     description: "No legacy exceptions for security enforcement"
     violation_code: "FA_014"
-    
+
   - action: "AMBIGUOUS_ARTIFACT_ACCEPTANCE"
     description: "Ambiguous artifacts must be rejected"
     violation_code: "FA_015"
@@ -291,17 +291,17 @@ NEW_ERROR_CODES:
     code: "WRP_008"
     description: "WRAP artifact_type mismatch or mixed semantics"
     severity: "CRITICAL"
-    
+
   WRP_009:
     code: "WRP_009"
     description: "WRAP training signal contains forbidden patterns"
     severity: "HIGH"
-    
+
   WRP_010:
     code: "WRP_010"
     description: "WRAP PAC_REFERENCE validation failed"
     severity: "HIGH"
-    
+
   WRP_011:
     code: "WRP_011"
     description: "WRAP preamble fields incomplete or invalid"
@@ -316,22 +316,22 @@ WRAP_VALIDATION_FLOW:
     action: "Detect artifact type"
     method: "Check for WRAP_INGESTION_PREAMBLE or WRAP-AGENT pattern"
     fail_action: "Route to PAC validation"
-    
+
   step_2:
     action: "Validate preamble position"
     method: "WRAP_INGESTION_PREAMBLE must be first block"
     fail_action: "HARD_FAIL with WRP_002"
-    
+
   step_3:
     action: "Check forbidden blocks"
     method: "Scan for PAC control blocks"
     fail_action: "HARD_FAIL with WRP_004"
-    
+
   step_4:
     action: "Validate required blocks"
     method: "Check BENSON_TRAINING_SIGNAL and FINAL_STATE"
     fail_action: "HARD_FAIL with WRP_003/WRP_006"
-    
+
   step_5:
     action: "Validate preamble fields"
     method: "Check all required fields present and valid"
@@ -349,13 +349,13 @@ VIOLATIONS_ADDRESSED:
     description: "WRAP/PAC boundary not formally enforced"
     resolution: "Explicit artifact type detection and separation"
     status: "RESOLVED"
-    
+
   - violation_id: "SEC_WRAP_002"
     code: "SEC_WRAP_002"
     description: "WRAP ingestion preamble not mandatory"
     resolution: "HARD_FAIL on missing or mispositioned preamble"
     status: "RESOLVED"
-    
+
   - violation_id: "SEC_WRAP_003"
     code: "SEC_WRAP_003"
     description: "Threat model not explicitly documented"
@@ -503,39 +503,39 @@ GOLD_STANDARD_CHECKLIST:
   execution_lane_instantiated: true
   canonical_headers_present: true
   block_order_correct: true
-  
+
   # Activation Blocks
   runtime_activation_ack_present: true
   runtime_activation_present: true
   agent_activation_ack_present: true
   agent_activation_present: true
   persona_activation_present: true
-  
+
   # PAG-01 Enforcement
   pag01_enforcement_present: true
   execution_lane_assignment_present: true
   permissions_explicit: true
   governance_mode_declared: true
-  
+
   # Security Gate Hardening (P31 Specific)
   pac_wrap_boundary_enforced: true
   wrap_ingestion_preamble_required: true
   threat_model_declared: true
   forbidden_blocks_defined: true
   gate_pack_hardening_specified: true
-  
+
   # Correction Blocks
   correction_class_declared: true
   violations_addressed_present: true
   error_codes_declared: true
-  
+
   # Review Gates
   benson_self_review_gate_present: true
   review_gate_declared: true
   review_gate_passed: true
   review_gate_terminal: true
   self_review_gate_passed: true
-  
+
   # Governance Blocks
   forbidden_actions_section_present: true
   forbidden_actions_declared: true
@@ -543,21 +543,21 @@ GOLD_STANDARD_CHECKLIST:
   scope_lock_present: true
   final_state_declared: true
   wrap_schema_valid: true
-  
+
   # Closure
   closure_declared: true
   closure_authority_declared: true
   pack_immutability_declared: true
-  
+
   # Content Validation
   no_extra_content: true
   no_scope_drift: true
-  
+
   # Required Keys
   training_signal_present: true
   training_signal_mandatory: true
   self_certification_present: true
-  
+
   # Terminal
   checklist_terminal: true
   checklist_all_items_passed: true

@@ -40,16 +40,16 @@ check_allowlist() {
     # Get list of staged files for this commit
     # For commit-msg hook, we check what's staged
     STAGED_FILES=$(git diff --cached --name-only 2>/dev/null || echo "")
-    
+
     if [ -z "$STAGED_FILES" ]; then
         # No staged files (e.g., amend with no changes) - require PAC
         return 1
     fi
-    
+
     # Check if ALL staged files match allowlist
     for file in $STAGED_FILES; do
         MATCHED=0
-        
+
         # Check against each allowlist pattern
         if echo "$file" | grep -qE '^docs/'; then
             MATCHED=1
@@ -58,13 +58,13 @@ check_allowlist() {
         elif echo "$file" | grep -qE '^README\.md$'; then
             MATCHED=1
         fi
-        
+
         if [ "$MATCHED" -eq 0 ]; then
             # File not in allowlist - require PAC
             return 1
         fi
     done
-    
+
     # All files in allowlist - bypass
     return 0
 }

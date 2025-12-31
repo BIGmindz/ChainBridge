@@ -1,0 +1,389 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# CHAINBRIDGE CANONICAL PDO SCHEMA v1.0.0
+# Authority: PAC-BENSON-GOV-SCHEMA-CANON-REMEDIATION-001
+# Mode: FROZEN | Enforcement: HARD_FAIL
+# ═══════════════════════════════════════════════════════════════════════════════
+
+SCHEMA_METADATA:
+  schema_id: "CHAINBRIDGE_CANONICAL_PDO_SCHEMA"
+  version: "1.0.0"
+  authority: "PAC-BENSON-GOV-SCHEMA-CANON-REMEDIATION-001"
+  status: "FROZEN"
+  enforcement: "HARD_FAIL"
+  mutable: false
+  effective_date: "2025-12-30"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 0. PDO DEFINITION (NON-NEGOTIABLE)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+PDO_DEFINITION:
+  artifact_class: "PROOF_DECISION_OUTCOME"
+  purpose: "Atomic, auditable governance unit linking proof to decision to outcome"
+  
+  CORE_PRINCIPLE: |
+    Every governance decision is a first-class, auditable object.
+    Proof → Decision → Outcome forms an immutable chain.
+    No decision exists without proof. No outcome exists without decision.
+    
+  CHARACTERISTICS:
+    atomic: true
+    auditable: true
+    immutable: true
+    hashchain_linked: true
+    
+  AUTHORITY_MODEL:
+    proof_collector: "Any authorized agent"
+    decision_maker: "Benson (GID-00) ONLY"
+    outcome_recorder: "System (deterministic)"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 1. PDO STRUCTURE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+PDO_STRUCTURE:
+  components:
+    PROOF:
+      description: "Evidence supporting decision"
+      required: true
+      immutable: true
+      
+    DECISION:
+      description: "Binding judgment based on proof"
+      required: true
+      immutable: true
+      authority: "Benson (GID-00) ONLY"
+      
+    OUTCOME:
+      description: "Deterministic result of decision"
+      required: true
+      immutable: true
+      derivation: "Automatic from decision"
+      
+  SEQUENCE_INVARIANT: |
+    PROOF must precede DECISION.
+    DECISION must precede OUTCOME.
+    OUTCOME must derive from DECISION.
+    Chain is irreversible.
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 2. PROOF COMPONENT SCHEMA
+# ═══════════════════════════════════════════════════════════════════════════════
+
+PROOF_SCHEMA:
+  component_name: "PROOF"
+  
+  required_fields:
+    proof_id:
+      type: "string"
+      pattern: "PRF-[A-Z0-9-]+"
+      description: "Unique proof identifier"
+      
+    proof_type:
+      type: "string"
+      enum:
+        - "EXECUTION_EVIDENCE"
+        - "COMPLIANCE_CHECK"
+        - "ATTESTATION"
+        - "AUDIT_TRAIL"
+        - "SIGNAL_DATA"
+        - "HUMAN_INPUT"
+      description: "Category of proof"
+      
+    proof_hash:
+      type: "string"
+      format: "sha256"
+      description: "Cryptographic hash of proof content"
+      
+    proof_timestamp:
+      type: "string"
+      format: "datetime"
+      description: "When proof was collected"
+      
+    proof_collector:
+      type: "string"
+      description: "Agent that collected proof"
+      
+    proof_content:
+      type: "object"
+      description: "Actual proof data"
+      
+  optional_fields:
+    proof_source:
+      type: "string"
+      description: "Origin of proof"
+      
+    proof_chain:
+      type: "array"
+      description: "Prior proofs in chain"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 3. DECISION COMPONENT SCHEMA
+# ═══════════════════════════════════════════════════════════════════════════════
+
+DECISION_SCHEMA:
+  component_name: "DECISION"
+  authority_constraint: "Benson (GID-00) ONLY"
+  
+  required_fields:
+    decision_id:
+      type: "string"
+      pattern: "DEC-[A-Z0-9-]+"
+      description: "Unique decision identifier"
+      
+    proof_reference:
+      type: "string"
+      pattern: "PRF-[A-Z0-9-]+"
+      description: "Proof this decision is based on"
+      
+    decision_type:
+      type: "string"
+      enum:
+        - "ACCEPT"
+        - "REJECT"
+        - "CONDITIONAL_ACCEPT"
+        - "ESCALATE"
+        - "DEFER"
+      description: "Decision category"
+      
+    decision_value:
+      type: "string"
+      description: "Specific decision made"
+      
+    decision_timestamp:
+      type: "string"
+      format: "datetime"
+      description: "When decision was made"
+      
+    decision_authority:
+      type: "string"
+      enum: ["BENSON_GID00"]
+      description: "Authority making decision"
+      
+    decision_hash:
+      type: "string"
+      format: "sha256"
+      description: "Hash linking to proof"
+      
+  optional_fields:
+    decision_rationale:
+      type: "string"
+      description: "Explanation for decision"
+      
+    decision_conditions:
+      type: "array"
+      description: "Conditions if conditional"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 4. OUTCOME COMPONENT SCHEMA
+# ═══════════════════════════════════════════════════════════════════════════════
+
+OUTCOME_SCHEMA:
+  component_name: "OUTCOME"
+  derivation: "DETERMINISTIC"
+  
+  required_fields:
+    outcome_id:
+      type: "string"
+      pattern: "OUT-[A-Z0-9-]+"
+      description: "Unique outcome identifier"
+      
+    decision_reference:
+      type: "string"
+      pattern: "DEC-[A-Z0-9-]+"
+      description: "Decision this outcome derives from"
+      
+    outcome_type:
+      type: "string"
+      enum:
+        - "SETTLEMENT"
+        - "REJECTION"
+        - "ESCALATION"
+        - "DEFERRAL"
+        - "CONDITIONAL_HOLD"
+      description: "Outcome category"
+      
+    outcome_state:
+      type: "string"
+      enum:
+        - "PENDING"
+        - "EXECUTED"
+        - "REVERTED"
+        - "CANCELLED"
+      description: "Current outcome state"
+      
+    outcome_timestamp:
+      type: "string"
+      format: "datetime"
+      description: "When outcome was recorded"
+      
+    outcome_hash:
+      type: "string"
+      format: "sha256"
+      description: "Hash linking to decision"
+      
+  optional_fields:
+    outcome_effects:
+      type: "array"
+      description: "Side effects of outcome"
+      
+    outcome_artifacts:
+      type: "array"
+      description: "Artifacts produced by outcome"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 5. PDO CHAIN INTEGRITY
+# ═══════════════════════════════════════════════════════════════════════════════
+
+PDO_CHAIN_INTEGRITY:
+  hash_algorithm: "SHA-256"
+  
+  CHAIN_RULES:
+    proof_to_decision:
+      link_type: "FORWARD_REFERENCE"
+      hash_includes: ["proof_id", "proof_hash", "proof_timestamp"]
+      
+    decision_to_outcome:
+      link_type: "FORWARD_REFERENCE"
+      hash_includes: ["decision_id", "decision_hash", "proof_reference"]
+      
+    pdo_to_pdo:
+      link_type: "MERKLE_CHAIN"
+      hash_includes: ["previous_pdo_hash", "current_pdo_hash"]
+      
+  INVARIANTS:
+    INV-PDO-001: "Proof hash must be verifiable"
+    INV-PDO-002: "Decision hash must include proof reference"
+    INV-PDO-003: "Outcome hash must include decision reference"
+    INV-PDO-004: "Chain is append-only"
+    INV-PDO-005: "Tampering invalidates entire chain"
+    INV-PDO-006: "No orphan components permitted"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 6. PDO GOVERNANCE MAPPING
+# ═══════════════════════════════════════════════════════════════════════════════
+
+PDO_GOVERNANCE_MAPPING:
+  description: "How PDO maps to PAC/WRAP/BER artifacts"
+  
+  PAC_AS_PROOF:
+    mapping: "PAC provides authorization proof"
+    proof_type: "EXECUTION_EVIDENCE"
+    
+  WRAP_AS_PROOF:
+    mapping: "WRAP provides execution proof"
+    proof_type: "ATTESTATION"
+    
+  BER_AS_DECISION:
+    mapping: "BER contains binding decision"
+    decision_authority: "Benson (GID-00)"
+    
+  SETTLEMENT_AS_OUTCOME:
+    mapping: "Settlement/effect is deterministic outcome"
+    outcome_derivation: "AUTOMATIC"
+    
+  WORKFLOW:
+    step_1: "PAC authorizes work (proof of authorization)"
+    step_2: "Execution produces WRAP (proof of execution)"
+    step_3: "BER contains decision (decision component)"
+    step_4: "System records outcome (outcome component)"
+    step_5: "PDO is sealed and chained"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 7. PDO VALIDATION RULES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+PDO_VALIDATION_RULES:
+  structural:
+    - "All three components (PROOF, DECISION, OUTCOME) present"
+    - "Component IDs follow naming conventions"
+    - "Timestamps are sequential (PROOF < DECISION < OUTCOME)"
+    
+  integrity:
+    - "Hash chain is unbroken"
+    - "Each component hash is verifiable"
+    - "References resolve to valid components"
+    
+  authority:
+    - "Decision authority is Benson (GID-00)"
+    - "Proof collector is authorized agent"
+    - "Outcome derivation is deterministic"
+    
+  immutability:
+    - "No component modification after sealing"
+    - "Corrections require new PDO with correction reference"
+    - "Chain append-only"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 8. PDO LIFECYCLE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+PDO_LIFECYCLE:
+  states:
+    PROOF_COLLECTED:
+      description: "Proof gathered, awaiting decision"
+      next: "DECISION_PENDING"
+      
+    DECISION_PENDING:
+      description: "Awaiting Benson decision"
+      next: "DECISION_MADE"
+      
+    DECISION_MADE:
+      description: "Decision issued, outcome pending"
+      next: "OUTCOME_RECORDED"
+      
+    OUTCOME_RECORDED:
+      description: "Outcome recorded, awaiting seal"
+      next: "SEALED"
+      
+    SEALED:
+      description: "PDO complete and immutable"
+      terminal: true
+      
+  TRANSITIONS:
+    - from: "PROOF_COLLECTED"
+      to: "DECISION_PENDING"
+      trigger: "Proof validation complete"
+      
+    - from: "DECISION_PENDING"
+      to: "DECISION_MADE"
+      trigger: "Benson issues decision"
+      
+    - from: "DECISION_MADE"
+      to: "OUTCOME_RECORDED"
+      trigger: "System records outcome"
+      
+    - from: "OUTCOME_RECORDED"
+      to: "SEALED"
+      trigger: "Hash chain finalized"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 9. ERROR CODES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+ERROR_CODES:
+  PDO_001: "Missing PROOF component"
+  PDO_002: "Missing DECISION component"
+  PDO_003: "Missing OUTCOME component"
+  PDO_004: "Hash chain broken"
+  PDO_005: "Unauthorized decision authority"
+  PDO_006: "Timestamp sequence violation"
+  PDO_007: "Reference resolution failed"
+  PDO_008: "Immutability violation attempted"
+  PDO_009: "Orphan component detected"
+  PDO_010: "Invalid component hash"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 10. SCHEMA IMMUTABILITY
+# ═══════════════════════════════════════════════════════════════════════════════
+
+SCHEMA_IMMUTABILITY:
+  schema_frozen: true
+  version_locked: "1.0.0"
+  modifications_allowed: false
+  supersession_requires: "PAC from Benson (GID-00) with explicit authority"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# END CHAINBRIDGE_CANONICAL_PDO_SCHEMA v1.0.0
+# STATUS: FROZEN | ENFORCEMENT: HARD_FAIL
+# ═══════════════════════════════════════════════════════════════════════════════

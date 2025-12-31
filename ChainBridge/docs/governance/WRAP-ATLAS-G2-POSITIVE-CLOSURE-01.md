@@ -103,19 +103,19 @@ VIOLATIONS_ADDRESSED:
   - violation_id: "G0_020"
     description: "Missing Gold Standard Checklist"
     status: "RESOLVED"
-    
+
   - violation_id: "G0_021"
     description: "Missing correction classification"
     status: "RESOLVED"
-    
+
   - violation_id: "G0_022"
     description: "Missing self-certification"
     status: "RESOLVED"
-    
+
   - violation_id: "G0_023"
     description: "Missing training signal propagation"
     status: "RESOLVED"
-    
+
   - violation_id: "G0_024"
     description: "Missing closure authority"
     status: "RESOLVED"
@@ -132,23 +132,23 @@ EVIDENCE:
     files:
       - "docs/governance/CANONICAL_CORRECTION_PACK_TEMPLATE.md"
       - "docs/governance/CANONICAL_PAC_TEMPLATE.md"
-      
+
   hard_gates_added:
     count: 3
     locations:
       - "gate_pack.py (G0_020-G0_024 error codes)"
       - ".githooks/pre-commit (Task 5/5)"
       - ".github/workflows/governance_check.yml (correction-pack-hardgate)"
-      
+
   audit_tools_created:
     count: 1
     files:
       - "tools/governance/audit_corrections.py"
-      
+
   forced_recorrections_generated:
     count: 5
     directory: "proofpacks/recorrection/"
-    
+
   precommit_blocking: true
   ci_blocking: true
   bypass_paths_detected: 0

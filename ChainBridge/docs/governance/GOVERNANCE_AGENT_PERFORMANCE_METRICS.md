@@ -1,9 +1,9 @@
 # Governance Agent Performance Metrics
 
-> **PAC Reference:** PAC-MAGGIE-P36-GOVERNANCE-METRICS-LEARNING-LOOP-AND-AGENT-PERFORMANCE-BASELINE-01  
-> **Author:** Maggie (GID-10) | 💗 MAGENTA  
-> **Authority:** BENSON (GID-00)  
-> **Date:** 2025-12-24  
+> **PAC Reference:** PAC-MAGGIE-P36-GOVERNANCE-METRICS-LEARNING-LOOP-AND-AGENT-PERFORMANCE-BASELINE-01
+> **Author:** Maggie (GID-10) | 💗 MAGENTA
+> **Authority:** BENSON (GID-00)
+> **Date:** 2025-12-24
 > **Status:** CANONICAL
 
 ---
@@ -30,23 +30,23 @@ METRIC_TAXONOMY:
     - id: "SPEED"
       description: "Time efficiency of task completion"
       unit: "seconds | iterations"
-      
+
     - id: "ACCURACY"
       description: "Correctness of deliverables"
       unit: "percentage | ratio"
-      
+
     - id: "CORRECTION_RATE"
       description: "Frequency of self-corrections needed"
       unit: "corrections_per_pac"
-      
+
     - id: "SCOPE_DISCIPLINE"
       description: "Adherence to declared execution lane"
       unit: "violations_count"
-      
+
     - id: "FAILURE_QUALITY"
       description: "Actionability and clarity of failure signals"
       unit: "quality_score (0-100)"
-      
+
     - id: "GOVERNANCE_COMPLIANCE"
       description: "Adherence to PAC/WRAP structure requirements"
       unit: "compliance_rate"
@@ -66,14 +66,14 @@ SPEED_METRICS:
     formula: "commit_timestamp - pac_received_timestamp"
     unit: "seconds"
     measurement: "AUTOMATED"
-    
+
   iterations_to_valid:
     id: "SPD_002"
     description: "Number of gate_pack.py runs until VALID"
     formula: "count(validation_attempts until status=VALID)"
     unit: "integer"
     measurement: "AUTOMATED"
-    
+
   correction_cycles:
     id: "SPD_003"
     description: "Number of edit-validate cycles per PAC"
@@ -92,21 +92,21 @@ ACCURACY_METRICS:
     formula: "1 if first_validation=VALID else 0"
     unit: "boolean (0|1)"
     measurement: "AUTOMATED"
-    
+
   deliverable_completeness:
     id: "ACC_002"
     description: "All declared deliverables are present"
     formula: "delivered_files / declared_files"
     unit: "ratio (0.0-1.0)"
     measurement: "AUTOMATED"
-    
+
   test_pass_rate:
     id: "ACC_003"
     description: "Percentage of tests passing (if applicable)"
     formula: "passed_tests / total_tests"
     unit: "percentage"
     measurement: "AUTOMATED"
-    
+
   regression_introduction:
     id: "ACC_004"
     description: "New failures introduced by PAC execution"
@@ -125,14 +125,14 @@ CORRECTION_RATE_METRICS:
     formula: "count(self_initiated_edits)"
     unit: "integer"
     measurement: "AUTOMATED"
-    
+
   external_corrections:
     id: "COR_002"
     description: "Corrections required after human/system feedback"
     formula: "count(feedback_triggered_edits)"
     unit: "integer"
     measurement: "AUTOMATED"
-    
+
   correction_ratio:
     id: "COR_003"
     description: "Ratio of corrections to total edits"
@@ -151,21 +151,21 @@ SCOPE_DISCIPLINE_METRICS:
     formula: "count(path_access where path not in allowed_paths)"
     unit: "integer"
     measurement: "AUTOMATED"
-    
+
   tool_violations:
     id: "SCP_002"
     description: "Attempts to use blocked tools"
     formula: "count(tool_use where tool in tools_blocked)"
     unit: "integer"
     measurement: "AUTOMATED"
-    
+
   scope_drift_events:
     id: "SCP_003"
     description: "Work performed outside declared PAC scope"
     formula: "count(actions where action not in declared_scope)"
     unit: "integer"
     measurement: "AUTOMATED"
-    
+
   authority_overreach:
     id: "SCP_004"
     description: "Attempts to claim unauthorized authority"
@@ -184,14 +184,14 @@ FAILURE_QUALITY_METRICS:
     formula: "failures_with_resolution / total_failures"
     unit: "ratio (0.0-1.0)"
     measurement: "AUTOMATED"
-    
+
   failure_evidence:
     id: "FQL_002"
     description: "Failures include specific evidence"
     formula: "failures_with_evidence / total_failures"
     unit: "ratio (0.0-1.0)"
     measurement: "AUTOMATED"
-    
+
   silent_failure_rate:
     id: "FQL_003"
     description: "Failures that emit no signal"
@@ -211,14 +211,14 @@ GOVERNANCE_COMPLIANCE_METRICS:
     formula: "1 if pag01_valid else 0"
     unit: "boolean (0|1)"
     measurement: "AUTOMATED"
-    
+
   gold_standard_compliance:
     id: "GOV_002"
     description: "All Gold Standard checklist items pass"
     formula: "passed_gs_items / total_gs_items"
     unit: "ratio (0.0-1.0)"
     measurement: "AUTOMATED"
-    
+
   training_signal_present:
     id: "GOV_003"
     description: "TRAINING_SIGNAL block present and valid"
@@ -247,7 +247,7 @@ ROLE_METRIC_WEIGHTS:
       FAILURE_QUALITY: 0.10
       GOVERNANCE_COMPLIANCE: 0.10
     priority: "ACCURACY > SCOPE_DISCIPLINE > SPEED"
-    
+
   FRONTEND:
     agent_example: "Dan (GID-07)"
     weights:
@@ -258,7 +258,7 @@ ROLE_METRIC_WEIGHTS:
       FAILURE_QUALITY: 0.10
       GOVERNANCE_COMPLIANCE: 0.20
     priority: "ACCURACY > GOVERNANCE_COMPLIANCE > SPEED"
-    
+
   SECURITY:
     agent_example: "Sam (GID-06)"
     weights:
@@ -269,7 +269,7 @@ ROLE_METRIC_WEIGHTS:
       FAILURE_QUALITY: 0.15
       GOVERNANCE_COMPLIANCE: 0.10
     priority: "ACCURACY > SCOPE_DISCIPLINE > FAILURE_QUALITY"
-    
+
   ML_AI:
     agent_example: "Maggie (GID-10)"
     weights:
@@ -280,7 +280,7 @@ ROLE_METRIC_WEIGHTS:
       FAILURE_QUALITY: 0.15
       GOVERNANCE_COMPLIANCE: 0.15
     priority: "ACCURACY > FAILURE_QUALITY > GOVERNANCE_COMPLIANCE"
-    
+
   STRATEGY:
     agent_example: "Atlas (GID-05)"
     weights:
@@ -291,7 +291,7 @@ ROLE_METRIC_WEIGHTS:
       FAILURE_QUALITY: 0.10
       GOVERNANCE_COMPLIANCE: 0.20
     priority: "ACCURACY > SCOPE_DISCIPLINE > GOVERNANCE_COMPLIANCE"
-    
+
   QUALITY_ASSURANCE:
     agent_example: "Alex (GID-08)"
     weights:
@@ -317,11 +317,11 @@ NORMALIZATION_RULES:
   count_metrics:
     formula: "max(0, 100 - (value * penalty_per_unit))"
     example: "violations=2, penalty=10 → score=80"
-    
+
   ratio_metrics:
     formula: "value * 100"
     example: "ratio=0.95 → score=95"
-    
+
   time_metrics:
     formula: "max(0, 100 - ((value - target) / target * 100))"
     example: "time=120s, target=60s → score=0"
@@ -334,11 +334,11 @@ NORMALIZATION_RULES:
 COMPOSITE_SCORE:
   formula: |
     composite = Σ(category_score * category_weight)
-    
+
     where:
       category_score = Σ(metric_score) / count(metrics_in_category)
       category_weight = ROLE_METRIC_WEIGHTS[role][category]
-      
+
   output_range: "[0, 100]"
   interpretation:
     "90-100": "EXEMPLARY"
@@ -363,7 +363,7 @@ AUTOMATED_COLLECTION_POINTS:
       - "agent_id"
       - "pac_id"
       - "declared_scope"
-      
+
   validation_attempt:
     triggers: "gate_pack.py execution"
     collects:
@@ -371,7 +371,7 @@ AUTOMATED_COLLECTION_POINTS:
       - "validation_result"
       - "error_codes"
       - "duration"
-      
+
   file_edit:
     triggers: "File modification"
     collects:
@@ -379,7 +379,7 @@ AUTOMATED_COLLECTION_POINTS:
       - "edit_type"
       - "in_allowed_paths"
       - "correction_flag"
-      
+
   pac_complete:
     triggers: "Git commit"
     collects:
@@ -397,7 +397,7 @@ METRIC_PERSISTENCE:
   format: "JSON"
   retention: "365 days"
   aggregation: "daily, weekly, monthly"
-  
+
   file_naming:
     pattern: "{agent_gid}_{pac_id}_{timestamp}.json"
     example: "GID-10_PAC-MAGGIE-P36_2025-12-24T00-00-00Z.json"
@@ -413,16 +413,16 @@ METRIC_PERSISTENCE:
 GLASS_BOX_CONSTRAINTS:
   - constraint: "All metric formulas must be published"
     enforcement: "MANDATORY"
-    
+
   - constraint: "No ML-derived metrics without explainer"
     enforcement: "MANDATORY"
-    
+
   - constraint: "Metric weights must be role-documented"
     enforcement: "MANDATORY"
-    
+
   - constraint: "Score components must be individually visible"
     enforcement: "MANDATORY"
-    
+
   - constraint: "No aggregation that hides individual failures"
     enforcement: "MANDATORY"
 ```
@@ -433,13 +433,13 @@ GLASS_BOX_CONSTRAINTS:
 ANTI_GAMING_CONSTRAINTS:
   - constraint: "Speed cannot offset accuracy failures"
     rule: "if ACCURACY < 60, composite capped at 59"
-    
+
   - constraint: "Scope violations are multiplicative penalties"
     rule: "if lane_violations > 0, composite *= 0.8"
-    
+
   - constraint: "Silent failures zero FAILURE_QUALITY score"
     rule: "if silent_failures > 0, FQL_score = 0"
-    
+
   - constraint: "First-pass validity bonus cannot exceed 10%"
     rule: "max_bonus = 10"
 ```
@@ -458,7 +458,7 @@ METRIC_CHANGE_PROCESS:
     3: "Baseline against historical data (if available)"
     4: "BENSON (GID-00) approval required"
     5: "30-day observation period before enforcement"
-    
+
   prohibited_changes:
     - "Removing metrics retroactively"
     - "Changing formulas without re-baselining"

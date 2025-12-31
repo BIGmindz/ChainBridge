@@ -29,7 +29,7 @@ Invalid WRAPs cannot exist.
 ```yaml
 GOLD_STANDARD_WRAP_SCHEMA:
   version: "G0.2.0"
-  
+
   required_sections:
     1. HEADER (ID, Version, Status, Authority)
     2. RUNTIME_ACTIVATION_ACK
@@ -44,10 +44,10 @@ GOLD_STANDARD_WRAP_SCHEMA:
     11. TRAINING_SIGNAL
     12. FINAL_STATE
     13. SIGNATURE_END_BANNER
-  
+
   section_order: STRICT
   missing_section: HARD_FAIL
-  
+
   validation_mode: FAIL_CLOSED
   bypass_paths: 0
 ```

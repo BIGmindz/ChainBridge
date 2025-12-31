@@ -1,0 +1,359 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# CHAINBRIDGE CANONICAL BER SCHEMA v1.1.0
+# Authority: PAC-JEFFREY-GOV-PDO-SPINE-ORCHESTRATION-001
+# Mode: FROZEN | Enforcement: HARD_FAIL
+# ═══════════════════════════════════════════════════════════════════════════════
+
+SCHEMA_METADATA:
+  schema_id: "CHAINBRIDGE_CANONICAL_BER_SCHEMA"
+  version: "1.1.0"
+  authority: "PAC-JEFFREY-GOV-PDO-SPINE-ORCHESTRATION-001"
+  previous_version: "1.0.0"
+  status: "FROZEN"
+  enforcement: "HARD_FAIL"
+  mutable: false
+  effective_date: "2025-12-30"
+  pdo_spine_binding: "MANDATORY"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 0. BER DEFINITION (NON-NEGOTIABLE)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+BER_DEFINITION:
+  artifact_class: "BINDING_EXECUTION_REVIEW"
+  purpose: "Issue binding acceptance or rejection of executed work"
+  authority_level: "ORCHESTRATION_ENGINE"
+  
+  ISSUER_CONSTRAINT:
+    permitted_issuer: "Benson (GID-00) ONLY"
+    issuer_role: "Orchestrator / Decision Authority"
+    delegation_permitted: false
+    enforcement: "HARD_FAIL"
+    
+  DECISION_AUTHORITY:
+    authority_type: "EXCLUSIVE"
+    decision_scope: "BINDING"
+    permitted_outcomes:
+      - "ACCEPTED"
+      - "REJECTED"
+      - "CONDITIONALLY_ACCEPTED"
+    finality: "ABSOLUTE"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 0.1 PDO SPINE BINDING (v1.1.0 — MANDATORY)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+PDO_SPINE_BINDING:
+  authority: "PAC-JEFFREY-GOV-PDO-SPINE-ORCHESTRATION-001"
+  enforcement: "HARD_FAIL"
+  error_code: "BER_PDO_001"
+  
+  BINDING_REQUIREMENT:
+    description: "All governance BERs MUST reference a valid PDO_ID"
+    scope: "ALL_GOVERNANCE_BERS"
+    enforcement: "MANDATORY"
+    
+  BER_HEADER_PDO_FIELDS:
+    pdo_id:
+      required: true
+      type: "string"
+      pattern: "PDO-[A-Z0-9-]+"
+      validation: "MUST_EXIST_IN_SPINE"
+      description: "Root PDO for this decision"
+      
+  PDO_DECISION_SYNCHRONIZATION:
+    on_ber_issuance:
+      - "Update PDO.decision_component with BER decision"
+      - "Update PDO.state to DECISION_MADE"
+      - "Record BER_ID in PDO.decision_reference"
+    bidirectional: true
+    
+  BER_REJECTION:
+    condition: |
+      IF ber_type = GOVERNANCE
+      AND pdo_id IS NULL
+      THEN REJECT
+    error_code: "BER_PDO_001"
+    message: "BER rejected: PDO decision binding required"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 1. BER ARTIFACT SEPARATION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+BER_ARTIFACT_SEPARATION:
+  enforcement: "ABSOLUTE"
+  
+  BER_VS_WRAP:
+    ber_contains_decision: true
+    wrap_contains_decision: false
+    separation_invariant: "BER is the ONLY artifact with decision authority"
+    
+  BER_VS_PAC:
+    pac_authorizes_work: true
+    ber_confirms_work: true
+    sequence: "PAC → WRAP → BER"
+    
+  INVARIANTS:
+    INV-BER-001: "Only Benson (GID-00) may issue BER"
+    INV-BER-002: "BER must reference authorizing PAC"
+    INV-BER-003: "BER must reference execution WRAP"
+    INV-BER-004: "BER decision is binding and final"
+    INV-BER-005: "No hybrid WRAP/BER artifacts permitted"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 2. BER REQUIRED BLOCKS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+REQUIRED_BER_BLOCKS:
+  mandatory:
+    - block: "BER_HEADER"
+      description: "Identification and metadata"
+      required: true
+      
+    - block: "PAC_REFERENCE"
+      description: "Link to authorizing PAC"
+      required: true
+      
+    - block: "WRAP_REFERENCE"
+      description: "Link to execution WRAP"
+      required: true
+      
+    - block: "BER_DECISION"
+      description: "Binding decision block"
+      required: true
+      issuer_only: "Benson (GID-00)"
+      
+    - block: "DECISION_RATIONALE"
+      description: "Justification for decision"
+      required: true
+      
+    - block: "BENSON_ATTESTATION"
+      description: "Explicit Benson confirmation"
+      required: true
+      
+  optional:
+    - block: "CORRECTION_HISTORY"
+      description: "Prior corrections if applicable"
+      required: false
+      
+    - block: "TRAINING_SIGNAL"
+      description: "Learning for future execution"
+      required: false
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 3. BER HEADER SCHEMA
+# ═══════════════════════════════════════════════════════════════════════════════
+
+BER_HEADER_SCHEMA:
+  required_fields:
+    ber_id:
+      type: "string"
+      pattern: "BER-[A-Z]+-[A-Z0-9-]+"
+      description: "Unique BER identifier"
+      
+    pdo_id:
+      type: "string"
+      pattern: "PDO-[A-Z0-9-]+"
+      description: "Root PDO for this decision (v1.1.0 MANDATORY)"
+      required: true
+      enforcement: "HARD_FAIL"
+      
+    pac_reference:
+      type: "string"
+      pattern: "PAC-[A-Z]+-[A-Z0-9-]+"
+      description: "Authorizing PAC ID"
+      
+    wrap_reference:
+      type: "string"
+      pattern: "WRAP-[A-Z]+-[A-Z0-9-]+"
+      description: "Execution WRAP ID"
+      
+    issuer:
+      type: "string"
+      enum: ["Benson (GID-00)"]
+      description: "BER issuer - MUST be Benson"
+      
+    date:
+      type: "string"
+      format: "date"
+      description: "Issuance date"
+      
+    decision:
+      type: "string"
+      enum: ["ACCEPTED", "REJECTED", "CONDITIONALLY_ACCEPTED"]
+      description: "Binding decision"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 4. BER DECISION BLOCK SCHEMA
+# ═══════════════════════════════════════════════════════════════════════════════
+
+BER_DECISION_SCHEMA:
+  block_name: "BER_DECISION"
+  issuer_constraint: "Benson (GID-00) ONLY"
+  
+  required_fields:
+    decision:
+      type: "string"
+      enum: ["ACCEPTED", "REJECTED", "CONDITIONALLY_ACCEPTED"]
+      
+    decision_scope:
+      type: "string"
+      description: "What is being decided upon"
+      
+    decision_timestamp:
+      type: "string"
+      format: "datetime"
+      
+    decision_authority:
+      type: "string"
+      enum: ["BENSON_GID00"]
+      
+  conditional_fields:
+    conditions:
+      type: "array"
+      description: "Required if CONDITIONALLY_ACCEPTED"
+      
+    rejection_reason:
+      type: "string"
+      description: "Required if REJECTED"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 5. BENSON ATTESTATION BLOCK
+# ═══════════════════════════════════════════════════════════════════════════════
+
+BENSON_ATTESTATION_SCHEMA:
+  block_name: "BENSON_ATTESTATION"
+  required: true
+  
+  template: |
+    I, Benson (GID-00), as Orchestrator and sole Decision Authority, hereby:
+    • Confirm review of WRAP: {wrap_reference}
+    • Confirm alignment with PAC: {pac_reference}
+    • Issue binding decision: {decision}
+    • Attest this BER represents my explicit judgment
+    
+  required_fields:
+    attestation_text:
+      type: "string"
+      must_contain:
+        - "Benson (GID-00)"
+        - "Decision Authority"
+        - "binding decision"
+        
+    explicit_confirmation:
+      type: "boolean"
+      value: true
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 6. FORBIDDEN BER PATTERNS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+FORBIDDEN_BER_PATTERNS:
+  enforcement: "HARD_FAIL"
+  
+  FORBIDDEN_ISSUERS:
+    agents:
+      - "Any agent other than Benson (GID-00)"
+      - "Benson Execution (without explicit confirmation)"
+      - "Atlas (GID-11)"
+      - "Cody (GID-01)"
+      - "Sam (GID-06)"
+    error_code: "BER_001"
+    
+  FORBIDDEN_STRUCTURES:
+    implicit_decision:
+      description: "Decision without explicit Benson attestation"
+      error_code: "BER_002"
+      
+    missing_wrap_reference:
+      description: "BER without linked WRAP"
+      error_code: "BER_003"
+      
+    missing_pac_reference:
+      description: "BER without linked PAC"
+      error_code: "BER_004"
+      
+    hybrid_artifact:
+      description: "Combined WRAP/BER document"
+      error_code: "BER_005"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 7. BER VALIDATION RULES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+BER_VALIDATION_RULES:
+  pre_issuance:
+    - "PAC must exist and be ACTIVE or COMPLETE"
+    - "WRAP must exist and reference same PAC"
+    - "Issuer must be Benson (GID-00)"
+    
+  structural:
+    - "All required blocks present"
+    - "BER_DECISION block contains valid decision"
+    - "BENSON_ATTESTATION block is explicit"
+    
+  post_issuance:
+    - "BER is immutable once issued"
+    - "Decision cannot be changed without new PAC"
+    - "Corrections require corrective PAC chain"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 8. BER WORKFLOW
+# ═══════════════════════════════════════════════════════════════════════════════
+
+BER_WORKFLOW:
+  sequence:
+    step_1:
+      action: "PAC issued by Benson (GID-00)"
+      output: "PAC artifact"
+      
+    step_2:
+      action: "Execution agents perform PAC tasks"
+      output: "Work artifacts"
+      
+    step_3:
+      action: "Execution agent produces WRAP"
+      output: "WRAP artifact (no decision)"
+      
+    step_4:
+      action: "Benson (GID-00) reviews WRAP"
+      input: "WRAP artifact"
+      
+    step_5:
+      action: "Benson (GID-00) issues BER"
+      output: "BER artifact (binding decision)"
+      authority: "EXCLUSIVE"
+      
+  INVARIANT: |
+    PAC → WRAP → BER is the canonical sequence.
+    Only Benson issues BER.
+    BER contains the binding decision.
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 9. ERROR CODES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+ERROR_CODES:
+  BER_001: "BER issued by unauthorized agent"
+  BER_002: "BER decision without explicit Benson attestation"
+  BER_003: "BER missing WRAP reference"
+  BER_004: "BER missing PAC reference"
+  BER_005: "Hybrid WRAP/BER artifact detected"
+  BER_006: "BER decision field invalid"
+  BER_007: "BER header incomplete"
+  BER_008: "BER attestation block missing or invalid"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 10. SCHEMA IMMUTABILITY
+# ═══════════════════════════════════════════════════════════════════════════════
+
+SCHEMA_IMMUTABILITY:
+  schema_frozen: true
+  version_locked: "1.0.0"
+  modifications_allowed: false
+  supersession_requires: "PAC from Benson (GID-00) with explicit authority"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# END CHAINBRIDGE_CANONICAL_BER_SCHEMA v1.0.0
+# STATUS: FROZEN | ENFORCEMENT: HARD_FAIL
+# ═══════════════════════════════════════════════════════════════════════════════

@@ -1,9 +1,9 @@
 # PAC-ALEX-P43-PAC-WRAP-SEQUENTIAL-GATE-IMPLEMENTATION-01
 
-> **PAC — PAC↔WRAP Sequential Gate Implementation**  
-> **Agent:** ALEX (GID-08)  
-> **Color:** ⚪ WHITE  
-> **Date:** 2025-12-24  
+> **PAC — PAC↔WRAP Sequential Gate Implementation**
+> **Agent:** ALEX (GID-08)
+> **Color:** ⚪ WHITE
+> **Date:** 2025-12-24
 > **Status:** ⚪ EXECUTABLE
 
 ---
@@ -128,7 +128,7 @@ Implement and hard-enforce PAC↔WRAP sequential dependency at the gate level:
 1. **PAC P(N) requires WRAP P(N-1)** — Before issuing PAC P(N), the ledger MUST contain
    an accepted WRAP for PAC P(N-1) for the same agent.
 
-2. **Ledger is the sole authority** — No checking filesystem for WRAP files. Only 
+2. **Ledger is the sole authority** — No checking filesystem for WRAP files. Only
    ledger entries of type `WRAP_ACCEPTED` count.
 
 3. **No grandfathering** — All PACs from P43 onward must comply. Existing PACs with
@@ -176,16 +176,16 @@ Implement and hard-enforce PAC↔WRAP sequential dependency at the gate level:
 forbidden:
   - DO_NOT: Infer WRAP existence from filesystem
     REASON: Ledger is the sole authority
-  
+
   - DO_NOT: Allow PAC issuance without WRAP check
     REASON: Sequential dependency is mandatory
-  
+
   - DO_NOT: Add warnings instead of blocks
     REASON: FAIL_CLOSED mode requires hard blocks
-  
+
   - DO_NOT: Modify existing error codes
     REASON: GS_111/GS_112 are already defined and stable
-  
+
   - DO_NOT: Skip validation for any agent except BENSON
     REASON: BENSON override is the only exception
 ```
@@ -201,11 +201,11 @@ forbidden:
    def validate_pac_wrap_sequential(self, pac_id: str, agent_gid: str) -> dict:
        """
        Validate PAC↔WRAP sequential dependency.
-       
+
        Rule: PAC P(N) requires WRAP P(N-1) to be ACCEPTED.
        Exception: First PAC for an agent (N=1 or no prior PACs) is allowed.
        Override: BENSON (GID-00) can bypass this check.
-       
+
        Returns:
            dict with 'valid', 'error_code', 'message', 'required_wrap_number'
        """
@@ -241,19 +241,19 @@ criteria:
   - description: "PAC P44 cannot validate unless WRAP P43 exists"
     validation: "Ledger query for WRAP_ACCEPTED with P(N-1)"
     result: PENDING
-  
+
   - description: "GS_111 emitted on sequential violation"
     validation: "gate_pack.py returns GS_111 error"
     result: PENDING
-  
+
   - description: "Ledger-backed enforcement only"
     validation: "No Path/filesystem checks in validation"
     result: PENDING
-  
+
   - description: "CI fails deterministically on sequence violations"
     validation: "gate_pack.py --file returns non-zero exit"
     result: PENDING
-  
+
   - description: "Regression tests pass"
     validation: "pytest tests/governance/test_pac_wrap_sequential.py"
     result: PENDING
@@ -315,7 +315,7 @@ error_codes: []
 authority:
   issuer: ALEX (GID-08)
   delegated_by: BENSON (GID-00)
-  
+
 execution_tracking:
   issued_at: 2025-12-24T20:30:00Z
   executed_at: null

@@ -47,33 +47,33 @@
 **Invariant Classes:**
 - **STRUCTURAL (5):** INV-001 to INV-005
   - Runtime activation acknowledgement required
-  - Agent activation acknowledgement required  
+  - Agent activation acknowledgement required
   - Canonical gateway sequence required
   - Template checksum verification
   - Gold Standard checklist completeness
-  
+
 - **BEHAVIORAL (4):** INV-010 to INV-013
   - No silent failures allowed
   - Fail-closed mode required
   - Deterministic hash generation
   - Finality irreversibility
-  
+
 - **AUTHORITY (4):** INV-020 to INV-023
   - Orchestrator scope limitation
   - Lane isolation enforcement
   - WRAP authority restriction
   - No agent self-closure
-  
+
 - **TEMPORAL (3):** INV-030 to INV-032
   - Gateway order enforcement
   - Human review before finality
   - Seal required before final state
-  
+
 - **INTEGRITY (3):** INV-040 to INV-042
   - Hash chain continuity
   - Merkle proof completeness
   - No replay attacks
-  
+
 - **COMPOSITE (2):** INV-050 to INV-051
   - All children validated
   - DAG acyclic enforcement
@@ -117,7 +117,7 @@
 
 **Error Codes:**
 - GS_600-609: Wrapper failures
-- GS_610-619: Context failures  
+- GS_610-619: Context failures
 - GS_620-629: Invariant enforcement
 - GS_630-639: Audit trail
 

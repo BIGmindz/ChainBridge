@@ -66,11 +66,11 @@ jobs:
         run: |
           echo "🔏 PDO Signing Security Gate"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           # Signing module must exist
           test -s app/services/pdo/signing.py || { echo "❌ FAIL: signing.py missing"; exit 1; }
           echo "✅ signing.py exists"
-          
+
           # Signing tests must exist
           test -s tests/test_pdo_signing.py || { echo "❌ FAIL: test_pdo_signing.py missing"; exit 1; }
           echo "✅ test_pdo_signing.py exists"
@@ -94,30 +94,30 @@ jobs:
         run: |
           echo "Scanning for signing bypass patterns..."
           BYPASS=0
-          
+
           # ALLOW_UNSIGNED = instant fail
           if grep -rn "ALLOW_UNSIGNED" app/ 2>/dev/null; then
             echo "❌ BYPASS: ALLOW_UNSIGNED detected"
             BYPASS=1
           fi
-          
+
           # skip_signature = instant fail
           if grep -rn "skip_signature\|skip_signing" app/ 2>/dev/null; then
             echo "❌ BYPASS: skip_signature detected"
             BYPASS=1
           fi
-          
+
           # Mock signing in production = instant fail
           if grep -rn "Mock.*verify_pdo_signature\|patch.*signing" app/ 2>/dev/null; then
             echo "❌ BYPASS: Mocked signing in production"
             BYPASS=1
           fi
-          
+
           if [ $BYPASS -ne 0 ]; then
             echo "❌ PDO Signing Security Gate FAILED"
             exit 1
           fi
-          
+
           echo "✅ No bypass patterns detected"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "✅ PDO Signing Security Gate PASSED"

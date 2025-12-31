@@ -264,13 +264,13 @@ FINAL_STATE:
   PAC: PAC-SAM-G1-PHASE-2-SECURITY-INVARIANT-HARDENING-01
   Status: COMPLETE
   Verdict: SECURE
-  
+
   Invariants_Defined: 8
   Invariants_Implemented: 8
   Drills_Total: 14
   Drills_Blocked: 14
   Drills_Passed: 0
-  
+
   CI_Gate: BLOCKING
   Test_Suite: 132 passed
   Bypass_Paths: 0

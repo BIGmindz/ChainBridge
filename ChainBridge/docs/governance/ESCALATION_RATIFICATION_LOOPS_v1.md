@@ -138,14 +138,14 @@ FAILURE_BINDINGS:
         type: WRAP_VALIDATION_FAILURE
         initial_state: DETECTED
         notify: [ALEX, BENSON, affected_agent]
-  
+
   authority_check:
     on_violation:
       create_escalation:
         type: AUTHORITY_VIOLATION
         initial_state: BLOCKED
         notify: [ALEX, BENSON, SAM]
-  
+
   state_invariant_check:
     on_violation:
       create_escalation:
@@ -257,12 +257,12 @@ DEADLOCK_CONDITIONS:
     definition: "Agent A waits on Agent B, Agent B waits on Agent A"
     detection: "Dependency graph cycle detection"
     resolution: "Escalate to BENSON for priority assignment"
-  
+
   resource_contention:
     definition: "Multiple agents require same locked resource"
     detection: "Resource lock conflict"
     resolution: "First-to-request wins, others queue"
-  
+
   authority_gap:
     definition: "Required authority not assigned to any agent"
     detection: "Authority matrix lookup failure"
@@ -415,7 +415,7 @@ TRAINING_SIGNAL:
   program: "Agent University"
   level: "L7"
   domain: "Enterprise Governance & Escalation Systems"
-  
+
   competencies:
     - "Escalation state modeling"
     - "Correction-resubmission loop design"
@@ -423,19 +423,19 @@ TRAINING_SIGNAL:
     - "Deadlock detection and prevention"
     - "Multi-agent dependency resolution"
     - "Authority-bound decision making"
-  
+
   behavioral_objectives:
     - "Formalize all governance failure paths"
     - "Prevent indefinite PENDING states"
     - "Ensure every escalation has clear ownership"
     - "Make governance decisions auditable"
-  
+
   drift_risks:
     - "Silent unblocks without ratification"
     - "Unbounded correction loops"
     - "Authority gaps in escalation matrix"
     - "Deadlock states in transition graph"
-  
+
   evaluation: "Binary"
   success_metric: "Zero deadlock paths, 100% escalation traceability"
 ```

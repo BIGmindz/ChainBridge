@@ -419,19 +419,19 @@ OVERRIDE_PROOF {
 ```yaml
 GOVERNANCE_SELF_CHECK {
   orphan_authority_query: |
-    SELECT * FROM decisions 
+    SELECT * FROM decisions
     WHERE authority_gid NOT IN (SELECT gid FROM agent_registry)
-  
+
   unproven_override_query: |
-    SELECT * FROM overrides 
+    SELECT * FROM overrides
     WHERE proof_id IS NULL
-  
+
   silent_remediation_query: |
-    SELECT * FROM fixes 
+    SELECT * FROM fixes
     WHERE violation_id IS NULL
-  
+
   cross_lane_bleed_query: |
-    SELECT * FROM actions 
+    SELECT * FROM actions
     WHERE actor_lane != action_lane
 }
 ```
