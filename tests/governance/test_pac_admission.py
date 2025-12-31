@@ -870,4 +870,3 @@ class TestActivationBlockEnforcement:
             test_gate.admit(declaration)
 
         assert "does not match canonical emoji" in str(exc_info.value)
-

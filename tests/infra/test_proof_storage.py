@@ -80,10 +80,10 @@ class TestChainHash:
         prev = "a" * 64
         content = "b" * 64
         chain = compute_chain_hash(prev, content)
-        
+
         # Same inputs should give same chain hash
         assert chain == compute_chain_hash(prev, content)
-        
+
         # Different previous should change chain hash
         assert chain != compute_chain_hash("c" * 64, content)
 
@@ -108,7 +108,7 @@ class TestProofStorageV1:
         log_path = os.path.join(temp_storage_dir, "new_proofs.jsonl")
         storage = ProofStorageV1(log_path=log_path)
         report = storage.validate_on_startup()
-        
+
         assert report["status"] == "PASS"
         assert report["validated_count"] == 0
         assert report["error_count"] == 0
@@ -117,7 +117,7 @@ class TestProofStorageV1:
         """Should append proof to log."""
         payload = {"action": "test", "value": 42}
         record = proof_storage.append_proof(proof_type="test", payload=payload)
-        
+
         assert record["proof_type"] == "test"
         assert record["payload"] == payload
         assert record["sequence_number"] == 1
@@ -130,7 +130,7 @@ class TestProofStorageV1:
         r1 = proof_storage.append_proof(proof_type="test", payload={"n": 1})
         r2 = proof_storage.append_proof(proof_type="test", payload={"n": 2})
         r3 = proof_storage.append_proof(proof_type="test", payload={"n": 3})
-        
+
         assert r1["sequence_number"] == 1
         assert r2["sequence_number"] == 2
         assert r3["sequence_number"] == 3
@@ -139,10 +139,10 @@ class TestProofStorageV1:
         """Each append should update the chain hash."""
         r1 = proof_storage.append_proof(proof_type="test", payload={"n": 1})
         r2 = proof_storage.append_proof(proof_type="test", payload={"n": 2})
-        
+
         # Chain hashes should differ
         assert r1["chain_hash"] != r2["chain_hash"]
-        
+
         # r2 chain should link to r1
         expected_chain = compute_chain_hash(r1["chain_hash"], r2["content_hash"])
         assert r2["chain_hash"] == expected_chain
@@ -151,7 +151,7 @@ class TestProofStorageV1:
         """Should iterate over all proofs."""
         for i in range(5):
             proof_storage.append_proof(proof_type="test", payload={"i": i})
-        
+
         proofs = list(proof_storage.iter_proofs())
         assert len(proofs) == 5
         assert [p["payload"]["i"] for p in proofs] == [0, 1, 2, 3, 4]
@@ -160,7 +160,7 @@ class TestProofStorageV1:
         """Should return accurate stats."""
         proof_storage.append_proof(proof_type="test", payload={"x": 1})
         proof_storage.append_proof(proof_type="test", payload={"x": 2})
-        
+
         stats = proof_storage.get_stats()
         assert stats["proof_count"] == 2
         assert stats["validated"] is True
@@ -170,7 +170,7 @@ class TestProofStorageV1:
         """Should raise error if validation wasn't called."""
         log_path = os.path.join(temp_storage_dir, "proofs.jsonl")
         storage = ProofStorageV1(log_path=log_path)
-        
+
         with pytest.raises(RuntimeError, match="validate_on_startup"):
             storage.append_proof(proof_type="test", payload={})
 
@@ -182,20 +182,20 @@ class TestProofPersistence:
         """Proofs should persist across storage instances."""
         log_path = os.path.join(temp_storage_dir, "proofs.jsonl")
         manifest_path = os.path.join(temp_storage_dir, "manifest.json")
-        
+
         # First instance: write proofs
         storage1 = ProofStorageV1(log_path=log_path, manifest_path=manifest_path)
         storage1.validate_on_startup()
         storage1.append_proof(proof_type="test", payload={"msg": "hello"})
         storage1.append_proof(proof_type="test", payload={"msg": "world"})
-        
+
         last_hash_1 = storage1.get_last_hash()
         chain_hash_1 = storage1.get_chain_hash()
-        
+
         # Simulate restart: new instance
         storage2 = ProofStorageV1(log_path=log_path, manifest_path=manifest_path)
         report = storage2.validate_on_startup()
-        
+
         # Verify persistence
         assert report["status"] == "PASS"
         assert report["validated_count"] == 2
@@ -206,20 +206,20 @@ class TestProofPersistence:
     def test_continue_appending_after_restart(self, temp_storage_dir):
         """Should continue appending after restart."""
         log_path = os.path.join(temp_storage_dir, "proofs.jsonl")
-        
+
         # First instance
         storage1 = ProofStorageV1(log_path=log_path)
         storage1.validate_on_startup()
         storage1.append_proof(proof_type="test", payload={"n": 1})
         storage1.append_proof(proof_type="test", payload={"n": 2})
-        
+
         # Restart
         storage2 = ProofStorageV1(log_path=log_path)
         storage2.validate_on_startup()
         storage2.append_proof(proof_type="test", payload={"n": 3})
-        
+
         assert storage2.get_proof_count() == 3
-        
+
         proofs = list(storage2.iter_proofs())
         assert proofs[2]["sequence_number"] == 3
 
@@ -230,12 +230,12 @@ class TestIntegrityValidation:
     def test_detects_content_hash_tampering(self, temp_storage_dir):
         """Should detect when content hash is tampered."""
         log_path = os.path.join(temp_storage_dir, "proofs.jsonl")
-        
+
         # Create valid proofs
         storage = ProofStorageV1(log_path=log_path)
         storage.validate_on_startup()
         storage.append_proof(proof_type="test", payload={"secret": "original"})
-        
+
         # Tamper with the file: change content hash
         with open(log_path, "r") as f:
             line = f.read()
@@ -243,7 +243,7 @@ class TestIntegrityValidation:
         record["content_hash"] = "0" * 64  # Invalid hash
         with open(log_path, "w") as f:
             f.write(json.dumps(record))
-        
+
         # New instance should detect tampering
         storage2 = ProofStorageV1(log_path=log_path)
         with pytest.raises(ProofIntegrityError, match="Content hash mismatch"):
@@ -252,12 +252,12 @@ class TestIntegrityValidation:
     def test_detects_payload_tampering(self, temp_storage_dir):
         """Should detect when payload is modified."""
         log_path = os.path.join(temp_storage_dir, "proofs.jsonl")
-        
+
         # Create valid proofs
         storage = ProofStorageV1(log_path=log_path)
         storage.validate_on_startup()
         storage.append_proof(proof_type="test", payload={"amount": 100})
-        
+
         # Tamper: modify payload but keep original hash
         with open(log_path, "r") as f:
             line = f.read()
@@ -265,7 +265,7 @@ class TestIntegrityValidation:
         record["payload"]["amount"] = 999999  # Tampered!
         with open(log_path, "w") as f:
             f.write(json.dumps(record))
-        
+
         # Should detect the tampering
         storage2 = ProofStorageV1(log_path=log_path)
         with pytest.raises(ProofIntegrityError, match="Content hash mismatch"):
@@ -274,13 +274,13 @@ class TestIntegrityValidation:
     def test_detects_chain_hash_tampering(self, temp_storage_dir):
         """Should detect when chain hash is tampered."""
         log_path = os.path.join(temp_storage_dir, "proofs.jsonl")
-        
+
         # Create multiple proofs
         storage = ProofStorageV1(log_path=log_path)
         storage.validate_on_startup()
         storage.append_proof(proof_type="test", payload={"n": 1})
         storage.append_proof(proof_type="test", payload={"n": 2})
-        
+
         # Tamper: break the chain hash
         with open(log_path, "r") as f:
             lines = f.readlines()
@@ -289,7 +289,7 @@ class TestIntegrityValidation:
         lines[1] = json.dumps(record) + "\n"
         with open(log_path, "w") as f:
             f.writelines(lines)
-        
+
         # Should detect broken chain
         storage2 = ProofStorageV1(log_path=log_path)
         with pytest.raises(ProofIntegrityError, match="Chain hash mismatch"):
@@ -298,21 +298,21 @@ class TestIntegrityValidation:
     def test_detects_deleted_entry(self, temp_storage_dir):
         """Should detect when an entry is deleted."""
         log_path = os.path.join(temp_storage_dir, "proofs.jsonl")
-        
+
         # Create multiple proofs
         storage = ProofStorageV1(log_path=log_path)
         storage.validate_on_startup()
         storage.append_proof(proof_type="test", payload={"n": 1})
         storage.append_proof(proof_type="test", payload={"n": 2})
         storage.append_proof(proof_type="test", payload={"n": 3})
-        
+
         # Delete the middle entry
         with open(log_path, "r") as f:
             lines = f.readlines()
         with open(log_path, "w") as f:
             f.write(lines[0])  # Keep first
             f.write(lines[2])  # Skip second, keep third
-        
+
         # Chain will be broken
         storage2 = ProofStorageV1(log_path=log_path)
         with pytest.raises(ProofIntegrityError, match="Chain hash mismatch"):
@@ -321,16 +321,16 @@ class TestIntegrityValidation:
     def test_detects_malformed_json(self, temp_storage_dir):
         """Should detect malformed JSON lines."""
         log_path = os.path.join(temp_storage_dir, "proofs.jsonl")
-        
+
         # Create valid proof
         storage = ProofStorageV1(log_path=log_path)
         storage.validate_on_startup()
         storage.append_proof(proof_type="test", payload={"ok": True})
-        
+
         # Corrupt the JSON
         with open(log_path, "a") as f:
             f.write("this is not json\n")
-        
+
         storage2 = ProofStorageV1(log_path=log_path)
         with pytest.raises(ProofIntegrityError):
             storage2.validate_on_startup()
@@ -338,12 +338,12 @@ class TestIntegrityValidation:
     def test_detects_missing_required_fields(self, temp_storage_dir):
         """Should detect records missing required fields."""
         log_path = os.path.join(temp_storage_dir, "proofs.jsonl")
-        
+
         # Write incomplete record directly
         incomplete = {"proof_id": str(uuid4())}  # Missing content_hash, payload, etc.
         with open(log_path, "w") as f:
             f.write(json.dumps(incomplete) + "\n")
-        
+
         storage = ProofStorageV1(log_path=log_path)
         with pytest.raises(ProofIntegrityError, match="Missing fields"):
             storage.validate_on_startup()
@@ -382,10 +382,10 @@ class TestManifest:
         """Manifest should be created after validation."""
         manifest_path = os.path.join(temp_storage_dir, "manifest.json")
         log_path = os.path.join(temp_storage_dir, "proofs.jsonl")
-        
+
         storage = ProofStorageV1(log_path=log_path, manifest_path=manifest_path)
         assert not Path(manifest_path).exists()
-        
+
         storage.validate_on_startup()
         assert Path(manifest_path).exists()
 
@@ -393,16 +393,16 @@ class TestManifest:
         """Manifest should update on each append."""
         manifest_path = os.path.join(temp_storage_dir, "manifest.json")
         log_path = os.path.join(temp_storage_dir, "proofs.jsonl")
-        
+
         storage = ProofStorageV1(log_path=log_path, manifest_path=manifest_path)
         storage.validate_on_startup()
-        
+
         with open(manifest_path) as f:
             m1 = json.load(f)
         assert m1["proof_count"] == 0
-        
+
         storage.append_proof(proof_type="test", payload={"x": 1})
-        
+
         with open(manifest_path) as f:
             m2 = json.load(f)
         assert m2["proof_count"] == 1
@@ -411,16 +411,16 @@ class TestManifest:
         """Manifest corruption should not block startup."""
         manifest_path = os.path.join(temp_storage_dir, "manifest.json")
         log_path = os.path.join(temp_storage_dir, "proofs.jsonl")
-        
+
         # Create storage with proofs
         storage1 = ProofStorageV1(log_path=log_path, manifest_path=manifest_path)
         storage1.validate_on_startup()
         storage1.append_proof(proof_type="test", payload={"x": 1})
-        
+
         # Corrupt manifest
         with open(manifest_path, "w") as f:
             f.write("corrupted!")
-        
+
         # Should still work (manifest is advisory)
         storage2 = ProofStorageV1(log_path=log_path, manifest_path=manifest_path)
         report = storage2.validate_on_startup()

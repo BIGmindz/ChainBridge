@@ -125,7 +125,7 @@ class TestMissingActivation:
                 inputs={"amount": 5000},
                 decision_fn=sample_decision_fn,
             )
-        
+
         assert exc_info.value.failure_code == DecisionExecutionFailure.ACTIVATION_MISSING
         assert "missing" in exc_info.value.message.lower()
 
@@ -139,7 +139,7 @@ class TestMissingActivation:
                 inputs={"amount": 5000},
                 decision_fn=sample_decision_fn,
             )
-        
+
         assert exc_info.value.failure_code == DecisionExecutionFailure.ACTIVATION_MISSING
 
     def test_no_implicit_default_activation(self):
@@ -153,7 +153,7 @@ class TestMissingActivation:
                 inputs={},
                 decision_fn=sample_decision_fn,
             )
-        
+
         # Must fail with ACTIVATION_MISSING, not proceed with default
         assert exc_info.value.failure_code == DecisionExecutionFailure.ACTIVATION_MISSING
 
@@ -176,7 +176,7 @@ class TestInvalidActivation:
                 inputs={"amount": 5000},
                 decision_fn=sample_decision_fn,
             )
-        
+
         assert exc_info.value.failure_code == DecisionExecutionFailure.ACTIVATION_INVALID
         assert "agent_name" in exc_info.value.message
 
@@ -190,7 +190,7 @@ class TestInvalidActivation:
                 inputs={"amount": 5000},
                 decision_fn=sample_decision_fn,
             )
-        
+
         assert exc_info.value.failure_code == DecisionExecutionFailure.ACTIVATION_INVALID
 
     def test_execute_decision_rejects_none_gid(self):
@@ -201,7 +201,7 @@ class TestInvalidActivation:
             color="BLUE",
             validation_timestamp=datetime.now(timezone.utc).isoformat(),
         )
-        
+
         with pytest.raises(DecisionExecutionError) as exc_info:
             execute_decision(
                 activation_reference=activation,
@@ -210,7 +210,7 @@ class TestInvalidActivation:
                 inputs={"amount": 5000},
                 decision_fn=sample_decision_fn,
             )
-        
+
         assert exc_info.value.failure_code == DecisionExecutionFailure.ACTIVATION_INVALID
         assert "gid" in exc_info.value.message
 
@@ -232,7 +232,7 @@ class TestValidActivation:
             inputs={"amount": 5000},
             decision_fn=sample_decision_fn,
         )
-        
+
         assert decision.outcome == ActivationAwareOutcome.APPROVED
         assert decision.activation_reference.agent_name == "CODY"
         assert decision.activation_reference.gid == "GID-01"
@@ -248,7 +248,7 @@ class TestValidActivation:
             inputs={"amount": 5000},
             decision_fn=sample_decision_fn,
         )
-        
+
         assert decision.activation_reference.agent_name == activation.agent_name
         assert decision.activation_reference.gid == activation.gid
         assert decision.activation_reference.color == activation.color
@@ -262,7 +262,7 @@ class TestValidActivation:
             inputs={"amount": 15000},
             decision_fn=sample_decision_fn,
         )
-        
+
         assert decision.outcome == ActivationAwareOutcome.REQUIRES_REVIEW
 
     def test_execute_decision_includes_rule_metadata(self):
@@ -274,7 +274,7 @@ class TestValidActivation:
             inputs={"amount": 5000},
             decision_fn=sample_decision_fn,
         )
-        
+
         assert decision.rule_id == "TEST-RULE-01"
         assert decision.rule_version == "1.0.0"
 
@@ -296,7 +296,7 @@ class TestFailurePropagation:
             inputs={"amount": 5000},
             decision_fn=failing_decision_fn,
         )
-        
+
         assert decision.outcome == ActivationAwareOutcome.ERROR
         assert decision.failure_code == DecisionExecutionFailure.RULE_EXECUTION_FAILURE
         assert "ValueError" in decision.explanation
@@ -310,7 +310,7 @@ class TestFailurePropagation:
             inputs={"amount": 5000},
             decision_fn=empty_explanation_fn,
         )
-        
+
         assert decision.outcome == ActivationAwareOutcome.ERROR
         assert decision.failure_code == DecisionExecutionFailure.CONTRACT_VIOLATION
 
@@ -323,7 +323,7 @@ class TestFailurePropagation:
             inputs={"amount": 5000},
             decision_fn=short_explanation_fn,
         )
-        
+
         assert decision.outcome == ActivationAwareOutcome.ERROR
         assert decision.failure_code == DecisionExecutionFailure.CONTRACT_VIOLATION
 
@@ -337,7 +337,7 @@ class TestFailurePropagation:
             inputs={"amount": 5000},
             decision_fn=failing_decision_fn,
         )
-        
+
         # But it MUST have explicit failure information
         assert decision.outcome == ActivationAwareOutcome.ERROR
         assert decision.failure_code is not None
@@ -361,7 +361,7 @@ class TestPersistenceContract:
             inputs={"amount": 5000},
             decision_fn=sample_decision_fn,
         )
-        
+
         is_valid, rejection = validate_for_persistence(decision)
         assert is_valid is True
         assert rejection is None
@@ -375,7 +375,7 @@ class TestPersistenceContract:
             inputs={"amount": 5000},
             decision_fn=sample_decision_fn,
         )
-        
+
         # Should not raise
         require_persistence_contract(decision)
 
@@ -396,7 +396,7 @@ class TestPersistenceContract:
                 validation_timestamp=datetime.now(timezone.utc).isoformat(),
             ),
         )
-        
+
         is_valid, rejection = validate_for_persistence(decision)
         assert is_valid is False
         assert "agent_name" in rejection
@@ -417,7 +417,7 @@ class TestPersistenceContract:
                 validation_timestamp=datetime.now(timezone.utc).isoformat(),
             ),
         )
-        
+
         is_valid, rejection = validate_for_persistence(decision)
         assert is_valid is False
         assert "gid" in rejection
@@ -438,7 +438,7 @@ class TestPersistenceContract:
                 validation_timestamp=datetime.now(timezone.utc).isoformat(),
             ),
         )
-        
+
         is_valid, rejection = validate_for_persistence(decision)
         assert is_valid is False
         assert "color" in rejection
@@ -454,7 +454,7 @@ class TestPersistenceContract:
             decision_fn=sample_decision_fn,
             enforce_persistence=True,
         )
-        
+
         assert decision.outcome == ActivationAwareOutcome.APPROVED
 
 
@@ -475,7 +475,7 @@ class TestMonotonicity:
             inputs={"amount": 5000},
             decision_fn=sample_decision_fn,
         )
-        
+
         decision_high = execute_decision(
             activation_reference=make_valid_activation(),
             rule_id="TEST-RULE-01",
@@ -483,11 +483,11 @@ class TestMonotonicity:
             inputs={"amount": 15000},
             decision_fn=sample_decision_fn,
         )
-        
+
         is_monotonic, violation = enforce_payment_monotonicity(
             15000, 5000, decision_high, decision_low
         )
-        
+
         # Higher amount, higher severity = monotonic
         assert is_monotonic is True
         assert violation is None
@@ -504,7 +504,7 @@ class TestMonotonicity:
             explanation="Low amount but requires review",
             activation_reference=make_valid_activation(),
         )
-        
+
         decision_high_amount_low_severity = ExecutableDecision(
             decision_id="test-2",
             outcome=ActivationAwareOutcome.APPROVED,
@@ -514,11 +514,11 @@ class TestMonotonicity:
             explanation="High amount but approved",
             activation_reference=make_valid_activation(),
         )
-        
+
         is_monotonic, violation = enforce_payment_monotonicity(
             15000, 5000, decision_high_amount_low_severity, decision_low_amount_high_severity
         )
-        
+
         # Higher amount, lower severity = NOT monotonic
         assert is_monotonic is False
         assert violation is not None
@@ -533,7 +533,7 @@ class TestMonotonicity:
             inputs={"amount": 15000},
             decision_fn=sample_decision_fn,
         )
-        
+
         # Lower amount should produce lower or equal severity
         decision = execute_decision_with_enforcement(
             activation_reference=make_valid_activation(),
@@ -543,7 +543,7 @@ class TestMonotonicity:
             decision_fn=sample_decision_fn,
             enforce_monotonicity_with=(15000, prior_decision),
         )
-        
+
         # This should succeed - lower amount, lower severity is monotonic
         assert decision.outcome == ActivationAwareOutcome.APPROVED
 
@@ -601,9 +601,9 @@ class TestSerialization:
             inputs={"amount": 5000},
             decision_fn=sample_decision_fn,
         )
-        
+
         data = decision.to_dict()
-        
+
         assert "decision_id" in data
         assert "outcome" in data
         assert "rule_id" in data
@@ -622,10 +622,10 @@ class TestSerialization:
             inputs={"amount": 5000},
             decision_fn=sample_decision_fn,
         )
-        
+
         data = decision.to_dict()
         ref = data["activation_reference"]
-        
+
         assert ref["agent_name"] == "CODY"
         assert ref["gid"] == "GID-01"
         assert ref["color"] == "BLUE"
@@ -640,9 +640,9 @@ class TestSerialization:
             inputs={"amount": 5000},
             decision_fn=failing_decision_fn,
         )
-        
+
         data = decision.to_dict()
-        
+
         assert data["outcome"] == "error"
         assert data["failure_code"] is not None
 
@@ -664,14 +664,14 @@ class TestNoRetrySemantics:
             inputs={"amount": 5000},
             decision_fn=sample_decision_fn,
         )
-        
+
         with pytest.raises(AttributeError):
             decision.outcome = ActivationAwareOutcome.REJECTED  # type: ignore
 
     def test_activation_reference_is_immutable(self):
         """ActivationReference MUST be immutable (frozen dataclass)."""
         activation = make_valid_activation()
-        
+
         with pytest.raises(AttributeError):
             activation.agent_name = "HACKER"  # type: ignore
 
@@ -688,7 +688,7 @@ class TestDeterminism:
         """Same inputs MUST produce same outcome."""
         inputs = {"amount": 5000}
         activation = make_valid_activation()
-        
+
         decision1 = execute_decision(
             activation_reference=activation,
             rule_id="TEST-RULE-01",
@@ -696,7 +696,7 @@ class TestDeterminism:
             inputs=inputs,
             decision_fn=sample_decision_fn,
         )
-        
+
         decision2 = execute_decision(
             activation_reference=activation,
             rule_id="TEST-RULE-01",
@@ -704,14 +704,14 @@ class TestDeterminism:
             inputs=inputs,
             decision_fn=sample_decision_fn,
         )
-        
+
         assert decision1.outcome == decision2.outcome
         assert decision1.rule_id == decision2.rule_id
 
     def test_different_amounts_produce_different_outcomes(self):
         """Different amounts MUST produce appropriate different outcomes."""
         activation = make_valid_activation()
-        
+
         decision_low = execute_decision(
             activation_reference=activation,
             rule_id="TEST-RULE-01",
@@ -719,7 +719,7 @@ class TestDeterminism:
             inputs={"amount": 5000},
             decision_fn=sample_decision_fn,
         )
-        
+
         decision_high = execute_decision(
             activation_reference=activation,
             rule_id="TEST-RULE-01",
@@ -727,6 +727,6 @@ class TestDeterminism:
             inputs={"amount": 15000},
             decision_fn=sample_decision_fn,
         )
-        
+
         assert decision_low.outcome == ActivationAwareOutcome.APPROVED
         assert decision_high.outcome == ActivationAwareOutcome.REQUIRES_REVIEW

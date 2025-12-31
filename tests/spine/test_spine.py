@@ -47,7 +47,7 @@ class TestSpineEvent:
             vendor_id="vendor-001",
             requestor_id="req-001",
         )
-        
+
         assert event.event_type == SpineEventType.PAYMENT_REQUEST
         assert event.payload["amount"] == 5000.00
         assert event.payload["vendor_id"] == "vendor-001"
@@ -62,7 +62,7 @@ class TestSpineEvent:
             vendor_id="v1",
             requestor_id="r1",
         )
-        
+
         with pytest.raises(Exception):  # Pydantic ValidationError for frozen model
             event.payload = {"new": "data"}
 
@@ -81,14 +81,14 @@ class TestSpineEvent:
             payload={"amount": 100.0, "vendor_id": "v1", "requestor_id": "r1", "currency": "USD"},
             timestamp="2025-01-01T00:00:00+00:00",
         )
-        
+
         assert event1.compute_hash() == event2.compute_hash()
 
     def test_event_hash_changes_with_content(self):
         """Different content produces different hash."""
         event1 = create_payment_request_event(amount=100.0, vendor_id="v1", requestor_id="r1")
         event2 = create_payment_request_event(amount=200.0, vendor_id="v1", requestor_id="r1")
-        
+
         assert event1.compute_hash() != event2.compute_hash()
 
     def test_payload_validation_rejects_empty(self):
@@ -124,9 +124,9 @@ class TestDecisionEngine:
             vendor_id="v1",
             requestor_id="r1",
         )
-        
+
         decision = DecisionEngine.decide(event)
-        
+
         assert decision.outcome == DecisionOutcome.APPROVED
         assert decision.rule_applied == "payment_threshold_v1"
         assert "within threshold" in decision.explanation
@@ -138,9 +138,9 @@ class TestDecisionEngine:
             vendor_id="v1",
             requestor_id="r1",
         )
-        
+
         decision = DecisionEngine.decide(event)
-        
+
         assert decision.outcome == DecisionOutcome.APPROVED
 
     def test_requires_review_over_threshold(self):
@@ -150,9 +150,9 @@ class TestDecisionEngine:
             vendor_id="v1",
             requestor_id="r1",
         )
-        
+
         decision = DecisionEngine.decide(event)
-        
+
         assert decision.outcome == DecisionOutcome.REQUIRES_REVIEW
         assert "exceeds threshold" in decision.explanation
 
@@ -164,10 +164,10 @@ class TestDecisionEngine:
             payload={"amount": 5000.0, "vendor_id": "v1", "requestor_id": "r1", "currency": "USD"},
             timestamp="2025-01-01T00:00:00+00:00",
         )
-        
+
         decision1 = DecisionEngine.decide(event)
         decision2 = DecisionEngine.decide(event)
-        
+
         assert decision1.outcome == decision2.outcome
         assert decision1.rule_applied == decision2.rule_applied
         assert decision1.inputs_snapshot == decision2.inputs_snapshot
@@ -180,9 +180,9 @@ class TestDecisionEngine:
             requestor_id="req-456",
             currency="EUR",
         )
-        
+
         decision = DecisionEngine.decide(event)
-        
+
         assert decision.inputs_snapshot["amount"] == 7500.00
         assert decision.inputs_snapshot["vendor_id"] == "vendor-123"
         assert decision.inputs_snapshot["requestor_id"] == "req-456"
@@ -195,9 +195,9 @@ class TestDecisionEngine:
             event_type=SpineEventType.PAYMENT_REQUEST,
             payload={"vendor_id": "v1", "requestor_id": "r1"},  # Missing amount
         )
-        
+
         decision = DecisionEngine.decide(event)
-        
+
         assert decision.outcome == DecisionOutcome.ERROR
         assert "Missing required field" in decision.explanation
 
@@ -227,9 +227,9 @@ class TestSpineExecutor:
             vendor_id="v1",
             requestor_id="r1",
         )
-        
+
         proof = executor.execute(event)
-        
+
         # Verify proof contains all required fields
         assert proof.event_id == event.id
         assert proof.event_hash == event.compute_hash()
@@ -244,13 +244,13 @@ class TestSpineExecutor:
             vendor_id="v1",
             requestor_id="r1",
         )
-        
+
         proof = executor.execute(event)
-        
+
         # Verify state was modified
         state_key = f"payment_{event.id}"
         state = executor.get_state(state_key)
-        
+
         assert state is not None
         assert state["status"] == "APPROVED"
         assert state["amount"] == 3000.00
@@ -262,9 +262,9 @@ class TestSpineExecutor:
             vendor_id="v1",
             requestor_id="r1",
         )
-        
+
         proof = executor.execute(event)
-        
+
         # Verify proof can be loaded
         loaded_proof = temp_proof_store.load(proof.id)
         assert loaded_proof is not None
@@ -279,9 +279,9 @@ class TestSpineExecutor:
             payload={"amount": 5000.0, "vendor_id": "v1", "requestor_id": "r1", "currency": "USD"},
             timestamp="2025-01-01T00:00:00+00:00",
         )
-        
+
         proof = executor.execute(event)
-        
+
         # Hash should be reproducible
         hash1 = proof.compute_hash()
         hash2 = proof.compute_hash()
@@ -294,12 +294,12 @@ class TestSpineExecutor:
             vendor_id="v1",
             requestor_id="r1",
         )
-        
+
         proof = executor.execute(event)
-        
+
         assert proof.decision_outcome == "requires_review"
         assert proof.action_status == "success"
-        
+
         state = executor.get_state(f"payment_{event.id}")
         assert state["status"] == "PENDING_REVIEW"
 
@@ -331,7 +331,7 @@ class TestExecutionProof:
             action_status="success",
             action_details={"status": "APPROVED"},
         )
-        
+
         # Required per PAC-BENSON-EXEC-SPINE-01
         assert proof.event_hash is not None
         assert proof.decision_inputs is not None
@@ -358,10 +358,10 @@ class TestExecutionProof:
             action_status="success",
             action_details={},
         )
-        
+
         json_str = proof.to_canonical_json()
         data = json.loads(json_str)
-        
+
         assert data["event_hash"] == "abc123"
         assert data["decision_outcome"] == "approved"
 
@@ -384,7 +384,7 @@ class TestSpineAPI:
     def test_spine_health_endpoint(self, client):
         """Health check returns spine status."""
         response = client.get("/spine/health")
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "healthy"
@@ -404,7 +404,7 @@ class TestSpineAPI:
                 },
             },
         )
-        
+
         assert response.status_code == 201
         data = response.json()
         assert data["success"] is True
@@ -422,7 +422,7 @@ class TestSpineAPI:
                 "requestor_id": "r1",
             },
         )
-        
+
         assert response.status_code == 201
         data = response.json()
         assert data["decision_outcome"] == "requires_review"
@@ -435,10 +435,10 @@ class TestSpineAPI:
             json={"amount": 1000.00, "vendor_id": "v1", "requestor_id": "r1"},
         )
         proof_id = exec_response.json()["proof_id"]
-        
+
         # Retrieve proof
         proof_response = client.get(f"/spine/proof/{proof_id}")
-        
+
         assert proof_response.status_code == 200
         data = proof_response.json()
         assert data["verified"] is True
@@ -454,6 +454,6 @@ class TestSpineAPI:
                 "payload": {"data": "value"},
             },
         )
-        
+
         assert response.status_code == 400
         assert "Unsupported event_type" in response.json()["detail"]

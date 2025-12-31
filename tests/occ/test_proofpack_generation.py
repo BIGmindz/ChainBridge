@@ -462,10 +462,10 @@ class TestVerificationInstructions:
 class TestOnePDOEnforcement:
     """
     Tests for INV-PP-005: One ProofPack = One PDO.
-    
+
     GAP-004 Enforcement: ProofPacks must contain exactly one root PDO.
     Multi-PDO aggregation is not permitted.
-    
+
     Per CANONICAL_INVARIANTS.md:
     - ProofPacks do not aggregate multiple PDOs
     - Failure Condition: ProofPack contains multiple root PDOs
@@ -590,7 +590,7 @@ class TestOnePDOEnforcement:
         # The main PDO record should be pdo2
         manifest = json.loads(pp["files"]["manifest.json"])
         assert manifest["contents"]["pdo"]["path"] == "pdo/record.json"
-        
+
         pdo_record = json.loads(pp["files"]["pdo/record.json"])
         assert pdo_record["pdo_id"] == str(pdo2.pdo_id)
 
@@ -602,5 +602,3 @@ class TestOnePDOEnforcement:
             for lineage_entry in manifest["contents"]["lineage"]:
                 assert lineage_entry["path"].startswith("lineage/")
                 assert not lineage_entry["path"].startswith("pdo/")
-
-

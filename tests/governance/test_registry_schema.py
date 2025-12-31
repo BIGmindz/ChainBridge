@@ -51,7 +51,7 @@ class TestRequiredTopLevelFields:
         """Missing registry_version fails validation."""
         bad_registry = copy.deepcopy(_REGISTRY_DATA)
         del bad_registry["registry_version"]
-        
+
         valid, errors = validate_registry_schema(bad_registry)
         assert valid is False
         assert any("registry_version" in e for e in errors)
@@ -60,7 +60,7 @@ class TestRequiredTopLevelFields:
         """Missing agents section fails validation."""
         bad_registry = copy.deepcopy(_REGISTRY_DATA)
         del bad_registry["agents"]
-        
+
         valid, errors = validate_registry_schema(bad_registry)
         assert valid is False
         assert any("agents" in e for e in errors)
@@ -69,7 +69,7 @@ class TestRequiredTopLevelFields:
         """Missing schema_metadata fails validation."""
         bad_registry = copy.deepcopy(_REGISTRY_DATA)
         del bad_registry["schema_metadata"]
-        
+
         valid, errors = validate_registry_schema(bad_registry)
         assert valid is False
         assert any("schema_metadata" in e for e in errors)
@@ -78,7 +78,7 @@ class TestRequiredTopLevelFields:
         """Missing governance_invariants fails validation."""
         bad_registry = copy.deepcopy(_REGISTRY_DATA)
         del bad_registry["governance_invariants"]
-        
+
         valid, errors = validate_registry_schema(bad_registry)
         assert valid is False
         assert any("governance_invariants" in e for e in errors)
@@ -98,7 +98,7 @@ class TestRegistryVersionValidation:
         """Invalid semver format fails validation."""
         bad_registry = copy.deepcopy(_REGISTRY_DATA)
         bad_registry["registry_version"] = "3.0"  # Missing patch version
-        
+
         valid, errors = validate_registry_schema(bad_registry)
         assert valid is False
         assert any("semver" in e.lower() for e in errors)
@@ -107,7 +107,7 @@ class TestRegistryVersionValidation:
         """Empty version string fails validation."""
         bad_registry = copy.deepcopy(_REGISTRY_DATA)
         bad_registry["registry_version"] = ""
-        
+
         valid, errors = validate_registry_schema(bad_registry)
         assert valid is False
 
@@ -115,7 +115,7 @@ class TestRegistryVersionValidation:
         """Non-string version fails validation."""
         bad_registry = copy.deepcopy(_REGISTRY_DATA)
         bad_registry["registry_version"] = 3.0  # Number, not string
-        
+
         valid, errors = validate_registry_schema(bad_registry)
         assert valid is False
 
@@ -138,7 +138,7 @@ class TestRequiredAgentFields:
         """Agent missing gid fails validation."""
         bad_registry = copy.deepcopy(_REGISTRY_DATA)
         del bad_registry["agents"]["BENSON"]["gid"]
-        
+
         valid, errors = validate_registry_schema(bad_registry)
         assert valid is False
         assert any("gid" in e.lower() and "BENSON" in e for e in errors)
@@ -147,7 +147,7 @@ class TestRequiredAgentFields:
         """Agent missing agent_level fails validation."""
         bad_registry = copy.deepcopy(_REGISTRY_DATA)
         del bad_registry["agents"]["CODY"]["agent_level"]
-        
+
         valid, errors = validate_registry_schema(bad_registry)
         assert valid is False
         assert any("agent_level" in e and "CODY" in e for e in errors)
@@ -156,7 +156,7 @@ class TestRequiredAgentFields:
         """Agent missing diversity_profile fails validation."""
         bad_registry = copy.deepcopy(_REGISTRY_DATA)
         del bad_registry["agents"]["DAN"]["diversity_profile"]
-        
+
         valid, errors = validate_registry_schema(bad_registry)
         assert valid is False
         assert any("diversity_profile" in e and "DAN" in e for e in errors)
@@ -165,7 +165,7 @@ class TestRequiredAgentFields:
         """Agent missing emoji_primary fails validation."""
         bad_registry = copy.deepcopy(_REGISTRY_DATA)
         del bad_registry["agents"]["ALEX"]["emoji_primary"]
-        
+
         valid, errors = validate_registry_schema(bad_registry)
         assert valid is False
         assert any("emoji_primary" in e and "ALEX" in e for e in errors)
@@ -174,7 +174,7 @@ class TestRequiredAgentFields:
         """Agent missing mutable_fields fails validation."""
         bad_registry = copy.deepcopy(_REGISTRY_DATA)
         del bad_registry["agents"]["SAM"]["mutable_fields"]
-        
+
         valid, errors = validate_registry_schema(bad_registry)
         assert valid is False
         assert any("mutable_fields" in e and "SAM" in e for e in errors)
@@ -183,7 +183,7 @@ class TestRequiredAgentFields:
         """Agent missing immutable_fields fails validation."""
         bad_registry = copy.deepcopy(_REGISTRY_DATA)
         del bad_registry["agents"]["PAX"]["immutable_fields"]
-        
+
         valid, errors = validate_registry_schema(bad_registry)
         assert valid is False
         assert any("immutable_fields" in e and "PAX" in e for e in errors)
@@ -201,7 +201,7 @@ class TestAgentLevelValidation:
         """Invalid agent level fails validation."""
         bad_registry = copy.deepcopy(_REGISTRY_DATA)
         bad_registry["agents"]["CODY"]["agent_level"] = "L4"  # Invalid
-        
+
         valid, errors = validate_registry_schema(bad_registry)
         assert valid is False
         assert any("agent_level" in e and "L4" in e for e in errors)
@@ -210,7 +210,7 @@ class TestAgentLevelValidation:
         """Numeric agent level (not string) is detected."""
         bad_registry = copy.deepcopy(_REGISTRY_DATA)
         bad_registry["agents"]["CODY"]["agent_level"] = 2  # Should be "L2"
-        
+
         valid, errors = validate_registry_schema(bad_registry)
         assert valid is False
 
@@ -230,7 +230,7 @@ class TestGIDFormatValidation:
         """Invalid GID format fails validation."""
         bad_registry = copy.deepcopy(_REGISTRY_DATA)
         bad_registry["agents"]["CODY"]["gid"] = "GID-1"  # Should be GID-01
-        
+
         valid, errors = validate_registry_schema(bad_registry)
         assert valid is False
         assert any("GID" in e and "CODY" in e for e in errors)
@@ -249,7 +249,7 @@ class TestMutabilityEnforcement:
         old_registry = copy.deepcopy(_REGISTRY_DATA)
         new_registry = copy.deepcopy(_REGISTRY_DATA)
         new_registry["agents"]["CODY"]["gid"] = "GID-99"
-        
+
         valid, violations = validate_mutability(old_registry, new_registry)
         assert valid is False
         assert any("gid" in v.lower() and "CODY" in v for v in violations)
@@ -259,7 +259,7 @@ class TestMutabilityEnforcement:
         old_registry = copy.deepcopy(_REGISTRY_DATA)
         new_registry = copy.deepcopy(_REGISTRY_DATA)
         new_registry["agents"]["CODY"]["lane"] = "PINK"
-        
+
         valid, violations = validate_mutability(old_registry, new_registry)
         assert valid is False
         assert any("lane" in v.lower() for v in violations)
@@ -269,7 +269,7 @@ class TestMutabilityEnforcement:
         old_registry = copy.deepcopy(_REGISTRY_DATA)
         new_registry = copy.deepcopy(_REGISTRY_DATA)
         new_registry["agents"]["DAN"]["color"] = "PURPLE"
-        
+
         valid, violations = validate_mutability(old_registry, new_registry)
         assert valid is False
         assert any("color" in v.lower() for v in violations)
@@ -279,7 +279,7 @@ class TestMutabilityEnforcement:
         old_registry = copy.deepcopy(_REGISTRY_DATA)
         new_registry = copy.deepcopy(_REGISTRY_DATA)
         del new_registry["agents"]["ATLAS"]
-        
+
         valid, violations = validate_mutability(old_registry, new_registry)
         assert valid is False
         assert any("ATLAS" in v and "removed" in v.lower() for v in violations)
@@ -290,7 +290,7 @@ class TestMutabilityEnforcement:
         new_registry = copy.deepcopy(_REGISTRY_DATA)
         # role is in mutable_fields for most agents
         new_registry["agents"]["CODY"]["role"] = "Updated Role Title"
-        
+
         valid, violations = validate_mutability(old_registry, new_registry)
         # role changes should not cause violations
         role_violations = [v for v in violations if "role" in v.lower()]
@@ -302,7 +302,7 @@ class TestMutabilityEnforcement:
         new_registry = copy.deepcopy(_REGISTRY_DATA)
         new_registry["registry_version"] = "99.0.0"  # Bumped version
         new_registry["agents"]["CODY"]["gid"] = "GID-99"  # Would be invalid
-        
+
         # With version bump, even GID changes pass mutability check
         # (schema validation would still fail for duplicate GID, but that's separate)
         valid, violations = validate_mutability(old_registry, new_registry)

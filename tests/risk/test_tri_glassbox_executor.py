@@ -22,7 +22,7 @@ NO TEST SKIPS. NO SOFT ASSERTIONS.
 """
 
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import pytest
 
@@ -78,7 +78,7 @@ def make_invalid_activation() -> ActivationReference:
 
 def make_valid_risk_input(
     entity_id: str = "test-entity-001",
-    activation: ActivationReference | None = None,
+    activation: Optional[ActivationReference] = None,
 ) -> TRIRiskInput:
     """Create a valid TRIRiskInput for testing."""
     now = datetime.now(timezone.utc)
@@ -174,12 +174,12 @@ class TestMissingActivation:
             entity_id="test-entity",
             request_id="test-request",
         )
-        
+
         executor = TRIGlassBoxExecutor()
-        
+
         with pytest.raises(TRIExecutionError) as exc_info:
             executor.execute(risk_input)
-        
+
         assert exc_info.value.failure_mode == IntegrationFailureMode.MISSING_ACTIVATION
 
     def test_factory_rejects_none_activation(self):
@@ -189,7 +189,7 @@ class TestMissingActivation:
                 entity_id="test-entity",
                 activation_reference=None,  # type: ignore
             )
-        
+
         assert "activation_reference" in str(exc_info.value)
 
     def test_execute_rejects_invalid_activation(self):
@@ -197,12 +197,12 @@ class TestMissingActivation:
         risk_input = make_valid_risk_input(
             activation=make_invalid_activation(),
         )
-        
+
         executor = TRIGlassBoxExecutor()
-        
+
         with pytest.raises(TRIExecutionError) as exc_info:
             executor.execute(risk_input)
-        
+
         assert exc_info.value.failure_mode == IntegrationFailureMode.INVALID_ACTIVATION
 
 
@@ -218,20 +218,20 @@ class TestInvalidGlassBoxOutput:
         """Execution MUST fail when score is outside [0.0, 1.0]."""
         risk_input = make_valid_risk_input()
         executor = TRIGlassBoxExecutor(scoring_fn=make_invalid_score_fn())
-        
+
         with pytest.raises(TRIExecutionError) as exc_info:
             executor.execute(risk_input)
-        
+
         assert exc_info.value.failure_mode == IntegrationFailureMode.INVALID_RISK_SCORE
 
     def test_execute_rejects_scoring_exception(self):
         """Execution MUST fail when scoring function raises."""
         risk_input = make_valid_risk_input()
         executor = TRIGlassBoxExecutor(scoring_fn=make_failing_scoring_fn())
-        
+
         with pytest.raises(TRIExecutionError) as exc_info:
             executor.execute(risk_input)
-        
+
         assert exc_info.value.failure_mode == ExecutorFailureMode.GLASS_BOX_EXECUTION_FAILED
         assert "RuntimeError" in exc_info.value.message
 
@@ -247,14 +247,14 @@ class TestMonotonicity:
     def test_monotonicity_state_tracks_calls(self):
         """MonotonicityState MUST track previous calls."""
         state = MonotonicityState()
-        
+
         # First call - should always succeed
         is_valid, failure = state.check_and_update(
             score=0.5,
             action=TRIAction.REVIEW,
             request_id="req-1",
         )
-        
+
         assert is_valid is True
         assert failure is None
         assert state.last_score == 0.5
@@ -263,47 +263,47 @@ class TestMonotonicity:
     def test_higher_score_higher_severity_passes(self):
         """Higher score → higher severity MUST pass."""
         state = MonotonicityState()
-        
+
         # First: low score, standard action
         state.check_and_update(0.2, TRIAction.STANDARD, "req-1")
-        
+
         # Second: higher score, higher severity - should pass
         is_valid, failure = state.check_and_update(
             score=0.7,
             action=TRIAction.ESCALATE,
             request_id="req-2",
         )
-        
+
         assert is_valid is True
         assert failure is None
 
     def test_higher_score_lower_severity_fails(self):
         """Higher score → lower severity MUST fail."""
         state = MonotonicityState()
-        
+
         # First: medium score, review action
         state.check_and_update(0.4, TRIAction.REVIEW, "req-1")
-        
+
         # Second: higher score but lower severity - should fail
         is_valid, failure = state.check_and_update(
             score=0.8,
             action=TRIAction.STANDARD,  # Lower severity!
             request_id="req-2",
         )
-        
+
         assert is_valid is False
         assert failure is not None
         assert failure.mode == IntegrationFailureMode.MONOTONICITY_VIOLATION
 
     def test_executor_enforces_monotonicity(self):
         """TRIGlassBoxExecutor MUST enforce monotonicity across calls.
-        
+
         NOTE: The contract's enforce_monotonicity checks that for ANY two
         score-action pairs, the lower score has <= severity than higher score.
         This means if we have:
         - Call 1: score=0.20, action=ESCALATE (severity=2)
         - Call 2: score=0.80, action=STANDARD (severity=0)
-        
+
         This VIOLATES monotonicity because the lower score (0.20) has HIGHER
         severity (ESCALATE) than the higher score (0.80) with STANDARD.
         """
@@ -311,7 +311,7 @@ class TestMonotonicity:
         # First call: LOW score but HIGH severity action (simulates bad model)
         # Second call: HIGH score but LOW severity action
         call_count = [0]
-        
+
         def violation_scorer(risk_input: TRIRiskInput):
             call_count[0] += 1
             if call_count[0] == 1:
@@ -341,25 +341,25 @@ class TestMonotonicity:
                     )],
                     "High risk score for monotonicity test",
                 )
-        
+
         executor = TRIGlassBoxExecutor(
             scoring_fn=violation_scorer,
             enforce_monotonicity=True,
         )
-        
+
         # First call: low score (0.20 → LOW tier → STANDARD action)
         risk_input_1 = make_valid_risk_input(entity_id="entity-1")
         result_1 = executor.execute(risk_input_1)
         assert result_1.glass_box_output.risk_score == 0.20
         assert result_1.glass_box_output.action == TRIAction.STANDARD
-        
+
         # Second call: high score (0.80 → HIGH tier → ESCALATE action)
         # This is VALID - higher score, higher severity
         risk_input_2 = make_valid_risk_input(entity_id="entity-2")
         result_2 = executor.execute(risk_input_2)
         assert result_2.glass_box_output.risk_score == 0.80
         assert result_2.glass_box_output.action == TRIAction.ESCALATE
-        
+
         # The pairwise check should pass since score→action mapping is monotonic
 
     def test_executor_can_disable_monotonicity(self):
@@ -368,16 +368,16 @@ class TestMonotonicity:
             scoring_fn=make_high_risk_scoring_fn(),
             enforce_monotonicity=False,  # Disabled
         )
-        
+
         # First call
         result_1 = executor.execute(make_valid_risk_input(entity_id="entity-1"))
-        
+
         # Second call with different executor but same entity - no check
         executor_2 = TRIGlassBoxExecutor(
             scoring_fn=make_low_risk_scoring_fn(),
             enforce_monotonicity=False,
         )
-        
+
         # Should succeed without monotonicity check
         result_2 = executor_2.execute(make_valid_risk_input(entity_id="entity-2"))
         assert result_2.glass_box_output.action == TRIAction.STANDARD
@@ -395,9 +395,9 @@ class TestPDORiskEmbedding:
         """Execution MUST produce valid PDO embedding."""
         risk_input = make_valid_risk_input()
         executor = TRIGlassBoxExecutor()
-        
+
         result = executor.execute(risk_input)
-        
+
         assert result.pdo_embedding is not None
         assert result.pdo_embedding.risk_score >= 0.0
         assert result.pdo_embedding.risk_score <= 1.0
@@ -409,10 +409,10 @@ class TestPDORiskEmbedding:
         """PDO embedding MUST have all required fields."""
         risk_input = make_valid_risk_input()
         executor = TRIGlassBoxExecutor()
-        
+
         result = executor.execute(risk_input)
         embedding_dict = result.pdo_embedding.to_dict()
-        
+
         required_fields = [
             "risk_score",
             "risk_tier",
@@ -425,7 +425,7 @@ class TestPDORiskEmbedding:
             "computation_timestamp",
             "activation_hash",
         ]
-        
+
         for field in required_fields:
             assert field in embedding_dict, f"Missing required field: {field}"
 
@@ -434,9 +434,9 @@ class TestPDORiskEmbedding:
         activation = make_valid_activation()
         risk_input = make_valid_risk_input(activation=activation)
         executor = TRIGlassBoxExecutor()
-        
+
         result = executor.execute(risk_input)
-        
+
         assert result.pdo_embedding.activation_hash == activation.activation_hash
         assert result.activation_hash == activation.activation_hash
 
@@ -453,9 +453,9 @@ class TestValidExecution:
         """Valid activation + risk → TRIExecutionResult."""
         risk_input = make_valid_risk_input()
         executor = TRIGlassBoxExecutor()
-        
+
         result = executor.execute(risk_input)
-        
+
         assert isinstance(result, TRIExecutionResult)
         assert result.execution_id is not None
         assert result.request_id == risk_input.request_id
@@ -466,9 +466,9 @@ class TestValidExecution:
         """Low risk score MUST produce STANDARD action."""
         executor = TRIGlassBoxExecutor(scoring_fn=make_low_risk_scoring_fn())
         risk_input = make_valid_risk_input()
-        
+
         result = executor.execute(risk_input)
-        
+
         assert result.glass_box_output.risk_tier == RiskSeverityTier.LOW
         assert result.glass_box_output.action == TRIAction.STANDARD
 
@@ -476,9 +476,9 @@ class TestValidExecution:
         """High risk score MUST produce ESCALATE action."""
         executor = TRIGlassBoxExecutor(scoring_fn=make_high_risk_scoring_fn())
         risk_input = make_valid_risk_input()
-        
+
         result = executor.execute(risk_input)
-        
+
         assert result.glass_box_output.risk_tier == RiskSeverityTier.HIGH
         assert result.glass_box_output.action == TRIAction.ESCALATE
 
@@ -486,10 +486,10 @@ class TestValidExecution:
         """Same input MUST produce same output."""
         risk_input = make_valid_risk_input(entity_id="deterministic-entity")
         executor = TRIGlassBoxExecutor(enforce_monotonicity=False)
-        
+
         result_1 = executor.execute(risk_input)
         result_2 = executor.execute(risk_input)
-        
+
         assert result_1.glass_box_output.risk_score == result_2.glass_box_output.risk_score
         assert result_1.glass_box_output.action == result_2.glass_box_output.action
 
@@ -497,10 +497,10 @@ class TestValidExecution:
         """TRIExecutionResult MUST serialize to dict."""
         risk_input = make_valid_risk_input()
         executor = TRIGlassBoxExecutor()
-        
+
         result = executor.execute(risk_input)
         result_dict = result.to_dict()
-        
+
         assert "execution_id" in result_dict
         assert "request_id" in result_dict
         assert "risk_score" in result_dict
@@ -540,7 +540,7 @@ class TestSeverityTierMapping:
         scores = [0.0, 0.2, 0.33, 0.5, 0.66, 0.8, 1.0]
         actions = [score_to_action(s) for s in scores]
         severities = [ACTION_SEVERITY_ORDER[a] for a in actions]
-        
+
         # Severity must never decrease
         for i in range(len(severities) - 1):
             assert severities[i] <= severities[i + 1]
@@ -549,7 +549,7 @@ class TestSeverityTierMapping:
         """Scores outside [0.0, 1.0] MUST raise ValueError."""
         with pytest.raises(ValueError):
             score_to_severity_tier(-0.1)
-        
+
         with pytest.raises(ValueError):
             score_to_severity_tier(1.1)
 
@@ -569,7 +569,7 @@ class TestFactoryFunctions:
             activation_hash="test-hash-123",
             scope_constraints=("risk", "scoring"),
         )
-        
+
         assert ref.agent_gid == "GID-01"
         assert ref.activation_hash == "test-hash-123"
         assert ref.is_valid()
@@ -598,7 +598,7 @@ class TestFactoryFunctions:
             activation_reference=activation,
             event_window_hours=48.0,
         )
-        
+
         assert risk_input.entity_id == "test-entity"
         assert risk_input.activation_reference == activation
         is_valid, _ = risk_input.validate()
@@ -628,7 +628,7 @@ class TestIntegrationContract:
             0.2, TRIAction.STANDARD,
             0.7, TRIAction.ESCALATE,
         )
-        
+
         assert is_valid is True
         assert failure is None
 
@@ -639,7 +639,7 @@ class TestIntegrationContract:
             0.2, TRIAction.ESCALATE,  # Low score, high severity
             0.7, TRIAction.STANDARD,  # High score, low severity
         )
-        
+
         assert is_valid is False
         assert failure is not None
         assert failure.mode == IntegrationFailureMode.MONOTONICITY_VIOLATION
@@ -650,7 +650,7 @@ class TestIntegrationContract:
         risk_input = make_valid_risk_input()
         executor = TRIGlassBoxExecutor()
         result = executor.execute(risk_input)
-        
+
         is_valid, failure = result.glass_box_output.validate()
         assert is_valid is True
         assert failure is None
