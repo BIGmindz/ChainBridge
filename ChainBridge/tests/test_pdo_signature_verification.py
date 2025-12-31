@@ -73,12 +73,12 @@ def _make_valid_pdo(
     agent_id: str = "agent::settlement-engine",
 ) -> dict[str, Any]:
     """Create a valid PDO with correct hash integrity (no signature).
-    
+
     Includes both canonical signature fields and backward-compat fields.
     """
     import uuid
     from datetime import timedelta
-    
+
     inputs_hash = hashlib.sha256(b"test_inputs").hexdigest()
     decision_hash = compute_decision_hash(inputs_hash, policy_version, outcome)
     timestamp = datetime.now(timezone.utc).isoformat()
@@ -294,7 +294,7 @@ class TestVerifyPDOSignature:
 
     def test_missing_signature_blocked(self):
         """PDO without signature returns UNSIGNED_PDO and blocks execution.
-        
+
         PAC-CODY-PDO-SIGNING-IMPL-01 (Updated): Signature is MANDATORY.
         Unsigned PDOs must NOT pass validation (fail-closed).
         """
@@ -326,7 +326,7 @@ class TestVerifyPDOSignature:
 
     def test_none_pdo_returns_unsigned(self):
         """None PDO data returns UNSIGNED_PDO and blocks execution.
-        
+
         PAC-CODY-PDO-SIGNING-IMPL-01 (Updated): Fail-closed mode.
         """
         result = verify_pdo_signature(None)
@@ -355,7 +355,7 @@ class TestKeyRegistry:
 
     def test_register_and_lookup_hmac_key(self):
         """Register HMAC key and retrieve verification function.
-        
+
         Note: register_trusted_key now takes 4 args (key_id, alg, key, agent_id).
         """
         register_trusted_key(
@@ -416,7 +416,7 @@ class TestPDOValidatorWithSignature:
 
     def test_unsigned_pdo_blocked(self):
         """Unsigned PDO fails validation (fail-closed).
-        
+
         PAC-CODY-PDO-SIGNING-IMPL-01 (Updated): No legacy unsigned mode.
         """
         pdo = _make_valid_pdo()  # No signature
@@ -509,7 +509,7 @@ class TestSignatureEnforcementGate:
 
     def test_unsigned_pdo_blocked(self, client):
         """Unsigned PDO blocked (fail-closed).
-        
+
         PAC-CODY-PDO-SIGNING-IMPL-01 (Updated): No legacy unsigned mode.
         """
         pdo = _make_valid_pdo()  # No signature
@@ -593,7 +593,7 @@ class TestVerificationResultProperties:
 
     def test_allows_execution_false_for_unsigned(self):
         """allows_execution is False for UNSIGNED_PDO (fail-closed).
-        
+
         PAC-CODY-PDO-SIGNING-IMPL-01 (Updated): No legacy unsigned mode.
         """
         result = VerificationResult(
@@ -621,7 +621,7 @@ class TestSignatureSecurityCases:
 
     def test_tampered_action_fails(self):
         """Tampering action after signing fails.
-        
+
         Note: inputs_hash is a backward-compat field NOT in SIGNATURE_FIELDS.
         Testing action instead which IS in the canonical signature fields.
         """
@@ -641,7 +641,7 @@ class TestSignatureSecurityCases:
 
     def test_tampered_agent_id_fails(self):
         """Tampering agent_id after signing fails.
-        
+
         Note: signer is a backward-compat field NOT in SIGNATURE_FIELDS.
         Testing agent_id instead which IS in the canonical signature fields.
         """

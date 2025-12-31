@@ -261,7 +261,7 @@ class TestTransitionProof:
             authority_gid="GID-05",
             triggering_proof_id="PROOF-123",
         )
-        
+
         data = original.to_dict()
         restored = StateTransitionProof.from_dict(data)
 
@@ -308,7 +308,7 @@ class TestTransitionProofEmitter:
             to_state="PENDING_APPROVAL",
         )
         result = validator.validate_transition(request)
-        
+
         if result.is_allowed:
             proof = emitter.emit(request, result)
             assert proof is not None
@@ -326,7 +326,7 @@ class TestTransitionProofEmitter:
             to_state="INVALID_STATE",
         )
         result = validator.validate_transition(request)
-        
+
         proof = emitter.emit(request, result)
         assert proof is None
         assert emitter.emission_count == 0
@@ -495,7 +495,7 @@ class TestStateTransitionIntegration:
                 proof_id=f"PROOF-{from_state}-{to_state}",
             )
             result = validator.validate_transition(request)
-            
+
             if result.is_allowed:
                 proof = emitter.emit(request, result)
                 if proof:

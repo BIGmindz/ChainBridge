@@ -97,7 +97,7 @@ class TestExecutionBypass:
         pdo = _make_pdo()
         pdo["signature"] = create_test_signature(pdo)
         pdo["outcome"] = "REJECTED"  # Tamper after signing
-        
+
         result = verify_pdo_signature(pdo)
         assert result.outcome == VerificationOutcome.INVALID_SIGNATURE
         assert result.allows_execution is False
@@ -143,7 +143,7 @@ class TestReplayAndTiming:
         """Same nonce cannot be used twice."""
         pdo1 = _make_pdo(pdo_id="PDO-REPLAY000001", nonce="SHARED_NONCE")
         pdo1["signature"] = create_test_signature(pdo1)
-        
+
         # First use succeeds
         result1 = verify_pdo_signature(pdo1)
         assert result1.outcome == VerificationOutcome.VALID
@@ -151,7 +151,7 @@ class TestReplayAndTiming:
         # Second use with same nonce fails
         pdo2 = _make_pdo(pdo_id="PDO-REPLAY000002", nonce="SHARED_NONCE")
         pdo2["signature"] = create_test_signature(pdo2)
-        
+
         result2 = verify_pdo_signature(pdo2)
         assert result2.outcome == VerificationOutcome.REPLAY_DETECTED
         assert result2.allows_execution is False
@@ -160,7 +160,7 @@ class TestReplayAndTiming:
         """PDO with past expires_at is rejected."""
         pdo = _make_pdo(pdo_id="PDO-EXPIRED00001", expires_in=-60)
         pdo["signature"] = create_test_signature(pdo)
-        
+
         result = verify_pdo_signature(pdo)
         assert result.outcome == VerificationOutcome.EXPIRED_PDO
         assert result.allows_execution is False
@@ -171,7 +171,7 @@ class TestReplayAndTiming:
         pdo = _make_pdo(pdo_id="PDO-BOUNDARY0001", expires_in=0)
         pdo["signature"] = create_test_signature(pdo)
         time.sleep(0.1)  # Ensure expiry
-        
+
         result = verify_pdo_signature(pdo)
         assert result.outcome == VerificationOutcome.EXPIRED_PDO
         assert result.allows_execution is False
@@ -181,7 +181,7 @@ class TestReplayAndTiming:
         pdo = _make_pdo(pdo_id="PDO-BADEXPIRY01")
         pdo["expires_at"] = "not-a-timestamp"
         pdo["signature"] = create_test_signature(pdo)
-        
+
         result = verify_pdo_signature(pdo)
         assert result.outcome == VerificationOutcome.EXPIRED_PDO
         assert result.allows_execution is False
@@ -206,7 +206,7 @@ class TestSignerConfusion:
 
         pdo = _make_pdo(pdo_id="PDO-MISMATCH0001")
         pdo["agent_id"] = "agent::unauthorized"  # Different from bound key
-        
+
         # Sign with bound key
         payload = canonicalize_pdo(pdo)
         sig_bytes = hmac.new(b"bound-secret-key", payload, hashlib.sha256).digest()
@@ -279,7 +279,7 @@ class TestSerializationAttacks:
         # Original order
         pdo1 = _make_pdo(pdo_id="PDO-REORDER0001")
         pdo1["signature"] = create_test_signature(pdo1)
-        
+
         # Reordered fields (same content)
         pdo2 = {
             "timestamp": pdo1["timestamp"],
@@ -367,7 +367,7 @@ class TestAuditIntegrity:
     def test_only_valid_allows_execution(self):
         """Only VALID outcome allows execution."""
         from app.services.pdo.signing import VerificationResult
-        
+
         valid_result = VerificationResult(
             outcome=VerificationOutcome.VALID,
             pdo_id="PDO-TEST",
@@ -388,11 +388,11 @@ class TestAuditIntegrity:
             return {"executed": True}
 
         client = TestClient(app)
-        
+
         # Submit unsigned PDO
         pdo = _make_pdo(pdo_id="PDO-AUDITTEST01")
         response = client.post("/test", json={"pdo": pdo})
-        
+
         assert response.status_code == 403
         detail = response.json()["detail"]
         assert detail["error"] == "PDO_ENFORCEMENT_FAILED"
@@ -431,10 +431,10 @@ class TestValidPDOPasses:
             return {"executed": True}
 
         client = TestClient(app)
-        
+
         pdo = _make_pdo(pdo_id="PDO-VALIDGATE001")
         pdo["signature"] = create_test_signature(pdo)
         response = client.post("/test", json={"pdo": pdo})
-        
+
         assert response.status_code == 200
         assert response.json()["executed"] is True

@@ -68,7 +68,7 @@ def valid_pdo() -> Dict[str, Any]:
     outcome = "APPROVED"
     binding_data = f"{inputs_hash}|{policy_version}|{outcome}"
     decision_hash = hashlib.sha256(binding_data.encode("utf-8")).hexdigest()
-    
+
     return {
         "pdo_id": "PDO-ABCD1234EFGH5678",  # Valid PDO ID format (8+ uppercase alphanumeric)
         "inputs_hash": inputs_hash,
@@ -88,38 +88,38 @@ def valid_pdo() -> Dict[str, Any]:
 
 class TestPDOValidationGuards:
     """Tests for PDO validation backend guards."""
-    
+
     def test_valid_pdo_passes_all_guards(self, validator: PDOValidator, valid_pdo: Dict[str, Any]):
         """Valid PDO should pass all validation guards."""
         result = validator.validate(valid_pdo)
         assert result.valid is True
         assert len(result.errors) == 0
-    
+
     def test_missing_pdo_id_blocked(self, validator: PDOValidator, valid_pdo: Dict[str, Any]):
         """Missing pdo_id should be blocked (no bypass)."""
         del valid_pdo["pdo_id"]
         result = validator.validate(valid_pdo)
         assert result.valid is False
         assert any(e.code == ValidationErrorCode.MISSING_FIELD for e in result.errors)
-    
+
     def test_missing_inputs_hash_blocked(self, validator: PDOValidator, valid_pdo: Dict[str, Any]):
         """Missing inputs_hash should be blocked (no bypass)."""
         del valid_pdo["inputs_hash"]
         result = validator.validate(valid_pdo)
         assert result.valid is False
-    
+
     def test_missing_policy_version_blocked(self, validator: PDOValidator, valid_pdo: Dict[str, Any]):
         """Missing policy_version should be blocked (no bypass)."""
         del valid_pdo["policy_version"]
         result = validator.validate(valid_pdo)
         assert result.valid is False
-    
+
     def test_missing_decision_hash_blocked(self, validator: PDOValidator, valid_pdo: Dict[str, Any]):
         """Missing decision_hash should be blocked (no bypass)."""
         del valid_pdo["decision_hash"]
         result = validator.validate(valid_pdo)
         assert result.valid is False
-    
+
     def test_tampered_decision_hash_blocked(self, validator: PDOValidator, valid_pdo: Dict[str, Any]):
         """Tampered decision_hash should be blocked (integrity check)."""
         valid_pdo["decision_hash"] = "tampered_hash_value"
@@ -128,12 +128,12 @@ class TestPDOValidationGuards:
         # Tampered hash that doesn't match 64-char lowercase hex pattern
         # gets caught as INVALID_FORMAT before hash verification
         assert any(e.code == ValidationErrorCode.INVALID_FORMAT for e in result.errors)
-    
+
     def test_empty_pdo_blocked(self, validator: PDOValidator):
         """Empty PDO should be blocked."""
         result = validator.validate({})
         assert result.valid is False
-    
+
     def test_none_pdo_blocked(self, validator: PDOValidator):
         """None PDO should be blocked."""
         result = validator.validate(None)  # type: ignore
@@ -147,13 +147,13 @@ class TestPDOValidationGuards:
 
 class TestA6GIDEnforcement:
     """Tests for A6 GID pattern enforcement."""
-    
+
     def test_valid_gid_allowed(self, valid_pdo: Dict[str, Any]):
         """Valid GID-XX pattern should be allowed."""
         valid_pdo["agent_id"] = "GID-01"
         result = validate_pdo_a6_enforcement(valid_pdo)
         assert result.valid is True
-    
+
     def test_invalid_gid_format_blocked(self, valid_pdo: Dict[str, Any]):
         """Invalid GID format (starting with GID-) should be blocked."""
         # Only GIDs starting with "GID-" are validated
@@ -166,7 +166,7 @@ class TestA6GIDEnforcement:
             valid_pdo["agent_id"] = invalid_gid
             result = validate_pdo_a6_enforcement(valid_pdo)
             assert result.valid is False, f"GID '{invalid_gid}' should be blocked"
-    
+
     def test_non_gid_agent_ids_allowed(self, valid_pdo: Dict[str, Any]):
         """Non-GID agent IDs (not starting with GID-) are allowed."""
         # Per implementation: A6 validation only runs on agent_ids starting with "GID-"
@@ -191,7 +191,7 @@ class TestA6GIDEnforcement:
 
 class TestAuthoritySignatureEnforcement:
     """Tests for authority signature requirement."""
-    
+
     def test_pdo_with_cro_hold_requires_authority(self, valid_pdo: Dict[str, Any]):
         """PDO with CRO HOLD decision should require authority signature."""
         valid_pdo["cro_decision"] = "HOLD"
@@ -200,13 +200,13 @@ class TestAuthoritySignatureEnforcement:
         # Note: A6 enforcement should flag missing authority for HOLD decisions
         # The actual behavior depends on implementation
         assert result is not None  # Just ensure no crash
-    
+
     def test_pdo_with_cro_escalate_requires_authority(self, valid_pdo: Dict[str, Any]):
         """PDO with CRO ESCALATE decision should require authority signature."""
         valid_pdo["cro_decision"] = "ESCALATE"
         result = validate_pdo_a6_enforcement(valid_pdo)
         assert result is not None
-    
+
     def test_authority_signature_present_when_required(self, valid_pdo: Dict[str, Any]):
         """Authority signature should satisfy requirement when present."""
         valid_pdo["cro_decision"] = "HOLD"
@@ -225,31 +225,31 @@ class TestAuthoritySignatureEnforcement:
 
 class TestNoBypassPaths:
     """Tests to ensure no bypass paths exist."""
-    
+
     def test_cannot_bypass_with_null_fields(self, validator: PDOValidator, valid_pdo: Dict[str, Any]):
         """Setting fields to None should not bypass validation."""
         valid_pdo["inputs_hash"] = None
         result = validator.validate(valid_pdo)
         assert result.valid is False
-    
+
     def test_cannot_bypass_with_empty_strings(self, validator: PDOValidator, valid_pdo: Dict[str, Any]):
         """Empty string fields should not bypass validation."""
         valid_pdo["pdo_id"] = ""
         result = validator.validate(valid_pdo)
         assert result.valid is False
-    
+
     def test_cannot_bypass_with_whitespace(self, validator: PDOValidator, valid_pdo: Dict[str, Any]):
         """Whitespace-only fields should not bypass validation."""
         valid_pdo["pdo_id"] = "   "
         result = validator.validate(valid_pdo)
         assert result.valid is False
-    
+
     def test_cannot_bypass_with_special_chars(self, validator: PDOValidator, valid_pdo: Dict[str, Any]):
         """Special characters should not bypass validation."""
         valid_pdo["agent_id"] = "GID-01\x00"  # Null byte injection attempt
         result = validate_pdo_a6_enforcement(valid_pdo)
         assert result.valid is False
-    
+
     def test_cannot_bypass_with_unicode_lookalikes(self, validator: PDOValidator, valid_pdo: Dict[str, Any]):
         """Unicode lookalike characters should not bypass validation."""
         # Using Cyrillic 'А' instead of Latin 'A'
@@ -266,7 +266,7 @@ class TestNoBypassPaths:
 
 class TestDeterministicGuards:
     """Tests for deterministic guard behavior."""
-    
+
     def test_same_input_same_output(self, validator: PDOValidator, valid_pdo: Dict[str, Any]):
         """Same input should always produce same validation result."""
         results = [validator.validate(valid_pdo.copy()) for _ in range(10)]
@@ -274,7 +274,7 @@ class TestDeterministicGuards:
         for result in results[1:]:
             assert result.valid == first_result.valid
             assert len(result.errors) == len(first_result.errors)
-    
+
     def test_validation_order_independent(self, validator: PDOValidator, valid_pdo: Dict[str, Any]):
         """Validation should be independent of field order."""
         # Create same PDO with different field order
