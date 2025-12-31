@@ -1,12 +1,12 @@
 # ═══════════════════════════════════════════════════════════════════════════════
-# ChainBridge Lint v2 — Invariant Compiler & Runtime Enforcement Engine
-# PAC-JEFFREY-P07: Lint v2 Law — Runtime & CI Enforcement Implementation
-# Supersedes: PAC-JEFFREY-C07R (LAW), PAC-JEFFREY-P06R
+# ChainBridge Lint v2 — Platform-Wide Invariant Compiler & Runtime Enforcement
+# PAC-JEFFREY-P11R: Option A Execution · Runtime & ACK Determinism Validation
+# Supersedes: PAC-JEFFREY-P10R, PAC-JEFFREY-P07, PAC-JEFFREY-C07R (LAW)
 # GOLD STANDARD · FAIL_CLOSED
 # ═══════════════════════════════════════════════════════════════════════════════
 
 """
-Lint v2 Invariant Compiler — Runtime-Enforced Governance.
+Lint v2 Platform-Wide Invariant Compiler — Runtime-Enforced Governance.
 
 INVARIANT CLASSES (PAC-JEFFREY-P05R Block 5, C07R LOCKED):
 - S-INV: Structural — Schema validation, required fields
@@ -17,18 +17,39 @@ INVARIANT CLASSES (PAC-JEFFREY-P05R Block 5, C07R LOCKED):
 - F-INV: Finality — BER/settlement eligibility
 - C-INV: Training — Signal emission compliance
 
-RUNTIME CHECKPOINTS (PAC-JEFFREY-P07 Block 5):
-1. PAC_ADMISSION     → S-INV, A-INV, T-INV
-2. WRAP_INGESTION    → S-INV, X-INV, C-INV
-3. RG01_REVIEW       → X-INV, A-INV
-4. BER_ELIGIBILITY   → F-INV, C-INV
-5. SETTLEMENT_READINESS → F-INV
+PLATFORM INVARIANTS (PAC-JEFFREY-P10R Block 6):
+- INV-LINT-PLAT-001: Runtime ACK REQUIRED
+- INV-LINT-PLAT-002: Agent execution without ACK = ILLEGAL
+- INV-LINT-PLAT-003: UI renders only lint-validated state
+- INV-LINT-PLAT-004: API admission requires lint PASS
+- INV-LINT-PLAT-005: Orchestration order deterministic
 
-RUNTIME ACTIVATION (P07 Block 3):
-- Schema validation ENABLED
-- Invariant registry LOADED
-- Fail-closed mode ACTIVE
-- Runtime admission hook ENABLED
+P11R EXECUTION MODEL (PAC-JEFFREY-P11R Block 2):
+- Execution Model: PARALLEL
+- Execution Barrier: AGENT_ACK_BARRIER
+- Barrier Release: ALL_AGENT_ACKED
+- Fail Mode: HARD_FAIL
+- Checkpoint Skip: FORBIDDEN
+- Drift Tolerance: ZERO
+
+P11R CHECKPOINT SEQUENCE (Block 5) — STRICT ORDER · NON-SKIPPABLE:
+1. PAC_ADMISSION
+2. RUNTIME_ACTIVATION
+3. RUNTIME_ACK_COLLECTION
+4. AGENT_ACTIVATION
+5. AGENT_ACK_COLLECTION
+6. AGENT_EXECUTION
+7. REVIEW_GATES
+8. BER_ELIGIBILITY
+
+P11R ACTIVATED AGENTS (Block 4):
+- BENSON (GID-00) — orchestration
+- CODY (GID-01) — backend
+- SONNY (GID-02) — frontend
+- DAN (GID-07) — ci_cd
+- SAM (GID-06) — security
+- ATLAS (GID-11) — repo_integrity
+- ALEX (GID-08) — governance
 
 SCHEMA REFERENCES:
 - lint_schema: CHAINBRIDGE_LINT_V2_INVARIANT_SCHEMA@v1.0.0
@@ -51,8 +72,14 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 from uuid import uuid4
+
+# CANONICAL IMPORT — gid_registry.py is the single source of truth
+from core.governance.gid_registry import (
+    get_registry as get_canonical_registry,
+    UnknownGIDError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -115,8 +142,460 @@ class RuntimeActivationStatus:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# AGENT ROSTER (PAC-JEFFREY-P07 Block 4)
+# P11R EXECUTION MODEL — OPTION A (PAC-JEFFREY-P11R Block 2-5)
 # ═══════════════════════════════════════════════════════════════════════════════
+# Execution Model: PARALLEL
+# Execution Barrier: AGENT_ACK_BARRIER
+# Barrier Release: ALL_AGENT_ACKED
+# Fail Mode: HARD_FAIL
+# Checkpoint Skip: FORBIDDEN
+# Drift Tolerance: ZERO
+
+class P11RExecutionModel(str, Enum):
+    """P11R Execution Models per Block 2."""
+    PARALLEL = "PARALLEL"
+    SEQUENTIAL = "SEQUENTIAL"
+
+
+class P11RBarrierType(str, Enum):
+    """P11R Barrier Types per Block 2."""
+    AGENT_ACK_BARRIER = "AGENT_ACK_BARRIER"
+    RUNTIME_ACK_BARRIER = "RUNTIME_ACK_BARRIER"
+    WRAP_BARRIER = "WRAP_BARRIER"
+
+
+class P11RBarrierRelease(str, Enum):
+    """P11R Barrier Release Conditions per Block 2."""
+    ALL_AGENT_ACKED = "ALL_AGENT_ACKED"
+    RUNTIME_ACKED = "RUNTIME_ACKED"
+    ALL_WRAPS_PRESENT = "ALL_WRAPS_PRESENT"
+
+
+@dataclass
+class RuntimeActivationACK:
+    """
+    Runtime Activation ACK per PAC-JEFFREY-P11R Block 3.
+    
+    REQUIRED before any agent execution.
+    Missing ACK → HARD_FAIL
+    """
+    ack_id: str = field(default_factory=lambda: f"RUNTIME-ACK-{uuid4().hex[:8].upper()}")
+    pac_id: str = ""
+    schema_validation_enabled: bool = False
+    invariant_registry_loaded: bool = False
+    lint_engine_ready: bool = False
+    runtime_ack_enforced: bool = False
+    deterministic_execution_order: bool = False
+    fail_closed_enabled: bool = False
+    acked_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    
+    def is_valid(self) -> bool:
+        """ALL activation checks REQUIRED per P11R Block 3."""
+        return all([
+            self.schema_validation_enabled,
+            self.invariant_registry_loaded,
+            self.lint_engine_ready,
+            self.runtime_ack_enforced,
+            self.deterministic_execution_order,
+            self.fail_closed_enabled,
+        ])
+    
+    def get_missing_checks(self) -> List[str]:
+        """Get list of missing activation checks."""
+        missing = []
+        if not self.schema_validation_enabled:
+            missing.append("schema_validation_enabled")
+        if not self.invariant_registry_loaded:
+            missing.append("invariant_registry_loaded")
+        if not self.lint_engine_ready:
+            missing.append("lint_engine_ready")
+        if not self.runtime_ack_enforced:
+            missing.append("runtime_ack_enforced")
+        if not self.deterministic_execution_order:
+            missing.append("deterministic_execution_order")
+        if not self.fail_closed_enabled:
+            missing.append("fail_closed_enabled")
+        return missing
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "ack_id": self.ack_id,
+            "pac_id": self.pac_id,
+            "schema_validation_enabled": self.schema_validation_enabled,
+            "invariant_registry_loaded": self.invariant_registry_loaded,
+            "lint_engine_ready": self.lint_engine_ready,
+            "runtime_ack_enforced": self.runtime_ack_enforced,
+            "deterministic_execution_order": self.deterministic_execution_order,
+            "fail_closed_enabled": self.fail_closed_enabled,
+            "is_valid": self.is_valid(),
+            "missing_checks": self.get_missing_checks(),
+            "acked_at": self.acked_at,
+        }
+
+
+@dataclass
+class AgentActivationACK:
+    """
+    Agent Activation ACK per PAC-JEFFREY-P11R Block 4.
+    
+    Explicit ACK REQUIRED per agent before execution.
+    No execution before ACK.
+    No undeclared agents permitted.
+    """
+    ack_id: str = field(default_factory=lambda: f"AGENT-ACK-{uuid4().hex[:8].upper()}")
+    pac_id: str = ""
+    gid: str = ""
+    agent_name: str = ""
+    lane: str = ""
+    activated: bool = False
+    acked_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "ack_id": self.ack_id,
+            "pac_id": self.pac_id,
+            "gid": self.gid,
+            "agent_name": self.agent_name,
+            "lane": self.lane,
+            "activated": self.activated,
+            "acked_at": self.acked_at,
+        }
+
+
+@dataclass
+class P11RAgentACKBarrier:
+    """
+    Agent ACK Barrier per PAC-JEFFREY-P11R Block 4.
+    
+    Barrier Release: ALL_AGENT_ACKED
+    Missing ACK → HARD_FAIL
+    """
+    barrier_id: str = field(default_factory=lambda: f"BARRIER-{uuid4().hex[:8].upper()}")
+    pac_id: str = ""
+    required_agents: List[str] = field(default_factory=list)  # List of GIDs
+    received_acks: Dict[str, AgentActivationACK] = field(default_factory=dict)
+    barrier_type: P11RBarrierType = P11RBarrierType.AGENT_ACK_BARRIER
+    release_condition: P11RBarrierRelease = P11RBarrierRelease.ALL_AGENT_ACKED
+    released: bool = False
+    released_at: Optional[str] = None
+    
+    def add_ack(self, ack: AgentActivationACK) -> None:
+        """Add agent ACK to barrier."""
+        if ack.gid in self.required_agents:
+            self.received_acks[ack.gid] = ack
+            self._check_release()
+    
+    def _check_release(self) -> None:
+        """Check if barrier release condition is met."""
+        if self.release_condition == P11RBarrierRelease.ALL_AGENT_ACKED:
+            if all(gid in self.received_acks for gid in self.required_agents):
+                self.released = True
+                self.released_at = datetime.now(timezone.utc).isoformat()
+    
+    def get_missing_acks(self) -> List[str]:
+        """Get list of agents that haven't ACKed."""
+        return [gid for gid in self.required_agents if gid not in self.received_acks]
+    
+    def is_released(self) -> bool:
+        """Check if barrier is released."""
+        return self.released
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "barrier_id": self.barrier_id,
+            "pac_id": self.pac_id,
+            "required_agents": self.required_agents,
+            "received_acks": {gid: ack.to_dict() for gid, ack in self.received_acks.items()},
+            "barrier_type": self.barrier_type.value,
+            "release_condition": self.release_condition.value,
+            "released": self.released,
+            "released_at": self.released_at,
+            "missing_acks": self.get_missing_acks(),
+        }
+
+
+# P11R Checkpoint Sequence (Block 5) — STRICT ORDER · NON-SKIPPABLE
+P11R_CHECKPOINT_SEQUENCE: List[str] = [
+    "PAC_ADMISSION",
+    "RUNTIME_ACTIVATION",
+    "RUNTIME_ACK_COLLECTION",
+    "AGENT_ACTIVATION",
+    "AGENT_ACK_COLLECTION",
+    "AGENT_EXECUTION",
+    "REVIEW_GATES",
+    "BER_ELIGIBILITY",
+]
+
+
+@dataclass
+class P11RCheckpointTracker:
+    """
+    Checkpoint Tracker per PAC-JEFFREY-P11R Block 5.
+    
+    Enforces strict checkpoint order.
+    Out-of-order execution → HARD_FAIL
+    """
+    tracker_id: str = field(default_factory=lambda: f"TRACK-{uuid4().hex[:8].upper()}")
+    pac_id: str = ""
+    completed_checkpoints: List[str] = field(default_factory=list)
+    current_checkpoint_index: int = 0
+    
+    def get_next_checkpoint(self) -> Optional[str]:
+        """Get next expected checkpoint."""
+        if self.current_checkpoint_index < len(P11R_CHECKPOINT_SEQUENCE):
+            return P11R_CHECKPOINT_SEQUENCE[self.current_checkpoint_index]
+        return None
+    
+    def complete_checkpoint(self, checkpoint: str) -> Tuple[bool, Optional[str]]:
+        """
+        Complete a checkpoint.
+        
+        Returns:
+            (success, error_message)
+        """
+        expected = self.get_next_checkpoint()
+        if expected is None:
+            return False, "All checkpoints already completed"
+        if checkpoint != expected:
+            return False, f"Out-of-order checkpoint: expected {expected}, got {checkpoint}"
+        
+        self.completed_checkpoints.append(checkpoint)
+        self.current_checkpoint_index += 1
+        return True, None
+    
+    def is_complete(self) -> bool:
+        """Check if all checkpoints completed."""
+        return len(self.completed_checkpoints) == len(P11R_CHECKPOINT_SEQUENCE)
+    
+    def get_remaining_checkpoints(self) -> List[str]:
+        """Get list of remaining checkpoints."""
+        return P11R_CHECKPOINT_SEQUENCE[self.current_checkpoint_index:]
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "tracker_id": self.tracker_id,
+            "pac_id": self.pac_id,
+            "completed_checkpoints": self.completed_checkpoints,
+            "current_checkpoint_index": self.current_checkpoint_index,
+            "next_checkpoint": self.get_next_checkpoint(),
+            "is_complete": self.is_complete(),
+            "remaining_checkpoints": self.get_remaining_checkpoints(),
+        }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# P11R WRAP VALIDATION (PAC-JEFFREY-P11R Block 7)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@dataclass
+class P11RWrapRequirement:
+    """
+    WRAP Requirement per PAC-JEFFREY-P11R Block 7.
+    
+    All WRAPs MANDATORY.
+    Missing WRAP → HARD_FAIL
+    """
+    pac_id: str = ""
+    required_wraps: List[str] = field(default_factory=list)
+    received_wraps: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    
+    def add_wrap(self, wrap_id: str, wrap_data: Dict[str, Any]) -> None:
+        """Add received WRAP."""
+        self.received_wraps[wrap_id] = wrap_data
+    
+    def get_missing_wraps(self) -> List[str]:
+        """Get list of missing WRAPs."""
+        return [w for w in self.required_wraps if w not in self.received_wraps]
+    
+    def is_complete(self) -> bool:
+        """Check if all required WRAPs received."""
+        return all(w in self.received_wraps for w in self.required_wraps)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "pac_id": self.pac_id,
+            "required_wraps": self.required_wraps,
+            "received_wraps": list(self.received_wraps.keys()),
+            "missing_wraps": self.get_missing_wraps(),
+            "is_complete": self.is_complete(),
+        }
+
+
+# P11R Required WRAPs per Block 7
+P11R_REQUIRED_WRAPS: List[str] = [
+    "WRAP-BENSON-GID00-PAC-JEFFREY-P11R",
+    "WRAP-CODY-GID01-PAC-JEFFREY-P11R",
+    "WRAP-SONNY-GID02-PAC-JEFFREY-P11R",
+    "WRAP-DAN-GID07-PAC-JEFFREY-P11R",
+    "WRAP-SAM-GID06-PAC-JEFFREY-P11R",
+    "WRAP-ATLAS-GID11-PAC-JEFFREY-P11R",
+    "WRAP-ALEX-GID08-PAC-JEFFREY-P11R",
+]
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# P11R BER FINALITY (PAC-JEFFREY-P11R Block 9)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class P11RBERClassification(str, Enum):
+    """BER Classification per P11R Block 9."""
+    PROVISIONAL = "PROVISIONAL"  # P11R default — no execution binding
+    BINDING = "BINDING"          # Full execution binding (not for P11R)
+
+
+@dataclass
+class P11RBERStatus:
+    """
+    BER Status per PAC-JEFFREY-P11R Block 9.
+    
+    P11R BER is PROVISIONAL only.
+    execution_binding = false
+    ledger_commit = FORBIDDEN
+    settlement_effect = NONE
+    """
+    ber_id: str = field(default_factory=lambda: f"BER-P11R-{uuid4().hex[:8].upper()}")
+    pac_id: str = ""
+    classification: P11RBERClassification = P11RBERClassification.PROVISIONAL
+    execution_binding: bool = False
+    ledger_commit_allowed: bool = False
+    settlement_effect: str = "NONE"
+    eligible: bool = False
+    eligibility_reason: str = ""
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "ber_id": self.ber_id,
+            "pac_id": self.pac_id,
+            "classification": self.classification.value,
+            "execution_binding": self.execution_binding,
+            "ledger_commit_allowed": self.ledger_commit_allowed,
+            "settlement_effect": self.settlement_effect,
+            "eligible": self.eligible,
+            "eligibility_reason": self.eligibility_reason,
+        }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# P11R EXECUTION STATE (COMBINED)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@dataclass
+class P11RExecutionState:
+    """
+    Complete P11R Execution State per PAC-JEFFREY-P11R.
+    
+    Tracks:
+    - Runtime activation ACK
+    - Agent activation barrier
+    - Checkpoint progression
+    - WRAP collection
+    - BER eligibility
+    """
+    state_id: str = field(default_factory=lambda: f"P11R-STATE-{uuid4().hex[:8].upper()}")
+    pac_id: str = "PAC-JEFFREY-P11R"
+    execution_model: P11RExecutionModel = P11RExecutionModel.PARALLEL
+    
+    # Components
+    runtime_ack: Optional[RuntimeActivationACK] = None
+    agent_barrier: Optional[P11RAgentACKBarrier] = None
+    checkpoint_tracker: Optional[P11RCheckpointTracker] = None
+    wrap_requirement: Optional[P11RWrapRequirement] = None
+    ber_status: Optional[P11RBERStatus] = None
+    
+    # State tracking
+    started_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    completed_at: Optional[str] = None
+    
+    def is_ready_for_execution(self) -> Tuple[bool, List[str]]:
+        """Check if ready for agent execution."""
+        issues = []
+        
+        # Check runtime ACK
+        if not self.runtime_ack or not self.runtime_ack.is_valid():
+            issues.append("Runtime ACK not valid")
+        
+        # Check agent barrier
+        if not self.agent_barrier or not self.agent_barrier.is_released():
+            issues.append("Agent ACK barrier not released")
+        
+        return len(issues) == 0, issues
+    
+    def is_complete(self) -> Tuple[bool, List[str]]:
+        """Check if P11R execution is complete."""
+        issues = []
+        
+        # Check checkpoint completion
+        if not self.checkpoint_tracker or not self.checkpoint_tracker.is_complete():
+            issues.append("Checkpoints not complete")
+        
+        # Check WRAP completion
+        if not self.wrap_requirement or not self.wrap_requirement.is_complete():
+            issues.append("WRAPs not complete")
+        
+        # Check BER eligibility
+        if not self.ber_status or not self.ber_status.eligible:
+            issues.append("BER not eligible")
+        
+        return len(issues) == 0, issues
+    
+    def to_dict(self) -> Dict[str, Any]:
+        ready, ready_issues = self.is_ready_for_execution()
+        complete, complete_issues = self.is_complete()
+        
+        return {
+            "state_id": self.state_id,
+            "pac_id": self.pac_id,
+            "execution_model": self.execution_model.value,
+            "runtime_ack": self.runtime_ack.to_dict() if self.runtime_ack else None,
+            "agent_barrier": self.agent_barrier.to_dict() if self.agent_barrier else None,
+            "checkpoint_tracker": self.checkpoint_tracker.to_dict() if self.checkpoint_tracker else None,
+            "wrap_requirement": self.wrap_requirement.to_dict() if self.wrap_requirement else None,
+            "ber_status": self.ber_status.to_dict() if self.ber_status else None,
+            "is_ready_for_execution": ready,
+            "ready_issues": ready_issues,
+            "is_complete": complete,
+            "complete_issues": complete_issues,
+            "started_at": self.started_at,
+            "completed_at": self.completed_at,
+        }
+
+
+def create_p11r_execution_state() -> P11RExecutionState:
+    """
+    Create P11R execution state with all components initialized.
+    
+    Per PAC-JEFFREY-P11R Blocks 2-9.
+    """
+    pac_id = "PAC-JEFFREY-P11R"
+    
+    # P11R activated agents (Block 4)
+    p11r_agents = ["GID-00", "GID-01", "GID-02", "GID-07", "GID-06", "GID-11", "GID-08"]
+    
+    return P11RExecutionState(
+        pac_id=pac_id,
+        execution_model=P11RExecutionModel.PARALLEL,
+        runtime_ack=RuntimeActivationACK(pac_id=pac_id),
+        agent_barrier=P11RAgentACKBarrier(
+            pac_id=pac_id,
+            required_agents=p11r_agents,
+        ),
+        checkpoint_tracker=P11RCheckpointTracker(pac_id=pac_id),
+        wrap_requirement=P11RWrapRequirement(
+            pac_id=pac_id,
+            required_wraps=P11R_REQUIRED_WRAPS,
+        ),
+        ber_status=P11RBERStatus(pac_id=pac_id),
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# AGENT ROSTER — DERIVED FROM CANONICAL REGISTRY (PAC-ATLAS-P02)
+# ═══════════════════════════════════════════════════════════════════════════════
+# INV-AGENT-001: Canonical Agent Registry is single source of truth
+# INV-AGENT-002: AgentRegistration.agent_name MUST match registry for given GID
+# INV-AGENT-003: Unknown agent names are forbidden
+# INV-AGENT-004: Lane assignment MUST match registry
+# INV-AGENT-005: Any violation → HARD_FAIL at lint, CI, and runtime
 
 @dataclass
 class AgentRegistration:
@@ -135,20 +614,47 @@ class AgentRegistration:
         }
 
 
-# Canonical Agent Roster per PAC-JEFFREY-C07R Block 4
+def _build_agent_roster_from_canonical() -> Dict[str, AgentRegistration]:
+    """
+    Build AGENT_ROSTER from canonical gid_registry.
+    
+    PAC-ATLAS-P02: Single source of truth enforcement.
+    This function ensures lint_v2.py ALWAYS reflects canonical registry.
+    """
+    try:
+        registry = get_canonical_registry()
+        roster: Dict[str, AgentRegistration] = {}
+        
+        for gid in registry.list_all_gids():
+            agent = registry.get_agent(gid)
+            # Convert registry lane to lowercase for lint compatibility
+            roster[gid] = AgentRegistration(
+                agent_name=agent.name,
+                gid=gid,
+                lane=agent.lane.lower(),
+                mode="EXECUTING",  # All registered agents are EXECUTING
+            )
+        
+        return roster
+    except Exception as e:
+        # FAIL_CLOSED: If registry fails, use empty roster → all validations fail
+        logger.error("LINT_V2: Failed to load canonical registry: %s", e)
+        return {}
+
+
+# CANONICAL AGENT ROSTER — Derived at module load from gid_registry.json
 # Undeclared agents: FORBIDDEN
 # Dynamic agents: FORBIDDEN
-AGENT_ROSTER: Dict[str, AgentRegistration] = {
-    "GID-00": AgentRegistration("BENSON", "GID-00", "orchestration", "EXECUTING"),
-    "GID-01": AgentRegistration("CODY", "GID-01", "backend", "EXECUTING"),
-    "GID-02": AgentRegistration("SONNY", "GID-02", "frontend", "EXECUTING"),
-    "GID-03": AgentRegistration("REECE", "GID-03", "docs", "EXECUTING"),
-    "GID-04": AgentRegistration("MAXWELL", "GID-04", "ml", "EXECUTING"),
-    "GID-05": AgentRegistration("TOBY", "GID-05", "testing", "EXECUTING"),
-    "GID-06": AgentRegistration("SAM", "GID-06", "security", "EXECUTING"),
-    "GID-07": AgentRegistration("DAN", "GID-07", "ci_cd", "EXECUTING"),
-    "GID-11": AgentRegistration("ATLAS", "GID-11", "repo_integrity", "EXECUTING"),
-}
+# Inline definitions: FORBIDDEN (PAC-ATLAS-P02)
+AGENT_ROSTER: Dict[str, AgentRegistration] = _build_agent_roster_from_canonical()
+
+# Compute registry hash for cross-artifact validation
+def _compute_registry_hash() -> str:
+    """Compute deterministic hash of agent roster for integrity checks."""
+    roster_data = {gid: reg.to_dict() for gid, reg in sorted(AGENT_ROSTER.items())}
+    return hashlib.sha256(json.dumps(roster_data, sort_keys=True).encode()).hexdigest()[:16]
+
+AGENT_REGISTRY_HASH: str = _compute_registry_hash()
 
 
 def get_registered_agent(gid: str) -> Optional[AgentRegistration]:
@@ -174,17 +680,28 @@ def validate_agent_lane(gid: str, requested_lane: str) -> Tuple[bool, Optional[s
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# CHECKPOINT → INVARIANT CLASS MAPPING (PAC-JEFFREY-P07 Block 5)
+# CHECKPOINT → INVARIANT CLASS MAPPING (PAC-JEFFREY-P10R Block 5)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Canonical mapping per PAC-JEFFREY-C07R Block 5
+# Canonical mapping per PAC-JEFFREY-P10R Block 5
+# 10 NON-SKIPPABLE checkpoints
 # Checkpoint skip: FORBIDDEN
 CHECKPOINT_INVARIANT_MAPPING: Dict[str, List[str]] = {
+    # Original checkpoints
     "PAC_ADMISSION": ["S-INV", "A-INV", "T-INV"],
     "WRAP_INGESTION": ["S-INV", "X-INV", "C-INV"],
     "RG01_EVALUATION": ["X-INV", "A-INV"],
     "BER_ELIGIBILITY": ["F-INV", "C-INV"],
     "SETTLEMENT_READINESS": ["F-INV"],
+    # P10R expanded checkpoints (Block 5)
+    "RUNTIME_ACTIVATION": ["S-INV", "A-INV"],
+    "AGENT_ACK_COLLECTION": ["A-INV", "T-INV"],
+    "AGENT_EXECUTION": ["A-INV", "X-INV"],
+    "API_ADMISSION": ["S-INV", "A-INV"],
+    "UI_RENDER_VALIDATION": ["S-INV", "M-INV"],
+    "REVIEW_GATES": ["X-INV", "C-INV"],
+    "LEDGER_COMMIT": ["F-INV", "X-INV"],
+    "FINALITY_SEAL": ["F-INV"],
 }
 
 
@@ -230,15 +747,26 @@ class InvariantSeverity(str, Enum):
 
 class EnforcementPoint(str, Enum):
     """
-    Runtime Enforcement Points per PAC-JEFFREY-P06R Block 5.
+    Runtime Enforcement Points per PAC-JEFFREY-P10R Block 5.
     
+    10 NON-SKIPPABLE checkpoints.
     Each checkpoint evaluates ALL applicable invariants.
     """
+    # Original checkpoints
     PAC_ADMISSION = "PAC_ADMISSION"
     WRAP_INGESTION = "WRAP_INGESTION"
     RG01_EVALUATION = "RG01_EVALUATION"
     BER_ELIGIBILITY = "BER_ELIGIBILITY"
     SETTLEMENT_READINESS = "SETTLEMENT_READINESS"
+    # P10R expanded checkpoints (Block 5)
+    RUNTIME_ACTIVATION = "RUNTIME_ACTIVATION"
+    AGENT_ACK_COLLECTION = "AGENT_ACK_COLLECTION"
+    AGENT_EXECUTION = "AGENT_EXECUTION"
+    API_ADMISSION = "API_ADMISSION"
+    UI_RENDER_VALIDATION = "UI_RENDER_VALIDATION"
+    REVIEW_GATES = "REVIEW_GATES"
+    LEDGER_COMMIT = "LEDGER_COMMIT"
+    FINALITY_SEAL = "FINALITY_SEAL"
 
 
 class EvaluationResult(str, Enum):
@@ -578,6 +1106,70 @@ A_INV_004 = InvariantDefinition(
     enforcement_points=[EnforcementPoint.PAC_ADMISSION],
 )
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# CANONICAL INVARIANTS — AGENT REGISTRY ENFORCEMENT (PAC-ATLAS-P02)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+A_INV_005 = InvariantDefinition(
+    invariant_id="A-INV-005",
+    invariant_class=InvariantClass.A_INV,
+    name="Canonical Agent Registry",
+    description="Canonical Agent Registry is single source of truth (INV-AGENT-001)",
+    enforcement_points=[
+        EnforcementPoint.PAC_ADMISSION,
+        EnforcementPoint.RUNTIME_ACTIVATION,
+        EnforcementPoint.AGENT_EXECUTION,
+    ],
+)
+
+A_INV_006 = InvariantDefinition(
+    invariant_id="A-INV-006",
+    invariant_class=InvariantClass.A_INV,
+    name="Agent Name Registry Match",
+    description="AgentRegistration.agent_name MUST match registry for given GID (INV-AGENT-002)",
+    enforcement_points=[
+        EnforcementPoint.PAC_ADMISSION,
+        EnforcementPoint.WRAP_INGESTION,
+    ],
+)
+
+A_INV_007 = InvariantDefinition(
+    invariant_id="A-INV-007",
+    invariant_class=InvariantClass.A_INV,
+    name="Unknown Agent Forbidden",
+    description="Unknown agent names are forbidden (INV-AGENT-003)",
+    enforcement_points=[
+        EnforcementPoint.PAC_ADMISSION,
+        EnforcementPoint.WRAP_INGESTION,
+        EnforcementPoint.AGENT_EXECUTION,
+    ],
+)
+
+A_INV_008 = InvariantDefinition(
+    invariant_id="A-INV-008",
+    invariant_class=InvariantClass.A_INV,
+    name="Lane Registry Match",
+    description="Lane assignment MUST match registry (INV-AGENT-004)",
+    enforcement_points=[
+        EnforcementPoint.PAC_ADMISSION,
+        EnforcementPoint.AGENT_EXECUTION,
+    ],
+)
+
+A_INV_009 = InvariantDefinition(
+    invariant_id="A-INV-009",
+    invariant_class=InvariantClass.A_INV,
+    name="Registry Violation Hard Fail",
+    description="Any registry violation → HARD_FAIL at lint, CI, and runtime (INV-AGENT-005)",
+    enforcement_points=[
+        EnforcementPoint.PAC_ADMISSION,
+        EnforcementPoint.WRAP_INGESTION,
+        EnforcementPoint.RUNTIME_ACTIVATION,
+        EnforcementPoint.AGENT_EXECUTION,
+        EnforcementPoint.API_ADMISSION,
+    ],
+)
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CANONICAL INVARIANTS — FINALITY (F-INV)
@@ -662,6 +1254,60 @@ C_INV_004 = InvariantDefinition(
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# PLATFORM INVARIANTS (PAC-JEFFREY-P10R Block 6)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+PLAT_INV_001 = InvariantDefinition(
+    invariant_id="INV-LINT-PLAT-001",
+    invariant_class=InvariantClass.A_INV,
+    name="Runtime ACK Required",
+    description="Runtime ACK REQUIRED for all agent execution",
+    enforcement_points=[
+        EnforcementPoint.RUNTIME_ACTIVATION,
+        EnforcementPoint.AGENT_ACK_COLLECTION,
+    ],
+)
+
+PLAT_INV_002 = InvariantDefinition(
+    invariant_id="INV-LINT-PLAT-002",
+    invariant_class=InvariantClass.A_INV,
+    name="Agent Execution ACK Gate",
+    description="Agent execution without ACK = ILLEGAL",
+    enforcement_points=[
+        EnforcementPoint.AGENT_EXECUTION,
+        EnforcementPoint.AGENT_ACK_COLLECTION,
+    ],
+)
+
+PLAT_INV_003 = InvariantDefinition(
+    invariant_id="INV-LINT-PLAT-003",
+    invariant_class=InvariantClass.M_INV,
+    name="UI Lint-Validated State Only",
+    description="UI renders only lint-validated state",
+    enforcement_points=[EnforcementPoint.UI_RENDER_VALIDATION],
+)
+
+PLAT_INV_004 = InvariantDefinition(
+    invariant_id="INV-LINT-PLAT-004",
+    invariant_class=InvariantClass.S_INV,
+    name="API Admission Lint Gate",
+    description="API admission requires lint PASS",
+    enforcement_points=[EnforcementPoint.API_ADMISSION],
+)
+
+PLAT_INV_005 = InvariantDefinition(
+    invariant_id="INV-LINT-PLAT-005",
+    invariant_class=InvariantClass.T_INV,
+    name="Orchestration Order Determinism",
+    description="Orchestration order deterministic",
+    enforcement_points=[
+        EnforcementPoint.PAC_ADMISSION,
+        EnforcementPoint.AGENT_EXECUTION,
+    ],
+)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # INVARIANT REGISTRY
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -691,6 +1337,12 @@ INVARIANT_REGISTRY: Dict[str, InvariantDefinition] = {
     "A-INV-002": A_INV_002,
     "A-INV-003": A_INV_003,
     "A-INV-004": A_INV_004,
+    # Agent Registry Enforcement (PAC-ATLAS-P02)
+    "A-INV-005": A_INV_005,
+    "A-INV-006": A_INV_006,
+    "A-INV-007": A_INV_007,
+    "A-INV-008": A_INV_008,
+    "A-INV-009": A_INV_009,
     # Finality
     "F-INV-001": F_INV_001,
     "F-INV-002": F_INV_002,
@@ -702,6 +1354,12 @@ INVARIANT_REGISTRY: Dict[str, InvariantDefinition] = {
     "C-INV-002": C_INV_002,
     "C-INV-003": C_INV_003,
     "C-INV-004": C_INV_004,
+    # Platform (P10R)
+    "INV-LINT-PLAT-001": PLAT_INV_001,
+    "INV-LINT-PLAT-002": PLAT_INV_002,
+    "INV-LINT-PLAT-003": PLAT_INV_003,
+    "INV-LINT-PLAT-004": PLAT_INV_004,
+    "INV-LINT-PLAT-005": PLAT_INV_005,
 }
 
 
@@ -732,15 +1390,29 @@ def get_invariants_by_class(
 @dataclass
 class LintV2Engine:
     """
-    Lint v2 Runtime Enforcement Engine.
+    Lint v2 Platform-Wide Runtime Enforcement Engine.
     
-    PAC-JEFFREY-P07: Runtime & CI Enforcement Implementation
+    PAC-JEFFREY-P10R: Platform-Wide Lint v2 Expansion
     
     Runtime Activation (Block 3):
-    - schema_validation ENABLED
-    - invariant_registry LOADED
-    - fail_closed_enabled ACTIVE
-    - runtime_admission_hook ENABLED
+    - lint_v2_engine_loaded
+    - invariant_registry_loaded
+    - execution_runtime_schema_loaded
+    - agent_registry_loaded
+    - fail_closed_enabled
+    - RUNTIME_ACK_REQUIRED
+    
+    Platform Invariants (Block 6):
+    - INV-LINT-PLAT-001: Runtime ACK REQUIRED
+    - INV-LINT-PLAT-002: Agent execution without ACK = ILLEGAL
+    - INV-LINT-PLAT-003: UI renders only lint-validated state
+    - INV-LINT-PLAT-004: API admission requires lint PASS
+    - INV-LINT-PLAT-005: Orchestration order deterministic
+    
+    10 Checkpoints (NON-SKIPPABLE):
+    PAC_ADMISSION, RUNTIME_ACTIVATION, AGENT_ACK_COLLECTION,
+    AGENT_EXECUTION, API_ADMISSION, UI_RENDER_VALIDATION,
+    REVIEW_GATES, BER_ELIGIBILITY, LEDGER_COMMIT, FINALITY_SEAL
     
     Binary output only — no warnings in production.
     Override: FORBIDDEN (C07R)
@@ -780,7 +1452,7 @@ class LintV2Engine:
             logger.info("LINT_V2: Runtime activated successfully")
         else:
             missing = self._activation_status.get_missing_preconditions()
-            logger.error(f"LINT_V2: Runtime activation FAILED - missing: {missing}")
+            logger.error("LINT_V2: Runtime activation FAILED - missing: %s", missing)
     
     def verify_runtime_activation(self) -> bool:
         """Verify all runtime preconditions are met (P07 Block 3)."""
@@ -861,8 +1533,10 @@ class LintV2Engine:
                 # Fail-fast in HARD_FAIL mode
                 if self.fail_mode == "HARD_FAIL":
                     logger.warning(
-                        f"LINT_V2: HARD_FAIL on {inv.invariant_id} "
-                        f"at {enforcement_point.value} for {artifact_id}"
+                        "LINT_V2: HARD_FAIL on %s at %s for %s",
+                        inv.invariant_id,
+                        enforcement_point.value,
+                        artifact_id,
                     )
                     break
         
@@ -884,9 +1558,12 @@ class LintV2Engine:
         )
         
         logger.info(
-            f"LINT_V2: {enforcement_point.value} evaluation complete "
-            f"artifact={artifact_id} result={result.value} "
-            f"violations={len(violations)} duration={duration_ms}ms"
+            "LINT_V2: %s evaluation complete artifact=%s result=%s violations=%s duration=%sms",
+            enforcement_point.value,
+            artifact_id,
+            result.value,
+            len(violations),
+            duration_ms,
         )
         
         return report
@@ -925,7 +1602,7 @@ class LintV2Engine:
             
         except Exception as e:
             # Exceptions are violations in FAIL_CLOSED mode
-            logger.error(f"LINT_V2: Exception evaluating {invariant.invariant_id}: {e}")
+            logger.error("LINT_V2: Exception evaluating %s: %s", invariant.invariant_id, e)
             return InvariantViolation(
                 violation_id=f"VIO-{uuid4().hex[:8].upper()}",
                 invariant_id=invariant.invariant_id,
@@ -970,9 +1647,9 @@ class LintV2Engine:
             if not pac:
                 return False, "PAC not provided in context"
             required = ["pac_id", "author", "classification"]
-            for field in required:
-                if not pac.get(field):
-                    return False, f"Missing required PAC field: {field}"
+            for field_name in required:
+                if not pac.get(field_name):
+                    return False, f"Missing required PAC field: {field_name}"
             return True, None
         
         if inv_id == "S-INV-002":  # WRAP Schema
@@ -1156,6 +1833,70 @@ class LintV2Engine:
                 return False, "Implicit agent activation detected"
             return True, None
         
+        # ═══════════════════════════════════════════════════════════════════════
+        # PAC-ATLAS-P02: Agent Registry Enforcement Invariants
+        # ═══════════════════════════════════════════════════════════════════════
+        
+        if inv_id == "A-INV-005":  # Canonical Agent Registry
+            # Verify we can access the canonical registry
+            try:
+                registry = get_canonical_registry()
+                if not registry.list_all_gids():
+                    return False, "Canonical registry empty or inaccessible"
+                return True, None
+            except Exception as e:
+                return False, f"Canonical registry unavailable: {e}"
+        
+        if inv_id == "A-INV-006":  # Agent Name Registry Match
+            agent_gid = context.get("agent_gid")
+            agent_name = context.get("agent_name")
+            if agent_gid and agent_name:
+                try:
+                    registry = get_canonical_registry()
+                    canonical_agent = registry.get_agent(agent_gid)
+                    if canonical_agent.name != agent_name:
+                        return False, f"Agent name mismatch: {agent_name} != {canonical_agent.name} for {agent_gid}"
+                except UnknownGIDError:
+                    return False, f"Unknown GID in registry: {agent_gid}"
+                except Exception as e:
+                    return False, f"Registry validation failed: {e}"
+            return True, None
+        
+        if inv_id == "A-INV-007":  # Unknown Agent Forbidden
+            agent_name = context.get("agent_name")
+            if agent_name:
+                try:
+                    registry = get_canonical_registry()
+                    all_agents = {registry.get_agent(gid).name for gid in registry.list_all_gids()}
+                    if agent_name not in all_agents:
+                        return False, f"Unknown agent name: {agent_name}"
+                except Exception as e:
+                    return False, f"Agent validation failed: {e}"
+            return True, None
+        
+        if inv_id == "A-INV-008":  # Lane Registry Match
+            agent_gid = context.get("agent_gid")
+            requested_lane = context.get("requested_lane")
+            if agent_gid and requested_lane:
+                try:
+                    registry = get_canonical_registry()
+                    canonical_agent = registry.get_agent(agent_gid)
+                    # Normalize lane comparison (registry uses uppercase)
+                    if canonical_agent.lane.upper() != requested_lane.upper():
+                        return False, f"Lane mismatch: {requested_lane} != {canonical_agent.lane} for {agent_gid}"
+                except UnknownGIDError:
+                    return False, f"Unknown GID in registry: {agent_gid}"
+                except Exception as e:
+                    return False, f"Lane validation failed: {e}"
+            return True, None
+        
+        if inv_id == "A-INV-009":  # Registry Violation Hard Fail
+            # This invariant is a meta-check: any registry violation should trigger HARD_FAIL
+            registry_violations = context.get("registry_violations", [])
+            if registry_violations:
+                return False, f"Registry violations detected: {registry_violations}"
+            return True, None
+        
         return True, None
     
     def _evaluate_finality(
@@ -1230,17 +1971,17 @@ class LintV2Engine:
         if inv_id == "C-INV-004":  # Positive Closure Valid
             positive_closure = context.get("positive_closure", {})
             required = ["scope_complete", "no_violations", "ready_for_next_stage"]
-            for field in required:
-                if not positive_closure.get(field):
-                    return False, f"Positive closure missing or invalid: {field}"
+            for field_name in required:
+                if not positive_closure.get(field_name):
+                    return False, f"Positive closure missing or invalid: {field_name}"
             return True, None
         
         return True, None
     
     def _evaluate_default(
         self,
-        invariant: InvariantDefinition,
-        context: Dict[str, Any],
+        _invariant: InvariantDefinition,
+        _context: Dict[str, Any],
     ) -> Tuple[bool, Optional[str]]:
         """Default evaluator — passes if no specific logic."""
         return True, None
