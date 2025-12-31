@@ -41,7 +41,7 @@ from .transition_validator import (
 class StateTransitionProof:
     """
     Immutable proof of a state transition.
-    
+
     This proof is emitted when a governed transition is validated.
     It provides an auditable record of:
     - What changed (artifact, states)
@@ -70,7 +70,7 @@ class StateTransitionProof:
     def _compute_hash(self) -> str:
         """
         Compute deterministic SHA-256 hash of transition proof.
-        
+
         Hash input: artifact_id + from_state + to_state + timestamp (ISO)
         """
         hash_input = (
@@ -133,11 +133,11 @@ class StateTransitionProof:
 class TransitionProofEmitter:
     """
     Emits transition proofs for validated state changes.
-    
+
     This emitter is READ-ONLY. It creates proof artifacts
     but does not persist them directly. Persistence is
     delegated to the caller.
-    
+
     Usage:
         emitter = TransitionProofEmitter()
         proof = emitter.emit(request, validation_result)
@@ -155,7 +155,7 @@ class TransitionProofEmitter:
     ) -> Optional[StateTransitionProof]:
         """
         Emit a transition proof for a validated transition.
-        
+
         Returns None if the transition was not allowed.
         This method has NO SIDE EFFECTS on system state.
         """
@@ -189,7 +189,7 @@ class TransitionProofEmitter:
     ) -> list[StateTransitionProof]:
         """
         Emit proofs for a batch of validated transitions.
-        
+
         Only emits proofs for allowed transitions.
         """
         proofs: list[StateTransitionProof] = []
@@ -218,12 +218,12 @@ def verify_transition_proof(proof: StateTransitionProof) -> bool:
 def verify_proof_chain(proofs: list[StateTransitionProof]) -> tuple[bool, list[str]]:
     """
     Verify a chain of transition proofs.
-    
+
     Checks:
     1. Each proof's hash is valid
     2. Transitions are temporally ordered
     3. State continuity (to_state of N matches from_state of N+1)
-    
+
     Returns (is_valid, list of errors).
     """
     errors: list[str] = []

@@ -422,6 +422,15 @@ except ImportError as e:
     print(f"Warning: Party Relationships router not available: {e}")
     PARTY_RELATIONSHIPS_ROUTER_AVAILABLE = False
 
+# Governance Health router - PAC-CODY-P01-GOVERNANCE-HEALTH-BACKEND-AGGREGATION-01
+try:
+    from api.routes.governance_health import router as governance_health_router
+
+    GOVERNANCE_HEALTH_ROUTER_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Governance Health router not available: {e}")
+    GOVERNANCE_HEALTH_ROUTER_AVAILABLE = False
+
 # OC (Exception Cockpit) router - serves frontend at /oc-exceptions
 try:
     from api.routes.oc import router as oc_router
@@ -677,6 +686,11 @@ if ESG_EVIDENCE_ROUTER_AVAILABLE:
 if PARTY_RELATIONSHIPS_ROUTER_AVAILABLE:
     app.include_router(party_relationships_router, prefix="/api/v1")
     print("✅ Party Relationships router registered")
+
+# Register Governance Health router (PAC-CODY-P01)
+if GOVERNANCE_HEALTH_ROUTER_AVAILABLE:
+    app.include_router(governance_health_router, prefix="/api")
+    print("✅ Governance Health router registered (PAC-CODY-P01)")
 
 # Register OC (Exception Cockpit) router for frontend consumption
 if OC_ROUTER_AVAILABLE:

@@ -63,7 +63,7 @@ AGENT_ONLY_FIELDS = frozenset({
 
 class RuntimeViolationType(str, Enum):
     """Types of runtime boundary violations."""
-    
+
     RUNTIME_CLAIMS_GID = "RUNTIME_CLAIMS_GID"
     RUNTIME_SIGNS_PDO = "RUNTIME_SIGNS_PDO"
     RUNTIME_CREATES_PROOF = "RUNTIME_CREATES_PROOF"
@@ -74,7 +74,7 @@ class RuntimeViolationType(str, Enum):
 @dataclass(frozen=True)
 class RuntimeViolation:
     """Immutable record of a runtime boundary violation."""
-    
+
     violation_type: RuntimeViolationType
     field: str
     value: str
@@ -85,13 +85,13 @@ class RuntimeViolation:
 @dataclass(frozen=True)
 class RuntimeGuardResult:
     """Result of runtime boundary check.
-    
+
     Attributes:
         valid: True if no boundary violations detected
         violations: List of detected violations (empty if valid)
         checked_at: ISO 8601 timestamp of check
     """
-    
+
     valid: bool
     violations: tuple[RuntimeViolation, ...]
     checked_at: str
@@ -104,48 +104,48 @@ class RuntimeGuardResult:
 
 class RuntimeBoundaryGuard:
     """Guards against runtime identity escalation.
-    
+
     Runtimes are execution engines that MUST NOT:
     - Claim agent GIDs
     - Sign PDOs as agents
     - Create proofs with agent identity
     - Emit decisions requiring agent authority
-    
+
     DOCTRINE (FAIL-CLOSED):
     - Any violation → FAIL
     - No soft bypasses
     - All violations logged
     """
-    
+
     def check_pdo_creation(
         self,
         pdo_data: Optional[dict],
         caller_identity: Optional[str] = None,
     ) -> RuntimeGuardResult:
         """Check PDO creation for runtime boundary violations.
-        
+
         INVARIANTS:
         - PDO signer MUST be valid agent (not runtime)
         - PDO agent_id (if GID) MUST be valid agent
         - Runtime identifiers MUST NOT appear as signers
-        
+
         Args:
             pdo_data: PDO data dictionary
             caller_identity: Identity of the caller (for logging)
-            
+
         Returns:
             RuntimeGuardResult with any violations detected
         """
         violations: list[RuntimeViolation] = []
         timestamp = datetime.now(timezone.utc).isoformat()
-        
+
         if pdo_data is None:
             return RuntimeGuardResult(
                 valid=True,
                 violations=(),
                 checked_at=timestamp,
             )
-        
+
         # Check signer field
         signer = pdo_data.get("signer")
         if signer and self._is_runtime_identity(signer):
@@ -156,7 +156,7 @@ class RuntimeBoundaryGuard:
                 message=f"Runtime '{signer}' cannot sign PDOs. Only agents can sign.",
                 timestamp=timestamp,
             ))
-        
+
         # Check agent_id field (if it looks like a GID attempt by runtime)
         agent_id = pdo_data.get("agent_id")
         if agent_id:
@@ -170,7 +170,7 @@ class RuntimeBoundaryGuard:
                         message=f"Runtime cannot claim GID '{agent_id}'",
                         timestamp=timestamp,
                     ))
-        
+
         # Check for runtime trying to set authority
         if caller_identity and self._is_runtime_identity(caller_identity):
             if pdo_data.get("authority_gid") or pdo_data.get("authority_signature"):
@@ -181,47 +181,47 @@ class RuntimeBoundaryGuard:
                     message="Runtime cannot set authority fields. Only agents can authorize.",
                     timestamp=timestamp,
                 ))
-        
+
         result = RuntimeGuardResult(
             valid=len(violations) == 0,
             violations=tuple(violations),
             checked_at=timestamp,
         )
-        
+
         # Log violations
         if not result.valid:
             self._log_violations(result, "pdo_creation", caller_identity)
-        
+
         return result
-    
+
     def check_proof_creation(
         self,
         proof_data: Optional[dict],
         caller_identity: Optional[str] = None,
     ) -> RuntimeGuardResult:
         """Check proof creation for runtime boundary violations.
-        
+
         INVARIANTS:
         - Proofs MUST be bound to valid agent identity
         - Runtime cannot create proofs with agent binding
-        
+
         Args:
             proof_data: Proof data dictionary
             caller_identity: Identity of the caller
-            
+
         Returns:
             RuntimeGuardResult with any violations detected
         """
         violations: list[RuntimeViolation] = []
         timestamp = datetime.now(timezone.utc).isoformat()
-        
+
         if proof_data is None:
             return RuntimeGuardResult(
                 valid=True,
                 violations=(),
                 checked_at=timestamp,
             )
-        
+
         # If caller is runtime, they cannot create proofs with agent binding
         if caller_identity and self._is_runtime_identity(caller_identity):
             agent_binding = proof_data.get("agent_id") or proof_data.get("agent_gid")
@@ -233,46 +233,46 @@ class RuntimeBoundaryGuard:
                     message=f"Runtime cannot create proofs with agent binding '{agent_binding}'",
                     timestamp=timestamp,
                 ))
-        
+
         result = RuntimeGuardResult(
             valid=len(violations) == 0,
             violations=tuple(violations),
             checked_at=timestamp,
         )
-        
+
         if not result.valid:
             self._log_violations(result, "proof_creation", caller_identity)
-        
+
         return result
-    
+
     def check_decision_emission(
         self,
         decision_data: Optional[dict],
         caller_identity: Optional[str] = None,
     ) -> RuntimeGuardResult:
         """Check decision emission for runtime boundary violations.
-        
+
         INVARIANTS:
         - Decisions MUST be emitted by valid agents
         - Runtime cannot emit decisions requiring agent authority
-        
+
         Args:
             decision_data: Decision data dictionary
             caller_identity: Identity of the caller
-            
+
         Returns:
             RuntimeGuardResult with any violations detected
         """
         violations: list[RuntimeViolation] = []
         timestamp = datetime.now(timezone.utc).isoformat()
-        
+
         if decision_data is None:
             return RuntimeGuardResult(
                 valid=True,
                 violations=(),
                 checked_at=timestamp,
             )
-        
+
         if caller_identity and self._is_runtime_identity(caller_identity):
             # Runtime cannot emit decisions at all
             violations.append(RuntimeViolation(
@@ -282,21 +282,21 @@ class RuntimeBoundaryGuard:
                 message=f"Runtime '{caller_identity}' cannot emit decisions. Only agents can decide.",
                 timestamp=timestamp,
             ))
-        
+
         result = RuntimeGuardResult(
             valid=len(violations) == 0,
             violations=tuple(violations),
             checked_at=timestamp,
         )
-        
+
         if not result.valid:
             self._log_violations(result, "decision_emission", caller_identity)
-        
+
         return result
-    
+
     def _is_runtime_identity(self, identity: str) -> bool:
         """Check if identity is a known runtime identifier.
-        
+
         Returns True if identity is:
         - In KNOWN_RUNTIME_IDENTIFIERS
         - Contains 'runtime' (case-insensitive)
@@ -304,23 +304,23 @@ class RuntimeBoundaryGuard:
         """
         if not identity:
             return False
-        
+
         identity_lower = identity.lower()
-        
+
         # Direct match
         if identity_lower in KNOWN_RUNTIME_IDENTIFIERS:
             return True
-        
+
         # Contains 'runtime'
         if "runtime" in identity_lower:
             return True
-        
+
         # System signer pattern (system::xxx is runtime context)
         if identity_lower.startswith("system::"):
             return True
-        
+
         return False
-    
+
     def _log_violations(
         self,
         result: RuntimeGuardResult,
@@ -344,7 +344,7 @@ class RuntimeBoundaryGuard:
             ],
             "checked_at": result.checked_at,
         }
-        
+
         logger.warning(
             "Runtime boundary violation detected: %s",
             log_data,
@@ -363,13 +363,13 @@ def check_runtime_boundary_pdo(
     caller_identity: Optional[str] = None,
 ) -> RuntimeGuardResult:
     """Check PDO creation for runtime boundary violations.
-    
+
     Module-level convenience function.
-    
+
     Args:
         pdo_data: PDO data dictionary
         caller_identity: Identity of the caller
-        
+
     Returns:
         RuntimeGuardResult with any violations detected
     """
@@ -381,13 +381,13 @@ def check_runtime_boundary_proof(
     caller_identity: Optional[str] = None,
 ) -> RuntimeGuardResult:
     """Check proof creation for runtime boundary violations.
-    
+
     Module-level convenience function.
-    
+
     Args:
         proof_data: Proof data dictionary
         caller_identity: Identity of the caller
-        
+
     Returns:
         RuntimeGuardResult with any violations detected
     """
@@ -399,13 +399,13 @@ def check_runtime_boundary_decision(
     caller_identity: Optional[str] = None,
 ) -> RuntimeGuardResult:
     """Check decision emission for runtime boundary violations.
-    
+
     Module-level convenience function.
-    
+
     Args:
         decision_data: Decision data dictionary
         caller_identity: Identity of the caller
-        
+
     Returns:
         RuntimeGuardResult with any violations detected
     """
