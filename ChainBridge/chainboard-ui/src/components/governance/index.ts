@@ -150,3 +150,21 @@ export {
   type GateIndicatorProps,
 } from './GovernanceSignalBadge';
 export { TerminalUIParityDemo } from './TerminalUIParityDemo';
+
+// PAC-SONNY-P01 — Governance Health Dashboard
+export {
+  GovernanceHealthDashboard,
+} from './GovernanceHealthDashboard';
+export {
+  GovernanceHealthMetricsPanel,
+} from './GovernanceHealthMetrics';
+export {
+  SettlementFlowDiagram,
+  CanonicalSettlementFlow,
+} from './SettlementFlowDiagram';
+export {
+  ArtifactStatusTimeline,
+} from './ArtifactStatusTimeline';
+export {
+  EnterpriseComplianceSummaryPanel,
+} from './EnterpriseComplianceSummary';

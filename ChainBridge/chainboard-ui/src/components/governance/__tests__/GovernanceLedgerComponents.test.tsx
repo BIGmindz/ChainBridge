@@ -39,14 +39,14 @@ describe('PositiveClosureBadge', () => {
       const { rerender } = render(
         <PositiveClosureBadge closureType="POSITIVE_CLOSURE" />
       );
-      
+
       const badge = screen.getByRole('status');
       expect(badge.className).toContain('bg-green');
       expect(badge).toHaveTextContent('Positive Closure');
 
       // Non-positive closures should NOT be green
       const nonGreenTypes: ClosureType[] = ['NONE', 'NEGATIVE_CLOSURE', 'CORRECTION_CLOSURE', 'ARCHIVED'];
-      
+
       for (const type of nonGreenTypes) {
         rerender(<PositiveClosureBadge closureType={type} />);
         const nonGreenBadge = screen.getByRole('status');
@@ -60,7 +60,7 @@ describe('PositiveClosureBadge', () => {
       render(
         <PositiveClosureBadge closureType="NONE" state="BLOCKED" />
       );
-      
+
       const badge = screen.getByRole('status');
       expect(badge.className).toContain('bg-red');
       expect(badge).toHaveTextContent('Blocked');
@@ -70,7 +70,7 @@ describe('PositiveClosureBadge', () => {
       render(
         <PositiveClosureBadge closureType="NEGATIVE_CLOSURE" />
       );
-      
+
       const badge = screen.getByRole('status');
       expect(badge.className).toContain('bg-red');
       expect(badge).toHaveTextContent('Negative Closure');
@@ -80,7 +80,7 @@ describe('PositiveClosureBadge', () => {
       render(
         <PositiveClosureBadge closureType="CORRECTION_CLOSURE" />
       );
-      
+
       const badge = screen.getByRole('status');
       expect(badge.className).toContain('bg-amber');
       expect(badge).toHaveTextContent('Correction Closure');
@@ -106,7 +106,7 @@ describe('PositiveClosureBadge', () => {
 
     it('includes lock icon for POSITIVE_CLOSURE', () => {
       render(<PositiveClosureBadge closureType="POSITIVE_CLOSURE" />);
-      
+
       const badge = screen.getByRole('status');
       const svg = badge.querySelector('svg');
       expect(svg).toBeInTheDocument();
@@ -134,7 +134,7 @@ describe('PositiveClosureBadge', () => {
       render(
         <PositiveClosureBadge closureType="POSITIVE_CLOSURE" showLabel={false} />
       );
-      
+
       expect(screen.queryByText('Positive Closure')).not.toBeInTheDocument();
     });
   });
@@ -143,7 +143,7 @@ describe('PositiveClosureBadge', () => {
 describe('ClosureIndicator', () => {
   it('renders minimal icon-only indicator', () => {
     render(<ClosureIndicator closureType="POSITIVE_CLOSURE" />);
-    
+
     const indicator = screen.getByRole('status');
     expect(indicator.querySelector('svg')).toBeInTheDocument();
   });
@@ -168,7 +168,7 @@ describe('GovernanceStateSummaryCard', () => {
   describe('UX Rule: blocked_means_disabled', () => {
     it('shows blocked count with error styling when blocked > 0', () => {
       render(<GovernanceStateSummaryCard summary={mockSummary} />);
-      
+
       // Find the blocked stat
       expect(screen.getByText('Blocked')).toBeInTheDocument();
       expect(screen.getByText('2')).toBeInTheDocument();
@@ -176,7 +176,7 @@ describe('GovernanceStateSummaryCard', () => {
 
     it('highlights active PACs with warning styling when active > 0', () => {
       render(<GovernanceStateSummaryCard summary={mockSummary} />);
-      
+
       expect(screen.getByText('Active')).toBeInTheDocument();
       expect(screen.getByText('3')).toBeInTheDocument();
     });
@@ -185,7 +185,7 @@ describe('GovernanceStateSummaryCard', () => {
   describe('system health indicator', () => {
     it('shows healthy indicator when system_healthy is true', () => {
       render(<GovernanceStateSummaryCard summary={mockSummary} />);
-      
+
       expect(screen.getByText('Healthy')).toBeInTheDocument();
     });
 
@@ -195,7 +195,7 @@ describe('GovernanceStateSummaryCard', () => {
           summary={{ ...mockSummary, system_healthy: false }}
         />
       );
-      
+
       expect(screen.getByText('Unhealthy')).toBeInTheDocument();
     });
   });
@@ -205,7 +205,7 @@ describe('GovernanceStateSummaryCard', () => {
       const { container } = render(
         <GovernanceStateSummaryCard summary={null} loading={true} />
       );
-      
+
       expect(container.querySelector('.animate-pulse')).toBeInTheDocument();
     });
   });
@@ -218,7 +218,7 @@ describe('GovernanceStateSummaryCard', () => {
           error={new Error('Test error')}
         />
       );
-      
+
       expect(screen.getByText(/Failed to load/)).toBeInTheDocument();
     });
   });
@@ -226,7 +226,7 @@ describe('GovernanceStateSummaryCard', () => {
   describe('positive closures display', () => {
     it('shows positive closures with success styling', () => {
       render(<GovernanceStateSummaryCard summary={mockSummary} />);
-      
+
       expect(screen.getByText('Positive Closures')).toBeInTheDocument();
       expect(screen.getByText('5')).toBeInTheDocument();
     });
@@ -263,14 +263,14 @@ describe('CorrectionCycleStepper', () => {
   describe('UX Rule: corrections_must_show_lineage', () => {
     it('displays all correction steps in order', () => {
       render(<CorrectionCycleStepper corrections={mockCorrections} />);
-      
+
       expect(screen.getByText('Correction 1')).toBeInTheDocument();
       expect(screen.getByText('Correction 2')).toBeInTheDocument();
     });
 
     it('shows violation IDs for each correction', () => {
       render(<CorrectionCycleStepper corrections={mockCorrections} />);
-      
+
       expect(screen.getByText('G0_020')).toBeInTheDocument();
       expect(screen.getByText('G0_021')).toBeInTheDocument();
     });
@@ -279,7 +279,7 @@ describe('CorrectionCycleStepper', () => {
       const { container } = render(
         <CorrectionCycleStepper corrections={mockCorrections} />
       );
-      
+
       // Check for green completed step indicators
       const greenIndicators = container.querySelectorAll('.bg-green-600');
       expect(greenIndicators.length).toBeGreaterThan(0);
@@ -289,10 +289,10 @@ describe('CorrectionCycleStepper', () => {
   describe('UX Rule: hover_explains_violation_codes', () => {
     it('shows tooltip on violation badge hover', async () => {
       render(<CorrectionCycleStepper corrections={mockCorrections} />);
-      
+
       const violationBadge = screen.getByText('G0_020');
       fireEvent.mouseEnter(violationBadge.parentElement!);
-      
+
       await waitFor(() => {
         expect(screen.getByRole('tooltip')).toBeInTheDocument();
         expect(screen.getByText('Missing checklist')).toBeInTheDocument();
@@ -301,10 +301,10 @@ describe('CorrectionCycleStepper', () => {
 
     it('shows resolution in tooltip for resolved violations', async () => {
       render(<CorrectionCycleStepper corrections={mockCorrections} />);
-      
+
       const violationBadge = screen.getByText('G0_020');
       fireEvent.mouseEnter(violationBadge.parentElement!);
-      
+
       await waitFor(() => {
         expect(screen.getByText(/Added/)).toBeInTheDocument();
       });
@@ -323,7 +323,7 @@ describe('CorrectionCycleStepper', () => {
           activeViolations={activeViolations}
         />
       );
-      
+
       expect(screen.getByText('Active Violations')).toBeInTheDocument();
       expect(screen.getByText('G0_030')).toBeInTheDocument();
     });
@@ -332,7 +332,7 @@ describe('CorrectionCycleStepper', () => {
   describe('empty state', () => {
     it('shows empty message when no corrections', () => {
       render(<CorrectionCycleStepper corrections={[]} />);
-      
+
       expect(screen.getByText('No correction cycles')).toBeInTheDocument();
     });
   });
@@ -342,7 +342,7 @@ describe('CorrectionCycleStepper', () => {
       const { container } = render(
         <CorrectionCycleStepper corrections={mockCorrections} orientation="horizontal" />
       );
-      
+
       // Check for horizontal flex layout
       expect(container.firstChild).toHaveClass('flex');
     });
@@ -401,7 +401,7 @@ describe('PacTimelineView', () => {
   describe('UX Rule: blocked_means_disabled', () => {
     it('displays blocked nodes with distinct red styling', () => {
       const { container } = render(<PacTimelineView nodes={mockNodes} />);
-      
+
       // Find the blocked node
       const blockedText = screen.getByText(/PAC blocked/);
       expect(blockedText.className).toContain('text-red');
@@ -411,7 +411,7 @@ describe('PacTimelineView', () => {
   describe('UX Rule: closure_requires_badge', () => {
     it('shows closure badge for closure nodes', () => {
       render(<PacTimelineView nodes={mockNodes} />);
-      
+
       // Positive closure should show badge
       const closureBadges = screen.getAllByRole('status');
       expect(closureBadges.length).toBeGreaterThan(0);
@@ -421,7 +421,7 @@ describe('PacTimelineView', () => {
   describe('UX Rule: no_green_without_positive_closure', () => {
     it('only shows green for POSITIVE_CLOSURE node', () => {
       const { container } = render(<PacTimelineView nodes={mockNodes} />);
-      
+
       // Find the positive closure node
       const successNode = screen.getByText('POSITIVE CLOSURE');
       expect(successNode.className).toContain('text-green');
@@ -431,7 +431,7 @@ describe('PacTimelineView', () => {
   describe('filter controls', () => {
     it('shows filter buttons when showFilters is true', () => {
       render(<PacTimelineView nodes={mockNodes} showFilters={true} />);
-      
+
       expect(screen.getByText('All')).toBeInTheDocument();
       expect(screen.getByText('Corrections')).toBeInTheDocument();
       expect(screen.getByText('Closures')).toBeInTheDocument();
@@ -440,9 +440,9 @@ describe('PacTimelineView', () => {
 
     it('filters to corrections when Corrections filter clicked', () => {
       render(<PacTimelineView nodes={mockNodes} showFilters={true} />);
-      
+
       fireEvent.click(screen.getByText('Corrections'));
-      
+
       // Should only show correction nodes
       expect(screen.getByText('CORRECTION-01 issued')).toBeInTheDocument();
       expect(screen.queryByText('PAC created')).not.toBeInTheDocument();
@@ -450,18 +450,18 @@ describe('PacTimelineView', () => {
 
     it('filters to closures when Closures filter clicked', () => {
       render(<PacTimelineView nodes={mockNodes} showFilters={true} />);
-      
+
       fireEvent.click(screen.getByText('Closures'));
-      
+
       expect(screen.getByText('POSITIVE CLOSURE')).toBeInTheDocument();
       expect(screen.queryByText('PAC created')).not.toBeInTheDocument();
     });
 
     it('filters to blocks when Blocks filter clicked', () => {
       render(<PacTimelineView nodes={mockNodes} showFilters={true} />);
-      
+
       fireEvent.click(screen.getByText('Blocks'));
-      
+
       expect(screen.getByText(/PAC blocked/)).toBeInTheDocument();
       expect(screen.queryByText('PAC created')).not.toBeInTheDocument();
     });
@@ -470,7 +470,7 @@ describe('PacTimelineView', () => {
   describe('maxItems prop', () => {
     it('limits displayed items when maxItems is set', () => {
       render(<PacTimelineView nodes={mockNodes} maxItems={2} showFilters={false} />);
-      
+
       // Should show truncation notice
       expect(screen.getByText(/Showing last 2 of 4 events/)).toBeInTheDocument();
     });
@@ -479,7 +479,7 @@ describe('PacTimelineView', () => {
   describe('empty state', () => {
     it('shows empty message when no nodes', () => {
       render(<PacTimelineView nodes={[]} />);
-      
+
       expect(screen.getByText('No timeline events')).toBeInTheDocument();
     });
   });
@@ -487,14 +487,14 @@ describe('PacTimelineView', () => {
   describe('agent display', () => {
     it('shows agent name and GID for each node', () => {
       render(<PacTimelineView nodes={mockNodes} />);
-      
+
       expect(screen.getByText(/SONNY/)).toBeInTheDocument();
       expect(screen.getByText(/GID-02/)).toBeInTheDocument();
     });
 
     it('shows agent color indicator', () => {
       const { container } = render(<PacTimelineView nodes={mockNodes} />);
-      
+
       // Check for yellow indicator for SONNY
       expect(container.querySelector('.bg-yellow-500')).toBeInTheDocument();
     });
@@ -522,12 +522,12 @@ describe('Governance Ledger Components Integration', () => {
         const { container, unmount } = render(
           <PositiveClosureBadge closureType="NONE" state={state} />
         );
-        
+
         // Only BLOCKED and REJECTED should show red, others blue/gray
         // But NONE of them should show green
         const badge = container.querySelector('[role="status"]');
         expect(badge?.className).not.toContain('bg-green');
-        
+
         unmount();
       }
     });
@@ -544,10 +544,10 @@ describe('Governance Ledger Components Integration', () => {
         const { container, unmount } = render(
           <PositiveClosureBadge closureType={type} />
         );
-        
+
         const badge = container.querySelector('[role="status"]');
         expect(badge?.className).not.toContain('bg-green');
-        
+
         unmount();
       }
 
@@ -555,7 +555,7 @@ describe('Governance Ledger Components Integration', () => {
       const { container } = render(
         <PositiveClosureBadge closureType="POSITIVE_CLOSURE" />
       );
-      
+
       const badge = container.querySelector('[role="status"]');
       expect(badge?.className).toContain('bg-green');
     });

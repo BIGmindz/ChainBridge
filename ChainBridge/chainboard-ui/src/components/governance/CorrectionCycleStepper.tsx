@@ -155,12 +155,12 @@ function CorrectionStep({
       {/* Step indicator */}
       <div className={`flex ${isVertical ? 'flex-col items-center' : 'flex-row items-center'}`}>
         <StepIcon status={status} number={stepNumber} />
-        
+
         {/* Connector line */}
         {!isLast && (
           <div className={`
-            ${isVertical 
-              ? 'w-0.5 h-8 mx-auto bg-gray-300 dark:bg-gray-600' 
+            ${isVertical
+              ? 'w-0.5 h-8 mx-auto bg-gray-300 dark:bg-gray-600'
               : 'h-0.5 w-8 bg-gray-300 dark:bg-gray-600'
             }
           `} />
@@ -175,7 +175,7 @@ function CorrectionStep({
         <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
           Correction {correction.correction_version}
         </div>
-        
+
         {!compact && (
           <>
             <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">

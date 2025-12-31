@@ -70,35 +70,35 @@ export const TERMINAL_GLYPHS = {
   WARN: '⚠',           // Warning triangle — universal caution
   FAIL: '✗',           // X mark — universal failure
   SKIP: '○',           // Empty circle — skipped/not applicable
-  
+
   // Large block variants for banners
   PASS_BLOCK: '🟩',    // Green square — governance success
   WARN_BLOCK: '🟧',    // Orange square — governance warning (NOT yellow/agent)
   FAIL_BLOCK: '🟥',    // Red square — governance failure
   SKIP_BLOCK: '⬜',    // White square — skipped
-  
+
   // Shield variants (distinct from agent circles)
   SHIELD_PASS: '🛡️',   // Shield — protected/compliant
   SHIELD_WARN: '⚠️',    // Warning — needs attention
   SHIELD_FAIL: '🚫',   // Prohibited — blocked
   SHIELD_SKIP: '➖',   // Minus — excluded
-  
+
   // Gate indicators
   GATE_OPEN: '🔓',     // Unlocked — gate passed
   GATE_CLOSED: '🔒',   // Locked — gate blocked
   GATE_PENDING: '⏳',  // Hourglass — awaiting
-  
+
   // Review state
   REVIEW_PENDING: '👁️',   // Eye — under review
   REVIEW_APPROVED: '✅',  // Check mark box
   REVIEW_REJECTED: '❌',  // X mark box
-  
+
   // Severity markers (shapes, not colors)
   CRITICAL: '🔺',      // Red triangle — critical
   HIGH: '◆',           // Diamond — high
   MEDIUM: '●',         // Circle — medium
   LOW: '○',            // Empty circle — low
-  
+
   // Progress
   COMPLETE: '█',       // Filled block
   PARTIAL: '▓',        // Partial block
@@ -143,7 +143,7 @@ export const GOVERNANCE_COLORS = {
     hex: '#10b981',
     hexLight: '#d1fae5',
   },
-  
+
   // WARN — Orange (NOT yellow, to avoid SONNY confusion)
   WARN: {
     bg: 'bg-orange-500',
@@ -154,7 +154,7 @@ export const GOVERNANCE_COLORS = {
     hex: '#f97316',
     hexLight: '#ffedd5',
   },
-  
+
   // FAIL — Rose (distinct from pure red)
   FAIL: {
     bg: 'bg-rose-500',
@@ -165,7 +165,7 @@ export const GOVERNANCE_COLORS = {
     hex: '#f43f5e',
     hexLight: '#ffe4e6',
   },
-  
+
   // SKIP — Slate (neutral, no agency)
   SKIP: {
     bg: 'bg-slate-400',
@@ -176,7 +176,7 @@ export const GOVERNANCE_COLORS = {
     hex: '#94a3b8',
     hexLight: '#f1f5f9',
   },
-  
+
   // PENDING — Sky blue (review state, not agent)
   PENDING: {
     bg: 'bg-sky-500',
@@ -347,7 +347,7 @@ export function formatTerminalSummary(counts: {
 }): string {
   const status = counts.fail > 0 ? 'INVALID' : 'VALID';
   const glyph = counts.fail > 0 ? TERMINAL_GLYPHS.FAIL : TERMINAL_GLYPHS.PASS;
-  
+
   return `SUMMARY: ${counts.fail} FAIL | ${counts.warn} WARN | ${counts.pass} PASS | ${counts.skip} SKIP\nSTATUS: ${glyph} ${status}`;
 }
 
@@ -355,12 +355,12 @@ export function formatTerminalSummary(counts: {
  * Generate terminal banner for validation result.
  */
 export function generateTerminalBanner(status: 'VALID' | 'INVALID' | 'PENDING'): string {
-  const banner = status === 'VALID' 
-    ? TERMINAL_BANNERS.PASS 
-    : status === 'INVALID' 
-      ? TERMINAL_BANNERS.FAIL 
+  const banner = status === 'VALID'
+    ? TERMINAL_BANNERS.PASS
+    : status === 'INVALID'
+      ? TERMINAL_BANNERS.FAIL
       : TERMINAL_BANNERS.PENDING;
-  
+
   return `
 ══════════════════════════════════════════════════════════════════════════════
 ${banner}

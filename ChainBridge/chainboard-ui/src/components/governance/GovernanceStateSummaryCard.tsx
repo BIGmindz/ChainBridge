@@ -124,8 +124,8 @@ export function GovernanceStateSummaryCard({
   return (
     <div
       className={`
-        bg-white dark:bg-gray-800 
-        border border-gray-200 dark:border-gray-700 
+        bg-white dark:bg-gray-800
+        border border-gray-200 dark:border-gray-700
         rounded-lg shadow-sm p-4
         ${className}
       `}
@@ -146,18 +146,18 @@ export function GovernanceStateSummaryCard({
           {/* Main stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <StatItem label="Total PACs" value={summary.total_pacs} />
-            <StatItem 
-              label="Active" 
-              value={summary.active_pacs} 
+            <StatItem
+              label="Active"
+              value={summary.active_pacs}
               variant={summary.active_pacs > 0 ? 'warning' : 'default'}
             />
-            <StatItem 
-              label="Blocked" 
-              value={summary.blocked_pacs} 
+            <StatItem
+              label="Blocked"
+              value={summary.blocked_pacs}
               variant={summary.blocked_pacs > 0 ? 'error' : 'default'}
             />
-            <StatItem 
-              label="Positive Closures" 
+            <StatItem
+              label="Positive Closures"
               value={summary.positive_closures}
               variant="success"
             />
@@ -165,13 +165,13 @@ export function GovernanceStateSummaryCard({
 
           {/* Secondary stats */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <StatItem 
-              label="Correction Cycles" 
+            <StatItem
+              label="Correction Cycles"
               value={summary.correction_cycles}
               variant={summary.correction_cycles > 0 ? 'warning' : 'default'}
             />
-            <StatItem 
-              label="Pending Ratifications" 
+            <StatItem
+              label="Pending Ratifications"
               value={summary.pending_ratifications}
               variant={summary.pending_ratifications > 0 ? 'warning' : 'default'}
             />

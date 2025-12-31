@@ -19,12 +19,12 @@
  * @see PAC-SONNY-G1-PHASE-2-OPERATOR-VISIBILITY-AND-GOVERNANCE-UX-LOCK-01
  */
 
-import { 
-  Shield, 
-  ShieldAlert, 
-  ShieldCheck, 
-  ShieldX, 
-  Clock, 
+import {
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  ShieldX,
+  Clock,
   AlertTriangle,
   CheckCircle,
   XCircle,
@@ -35,8 +35,8 @@ import {
 import { useState } from 'react';
 
 import { useGovernanceState } from '../../hooks/useGovernanceState';
-import type { 
-  GovernanceUIState, 
+import type {
+  GovernanceUIState,
   EscalationLevel,
   GovernanceBlockReason,
   GovernanceEscalation,
@@ -156,7 +156,7 @@ function BlockReasonRow({ block }: { block: GovernanceBlockReason }) {
  */
 function EscalationRow({ escalation }: { escalation: GovernanceEscalation }) {
   const levelConfig = ESCALATION_CONFIG[escalation.level];
-  
+
   return (
     <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
       <AlertTriangle className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
@@ -170,7 +170,7 @@ function EscalationRow({ escalation }: { escalation: GovernanceEscalation }) {
           </span>
           <span className={classNames(
             'text-xs px-1.5 py-0.5 rounded',
-            escalation.status === 'PENDING' 
+            escalation.status === 'PENDING'
               ? 'bg-amber-500/20 text-amber-300'
               : escalation.status === 'RESOLVED'
                 ? 'bg-emerald-500/20 text-emerald-300'
@@ -201,7 +201,7 @@ export interface GovernanceStatePanelProps {
 /**
  * Governance State Panel Component.
  */
-export function GovernanceStatePanel({ 
+export function GovernanceStatePanel({
   compact = false,
   className,
 }: GovernanceStatePanelProps) {
@@ -268,7 +268,7 @@ export function GovernanceStatePanel({
       className
     )}>
       {/* Header */}
-      <div 
+      <div
         className="flex items-center gap-3 p-4 cursor-pointer"
         onClick={() => setExpanded(!expanded)}
       >
@@ -358,7 +358,7 @@ export function GovernanceStatePanel({
               </h4>
               <div className="space-y-1">
                 {context.active_pacs.map((pac) => (
-                  <div 
+                  <div
                     key={pac.pac_id}
                     className="flex items-center gap-2 text-xs text-slate-300 p-2 rounded bg-slate-800/30"
                   >
