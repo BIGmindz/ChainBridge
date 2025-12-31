@@ -98,7 +98,7 @@ from app.models.canonical_model_spec import (
 
 class DrillOutcome(str, Enum):
     """Expected outcomes for ML failure drills."""
-    
+
     DRIFT_CLASSIFIED = "DRIFT_CLASSIFIED"
     RECALIBRATION_REQUIRED = "RECALIBRATION_REQUIRED"
     DECISION_BLOCK = "DECISION_BLOCK"
@@ -109,7 +109,7 @@ class DrillOutcome(str, Enum):
 @dataclass
 class DrillResult:
     """Result of a single failure drill execution."""
-    
+
     drill_id: str
     scenario: str
     expected_outcome: DrillOutcome
@@ -117,7 +117,7 @@ class DrillResult:
     passed: bool
     evidence: Dict[str, Any] = field(default_factory=dict)
     execution_ms: float = 0.0
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "drill_id": self.drill_id,
@@ -218,9 +218,9 @@ def sample_risk_output(sample_risk_input: RiskInput) -> RiskOutput:
 
 class TestML01FeatureDistributionDrift:
     """ML-01: Prove feature distribution drift is classified, never silent."""
-    
+
     def test_significant_drift_is_classified(
-        self, 
+        self,
         baseline_feature_stats: Dict[str, Dict[str, float]],
         drifted_feature_stats: Dict[str, Dict[str, float]],
     ) -> None:
@@ -229,21 +229,21 @@ class TestML01FeatureDistributionDrift:
             baseline_stats=baseline_feature_stats,
             current_stats=drifted_feature_stats,
         )
-        
+
         # Verify drift is detected and classified
         assert result.drift_score > DEFAULT_DRIFT_THRESHOLDS["MODERATE"], \
             f"Expected drift > MODERATE threshold, got {result.drift_score}"
-        
+
         # Verify drift bucket is not STABLE (i.e., drift is classified)
         assert result.drift_bucket != DriftBucket.STABLE, \
             "Significant drift must not be classified as STABLE"
-        
+
         # Verify action is appropriate (not CONTINUE for severe drift)
         action = get_drift_action(result.drift_bucket)
         if result.drift_bucket in (DriftBucket.SEVERE, DriftBucket.CRITICAL):
             assert action in (DriftAction.ESCALATE, DriftAction.HALT), \
                 f"Severe/Critical drift must ESCALATE or HALT, got {action}"
-    
+
     def test_all_features_have_drift_classification(
         self,
         baseline_feature_stats: Dict[str, Dict[str, float]],
@@ -254,36 +254,36 @@ class TestML01FeatureDistributionDrift:
             baseline_stats=baseline_feature_stats,
             current_stats=drifted_feature_stats,
         )
-        
+
         for fd in result.feature_drifts:
             # Verify drift bucket is set
             assert fd.drift_bucket is not None, \
                 f"Feature {fd.feature_name} has no drift bucket"
-            
+
             # Verify drift bucket is a valid enum value
             assert isinstance(fd.drift_bucket, DriftBucket), \
                 f"Feature {fd.feature_name} drift_bucket is not DriftBucket enum"
-    
+
     def test_critical_drift_triggers_halt(self) -> None:
         """Critical drift (PSI > CRITICAL threshold) MUST trigger HALT action."""
         # Extreme drift scenario
         baseline = {"feature": {"mean": 1.0, "std": 0.1, "count": 1000}}
         extreme_drift = {"feature": {"mean": 10.0, "std": 2.0, "count": 100}}
-        
+
         result = corridor_drift_score(
             baseline_stats=baseline,
             current_stats=extreme_drift,
         )
-        
+
         # Verify CRITICAL bucket
         assert result.drift_bucket == DriftBucket.CRITICAL, \
             f"Extreme drift must be CRITICAL, got {result.drift_bucket}"
-        
+
         # Verify HALT action
         action = get_drift_action(result.drift_bucket)
         assert action == DriftAction.HALT, \
             f"CRITICAL drift must HALT, got {action}"
-        
+
         # Verify should_halt_scoring returns True
         assert should_halt_scoring(result.drift_bucket), \
             "should_halt_scoring must return True for CRITICAL drift"
@@ -296,7 +296,7 @@ class TestML01FeatureDistributionDrift:
 
 class TestML02CalibrationDecay:
     """ML-02: Prove calibration decay triggers recalibration, never silent degradation."""
-    
+
     def test_ece_above_threshold_requires_recalibration(self) -> None:
         """ECE > 5% MUST trigger RECALIBRATION_REQUIRED."""
         # Create metrics with ECE above threshold
@@ -305,16 +305,16 @@ class TestML02CalibrationDecay:
             mce=0.15,
             brier_score=0.22,
         )
-        
+
         # Verify needs_recalibration returns True
         assert metrics.needs_recalibration(), \
             f"ECE {metrics.ece} > threshold should require recalibration"
-        
+
         # Verify action is RECALIBRATE
         action = metrics.get_action()
         assert action == CalibrationAction.RECALIBRATE, \
             f"ECE > threshold must return RECALIBRATE, got {action}"
-    
+
     def test_ece_at_critical_level_halts(self) -> None:
         """ECE > 15% (critical) MUST trigger HALT, not just recalibration."""
         metrics = CalibrationMetrics(
@@ -322,11 +322,11 @@ class TestML02CalibrationDecay:
             mce=0.35,
             brier_score=0.40,
         )
-        
+
         action = metrics.get_action()
         assert action == CalibrationAction.HALT, \
             f"Critical ECE must HALT, got {action}"
-    
+
     def test_healthy_calibration_continues(self) -> None:
         """ECE < threshold should allow CONTINUE."""
         metrics = CalibrationMetrics(
@@ -334,14 +334,14 @@ class TestML02CalibrationDecay:
             mce=0.08,
             brier_score=0.15,
         )
-        
+
         assert not metrics.needs_recalibration(), \
             "Healthy ECE should not require recalibration"
-        
+
         action = metrics.get_action()
         assert action == CalibrationAction.CONTINUE, \
             f"Healthy calibration should CONTINUE, got {action}"
-    
+
     def test_marginal_calibration_triggers_monitor(self) -> None:
         """ECE between 3-5% should trigger MONITOR."""
         metrics = CalibrationMetrics(
@@ -349,7 +349,7 @@ class TestML02CalibrationDecay:
             mce=0.10,
             brier_score=0.18,
         )
-        
+
         action = metrics.get_action()
         assert action == CalibrationAction.MONITOR, \
             f"Marginal ECE should MONITOR, got {action}"
@@ -362,7 +362,7 @@ class TestML02CalibrationDecay:
 
 class TestML03MonotonicConstraintViolation:
     """ML-03: Prove monotonic constraint violations block decisions."""
-    
+
     def test_increasing_risk_feature_must_not_decrease_score(self) -> None:
         """Higher risk signal MUST NOT decrease risk score (monotonicity)."""
         constraint = MonotonicConstraint(
@@ -370,22 +370,22 @@ class TestML03MonotonicConstraintViolation:
             direction="increasing",
             description="Higher incident rate MUST increase risk",
         )
-        
+
         # Valid: higher feature, equal or higher score
         assert constraint.validate(
             old_value=0.05, new_value=0.10,  # Higher incident rate
             old_score=50.0, new_score=65.0,  # Higher score ✓
         ), "Higher feature with higher score should be valid"
-        
+
         # VIOLATION: higher feature, lower score
         violation_detected = not constraint.validate(
             old_value=0.05, new_value=0.10,  # Higher incident rate
             old_score=50.0, new_score=45.0,  # Lower score ✗
         )
-        
+
         assert violation_detected, \
             "Higher incident rate with lower score must be a VIOLATION"
-    
+
     def test_all_canonical_monotonic_features_have_constraints(self) -> None:
         """All canonical monotonic features MUST have defined constraints."""
         canonical_features = {
@@ -396,17 +396,17 @@ class TestML03MonotonicConstraintViolation:
             "value_usd",
             "lane_risk_index",
         }
-        
+
         defined_features = {c.feature_name for c in MONOTONIC_FEATURES}
-        
+
         for feature in canonical_features:
             assert feature in defined_features, \
                 f"Canonical monotonic feature {feature} missing from MONOTONIC_FEATURES"
-    
+
     def test_monotonic_violation_blocks_decision(self) -> None:
         """Monotonic violation MUST block decision emission."""
         violations_detected = []
-        
+
         # Test each canonical monotonic feature
         for constraint in MONOTONIC_FEATURES:
             # Simulate a violation
@@ -414,12 +414,12 @@ class TestML03MonotonicConstraintViolation:
                 old_value=1.0, new_value=2.0,  # Higher feature
                 old_score=60.0, new_score=50.0,  # Lower score — VIOLATION
             )
-            
+
             if constraint.direction == "increasing":
                 assert is_violation, \
                     f"Monotonic violation not detected for {constraint.feature_name}"
                 violations_detected.append(constraint.feature_name)
-        
+
         # Verify all increasing constraints detected violations
         assert len(violations_detected) == len([c for c in MONOTONIC_FEATURES if c.direction == "increasing"]), \
             "Not all monotonic violations were detected"
@@ -432,7 +432,7 @@ class TestML03MonotonicConstraintViolation:
 
 class TestML04AdversarialFeaturePerturbation:
     """ML-04: Prove adversarial perturbations trigger ESCALATE, not silent corruption."""
-    
+
     def test_extreme_feature_values_escalate(self) -> None:
         """Extreme/anomalous feature values MUST trigger ESCALATE."""
         # Baseline stats for comparison
@@ -440,48 +440,48 @@ class TestML04AdversarialFeaturePerturbation:
             "carrier_incident_rate_90d": {"mean": 0.05, "std": 0.02, "count": 10000},
             "value_usd": {"mean": 75000, "std": 30000, "count": 10000},
         }
-        
+
         # Adversarial perturbation: extreme outliers
         adversarial = {
             "carrier_incident_rate_90d": {"mean": 0.95, "std": 0.01, "count": 10},  # 45 std shift
             "value_usd": {"mean": 10000000, "std": 1000, "count": 10},  # Extreme value
         }
-        
+
         result = corridor_drift_score(
             baseline_stats=baseline,
             current_stats=adversarial,
         )
-        
+
         # Adversarial inputs should trigger SEVERE or CRITICAL
         assert result.drift_bucket in (DriftBucket.SEVERE, DriftBucket.CRITICAL), \
             f"Adversarial perturbation must be SEVERE/CRITICAL, got {result.drift_bucket}"
-        
+
         # Action should be ESCALATE or HALT
         action = get_drift_action(result.drift_bucket)
         assert action in (DriftAction.ESCALATE, DriftAction.HALT), \
             f"Adversarial perturbation must ESCALATE/HALT, got {action}"
-    
+
     def test_sudden_distribution_shift_escalates(self) -> None:
         """Sudden distribution shift (potential adversarial attack) MUST escalate."""
         baseline = {"feature": {"mean": 50.0, "std": 5.0, "count": 10000}}
-        
+
         # Sudden shift: bimodal attack distribution
         sudden_shift = {"feature": {"mean": 5.0, "std": 50.0, "count": 100}}
-        
+
         result = corridor_drift_score(
             baseline_stats=baseline,
             current_stats=sudden_shift,
         )
-        
+
         # Large shift should be classified as severe drift
         assert result.drift_score > 0.35, \
             f"Sudden distribution shift must have high drift score, got {result.drift_score}"
-        
+
         # Should trigger ESCALATE or HALT
         action = get_drift_action(result.drift_bucket)
         assert action in (DriftAction.ESCALATE, DriftAction.HALT), \
             f"Sudden shift must ESCALATE/HALT, got {action}"
-    
+
     def test_feature_corruption_detected(self) -> None:
         """Feature corruption (impossible values) MUST be detected."""
         # Incident rate cannot exceed 1.0
@@ -497,7 +497,7 @@ class TestML04AdversarialFeaturePerturbation:
         except ValueError as e:
             assert "carrier_incident_rate_90d" in str(e).lower() or "must be in [0, 1]" in str(e), \
                 f"Error should mention incident rate bounds: {e}"
-    
+
     def test_negative_value_rejected(self) -> None:
         """Negative shipment value (impossible) MUST be rejected."""
         try:
@@ -520,7 +520,7 @@ class TestML04AdversarialFeaturePerturbation:
 
 class TestML05ReplayMismatch:
     """ML-05: Prove replay mismatches trigger HALT, ensuring determinism."""
-    
+
     def test_replay_with_same_inputs_produces_identical_output(
         self,
         sample_risk_input: RiskInput,
@@ -540,17 +540,17 @@ class TestML05ReplayMismatch:
             evaluation_id=str(uuid.uuid4()),  # Different eval ID is OK
             input_hash=sample_risk_input.compute_hash(),
         )
-        
+
         result = verify_replay(
             original_input=sample_risk_input,
             original_output=sample_risk_output,
             replay_output=replay_output,
         )
-        
+
         assert result.verified, \
             f"Identical replay should verify. Outputs match: {result.outputs_match}, " \
             f"Model match: {result.model_version_match}"
-    
+
     def test_replay_mismatch_detected_on_score_change(
         self,
         sample_risk_input: RiskInput,
@@ -570,18 +570,18 @@ class TestML05ReplayMismatch:
             evaluation_id=str(uuid.uuid4()),
             input_hash=sample_risk_input.compute_hash(),
         )
-        
+
         result = verify_replay(
             original_input=sample_risk_input,
             original_output=sample_risk_output,
             replay_output=tampered_output,
         )
-        
+
         assert not result.verified, \
             "Tampered replay (different score) must NOT verify"
         assert not result.outputs_match, \
             "outputs_match should be False for score mismatch"
-    
+
     def test_hash_integrity_verification(
         self,
         sample_risk_input: RiskInput,
@@ -589,13 +589,13 @@ class TestML05ReplayMismatch:
     ) -> None:
         """Output hash MUST match for deterministic replay."""
         original_hash = sample_risk_output.compute_hash()
-        
+
         # Recompute hash — should be identical
         recomputed_hash = sample_risk_output.compute_hash()
-        
+
         assert original_hash == recomputed_hash, \
             "Output hash must be deterministic"
-        
+
         # Different score = different hash
         tampered = RiskOutput(
             risk_score=56.0,  # Slightly different
@@ -609,7 +609,7 @@ class TestML05ReplayMismatch:
             evaluation_id=str(uuid.uuid4()),
             input_hash=sample_risk_input.compute_hash(),
         )
-        
+
         tampered_hash = tampered.compute_hash()
         assert original_hash != tampered_hash, \
             "Different score must produce different hash"
@@ -622,7 +622,7 @@ class TestML05ReplayMismatch:
 
 class TestML06ModelVersionMismatch:
     """ML-06: Prove model version mismatch blocks decisions."""
-    
+
     def test_version_mismatch_detected_on_replay(
         self,
         sample_risk_input: RiskInput,
@@ -642,18 +642,18 @@ class TestML06ModelVersionMismatch:
             evaluation_id=str(uuid.uuid4()),
             input_hash=sample_risk_input.compute_hash(),
         )
-        
+
         result = verify_replay(
             original_input=sample_risk_input,
             original_output=sample_risk_output,
             replay_output=version_mismatch_output,
         )
-        
+
         assert not result.model_version_match, \
             "Model version mismatch must be detected"
         assert not result.verified, \
             "Replay with version mismatch must NOT verify"
-    
+
     def test_forbidden_model_type_raises_violation(self) -> None:
         """Forbidden model types MUST raise CanonicalModelViolation."""
         for forbidden in ForbiddenModelType:
@@ -668,7 +668,7 @@ class TestML06ModelVersionMismatch:
             except (ValueError, CanonicalModelViolation):
                 # Expected — forbidden type cannot be instantiated as ModelType
                 pass
-    
+
     def test_glass_box_model_types_allowed(self) -> None:
         """Glass-box model types MUST be allowed at decision boundary."""
         allowed_types = [
@@ -678,17 +678,17 @@ class TestML06ModelVersionMismatch:
             ModelType.MONOTONIC_LOGISTIC,
             ModelType.LINEAR_MODEL,
         ]
-        
+
         for model_type in allowed_types:
             spec = CanonicalModelSpec(
                 model_type=model_type,
                 model_version="v1.0.0",
                 data_version="2024-12-01",
             )
-            
+
             # Should not raise
             spec.validate_model_type()
-    
+
     def test_decision_requires_model_version(
         self,
         sample_risk_input: RiskInput,
@@ -717,7 +717,7 @@ class TestML06ModelVersionMismatch:
             hash_content = output.compute_hash()
             # Empty model version in hash is detectable
             assert output.model_version == "", "Sanity check"
-            
+
         except ValueError:
             # If ValueError raised for empty model_version, that's also valid
             pass
@@ -729,7 +729,7 @@ class TestML06ModelVersionMismatch:
 
 class TestMLFailureDrillSummary:
     """Summary tests proving all failure drills pass."""
-    
+
     def test_drift_response_policy_is_complete(self) -> None:
         """All drift buckets MUST have defined response actions."""
         for bucket in DriftBucket:
@@ -738,30 +738,30 @@ class TestMLFailureDrillSummary:
                 f"Bucket {bucket} must have valid action, got {action}"
             assert action in DRIFT_RESPONSE_POLICY.values(), \
                 f"Action {action} must be in response policy"
-    
+
     def test_no_silent_drift_path(self) -> None:
         """There must be NO code path where drift goes unclassified."""
         # Test boundary conditions
         test_scores = [0.0, 0.05, 0.10, 0.20, 0.35, 0.5, 1.0, 2.0]
-        
+
         for score in test_scores:
             bucket = categorical_drift_bucket(score)
             assert bucket is not None, f"Score {score} must have bucket"
             assert isinstance(bucket, DriftBucket), \
                 f"Score {score} bucket must be DriftBucket enum"
-    
+
     def test_critical_drift_always_halts(self) -> None:
         """CRITICAL drift must ALWAYS halt — no exceptions."""
         assert should_halt_scoring(DriftBucket.CRITICAL), \
             "CRITICAL drift must halt scoring"
-        
+
         assert get_drift_action(DriftBucket.CRITICAL) == DriftAction.HALT, \
             "CRITICAL drift action must be HALT"
-    
+
     def test_risk_multiplier_never_below_one(self) -> None:
         """Risk multiplier from drift must never decrease risk (< 1.0)."""
         test_scores = [0.0, 0.1, 0.25, 0.5, 0.75, 1.0, 2.0]
-        
+
         for score in test_scores:
             multiplier = risk_multiplier_from_drift(score)
             assert multiplier >= 1.0, \
