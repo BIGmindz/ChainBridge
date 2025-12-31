@@ -72,15 +72,11 @@ from pydantic import BaseModel, Field
 
 from core.governance.control_plane import (
     ACK_LATENCY_THRESHOLD_MS,
-    AgentACK,
     AgentACKEvidence,
     AgentACKState,
-    AgentLane,
     BarrierReleaseCondition,
     BensonSelfReviewBSRG01,
-    BERRecord,
     BERState,
-    BlockingReasonEvidence,
     ControlPlaneState,
     ExecutionBarrier,
     ExecutionBarrierType,
@@ -92,7 +88,6 @@ from core.governance.control_plane import (
     PositiveClosure,
     PositiveClosureChecklist,
     ReviewGateRG01,
-    SettlementBlockingReason,
     SettlementEligibility,
     SettlementReadinessStatus,
     SettlementReadinessVerdict,
@@ -100,7 +95,6 @@ from core.governance.control_plane import (
     WRAPArtifact,
     WRAPValidationState,
     check_ack_latency_eligibility,
-    compute_pack_hash,
     compute_positive_closure_digest,
     compute_training_signal_digest,
     create_ack_evidence,
@@ -108,17 +102,10 @@ from core.governance.control_plane import (
     create_bsrg01,
     create_control_plane_state,
     create_execution_barrier,
-    create_ledger_commit_attestation,
     create_multi_agent_wrap_set,
-    create_pack_immutability_attestation,
-    create_positive_closure,
     create_positive_closure_checklist,
     create_review_gate_rg01,
-    create_settlement_readiness_verdict,
-    create_training_signal,
     evaluate_settlement_readiness,
-    get_agent_lane,
-    validate_lane_authorization,
 )
 
 logger = logging.getLogger(__name__)
@@ -477,7 +464,9 @@ async def reject_mutations(path: str, request: Request):
     FAIL_CLOSED: No unauthorized mutations permitted.
     """
     logger.warning(
-        f"CONTROL_PLANE OC: Mutation rejected method={request.method} path={path}"
+        "CONTROL_PLANE OC: Mutation rejected method=%s path=%s",
+        request.method,
+        path,
     )
     raise HTTPException(
         status_code=405,
@@ -725,7 +714,7 @@ def _ensure_demo_wrap_set() -> str:
                 submitted_at=datetime.now(timezone.utc).isoformat(),
                 validation_state=WRAPValidationState.VALID,
                 validated_at=datetime.now(timezone.utc).isoformat(),
-                artifact_refs=[f"core/governance/control_plane.py", f"api/controlplane_oc.py"],
+                artifact_refs=["core/governance/control_plane.py", "api/controlplane_oc.py"],
             )
             wrap_set.collected_wraps[gid] = wrap
         
@@ -1225,7 +1214,7 @@ def _ensure_demo_barrier() -> str:
 )
 async def get_execution_barrier(
     pac_id: str,
-    request: Request,
+    _request: Request,
 ) -> Dict[str, Any]:
     """
     Get execution barrier status for a PAC.
@@ -1248,7 +1237,7 @@ async def get_execution_barrier(
 )
 async def get_pack_immutability(
     pac_id: str,
-    request: Request,
+    _request: Request,
 ) -> Dict[str, Any]:
     """
     Get PACK immutability attestation for a PAC.
@@ -1276,14 +1265,14 @@ async def get_pack_immutability(
 )
 async def get_closure_checklist(
     pac_id: str,
-    request: Request,
+    _request: Request,
 ) -> Dict[str, Any]:
     """
     Get positive closure checklist for a PAC.
     
     All items must PASS for valid positive closure.
     """
-    demo_pac_id = _ensure_demo_state()
+    _ensure_demo_state()  # Ensure demo data exists
     
     # Create demo checklist if not exists
     if pac_id not in _closure_checklists:
@@ -1295,7 +1284,7 @@ async def get_closure_checklist(
             checklist.pag01_acks_complete = state.all_acks_received()
             wrap_set = _wrap_sets.get(pac_id)
             checklist.all_required_wraps = wrap_set.is_complete() if wrap_set else False
-            rg01 = _rg01_gates.get(pac_id)
+            rg01 = _review_gates.get(pac_id)
             checklist.rg01_passed = rg01.result == "PASS" if rg01 else False
             bsrg = _bsrg_gates.get(pac_id)
             checklist.bsrg01_passed = bsrg.self_attestation if bsrg else False
@@ -1318,7 +1307,7 @@ async def get_closure_checklist(
     summary="Get agent lane assignments",
     description="PAC-JEFFREY-P03 Section 3: Cross-lane execution FORBIDDEN",
 )
-async def get_agent_lanes(request: Request) -> Dict[str, Any]:
+async def get_agent_lanes(_request: Request) -> Dict[str, Any]:
     """
     Get all agent lane assignments.
     
@@ -1346,7 +1335,7 @@ async def get_agent_lanes(request: Request) -> Dict[str, Any]:
 )
 async def get_required_wraps(
     pac_id: str,
-    request: Request,
+    _request: Request,
 ) -> Dict[str, Any]:
     """
     Get required WRAP obligations for a PAC.
@@ -1357,7 +1346,7 @@ async def get_required_wraps(
     - WRAP-DAN-GID07-<pac_id>
     - WRAP-BENSON-GID00-<pac_id>
     """
-    demo_pac_id = _ensure_demo_state()
+    _ensure_demo_state()  # Ensure demo data exists
     wrap_set = _wrap_sets.get(pac_id)
     
     required_wraps = [
@@ -1402,7 +1391,7 @@ _settlement_verdicts: Dict[str, SettlementReadinessVerdict] = {}
 )
 async def get_settlement_readiness(
     pac_id: str,
-    request: Request,
+    _request: Request,
 ) -> Dict[str, Any]:
     """
     Get Settlement Readiness Verdict for a PAC.
@@ -1415,7 +1404,7 @@ async def get_settlement_readiness(
     This endpoint computes the settlement readiness verdict in real-time
     based on the current state of the PAC.
     """
-    demo_pac_id = _ensure_demo_state()
+    _ensure_demo_state()  # Ensure demo data exists
     
     state = _control_plane_store.get(pac_id)
     if not state:
@@ -1423,7 +1412,7 @@ async def get_settlement_readiness(
     
     # Gather all evidence for verdict computation
     wrap_set = _wrap_sets.get(pac_id)
-    rg01 = _rg01_gates.get(pac_id)
+    rg01 = _review_gates.get(pac_id)
     bsrg = _bsrg_gates.get(pac_id)
     training_signals = list(_training_signals.get(pac_id, {}).values())
     positive_closures = list(_positive_closures.get(pac_id, {}).values())
@@ -1454,14 +1443,14 @@ async def get_settlement_readiness(
 )
 async def get_settlement_blocking_reasons(
     pac_id: str,
-    request: Request,
+    _request: Request,
 ) -> Dict[str, Any]:
     """
     Get detailed blocking reasons for settlement.
     
     Returns empty list if settlement is ELIGIBLE.
     """
-    demo_pac_id = _ensure_demo_state()
+    _ensure_demo_state()  # Ensure demo data exists
     
     # Get or compute verdict
     verdict = _settlement_verdicts.get(pac_id)
@@ -1475,7 +1464,7 @@ async def get_settlement_blocking_reasons(
             pac_id=pac_id,
             state=state,
             wrap_set=_wrap_sets.get(pac_id),
-            rg01=_rg01_gates.get(pac_id),
+            rg01=_review_gates.get(pac_id),
             bsrg01=_bsrg_gates.get(pac_id),
             training_signals=list(_training_signals.get(pac_id, {}).values()),
             positive_closures=list(_positive_closures.get(pac_id, {}).values()),

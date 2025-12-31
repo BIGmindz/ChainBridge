@@ -197,17 +197,43 @@ class ProofPackVerifier:
             )
 
     def _load_from_path(self, path: Path) -> Dict[str, str]:
-        """Load all files from a ProofPack directory."""
+        """
+        Load all files from a ProofPack directory.
+
+        Security (SAM-001): Path traversal protection
+        - Validates all paths stay within the base directory
+        - Uses resolve() to canonicalize paths and detect escapes
+        - Rejects paths that would escape via symlinks or .. sequences
+        """
         files: Dict[str, str] = {}
 
         if not path.exists():
             raise FileNotFoundError(f"ProofPack path not found: {path}")
 
+        # Resolve base path to absolute canonical form
+        base_path = path.resolve()
+
         # Walk directory and load all files
         for file_path in path.rglob("*"):
             if file_path.is_file():
+                # SAM-001: Resolve to canonical path and validate containment
+                resolved_file = file_path.resolve()
+
+                # Security check: Ensure resolved path is within base directory
+                # This protects against symlink attacks and .. traversal
+                try:
+                    resolved_file.relative_to(base_path)
+                except ValueError:
+                    # Path escapes base directory - potential path traversal attack
+                    logger.warning(
+                        "Path traversal attempt blocked: %s escapes base %s",
+                        resolved_file,
+                        base_path,
+                    )
+                    continue
+
                 rel_path = str(file_path.relative_to(path))
-                with open(file_path, "r", encoding="utf-8") as f:
+                with open(resolved_file, "r", encoding="utf-8") as f:
                     files[rel_path] = f.read()
 
         return files

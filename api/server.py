@@ -23,6 +23,11 @@ from api.trace_oc import router as trace_oc_router
 from api.governance_oc import governance_oc_router
 from api.controlplane_oc import controlplane_oc_router
 from api.lintv2_oc import lintv2_oc_router  # Lint v2 OC (PAC-JEFFREY-P06R)
+from api.settlement_oc import router as settlement_oc_router  # Settlement OC (PAC-JEFFREY-P08)
+from api.occ_dashboard import router as occ_dashboard_router  # OCC Dashboard API (PAC-BENSON-P21-C)
+from api.occ_timeline import router as occ_timeline_router  # OCC Timeline API (PAC-BENSON-P22-C)
+from api.occ_agents import router as occ_agents_router  # OCC Agents API (PAC-BENSON-P22-C)
+from api.occ_diff import router as occ_diff_router  # OCC Diff API (PAC-BENSON-P22-C)
 from api.spine import router as spine_router
 from api.trust import router as trust_router
 from core.data_processor import DataProcessor
@@ -257,6 +262,11 @@ app.include_router(trace_oc_router)  # End-to-End Trace Visibility (PAC-009)
 app.include_router(governance_oc_router)  # Governance OC Visibility (PAC-012)
 app.include_router(controlplane_oc_router)  # Control Plane OC (PAC-CP-UI-EXEC-001)
 app.include_router(lintv2_oc_router)  # Lint v2 Invariant OC (PAC-JEFFREY-P06R)
+app.include_router(settlement_oc_router)  # Settlement E2E OC (PAC-JEFFREY-P08)
+app.include_router(occ_dashboard_router)  # OCC Dashboard API (PAC-BENSON-P21-C)
+app.include_router(occ_timeline_router)  # OCC Timeline API (PAC-BENSON-P22-C)
+app.include_router(occ_agents_router)  # OCC Agents Drilldown API (PAC-BENSON-P22-C)
+app.include_router(occ_diff_router)  # OCC Decision Diff API (PAC-BENSON-P22-C)
 
 
 @app.get("/", response_model=Dict[str, str])
@@ -305,12 +315,12 @@ async def get_governance_fingerprint():
         raise HTTPException(
             status_code=503,
             detail=f"Governance fingerprint unavailable: {e}",
-        )
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=500,
             detail=f"Failed to compute governance fingerprint: {e}",
-        )
+        ) from e
 
 
 @app.get("/modules", response_model=List[str])
@@ -342,7 +352,7 @@ async def register_module(request: ModuleRegistrationRequest):
             "module_name": module_name,
         }
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @app.post("/modules/{module_name}/execute", response_model=Dict[str, Any])
@@ -369,7 +379,7 @@ async def execute_module(module_name: str, request: ModuleExecutionRequest):
 
     except Exception as e:
         metrics_collector.track_error("module_execution", module_name, str(e))
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @app.get("/pipelines", response_model=List[str])
@@ -413,7 +423,7 @@ async def create_pipeline(request: PipelineCreationRequest):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @app.get("/pipelines/{pipeline_name}", response_model=Dict[str, Any])
@@ -463,7 +473,7 @@ async def execute_pipeline(pipeline_name: str, request: PipelineExecutionRequest
             False,
         )
         metrics_collector.track_error("pipeline_execution", pipeline_name, str(e))
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @app.get("/metrics", response_model=Dict[str, Any])
@@ -503,7 +513,7 @@ async def process_data(data: Dict[str, Any]):
         }
 
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @app.post("/analysis/multi-signal", response_model=Dict[str, Any])
@@ -573,7 +583,7 @@ async def multi_signal_analysis(request: MultiSignalAnalysisRequest):
         raise
     except Exception as e:
         metrics_collector.track_error("multi_signal_analysis", "system", str(e))
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @app.post("/analysis/multi-signal/backtest", response_model=Dict[str, Any])
@@ -637,7 +647,7 @@ async def multi_signal_backtest(request: MultiSignalBacktestRequest):
 
     except Exception as e:
         metrics_collector.track_error("multi_signal_backtest", "system", str(e))
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @app.get("/signals/available", response_model=List[Dict[str, Any]])
@@ -677,7 +687,7 @@ async def get_available_signals():
         return available_signals
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # Load default modules on startup
@@ -701,7 +711,7 @@ async def startup_event():
         print(f"  Error: {e}")
         print("  Startup ABORTED - proof artifacts may be corrupted")
         print("=" * 60)
-        raise SystemExit(1)  # Hard crash on integrity failure
+        raise SystemExit(1) from e  # Hard crash on integrity failure
 
     try:
         newly_loaded = ensure_default_modules_loaded()
@@ -718,7 +728,7 @@ async def startup_event():
 
 if __name__ == "__main__":
     # Run the server
-    port = int(os.getenv("PORT", 8000))
+    port = int(os.getenv("PORT", "8000"))
     host = os.getenv("HOST", "0.0.0.0")
 
     uvicorn.run("api.server:app", host=host, port=port, reload=True, log_level="info")
