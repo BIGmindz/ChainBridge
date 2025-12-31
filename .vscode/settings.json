@@ -73,7 +73,7 @@
   ],
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
-  "yaml.validate": true
+  "yaml.validate": true,
   "chat.tools.terminal.autoApprove": {
     "cd": true,
     "echo": true,

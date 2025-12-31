@@ -1,0 +1,32 @@
+{
+  "action_details": {
+    "amount": 15000.0,
+    "new_status": "PENDING_REVIEW",
+    "review_queue": "senior_approvals",
+    "state_key": "payment_87dec02b-26f5-4ad4-9920-f2d2a199e3f7"
+  },
+  "action_error": null,
+  "action_id": "7cc26964-ed41-4155-af7a-55550db3276d",
+  "action_status": "success",
+  "action_type": "state_transition",
+  "decision_explanation": "Payment of $15000.00 exceeds threshold of $10000.00",
+  "decision_hash": "1f34a8b19161525af13582c64a3027be07706be1adbcdc3088675da376e5ff16",
+  "decision_id": "20b901e3-be04-4a69-b491-22b445da3211",
+  "decision_inputs": {
+    "amount": 15000.0,
+    "currency": "USD",
+    "requestor_id": "r1",
+    "threshold": 10000.0,
+    "vendor_id": "v1"
+  },
+  "decision_outcome": "requires_review",
+  "decision_rule": "payment_threshold_v1",
+  "decision_rule_version": "1.0.0",
+  "event_hash": "d92f6fc533d7573ca516f151d44629d40d6faa5b2aaa95c4996ffef10ddfe957",
+  "event_id": "87dec02b-26f5-4ad4-9920-f2d2a199e3f7",
+  "event_timestamp": "2025-12-19T12:01:13.718653+00:00",
+  "event_type": "payment_request",
+  "id": "114d922c-1c44-4131-9d62-c3bc7eb59643",
+  "proof_timestamp": "2025-12-19T12:01:13.718734+00:00",
+  "version": "1.0.0"
+}

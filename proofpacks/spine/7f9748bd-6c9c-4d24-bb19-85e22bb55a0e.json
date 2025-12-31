@@ -1,0 +1,31 @@
+{
+  "action_details": {
+    "action": "error_recorded",
+    "decision_outcome": "error",
+    "event_id": "14102dd3-2fd3-47d6-ad9f-27f46657b8ee",
+    "explanation": "Unsupported event type: inventory_update. Supported: ('payment_request',)",
+    "payload": {
+      "item_id": "x",
+      "qty": 10
+    },
+    "rule_id": "RULE-EVENT-TYPE-V1",
+    "timestamp": "2025-12-19T12:57:29.149366+00:00"
+  },
+  "action_error": null,
+  "action_status": "success",
+  "action_type": "record_error",
+  "decision_outcome": "error",
+  "decision_reason": "Unsupported event type: inventory_update. Supported: ('payment_request',)",
+  "decision_rule": "RULE-EVENT-TYPE-V1",
+  "event_hash": "821b2215a085ff1ac19864b551529db179530eeac9c44ac8e0dae3dc3c5c4ceb",
+  "event_id": "14102dd3-2fd3-47d6-ad9f-27f46657b8ee",
+  "event_payload": {
+    "item_id": "x",
+    "qty": 10
+  },
+  "event_timestamp": "2025-12-19T12:57:29.149354+00:00",
+  "event_type": "inventory_update",
+  "proof_hash": "2b08d6875a99a8eb6a51571e0971383e84ed2c7b44dffd8627592adb207f3c5b",
+  "proof_id": "7f9748bd-6c9c-4d24-bb19-85e22bb55a0e",
+  "timestamp": "2025-12-19T12:57:29.149446+00:00"
+}

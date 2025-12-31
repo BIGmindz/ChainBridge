@@ -1,0 +1,23 @@
+{
+  "shipment_id": "LAR12345",
+  "events": [
+    {
+      "event_type": "pickup",
+      "timestamp": "2025-11-12T10:00:00Z",
+      "details": {}
+    },
+    {
+      "event_type": "in_transit",
+      "timestamp": "2025-11-12T16:00:00Z",
+      "details": {}
+    },
+    {
+      "event_type": "delivery",
+      "timestamp": "2025-11-13T08:00:00Z",
+      "details": {}
+    }
+  ],
+  "risk_score": 72.5,
+  "policy_version": "v3.2.1",
+  "generated_at": "2025-11-12T14:21:00.976972+00:00"
+}
