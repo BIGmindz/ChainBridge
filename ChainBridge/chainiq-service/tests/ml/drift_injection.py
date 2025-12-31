@@ -22,18 +22,18 @@ import numpy as np
 
 class DriftScenario(str, Enum):
     """Enumeration of drift injection scenarios."""
-    
+
     # ML-01: Feature distribution drift
     GRADUAL_MEAN_SHIFT = "GRADUAL_MEAN_SHIFT"
     SUDDEN_MEAN_SHIFT = "SUDDEN_MEAN_SHIFT"
     VARIANCE_EXPLOSION = "VARIANCE_EXPLOSION"
     DISTRIBUTION_MODE_CHANGE = "DISTRIBUTION_MODE_CHANGE"
-    
+
     # ML-02: Calibration decay
     CALIBRATION_DRIFT_MILD = "CALIBRATION_DRIFT_MILD"
     CALIBRATION_DRIFT_SEVERE = "CALIBRATION_DRIFT_SEVERE"
     CALIBRATION_DRIFT_CRITICAL = "CALIBRATION_DRIFT_CRITICAL"
-    
+
     # ML-04: Adversarial perturbation
     ADVERSARIAL_OUTLIERS = "ADVERSARIAL_OUTLIERS"
     ADVERSARIAL_BOUNDARY = "ADVERSARIAL_BOUNDARY"
@@ -43,7 +43,7 @@ class DriftScenario(str, Enum):
 @dataclass
 class InjectionConfig:
     """Configuration for a drift injection scenario."""
-    
+
     scenario: DriftScenario
     seed: int = 42  # Reproducibility
     severity: float = 1.0  # Multiplier for drift magnitude
@@ -54,7 +54,7 @@ class InjectionConfig:
 @dataclass
 class InjectedDrift:
     """Result of drift injection with original and modified stats."""
-    
+
     config: InjectionConfig
     baseline_stats: Dict[str, Dict[str, float]]
     modified_stats: Dict[str, Dict[str, float]]
@@ -71,7 +71,7 @@ class InjectedDrift:
 
 def get_canonical_baseline() -> Dict[str, Dict[str, float]]:
     """Return canonical baseline feature statistics for ChainIQ risk model.
-    
+
     These represent production-stable distributions.
     """
     return {
@@ -144,25 +144,25 @@ def inject_gradual_mean_shift(
     affected_features: Optional[List[str]] = None,
 ) -> Dict[str, Dict[str, float]]:
     """Inject gradual mean shift (typical real-world drift).
-    
+
     Simulates gradual distribution shift over time, e.g., seasonal changes.
-    
+
     Args:
         baseline: Baseline feature statistics
         severity: Drift multiplier (1.0 = ~2 std shift, 2.0 = ~4 std shift)
         affected_features: Features to drift (None = all)
-        
+
     Returns:
         Modified feature statistics
     """
     modified = {}
     targets = affected_features or list(baseline.keys())
-    
+
     for feature, stats in baseline.items():
         if feature in targets:
             std = stats.get("std", 1.0)
             shift = 2.0 * std * severity  # 2 std shift per severity unit
-            
+
             modified[feature] = {
                 **stats,
                 "mean": stats["mean"] + shift,
@@ -171,7 +171,7 @@ def inject_gradual_mean_shift(
             }
         else:
             modified[feature] = stats.copy()
-    
+
     return modified
 
 
@@ -181,25 +181,25 @@ def inject_sudden_mean_shift(
     affected_features: Optional[List[str]] = None,
 ) -> Dict[str, Dict[str, float]]:
     """Inject sudden/abrupt mean shift (covariate shift).
-    
+
     Simulates sudden regime change, e.g., new carrier entering market.
-    
+
     Args:
         baseline: Baseline feature statistics
         severity: Drift multiplier (1.0 = ~5 std shift)
         affected_features: Features to drift (None = all)
-        
+
     Returns:
         Modified feature statistics
     """
     modified = {}
     targets = affected_features or list(baseline.keys())
-    
+
     for feature, stats in baseline.items():
         if feature in targets:
             std = stats.get("std", 1.0)
             shift = 5.0 * std * severity  # 5 std shift — severe
-            
+
             modified[feature] = {
                 **stats,
                 "mean": stats["mean"] + shift,
@@ -208,7 +208,7 @@ def inject_sudden_mean_shift(
             }
         else:
             modified[feature] = stats.copy()
-    
+
     return modified
 
 
@@ -218,24 +218,24 @@ def inject_variance_explosion(
     affected_features: Optional[List[str]] = None,
 ) -> Dict[str, Dict[str, float]]:
     """Inject variance explosion (increased uncertainty).
-    
+
     Simulates increased variability, e.g., supply chain disruption.
-    
+
     Args:
         baseline: Baseline feature statistics
         severity: Variance multiplier (1.0 = 3x variance, 2.0 = 9x variance)
         affected_features: Features to drift (None = all)
-        
+
     Returns:
         Modified feature statistics
     """
     modified = {}
     targets = affected_features or list(baseline.keys())
-    
+
     for feature, stats in baseline.items():
         if feature in targets:
             variance_mult = 3.0 ** severity
-            
+
             modified[feature] = {
                 **stats,
                 "mean": stats["mean"],  # Mean unchanged
@@ -244,7 +244,7 @@ def inject_variance_explosion(
             }
         else:
             modified[feature] = stats.copy()
-    
+
     return modified
 
 
@@ -254,7 +254,7 @@ def inject_variance_explosion(
 
 def generate_calibration_decay_mild() -> Dict[str, float]:
     """Generate mild calibration decay metrics (ECE ~6%).
-    
+
     Returns:
         Calibration metrics dictionary
     """
@@ -268,7 +268,7 @@ def generate_calibration_decay_mild() -> Dict[str, float]:
 
 def generate_calibration_decay_severe() -> Dict[str, float]:
     """Generate severe calibration decay metrics (ECE ~12%).
-    
+
     Returns:
         Calibration metrics dictionary
     """
@@ -282,7 +282,7 @@ def generate_calibration_decay_severe() -> Dict[str, float]:
 
 def generate_calibration_decay_critical() -> Dict[str, float]:
     """Generate critical calibration decay metrics (ECE >15%).
-    
+
     Returns:
         Calibration metrics dictionary
     """
@@ -304,25 +304,25 @@ def inject_adversarial_outliers(
     affected_features: Optional[List[str]] = None,
 ) -> Dict[str, Dict[str, float]]:
     """Inject adversarial outlier values (extreme points).
-    
+
     Simulates adversarial attack with extreme feature values.
-    
+
     Args:
         baseline: Baseline feature statistics
         severity: Extremity multiplier (1.0 = 20 std, 2.0 = 40 std)
         affected_features: Features to attack (None = all)
-        
+
     Returns:
         Modified feature statistics
     """
     modified = {}
     targets = affected_features or list(baseline.keys())
-    
+
     for feature, stats in baseline.items():
         if feature in targets:
             std = stats.get("std", 1.0)
             extreme_shift = 20.0 * std * severity
-            
+
             modified[feature] = {
                 **stats,
                 "mean": stats["mean"] + extreme_shift,
@@ -331,7 +331,7 @@ def inject_adversarial_outliers(
             }
         else:
             modified[feature] = stats.copy()
-    
+
     return modified
 
 
@@ -339,15 +339,15 @@ def inject_adversarial_boundary(
     baseline: Dict[str, Dict[str, float]],
 ) -> Dict[str, Dict[str, float]]:
     """Inject adversarial values at decision boundaries.
-    
+
     Targets risk band boundaries to exploit threshold weaknesses.
-    
+
     Returns:
         Modified feature statistics
     """
     # Target boundary-sensitive features
     modified = baseline.copy()
-    
+
     # Push lane_risk_index to boundary (0.5 = medium/high boundary)
     if "lane_risk_index" in modified:
         modified["lane_risk_index"] = {
@@ -356,7 +356,7 @@ def inject_adversarial_boundary(
             "std": 0.001,  # Extremely tight
             "count": 100,
         }
-    
+
     # Push value_usd to $100k boundary
     if "value_usd" in modified:
         modified["value_usd"] = {
@@ -365,7 +365,7 @@ def inject_adversarial_boundary(
             "std": 0.01,
             "count": 100,
         }
-    
+
     return modified
 
 
@@ -379,12 +379,12 @@ def create_drift_scenario(
     affected_features: Optional[List[str]] = None,
 ) -> InjectedDrift:
     """Factory function to create drift injection scenarios.
-    
+
     Args:
         scenario: Type of drift scenario
         severity: Magnitude multiplier
         affected_features: Specific features to affect (None = defaults)
-        
+
     Returns:
         InjectedDrift with baseline and modified statistics
     """
@@ -394,42 +394,42 @@ def create_drift_scenario(
         severity=severity,
         affected_features=affected_features or [],
     )
-    
+
     # ML-01 scenarios
     if scenario == DriftScenario.GRADUAL_MEAN_SHIFT:
         modified = inject_gradual_mean_shift(baseline, severity, affected_features)
         expected_bucket = "MODERATE" if severity < 1.5 else "SEVERE"
         expected_action = "ALERT" if severity < 1.5 else "ESCALATE"
         config.description = f"Gradual mean shift ({severity:.1f}x severity)"
-        
+
     elif scenario == DriftScenario.SUDDEN_MEAN_SHIFT:
         modified = inject_sudden_mean_shift(baseline, severity, affected_features)
         expected_bucket = "SEVERE" if severity < 1.5 else "CRITICAL"
         expected_action = "ESCALATE" if severity < 1.5 else "HALT"
         config.description = f"Sudden mean shift ({severity:.1f}x severity)"
-        
+
     elif scenario == DriftScenario.VARIANCE_EXPLOSION:
         modified = inject_variance_explosion(baseline, severity, affected_features)
         expected_bucket = "MODERATE" if severity < 1.5 else "SEVERE"
         expected_action = "ALERT" if severity < 1.5 else "ESCALATE"
         config.description = f"Variance explosion ({severity:.1f}x severity)"
-        
+
     # ML-04 scenarios
     elif scenario == DriftScenario.ADVERSARIAL_OUTLIERS:
         modified = inject_adversarial_outliers(baseline, severity, affected_features)
         expected_bucket = "CRITICAL"
         expected_action = "HALT"
         config.description = f"Adversarial outliers ({severity:.1f}x severity)"
-        
+
     elif scenario == DriftScenario.ADVERSARIAL_BOUNDARY:
         modified = inject_adversarial_boundary(baseline)
         expected_bucket = "MODERATE"  # Less detectable
         expected_action = "ALERT"
         config.description = "Adversarial boundary attack"
-        
+
     else:
         raise ValueError(f"Unknown scenario: {scenario}")
-    
+
     return InjectedDrift(
         config=config,
         baseline_stats=baseline,
@@ -451,14 +451,14 @@ def generate_drill_evidence(
     actual_action: str,
 ) -> Dict[str, Any]:
     """Generate evidence artifact for audit trail.
-    
+
     Args:
         drill_id: Failure drill identifier (e.g., "ML-01")
         scenario: Drift scenario used
         injected: Injection results
         actual_bucket: Observed drift bucket
         actual_action: Observed action
-        
+
     Returns:
         Evidence dictionary for WRAP
     """

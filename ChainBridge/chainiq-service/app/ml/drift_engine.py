@@ -112,10 +112,10 @@ DEFAULT_RISK_MULTIPLIER_CONFIG = {
 
 class DriftAction(str, Enum):
     """Required action for drift level.
-    
+
     A10 LOCK: Drift ESCALATES, never auto-corrects.
     """
-    
+
     CONTINUE = "CONTINUE"  # Normal operation
     MONITOR = "MONITOR"  # Log only, watch closely
     ALERT = "ALERT"  # Notify team
@@ -135,13 +135,13 @@ DRIFT_RESPONSE_POLICY = {
 
 def get_drift_action(bucket: DriftBucket) -> DriftAction:
     """Get required action for drift bucket.
-    
+
     A10 LOCK INVARIANT: This function NEVER returns auto-correction actions.
     Drift is ALWAYS escalated according to policy.
-    
+
     Args:
         bucket: Drift severity bucket
-        
+
     Returns:
         Required action from DRIFT_RESPONSE_POLICY
     """
@@ -150,12 +150,12 @@ def get_drift_action(bucket: DriftBucket) -> DriftAction:
 
 def should_halt_scoring(bucket: DriftBucket) -> bool:
     """Check if drift level requires halting new scores.
-    
+
     A10 LOCK: CRITICAL drift MUST halt scoring until human review.
-    
+
     Args:
         bucket: Drift severity bucket
-        
+
     Returns:
         True if scoring should be halted
     """

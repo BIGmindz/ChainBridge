@@ -131,7 +131,7 @@ class TestRiskReplayDeterminism:
         """Same inputs should produce identical hash."""
         hash1 = sample_risk_input.compute_hash()
         hash2 = sample_risk_input.compute_hash()
-        
+
         assert hash1 == hash2, "Input hash must be deterministic"
         assert len(hash1) == 64, "Hash should be SHA-256 (64 hex chars)"
 
@@ -142,21 +142,21 @@ class TestRiskReplayDeterminism:
             value_usd=200000.0,
             carrier_id="CARR-002",
         )
-        
+
         hash1 = sample_risk_input.compute_hash()
         hash2 = input2.compute_hash()
-        
+
         assert hash1 != hash2, "Different inputs must produce different hashes"
 
     def test_output_hash_is_deterministic(self, sample_risk_output: RiskOutput):
         """Output hash should be deterministic."""
         hash1 = sample_risk_output.compute_hash()
         hash2 = sample_risk_output.compute_hash()
-        
+
         assert hash1 == hash2, "Output hash must be deterministic"
 
     def test_replay_verification_passes_for_identical_output(
-        self, 
+        self,
         sample_risk_input: RiskInput,
         sample_risk_output: RiskOutput,
     ):
@@ -174,9 +174,9 @@ class TestRiskReplayDeterminism:
             evaluation_id=str(uuid.uuid4()),  # Different eval ID OK
             input_hash=sample_risk_input.compute_hash(),
         )
-        
+
         result = verify_replay(sample_risk_input, sample_risk_output, replay_output)
-        
+
         assert result.verified, "Replay should verify for identical outputs"
         assert result.outputs_match, "Output hashes should match"
         assert result.model_version_match, "Model versions should match"
@@ -199,9 +199,9 @@ class TestRiskReplayDeterminism:
             evaluation_id=str(uuid.uuid4()),
             input_hash=sample_risk_input.compute_hash(),
         )
-        
+
         result = verify_replay(sample_risk_input, sample_risk_output, replay_output)
-        
+
         assert not result.outputs_match, "Different scores should not match"
         assert not result.verified, "Replay should fail verification"
 
@@ -223,9 +223,9 @@ class TestRiskReplayDeterminism:
             evaluation_id=str(uuid.uuid4()),
             input_hash=sample_risk_input.compute_hash(),
         )
-        
+
         result = verify_replay(sample_risk_input, sample_risk_output, replay_output)
-        
+
         assert not result.model_version_match, "Model versions should not match"
 
 
@@ -258,11 +258,11 @@ class TestEngineReplayDeterminism:
             lane_risk_index=0.5,
             border_crossing_count=1,
         )
-        
+
         # Score twice
         result1 = compute_risk_score(shipment, carrier, lane)
         result2 = compute_risk_score(shipment, carrier, lane)
-        
+
         assert result1.score == result2.score, "Scores must be identical"
         assert result1.band == result2.band, "Bands must be identical"
         assert result1.reasons == result2.reasons, "Reasons must be identical"
@@ -271,7 +271,7 @@ class TestEngineReplayDeterminism:
     def test_engine_model_version_is_immutable(self):
         """Model version should be a constant."""
         assert MODEL_VERSION == "chainiq_v1_maggie", "Model version must be locked"
-        
+
         # Score should always include version
         shipment = ShipmentFeatures(
             value_usd=50000.0,
@@ -293,7 +293,7 @@ class TestEngineReplayDeterminism:
             lane_risk_index=0.3,
             border_crossing_count=0,
         )
-        
+
         result = compute_risk_score(shipment, carrier, lane)
         assert result.model_version == MODEL_VERSION
 
@@ -319,18 +319,18 @@ class TestEngineReplayDeterminism:
             lane_risk_index=0.9,
             border_crossing_count=3,
         )
-        
+
         # Run 100 times
         results = [compute_risk_score(shipment, carrier, lane) for _ in range(100)]
-        
+
         # All scores must be identical
         scores = [r.score for r in results]
         assert len(set(scores)) == 1, f"All scores must be identical, got {set(scores)}"
-        
+
         # All bands must be identical
         bands = [r.band for r in results]
         assert len(set(bands)) == 1, "All bands must be identical"
-        
+
         # All reasons must be identical
         reasons_sets = [tuple(r.reasons) for r in results]
         assert len(set(reasons_sets)) == 1, "All reasons must be identical"
@@ -346,34 +346,34 @@ class TestAuditTrailSupport:
     def test_input_serialization_is_reversible(self, sample_risk_input: RiskInput):
         """Input should serialize and deserialize identically."""
         data = sample_risk_input.to_dict()
-        
+
         # Verify all expected fields present
         assert "shipment_id" in data
         assert "value_usd" in data
         assert "carrier_incident_rate_90d" in data
         assert "lane_risk_index" in data
-        
+
         # Verify JSON serializable
         json_str = json.dumps(data, sort_keys=True)
         parsed = json.loads(json_str)
-        
+
         assert parsed == data, "JSON roundtrip must preserve data"
 
     def test_output_serialization_is_reversible(self, sample_risk_output: RiskOutput):
         """Output should serialize and deserialize identically."""
         data = sample_risk_output.to_dict()
-        
+
         # Verify all expected fields present
         assert "risk_score" in data
         assert "risk_band" in data
         assert "reason_codes" in data
         assert "top_factors" in data
         assert "model_version" in data
-        
+
         # Verify JSON serializable
         json_str = json.dumps(data, sort_keys=True)
         parsed = json.loads(json_str)
-        
+
         assert parsed == data, "JSON roundtrip must preserve data"
 
     def test_replay_result_contains_all_verification_info(
@@ -394,9 +394,9 @@ class TestAuditTrailSupport:
             evaluation_id=str(uuid.uuid4()),
             input_hash=sample_risk_input.compute_hash(),
         )
-        
+
         result = verify_replay(sample_risk_input, sample_risk_output, replay_output)
-        
+
         # All verification fields populated
         assert result.original_output_hash, "Original hash required"
         assert result.replay_output_hash, "Replay hash required"

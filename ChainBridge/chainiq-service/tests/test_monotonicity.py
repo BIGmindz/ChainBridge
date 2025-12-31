@@ -113,7 +113,7 @@ class TestCarrierIncidentRateMonotonicity:
     ):
         """Higher incident rate must not decrease score."""
         incident_rates = [0.01, 0.03, 0.05, 0.08, 0.10, 0.15, 0.20]
-        
+
         scores = []
         for rate in incident_rates:
             carrier = CarrierProfile(
@@ -124,7 +124,7 @@ class TestCarrierIncidentRateMonotonicity:
             )
             result = compute_risk_score(baseline_shipment, carrier, baseline_lane)
             scores.append(result.score)
-        
+
         # Verify monotonicity: each score >= previous
         for i in range(1, len(scores)):
             assert scores[i] >= scores[i-1], (
@@ -144,9 +144,9 @@ class TestCarrierIncidentRateMonotonicity:
             tenure_days=30,
             on_time_rate=0.50,
         )
-        
+
         result = compute_risk_score(baseline_shipment, carrier, baseline_lane)
-        
+
         # Should be at least medium risk
         assert result.score >= 40, "Extreme incident rate should elevate score"
 
@@ -161,7 +161,7 @@ class TestDelayEventsMonotonicity:
     ):
         """More delays must not decrease score."""
         delay_counts = [0, 1, 2, 3, 5, 10]
-        
+
         scores = []
         for delays in delay_counts:
             shipment = ShipmentFeatures(
@@ -174,7 +174,7 @@ class TestDelayEventsMonotonicity:
             )
             result = compute_risk_score(shipment, baseline_carrier, baseline_lane)
             scores.append(result.score)
-        
+
         # Verify monotonicity
         for i in range(1, len(scores)):
             assert scores[i] >= scores[i-1], (
@@ -193,7 +193,7 @@ class TestIoTAlertMonotonicity:
     ):
         """More IoT alerts must not decrease score."""
         alert_counts = [0, 1, 2, 3, 5, 10]
-        
+
         scores = []
         for alerts in alert_counts:
             shipment = ShipmentFeatures(
@@ -206,7 +206,7 @@ class TestIoTAlertMonotonicity:
             )
             result = compute_risk_score(shipment, baseline_carrier, baseline_lane)
             scores.append(result.score)
-        
+
         # Verify monotonicity
         for i in range(1, len(scores)):
             assert scores[i] >= scores[i-1], (
@@ -225,7 +225,7 @@ class TestBorderCrossingMonotonicity:
     ):
         """More border crossings must not decrease score."""
         crossing_counts = [0, 1, 2, 3, 5]
-        
+
         scores = []
         for crossings in crossing_counts:
             lane = LaneProfile(
@@ -236,7 +236,7 @@ class TestBorderCrossingMonotonicity:
             )
             result = compute_risk_score(baseline_shipment, baseline_carrier, lane)
             scores.append(result.score)
-        
+
         # Verify monotonicity
         for i in range(1, len(scores)):
             assert scores[i] >= scores[i-1], (
@@ -255,7 +255,7 @@ class TestValueMonotonicity:
     ):
         """Higher cargo value must not decrease score."""
         values = [10000, 50000, 100000, 150000, 250000, 500000, 1000000]
-        
+
         scores = []
         for value in values:
             shipment = ShipmentFeatures(
@@ -268,7 +268,7 @@ class TestValueMonotonicity:
             )
             result = compute_risk_score(shipment, baseline_carrier, baseline_lane)
             scores.append(result.score)
-        
+
         # Verify monotonicity
         for i in range(1, len(scores)):
             assert scores[i] >= scores[i-1], (
@@ -287,7 +287,7 @@ class TestLaneRiskIndexMonotonicity:
     ):
         """Higher lane risk index must not decrease score."""
         risk_indices = [0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.0]
-        
+
         scores = []
         for risk_idx in risk_indices:
             lane = LaneProfile(
@@ -298,7 +298,7 @@ class TestLaneRiskIndexMonotonicity:
             )
             result = compute_risk_score(baseline_shipment, baseline_carrier, lane)
             scores.append(result.score)
-        
+
         # Verify monotonicity
         for i in range(1, len(scores)):
             assert scores[i] >= scores[i-1], (
@@ -336,9 +336,9 @@ class TestBoundaryConditions:
             lane_risk_index=0.01,  # Very safe lane
             border_crossing_count=0,
         )
-        
+
         result = compute_risk_score(shipment, carrier, lane)
-        
+
         assert result.score <= 30, f"Minimum risk should be LOW band, got score {result.score}"
         assert result.band == RiskBand.LOW, f"Expected LOW band, got {result.band}"
 
@@ -364,9 +364,9 @@ class TestBoundaryConditions:
             lane_risk_index=1.0,  # Maximum risk lane
             border_crossing_count=10,
         )
-        
+
         result = compute_risk_score(shipment, carrier, lane)
-        
+
         assert result.score >= 70, f"Maximum risk should be HIGH band, got score {result.score}"
         assert result.band == RiskBand.HIGH, f"Expected HIGH band, got {result.band}"
 
@@ -397,7 +397,7 @@ class TestBoundaryConditions:
                 LaneProfile(origin="X", destination="Y", lane_risk_index=1.0, border_crossing_count=100),
             ),
         ]
-        
+
         for shipment, carrier, lane in test_cases:
             result = compute_risk_score(shipment, carrier, lane)
             assert 0 <= result.score <= 100, f"Score out of range: {result.score}"
@@ -420,9 +420,9 @@ class TestCanonicalConstraints:
             "value_usd",
             "lane_risk_index",
         }
-        
+
         actual_features = {c.feature_name for c in MONOTONIC_FEATURES}
-        
+
         assert expected_features == actual_features, (
             f"Missing features: {expected_features - actual_features}, "
             f"Extra features: {actual_features - expected_features}"
@@ -442,13 +442,13 @@ class TestCanonicalConstraints:
             feature_name="test_feature",
             direction="increasing",
         )
-        
+
         # Valid: higher feature, higher score
         assert constraint.validate(1.0, 2.0, 50.0, 60.0) is True
-        
+
         # Valid: same feature, same score
         assert constraint.validate(1.0, 1.0, 50.0, 50.0) is True
-        
+
         # Invalid: higher feature, lower score
         assert constraint.validate(1.0, 2.0, 60.0, 50.0) is False
 
@@ -474,9 +474,9 @@ class TestReasonCodes:
             iot_alert_count=0,
             recent_delay_events=0,
         )
-        
+
         result = compute_risk_score(shipment, baseline_carrier, baseline_lane)
-        
+
         assert any("High Value" in r or "100k" in r for r in result.reasons), (
             f"Expected high value reason, got: {result.reasons}"
         )
@@ -495,9 +495,9 @@ class TestReasonCodes:
             iot_alert_count=0,
             recent_delay_events=0,
         )
-        
+
         result = compute_risk_score(shipment, baseline_carrier, baseline_lane)
-        
+
         assert any("Hazmat" in r for r in result.reasons), (
             f"Expected hazmat reason, got: {result.reasons}"
         )
@@ -516,9 +516,9 @@ class TestReasonCodes:
             iot_alert_count=3,
             recent_delay_events=0,
         )
-        
+
         result = compute_risk_score(shipment, baseline_carrier, baseline_lane)
-        
+
         assert any("IoT" in r for r in result.reasons), (
             f"Expected IoT alert reason, got: {result.reasons}"
         )
