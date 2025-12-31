@@ -1,8 +1,8 @@
 # ═══════════════════════════════════════════════════════════════════════════════
 # ChainBridge Lint v2 — Platform-Wide Invariant Compiler & Runtime Enforcement
-# PAC-JEFFREY-P11R: Option A Execution · Runtime & ACK Determinism Validation
-# Supersedes: PAC-JEFFREY-P10R, PAC-JEFFREY-P07, PAC-JEFFREY-C07R (LAW)
-# GOLD STANDARD · FAIL_CLOSED
+# PAC-JEFFREY-C16R: BER Formalization · P16 Agent Modularity (LAW)
+# Supersedes: PAC-JEFFREY-P16 (EXECUTION OUTPUT ONLY)
+# GOLD STANDARD · FAIL_CLOSED · BER FORMALIZATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
 """
@@ -24,36 +24,93 @@ PLATFORM INVARIANTS (PAC-JEFFREY-P10R Block 6):
 - INV-LINT-PLAT-004: API admission requires lint PASS
 - INV-LINT-PLAT-005: Orchestration order deterministic
 
-P11R EXECUTION MODEL (PAC-JEFFREY-P11R Block 2):
+C16R EXECUTION MODEL (PAC-JEFFREY-C16R Block 2):
+- Execution: NONE (CORRECTIVE · LAW)
+- Automation Target: TRUE
+- Binding Authority: JEFFREY (CTO)
+- Fail Mode: HARD_FAIL
+- Drift Tolerance: ZERO
+
+C16R CHECKPOINT SEQUENCE (Block 5) — BER FORMALIZATION · 3 CHECKPOINTS:
+1. BER_ADMISSION  → S-INV, A-INV
+2. BER_REVIEW     → X-INV, C-INV
+3. BER_FINALITY   → F-INV
+
+C16R ACTIVATED AGENTS (Block 4) — 2 AGENTS · NON_EXECUTING:
+- BENSON (GID-00) — orchestration · NON_EXECUTING
+- ALEX (GID-08) — governance · NON_EXECUTING
+
+C16R BER GOVERNANCE INVARIANTS (Block 6):
+- INV-BER-016-01: execution_binding REQUIRED (explicit)
+- INV-BER-016-02: ber_classification ∈ {PROVISIONAL, BINDING}
+- INV-BER-016-03: ledger_commit_hash REQUIRED for BINDING
+- INV-BER-016-04: settlement_effect ∈ {NONE, BINDING}
+- INV-BER-016-05: reviewer_authority explicit
+- INV-BER-016-06: training_signal REQUIRED
+- INV-BER-016-07: positive_closure REQUIRED
+
+C16R BER FINALITY (Block 9):
+- ber_id: BER-PAC-JEFFREY-P16
+- ber_classification: PROVISIONAL
+- execution_binding: false
+- ledger_commit_hash: null
+- settlement_effect: NONE
+- settlement: FORBIDDEN
+
+C16R TRAINING SIGNAL (Block 10):
+- TS-C16R-001: BER binding semantics must be explicit and lint-enforced
+
+P16 EXECUTION MODEL (PAC-JEFFREY-P16 Block 2):
 - Execution Model: PARALLEL
 - Execution Barrier: AGENT_ACK_BARRIER
 - Barrier Release: ALL_AGENT_ACKED
+- Mixed Mode Execution: FORBIDDEN
 - Fail Mode: HARD_FAIL
 - Checkpoint Skip: FORBIDDEN
 - Drift Tolerance: ZERO
 
-P11R CHECKPOINT SEQUENCE (Block 5) — STRICT ORDER · NON-SKIPPABLE:
-1. PAC_ADMISSION
-2. RUNTIME_ACTIVATION
-3. RUNTIME_ACK_COLLECTION
-4. AGENT_ACTIVATION
-5. AGENT_ACK_COLLECTION
-6. AGENT_EXECUTION
-7. REVIEW_GATES
-8. BER_ELIGIBILITY
+P16 CHECKPOINT SEQUENCE (Block 5) — STRICT ORDER · NON-SKIPPABLE · 8 CHECKPOINTS:
+1. PAC_ADMISSION        → S-INV, A-INV, T-INV
+2. RUNTIME_ACTIVATION   → S-INV
+3. RUNTIME_ACK          → A-INV
+4. AGENT_ACTIVATION     → A-INV
+5. AGENT_ACK_COLLECTION → A-INV
+6. AGENT_EXECUTION      → M-INV
+7. REVIEW_GATES         → X-INV, C-INV
+8. BER_ELIGIBILITY      → F-INV
 
-P11R ACTIVATED AGENTS (Block 4):
-- BENSON (GID-00) — orchestration
-- CODY (GID-01) — backend
-- SONNY (GID-02) — frontend
-- DAN (GID-07) — ci_cd
-- SAM (GID-06) — security
-- ATLAS (GID-11) — repo_integrity
-- ALEX (GID-08) — governance
+P16 OBJECTIVE (Block 1):
+- Establish agent-type modularity under canonical governance "uniform"
+- Prove non-software agents can be hot-swapped without governance degradation
+- Outcome: Any compliant agent operates at identical determinism, auditability, finality
 
-SCHEMA REFERENCES:
+P16 ACTIVATED AGENTS (Block 4) — 8 AGENTS WITH SCOPES:
+- BENSON (GID-00) — orchestration · execution control
+- CODY (GID-01) — backend · system primitives
+- SONNY (GID-02) — frontend · OC surfaces
+- DAN (GID-07) — ci_cd · pipeline gates
+- SAM (GID-06) — security · threat & controls
+- ATLAS (GID-11) — repo_integrity · hygiene
+- ALEX (GID-08) — governance · law & invariants
+- PAX (GID-05) — product · constraint modeling
+
+P16 BER (Block 8):
+- Classification: PROVISIONAL
+- execution_binding: false
+- ledger_commit: FORBIDDEN
+- settlement_effect: NONE
+
+P16 TRAINING SIGNALS (Block 9):
+- TS-P16-001: Agent-uniform decoupling validated
+- TS-P16-002: Governance-first execution portability confirmed
+
+SCHEMA REFERENCES (PINNED):
+- pac_schema: CHAINBRIDGE_CANONICAL_PAC_SCHEMA@v1.0.0
+- wrap_schema: CHAINBRIDGE_CANONICAL_WRAP_SCHEMA@v1.0.0
+- ber_schema: CHAINBRIDGE_CANONICAL_BER_SCHEMA@v1.0.0
+- ack_schema: AGENT_ACK_EVIDENCE_SCHEMA@v1.0.0
+- rg_schema: RG01_SCHEMA@v1.0.0
 - lint_schema: CHAINBRIDGE_LINT_V2_INVARIANT_SCHEMA@v1.0.0
-- runtime_schema: PAC_EXECUTION_RUNTIME_TEMPLATE_V1
 
 Rule Engine: Deterministic (Pydantic-based)
 Output: Binary { valid: true|false, violation_id }
@@ -236,11 +293,18 @@ class RuntimeActivationACK:
 @dataclass
 class AgentActivationACK:
     """
-    Agent Activation ACK per PAC-JEFFREY-P11R Block 4.
+    Agent Activation ACK per PAC-JEFFREY-P12 Block 5.
     
     Explicit ACK REQUIRED per agent before execution.
     No execution before ACK.
     No undeclared agents permitted.
+    
+    P12 Enhanced Evidence Fields:
+    - latency_ms: ACK response latency
+    - authorization_scope: Agent's authorized scope
+    - evidence_hash: SHA-256 hash of ACK evidence
+    
+    Schema: AGENT_ACK_EVIDENCE_SCHEMA@v1.0.0
     """
     ack_id: str = field(default_factory=lambda: f"AGENT-ACK-{uuid4().hex[:8].upper()}")
     pac_id: str = ""
@@ -249,6 +313,20 @@ class AgentActivationACK:
     lane: str = ""
     activated: bool = False
     acked_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    # P12 Enhanced Evidence Fields (Block 5)
+    latency_ms: int = 0
+    authorization_scope: str = ""  # e.g., "full", "code", "ui", "gates", "review", "hygiene", "law", "constraints"
+    evidence_hash: str = field(default_factory=lambda: "")
+    
+    def compute_evidence_hash(self) -> str:
+        """Compute SHA-256 hash of ACK evidence."""
+        evidence_data = f"{self.ack_id}:{self.pac_id}:{self.gid}:{self.agent_name}:{self.lane}:{self.acked_at}"
+        return hashlib.sha256(evidence_data.encode()).hexdigest()[:16]
+    
+    def __post_init__(self) -> None:
+        """Auto-compute evidence hash if not provided."""
+        if not self.evidence_hash:
+            self.evidence_hash = self.compute_evidence_hash()
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -259,6 +337,9 @@ class AgentActivationACK:
             "lane": self.lane,
             "activated": self.activated,
             "acked_at": self.acked_at,
+            "latency_ms": self.latency_ms,
+            "authorization_scope": self.authorization_scope,
+            "evidence_hash": self.evidence_hash,
         }
 
 
@@ -325,6 +406,530 @@ P11R_CHECKPOINT_SEQUENCE: List[str] = [
     "REVIEW_GATES",
     "BER_ELIGIBILITY",
 ]
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# P12 CHECKPOINT SEQUENCE & INVARIANT MAPPING (PAC-JEFFREY-P12 Block 6)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# P12 Checkpoint Sequence (Block 6) — STRICT ORDER · NON-SKIPPABLE
+P12_CHECKPOINT_SEQUENCE: List[str] = [
+    "PAC_ADMISSION",
+    "RUNTIME_ACTIVATION",
+    "RUNTIME_ACK",
+    "AGENT_ACTIVATION",
+    "AGENT_EXECUTION",
+    "REVIEW_GATES",
+    "BER_ELIGIBILITY",
+    "FINALITY_SEAL",
+]
+
+# P12 Checkpoint → Invariant Class Mapping (Block 6)
+P12_CHECKPOINT_INVARIANT_MAPPING: Dict[str, List[str]] = {
+    "PAC_ADMISSION": ["S-INV", "A-INV", "T-INV"],
+    "RUNTIME_ACTIVATION": ["S-INV"],
+    "RUNTIME_ACK": ["A-INV"],
+    "AGENT_ACTIVATION": ["A-INV"],
+    "AGENT_EXECUTION": ["M-INV"],
+    "REVIEW_GATES": ["X-INV", "C-INV"],
+    "BER_ELIGIBILITY": ["F-INV"],
+    "FINALITY_SEAL": ["F-INV"],
+}
+
+
+def get_p12_required_invariants(checkpoint: str) -> List[str]:
+    """Get required invariant classes for a P12 checkpoint."""
+    return P12_CHECKPOINT_INVARIANT_MAPPING.get(checkpoint, [])
+
+
+def validate_p12_checkpoint_invariants(
+    checkpoint: str, evaluated_classes: Set[str]
+) -> Tuple[bool, Optional[str]]:
+    """
+    Validate that all required invariant classes were evaluated at P12 checkpoint.
+    
+    Returns:
+        (success, error_message)
+    """
+    required = set(P12_CHECKPOINT_INVARIANT_MAPPING.get(checkpoint, []))
+    missing = required - evaluated_classes
+    if missing:
+        return False, f"P12 checkpoint {checkpoint} missing invariants: {missing}"
+    return True, None
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# P13 CHECKPOINT SEQUENCE & INVARIANT MAPPING (PAC-JEFFREY-P13 Block 5)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# P13 Checkpoint Sequence (Block 5) — STRICT ORDER · NON-SKIPPABLE
+P13_CHECKPOINT_SEQUENCE: List[str] = [
+    "PAC_ADMISSION",
+    "RUNTIME_ACTIVATION",
+    "RUNTIME_ACK",
+    "AGENT_ACTIVATION",
+    "AGENT_ACK_COLLECTION",  # P13 addition: explicit ACK collection checkpoint
+    "AGENT_EXECUTION",
+    "REVIEW_GATES",
+    "BER_ELIGIBILITY",
+]
+
+# P13 Checkpoint → Invariant Class Mapping (Block 5)
+P13_CHECKPOINT_INVARIANT_MAPPING: Dict[str, List[str]] = {
+    "PAC_ADMISSION": ["S-INV", "A-INV", "T-INV"],
+    "RUNTIME_ACTIVATION": ["S-INV"],
+    "RUNTIME_ACK": ["A-INV"],
+    "AGENT_ACTIVATION": ["A-INV"],
+    "AGENT_ACK_COLLECTION": ["A-INV"],  # P13: ACK collection authority validation
+    "AGENT_EXECUTION": ["M-INV"],
+    "REVIEW_GATES": ["X-INV", "C-INV"],
+    "BER_ELIGIBILITY": ["F-INV"],
+}
+
+
+def get_p13_required_invariants(checkpoint: str) -> List[str]:
+    """Get required invariant classes for a P13 checkpoint."""
+    return P13_CHECKPOINT_INVARIANT_MAPPING.get(checkpoint, [])
+
+
+def validate_p13_checkpoint_invariants(
+    checkpoint: str, evaluated_classes: Set[str]
+) -> Tuple[bool, Optional[str]]:
+    """
+    Validate that all required invariant classes were evaluated at P13 checkpoint.
+    
+    Returns:
+        (success, error_message)
+    """
+    required = set(P13_CHECKPOINT_INVARIANT_MAPPING.get(checkpoint, []))
+    missing = required - evaluated_classes
+    if missing:
+        return False, f"P13 checkpoint {checkpoint} missing invariants: {missing}"
+    return True, None
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# P14R CHECKPOINT SEQUENCE & INVARIANT MAPPING (PAC-JEFFREY-P14R Block 5)
+# BINDING SETTLEMENT · 9 CHECKPOINTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# P14R Checkpoint Sequence (Block 5) — STRICT ORDER · NON-SKIPPABLE · 9 CHECKPOINTS
+P14R_CHECKPOINT_SEQUENCE: List[str] = [
+    "PAC_ADMISSION",
+    "RUNTIME_ACTIVATION",
+    "RUNTIME_ACK",
+    "AGENT_ACTIVATION",
+    "AGENT_ACK_COLLECTION",
+    "AGENT_EXECUTION",
+    "REVIEW_GATES",
+    "LEDGER_COMMIT",    # P14R ADDITION: Binding settlement requires ledger commit
+    "FINALITY_SEAL",
+]
+
+# P14R Checkpoint → Invariant Class Mapping (Block 5)
+P14R_CHECKPOINT_INVARIANT_MAPPING: Dict[str, List[str]] = {
+    "PAC_ADMISSION": ["S-INV", "A-INV", "T-INV"],
+    "RUNTIME_ACTIVATION": ["S-INV"],
+    "RUNTIME_ACK": ["A-INV"],
+    "AGENT_ACTIVATION": ["A-INV"],
+    "AGENT_ACK_COLLECTION": ["A-INV"],
+    "AGENT_EXECUTION": ["M-INV"],
+    "REVIEW_GATES": ["X-INV", "C-INV"],
+    "LEDGER_COMMIT": ["F-INV"],     # P14R: Ledger commit requires finality validation
+    "FINALITY_SEAL": ["F-INV"],
+}
+
+# P14R BER Governance Invariants (Block 6) — LOCKED
+P14R_BER_GOVERNANCE_INVARIANTS: List[str] = [
+    "INV-BER-001",  # execution_binding REQUIRED
+    "INV-BER-002",  # ledger_commit_hash REQUIRED
+    "INV-BER-003",  # settlement_effect REQUIRED
+    "INV-BER-004",  # reviewer_authority REQUIRED
+    "INV-BER-005",  # training_signals REQUIRED
+    "INV-BER-006",  # positive_closure REQUIRED
+]
+
+
+def get_p14r_required_invariants(checkpoint: str) -> List[str]:
+    """Get required invariant classes for a P14R checkpoint."""
+    return P14R_CHECKPOINT_INVARIANT_MAPPING.get(checkpoint, [])
+
+
+def validate_p14r_checkpoint_invariants(
+    checkpoint: str, evaluated_classes: Set[str]
+) -> Tuple[bool, Optional[str]]:
+    """
+    Validate that all required invariant classes were evaluated at P14R checkpoint.
+    
+    Returns:
+        (success, error_message)
+    """
+    required = set(P14R_CHECKPOINT_INVARIANT_MAPPING.get(checkpoint, []))
+    missing = required - evaluated_classes
+    if missing:
+        return False, f"P14R checkpoint {checkpoint} missing invariants: {missing}"
+    return True, None
+
+
+class P14RBERClassification(str, Enum):
+    """BER Classification per P14R Block 9 — BINDING."""
+    FINAL = "FINAL"          # P14R: Full binding settlement
+    PROVISIONAL = "PROVISIONAL"  # Fallback (should not be used in P14R)
+
+
+@dataclass
+class P14RBERStatus:
+    """
+    BER Status per PAC-JEFFREY-P14R Block 9 — BINDING SETTLEMENT.
+    
+    P14R BER is FINAL (BINDING).
+    execution_binding = TRUE
+    ledger_commit_hash = REQUIRED
+    settlement_effect = BINDING
+    """
+    ber_id: str = field(default_factory=lambda: f"BER-P14R-{uuid4().hex[:8].upper()}")
+    pac_id: str = "PAC-JEFFREY-P14R"
+    classification: P14RBERClassification = P14RBERClassification.FINAL
+    execution_binding: bool = True
+    ledger_commit_hash: str = ""  # REQUIRED for P14R
+    settlement_effect: str = "BINDING"
+    reviewer_authority: str = ""  # INV-BER-004
+    training_signals_present: bool = False  # INV-BER-005
+    positive_closure: bool = False  # INV-BER-006
+    finalized_at: str = ""
+    
+    def is_valid_for_finality(self) -> Tuple[bool, List[str]]:
+        """Validate P14R BER meets all governance invariants."""
+        issues = []
+        
+        if not self.execution_binding:
+            issues.append("INV-BER-001: execution_binding must be TRUE")
+        if not self.ledger_commit_hash:
+            issues.append("INV-BER-002: ledger_commit_hash REQUIRED")
+        if self.settlement_effect != "BINDING":
+            issues.append("INV-BER-003: settlement_effect must be BINDING")
+        if not self.reviewer_authority:
+            issues.append("INV-BER-004: reviewer_authority REQUIRED")
+        if not self.training_signals_present:
+            issues.append("INV-BER-005: training_signals REQUIRED")
+        if not self.positive_closure:
+            issues.append("INV-BER-006: positive_closure REQUIRED")
+        
+        return len(issues) == 0, issues
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "ber_id": self.ber_id,
+            "pac_id": self.pac_id,
+            "classification": self.classification.value,
+            "execution_binding": self.execution_binding,
+            "ledger_commit_hash": self.ledger_commit_hash,
+            "settlement_effect": self.settlement_effect,
+            "reviewer_authority": self.reviewer_authority,
+            "training_signals_present": self.training_signals_present,
+            "positive_closure": self.positive_closure,
+            "finalized_at": self.finalized_at,
+        }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# P15R CHECKPOINT SEQUENCE & INVARIANT MAPPING (PAC-JEFFREY-P15R Block 5)
+# GOVERNANCE SATURATION · 10 CHECKPOINTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# P15R Checkpoint Sequence (Block 5) — STRICT ORDER · NON-SKIPPABLE · 10 CHECKPOINTS
+P15R_CHECKPOINT_SEQUENCE: List[str] = [
+    "PAC_ADMISSION",
+    "RUNTIME_ACTIVATION",
+    "RUNTIME_ACK_COLLECTION",  # P15R: Explicit runtime ACK collection
+    "AGENT_ACTIVATION",
+    "AGENT_ACK_COLLECTION",
+    "AGENT_EXECUTION",
+    "REVIEW_GATES",
+    "BER_ELIGIBILITY",          # P15R: BER eligibility before commit
+    "LEDGER_COMMIT",
+    "FINALITY_SEAL",
+]
+
+# P15R Checkpoint → Invariant Class Mapping (Block 5)
+P15R_CHECKPOINT_INVARIANT_MAPPING: Dict[str, List[str]] = {
+    "PAC_ADMISSION": ["S-INV", "A-INV", "T-INV"],
+    "RUNTIME_ACTIVATION": ["S-INV"],
+    "RUNTIME_ACK_COLLECTION": ["A-INV"],
+    "AGENT_ACTIVATION": ["A-INV"],
+    "AGENT_ACK_COLLECTION": ["A-INV"],
+    "AGENT_EXECUTION": ["M-INV"],
+    "REVIEW_GATES": ["X-INV", "C-INV"],
+    "BER_ELIGIBILITY": ["F-INV"],
+    "LEDGER_COMMIT": ["F-INV"],
+    "FINALITY_SEAL": ["F-INV"],
+}
+
+# P15R Governance Saturation Scope (Block 1)
+P15R_GOVERNANCE_SATURATION_SCOPE: List[str] = [
+    "control_plane",
+    "governance_engine",
+    "lint_v2_compiler",
+    "runtime_admission",
+    "operator_console",
+    "api_routers",
+    "ber_settlement",
+]
+
+# P15R Runtime Activation Requirements (Block 3) — ALL REQUIRED TRUE
+P15R_RUNTIME_ACTIVATION_REQUIREMENTS: List[str] = [
+    "schema_validation_enabled",
+    "invariant_registry_loaded",
+    "lint_v2_compiler_active",
+    "runtime_ack_enforced",
+    "agent_ack_enforced",
+    "deterministic_execution_order",
+    "fail_closed_enabled",
+]
+
+
+def get_p15r_required_invariants(checkpoint: str) -> List[str]:
+    """Get required invariant classes for a P15R checkpoint."""
+    return P15R_CHECKPOINT_INVARIANT_MAPPING.get(checkpoint, [])
+
+
+def validate_p15r_checkpoint_invariants(
+    checkpoint: str, evaluated_classes: Set[str]
+) -> Tuple[bool, Optional[str]]:
+    """
+    Validate that all required invariant classes were evaluated at P15R checkpoint.
+    
+    Returns:
+        (success, error_message)
+    """
+    required = set(P15R_CHECKPOINT_INVARIANT_MAPPING.get(checkpoint, []))
+    missing = required - evaluated_classes
+    if missing:
+        return False, f"P15R checkpoint {checkpoint} missing invariants: {missing}"
+    return True, None
+
+
+def validate_p15r_governance_saturation(
+    covered_scopes: Set[str]
+) -> Tuple[bool, List[str]]:
+    """
+    Validate P15R governance saturation across all required scopes.
+    
+    Returns:
+        (saturated, missing_scopes)
+    """
+    required = set(P15R_GOVERNANCE_SATURATION_SCOPE)
+    missing = required - covered_scopes
+    return len(missing) == 0, list(missing)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# P16 CHECKPOINT SEQUENCE & AGENT MODULARITY (PAC-JEFFREY-P16 Block 5)
+# AGENT MODULARITY & UNIFORMIZATION · 8 CHECKPOINTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# P16 Checkpoint Sequence (Block 5) — STRICT ORDER · NON-SKIPPABLE · 8 CHECKPOINTS
+P16_CHECKPOINT_SEQUENCE: List[str] = [
+    "PAC_ADMISSION",
+    "RUNTIME_ACTIVATION",
+    "RUNTIME_ACK",
+    "AGENT_ACTIVATION",
+    "AGENT_ACK_COLLECTION",
+    "AGENT_EXECUTION",
+    "REVIEW_GATES",
+    "BER_ELIGIBILITY",
+]
+
+# P16 Checkpoint → Invariant Class Mapping (Block 5)
+P16_CHECKPOINT_INVARIANT_MAPPING: Dict[str, List[str]] = {
+    "PAC_ADMISSION": ["S-INV", "A-INV", "T-INV"],
+    "RUNTIME_ACTIVATION": ["S-INV"],
+    "RUNTIME_ACK": ["A-INV"],
+    "AGENT_ACTIVATION": ["A-INV"],
+    "AGENT_ACK_COLLECTION": ["A-INV"],
+    "AGENT_EXECUTION": ["M-INV"],
+    "REVIEW_GATES": ["X-INV", "C-INV"],
+    "BER_ELIGIBILITY": ["F-INV"],
+}
+
+# P16 Agent Scopes (Block 4) — Canonical Agent "Uniform"
+P16_AGENT_SCOPES: Dict[str, str] = {
+    "GID-00": "execution_control",      # BENSON · orchestration
+    "GID-01": "system_primitives",      # CODY · backend
+    "GID-02": "oc_surfaces",            # SONNY · frontend
+    "GID-07": "pipeline_gates",         # DAN · ci_cd
+    "GID-06": "threat_controls",        # SAM · security
+    "GID-11": "hygiene",                # ATLAS · repo_integrity
+    "GID-08": "law_invariants",         # ALEX · governance
+    "GID-05": "constraint_modeling",    # PAX · product
+}
+
+# P16 Training Signals (Block 9)
+P16_TRAINING_SIGNALS: List[str] = [
+    "TS-P16-001",  # Agent-uniform decoupling validated
+    "TS-P16-002",  # Governance-first execution portability confirmed
+]
+
+# P16 Agent Modularity Invariants (Block 1)
+P16_MODULARITY_INVARIANTS: List[str] = [
+    "INV-MOD-001",  # Agent-type modularity under canonical governance uniform
+    "INV-MOD-002",  # Hot-swap without governance degradation
+    "INV-MOD-003",  # Identical determinism across agent types
+    "INV-MOD-004",  # Identical auditability across agent types
+    "INV-MOD-005",  # Identical finality across agent types
+]
+
+
+def get_p16_required_invariants(checkpoint: str) -> List[str]:
+    """Get required invariant classes for a P16 checkpoint."""
+    return P16_CHECKPOINT_INVARIANT_MAPPING.get(checkpoint, [])
+
+
+def validate_p16_checkpoint_invariants(
+    checkpoint: str, evaluated_classes: Set[str]
+) -> Tuple[bool, Optional[str]]:
+    """
+    Validate that all required invariant classes were evaluated at P16 checkpoint.
+    
+    Returns:
+        (success, error_message)
+    """
+    required = set(P16_CHECKPOINT_INVARIANT_MAPPING.get(checkpoint, []))
+    missing = required - evaluated_classes
+    if missing:
+        return False, f"P16 checkpoint {checkpoint} missing invariants: {missing}"
+    return True, None
+
+
+def validate_p16_agent_modularity(
+    agent_gid: str, scope: str
+) -> Tuple[bool, Optional[str]]:
+    """
+    Validate agent scope matches P16 canonical agent uniform.
+    
+    Returns:
+        (valid, error_message)
+    """
+    expected_scope = P16_AGENT_SCOPES.get(agent_gid)
+    if expected_scope is None:
+        return False, f"Unknown agent GID: {agent_gid}"
+    if scope != expected_scope:
+        return False, f"Agent {agent_gid} scope mismatch: expected {expected_scope}, got {scope}"
+    return True, None
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# C16R BER FORMALIZATION (PAC-JEFFREY-C16R Blocks 5-10)
+# CORRECTIVE · LAW · NON_EXECUTING · BER-GRADE ARTIFACT
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# C16R Checkpoint Sequence (Block 5) — BER FORMALIZATION · 3 CHECKPOINTS
+C16R_CHECKPOINT_SEQUENCE: List[str] = [
+    "BER_ADMISSION",
+    "BER_REVIEW",
+    "BER_FINALITY",
+]
+
+# C16R Checkpoint → Invariant Class Mapping (Block 5)
+C16R_CHECKPOINT_INVARIANT_MAPPING: Dict[str, List[str]] = {
+    "BER_ADMISSION": ["S-INV", "A-INV"],
+    "BER_REVIEW": ["X-INV", "C-INV"],
+    "BER_FINALITY": ["F-INV"],
+}
+
+# C16R BER Governance Invariants (Block 6)
+C16R_BER_GOVERNANCE_INVARIANTS: List[str] = [
+    "INV-BER-016-01",  # execution_binding REQUIRED (explicit)
+    "INV-BER-016-02",  # ber_classification ∈ {PROVISIONAL, BINDING}
+    "INV-BER-016-03",  # ledger_commit_hash REQUIRED for BINDING
+    "INV-BER-016-04",  # settlement_effect ∈ {NONE, BINDING}
+    "INV-BER-016-05",  # reviewer_authority explicit
+    "INV-BER-016-06",  # training_signal REQUIRED
+    "INV-BER-016-07",  # positive_closure REQUIRED
+]
+
+# C16R Required WRAPs (Block 7) — 2 AGENTS (NON_EXECUTING)
+C16R_REQUIRED_WRAPS: List[str] = [
+    "WRAP-BENSON-GID00-PAC-JEFFREY-C16R",
+    "WRAP-ALEX-GID08-PAC-JEFFREY-C16R",
+]
+
+# C16R Activated Agents (Block 4) — 2 AGENTS (NON_EXECUTING)
+C16R_ACTIVATED_AGENTS: List[str] = [
+    "GID-00",  # BENSON · orchestration · NON_EXECUTING
+    "GID-08",  # ALEX · governance · NON_EXECUTING
+]
+
+# C16R Review Gates (Block 8) — RG-01 REQUIREMENTS
+C16R_REVIEW_GATES: List[str] = [
+    "structural_conformance",
+    "authority_validation",
+    "cross_artifact_lineage",
+    "invariant_pass",
+    "training_signal_present",
+]
+
+# C16R Training Signal (Block 10)
+C16R_TRAINING_SIGNALS: List[str] = [
+    "TS-C16R-001",  # BER binding semantics must be explicit and lint-enforced
+]
+
+# C16R Positive Closure (Block 10)
+C16R_POSITIVE_CLOSURE: Dict[str, bool] = {
+    "pac_received": True,
+    "all_blocks_present": True,
+    "no_execution_performed": True,
+    "ber_formalized": True,
+    "zero_drift_confirmed": True,
+}
+
+
+@dataclass
+class C16RBERFinality:
+    """
+    C16R BER Finality Declaration (Block 9).
+    
+    Formalizes PAC-JEFFREY-P16 into BER-grade artifact with explicit
+    execution binding, finality, and settlement semantics.
+    """
+    ber_id: str = "BER-PAC-JEFFREY-P16"
+    ber_classification: str = "PROVISIONAL"
+    execution_binding: bool = False
+    ledger_commit_hash: Optional[str] = None
+    settlement_effect: str = "NONE"
+    settlement: str = "FORBIDDEN"
+
+
+def get_c16r_required_invariants(checkpoint: str) -> List[str]:
+    """Get required invariant classes for a C16R checkpoint."""
+    return C16R_CHECKPOINT_INVARIANT_MAPPING.get(checkpoint, [])
+
+
+def validate_c16r_checkpoint_invariants(
+    checkpoint: str, evaluated_classes: Set[str]
+) -> Tuple[bool, Optional[str]]:
+    """
+    Validate that all required invariant classes were evaluated at C16R checkpoint.
+    
+    Returns:
+        (success, error_message)
+    """
+    required = set(C16R_CHECKPOINT_INVARIANT_MAPPING.get(checkpoint, []))
+    missing = required - evaluated_classes
+    if missing:
+        return False, f"C16R checkpoint {checkpoint} missing invariants: {missing}"
+    return True, None
+
+
+def validate_c16r_positive_closure() -> Tuple[bool, List[str]]:
+    """
+    Validate C16R positive closure requirements.
+    
+    Returns:
+        (all_satisfied, missing_requirements)
+    """
+    missing = [k for k, v in C16R_POSITIVE_CLOSURE.items() if not v]
+    return len(missing) == 0, missing
 
 
 @dataclass
@@ -431,6 +1036,371 @@ P11R_REQUIRED_WRAPS: List[str] = [
     "WRAP-ATLAS-GID11-PAC-JEFFREY-P11R",
     "WRAP-ALEX-GID08-PAC-JEFFREY-P11R",
 ]
+
+# P12 Required WRAPs per Block 7 — 8 AGENTS (includes PAX)
+P12_REQUIRED_WRAPS: List[str] = [
+    "WRAP-BENSON-GID00-PAC-JEFFREY-P12",
+    "WRAP-CODY-GID01-PAC-JEFFREY-P12",
+    "WRAP-SONNY-GID02-PAC-JEFFREY-P12",
+    "WRAP-DAN-GID07-PAC-JEFFREY-P12",
+    "WRAP-SAM-GID06-PAC-JEFFREY-P12",
+    "WRAP-ATLAS-GID11-PAC-JEFFREY-P12",
+    "WRAP-ALEX-GID08-PAC-JEFFREY-P12",
+    "WRAP-PAX-GID05-PAC-JEFFREY-P12",
+]
+
+# P13 Required WRAPs per Block 7 — 8 AGENTS
+P13_REQUIRED_WRAPS: List[str] = [
+    "WRAP-BENSON-GID00-PAC-JEFFREY-P13",
+    "WRAP-CODY-GID01-PAC-JEFFREY-P13",
+    "WRAP-SONNY-GID02-PAC-JEFFREY-P13",
+    "WRAP-DAN-GID07-PAC-JEFFREY-P13",
+    "WRAP-SAM-GID06-PAC-JEFFREY-P13",
+    "WRAP-ATLAS-GID11-PAC-JEFFREY-P13",
+    "WRAP-ALEX-GID08-PAC-JEFFREY-P13",
+    "WRAP-PAX-GID05-PAC-JEFFREY-P13",
+]
+
+# P13 Activated Agents (Block 4) — 8 AGENTS
+P13_ACTIVATED_AGENTS: List[str] = [
+    "GID-00",  # BENSON · orchestration · EXECUTING
+    "GID-01",  # CODY · backend · EXECUTING
+    "GID-02",  # SONNY · frontend · EXECUTING
+    "GID-07",  # DAN · ci_cd · EXECUTING
+    "GID-06",  # SAM · security · EXECUTING
+    "GID-11",  # ATLAS · repo_integrity · EXECUTING
+    "GID-08",  # ALEX · governance · EXECUTING
+    "GID-05",  # PAX · product · EXECUTING
+]
+
+# P14R Required WRAPs per Block 7 — 8 AGENTS (BINDING SETTLEMENT)
+P14R_REQUIRED_WRAPS: List[str] = [
+    "WRAP-BENSON-GID00-PAC-JEFFREY-P14R",
+    "WRAP-CODY-GID01-PAC-JEFFREY-P14R",
+    "WRAP-SONNY-GID02-PAC-JEFFREY-P14R",
+    "WRAP-DAN-GID07-PAC-JEFFREY-P14R",
+    "WRAP-SAM-GID06-PAC-JEFFREY-P14R",
+    "WRAP-ATLAS-GID11-PAC-JEFFREY-P14R",
+    "WRAP-ALEX-GID08-PAC-JEFFREY-P14R",
+    "WRAP-PAX-GID05-PAC-JEFFREY-P14R",
+]
+
+# P14R Activated Agents (Block 4) — 8 AGENTS (BINDING SETTLEMENT)
+P14R_ACTIVATED_AGENTS: List[str] = [
+    "GID-00",  # BENSON · orchestration · EXECUTING
+    "GID-01",  # CODY · backend · EXECUTING
+    "GID-02",  # SONNY · frontend · EXECUTING
+    "GID-07",  # DAN · ci_cd · EXECUTING
+    "GID-06",  # SAM · security · EXECUTING
+    "GID-11",  # ATLAS · repo_integrity · EXECUTING
+    "GID-08",  # ALEX · governance · EXECUTING
+    "GID-05",  # PAX · product · EXECUTING
+]
+
+# P15R Required WRAPs per Block 7 — 8 AGENTS (GOVERNANCE SATURATION)
+P15R_REQUIRED_WRAPS: List[str] = [
+    "WRAP-BENSON-GID00-PAC-JEFFREY-P15R",
+    "WRAP-CODY-GID01-PAC-JEFFREY-P15R",
+    "WRAP-SONNY-GID02-PAC-JEFFREY-P15R",
+    "WRAP-DAN-GID07-PAC-JEFFREY-P15R",
+    "WRAP-SAM-GID06-PAC-JEFFREY-P15R",
+    "WRAP-ATLAS-GID11-PAC-JEFFREY-P15R",
+    "WRAP-ALEX-GID08-PAC-JEFFREY-P15R",
+    "WRAP-PAX-GID05-PAC-JEFFREY-P15R",
+]
+
+# P15R Activated Agents (Block 4) — 8 AGENTS (GOVERNANCE SATURATION)
+P15R_ACTIVATED_AGENTS: List[str] = [
+    "GID-00",  # BENSON · orchestration · EXECUTING
+    "GID-01",  # CODY · backend · EXECUTING
+    "GID-02",  # SONNY · frontend · EXECUTING
+    "GID-07",  # DAN · ci_cd · EXECUTING
+    "GID-06",  # SAM · security · EXECUTING
+    "GID-11",  # ATLAS · repo_integrity · EXECUTING
+    "GID-08",  # ALEX · governance · EXECUTING
+    "GID-05",  # PAX · product · EXECUTING
+]
+
+# P16 Required WRAPs per Block 7 — 8 AGENTS (AGENT MODULARITY)
+P16_REQUIRED_WRAPS: List[str] = [
+    "WRAP-BENSON-GID00-PAC-JEFFREY-P16",
+    "WRAP-CODY-GID01-PAC-JEFFREY-P16",
+    "WRAP-SONNY-GID02-PAC-JEFFREY-P16",
+    "WRAP-DAN-GID07-PAC-JEFFREY-P16",
+    "WRAP-SAM-GID06-PAC-JEFFREY-P16",
+    "WRAP-ATLAS-GID11-PAC-JEFFREY-P16",
+    "WRAP-ALEX-GID08-PAC-JEFFREY-P16",
+    "WRAP-PAX-GID05-PAC-JEFFREY-P16",
+]
+
+# P16 Activated Agents (Block 4) — 8 AGENTS (AGENT MODULARITY)
+P16_ACTIVATED_AGENTS: List[str] = [
+    "GID-00",  # BENSON · orchestration · execution_control
+    "GID-01",  # CODY · backend · system_primitives
+    "GID-02",  # SONNY · frontend · oc_surfaces
+    "GID-07",  # DAN · ci_cd · pipeline_gates
+    "GID-06",  # SAM · security · threat_controls
+    "GID-11",  # ATLAS · repo_integrity · hygiene
+    "GID-08",  # ALEX · governance · law_invariants
+    "GID-05",  # PAX · product · constraint_modeling
+]
+
+# P12 Activated Agents (Block 4) — 8 AGENTS
+P12_ACTIVATED_AGENTS: List[str] = [
+    "GID-00",  # BENSON · orchestration · full
+    "GID-01",  # CODY · backend · code
+    "GID-02",  # SONNY · frontend · ui
+    "GID-07",  # DAN · ci_cd · gates
+    "GID-06",  # SAM · security · review
+    "GID-11",  # ATLAS · repo_integrity · hygiene
+    "GID-08",  # ALEX · governance · law
+    "GID-05",  # PAX · product · constraints
+]
+
+# P12 Agent Authorization Scopes (Block 4)
+P12_AGENT_SCOPES: Dict[str, str] = {
+    "GID-00": "full",
+    "GID-01": "code",
+    "GID-02": "ui",
+    "GID-07": "gates",
+    "GID-06": "review",
+    "GID-11": "hygiene",
+    "GID-08": "law",
+    "GID-05": "constraints",
+}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# P17 SESSION ACTIVATION (PAC-JEFFREY-P17)
+# SESSION ACTIVATION · CANONICAL GOVERNANCE · 8 AGENTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# P17 Checkpoint Sequence (Block 5) — STRICT ORDER · NON-SKIPPABLE · 8 CHECKPOINTS
+P17_CHECKPOINT_SEQUENCE: List[str] = [
+    "PAC_ADMISSION",
+    "RUNTIME_ACTIVATION",
+    "RUNTIME_ACK",
+    "AGENT_ACTIVATION",
+    "AGENT_ACK_COLLECTION",
+    "AGENT_EXECUTION",
+    "REVIEW_GATES",
+    "BER_ELIGIBILITY",
+]
+
+# P17 Checkpoint → Invariant Class Mapping (Block 5)
+P17_CHECKPOINT_INVARIANT_MAPPING: Dict[str, List[str]] = {
+    "PAC_ADMISSION": ["S-INV", "A-INV", "T-INV"],
+    "RUNTIME_ACTIVATION": ["S-INV"],
+    "RUNTIME_ACK": ["A-INV"],
+    "AGENT_ACTIVATION": ["A-INV"],
+    "AGENT_ACK_COLLECTION": ["A-INV"],
+    "AGENT_EXECUTION": ["M-INV"],
+    "REVIEW_GATES": ["X-INV", "C-INV"],
+    "BER_ELIGIBILITY": ["F-INV"],
+}
+
+# P17 Required WRAPs per Block 7 — 8 AGENTS (SESSION ACTIVATION)
+P17_REQUIRED_WRAPS: List[str] = [
+    "WRAP-BENSON-GID00-PAC-JEFFREY-P17",
+    "WRAP-CODY-GID01-PAC-JEFFREY-P17",
+    "WRAP-SONNY-GID02-PAC-JEFFREY-P17",
+    "WRAP-DAN-GID07-PAC-JEFFREY-P17",
+    "WRAP-SAM-GID06-PAC-JEFFREY-P17",
+    "WRAP-ATLAS-GID11-PAC-JEFFREY-P17",
+    "WRAP-ALEX-GID08-PAC-JEFFREY-P17",
+    "WRAP-PAX-GID05-PAC-JEFFREY-P17",
+]
+
+# P17 Activated Agents (Block 4) — 8 AGENTS (SESSION ACTIVATION)
+P17_ACTIVATED_AGENTS: List[str] = [
+    "GID-00",  # BENSON · orchestration · EXECUTING
+    "GID-01",  # CODY · backend · EXECUTING
+    "GID-02",  # SONNY · frontend · EXECUTING
+    "GID-07",  # DAN · ci_cd · EXECUTING
+    "GID-06",  # SAM · security · EXECUTING
+    "GID-11",  # ATLAS · repo_integrity · EXECUTING
+    "GID-08",  # ALEX · governance · EXECUTING
+    "GID-05",  # PAX · product · EXECUTING
+]
+
+# P17 Training Signals (Block 10)
+P17_TRAINING_SIGNALS: List[str] = [
+    "TS-P17-001",  # Session activation under canonical governance confirmed
+]
+
+# P17 BER Status (Block 9)
+P17_BER_STATUS: Dict[str, Any] = {
+    "classification": "PROVISIONAL",
+    "execution_binding": False,
+    "ledger_commit": "FORBIDDEN",
+    "settlement_effect": "NONE",
+}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# P18 AGENT UNIFORM DOCTRINE (PAC-JEFFREY-P18)
+# AGENT UNIFORM ENFORCEMENT · RUNTIME LAW · 8 AGENTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# P18 Checkpoint Sequence (Block 5) — STRICT ORDER · NON-SKIPPABLE · 8 CHECKPOINTS
+P18_CHECKPOINT_SEQUENCE: List[str] = [
+    "PAC_ADMISSION",
+    "RUNTIME_ACTIVATION",
+    "RUNTIME_ACK_COLLECTION",
+    "AGENT_ACTIVATION",
+    "AGENT_ACK_COLLECTION",
+    "AGENT_EXECUTION",
+    "REVIEW_GATES",
+    "BER_ELIGIBILITY",
+]
+
+# P18 Checkpoint → Invariant Class Mapping (Block 5)
+P18_CHECKPOINT_INVARIANT_MAPPING: Dict[str, List[str]] = {
+    "PAC_ADMISSION": ["S-INV", "A-INV", "T-INV"],
+    "RUNTIME_ACTIVATION": ["S-INV"],
+    "RUNTIME_ACK_COLLECTION": ["A-INV"],
+    "AGENT_ACTIVATION": ["A-INV"],
+    "AGENT_ACK_COLLECTION": ["A-INV"],
+    "AGENT_EXECUTION": ["M-INV"],
+    "REVIEW_GATES": ["X-INV", "C-INV"],
+    "BER_ELIGIBILITY": ["F-INV"],
+}
+
+# P18 Governance Scope (Block 1)
+P18_GOVERNANCE_SCOPE: List[str] = [
+    "governance_engine",
+    "lint_v2_compiler",
+    "runtime_admission",
+    "agent_registry",
+    "ber_pipeline",
+    "operator_console",
+]
+
+# P18 Required WRAPs per Block 7 — 8 AGENTS (AGENT UNIFORM)
+P18_REQUIRED_WRAPS: List[str] = [
+    "WRAP-BENSON-GID00-PAC-JEFFREY-P18",
+    "WRAP-CODY-GID01-PAC-JEFFREY-P18",
+    "WRAP-SONNY-GID02-PAC-JEFFREY-P18",
+    "WRAP-DAN-GID07-PAC-JEFFREY-P18",
+    "WRAP-SAM-GID06-PAC-JEFFREY-P18",
+    "WRAP-ATLAS-GID11-PAC-JEFFREY-P18",
+    "WRAP-ALEX-GID08-PAC-JEFFREY-P18",
+    "WRAP-PAX-GID05-PAC-JEFFREY-P18",
+]
+
+# P18 Activated Agents (Block 4) — 8 AGENTS (AGENT UNIFORM)
+P18_ACTIVATED_AGENTS: List[str] = [
+    "GID-00",  # BENSON · orchestration
+    "GID-01",  # CODY · backend
+    "GID-02",  # SONNY · frontend
+    "GID-07",  # DAN · ci_cd
+    "GID-06",  # SAM · security
+    "GID-11",  # ATLAS · repo_integrity
+    "GID-08",  # ALEX · governance
+    "GID-05",  # PAX · constraint_modeling
+]
+
+# P18 Agent Uniform Scopes (Block 4) — Canonical Agent "Uniform"
+P18_AGENT_UNIFORM_SCOPES: Dict[str, str] = {
+    "GID-00": "orchestration",
+    "GID-01": "backend",
+    "GID-02": "frontend",
+    "GID-07": "ci_cd",
+    "GID-06": "security",
+    "GID-11": "repo_integrity",
+    "GID-08": "governance",
+    "GID-05": "constraint_modeling",
+}
+
+# P18 Agent Uniform Invariants (Block 6) — RUNTIME LAW
+P18_UNIFORM_INVARIANTS: List[str] = [
+    "INV-UNIFORM-001",  # No agent executes without uniform
+    "INV-UNIFORM-002",  # Unknown agents forbidden
+    "INV-UNIFORM-003",  # PAC required for all execution
+    "INV-UNIFORM-004",  # BER required for finality
+]
+
+# P18 Training Signals (Block 9)
+P18_TRAINING_SIGNALS: List[str] = [
+    "TS-P18-001",  # Agent Uniform enforced as runtime law
+    "TS-P18-002",  # Modular agent swap validated under governance
+]
+
+# P18 BER Status (Block 8)
+P18_BER_STATUS: Dict[str, Any] = {
+    "classification": "PROVISIONAL",
+    "execution_binding": False,
+    "ledger_commit": "FORBIDDEN",
+    "settlement_effect": "NONE",
+}
+
+# P18 Positive Closure Conditions (Block 10)
+P18_POSITIVE_CLOSURE: Dict[str, bool] = {
+    "all_agents_acked": True,
+    "all_wraps_present": True,
+    "no_execution_outside_uniform": True,
+    "zero_drift_confirmed": True,
+    "system_ready_for_next_pac": True,
+}
+
+
+def get_p17_required_invariants(checkpoint: str) -> List[str]:
+    """Get required invariant classes for a P17 checkpoint."""
+    return P17_CHECKPOINT_INVARIANT_MAPPING.get(checkpoint, [])
+
+
+def get_p18_required_invariants(checkpoint: str) -> List[str]:
+    """Get required invariant classes for a P18 checkpoint."""
+    return P18_CHECKPOINT_INVARIANT_MAPPING.get(checkpoint, [])
+
+
+def validate_p18_checkpoint_invariants(
+    checkpoint: str, evaluated_classes: Set[str]
+) -> Tuple[bool, Optional[str]]:
+    """
+    Validate that all required invariant classes were evaluated at P18 checkpoint.
+    
+    Returns:
+        (success, error_message)
+    """
+    required = set(P18_CHECKPOINT_INVARIANT_MAPPING.get(checkpoint, []))
+    missing = required - evaluated_classes
+    if missing:
+        return False, f"P18 checkpoint {checkpoint} missing invariants: {missing}"
+    return True, None
+
+
+def validate_p18_agent_uniform(
+    agent_gid: str, scope: str
+) -> Tuple[bool, Optional[str]]:
+    """
+    Validate agent scope matches P18 Agent Uniform Doctrine.
+    
+    RUNTIME LAW: No agent executes without uniform (INV-UNIFORM-001).
+    
+    Returns:
+        (valid, error_message)
+    """
+    expected_scope = P18_AGENT_UNIFORM_SCOPES.get(agent_gid)
+    if expected_scope is None:
+        return False, f"INV-UNIFORM-002: Unknown agent GID: {agent_gid}"
+    if scope != expected_scope:
+        return False, f"INV-UNIFORM-001: Agent {agent_gid} uniform mismatch: expected {expected_scope}, got {scope}"
+    return True, None
+
+
+def validate_p18_governance_scope(
+    covered_scopes: Set[str]
+) -> Tuple[bool, List[str]]:
+    """
+    Validate P18 governance coverage across all required scopes.
+    
+    Returns:
+        (covered, missing_scopes)
+    """
+    required = set(P18_GOVERNANCE_SCOPE)
+    missing = required - covered_scopes
+    return len(missing) == 0, list(missing)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1308,6 +2278,61 @@ PLAT_INV_005 = InvariantDefinition(
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# AGENT UNIFORM INVARIANTS (PAC-JEFFREY-P18 Block 6)
+# RUNTIME LAW · NO AGENT EXECUTES WITHOUT UNIFORM
+# ═══════════════════════════════════════════════════════════════════════════════
+
+UNIFORM_INV_001 = InvariantDefinition(
+    invariant_id="INV-UNIFORM-001",
+    invariant_class=InvariantClass.A_INV,
+    name="Agent Uniform Required",
+    description="No agent executes without uniform (PAC + ACK + WRAP + BER)",
+    enforcement_points=[
+        EnforcementPoint.PAC_ADMISSION,
+        EnforcementPoint.RUNTIME_ACTIVATION,
+        EnforcementPoint.AGENT_EXECUTION,
+        EnforcementPoint.AGENT_ACK_COLLECTION,
+    ],
+)
+
+UNIFORM_INV_002 = InvariantDefinition(
+    invariant_id="INV-UNIFORM-002",
+    invariant_class=InvariantClass.A_INV,
+    name="Unknown Agents Forbidden",
+    description="Unknown agents forbidden under Agent Uniform Doctrine",
+    enforcement_points=[
+        EnforcementPoint.PAC_ADMISSION,
+        EnforcementPoint.WRAP_INGESTION,
+        EnforcementPoint.AGENT_EXECUTION,
+        EnforcementPoint.API_ADMISSION,
+    ],
+)
+
+UNIFORM_INV_003 = InvariantDefinition(
+    invariant_id="INV-UNIFORM-003",
+    invariant_class=InvariantClass.A_INV,
+    name="PAC Required For Execution",
+    description="PAC required for all agent execution under Agent Uniform Doctrine",
+    enforcement_points=[
+        EnforcementPoint.PAC_ADMISSION,
+        EnforcementPoint.AGENT_EXECUTION,
+        EnforcementPoint.RUNTIME_ACTIVATION,
+    ],
+)
+
+UNIFORM_INV_004 = InvariantDefinition(
+    invariant_id="INV-UNIFORM-004",
+    invariant_class=InvariantClass.F_INV,
+    name="BER Required For Finality",
+    description="BER required for finality under Agent Uniform Doctrine",
+    enforcement_points=[
+        EnforcementPoint.BER_ELIGIBILITY,
+        EnforcementPoint.SETTLEMENT_READINESS,
+    ],
+)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # INVARIANT REGISTRY
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -1360,6 +2385,11 @@ INVARIANT_REGISTRY: Dict[str, InvariantDefinition] = {
     "INV-LINT-PLAT-003": PLAT_INV_003,
     "INV-LINT-PLAT-004": PLAT_INV_004,
     "INV-LINT-PLAT-005": PLAT_INV_005,
+    # Agent Uniform (P18)
+    "INV-UNIFORM-001": UNIFORM_INV_001,
+    "INV-UNIFORM-002": UNIFORM_INV_002,
+    "INV-UNIFORM-003": UNIFORM_INV_003,
+    "INV-UNIFORM-004": UNIFORM_INV_004,
 }
 
 

@@ -36,10 +36,7 @@ from core.governance.lint_v2 import (
     EvaluationReport,
     EvaluationResult,
     InvariantClass,
-    InvariantDefinition,
-    InvariantViolation,
     LintTrainingSignal,
-    LintV2Engine,
     emit_lint_training_signals,
     get_invariants_by_class,
     get_invariants_for_enforcement_point,
@@ -148,7 +145,9 @@ async def reject_mutations(path: str, request: Request):
     OC endpoints are GET-only. Any mutation attempt returns 405.
     """
     logger.warning(
-        f"LINT_V2 OC: Mutation rejected method={request.method} path={path}"
+        "LINT_V2 OC: Mutation rejected method=%s path=%s",
+        request.method,
+        path,
     )
     raise HTTPException(
         status_code=405,
@@ -240,12 +239,12 @@ async def get_invariants_by_class_endpoint(inv_class: str) -> Dict[str, Any]:
     """Get all invariants of a specific class."""
     try:
         invariant_class = InvariantClass(inv_class)
-    except ValueError:
+    except ValueError as exc:
         valid = [c.value for c in InvariantClass]
         raise HTTPException(
             status_code=400, 
             detail=f"Invalid invariant class: {inv_class}. Valid: {valid}"
-        )
+        ) from exc
     
     invariants = get_invariants_by_class(invariant_class)
     
@@ -274,12 +273,12 @@ async def get_invariants_by_ep(ep: str) -> Dict[str, Any]:
     """Get all invariants for a specific enforcement point."""
     try:
         enforcement_point = EnforcementPoint(ep)
-    except ValueError:
+    except ValueError as exc:
         valid = [e.value for e in EnforcementPoint]
         raise HTTPException(
             status_code=400, 
             detail=f"Invalid enforcement point: {ep}. Valid: {valid}"
-        )
+        ) from exc
     
     invariants = get_invariants_for_enforcement_point(enforcement_point)
     

@@ -63,7 +63,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
@@ -177,21 +177,21 @@ class PACLifecycleState(str, Enum):
 class AgentACKState(str, Enum):
     """Agent acknowledgment states."""
     
-    PENDING = "PENDING"           # ACK requested, awaiting response
-    ACKNOWLEDGED = "ACKNOWLEDGED" # Agent explicitly ACKed
-    REJECTED = "REJECTED"         # Agent explicitly rejected
-    TIMEOUT = "TIMEOUT"           # ACK deadline expired
+    PENDING = "PENDING"  # ACK requested, awaiting response
+    ACKNOWLEDGED = "ACKNOWLEDGED"  # Agent explicitly ACKed
+    REJECTED = "REJECTED"  # Agent explicitly rejected
+    TIMEOUT = "TIMEOUT"  # ACK deadline expired
 
 
 class WRAPValidationState(str, Enum):
     """WRAP validation states."""
     
-    PENDING = "PENDING"           # WRAP not yet submitted
-    SUBMITTED = "SUBMITTED"       # WRAP submitted, validation in progress
-    VALID = "VALID"               # WRAP passed all validation checks
-    INVALID = "INVALID"           # WRAP failed validation
-    SCHEMA_ERROR = "SCHEMA_ERROR" # WRAP failed schema validation
-    MISSING_ACK = "MISSING_ACK"   # WRAP rejected due to missing ACK
+    PENDING = "PENDING"  # WRAP not yet submitted
+    SUBMITTED = "SUBMITTED"  # WRAP submitted, validation in progress
+    VALID = "VALID"  # WRAP passed all validation checks
+    INVALID = "INVALID"  # WRAP failed validation
+    SCHEMA_ERROR = "SCHEMA_ERROR"  # WRAP failed schema validation
+    MISSING_ACK = "MISSING_ACK"  # WRAP rejected due to missing ACK
 
 
 class BERState(str, Enum):
@@ -605,7 +605,6 @@ class ControlPlaneState:
 
 class ControlPlaneStateError(Exception):
     """Raised when a state transition is invalid."""
-    pass
 
 
 def validate_transition(
@@ -656,8 +655,10 @@ def transition_state(
     state.settlement_eligibility = state.compute_settlement_eligibility()
     
     logger.info(
-        f"CONTROL_PLANE: State transition {transition_record['from_state']} → "
-        f"{transition_record['to_state']} for PAC {state.pac_id}"
+        "CONTROL_PLANE: State transition %s → %s for PAC %s",
+        transition_record['from_state'],
+        transition_record['to_state'],
+        state.pac_id,
     )
     
     return state
@@ -1347,7 +1348,7 @@ class ExecutionBarrier:
             return False
         self.released = True
         self.released_at = datetime.now(timezone.utc).isoformat()
-        logger.info(f"BARRIER_RELEASED: {self.barrier_id} for PAC {self.pac_id}")
+        logger.info("BARRIER_RELEASED: %s for PAC %s", self.barrier_id, self.pac_id)
         return True
     
     def get_missing_acks(self) -> List[str]:
