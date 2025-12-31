@@ -75,6 +75,6 @@ FUNCTION:         Pointer-only reference
 
 ---
 
-**Prepared by:** ALEX (GID-08)  
-**Date:** 2025-12-19  
+**Prepared by:** ALEX (GID-08)
+**Date:** 2025-12-19
 **PAC Reference:** PAC-ALEX-AGENT-REGISTRY-TEMPLATE-LOCK-01

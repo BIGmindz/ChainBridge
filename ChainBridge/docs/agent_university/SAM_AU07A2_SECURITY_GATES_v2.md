@@ -1,9 +1,9 @@
 # SAM AU07.A-2: Security Gates v2 — Runtime + PR Enforcement
 
-> **Training Document** — AU07.A-2  
-> **Version:** 2.0.0  
-> **Effective Date:** 2025-12-15  
-> **Owner:** SAM (GID-06)  
+> **Training Document** — AU07.A-2
+> **Version:** 2.0.0
+> **Effective Date:** 2025-12-15
+> **Owner:** SAM (GID-06)
 > **Status:** 🔒 OPERATIONAL
 
 ---
@@ -81,7 +81,7 @@ if validated_plugin_path.is_relative_to(ALLOWED_PLUGIN_DIR):
 
 # Section 2: PR Security Checklist (10 Items)
 
-> **Copy this into every PR touching security-sensitive code.**  
+> **Copy this into every PR touching security-sensitive code.**
 > **All 10 must PASS for SAM approval.**
 
 ```markdown

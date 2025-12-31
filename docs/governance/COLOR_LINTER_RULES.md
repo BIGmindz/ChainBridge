@@ -112,7 +112,7 @@ FUNCTION:         Declarative rules reference (no implementation)
 
 ---
 
-**Prepared by:** ALEX (GID-08)  
-**Date:** 2025-12-19  
-**PAC Reference:** PAC-BENSON-COLOR-GATEWAY-IMPLEMENTATION-01  
+**Prepared by:** ALEX (GID-08)
+**Date:** 2025-12-19
+**PAC Reference:** PAC-BENSON-COLOR-GATEWAY-IMPLEMENTATION-01
 **Classification:** Declarative specification. Non-authoritative.

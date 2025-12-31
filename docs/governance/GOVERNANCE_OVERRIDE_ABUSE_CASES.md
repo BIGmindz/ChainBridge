@@ -115,7 +115,7 @@ Actual issuer: GID-08
 
 **Detection:** `claimed_authority != authenticated_issuer`
 
-**Response:** 
+**Response:**
 - Override rejected
 - `AUTHORITY_IMPERSONATION_ATTEMPT` event emitted
 - Issuing agent enters `QUARANTINE` state

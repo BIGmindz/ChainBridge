@@ -1,0 +1,93 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# ChainBridge Control Plane — Docker Compose Service Configuration
+# PAC-JEFFREY-P01: SECTION 6.4 — Containerization
+#
+# INVARIANTS:
+# - Deterministic service configuration
+# - Health check integration
+# - Governance-aware networking
+# - FAIL_CLOSED restart policy
+#
+# Usage:
+#   docker-compose -f infra/controlplane/docker-compose.controlplane.yml up -d
+#
+# Author: DAN (GID-07) — CI/CD Lane
+# ═══════════════════════════════════════════════════════════════════════════════
+
+version: "3.8"
+
+services:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # CONTROL PLANE API SERVICE
+  # ═══════════════════════════════════════════════════════════════════════════
+  controlplane-api:
+    build:
+      context: ../..
+      dockerfile: infra/controlplane/Dockerfile
+      args:
+        BUILD_DATE: ${BUILD_DATE:-$(date -u +'%Y-%m-%dT%H:%M:%SZ')}
+        GIT_SHA: ${GIT_SHA:-$(git rev-parse HEAD)}
+    container_name: chainbridge-controlplane
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+      - CONTROLPLANE_MODE=production
+      - GOVERNANCE_FAIL_CLOSED=true
+      - LOG_LEVEL=INFO
+    volumes:
+      # Mount logs for audit trail persistence
+      - controlplane-logs:/app/logs
+      # Mount proofpacks for governance artifacts
+      - controlplane-proofpacks:/app/proofpacks
+    networks:
+      - chainbridge-governance
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/oc/controlplane/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    labels:
+      - "org.chainbridge.pac=PAC-JEFFREY-P01"
+      - "org.chainbridge.component=control-plane"
+      - "org.chainbridge.lane=ci-cd"
+      - "org.chainbridge.governance=FAIL_CLOSED"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # CONTROL PLANE UI SERVICE (ChainBoard)
+  # ═══════════════════════════════════════════════════════════════════════════
+  controlplane-ui:
+    build:
+      context: ../../chainboard-ui
+      dockerfile: Dockerfile
+    container_name: chainbridge-controlplane-ui
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://controlplane-api:8000
+      - NODE_ENV=production
+    depends_on:
+      controlplane-api:
+        condition: service_healthy
+    networks:
+      - chainbridge-governance
+    restart: unless-stopped
+    profiles:
+      - ui
+    labels:
+      - "org.chainbridge.pac=PAC-JEFFREY-P01"
+      - "org.chainbridge.component=control-plane-ui"
+      - "org.chainbridge.lane=frontend"
+
+networks:
+  chainbridge-governance:
+    name: chainbridge-governance
+    driver: bridge
+
+volumes:
+  controlplane-logs:
+    name: controlplane-logs
+  controlplane-proofpacks:
+    name: controlplane-proofpacks

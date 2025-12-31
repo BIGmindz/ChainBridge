@@ -1,8 +1,8 @@
 # Execution Spine Threat Model
 
-**PAC-SAM-PROOF-INTEGRITY-01**  
-**Author:** SAM (GID-06) — Security & Threat Engineer  
-**Date:** 2025-12-19  
+**PAC-SAM-PROOF-INTEGRITY-01**
+**Author:** SAM (GID-06) — Security & Threat Engineer
+**Date:** 2025-12-19
 **Status:** ACTIVE
 
 ---

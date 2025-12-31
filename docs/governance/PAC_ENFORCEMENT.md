@@ -240,16 +240,16 @@ Before approving:
 
 ---
 
-**Prepared by:** ALEX (GID-08)  
-**Date:** 2025-12-19  
-**PAC Reference:** PAC-ALEX-GOVERNANCE-LOCK-01  
+**Prepared by:** ALEX (GID-08)
+**Date:** 2025-12-19
+**PAC Reference:** PAC-ALEX-GOVERNANCE-LOCK-01
 **Classification:** Reference document. Navigational aid only. Non-authoritative.
 
 ---
 
 ## Git Hook Enforcement (PAC-DAN-PAC-ENFORCEMENT-01)
 
-**Added:** 2025-12-19  
+**Added:** 2025-12-19
 **Author:** DAN (GID-07)
 
 ### Local Commit Enforcement
@@ -320,4 +320,3 @@ $ git commit -m "PAC-DAN-PAC-ENFORCEMENT-01: Add git hooks"
 | Hook not running | Run `./scripts/install-githooks.sh` |
 | Wrong regex match | Ensure uppercase: `PAC-AGENT-TASK-01` |
 | Need to bypass | Only touch `docs/`, `.github/`, or `README.md` |
-
