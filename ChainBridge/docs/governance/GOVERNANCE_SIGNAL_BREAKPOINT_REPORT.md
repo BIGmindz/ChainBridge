@@ -1,9 +1,9 @@
 # Governance Signal Breakpoint Discovery Report
 
-> **PAC Reference:** PAC-MAGGIE-P39-GOVERNANCE-SIGNAL-BREAKPOINT-DISCOVERY-AND-FAILURE-INDUCTION-01  
-> **Author:** Maggie (GID-10) | 💗 MAGENTA  
-> **Authority:** BENSON (GID-00)  
-> **Date:** 2025-12-24  
+> **PAC Reference:** PAC-MAGGIE-P39-GOVERNANCE-SIGNAL-BREAKPOINT-DISCOVERY-AND-FAILURE-INDUCTION-01
+> **Author:** Maggie (GID-10) | 💗 MAGENTA
+> **Authority:** BENSON (GID-00)
+> **Date:** 2025-12-24
 > **Status:** BREAKPOINT_DISCOVERY_COMPLETE
 
 ---
@@ -22,7 +22,7 @@ This report documents the results of **breakpoint discovery testing** against th
 
 ### 2.1 Attack Philosophy
 
-P33 asked: "Can the system survive known attacks?"  
+P33 asked: "Can the system survive known attacks?"
 P39 asks: "Where does the system actually break?"
 
 ```yaml
@@ -34,7 +34,7 @@ BREAKPOINT_PHILOSOPHY:
     - Compound Adversarial Stacking
     - Temporal Drift Injection
     - Governance-to-Economic Stress Coupling
-  
+
   success_criteria:
     - At least one breakpoint discovered
     - All breakpoints reproducible
@@ -49,7 +49,7 @@ HARD_CONSTRAINTS:
   no_threshold_redefinition: true
   no_override_logic_changes: true
   glass_box_only: true
-  
+
 FAILURE_EXPECTATION:
   at_least_one_breakpoint: REQUIRED
   zero_silent_failures: REQUIRED
@@ -100,7 +100,7 @@ BREAKPOINT_METRICS:
 ```yaml
 BOUNDARY_COLLAPSE_INDUCTION:
   attack_class: "INFINITESIMAL_PERTURBATION"
-  
+
   boundary_tests:
     pass_warn_boundary:
       base_input: "1 optional field missing"
@@ -108,14 +108,14 @@ BOUNDARY_COLLAPSE_INDUCTION:
       evaluations: 1000
       oscillations: 0
       verdict: STABLE
-      
+
     warn_fail_boundary:
       base_input: "1 required field missing"
       perturbation: "±0.0000001 severity score"
       evaluations: 1000
       oscillations: 0
       verdict: STABLE
-      
+
     fail_critical_boundary:
       base_input: "Authority mismatch"
       perturbation: "±0.0000001 impact score"
@@ -142,12 +142,12 @@ BP_001_VERDICT:
   severity: LOW
   exploitable: false
   mitigation: NONE_REQUIRED
-  
+
   explanation: |
     The governance system operates on discrete states (field present/absent,
     authority valid/invalid). There is no continuous boundary to oscillate
     across. This is a design strength, not a weakness.
-    
+
   proof: "H(input) → categorical_state, no intermediate values exist"
 ```
 
@@ -170,7 +170,7 @@ BP_001_VERDICT:
 ```yaml
 COMPOUND_ADVERSARIAL_STACKING:
   attack_class: "MULTI_VECTOR_SIMULTANEOUS"
-  
+
   stacking_tests:
     2_class_stack:
       classes: [BOUNDARY_JITTER, CONFLICTING_AUTHORITIES]
@@ -178,21 +178,21 @@ COMPOUND_ADVERSARIAL_STACKING:
       error_codes_returned: 2
       explainability: COMPLETE
       verdict: ROBUST
-      
+
     3_class_stack:
       classes: [BOUNDARY_JITTER, CONFLICTING_AUTHORITIES, STALE_FRESH_CONFLICT]
       result: FAIL
       error_codes_returned: 3
       explainability: COMPLETE
       verdict: ROBUST
-      
+
     4_class_stack:
       classes: [BOUNDARY_JITTER, CONFLICTING_AUTHORITIES, STALE_FRESH_CONFLICT, ML_FEATURE_SPOOFING]
       result: FAIL
       error_codes_returned: 4
       explainability: DEGRADED
       verdict: BREAKPOINT_HIT
-      
+
     5_class_stack:
       classes: [BOUNDARY_JITTER, CONFLICTING_AUTHORITIES, STALE_FRESH_CONFLICT, ML_FEATURE_SPOOFING, OVERRIDE_PRESSURE]
       result: FAIL
@@ -220,18 +220,18 @@ BP_002_VERDICT:
   severity: MEDIUM
   exploitable: false
   mitigation: RECOMMENDED
-  
+
   explanation: |
     Under compound adversarial stacking (≥4 classes), the system correctly
     rejects the artifact but the error message quality degrades. The user
     cannot easily determine which violation to fix first. This is an
     actionability breakpoint, not a security breakpoint.
-    
+
   recommended_mitigation: |
     - Prioritize error codes by severity
     - Return only top 3 blocking errors
     - Add "and N more issues detected" summary
-    
+
   proof: |
     Input: 5 simultaneous adversarial classes
     Output: FAIL with 5 error codes
@@ -257,29 +257,29 @@ BP_002_VERDICT:
 ```yaml
 TEMPORAL_DRIFT_INJECTION:
   attack_class: "TIMESTAMP_MANIPULATION"
-  
+
   past_timestamp_tests:
     30_days_past:
       status: WARN
       message: "Timestamp > 30 days old"
       verdict: CORRECT
-      
+
     60_days_past:
       status: WARN
       message: "Timestamp > 30 days old"
       verdict: CORRECT
-      
+
     90_days_past:
       status: WARN
       message: "Timestamp > 30 days old"
       verdict: CORRECT
-      
+
     180_days_past:
       status: WARN
       message: "Timestamp > 30 days old"
       verdict: BREAKPOINT_HIT
       note: "180 days should escalate to FAIL, got WARN"
-      
+
     365_days_past:
       status: WARN
       message: "Timestamp > 30 days old"
@@ -291,12 +291,12 @@ TEMPORAL_DRIFT_INJECTION:
       status: FAIL
       message: "Timestamp in future (>24h)"
       verdict: CORRECT
-      
+
     7_days_future:
       status: FAIL
       message: "Timestamp in future (>24h)"
       verdict: CORRECT
-      
+
     30_days_future:
       status: FAIL
       message: "Timestamp in future (>24h)"
@@ -322,17 +322,17 @@ BP_003_VERDICT:
   severity: MEDIUM
   exploitable: true_in_theory
   mitigation: RECOMMENDED
-  
+
   explanation: |
     The staleness detection treats all timestamps >30 days equally. A 365-day-old
     artifact receives WARN, same as a 31-day-old artifact. This creates a flat
     severity curve for extreme staleness.
-    
+
   recommended_mitigation: |
     - Add FAIL threshold at 90 days
     - Add CRITICAL threshold at 180 days
     - Block artifact processing for >365 days
-    
+
   proof: |
     Input: artifact with timestamp 365 days ago
     Expected: FAIL (blocking)
@@ -359,7 +359,7 @@ BP_003_VERDICT:
 ```yaml
 GOVERNANCE_ECONOMIC_COUPLING:
   attack_class: "AMBIGUITY_PROPAGATION"
-  
+
   coupling_tests:
     warn_to_settlement:
       governance_status: WARN
@@ -367,14 +367,14 @@ GOVERNANCE_ECONOMIC_COUPLING:
       decision_quality: DEGRADED
       ambiguity_resolved: false
       verdict: BREAKPOINT_HIT
-      
+
     fail_to_settlement:
       governance_status: FAIL
       settlement_receives: "BLOCKED"
       decision_quality: N/A
       ambiguity_resolved: true
       verdict: CORRECT
-      
+
     pass_to_settlement:
       governance_status: PASS
       settlement_receives: "APPROVED"
@@ -408,23 +408,23 @@ BP_004_VERDICT:
   severity: HIGH
   exploitable: true_in_practice
   mitigation: REQUIRED
-  
+
   explanation: |
     The WARN status creates semantic ambiguity that propagates into the
     settlement layer. Settlement systems receive WARN but must still decide.
     This creates a "soft failure" mode where decisions are made under
     degraded confidence without clear resolution.
-    
+
   recommended_mitigation: |
     - Define WARN → Settlement policy (block or proceed with flag)
     - Add explicit WARN_OVERRIDE authority requirement
     - Track WARN propagation depth and alert on depth > 1
-    
+
   business_impact: |
     WARN signals can cascade through 2-3 decision layers before resolution,
     creating potential for suboptimal settlement decisions made under
     ambiguity rather than certainty.
-    
+
   proof: |
     Input: Governance WARN on artifact
     Output: Settlement decision made under ambiguity
@@ -451,7 +451,7 @@ BP_004_VERDICT:
 ```yaml
 CAUSAL_INVERSION_ATTACK:
   attack_class: "TEMPORAL_PARADOX"
-  
+
   causal_tests:
     forward_authority:
       artifact_a_timestamp: "T"
@@ -459,7 +459,7 @@ CAUSAL_INVERSION_ATTACK:
       authority_claim: "A claims B as authority"
       result: PASS
       verdict: CORRECT (B precedes A)
-      
+
     retroactive_authority:
       artifact_a_timestamp: "T"
       artifact_b_timestamp: "T+1"
@@ -467,7 +467,7 @@ CAUSAL_INVERSION_ATTACK:
       result: WARN
       verdict: BREAKPOINT_HIT
       note: "Retroactive authority accepted with WARN, not FAIL"
-      
+
     future_authority:
       artifact_a_timestamp: "T"
       artifact_b_timestamp: "T+30days"
@@ -500,25 +500,25 @@ BP_005_VERDICT:
   severity: HIGH
   exploitable: true_in_practice
   mitigation: REQUIRED
-  
+
   explanation: |
     The 24-hour future timestamp tolerance creates a window where retroactive
     authority is accepted. An artifact can claim authority from a source that
     did not yet exist at submission time, as long as both are within 24 hours.
-    
+
     This creates a "temporal paradox" where effect precedes cause.
-    
+
   recommended_mitigation: |
     - Strict causality enforcement: authority source MUST predate artifact
     - Remove 24-hour future tolerance for authority claims
     - Add explicit "PENDING_AUTHORITY" status for same-day claims
-    
+
   attack_scenario: |
     1. Submit malicious artifact A at T claiming authority from B
     2. Wait 12 hours
     3. Submit B at T+12h to retroactively authorize A
     4. A is now "authorized" despite causal inversion
-    
+
   proof: |
     Input: A (T) claims B (T+12h) as authority
     Expected: FAIL (causality violation)
@@ -548,9 +548,9 @@ RISK_ASSESSMENT:
   high_breakpoints: 1 (BP-004)
   medium_breakpoints: 2 (BP-002, BP-003)
   low_breakpoints: 1 (BP-001)
-  
+
   overall_risk: MEDIUM_HIGH
-  
+
   immediate_action_required:
     - BP-005: Enforce strict causality
     - BP-004: Define WARN → Settlement policy
@@ -565,28 +565,28 @@ All breakpoints were verified for reproducibility:
 ```yaml
 DETERMINISM_VERIFICATION:
   methodology: "Hash-stable replay at discovered breakpoints"
-  
+
   results:
     BP_001:
       replays: 50
       consistent: true
       hash_match: "a7f2c1..."
-      
+
     BP_002:
       replays: 50
       consistent: true
       hash_match: "b3e4d2..."
-      
+
     BP_003:
       replays: 50
       consistent: true
       hash_match: "c9a1b3..."
-      
+
     BP_004:
       replays: 50
       consistent: true
       hash_match: "d2f5e6..."
-      
+
     BP_005:
       replays: 50
       consistent: true
@@ -627,7 +627,7 @@ TRUST_BOUNDARY:
     - Standard boundary testing
     - Deterministic replay
     - PASS/FAIL decisions (not WARN)
-    
+
   outside_limits:
     - Compound adversarial stacking (≥4 classes)
     - Extreme staleness (>180 days)
@@ -663,12 +663,12 @@ TRAINING_SIGNAL:
   signal_type: PATTERN_LEARNING
   pattern: BREAKPOINTS_CREATE_TRUST
   lesson: "A system without known limits is a system without proof."
-  
+
   learning_outcomes:
     - "Breakpoint discovery is not failure — it is knowledge"
     - "Known limits create trust; unknown limits create uncertainty"
     - "5 breakpoints found means 5 limits now documented"
-    
+
   propagate: true
   mandatory: true
 ```

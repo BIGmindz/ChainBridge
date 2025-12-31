@@ -4,7 +4,7 @@
 #
 # PAC: PAC-DAN-A9-DEPLOYMENT-READINESS-LOCK-01
 # Author: Dan (GID-07) | DevOps & CI/CD Lead
-# 
+#
 # PURPOSE:
 # Enforce deployment readiness before any environment promotion.
 # This workflow is the FINAL GATE before capital exposure.
@@ -73,22 +73,22 @@ jobs:
       ready: ${{ steps.verify.outputs.ready }}
       locks_hash: ${{ steps.locks.outputs.hash }}
       registry_hash: ${{ steps.registry.outputs.hash }}
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ env.DEPLOY_COMMIT }}
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      
+
       - name: Install dependencies
         run: |
           pip install pyyaml
-      
+
       # ─────────────────────────────────────────────────────────────────────────
       # LOCK FILE VERIFICATION (A1-A9)
       # ─────────────────────────────────────────────────────────────────────────
@@ -98,7 +98,7 @@ jobs:
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "🔒 VERIFYING GOVERNANCE LOCKS (A1-A9)"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           REQUIRED_LOCKS=(
             "A1_ARCHITECTURE_LOCK.md"
             "A2_RUNTIME_BOUNDARY_LOCK.md"
@@ -108,11 +108,11 @@ jobs:
             "A6_GOVERNANCE_ALIGNMENT_LOCK.md"
             "A9_DEPLOYMENT_READINESS_LOCK.md"
           )
-          
+
           LOCKS_DIR="docs/governance"
           MISSING=()
           LOCK_HASHES=""
-          
+
           for lock in "${REQUIRED_LOCKS[@]}"; do
             if [ -f "$LOCKS_DIR/$lock" ]; then
               hash=$(sha256sum "$LOCKS_DIR/$lock" | cut -d' ' -f1)
@@ -123,21 +123,21 @@ jobs:
               MISSING+=("$lock")
             fi
           done
-          
+
           if [ ${#MISSING[@]} -gt 0 ]; then
             echo ""
             echo "❌ DEPLOYMENT BLOCKED: Missing governance locks"
             echo "Missing: ${MISSING[*]}"
             exit 1
           fi
-          
+
           # Compute combined hash
           COMBINED_HASH=$(echo -n "$LOCK_HASHES" | sha256sum | cut -d' ' -f1)
           echo "hash=$COMBINED_HASH" >> $GITHUB_OUTPUT
           echo ""
           echo "✅ All governance locks present"
           echo "Combined hash: $COMBINED_HASH"
-      
+
       # ─────────────────────────────────────────────────────────────────────────
       # AGENT REGISTRY VERIFICATION
       # ─────────────────────────────────────────────────────────────────────────
@@ -147,24 +147,24 @@ jobs:
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "🔒 VERIFYING AGENT REGISTRY"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           REGISTRY="docs/governance/AGENT_REGISTRY.json"
-          
+
           if [ ! -f "$REGISTRY" ]; then
             echo "❌ DEPLOYMENT BLOCKED: AGENT_REGISTRY.json missing"
             exit 1
           fi
-          
+
           # Validate JSON
           python3 -c "import json; json.load(open('$REGISTRY'))" || {
             echo "❌ DEPLOYMENT BLOCKED: Invalid JSON in registry"
             exit 1
           }
-          
+
           hash=$(sha256sum "$REGISTRY" | cut -d' ' -f1)
           echo "hash=$hash" >> $GITHUB_OUTPUT
           echo "✅ Registry valid: $hash"
-      
+
       # ─────────────────────────────────────────────────────────────────────────
       # DEPLOYMENT READINESS CHECK
       # ─────────────────────────────────────────────────────────────────────────
@@ -174,9 +174,9 @@ jobs:
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "🔒 DEPLOYMENT READINESS CHECK"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           python scripts/ci/verify_deploy_readiness.py
-          
+
           if [ $? -eq 0 ]; then
             echo "ready=true" >> $GITHUB_OUTPUT
             echo "✅ DEPLOYMENT READY"
@@ -185,7 +185,7 @@ jobs:
             echo "❌ DEPLOYMENT NOT READY"
             exit 1
           fi
-      
+
       # ─────────────────────────────────────────────────────────────────────────
       # ENVIRONMENT VALIDATION
       # ─────────────────────────────────────────────────────────────────────────
@@ -194,9 +194,9 @@ jobs:
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "🔒 ENVIRONMENT VALIDATION"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           ENV="${{ inputs.environment }}"
-          
+
           case "$ENV" in
             dev|stage|prod)
               echo "✅ Valid environment: $ENV"
@@ -206,11 +206,11 @@ jobs:
               exit 1
               ;;
           esac
-          
+
           # Check for forbidden environment-specific code
           echo ""
           echo "Checking for forbidden environment patterns..."
-          
+
           FORBIDDEN_PATTERNS=(
             'ENV.*==.*production'
             'ENV.*==.*staging'
@@ -218,7 +218,7 @@ jobs:
             'is_production'
             'is_staging'
           )
-          
+
           VIOLATIONS=0
           for pattern in "${FORBIDDEN_PATTERNS[@]}"; do
             if grep -rn --include="*.py" "$pattern" src/ app/ 2>/dev/null; then
@@ -226,14 +226,14 @@ jobs:
               VIOLATIONS=$((VIOLATIONS + 1))
             fi
           done
-          
+
           if [ $VIOLATIONS -gt 0 ]; then
             echo ""
             echo "❌ DEPLOYMENT BLOCKED: Environment-specific code detected"
             echo "Violations: $VIOLATIONS"
             exit 1
           fi
-          
+
           echo "✅ No forbidden environment patterns"
 
   # ════════════════════════════════════════════════════════════════════════════
@@ -243,28 +243,28 @@ jobs:
     name: "🔒 Gate 2: CI Verification"
     runs-on: ubuntu-latest
     needs: pre-deploy-gate
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ env.DEPLOY_COMMIT }}
-      
+
       - name: "🔒 Verify CI status"
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "🔒 CI VERIFICATION"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           # In a real deployment, this would check:
           # 1. CI_PROOF artifact from governance-check workflow
           # 2. All required status checks passed
           # 3. Test coverage threshold met
-          
+
           echo "Commit: ${{ env.DEPLOY_COMMIT }}"
           echo "Environment: ${{ inputs.environment }}"
           echo ""
-          
+
           # For now, verify the governance check workflow exists
           if [ -f ".github/workflows/governance-check.yml" ]; then
             echo "✅ Governance check workflow present"
@@ -272,7 +272,7 @@ jobs:
             echo "❌ DEPLOYMENT BLOCKED: governance-check.yml missing"
             exit 1
           fi
-          
+
           echo "✅ CI verification passed"
 
   # ════════════════════════════════════════════════════════════════════════════
@@ -282,35 +282,35 @@ jobs:
     name: "🔒 Gate 3: Security Verification"
     runs-on: ubuntu-latest
     needs: ci-verification
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ env.DEPLOY_COMMIT }}
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      
+
       - name: "🔒 Run security scan"
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "🔒 SECURITY VERIFICATION"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           pip install bandit safety
-          
+
           echo ""
           echo "Running bandit security scan..."
           bandit -r src/ app/ -ll --quiet || {
             echo "❌ DEPLOYMENT BLOCKED: Security issues found"
             exit 1
           }
-          
+
           echo "✅ Bandit scan passed"
-          
+
           echo ""
           echo "Running safety check..."
           if [ -f "requirements.txt" ]; then
@@ -318,7 +318,7 @@ jobs:
               echo "⚠️ Safety check warnings (non-blocking for now)"
             }
           fi
-          
+
           echo ""
           echo "✅ Security verification passed"
 
@@ -331,32 +331,32 @@ jobs:
     needs: security-verification
     outputs:
       artifact_hash: ${{ steps.hash.outputs.artifact_hash }}
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ env.DEPLOY_COMMIT }}
-      
+
       - name: "🔒 Verify artifacts"
         id: hash
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "🔒 ARTIFACT VERIFICATION"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           # Compute source hash
           SOURCE_HASH=$(find src/ app/ -name "*.py" -type f -exec sha256sum {} \; 2>/dev/null | sort | sha256sum | cut -d' ' -f1)
           echo "Source hash: $SOURCE_HASH"
-          
+
           # Compute config hash
           CONFIG_HASH=$(sha256sum config/*.yaml 2>/dev/null | sort | sha256sum | cut -d' ' -f1 || echo "no-config")
           echo "Config hash: $CONFIG_HASH"
-          
+
           # Combined artifact hash
           ARTIFACT_HASH=$(echo -n "$SOURCE_HASH$CONFIG_HASH" | sha256sum | cut -d' ' -f1)
           echo "artifact_hash=$ARTIFACT_HASH" >> $GITHUB_OUTPUT
-          
+
           echo ""
           echo "✅ Artifact verification passed"
           echo "Combined hash: $ARTIFACT_HASH"
@@ -370,32 +370,32 @@ jobs:
     needs: [pre-deploy-gate, artifact-verification]
     if: ${{ inputs.dry_run != true }}
     environment: ${{ inputs.environment }}
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ env.DEPLOY_COMMIT }}
-      
+
       - name: "🚀 Deploy"
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "🚀 DEPLOYING TO ${{ inputs.environment }}"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           echo "Commit: ${{ env.DEPLOY_COMMIT }}"
           echo "Environment: ${{ inputs.environment }}"
           echo "Artifact hash: ${{ needs.artifact-verification.outputs.artifact_hash }}"
           echo "Locks hash: ${{ needs.pre-deploy-gate.outputs.locks_hash }}"
           echo "Registry hash: ${{ needs.pre-deploy-gate.outputs.registry_hash }}"
           echo ""
-          
+
           # In production, this would:
           # 1. Pull image by digest (not tag)
           # 2. Apply Kubernetes manifests
           # 3. Wait for rollout
           # 4. Run smoke tests
-          
+
           echo "✅ Deployment simulated (implement actual deploy commands)"
 
   # ════════════════════════════════════════════════════════════════════════════
@@ -406,27 +406,27 @@ jobs:
     runs-on: ubuntu-latest
     needs: [pre-deploy-gate, artifact-verification, deploy]
     if: always() && (needs.deploy.result == 'success' || inputs.dry_run == true)
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ env.DEPLOY_COMMIT }}
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      
+
       - name: Install dependencies
         run: pip install pyyaml
-      
+
       - name: "📋 Generate DEPLOYMENT_PROOF"
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "📋 GENERATING DEPLOYMENT_PROOF"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           python scripts/ci/emit_deployment_proof.py \
             --env "${{ inputs.environment }}" \
             --commit "${{ env.DEPLOY_COMMIT }}" \
@@ -434,7 +434,7 @@ jobs:
             --locks-hash "${{ needs.pre-deploy-gate.outputs.locks_hash }}" \
             --registry-hash "${{ needs.pre-deploy-gate.outputs.registry_hash }}" \
             --dry-run "${{ inputs.dry_run }}"
-      
+
       - name: "📤 Upload DEPLOYMENT_PROOF"
         uses: actions/upload-artifact@v4
         with:
@@ -450,7 +450,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [pre-deploy-gate, ci-verification, security-verification, artifact-verification, emit-proof]
     if: always()
-    
+
     steps:
       - name: "📊 Generate Summary"
         run: |

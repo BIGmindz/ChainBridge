@@ -1,9 +1,9 @@
 # PAC-ATLAS-P41-GOVERNANCE-REGRESSION-AND-DRIFT-ENFORCEMENT-INTEGRATION-01
 
-> **Status:** CANONICAL  
-> **Agent:** ATLAS (GID-05) | 🔵 BLUE  
-> **Authority:** BENSON (GID-00)  
-> **Date:** 2025-12-24  
+> **Status:** CANONICAL
+> **Agent:** ATLAS (GID-05) | 🔵 BLUE
+> **Authority:** BENSON (GID-00)
+> **Date:** 2025-12-24
 > **Pattern:** GOVERNANCE_MUST_NOT_DECAY
 
 ---
@@ -76,7 +76,7 @@ SCOPE:
     - Drift evaluator (calibration envelope detection)
     - gate_pack.py enforcement integration
     - GS_094/GS_095 error code emission
-    
+
   out_of_scope:
     - UI modifications
     - Training signal schema changes
@@ -133,7 +133,7 @@ TASKS:
       - "Parse YAML role baselines (BACKEND, FRONTEND, SECURITY, etc.)"
       - "Bind baselines to agent GID and execution lane"
     deliverable: tools/governance/regression_evaluator.py (BaselineLoader class)
-    
+
   2:
     name: Regression Evaluator
     status: COMPLETE
@@ -143,7 +143,7 @@ TASKS:
       - "Emit GS_094 on hard regression (SEVERE/CRITICAL)"
       - "Handle inverted metrics (time/violations vs accuracy)"
     deliverable: tools/governance/regression_evaluator.py (RegressionEvaluator class)
-    
+
   3:
     name: Drift Evaluator
     status: COMPLETE
@@ -153,7 +153,7 @@ TASKS:
       - "Detect MINOR (3x P50), MODERATE (2x P25), SEVERE (1x P10)"
       - "Emit GS_095 on semantic drift with BLOCK or ESCALATE"
     deliverable: tools/governance/drift_evaluator.py
-    
+
   4:
     name: Enforcement Hook
     status: COMPLETE
@@ -181,7 +181,7 @@ FILES_CREATED:
       - RegressionReport: "Report with blocking/non-blocking regressions"
     functions:
       - evaluate_regression(): "Convenience function for gate_pack.py"
-      
+
   - path: tools/governance/drift_evaluator.py
     purpose: "Semantic drift detection vs calibration envelope"
     classes:
@@ -215,15 +215,15 @@ ACCEPTANCE:
   regression_blocks_execution:
     status: REQUIRED
     validation: "SEVERE/CRITICAL regression emits GS_094 and blocks"
-    
+
   drift_cannot_pass_silently:
     status: REQUIRED
     validation: "Drift emits GS_095 with BLOCK or ESCALATE"
-    
+
   enforcement_is_deterministic:
     status: REQUIRED
     validation: "Same inputs → same regression/drift outcome"
-    
+
   ci_detects_regression_cases:
     status: REQUIRED
     validation: "gate_pack.py --mode ci catches regression/drift"
@@ -273,7 +273,7 @@ VIOLATIONS_ADDRESSED:
   GS_094:
     description: "Performance regression allowed to proceed"
     resolution: "regression_evaluator.py blocks SEVERE/CRITICAL regression"
-    
+
   GS_095:
     description: "Semantic drift unbound from enforcement"
     resolution: "drift_evaluator.py enforces BLOCK or ESCALATE on drift"
@@ -363,7 +363,7 @@ GOLD_STANDARD_CHECKLIST:
 
 ---
 
-**END — PAC-ATLAS-P41-GOVERNANCE-REGRESSION-AND-DRIFT-ENFORCEMENT-INTEGRATION-01**  
-**STATUS:** GOLD_STANDARD_COMPLIANT  
-**CLOSURE:** POSITIVE_CLOSURE | REGRESSION_AND_DRIFT_ENFORCEMENT_WIRED  
+**END — PAC-ATLAS-P41-GOVERNANCE-REGRESSION-AND-DRIFT-ENFORCEMENT-INTEGRATION-01**
+**STATUS:** GOLD_STANDARD_COMPLIANT
+**CLOSURE:** POSITIVE_CLOSURE | REGRESSION_AND_DRIFT_ENFORCEMENT_WIRED
 🔵🔵🔵 ATLAS (GID-05) | BLUE 🔵🔵🔵

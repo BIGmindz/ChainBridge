@@ -33,7 +33,7 @@ jobs:
   validate-pac-identity:
     name: Validate PAC/WRAP Identity Compliance
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -58,9 +58,9 @@ jobs:
           echo "Authority: Benson (GID-00)"
           echo "Failure Mode: FAIL_CLOSED"
           echo "=============================================="
-          
+
           python scripts/ci/validate_pac_identity.py docs/governance/
-          
+
           exit_code=$?
           if [ $exit_code -ne 0 ]; then
             echo ""
@@ -74,7 +74,7 @@ jobs:
       - name: Verify Funnel Stage Declarations
         run: |
           echo "Checking for PAC files missing Funnel Stage..."
-          
+
           # Find PAC files and check for Funnel Stage
           missing_funnel=()
           while IFS= read -r -d '' file; do
@@ -82,7 +82,7 @@ jobs:
               missing_funnel+=("$file")
             fi
           done < <(find . -name "PAC-*.md" -print0 2>/dev/null)
-          
+
           if [ ${#missing_funnel[@]} -gt 0 ]; then
             echo "✗ PAC files missing Funnel Stage declaration:"
             printf '  - %s\n' "${missing_funnel[@]}"

@@ -1,9 +1,9 @@
 # GOVERNANCE_CAUSAL_SEQUENCING.md
 
-> **Version:** 1.0.0  
-> **Authority:** PAC-BENSON-P42-SEQUENTIAL-PAC-WRAP-GATING-AND-CAUSAL-ADVANCEMENT-ENFORCEMENT-01  
-> **Status:** ACTIVE  
-> **Mode:** FAIL_CLOSED  
+> **Version:** 1.0.0
+> **Authority:** PAC-BENSON-P42-SEQUENTIAL-PAC-WRAP-GATING-AND-CAUSAL-ADVANCEMENT-ENFORCEMENT-01
+> **Status:** ACTIVE
+> **Mode:** FAIL_CLOSED
 > **Last Updated:** 2025-12-24
 
 ---
@@ -54,7 +54,7 @@ IF PAC-Pn has no WRAP THEN
   ERROR: GS_096
 ```
 
-**Pattern:** CAUSALITY_OVER_CONVENIENCE  
+**Pattern:** CAUSALITY_OVER_CONVENIENCE
 **Lesson:** Progress without proof is not progress.
 
 ---

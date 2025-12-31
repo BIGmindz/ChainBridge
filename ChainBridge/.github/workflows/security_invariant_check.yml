@@ -59,34 +59,34 @@ jobs:
     name: "🔐 Security Invariant Drills"
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
+
       - name: Install Dependencies
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt || pip install pytest
-      
+
       - name: Run Security Invariant Drills
         id: invariant-drills
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "🔐 SECURITY INVARIANT DRILLS"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           # Run the security drills module directly
           python -m tools.security.security_drills
           DRILL_EXIT_CODE=$?
-          
+
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           if [ $DRILL_EXIT_CODE -eq 0 ]; then
             echo "✅ All security drills BLOCKED (SECURE)"
             echo "drills_passed=true" >> $GITHUB_OUTPUT
@@ -95,25 +95,25 @@ jobs:
             echo "drills_passed=false" >> $GITHUB_OUTPUT
             exit 1
           fi
-      
+
       - name: Run Security Test Suite
         id: security-tests
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "🔒 SECURITY TEST SUITE"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           pytest tests/security/ -v --tb=short
-          
+
       - name: Run PDO Enforcement Tests
         id: pdo-tests
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "🛡️ PDO ENFORCEMENT TESTS"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           pytest tests/security/test_pdo_enforcement.py tests/security/test_adversarial_pdo.py -v --tb=short
-      
+
       - name: Security Gate Summary
         if: always()
         run: |
@@ -142,20 +142,20 @@ jobs:
     runs-on: ubuntu-latest
     needs: [security-invariant-drills]
     if: always()
-    
+
     steps:
       - name: Check Gate Status
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "🔐 SECURITY GATE FINAL STATUS"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           if [ "${{ needs.security-invariant-drills.result }}" != "success" ]; then
             echo "❌ SECURITY GATE FAILED"
             echo "   Security drills result: ${{ needs.security-invariant-drills.result }}"
             exit 1
           fi
-          
+
           echo "✅ SECURITY GATE PASSED"
           echo "   All security invariants enforced"
           echo "   All adversarial drills blocked"

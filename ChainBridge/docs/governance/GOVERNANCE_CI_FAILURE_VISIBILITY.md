@@ -1,8 +1,8 @@
 # Governance CI Failure Visibility
 
-> **PAC-DAN-P44-GOVERNANCE-CI-FAILURE-VISIBILITY-AUTO-REMEDIATION-01**  
-> **Owner:** Dan (GID-07)  
-> **Status:** ACTIVE  
+> **PAC-DAN-P44-GOVERNANCE-CI-FAILURE-VISIBILITY-AUTO-REMEDIATION-01**
+> **Owner:** Dan (GID-07)
+> **Status:** ACTIVE
 > **Mode:** FAIL_CLOSED — Zero Silent Failures
 
 ---

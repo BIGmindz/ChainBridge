@@ -24,7 +24,7 @@ METRICS:
   tasks_total: <integer>                 # Total tasks in scope
   quality_score: <float 0.0-1.0>         # Self-assessed quality (0.0-1.0)
   scope_compliance: <boolean>            # Did execution stay within PAC scope?
-  
+
   # OPTIONAL FIELDS
   files_created: <integer>               # Files created during execution
   files_modified: <integer>              # Files modified during execution
@@ -33,21 +33,21 @@ METRICS:
   errors_encountered: <integer>          # Errors encountered during execution
   errors_resolved: <integer>             # Errors successfully resolved
   ci_validation_passed: <boolean>        # Did CI validation pass?
-  
+
   # EXECUTION LANE SPECIFIC (optional)
   lane_specific:
     # UI Lane
     components_created: <integer>
     test_coverage_percent: <float>
-    
+
     # SECURITY Lane
     vulnerabilities_found: <integer>
     vulnerabilities_fixed: <integer>
-    
+
     # DEVOPS Lane
     pipeline_stages_added: <integer>
     deployment_time_ms: <integer>
-    
+
     # SYSTEM_STATE Lane
     state_transitions: <integer>
     invariants_validated: <integer>
@@ -91,7 +91,7 @@ SCOPE_COMPLIANCE_RULES:
     - "No unauthorized artifact creation"
     - "No scope expansion beyond TASKS"
     - "No authority escalation"
-    
+
   false:
     - "Modified files outside PAC scope"
     - "Created artifacts not in PAC plan"
@@ -109,37 +109,37 @@ EXECUTION_LANE_BASELINES:
     expected_quality_score: 0.95
     max_execution_time_ms: 300000  # 5 minutes
     scope_compliance_required: true
-    
+
   GOVERNANCE:
     expected_quality_score: 0.98
     max_execution_time_ms: 180000  # 3 minutes
     scope_compliance_required: true
-    
+
   SECURITY:
     expected_quality_score: 0.95
     max_execution_time_ms: 600000  # 10 minutes
     scope_compliance_required: true
-    
+
   DEVOPS:
     expected_quality_score: 0.90
     max_execution_time_ms: 900000  # 15 minutes
     scope_compliance_required: true
-    
+
   SYSTEM_STATE:
     expected_quality_score: 0.95
     max_execution_time_ms: 300000  # 5 minutes
     scope_compliance_required: true
-    
+
   BACKEND:
     expected_quality_score: 0.90
     max_execution_time_ms: 1200000  # 20 minutes
     scope_compliance_required: true
-    
+
   FRONTEND:
     expected_quality_score: 0.90
     max_execution_time_ms: 1200000  # 20 minutes
     scope_compliance_required: true
-    
+
   ML_AI:
     expected_quality_score: 0.85
     max_execution_time_ms: 1800000  # 30 minutes
@@ -156,27 +156,27 @@ ERROR_CODES:
     name: "Missing METRICS block in EXECUTABLE artifact"
     severity: "HARD_FAIL"
     trigger: "EXECUTABLE artifact without METRICS block"
-    
+
   GS_081:
     name: "METRICS block missing required field"
     severity: "HARD_FAIL"
     trigger: "Missing execution_time_ms, tasks_completed, tasks_total, quality_score, or scope_compliance"
-    
+
   GS_082:
     name: "METRICS block contains invalid or unparseable value"
     severity: "HARD_FAIL"
     trigger: "YAML parse error or type mismatch"
-    
+
   GS_083:
     name: "METRICS execution_time_ms must be numeric"
     severity: "HARD_FAIL"
     trigger: "Non-numeric value for execution_time_ms"
-    
+
   GS_084:
     name: "METRICS quality_score out of valid range (0.0-1.0)"
     severity: "HARD_FAIL"
     trigger: "quality_score < 0.0 or > 1.0"
-    
+
   GS_085:
     name: "METRICS scope_compliance must be boolean"
     severity: "HARD_FAIL"
@@ -192,15 +192,15 @@ ENFORCEMENT_RULES:
   executable_artifacts:
     - "PACs with TASKS and/or FILES blocks"
     - "WRAPs documenting execution completion"
-    
+
   exempt_artifacts:
     - "Doctrinal PACs (constraints only, no TASKS)"
     - "Template files"
     - "Registry files"
     - "Legacy artifacts (grandfathered, flagged)"
-    
+
   validation_mode: "FAIL_CLOSED"
-  
+
   grandfathering:
     enabled: true
     cutoff_date: "2025-12-24"
@@ -257,7 +257,7 @@ LEDGER_INTEGRATION:
     - quality_score
     - scope_compliance
     - timestamp
-    
+
   aggregation:
     - "Per-agent averages"
     - "Per-lane baselines"

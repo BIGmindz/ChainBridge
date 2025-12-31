@@ -56,7 +56,7 @@ WRAP_TEMPLATE_V1:
     - 5: DEVIATIONS
     - 6: TRAINING_SIGNAL
     - 7: FINAL_STATE
-  
+
   rules:
     - no_section_may_be_omitted: true
     - no_section_may_be_reordered: true

@@ -151,28 +151,28 @@ GOLD_STANDARD_CHECKLIST:
   identity_correct: [true/false]
   agent_color_correct: [true/false]
   execution_lane_correct: [true/false]
-  
+
   # Structure Validation
   canonical_headers_present: [true/false]
   block_order_correct: [true/false]
-  
+
   # Required Blocks
   agent_activation_ack_present: [true/false]
   runtime_activation_ack_present: [true/false]
-  
+
   # Review Gate Requirements
   review_gate_declared: [true/false]
   scope_lock_present: [true/false]
   forbidden_actions_declared: [true/false]
   error_codes_declared: [true/false]
-  
+
   # Governance Requirements
   training_signal_present: [true/false]
   final_state_declared: [true/false]
-  
+
   # Self-Certification Requirements
   self_certification_present: [true/false]
-  
+
   # Terminal Requirements
   checklist_terminal: [true/false]
   checklist_all_items_passed: [true/false]

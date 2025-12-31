@@ -87,7 +87,7 @@ LEDGER_ENTRY_SCHEMA:
   artifact_id: string
   artifact_type: string
   artifact_status: string
-  
+
   # G2 Learning fields (new)
   training_signal:
     signal_type: enum
@@ -130,13 +130,13 @@ INTEGRATION:
     record_on_positive_closure: true
     new_functions:
       - "record_block_enforced() — auto-records learning events on validation failures"
-  
+
   audit_corrections.py:
     verify_ledger_consistency: true
     new_functions:
       - "verify_ledger_consistency() — validates sequence continuity and authority"
       - "--verify-ledger CLI option"
-  
+
   ledger_writer.py:
     new_entry_types:
       - CORRECTION_APPLIED
@@ -160,12 +160,12 @@ FAILURE_MODES:
     name: LEARNING_EVENT_MISSING_LEDGER_ENTRY
     trigger: "Learning event occurs without ledger write"
     response: BLOCK
-  
+
   - code: G0_051
     name: LEARNING_EVENT_INVALID_SEQUENCE
     trigger: "Ledger sequence gap or out-of-order entry"
     response: BLOCK
-  
+
   - code: G0_052
     name: LEARNING_EVENT_AUTHORITY_MISMATCH
     trigger: "Learning event lacks authority_gid"
@@ -182,13 +182,13 @@ TRAINING_SIGNAL:
   pattern: LEDGER_GOVERNED_LEARNING
   program: "Agent University"
   course: "GOV-400: Learning Governance"
-  
+
   learning:
     - "Learning only exists if recorded"
     - "Ledger is the memory, not the agent"
     - "Governance precedes intelligence"
     - "Authority must be declared for all learning events"
-  
+
   doctrine_mutation: LEARNING_LEDGER_CANONICAL
   result: PASS
 ```
@@ -271,7 +271,7 @@ GOLD_STANDARD_CHECKLIST:
   execution_lane_correct: true
   canonical_headers_present: true
   block_order_correct: true
-  
+
   # Governance Blocks
   pac_class_declared: true
   executing_agent_declared: true
@@ -280,7 +280,7 @@ GOLD_STANDARD_CHECKLIST:
   hard_constraints_listed: true
   integration_points_defined: true
   failure_modes_defined: true
-  
+
   # Required Keys
   training_signal_present: true
   forbidden_actions_present: true

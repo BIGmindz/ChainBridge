@@ -131,31 +131,31 @@ FAILURE_DRILLS:
     expected: DRIFT_CLASSIFIED
     status: ✅ PASS
     tests: 3/3
-    
+
   - id: ML-02
     scenario: Calibration decay (ECE > 5%)
     expected: RECALIBRATION_REQUIRED
     status: ✅ PASS
     tests: 4/4
-    
+
   - id: ML-03
     scenario: Monotonic constraint violation
     expected: DECISION_BLOCK
     status: ✅ PASS
     tests: 3/3
-    
+
   - id: ML-04
     scenario: Adversarial feature perturbation
     expected: ESCALATE
     status: ✅ PASS
     tests: 4/4
-    
+
   - id: ML-05
     scenario: Replay mismatch (same input, different output)
     expected: HALT
     status: ✅ PASS
     tests: 3/3
-    
+
   - id: ML-06
     scenario: Model version mismatch
     expected: DECISION_BLOCK
@@ -238,26 +238,26 @@ WRAP:
   gid: GID-10
   color: 🩷 PINK
   authority: BENSON (GID-00)
-  
+
   execution:
     started_at: "2024-12-23T00:00:00Z"
     completed_at: "2024-12-23T00:30:00Z"
     mode: ML_FAILURE_VALIDATION
-    
+
   deliverables:
     tests_created: 25
     tests_passed: 25
     tests_failed: 0
     files_created: 2
     governance_doc: 1
-    
+
   success_metrics:
     silent_drift_events: 0
     monotonic_violations: 0
     replay_mismatches: 0
     unclassified_drift: 0
     unauthorized_models_used: 0
-    
+
   drill_matrix:
     ML-01: PASS  # Feature distribution drift → DRIFT_CLASSIFIED
     ML-02: PASS  # Calibration decay → RECALIBRATION_REQUIRED
@@ -265,7 +265,7 @@ WRAP:
     ML-04: PASS  # Adversarial perturbation → ESCALATE
     ML-05: PASS  # Replay mismatch → HALT
     ML-06: PASS  # Model version mismatch → DECISION_BLOCK
-    
+
 FINAL_STATE:
   pac_id: PAC-MAGGIE-G1-PHASE-2-RISK-MODEL-DRIFT-FAILURE-DRILLS-01
   status: EXECUTED
@@ -273,7 +273,7 @@ FINAL_STATE:
   ml_safety_tolerance: 0
   silent_failure_paths: 0
   all_drills_passed: true
-  
+
 ATTESTATION:
   agent: MAGGIE (GID-10)
   statement: |
@@ -297,14 +297,14 @@ TRAINING_SIGNAL:
     Every constraint violation must produce a block.
     Every replay must be deterministic or halt.
     Silent degradation is the enemy — test for its absence.
-  
+
   patterns_to_replicate:
     - Enumerate all drift scenarios systematically
     - Test boundary conditions (thresholds)
     - Verify hash integrity for determinism
     - Test for rejection of impossible values
     - Ensure escalation paths are explicit
-    
+
   anti_patterns_to_avoid:
     - Testing only happy paths
     - Assuming drift detection works without proof

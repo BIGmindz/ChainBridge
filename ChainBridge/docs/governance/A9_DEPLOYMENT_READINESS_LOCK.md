@@ -131,21 +131,21 @@ CONFIG_SCHEMA_V1 {
     port: integer
     name: string
     pool_size: integer
-  
+
   redis:
     host: string
     port: integer
     db: integer
-  
+
   api:
     host: string
     port: integer
     workers: integer
-  
+
   logging:
     level: "DEBUG" | "INFO" | "WARNING" | "ERROR"
     format: string
-  
+
   features:
     # Feature flags (identical keys, values may differ)
     [key: string]: boolean
@@ -175,7 +175,7 @@ DRIFT_CHECK {
   schema_hash_dev: SHA256
   schema_hash_stage: SHA256
   schema_hash_prod: SHA256
-  
+
   invariant: schema_hash_dev == schema_hash_stage == schema_hash_prod
   violation_response: HALT_DEPLOY
 }
@@ -204,7 +204,7 @@ ARTIFACT_MANIFEST {
   version: "1.0.0"
   commit_sha: string
   build_timestamp: ISO-8601
-  
+
   images:
     - name: "chainbridge/api"
       digest: "sha256:..."
@@ -212,7 +212,7 @@ ARTIFACT_MANIFEST {
     - name: "chainbridge/worker"
       digest: "sha256:..."
       size_bytes: integer
-  
+
   config_hash: SHA256
   lock_hashes:
     A1: SHA256
@@ -224,7 +224,7 @@ ARTIFACT_MANIFEST {
     A7: SHA256
     A8: SHA256
     A9: SHA256
-  
+
   signed_by: GID
   signature: string
 }
@@ -249,28 +249,28 @@ ROLLBACK_PROOF {
   rollback_id: UUID
   timestamp: ISO-8601
   authority_gid: string
-  
+
   current_state:
     commit_sha: string
     artifact_hash: string
     deployed_at: ISO-8601
-  
+
   target_state:
     commit_sha: string
     artifact_hash: string
     originally_deployed_at: ISO-8601
-  
+
   failure_evidence:
     type: "health_check" | "error_rate" | "latency" | "manual"
     description: string
     metrics: object
     captured_at: ISO-8601
-  
+
   approval_chain:
     - gid: string
       approved_at: ISO-8601
       signature: string
-  
+
   executed_at: ISO-8601
   execution_hash: SHA256
 }
@@ -294,22 +294,22 @@ PRE_DEPLOY_GATE {
     A7_present: boolean  # CI/CD hardening lock
     A8_present: boolean  # Security hardening lock
     A9_present: boolean  # This document
-  
+
   ci_verification:
     ci_proof_present: boolean
     all_gates_passed: boolean
     test_coverage_met: boolean
-  
+
   security_verification:
     security_scan_passed: boolean
     no_critical_vulnerabilities: boolean
     secrets_scan_passed: boolean
-  
+
   artifact_verification:
     image_digest_only: boolean
     config_hash_present: boolean
     manifest_signed: boolean
-  
+
   approval:
     authority_gid: string
     approved_at: ISO-8601
@@ -337,20 +337,20 @@ DEPLOYMENT_PROOF {
   proof_id: UUID
   proof_version: "1.0.0"
   timestamp: ISO-8601
-  
+
   deployment:
     environment: "dev" | "stage" | "prod"
     state: "BUILD" | "VERIFY" | "STAGE" | "PROD" | "ROLLBACK"
     commit_sha: string
     branch: string
-    
+
   artifacts:
     image_digests:
       - name: string
         digest: "sha256:..."
     config_hash: SHA256
     manifest_hash: SHA256
-    
+
   governance:
     lock_hashes:
       A1: SHA256
@@ -363,21 +363,21 @@ DEPLOYMENT_PROOF {
       A8: SHA256
       A9: SHA256
     registry_hash: SHA256
-    
+
   verification:
     ci_proof_hash: SHA256
     all_gates_passed: boolean
     security_scan_passed: boolean
     test_coverage: float
-    
+
   authority:
     deployer_gid: string
     approver_gid: string
     approval_timestamp: ISO-8601
-    
+
   verdict: "PASS" | "FAIL"
   failure_reason: string | null
-  
+
   signature:
     algorithm: "SHA256-RSA"
     value: string
@@ -411,18 +411,18 @@ on:
       environment:
         type: choice
         options: [dev, stage, prod]
-      
+
 jobs:
   pre-deploy-gate:
     # Verify all locks present
     # Verify CI_PROOF exists
     # Verify security pass
-    
+
   deploy:
     needs: pre-deploy-gate
     # Execute deployment
     # Use image digests only
-    
+
   emit-proof:
     needs: deploy
     # Generate DEPLOYMENT_PROOF
@@ -437,7 +437,7 @@ BRANCH_PROTECTION {
     - "pre-deploy-gate"
     - "deploy"
     - "emit-proof"
-  
+
   require_all_checks_passed: true
   allow_force_push: false
   allow_deletions: false
@@ -514,13 +514,13 @@ LOCK_SIGNATURE {
   document: "A9_DEPLOYMENT_READINESS_LOCK"
   version: "1.0.0"
   hash: "{{COMPUTED_AT_COMMIT}}"
-  
+
   author:
     gid: "GID-07"
     name: "Dan"
     role: "DevOps & CI/CD Lead"
     signed_at: "2025-12-22T00:00:00Z"
-  
+
   authority:
     gid: "GID-00"
     name: "Benson"

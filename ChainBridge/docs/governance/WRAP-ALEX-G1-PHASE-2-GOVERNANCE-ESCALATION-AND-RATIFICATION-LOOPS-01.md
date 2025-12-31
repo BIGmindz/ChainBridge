@@ -226,7 +226,7 @@ TRAINING_SIGNAL:
   program: "Agent University"
   level: "L7"
   domain: "Enterprise Governance & Escalation Systems"
-  
+
   competencies:
     - "Escalation state modeling"
     - "Correction-resubmission loop design"
@@ -234,7 +234,7 @@ TRAINING_SIGNAL:
     - "Deadlock detection and prevention"
     - "Multi-agent dependency resolution"
     - "Authority-bound decision making"
-  
+
   evaluation: "Binary"
   result: "PASS"
 ```

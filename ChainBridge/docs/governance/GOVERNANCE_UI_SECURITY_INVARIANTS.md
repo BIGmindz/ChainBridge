@@ -1,9 +1,9 @@
 # GOVERNANCE_UI_SECURITY_INVARIANTS
 
-> **Canonical Security Invariants for Governance UI, Terminal Signals, and WRAP Ingestion**  
-> **Issued By:** Sam (GID-06)  
-> **Authority:** BENSON (GID-00)  
-> **Date:** 2025-12-24  
+> **Canonical Security Invariants for Governance UI, Terminal Signals, and WRAP Ingestion**
+> **Issued By:** Sam (GID-06)
+> **Authority:** BENSON (GID-00)
+> **Date:** 2025-12-24
 > **PAC Reference:** PAC-SAM-P30-GOVERNANCE-UI-SECURITY-INVARIANTS-AND-WRAP-INGESTION-01
 
 ---
@@ -117,16 +117,16 @@ WRAP_INGESTION:
   artifact_type: "REPORT"
   authorization_capability: false
   state_mutation_capability: false
-  
+
   gates_disabled:
     - PAG-01
     - REVIEW-GATE
     - BSRG
-    
+
   required_blocks:
     - BENSON_TRAINING_SIGNAL
     - FINAL_STATE
-    
+
   forbidden_blocks:
     - AGENT_ACTIVATION_ACK
     - RUNTIME_ACTIVATION_ACK
@@ -167,14 +167,14 @@ TRAINING_SIGNALS:
   confidence: "REQUIRED"
   explainability: "MANDATORY"
   poisoning_detection: "ENABLED"
-  
+
   required_fields:
     - signal_type
     - lesson
     - confidence
     - source_wrap_id
     - timestamp
-    
+
   forbidden_operations:
     - enforcement_logic_modification
     - policy_weight_adjustment
@@ -247,26 +247,26 @@ SECURITY_INVARIANT_AUDIT_CHECKLIST:
   ui_data_source_ledger_only: true
   ui_no_policy_eval: true
   ui_color_semantics_fixed: true
-  
+
   # Terminal Invariants
   terminal_output_derived: true
   terminal_no_agent_glyphs: true
   terminal_spoofing_detection: true
-  
+
   # WRAP Invariants
   wrap_cannot_authorize: true
   wrap_cannot_mutate: true
   wrap_gates_disabled: true
   wrap_required_blocks_present: true
   wrap_forbidden_blocks_absent: true
-  
+
   # Training Invariants
   training_source_wrap_only: true
   training_mutation_forbidden: true
   training_confidence_required: true
   training_explainability_mandatory: true
   training_poisoning_forbidden: true
-  
+
   # Overall
   all_invariants_enforced: true
   fail_closed_on_ambiguity: true

@@ -1,9 +1,9 @@
 # PAC-MAGGIE-P30-GOVERNANCE-SIGNAL-SEMANTICS-AND-EXPLAINABILITY-01
 
-> **Governance Signal Semantics and Explainability — P30 Enforcement**  
-> **Agent:** Maggie (GID-10)  
-> **Color:** 💗 MAGENTA  
-> **Date:** 2025-12-24  
+> **Governance Signal Semantics and Explainability — P30 Enforcement**
+> **Agent:** Maggie (GID-10)
+> **Color:** 💗 MAGENTA
+> **Date:** 2025-12-24
 > **Status:** 💗 POSITIVE_CLOSURE
 
 ---
@@ -368,7 +368,7 @@ SELF_CERTIFICATION:
     - Explainable (human-readable rationale required)
     - Glass-box (no opaque ML scores permitted)
     - Business-aligned (severity reflects impact, not noise)
-    
+
     Deliverable: docs/governance/GOVERNANCE_SIGNAL_SEMANTICS.md
   certified: true
   timestamp: "2025-12-24T00:00:00Z"
@@ -396,7 +396,7 @@ GOLD_STANDARD_CHECKLIST:
   execution_lane_declared: true
   canonical_headers_present: true
   block_order_correct: true
-  
+
   # Governance Blocks
   governance_mode_declared: true
   correction_class_declared: true
@@ -407,30 +407,30 @@ GOLD_STANDARD_CHECKLIST:
   forbidden_actions_section_present: true
   scope_lock_present: true
   wrap_schema_valid: true
-  
+
   # Review Gates
   review_gate_declared: true
   review_gate_passed: true
   review_gate_terminal: true
   benson_self_review_gate_present: true
   benson_self_review_gate_passed: true
-  
+
   # Content Validation
   no_extra_content: true
   no_scope_drift: true
-  
+
   # Required Keys
   training_signal_present: true
   self_certification_present: true
   final_state_declared: true
-  
+
   # P30 Specific
   signal_taxonomy_defined: true
   explanation_schema_defined: true
   gate_mappings_complete: true
   ml_constraints_documented: true
   glass_box_enforced: true
-  
+
   # Closure
   closure_declared: true
   positive_closure_declared: true
@@ -440,7 +440,7 @@ GOLD_STANDARD_CHECKLIST:
   ordering_verified: true
   immutability_declared: true
   pack_immutability_declared: true
-  
+
   # Terminal
   checklist_terminal: true
   checklist_all_items_passed: true

@@ -58,15 +58,15 @@ jobs:
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "🔍 INVARIANT 1: PDO enforcement files exist"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           echo "Checking: app/services/pdo/validator.py"
           test -s app/services/pdo/validator.py || { echo "❌ FAILED: validator.py missing or empty"; exit 1; }
           echo "✅ validator.py exists and is non-empty"
-          
+
           echo "Checking: app/middleware/pdo_enforcement.py"
           test -s app/middleware/pdo_enforcement.py || { echo "❌ FAILED: pdo_enforcement.py missing or empty"; exit 1; }
           echo "✅ pdo_enforcement.py exists and is non-empty"
-          
+
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "✅ INVARIANT 1 PASSED"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -79,19 +79,19 @@ jobs:
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "🔍 INVARIANT 2: PDO enforcement symbols exist"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           echo "Checking: class PDOEnforcementGate"
           grep -q "class PDOEnforcementGate" app/middleware/pdo_enforcement.py || { echo "❌ FAILED: PDOEnforcementGate class not found"; exit 1; }
           echo "✅ PDOEnforcementGate class exists"
-          
+
           echo "Checking: require_valid_pdo decorator"
           grep -q "require_valid_pdo" app/middleware/pdo_enforcement.py || { echo "❌ FAILED: require_valid_pdo not found"; exit 1; }
           echo "✅ require_valid_pdo exists"
-          
+
           echo "Checking: validate_pdo function"
           grep -q "validate_pdo" app/services/pdo/validator.py || { echo "❌ FAILED: validate_pdo not found"; exit 1; }
           echo "✅ validate_pdo exists"
-          
+
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "✅ INVARIANT 2 PASSED"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -104,11 +104,11 @@ jobs:
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "🔍 INVARIANT 3: PDO enforcement tests exist"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           echo "Checking: tests/test_pdo_enforcement.py"
           test -s tests/test_pdo_enforcement.py || { echo "❌ FAILED: test_pdo_enforcement.py missing or empty"; exit 1; }
           echo "✅ test_pdo_enforcement.py exists and is non-empty"
-          
+
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "✅ INVARIANT 3 PASSED"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -135,21 +135,21 @@ jobs:
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "🔍 INVARIANT 4: PDO enforcement tests pass"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           export PYTHONPATH="${PYTHONPATH}:$(pwd)"
-          
+
           # Run PDO enforcement tests - must collect at least 1 test
           python -m pytest tests/test_pdo_enforcement.py -q --tb=short
-          
+
           TEST_EXIT=$?
-          
+
           if [ $TEST_EXIT -ne 0 ]; then
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo "❌ INVARIANT 4 FAILED: PDO enforcement tests did not pass"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             exit 1
           fi
-          
+
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "✅ INVARIANT 4 PASSED"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -162,14 +162,14 @@ jobs:
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "🔍 INVARIANT 5: No enforcement bypass patterns"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           # Check enforcement middleware is not stubbed/mocked in production code
           if grep -rn "Mock.*PDOEnforcementGate\|patch.*pdo_enforcement" app/ 2>/dev/null; then
             echo "❌ FAILED: Enforcement bypass detected in production code"
             exit 1
           fi
           echo "✅ No mocking/stubbing of enforcement in production code"
-          
+
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "✅ INVARIANT 5 PASSED"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -186,11 +186,11 @@ jobs:
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "🔏 INVARIANT 6: PDO signing modules exist"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           echo "Checking: app/services/pdo/signing.py"
           test -s app/services/pdo/signing.py || { echo "❌ FAILED: signing.py missing or empty"; exit 1; }
           echo "✅ signing.py exists and is non-empty"
-          
+
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "✅ INVARIANT 6 PASSED"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -203,23 +203,23 @@ jobs:
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "🔏 INVARIANT 7: PDO signing symbols present"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           echo "Checking: verify_pdo_signature function"
           grep -q "def verify_pdo_signature" app/services/pdo/signing.py || { echo "❌ FAILED: verify_pdo_signature not found"; exit 1; }
           echo "✅ verify_pdo_signature exists"
-          
+
           echo "Checking: PDOSignature class"
           grep -q "class PDOSignature" app/services/pdo/signing.py || { echo "❌ FAILED: PDOSignature class not found"; exit 1; }
           echo "✅ PDOSignature class exists"
-          
+
           echo "Checking: VerificationOutcome enum"
           grep -q "class VerificationOutcome" app/services/pdo/signing.py || { echo "❌ FAILED: VerificationOutcome not found"; exit 1; }
           echo "✅ VerificationOutcome exists"
-          
+
           echo "Checking: signature field in validator"
           grep -q "signature" app/services/pdo/validator.py || { echo "❌ FAILED: signature references missing from validator"; exit 1; }
           echo "✅ signature referenced in validator"
-          
+
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "✅ INVARIANT 7 PASSED"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -232,11 +232,11 @@ jobs:
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "🔏 INVARIANT 8: PDO signing tests exist"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           echo "Checking: tests/test_pdo_signing.py"
           test -s tests/test_pdo_signing.py || { echo "❌ FAILED: test_pdo_signing.py missing or empty"; exit 1; }
           echo "✅ test_pdo_signing.py exists and is non-empty"
-          
+
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "✅ INVARIANT 8 PASSED"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -250,23 +250,23 @@ jobs:
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "🔏 INVARIANT 9: PDO signing negative tests exist"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           echo "Checking: test for unsigned PDO rejection"
           grep -q "test_unsigned_pdo" tests/test_pdo_signing.py || { echo "❌ FAILED: Unsigned PDO rejection test not found"; exit 1; }
           echo "✅ Unsigned PDO rejection test exists"
-          
+
           echo "Checking: test for tampered/invalid signature rejection"
           grep -qE "test_tampered|test_.*mismatch|test_.*invalid" tests/test_pdo_signing.py || { echo "❌ FAILED: Signature mismatch/invalid test not found"; exit 1; }
           echo "✅ Signature mismatch/invalid test exists"
-          
+
           echo "Checking: test for expired PDO rejection"
           grep -q "test_expired" tests/test_pdo_signing.py || { echo "❌ FAILED: Expired PDO rejection test not found"; exit 1; }
           echo "✅ Expired PDO rejection test exists"
-          
+
           echo "Checking: test for replay attack rejection"
           grep -qE "test_.*replay|test_duplicate_nonce" tests/test_pdo_signing.py || { echo "❌ FAILED: Replay attack rejection test not found"; exit 1; }
           echo "✅ Replay attack rejection test exists"
-          
+
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "✅ INVARIANT 9 PASSED"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -276,21 +276,21 @@ jobs:
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "🔏 RUNNING PDO signing tests"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
+
           export PYTHONPATH="${PYTHONPATH}:$(pwd)"
-          
+
           # Run signing tests - MUST pass
           python -m pytest tests/test_pdo_signing.py -q --tb=short
-          
+
           SIGN_EXIT=$?
-          
+
           if [ $SIGN_EXIT -ne 0 ]; then
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo "❌ FAILED: PDO signing tests did not pass"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             exit 1
           fi
-          
+
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "✅ PDO signing tests PASSED"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -304,50 +304,50 @@ jobs:
           echo "🔏 INVARIANT 10: No signing bypass patterns"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           BYPASS_FOUND=0
-          
+
           # Check for ALLOW_UNSIGNED pattern
           if grep -rn "ALLOW_UNSIGNED" app/ 2>/dev/null; then
             echo "❌ BYPASS DETECTED: ALLOW_UNSIGNED in production code"
             BYPASS_FOUND=1
           fi
-          
+
           # Check for skip_signature pattern
           if grep -rn "skip_signature\|skip_signing" app/ 2>/dev/null; then
             echo "❌ BYPASS DETECTED: skip_signature/skip_signing in production code"
             BYPASS_FOUND=1
           fi
-          
+
           # Check for DEBUG-conditional signature skipping
           if grep -rn "if DEBUG.*signature\|if.*DEBUG.*sign" app/ 2>/dev/null | grep -v "#"; then
             echo "❌ BYPASS DETECTED: DEBUG-conditional signature skipping"
             BYPASS_FOUND=1
           fi
-          
+
           # Check for mocking of signing in production code (not tests/)
           if grep -rn "Mock.*verify_pdo_signature\|patch.*signing" app/ 2>/dev/null; then
             echo "❌ BYPASS DETECTED: Mocking of signing in production code"
             BYPASS_FOUND=1
           fi
-          
+
           # Check for monkeypatch of signing
           if grep -rn "monkeypatch.*sign\|setattr.*sign" app/ 2>/dev/null; then
             echo "❌ BYPASS DETECTED: Monkeypatching of signing"
             BYPASS_FOUND=1
           fi
-          
+
           if [ $BYPASS_FOUND -ne 0 ]; then
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo "❌ INVARIANT 10 FAILED: Signing bypass patterns detected"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             exit 1
           fi
-          
+
           echo "✅ No ALLOW_UNSIGNED patterns"
           echo "✅ No skip_signature patterns"
           echo "✅ No DEBUG-conditional signing skips"
           echo "✅ No mocking of signing in production code"
           echo "✅ No monkeypatching of signing"
-          
+
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "✅ INVARIANT 10 PASSED"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

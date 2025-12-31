@@ -48,7 +48,7 @@ for file in $STAGED_FILES; do
     if [ ! -f "${REPO_ROOT}/${file}" ]; then
         continue
     fi
-    
+
     # Run gate_pack.py validation
     if python3 "$GATE_ENGINE" --file "${REPO_ROOT}/${file}"; then
         echo "  ✓ ${file}"

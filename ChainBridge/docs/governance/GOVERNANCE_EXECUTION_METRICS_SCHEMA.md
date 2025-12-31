@@ -1,9 +1,9 @@
 # Governance Execution Metrics Schema
 
-> **Schema Document** — PAC-ALEX-P36  
-> **Version:** 1.0.0  
-> **Effective Date:** 2025-12-24  
-> **Authority:** Benson (GID-00)  
+> **Schema Document** — PAC-ALEX-P36
+> **Version:** 1.0.0
+> **Effective Date:** 2025-12-24
+> **Authority:** Benson (GID-00)
 > **Status:** LOCKED / CANONICAL
 
 ---
@@ -59,7 +59,7 @@ EXECUTION_METRICS:
   tasks_planned: 5
   tasks_completed: 5
   validation_passed: true
-  
+
   # Recommended
   tasks_failed: 0
   completion_rate: 1.0
@@ -215,18 +215,18 @@ EXECUTION_METRICS_SCHEMA = {
 def validate_metrics_schema(metrics: dict) -> list[str]:
     """Validate EXECUTION_METRICS against schema."""
     errors = []
-    
+
     # Check required fields
     for field in EXECUTION_METRICS_SCHEMA["required"]:
         if field not in metrics:
             errors.append(f"[GS_070] Missing required metric: {field}")
-    
+
     # Check types
     for key, value in metrics.items():
         expected_type = EXECUTION_METRICS_SCHEMA["types"].get(key)
         if expected_type and not isinstance(value, expected_type):
             errors.append(f"[GS_074] Type mismatch: '{key}' expected {expected_type.__name__}")
-    
+
     return errors
 ```
 
@@ -242,5 +242,5 @@ Future versions will maintain backward compatibility. New fields may be added bu
 
 ---
 
-**Authority:** PAC-ALEX-P36-GOVERNANCE-MEASUREMENT-ENFORCEMENT-AND-AGENT-LEARNING-MANDATE-01  
+**Authority:** PAC-ALEX-P36-GOVERNANCE-MEASUREMENT-ENFORCEMENT-AND-AGENT-LEARNING-MANDATE-01
 **Status:** LOCKED — Schema changes require BENSON (GID-00) authorization

@@ -548,55 +548,55 @@ jobs:
         run: |
           echo "🔵 ATLAS (GID-11) — Running PAC Linter..."
           echo ""
-          
+
           # Run linter in check mode - exits non-zero on errors
           python tools/pac_linter.py --check --verbose 2>&1 | tee pac_lint_output.txt
-          
+
           # Capture exit code
           LINT_EXIT_CODE=${PIPESTATUS[0]}
-          
+
           if [ $LINT_EXIT_CODE -ne 0 ]; then
             echo ""
             echo "❌ PAC LINT FAILED — Merge blocked"
             echo "Fix violations before merging."
             exit 1
           fi
-          
+
           echo ""
           echo "✅ PAC lint passed — All governance checks satisfied"
 
       - name: Verify Color Gateway Compliance
         run: |
           echo "🔵 ATLAS (GID-11) — Verifying Color Gateway spec compliance..."
-          
+
           # Check that color_gateway_spec.json exists and is valid
           if [ ! -f "docs/governance/color_gateway_spec.json" ]; then
             echo "❌ GOVERNANCE ERROR: color_gateway_spec.json not found"
             exit 1
           fi
-          
+
           # Validate JSON structure
           python3 << 'EOF'
           import json
           import sys
-          
+
           with open('docs/governance/color_gateway_spec.json') as f:
               spec = json.load(f)
-          
+
           # Required fields
           required = ['spec_version', 'lanes', 'rules']
           missing = [f for f in required if f not in spec]
-          
+
           if missing:
               print(f"❌ Color Gateway spec missing: {missing}")
               sys.exit(1)
-          
+
           # Verify TEAL is reserved for GID-00
           teal = spec.get('lanes', {}).get('TEAL', {})
           if teal.get('reserved_gid') != 'GID-00':
               print("❌ TEAL lane must be reserved for GID-00")
               sys.exit(1)
-          
+
           # Verify rules are strict
           rules = spec.get('rules', {})
           strict_rules = [
@@ -606,33 +606,33 @@ jobs:
               'deny_color_agent_mismatch',
               'deny_teal_as_executing'
           ]
-          
+
           for rule in strict_rules:
               if not rules.get(rule, False):
                   print(f"❌ Color Gateway rule must be enabled: {rule}")
                   sys.exit(1)
-          
+
           print("✅ Color Gateway spec validated")
           EOF
 
       - name: Check AGENT_REGISTRY.json integrity
         run: |
           echo "🔵 ATLAS (GID-11) — Verifying agent registry integrity..."
-          
+
           if [ ! -f "docs/governance/AGENT_REGISTRY.json" ]; then
             echo "❌ GOVERNANCE ERROR: AGENT_REGISTRY.json not found"
             exit 1
           fi
-          
+
           python3 << 'EOF'
           import json
           import sys
-          
+
           with open('docs/governance/AGENT_REGISTRY.json') as f:
               registry = json.load(f)
-          
+
           agents = registry.get('agents', {})
-          
+
           # Verify GID-00 through GID-11 exist
           gid_index = registry.get('gid_index', {})
           for i in range(12):
@@ -640,18 +640,18 @@ jobs:
               if gid not in gid_index:
                   print(f"❌ Missing agent for {gid}")
                   sys.exit(1)
-          
+
           # Verify BENSON is GID-00
           if gid_index.get('GID-00') != 'BENSON':
               print("❌ GID-00 must be BENSON")
               sys.exit(1)
-          
+
           # Verify TEAL is exclusive to GID-00
           for name, agent in agents.items():
               if agent.get('color') == 'TEAL' and agent.get('gid') != 'GID-00':
                   print(f"❌ TEAL color reserved for GID-00, found on {name}")
                   sys.exit(1)
-          
+
           print(f"✅ Agent registry validated ({len(agents)} agents)")
           EOF
 
@@ -665,7 +665,7 @@ jobs:
   # ============================================================================
   # 🔵 ATLAS (GID-11) CORRECTION PACK HARD-GATE
   # PAC-ATLAS-G2-GOVERNANCE-CORRECTION-HARD-GATE-IMPLEMENTATION-01
-  # 
+  #
   # FAIL-CLOSED. NO PARTIAL CHECKLISTS. NO MANUAL OVERRIDES. NO EXCEPTIONS.
   # ============================================================================
   governance-correction-pack-hardgate:
@@ -696,33 +696,33 @@ jobs:
           echo ""
           echo "NO PARTIAL CHECKLISTS. NO MANUAL OVERRIDES. NO EXCEPTIONS."
           echo ""
-          
+
           # Find all correction pack files in the changed files
           CHANGED_FILES=$(git diff --name-only origin/main... 2>/dev/null || git diff --name-only HEAD~1 2>/dev/null || echo "")
-          
+
           # Pattern match for correction packs
           CORRECTION_PACKS=$(echo "$CHANGED_FILES" | grep -E "(CORRECTION|GOVERNANCE_CORRECTION)" || true)
-          
+
           # Also scan for files containing correction markers
           ALL_CHANGED=$(echo "$CHANGED_FILES" | grep -E "\.(md|py|txt)$" || true)
-          
+
           HARDGATE_FAILED=0
           VALIDATION_ERRORS=""
-          
+
           for file in $ALL_CHANGED; do
             if [ -f "$file" ]; then
               # Check if file contains correction markers
               IS_CORRECTION=$(grep -cE "(CORRECTION|GOVERNANCE_CORRECTION|MODE: GOVERNANCE_CORRECTION|VIOLATIONS_ADDRESSED|correction_type:)" "$file" 2>/dev/null || echo "0")
-              
+
               if [ "$IS_CORRECTION" -gt 0 ]; then
                 echo "🔍 Detected correction pack: $file"
-                
+
                 # Run gate_pack.py validation
                 if [ -f "ChainBridge/tools/governance/gate_pack.py" ]; then
                   VALIDATION_OUTPUT=$(python ChainBridge/tools/governance/gate_pack.py --validate "$file" 2>&1) || {
                     HARDGATE_FAILED=1
                     VALIDATION_ERRORS="$VALIDATION_ERRORS\n❌ $file:\n$VALIDATION_OUTPUT\n"
-                    
+
                     echo ""
                     echo "┌──────────────────────────────────────────────────────────────┐"
                     echo "│ ❌ HARD-GATE FAILURE: $file"
@@ -731,46 +731,46 @@ jobs:
                     echo "└──────────────────────────────────────────────────────────────┘"
                     echo ""
                   }
-                  
+
                   if [ $? -eq 0 ]; then
                     echo "✅ Validated: $file"
                   fi
                 else
                   echo "⚠️  gate_pack.py not found - running inline validation"
-                  
+
                   # Inline Gold Standard Checklist validation
                   python3 << EOF
           import re
           import sys
           import yaml
-          
+
           GOLD_STANDARD_KEYS = [
               "identity_correct", "agent_color_correct", "execution_lane_correct",
               "canonical_headers_present", "block_order_correct", "forbidden_actions_section_present",
               "scope_lock_present", "training_signal_present", "final_state_declared",
               "wrap_schema_valid", "no_extra_content", "no_scope_drift", "self_certification_present"
           ]
-          
+
           with open("$file", "r") as f:
               content = f.read()
-          
+
           # Check for GOLD_STANDARD_CHECKLIST block
           if "GOLD_STANDARD_CHECKLIST" not in content:
               print("❌ G0_020: GOLD_STANDARD_CHECKLIST block missing")
               sys.exit(1)
-          
+
           # Extract YAML block
           yaml_match = re.search(r'GOLD_STANDARD_CHECKLIST:\s*\n```yaml\n(.*?)\n```', content, re.DOTALL)
           if not yaml_match:
               print("❌ G0_020: Unable to parse GOLD_STANDARD_CHECKLIST YAML block")
               sys.exit(1)
-          
+
           try:
               checklist = yaml.safe_load(yaml_match.group(1))
           except yaml.YAMLError as e:
               print(f"❌ G0_020: Invalid YAML in checklist: {e}")
               sys.exit(1)
-          
+
           # Validate all keys present and checked
           errors = []
           for key in GOLD_STANDARD_KEYS:
@@ -778,26 +778,26 @@ jobs:
                   errors.append(f"G0_024: Missing key '{key}'")
               elif not isinstance(checklist[key], dict) or not checklist[key].get("checked", False):
                   errors.append(f"G0_023: Key '{key}' is not checked: true")
-          
+
           if errors:
               print("❌ GOLD STANDARD CHECKLIST VALIDATION FAILED")
               for err in errors:
                   print(f"   {err}")
               sys.exit(1)
-          
+
           # Check for self-certification
           if "SELF_CERTIFICATION" not in content:
               print("❌ G0_021: SELF_CERTIFICATION block missing")
               sys.exit(1)
-          
+
           # Check for VIOLATIONS_ADDRESSED
           if "VIOLATIONS_ADDRESSED" not in content:
               print("❌ G0_022: VIOLATIONS_ADDRESSED section missing")
               sys.exit(1)
-          
+
           print("✅ All Gold Standard Checklist items verified")
           EOF
-                  
+
                   if [ $? -ne 0 ]; then
                     HARDGATE_FAILED=1
                     VALIDATION_ERRORS="$VALIDATION_ERRORS\n❌ $file: Gold Standard Checklist validation failed\n"
@@ -806,10 +806,10 @@ jobs:
               fi
             fi
           done
-          
+
           echo ""
           echo "═════════════════════════════════════════════════════════════════"
-          
+
           if [ $HARDGATE_FAILED -eq 1 ]; then
             echo ""
             echo "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓"
@@ -1016,7 +1016,7 @@ jobs:
              [[ "${{ needs.governance-correction-pack-hardgate.result }}" != "success" ]]; then
             echo "❌ ALEX GOVERNANCE: PR BLOCKED"
             echo "Fix violations before merging"
-            
+
             # Check specifically for correction pack hard-gate failure
             if [[ "${{ needs.governance-correction-pack-hardgate.result }}" != "success" ]]; then
               echo ""
@@ -1027,7 +1027,7 @@ jobs:
               echo "┃ NO PARTIAL CHECKLISTS. NO MANUAL OVERRIDES. NO EXCEPTIONS.  ┃"
               echo "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
             fi
-            
+
             exit 1
           fi
 

@@ -53,7 +53,7 @@ from core.state.transition_validator import (
 
 class CheckStatus(Enum):
     """Status of a verification check."""
-    
+
     PASS = "PASS"
     FAIL = "FAIL"
     WARN = "WARN"
@@ -63,7 +63,7 @@ class CheckStatus(Enum):
 @dataclass
 class CheckResult:
     """Result of a single verification check."""
-    
+
     name: str
     status: CheckStatus
     message: str
@@ -151,7 +151,7 @@ def check_state_machine_registry() -> CheckResult:
 def check_state_machine_integrity() -> CheckResult:
     """Verify all state machines pass structural validation."""
     results = validate_all_state_machines()
-    
+
     # validate_all_state_machines returns dict[name, list[errors]]
     all_errors = []
     for name, errors in results.items():
@@ -289,7 +289,7 @@ def check_initial_states() -> CheckResult:
         target_states = set()
         for targets in machine.transitions.values():
             target_states.update(targets)
-        
+
         # States that are sources but never targets (initial candidates)
         initial_candidates = source_states - target_states
 

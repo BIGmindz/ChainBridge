@@ -230,21 +230,21 @@ FINAL_STATE:
   status: "COMPLETED"
   test_status: "971 passed, 1 skipped"
   validation_status: "ALL VALIDATIONS PASSED"
-  
+
   files_created:
     - docs/governance/CANONICAL_PAC_TEMPLATE.md
     - tools/governance/gate_pack.py
     - .githooks/pre-commit
     - .github/workflows/governance-pack-gate.yml
-  
+
   gates_implemented:
     - EMISSION (template defines single valid format)
     - PRE-COMMIT (hook blocks invalid commits)
     - CI (workflow blocks invalid merges)
-  
+
   enforcement_mode: "FAIL_CLOSED"
   legacy_handling: "GRANDFATHERED"
-  
+
   attestation: |
     I, Benson (GID-00), attest that:
     - The G0 Phase 1 hard gates are implemented and functional

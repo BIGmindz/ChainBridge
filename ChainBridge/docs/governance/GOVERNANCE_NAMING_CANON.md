@@ -35,7 +35,7 @@ AGENT_ROLE_CLASSES:
       - LIRA (GID-09)
       - MAGGIE (GID-10)
       - RUBY (GID-12)
-      
+
   NON_EXECUTING:
     description: "Agents that CANNOT execute PACs or emit artifacts"
     can_appear_in_pac_id: false
@@ -43,7 +43,7 @@ AGENT_ROLE_CLASSES:
     examples:
       - PAX (RETIRED)
       - DANA (RETIRED)
-      
+
   CONSTRAINED:
     description: "Agents with execution restrictions"
     can_appear_in_pac_id: true
@@ -62,14 +62,14 @@ PAC_NAMING_CANON:
   rule_2: "PAC ID CANNOT reference NON_EXECUTING agents"
   rule_3: "PAC ID CANNOT reference forbidden aliases"
   rule_4: "Footer color MUST match executing agent"
-  
+
   pattern: "PAC-<EXECUTING_AGENT>-<TYPE>-<SEQUENCE>-<VERSION>"
-  
+
   valid_examples:
     - "PAC-BENSON-P36-NONEXECUTING-AGENT-ENFORCEMENT-01"
     - "PAC-ATLAS-P33-STRESS-ORCHESTRATION-01"
     - "PAC-SAM-P32-SECURITY-GATE-HARDENING-01"
-    
+
   invalid_examples:
     - "PAC-PAX-P32-GOVERNANCE-ECONOMIC-STRESS-01"  # PAX is NON_EXECUTING
     - "PAC-DANA-GOV-001-POLICY-UPDATE-01"          # DANA is RETIRED
@@ -85,7 +85,7 @@ FORBIDDEN_AGENT_ALIASES:
       status: "RETIRED"
       reason: "Consolidated/deprecated in registry v4.0.0"
       error_code: "GS_073"
-      
+
   - DANA:
       status: "RETIRED"
       reason: "Deprecated — no longer a valid agent"
@@ -100,12 +100,12 @@ FORBIDDEN_AGENT_ALIASES:
 FOOTER_COLOR_RULES:
   rule: "Footer color MUST match executing agent from AGENT_ACTIVATION_ACK"
   enforcement: "GS_072"
-  
+
   valid_footer_example: |
     ╔══════════════════════════════════════════════════════════════════════════════════════╗
     ║ 🟦🟩 TEAL — BENSON (GID-00) — Governance Runtime                                     ║
     ╚══════════════════════════════════════════════════════════════════════════════════════╝
-    
+
   invalid_footer_example: |
     # PAC executed by BENSON but footer shows SAM's color
     ╔══════════════════════════════════════════════════════════════════════════════════════╗
@@ -123,12 +123,12 @@ PERSONA_MEMORY_POLICY:
   explanation: |
     If an agent's persona memory contains capabilities or roles
     that conflict with AGENT_REGISTRY.md, the registry wins.
-    
+
   override_order:
     1: "AGENT_REGISTRY.md (CANONICAL)"
     2: "PAC explicit constraints"
     3: "Persona memory (SUBORDINATE)"
-    
+
   example: |
     If persona memory says "Pax can execute strategy PACs"
     but AGENT_REGISTRY says "PAX — Retired (NON_EXECUTING)"
@@ -145,12 +145,12 @@ ERROR_CODES:
     name: "PAC ID references non-executing or retired agent"
     severity: "HARD_FAIL"
     example: "PAC-PAX-P32-..." triggers GS_071
-    
+
   GS_072:
     name: "Footer color mismatch — must match executing agent"
     severity: "HARD_FAIL"
     example: "BENSON PAC with SAM footer color"
-    
+
   GS_073:
     name: "Forbidden agent alias detected in PAC ID"
     severity: "HARD_FAIL"
@@ -166,7 +166,7 @@ CI_ENFORCEMENT:
   validator: "tools/governance/gate_pack.py"
   function: "validate_pac_naming_and_roles()"
   mode: "FAIL_CLOSED"
-  
+
   checks:
     - "PAC ID agent extraction"
     - "Forbidden alias detection"
@@ -183,7 +183,7 @@ MIGRATION_NOTES:
   legacy_pacs:
     - "PAC-PAX-* files MUST be archived or reassigned"
     - "Footer colors MUST be updated to match executor"
-    
+
   action_required:
     - "Audit all PAC-PAX-* files in docs/governance/"
     - "Reassign to appropriate executing agent or archive"

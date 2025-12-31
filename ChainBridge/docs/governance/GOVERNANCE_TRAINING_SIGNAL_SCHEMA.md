@@ -1,9 +1,9 @@
 # Governance Training Signal Schema
 
-> **PAC Reference:** PAC-MAGGIE-P36-GOVERNANCE-METRICS-LEARNING-LOOP-AND-AGENT-PERFORMANCE-BASELINE-01  
-> **Author:** Maggie (GID-10) | 💗 MAGENTA  
-> **Authority:** BENSON (GID-00)  
-> **Date:** 2025-12-24  
+> **PAC Reference:** PAC-MAGGIE-P36-GOVERNANCE-METRICS-LEARNING-LOOP-AND-AGENT-PERFORMANCE-BASELINE-01
+> **Author:** Maggie (GID-10) | 💗 MAGENTA
+> **Authority:** BENSON (GID-00)
+> **Date:** 2025-12-24
 > **Status:** CANONICAL
 
 ---
@@ -26,7 +26,7 @@ This document defines the canonical schema for TRAINING_SIGNAL blocks in PAC and
 ```yaml
 TRAINING_SIGNAL_SCHEMA:
   version: "1.0.0"
-  
+
   required_fields:
     signal_type:
       type: "string"
@@ -37,7 +37,7 @@ TRAINING_SIGNAL_SCHEMA:
         - "ERROR_CORRECTION"
         - "BEHAVIORAL_ADJUSTMENT"
       description: "Classification of the training signal"
-      
+
     pattern:
       type: "string"
       format: "SCREAMING_SNAKE_CASE"
@@ -47,48 +47,48 @@ TRAINING_SIGNAL_SCHEMA:
         - "GOVERNANCE_MUST_SURVIVE_ADVERSARIES"
         - "AGENTS_MUST_IMPROVE_MEASURABLY"
         - "NO_SILENT_FAILURES_PERMITTED"
-        
+
     lesson:
       type: "string | array[string]"
       max_length: 500
       description: "Human-readable lesson(s) from this operation"
-      
+
     mandatory:
       type: "boolean"
       default: true
       description: "Whether this signal must be propagated"
-      
+
     propagate:
       type: "boolean"
       default: true
       description: "Whether to share with other agents"
-      
+
   optional_fields:
     program:
       type: "string"
       description: "Learning program this belongs to"
       example: "Agent University"
-      
+
     course:
       type: "string"
       description: "Specific course within program"
       example: "GOV-900: Adversarial Governance Robustness"
-      
+
     module:
       type: "string"
       description: "Module within course"
       example: "P36 — Agent Performance Baselines"
-      
+
     standard:
       type: "string"
       description: "External standard reference"
       example: "ISO/PAC/METRICS-V1.0"
-      
+
     evaluation:
       type: "string"
       allowed_values: ["Binary", "Graduated", "Continuous"]
       description: "How learning is evaluated"
-      
+
     scope:
       type: "string"
       allowed_values:
@@ -97,18 +97,18 @@ TRAINING_SIGNAL_SCHEMA:
         - "LANE_SPECIFIC"
         - "ALL_AGENTS"
       description: "Who should receive this signal"
-      
+
     priority:
       type: "integer"
       range: [1, 10]
       default: 5
       description: "Urgency of learning (10 = highest)"
-      
+
     expires:
       type: "string"
       format: "ISO8601"
       description: "When this signal becomes obsolete"
-      
+
     supersedes:
       type: "array[string]"
       description: "Previous patterns this replaces"
@@ -130,7 +130,7 @@ POSITIVE_REINFORCEMENT:
     - "Zero scope violations"
     - "Comprehensive failure explanations"
     - "Ahead-of-schedule completion"
-    
+
   example:
     signal_type: "POSITIVE_REINFORCEMENT"
     pattern: "FIRST_PASS_VALIDATION_ACHIEVED"
@@ -152,7 +152,7 @@ NEGATIVE_REINFORCEMENT:
     - "Scope violations"
     - "Authority overreach"
     - "Silent failures"
-    
+
   example:
     signal_type: "NEGATIVE_REINFORCEMENT"
     pattern: "SCOPE_VIOLATION_DETECTED"
@@ -173,7 +173,7 @@ PATTERN_LEARNING:
     - "New governance structure introduced"
     - "Process change documented"
     - "Schema evolution"
-    
+
   example:
     signal_type: "PATTERN_LEARNING"
     pattern: "METRICS_REQUIRED_FOR_COMPLETION"
@@ -194,7 +194,7 @@ ERROR_CORRECTION:
     - "Validation error resolved"
     - "Regression fixed"
     - "Misunderstanding clarified"
-    
+
   example:
     signal_type: "ERROR_CORRECTION"
     pattern: "REGISTRY_BINDING_CORRECTED"
@@ -215,7 +215,7 @@ BEHAVIORAL_ADJUSTMENT:
     - "Performance below baseline"
     - "New constraint introduced"
     - "Process optimization identified"
-    
+
   example:
     signal_type: "BEHAVIORAL_ADJUSTMENT"
     pattern: "REDUCE_VALIDATION_ITERATIONS"
@@ -236,15 +236,15 @@ MANDATORY_EMISSION_POINTS:
   pac_completion:
     condition: "PAC reaches POSITIVE_CLOSURE"
     required_signal_type: "POSITIVE_REINFORCEMENT | PATTERN_LEARNING"
-    
+
   validation_failure:
     condition: "gate_pack.py returns INVALID"
     required_signal_type: "NEGATIVE_REINFORCEMENT | ERROR_CORRECTION"
-    
+
   scope_violation:
     condition: "Agent accesses forbidden path/tool"
     required_signal_type: "NEGATIVE_REINFORCEMENT"
-    
+
   baseline_deviation:
     condition: "Performance metric exceeds threshold"
     required_signal_type: "BEHAVIORAL_ADJUSTMENT"
@@ -257,15 +257,15 @@ SIGNAL_QUALITY_REQUIREMENTS:
   lesson_clarity:
     requirement: "Lesson must be actionable"
     test: "Can an agent modify behavior based on this lesson?"
-    
+
   pattern_uniqueness:
     requirement: "Pattern must be unique across signals"
     test: "No duplicate patterns in same scope"
-    
+
   scope_appropriateness:
     requirement: "Scope must match lesson generalizability"
     test: "ALL_AGENTS only for universal lessons"
-    
+
   propagation_necessity:
     requirement: "propagate=true only when lesson benefits others"
     test: "Agent-specific errors should not propagate"
@@ -283,22 +283,22 @@ INGESTION_PIPELINE:
     1_receive:
       action: "Parse TRAINING_SIGNAL from PAC/WRAP"
       validation: "Schema compliance check"
-      
+
     2_classify:
       action: "Route by signal_type and scope"
       routing:
         AGENT_SPECIFIC: "agent/{gid}/signals/"
         ROLE_SPECIFIC: "roles/{role}/signals/"
         ALL_AGENTS: "global/signals/"
-        
+
     3_deduplicate:
       action: "Check for duplicate patterns"
       resolution: "Keep most recent, archive older"
-      
+
     4_index:
       action: "Add to searchable signal index"
       fields: ["pattern", "signal_type", "scope", "timestamp"]
-      
+
     5_notify:
       action: "Alert affected agents"
       method: "Next PAC preamble includes pending signals"
@@ -310,7 +310,7 @@ INGESTION_PIPELINE:
 SIGNAL_STORAGE:
   location: "data/training_signals/"
   format: "JSON"
-  
+
   structure:
     global/
       signals.json        # ALL_AGENTS signals
@@ -345,9 +345,9 @@ PRE_PAC_SIGNAL_REVIEW:
     - "global/signals.json"
     - "roles/{agent_role}/signals.json"
     - "agents/{agent_gid}/signals.json"
-    
+
   review_window: "Last 30 days or 50 signals, whichever is fewer"
-  
+
   action_on_review:
     POSITIVE_REINFORCEMENT: "Note exemplary patterns"
     NEGATIVE_REINFORCEMENT: "Avoid documented anti-patterns"
@@ -362,13 +362,13 @@ PRE_PAC_SIGNAL_REVIEW:
 SIGNAL_ACKNOWLEDGMENT:
   block_name: "SIGNALS_ACKNOWLEDGED"
   required_in: "PAC header section"
-  
+
   format:
     SIGNALS_ACKNOWLEDGED:
       global: ["PATTERN_1", "PATTERN_2"]
       role: ["PATTERN_3"]
       agent: ["PATTERN_4"]
-      
+
   enforcement: "ADVISORY"  # Will become MANDATORY after observation period
 ```
 
@@ -385,13 +385,13 @@ SIGNAL_EFFECTIVENESS_METRICS:
     description: "Rate of pattern compliance post-signal"
     formula: "compliant_operations / total_operations"
     target: "> 0.90"
-    
+
   recurrence_rate:
     id: "SIG_002"
     description: "Rate of same error after correction signal"
     formula: "recurring_errors / total_errors_of_type"
     target: "< 0.10"
-    
+
   signal_half_life:
     id: "SIG_003"
     description: "Time until signal becomes obsolete"
