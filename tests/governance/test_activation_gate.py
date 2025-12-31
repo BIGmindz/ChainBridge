@@ -42,7 +42,7 @@ class TestNoBypassPaths:
     def test_missing_activation_block_in_pac_fails(self, tmp_path: Path):
         """
         QA ACCEPTANCE: ❌ PR without Activation Block → CI FAIL
-        
+
         A PAC-like file without EXECUTING AGENT declaration MUST fail.
         """
         test_file = tmp_path / "pac_missing_agent.py"
@@ -75,7 +75,7 @@ def bypass_attempt():
     def test_wrong_agent_gid_combination_fails(self, tmp_path: Path):
         """
         QA ACCEPTANCE: ❌ Wrong agent/GID → CI FAIL
-        
+
         Mismatched agent name and GID MUST fail registry validation.
         """
         test_file = tmp_path / "pac_wrong_gid.py"
@@ -112,7 +112,7 @@ def wrong_gid_function():
     def test_duplicate_activation_blocks_fails(self, tmp_path: Path):
         """
         QA ACCEPTANCE: ❌ Duplicate activation blocks → CI FAIL
-        
+
         Multiple activation blocks MUST fail.
         """
         test_file = tmp_path / "pac_duplicate.py"
@@ -160,7 +160,7 @@ def duplicate_function():
     def test_misordered_activation_block_fails(self, tmp_path: Path):
         """
         QA ACCEPTANCE: ❌ Misordered activation block → CI FAIL
-        
+
         Activation block not at top MUST fail.
         """
         test_file = tmp_path / "pac_misordered.py"
@@ -220,7 +220,7 @@ class TestValidActivationPasses:
     def test_valid_activation_block_passes(self, tmp_path: Path):
         """
         QA ACCEPTANCE: ✅ Valid activation → CI CONTINUES
-        
+
         Properly formatted activation block MUST pass.
         """
         test_file = tmp_path / "pac_valid.py"
@@ -280,7 +280,7 @@ def helper_function():
 class TestDeterministicBehavior:
     """
     QA ACCEPTANCE: ✅ 100% deterministic CI behavior
-    
+
     Same input MUST produce same output every time.
     """
 

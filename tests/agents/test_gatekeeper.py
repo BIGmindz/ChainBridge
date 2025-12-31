@@ -66,7 +66,8 @@ class TestRegistry:
         dan = data["agents"].get("DAN")
         assert dan is not None
         assert dan.get("gid") == "GID-07"
-        assert dan.get("emoji") == "🟠"
+        # Registry uses "icon" key for emoji
+        assert dan.get("icon") == "🟢"
 
     def test_forbidden_aliases_include_dana(self):
         data = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))

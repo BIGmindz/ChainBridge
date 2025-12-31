@@ -12,7 +12,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Set
+from typing import List, Set, Optional
 
 import pytest
 
@@ -73,7 +73,7 @@ class Violation:
     category: str
     file_path: str
     message: str
-    line_number: int | None = None
+    line_number: Optional[int] = None
 
 
 @dataclass
@@ -88,7 +88,7 @@ class ScopeCheckResult:
     def passed(self) -> bool:
         return len(self.violations) == 0
 
-    def add_violation(self, category: str, file_path: str, message: str, line_number: int | None = None) -> None:
+    def add_violation(self, category: str, file_path: str, message: str, line_number: Optional[int] = None) -> None:
         self.violations.append(Violation(category, file_path, message, line_number))
 
 

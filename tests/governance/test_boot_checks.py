@@ -19,7 +19,7 @@ from __future__ import annotations
 import json
 import tempfile
 from pathlib import Path
-from typing import Generator
+from typing import Generator, Optional
 
 import pytest
 
@@ -78,8 +78,8 @@ def valid_alex_rules_json() -> dict:
 
 def write_governance_files(
     repo_root: Path,
-    agents_content: dict | str | None = None,
-    alex_content: dict | str | None = None,
+    agents_content: dict | Optional[str] = None,
+    alex_content: dict | Optional[str] = None,
 ) -> None:
     """Helper to write governance files with various content."""
     if agents_content is not None:

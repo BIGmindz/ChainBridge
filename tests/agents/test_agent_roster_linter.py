@@ -270,7 +270,7 @@ class TestHardRules:
             "MAGGIE": "🩷",
             "ATLAS": "🔵",
         }
-        
+
         for name, expected_emoji in LOCKED_ASSIGNMENTS.items():
             agent = CANONICAL_AGENTS[name]
             assert agent.emoji == expected_emoji, f"{name} emoji drift detected!"

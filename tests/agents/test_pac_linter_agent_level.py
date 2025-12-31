@@ -191,7 +191,7 @@ Test PAC for validation
 """
         level_violations = lint_agent_level_valid(content, Path("test.py"))
         deprecated_violations = lint_deprecated_agent(content, Path("test.py"))
-        
+
         assert len(level_violations) == 0
         assert len(deprecated_violations) == 0
 
