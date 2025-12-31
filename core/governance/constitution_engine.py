@@ -29,7 +29,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import yaml
 
@@ -99,7 +99,7 @@ class LockViolationError(ConstitutionError):
         lock_id: str,
         message: str,
         severity: LockSeverity = LockSeverity.CRITICAL,
-        context: dict[str, Any] | None = None,
+        context: Optional[Dict[str, Any]] = None,
     ):
         self.lock_id = lock_id
         self.severity = severity
@@ -119,7 +119,7 @@ class LockEnforcementMissingError(ConstitutionError):
 class PACAdmissionError(ConstitutionError):
     """PAC failed admission gate."""
 
-    def __init__(self, reason: str, missing_locks: list[str] | None = None):
+    def __init__(self, reason: str, missing_locks: Optional[List[str]] = None):
         self.reason = reason
         self.missing_locks = missing_locks or []
         super().__init__(f"PAC admission failed: {reason}")
@@ -161,7 +161,7 @@ class Lock:
     source_invariants: tuple[str, ...] = field(default_factory=tuple)
     forbidden_zones: tuple[str, ...] = field(default_factory=tuple)
     status: str = "ACTIVE"
-    superseded_by: str | None = None
+    superseded_by: Optional[str] = None
 
     def has_enforcement(self) -> bool:
         """Check if lock has at least one enforcement mechanism."""
@@ -232,12 +232,12 @@ class ConstitutionEngine:
     - Validate PAC admission
     """
 
-    def __init__(self, registry_path: Path | None = None):
+    def __init__(self, registry_path: Optional[Path] = None):
         """Initialize Constitution Engine."""
         self._registry_path = registry_path or LOCK_REGISTRY_PATH
         self._locks: dict[str, Lock] = {}
         self._loaded = False
-        self._registry_hash: str | None = None
+        self._registry_hash: Optional[str] = None
 
     def load_registry(self) -> None:
         """Load lock registry from YAML file."""
@@ -337,7 +337,7 @@ class ConstitutionEngine:
     def assert_lock(
         self,
         lock_id: str,
-        context: dict[str, Any] | None = None,
+        context: Optional[Dict[str, Any]] = None,
         condition: bool = True,
     ) -> None:
         """
@@ -389,7 +389,7 @@ class ConstitutionEngine:
         self,
         acknowledged_locks: list[str],
         affected_scopes: list[str],
-        touched_files: list[str] | None = None,
+        touched_files: Optional[List[str]] = None,
     ) -> tuple[bool, list[str]]:
         """
         Validate PAC admission against lock acknowledgment.
@@ -447,7 +447,7 @@ class ConstitutionEngine:
                         return lock
         return None
 
-    def get_registry_hash(self) -> str | None:
+    def get_registry_hash(self) -> Optional[str]:
         """Get SHA-256 hash of loaded registry."""
         return self._registry_hash
 
@@ -501,7 +501,7 @@ def get_constitution_engine() -> ConstitutionEngine:
 
 def assert_lock(
     lock_id: str,
-    context: dict[str, Any] | None = None,
+    context: Optional[Dict[str, Any]] = None,
     condition: bool = True,
 ) -> None:
     """

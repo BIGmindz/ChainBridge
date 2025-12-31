@@ -94,7 +94,7 @@ class ChecklistLoader:
     This is a HARD DEPENDENCY — if loading fails, the system refuses to boot.
     """
 
-    def __init__(self, checklist_path: Path | None = None) -> None:
+    def __init__(self, checklist_path: Optional[Path] = None) -> None:
         """Initialize the loader.
 
         Args:
@@ -228,7 +228,7 @@ class ChecklistLoader:
 _checklist_loader: Optional[ChecklistLoader] = None
 
 
-def get_checklist_loader(path: Path | None = None) -> ChecklistLoader:
+def get_checklist_loader(path: Optional[Path] = None) -> ChecklistLoader:
     """Get or create the checklist loader singleton.
 
     Args:
@@ -243,7 +243,7 @@ def get_checklist_loader(path: Path | None = None) -> ChecklistLoader:
     return _checklist_loader
 
 
-def load_governance_checklist(path: Path | None = None) -> GovernanceChecklist:
+def load_governance_checklist(path: Optional[Path] = None) -> GovernanceChecklist:
     """Load the governance checklist (convenience function).
 
     Args:

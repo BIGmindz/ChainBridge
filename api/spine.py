@@ -57,7 +57,7 @@ def get_proof_store() -> ProofStore:
 class SpineEventRequest(BaseModel):
     """
     Request to trigger the Minimum Execution Spine.
-    
+
     Canonical schema (LOCKED):
     - event_type: str
     - payload: dict
@@ -106,24 +106,24 @@ class ProofResponse(BaseModel):
     summary="Trigger Minimum Execution Spine",
     description="""
     Execute the canonical flow: Event → Decision → Action → Proof
-    
+
     This endpoint:
     1. Ingests a real external event
     2. Computes a deterministic decision
     3. Executes a real side effect
     4. Generates and persists an immutable proof artifact
-    
+
     No mocks. No slides. No narration.
     """,
 )
 async def execute_spine(request: SpineEventRequest) -> SpineExecutionResponse:
     """
     Execute the Minimum Execution Spine.
-    
+
     PAC-BENSON-EXEC-SPINE-01 canonical flow.
     """
     logger.info(f"Spine execution requested: event_type={request.event_type}")
-    
+
     # Validate event type
     try:
         event_type = SpineEventType(request.event_type)
@@ -132,7 +132,7 @@ async def execute_spine(request: SpineEventRequest) -> SpineExecutionResponse:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Unsupported event_type: {request.event_type}. Supported: {[e.value for e in SpineEventType]}",
         )
-    
+
     # Create immutable event
     try:
         # Only pass timestamp if explicitly provided
@@ -142,14 +142,14 @@ async def execute_spine(request: SpineEventRequest) -> SpineExecutionResponse:
         }
         if request.timestamp:
             event_kwargs["timestamp"] = request.timestamp
-        
+
         event = SpineEvent(**event_kwargs)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid event data: {e}",
         )
-    
+
     # Execute spine (fails loudly on error)
     executor = get_executor()
     try:
@@ -160,12 +160,12 @@ async def execute_spine(request: SpineEventRequest) -> SpineExecutionResponse:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Execution failed: {e}",
         )
-    
+
     # Get proof storage path
     proof_store = get_proof_store()
     proof_hash = proof.compute_hash()
     proof_path = str(proof_store._storage_dir / f"proof_{proof.id}_{proof_hash[:8]}.json")
-    
+
     return SpineExecutionResponse(
         success=True,
         proof_id=proof.id,
@@ -187,7 +187,7 @@ async def execute_spine(request: SpineEventRequest) -> SpineExecutionResponse:
 async def execute_payment_request(request: PaymentRequestBody) -> SpineExecutionResponse:
     """
     Convenience endpoint for payment requests.
-    
+
     Wraps the generic /spine/event endpoint with typed payload.
     """
     event = create_payment_request_event(
@@ -196,7 +196,7 @@ async def execute_payment_request(request: PaymentRequestBody) -> SpineExecution
         requestor_id=request.requestor_id,
         currency=request.currency,
     )
-    
+
     executor = get_executor()
     try:
         proof = executor.execute(event)
@@ -206,11 +206,11 @@ async def execute_payment_request(request: PaymentRequestBody) -> SpineExecution
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Execution failed: {e}",
         )
-    
+
     proof_store = get_proof_store()
     proof_hash = proof.compute_hash()
     proof_path = str(proof_store._storage_dir / f"proof_{proof.id}_{proof_hash[:8]}.json")
-    
+
     return SpineExecutionResponse(
         success=True,
         proof_id=proof.id,
@@ -232,15 +232,15 @@ async def get_proof(proof_id: UUID) -> ProofResponse:
     """Retrieve a proof artifact for verification."""
     proof_store = get_proof_store()
     proof = proof_store.load(proof_id)
-    
+
     if proof is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Proof not found: {proof_id}",
         )
-    
+
     proof_hash = proof.compute_hash()
-    
+
     return ProofResponse(
         proof=proof.model_dump(mode="json"),
         proof_hash=proof_hash,

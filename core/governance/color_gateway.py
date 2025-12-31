@@ -99,12 +99,12 @@ def validate_execution(
 ) -> dict:
     """
     Validate that an agent is permitted to execute in the declared color lane.
-    
+
     Args:
         executing_agent_gid: The GID of the executing agent (e.g., "GID-01")
         executing_color: The declared executing color (e.g., "BLUE" or "🔵 BLUE")
         pac_id: Optional PAC ID for error context
-    
+
     Returns:
         dict with validation result:
             {
@@ -114,7 +114,7 @@ def validate_execution(
                 "color": "BLUE",
                 "pac_id": "PAC-..."
             }
-    
+
     Raises:
         MissingFieldError: If required fields are missing
         UnknownAgentError: If GID not in registry
@@ -125,17 +125,17 @@ def validate_execution(
     # Load canonical sources
     spec = _load_spec()
     registry = _load_registry()
-    
+
     # Validate required fields
     if not executing_agent_gid:
         raise MissingFieldError("EXECUTING GID is required")
     if not executing_color:
         raise MissingFieldError("EXECUTING COLOR is required")
-    
+
     # Normalize inputs
     gid = executing_agent_gid.strip().upper()
     color_normalized = _normalize_color(executing_color)
-    
+
     # Map normalized color names to spec keys (matches color_gateway_spec.json)
     color_map = {
         "TEAL": "TEAL",
@@ -153,32 +153,32 @@ def validate_execution(
         "WHITE_GREY": "WHITE",
         "PINK": "PINK",
     }
-    
+
     spec_color_key = color_map.get(color_normalized)
     if not spec_color_key:
         raise UnknownColorError(f"Unknown color lane: {executing_color}")
-    
+
     # Check if color exists in spec
     lanes = spec.get("lanes", {})
     if spec_color_key not in lanes:
         raise UnknownColorError(f"Color lane not in spec: {spec_color_key}")
-    
+
     lane_spec = lanes[spec_color_key]
-    
+
     # Rule: TEAL cannot be executing lane
     if spec_color_key == "TEAL":
         raise TealExecutionError(
             f"TEAL lane is orchestration-only and cannot be used as executing lane. "
             f"PAC: {pac_id or 'unknown'}"
         )
-    
+
     # Validate GID exists in registry
     gid_index = registry.get("gid_index", {})
     if gid not in gid_index:
         raise UnknownAgentError(f"Unknown agent GID: {gid}")
-    
+
     agent_name = gid_index[gid]
-    
+
     # Validate GID is permitted in this color lane
     allowed_gids = lane_spec.get("allowed_gids", [])
     if gid not in allowed_gids:
@@ -188,7 +188,7 @@ def validate_execution(
             f"Allowed: {expected_agents} ({allowed_gids}). "
             f"PAC: {pac_id or 'unknown'}"
         )
-    
+
     # Success
     return {
         "valid": True,
@@ -202,13 +202,13 @@ def validate_execution(
 def validate_pac_header(pac_header: dict) -> dict:
     """
     Validate a PAC header dictionary for Color Gateway compliance.
-    
+
     Args:
         pac_header: Dict with keys like "EXECUTING AGENT", "EXECUTING GID", "EXECUTING COLOR"
-    
+
     Returns:
         Validation result dict
-    
+
     Raises:
         MissingFieldError: If required fields missing
         ColorGatewayViolation subclass: On validation failure
@@ -217,14 +217,14 @@ def validate_pac_header(pac_header: dict) -> dict:
     executing_gid = pac_header.get("EXECUTING GID")
     executing_color = pac_header.get("EXECUTING COLOR")
     pac_id = pac_header.get("PAC ID") or pac_header.get("pac_id")
-    
+
     if not executing_agent:
         raise MissingFieldError("PAC header missing: EXECUTING AGENT")
     if not executing_gid:
         raise MissingFieldError("PAC header missing: EXECUTING GID")
     if not executing_color:
         raise MissingFieldError("PAC header missing: EXECUTING COLOR")
-    
+
     return validate_execution(
         executing_agent_gid=executing_gid,
         executing_color=executing_color,
@@ -235,46 +235,46 @@ def validate_pac_header(pac_header: dict) -> dict:
 def get_agent_color(gid: str) -> str:
     """
     Look up the canonical color for an agent GID.
-    
+
     Args:
         gid: Agent GID (e.g., "GID-01")
-    
+
     Returns:
         Color name (e.g., "BLUE")
-    
+
     Raises:
         UnknownAgentError: If GID not found
     """
     registry = _load_registry()
     gid_index = registry.get("gid_index", {})
     gid = gid.strip().upper()
-    
+
     if gid not in gid_index:
         raise UnknownAgentError(f"Unknown agent GID: {gid}")
-    
+
     agent_name = gid_index[gid]
     agents = registry.get("agents", {})
     agent_info = agents.get(agent_name, {})
-    
+
     return agent_info.get("color", "UNKNOWN")
 
 
 def get_color_agents(color: str) -> list[str]:
     """
     Get list of agent GIDs permitted in a color lane.
-    
+
     Args:
         color: Color name (e.g., "BLUE")
-    
+
     Returns:
         List of GIDs (e.g., ["GID-01", "GID-11"])
-    
+
     Raises:
         UnknownColorError: If color not found
     """
     spec = _load_spec()
     color_normalized = _normalize_color(color)
-    
+
     color_map = {
         "TEAL": "TEAL",
         "BLUE": "BLUE",
@@ -287,13 +287,13 @@ def get_color_agents(color: str) -> list[str]:
         "GREY": "WHITE",
         "PINK": "PINK",
     }
-    
+
     spec_key = color_map.get(color_normalized)
     if not spec_key:
         raise UnknownColorError(f"Unknown color: {color}")
-    
+
     lanes = spec.get("lanes", {})
     if spec_key not in lanes:
         raise UnknownColorError(f"Color not in spec: {spec_key}")
-    
+
     return lanes[spec_key].get("allowed_gids", [])

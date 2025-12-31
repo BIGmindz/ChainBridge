@@ -44,7 +44,7 @@ from typing import Any, Dict, Optional, Tuple
 class ActivationDecisionFailure(str, Enum):
     """
     Explicit failure modes for activation-aware decisions.
-    
+
     Each failure mode maps to a deterministic ERROR outcome.
     No silent failures. No soft warnings.
     """
@@ -66,7 +66,7 @@ class ActivationDecisionFailure(str, Enum):
 class ActivationAwareOutcome(str, Enum):
     """
     Decision outcomes that are activation-aware.
-    
+
     Severity ordering (monotonic):
     APPROVED (100) < REJECTED (200) < REQUIRES_REVIEW (300) < ERROR (400)
     """
@@ -94,14 +94,14 @@ OUTCOME_SEVERITY_MAP: Dict[ActivationAwareOutcome, int] = {
 class ActivationReference:
     """
     Minimal activation block reference for decision binding.
-    
+
     Links a decision to its authorizing activation block.
     """
     agent_name: str
     gid: str
     color: str
     validation_timestamp: str
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "agent_name": self.agent_name,
@@ -120,14 +120,14 @@ class ActivationReference:
 class ActivationAwareDecision:
     """
     Glass-box decision with mandatory activation binding.
-    
+
     MANDATORY FIELDS (all required, no defaults):
     - decision_outcome: The outcome of the decision
     - decision_rule_id: The rule that produced the outcome
     - decision_inputs: All inputs used in the decision
     - decision_explanation: Human-readable explanation
     - activation_reference: Link to authorizing activation block
-    
+
     INVARIANTS:
     - Immutable after creation
     - All fields must be non-None
@@ -144,7 +144,7 @@ class ActivationAwareDecision:
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
     failure_mode: Optional[ActivationDecisionFailure] = None
-    
+
     def __post_init__(self) -> None:
         """Validate contract invariants on creation."""
         # Mandatory field validation
@@ -178,7 +178,7 @@ class ActivationAwareDecision:
                 "activation_reference is mandatory",
                 ActivationDecisionFailure.MISSING_ACTIVATION,
             )
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Serialize for audit trail."""
         return {
@@ -201,10 +201,10 @@ class ActivationAwareDecision:
 class ContractViolationError(Exception):
     """
     Raised when the glass-box decision contract is violated.
-    
+
     HARD STOP — no recovery.
     """
-    
+
     def __init__(self, message: str, failure_mode: ActivationDecisionFailure):
         self.message = message
         self.failure_mode = failure_mode
@@ -224,32 +224,32 @@ def enforce_monotonicity(
 ) -> Tuple[bool, Optional[str]]:
     """
     Enforce monotonicity constraint.
-    
+
     RULE: If input_severity_a > input_severity_b,
           then outcome_severity_a >= outcome_severity_b
-    
+
     More severe inputs must produce equal or more severe outcomes.
     Never less severe.
-    
+
     Args:
         outcome_a: First decision outcome
         outcome_b: Second decision outcome
         input_severity_a: Severity measure of first input
         input_severity_b: Severity measure of second input
-        
+
     Returns:
         (is_monotonic, violation_message)
     """
     severity_a = OUTCOME_SEVERITY_MAP[outcome_a]
     severity_b = OUTCOME_SEVERITY_MAP[outcome_b]
-    
+
     if input_severity_a > input_severity_b:
         if severity_a < severity_b:
             return False, (
                 f"Monotonicity violation: input severity {input_severity_a} > {input_severity_b} "
                 f"but outcome severity {severity_a} < {severity_b}"
             )
-    
+
     return True, None
 
 
@@ -261,15 +261,15 @@ def verify_monotonicity_for_payment(
 ) -> Tuple[bool, Optional[str]]:
     """
     Verify monotonicity for payment decisions.
-    
+
     RULE: Higher amount → equal or higher severity outcome.
-    
+
     Args:
         amount_a: First payment amount
         amount_b: Second payment amount
         outcome_a: First decision outcome
         outcome_b: Second decision outcome
-        
+
     Returns:
         (is_monotonic, violation_message)
     """
@@ -284,31 +284,31 @@ def verify_monotonicity_for_payment(
 def verify_explanation_completeness(decision: ActivationAwareDecision) -> Tuple[bool, Optional[str]]:
     """
     Verify that a decision has a complete, valid explanation.
-    
+
     RULES:
     - Explanation must not be empty
     - Explanation must not be whitespace only
     - Explanation must contain actual reasoning
     - No auto-generated placeholder text
-    
+
     Args:
         decision: The decision to verify
-        
+
     Returns:
         (is_complete, violation_message)
     """
     explanation = decision.decision_explanation
-    
+
     if not explanation:
         return False, "Explanation is empty"
-    
+
     if not explanation.strip():
         return False, "Explanation is whitespace only"
-    
+
     # Minimum meaningful explanation length
     if len(explanation.strip()) < 10:
         return False, f"Explanation too short ({len(explanation.strip())} chars): likely incomplete"
-    
+
     # Check for placeholder patterns
     placeholder_patterns = [
         "TODO",
@@ -321,7 +321,7 @@ def verify_explanation_completeness(decision: ActivationAwareDecision) -> Tuple[
     for pattern in placeholder_patterns:
         if pattern.lower() in explanation_lower:
             return False, f"Explanation contains placeholder pattern: '{pattern}'"
-    
+
     return True, None
 
 
@@ -340,11 +340,11 @@ def decide_with_activation(
 ) -> ActivationAwareDecision:
     """
     Execute decision logic with activation block enforcement.
-    
+
     INVARIANT: IF activation_block != VALID → DECISION = ERROR
-    
+
     This is the core gate. No decision may proceed without a valid activation block.
-    
+
     Args:
         activation_valid: Whether the activation block was validated
         activation_reference: Reference to the validated activation block
@@ -352,7 +352,7 @@ def decide_with_activation(
         rule_version: The rule version
         inputs: Decision inputs
         decision_fn: The deterministic decision function to execute
-        
+
     Returns:
         ActivationAwareDecision (always, even on failure)
     """
@@ -372,7 +372,7 @@ def decide_with_activation(
             ),
             failure_mode=ActivationDecisionFailure.INVALID_ACTIVATION,
         )
-    
+
     if activation_reference is None:
         return ActivationAwareDecision(
             decision_outcome=ActivationAwareOutcome.ERROR,
@@ -388,7 +388,7 @@ def decide_with_activation(
             ),
             failure_mode=ActivationDecisionFailure.MISSING_ACTIVATION,
         )
-    
+
     # Execute deterministic decision
     try:
         outcome, explanation = decision_fn(inputs)
@@ -402,7 +402,7 @@ def decide_with_activation(
             activation_reference=activation_reference,
             failure_mode=ActivationDecisionFailure.NON_DETERMINISTIC_OUTPUT,
         )
-    
+
     # Build decision with activation binding
     decision = ActivationAwareDecision(
         decision_outcome=outcome,
@@ -412,7 +412,7 @@ def decide_with_activation(
         decision_explanation=explanation,
         activation_reference=activation_reference,
     )
-    
+
     # Verify explanation completeness
     is_complete, violation_msg = verify_explanation_completeness(decision)
     if not is_complete:
@@ -425,7 +425,7 @@ def decide_with_activation(
             activation_reference=activation_reference,
             failure_mode=ActivationDecisionFailure.EXPLANATION_GAP,
         )
-    
+
     return decision
 
 
@@ -441,14 +441,14 @@ def verify_determinism(
 ) -> Tuple[bool, Optional[str]]:
     """
     Verify that a decision function is deterministic.
-    
+
     RULE: Same inputs → same output, every time.
-    
+
     Args:
         inputs: The inputs to test
         decision_fn: The decision function to verify
         iterations: Number of iterations to test
-        
+
     Returns:
         (is_deterministic, violation_message)
     """
@@ -459,7 +459,7 @@ def verify_determinism(
             results.append((outcome, explanation))
         except Exception as e:
             return False, f"Decision function raised exception: {e}"
-    
+
     # All results must be identical
     first_result = results[0]
     for i, result in enumerate(results[1:], 2):
@@ -468,7 +468,7 @@ def verify_determinism(
                 f"Non-deterministic: iteration 1 returned {first_result}, "
                 f"iteration {i} returned {result}"
             )
-    
+
     return True, None
 
 

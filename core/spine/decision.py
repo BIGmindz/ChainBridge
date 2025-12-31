@@ -39,7 +39,7 @@ class DecisionOutcome(str, Enum):
 class DecisionResult(BaseModel):
     """
     Immutable decision result with full traceability.
-    
+
     Contains all inputs used in the decision for auditability.
     """
     id: UUID = Field(default_factory=uuid4, description="Unique decision identifier")
@@ -54,9 +54,9 @@ class DecisionResult(BaseModel):
         default_factory=lambda: datetime.now(timezone.utc).isoformat(),
         description="ISO8601 timestamp of decision"
     )
-    
+
     model_config = {"frozen": True}  # Immutable
-    
+
     def compute_hash(self) -> str:
         """Compute deterministic SHA-256 hash of this decision."""
         canonical = json.dumps(
@@ -80,27 +80,27 @@ class DecisionResult(BaseModel):
 class DecisionEngine:
     """
     Pure function decision engine.
-    
+
     Rule-based, deterministic, fully traceable.
     No side effects during decision computation.
     """
-    
+
     # V1 Decision Rule Configuration (LOCKED)
     PAYMENT_THRESHOLD = 10_000.00  # USD
     RULE_NAME = "payment_threshold_v1"
     RULE_VERSION = "1.0.0"
-    
+
     @classmethod
     def decide(cls, event: SpineEvent) -> DecisionResult:
         """
         Execute deterministic decision logic.
-        
+
         Args:
             event: The triggering event
-            
+
         Returns:
             Immutable DecisionResult with full traceability
-            
+
         Raises:
             ValueError: If event type is not supported
         """
@@ -109,20 +109,20 @@ class DecisionEngine:
                 event=event,
                 explanation=f"Unsupported event type: {event.event_type}",
             )
-        
+
         return cls._decide_payment_request(event)
-    
+
     @classmethod
     def _decide_payment_request(cls, event: SpineEvent) -> DecisionResult:
         """
         V1 Decision Rule: Payment Threshold
-        
+
         Rule (LOCKED):
         - amount ≤ 10,000: APPROVED
         - amount > 10,000: REQUIRES_REVIEW
         """
         payload = event.payload
-        
+
         # Extract and validate required field
         amount = payload.get("amount")
         if amount is None:
@@ -130,7 +130,7 @@ class DecisionEngine:
                 event=event,
                 explanation="Missing required field: amount",
             )
-        
+
         try:
             amount = float(amount)
         except (TypeError, ValueError):
@@ -138,7 +138,7 @@ class DecisionEngine:
                 event=event,
                 explanation=f"Invalid amount type: {type(amount).__name__}",
             )
-        
+
         # Build inputs snapshot for auditability
         inputs_snapshot = {
             "amount": amount,
@@ -147,7 +147,7 @@ class DecisionEngine:
             "requestor_id": payload.get("requestor_id"),
             "threshold": cls.PAYMENT_THRESHOLD,
         }
-        
+
         # Apply deterministic rule
         if amount <= cls.PAYMENT_THRESHOLD:
             return DecisionResult(
@@ -169,7 +169,7 @@ class DecisionEngine:
                 inputs_snapshot=inputs_snapshot,
                 explanation=f"Payment of ${amount:.2f} exceeds threshold of ${cls.PAYMENT_THRESHOLD:.2f}",
             )
-    
+
     @classmethod
     def _create_error_result(cls, event: SpineEvent, explanation: str) -> DecisionResult:
         """Create an error decision result."""

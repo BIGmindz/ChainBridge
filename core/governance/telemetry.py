@@ -20,7 +20,7 @@ PAC-CODY-OBS-BIND-01 additions:
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, TypeVar, Optional
 
 from core.governance.event_sink import emit_event
 from core.governance.events import (
@@ -127,7 +127,7 @@ def emit_drcp_triggered(
     target: str,
     denial_code: str,
     *,
-    intent_id: str | None = None,
+    intent_id: Optional[str] = None,
 ) -> None:
     """
     Emit telemetry when DRCP is triggered.
@@ -158,8 +158,8 @@ def emit_diggi_correction(
     target: str,
     correction_type: str,
     *,
-    envelope_id: str | None = None,
-    num_options: int | None = None,
+    envelope_id: Optional[str] = None,
+    num_options: Optional[int] = None,
 ) -> None:
     """
     Emit telemetry when Diggi issues a correction.
@@ -195,8 +195,8 @@ def emit_tool_execution(
     tool_name: str,
     allowed: bool,
     *,
-    envelope_id: str | None = None,
-    reason_code: str | None = None,
+    envelope_id: Optional[str] = None,
+    reason_code: Optional[str] = None,
 ) -> None:
     """
     Emit telemetry for tool execution decisions.
@@ -326,8 +326,8 @@ def emit_artifact_verification(
     passed: bool,
     aggregate_hash: str,
     *,
-    file_count: int | None = None,
-    mismatches: list[str] | None = None,
+    file_count: Optional[int] = None,
+    mismatches: Optional[List[str]] = None,
 ) -> None:
     """
     Emit telemetry for artifact verification.
@@ -355,7 +355,7 @@ def emit_scope_violation(
     file_path: str,
     violation_type: str,
     *,
-    pattern: str | None = None,
+    pattern: Optional[str] = None,
 ) -> None:
     """
     Emit telemetry for scope violations.

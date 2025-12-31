@@ -182,7 +182,7 @@ class ACMLoader:
     Any validation failure causes hard startup failure.
     """
 
-    def __init__(self, manifests_dir: str | Path | None = None) -> None:
+    def __init__(self, manifests_dir: str | Optional[Path] = None) -> None:
         """Initialize the ACM loader.
 
         Args:
@@ -349,7 +349,7 @@ class ACMLoader:
 _default_loader: Optional[ACMLoader] = None
 
 
-def get_acm_loader(manifests_dir: str | Path | None = None) -> ACMLoader:
+def get_acm_loader(manifests_dir: str | Optional[Path] = None) -> ACMLoader:
     """Get or create the default ACM loader singleton.
 
     Args:

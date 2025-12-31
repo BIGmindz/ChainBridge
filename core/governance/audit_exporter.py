@@ -30,7 +30,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from core.governance.freshness import DEFAULT_MAX_STALENESS_SECONDS, FRESHNESS_MANIFEST_FILENAME, SourceTimestamp, create_freshness_manifest
 from core.governance.governance_fingerprint import GovernanceFingerprintEngine
@@ -60,8 +60,8 @@ class AuditBundleConfig:
     end_time: datetime | None = None
     source_log_path: str = DEFAULT_ROTATING_LOG_PATH
     artifact_manifest_path: str = DEFAULT_ARTIFACT_MANIFEST_PATH
-    output_path: str | Path | None = None
-    project_root: str | Path | None = None
+    output_path: str | Optional[Path] = None
+    project_root: str | Optional[Path] = None
     max_staleness_seconds: int = DEFAULT_MAX_STALENESS_SECONDS
 
 
@@ -85,7 +85,7 @@ class AuditBundleResult:
     event_count: int
     file_count: int
     success: bool
-    error: str | None = None
+    error: Optional[str] = None
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -130,7 +130,7 @@ class AuditBundleExporter:
         """Get current UTC timestamp as ISO string."""
         return datetime.now(timezone.utc).isoformat()
 
-    def _create_bundle_dir(self, output_path: Path | None = None) -> Path:
+    def _create_bundle_dir(self, output_path: Optional[Path] = None) -> Path:
         """Create bundle directory structure."""
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
 
@@ -528,7 +528,7 @@ or refer to the Governance documentation.
 
         return bundle_hash
 
-    def export(self, output_path: str | Path | None = None) -> AuditBundleResult:
+    def export(self, output_path: str | Optional[Path] = None) -> AuditBundleResult:
         """
         Export audit bundle.
 
@@ -630,9 +630,9 @@ or refer to the Governance documentation.
 def export_audit_bundle(
     start_time: datetime | None = None,
     end_time: datetime | None = None,
-    output_path: str | Path | None = None,
+    output_path: str | Optional[Path] = None,
     source_log_path: str = DEFAULT_ROTATING_LOG_PATH,
-    project_root: str | Path | None = None,
+    project_root: str | Optional[Path] = None,
     max_staleness_seconds: int = DEFAULT_MAX_STALENESS_SECONDS,
 ) -> AuditBundleResult:
     """

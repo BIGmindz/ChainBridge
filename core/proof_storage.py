@@ -61,7 +61,7 @@ DEFAULT_PROOF_MANIFEST_PATH = "./data/proofs_manifest.json"
 def compute_content_hash(payload: Dict[str, Any]) -> str:
     """
     Compute deterministic SHA-256 hash of proof payload.
-    
+
     Uses canonical JSON serialization for consistency.
     """
     canonical = json.dumps(
@@ -76,7 +76,7 @@ def compute_content_hash(payload: Dict[str, Any]) -> str:
 def compute_chain_hash(previous_hash: str, content_hash: str) -> str:
     """
     Compute chain hash linking to previous entry.
-    
+
     This creates a hash chain making tampering detectable.
     """
     combined = f"{previous_hash}:{content_hash}"
@@ -86,34 +86,34 @@ def compute_chain_hash(previous_hash: str, content_hash: str) -> str:
 class ProofStorageV1:
     """
     Append-only proof storage with integrity validation.
-    
+
     Storage Format: JSONL (JSON Lines)
     - One proof per line
     - Each line is a complete JSON object
     - fsync on every write for durability
     - Lock-protected for concurrent access
-    
+
     Manifest File: JSON
     - Total proof count
     - Last content hash
     - Last chain hash
     - Last validated timestamp
-    
+
     Startup Behavior:
     - Loads all proofs
     - Recomputes all hashes
     - Verifies chain integrity
     - CRASHES if any mismatch (fail loud)
-    
+
     Usage:
         store = ProofStorageV1()
         store.validate_on_startup()  # MUST be called before any operations
         store.append_proof(proof_type="execution", payload={...})
     """
-    
+
     # Genesis hash for the first entry in the chain
     GENESIS_HASH = "0" * 64  # 64 zeros (SHA-256 length)
-    
+
     def __init__(
         self,
         log_path: Optional[str] = None,
@@ -121,7 +121,7 @@ class ProofStorageV1:
     ):
         """
         Initialize proof storage.
-        
+
         Args:
             log_path: Path to JSONL proof log. Defaults to
                       CHAINBRIDGE_PROOF_LOG_PATH env var or ./data/proofs.jsonl
@@ -129,71 +129,71 @@ class ProofStorageV1:
                            CHAINBRIDGE_PROOF_MANIFEST_PATH env var or ./data/proofs_manifest.json
         """
         self._log_path = Path(
-            log_path or 
+            log_path or
             os.environ.get("CHAINBRIDGE_PROOF_LOG_PATH", DEFAULT_PROOF_LOG_PATH)
         )
         self._manifest_path = Path(
-            manifest_path or 
+            manifest_path or
             os.environ.get("CHAINBRIDGE_PROOF_MANIFEST_PATH", DEFAULT_PROOF_MANIFEST_PATH)
         )
-        
+
         # Runtime state
         self._proof_count: int = 0
         self._last_content_hash: str = self.GENESIS_HASH
         self._last_chain_hash: str = self.GENESIS_HASH
         self._validated: bool = False
-        
+
         # Ensure directories exist
         self._log_path.parent.mkdir(parents=True, exist_ok=True)
         self._manifest_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         logger.info(f"ProofStorageV1 initialized: log={self._log_path}, manifest={self._manifest_path}")
-    
+
     def validate_on_startup(self) -> Dict[str, Any]:
         """
         Validate proof integrity on startup.
-        
+
         MUST be called before any write operations.
-        
+
         Returns:
             Validation report with proof count and last hashes
-            
+
         Raises:
             ProofIntegrityError: If validation fails (CRASHES startup)
         """
         logger.info("Starting proof integrity validation...")
-        
+
         # If log file doesn't exist, this is a fresh start
         if not self._log_path.exists():
             logger.info("No existing proof log found. Starting fresh.")
             self._validated = True
             self._write_manifest()  # Write initial manifest
             return self._create_validation_report(validated_count=0, errors=[])
-        
+
         errors: List[str] = []
         validated_count = 0
         previous_chain_hash = self.GENESIS_HASH
-        
+
         try:
             with open(self._log_path, "r", encoding="utf-8") as f:
                 for line_num, line in enumerate(f, start=1):
                     line = line.strip()
                     if not line:
                         continue  # Skip empty lines
-                    
+
                     try:
                         record = json.loads(line)
                     except json.JSONDecodeError as e:
                         errors.append(f"Line {line_num}: JSON parse error: {e}")
                         continue
-                    
+
                     # Validate required fields
                     required_fields = ["proof_id", "content_hash", "payload", "sequence_number"]
                     missing = [f for f in required_fields if f not in record]
                     if missing:
                         errors.append(f"Line {line_num}: Missing fields: {missing}")
                         continue
-                    
+
                     # Recompute content hash
                     computed_hash = compute_content_hash(record["payload"])
                     if computed_hash != record["content_hash"]:
@@ -203,7 +203,7 @@ class ProofStorageV1:
                             f"Computed={computed_hash[:16]}..."
                         )
                         continue
-                    
+
                     # Verify chain hash if present
                     if "chain_hash" in record:
                         expected_chain = compute_chain_hash(previous_chain_hash, computed_hash)
@@ -218,39 +218,39 @@ class ProofStorageV1:
                     else:
                         # Legacy record without chain hash - still validate content
                         previous_chain_hash = compute_chain_hash(previous_chain_hash, computed_hash)
-                    
+
                     validated_count += 1
                     self._last_content_hash = record["content_hash"]
                     self._last_chain_hash = previous_chain_hash
-        
+
         except Exception as e:
             raise ProofIntegrityError(f"Failed to read proof log: {e}") from e
-        
+
         # FAIL LOUD on any errors
         if errors:
             error_summary = "\n".join(errors[:10])  # Show first 10 errors
             if len(errors) > 10:
                 error_summary += f"\n... and {len(errors) - 10} more errors"
-            
+
             logger.critical(f"PROOF INTEGRITY VALIDATION FAILED!\n{error_summary}")
             raise ProofIntegrityError(
                 f"Proof log integrity check failed with {len(errors)} error(s). "
                 f"First error: {errors[0]}"
             )
-        
+
         self._proof_count = validated_count
         self._validated = True
-        
+
         # Update manifest
         self._write_manifest()
-        
+
         logger.info(
             f"Proof validation PASSED: count={validated_count}, "
             f"last_hash={self._last_content_hash[:16]}..."
         )
-        
+
         return self._create_validation_report(validated_count=validated_count, errors=[])
-    
+
     def append_proof(
         self,
         proof_type: str,
@@ -259,15 +259,15 @@ class ProofStorageV1:
     ) -> ProofRecord:
         """
         Append a proof to the log (append-only).
-        
+
         Args:
             proof_type: Type of proof (e.g., "execution", "artifact", "decision")
             payload: The proof payload (will be hashed)
             proof_id: Optional ID (auto-generated if not provided)
-            
+
         Returns:
             The created ProofRecord
-            
+
         Raises:
             RuntimeError: If validate_on_startup() wasn't called
             IOError: If write fails
@@ -276,14 +276,14 @@ class ProofStorageV1:
             raise RuntimeError(
                 "ProofStorageV1.validate_on_startup() must be called before any operations!"
             )
-        
+
         # Generate proof record
         proof_id = proof_id or str(uuid4())
         content_hash = compute_content_hash(payload)
         chain_hash = compute_chain_hash(self._last_chain_hash, content_hash)
         sequence_number = self._proof_count + 1
         timestamp = datetime.now(timezone.utc).isoformat()
-        
+
         record: ProofRecord = {
             "proof_id": proof_id,
             "content_hash": content_hash,
@@ -293,33 +293,33 @@ class ProofStorageV1:
             "payload": payload,
             "sequence_number": sequence_number,
         }
-        
+
         # Append to log with fsync
         self._append_to_log(record)
-        
+
         # Update state
         self._proof_count = sequence_number
         self._last_content_hash = content_hash
         self._last_chain_hash = chain_hash
-        
+
         # Update manifest
         self._write_manifest()
-        
+
         logger.info(
             f"Proof appended: id={proof_id}, type={proof_type}, "
             f"seq={sequence_number}, hash={content_hash[:16]}..."
         )
-        
+
         return record
-    
+
     def _append_to_log(self, record: ProofRecord) -> None:
         """
         Append record to JSONL log with fsync.
-        
+
         Uses file locking for concurrent access safety.
         """
         line = json.dumps(record, separators=(",", ":"), default=str) + "\n"
-        
+
         try:
             with open(self._log_path, "a", encoding="utf-8") as f:
                 # Acquire exclusive lock
@@ -333,11 +333,11 @@ class ProofStorageV1:
         except Exception as e:
             logger.error(f"Failed to append proof to log: {e}")
             raise IOError(f"Proof append failed: {e}") from e
-    
+
     def _write_manifest(self) -> None:
         """
         Write manifest file with current state.
-        
+
         Manifest is advisory - the JSONL log is the source of truth.
         """
         manifest = {
@@ -348,7 +348,7 @@ class ProofStorageV1:
             "last_chain_hash": self._last_chain_hash,
             "last_validated": datetime.now(timezone.utc).isoformat(),
         }
-        
+
         try:
             with open(self._manifest_path, "w", encoding="utf-8") as f:
                 json.dump(manifest, f, indent=2)
@@ -357,7 +357,7 @@ class ProofStorageV1:
         except Exception as e:
             # Manifest write failure is non-fatal (log is source of truth)
             logger.warning(f"Failed to write manifest: {e}")
-    
+
     def _create_validation_report(
         self, validated_count: int, errors: List[str]
     ) -> Dict[str, Any]:
@@ -372,41 +372,41 @@ class ProofStorageV1:
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "log_path": str(self._log_path),
         }
-    
+
     def iter_proofs(self) -> Iterator[ProofRecord]:
         """
         Iterate over all proofs in the log.
-        
+
         Yields:
             ProofRecord for each valid entry
         """
         if not self._log_path.exists():
             return
-        
+
         with open(self._log_path, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line:
                     yield json.loads(line)
-    
+
     def get_proof_count(self) -> int:
         """Get current proof count."""
         return self._proof_count
-    
+
     def get_last_hash(self) -> str:
         """Get last content hash (for verification)."""
         return self._last_content_hash
-    
+
     def get_chain_hash(self) -> str:
         """Get last chain hash (for verification)."""
         return self._last_chain_hash
-    
+
     def get_stats(self) -> Dict[str, Any]:
         """Get storage statistics for monitoring."""
         file_size = 0
         if self._log_path.exists():
             file_size = self._log_path.stat().st_size
-        
+
         return {
             "log_path": str(self._log_path),
             "proof_count": self._proof_count,
@@ -427,7 +427,7 @@ _proof_storage_instance: Optional[ProofStorageV1] = None
 def get_proof_storage() -> ProofStorageV1:
     """
     Get the singleton ProofStorageV1 instance.
-    
+
     WARNING: validate_on_startup() must be called on the instance before use!
     """
     global _proof_storage_instance
@@ -439,12 +439,12 @@ def get_proof_storage() -> ProofStorageV1:
 def init_proof_storage() -> Dict[str, Any]:
     """
     Initialize and validate proof storage.
-    
+
     Call this once during application startup.
-    
+
     Returns:
         Validation report
-        
+
     Raises:
         ProofIntegrityError: If validation fails
     """

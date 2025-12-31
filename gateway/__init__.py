@@ -3,6 +3,7 @@
 Includes ALEX middleware for ACM enforcement (GID-08).
 Includes Canonical Decision Envelope (CDE) v1 for stable response contracts.
 Includes Tool Binding Enforcement (TBE) v1 for envelope-based execution (PAC-GATEWAY-02).
+Includes Tool Strip Gateway (TSG) v1 for pre-execution tool filtering (PAC-014).
 """
 
 from gateway.alex_middleware import (
@@ -31,6 +32,15 @@ from gateway.decision_envelope import (
     validate_envelope,
 )
 from gateway.tool_executor import DenialReasonCode, ToolExecutionDenied, ToolExecutionResult, ToolExecutor, can_execute_tool, execute_tool
+from gateway.tool_strip_gateway import (
+    ToolStripGateway,
+    ToolStripResult,
+    ToolStripDenialError,
+    ToolStripError,
+    filter_tools_before_execution,
+    assert_tool_before_execution,
+    get_tool_strip_gateway,
+)
 
 __all__ = [
     # ALEX Middleware
@@ -63,4 +73,12 @@ __all__ = [
     "ToolExecutor",
     "can_execute_tool",
     "execute_tool",
+    # Tool Strip Gateway (PAC-014)
+    "ToolStripGateway",
+    "ToolStripResult",
+    "ToolStripDenialError",
+    "ToolStripError",
+    "filter_tools_before_execution",
+    "assert_tool_before_execution",
+    "get_tool_strip_gateway",
 ]

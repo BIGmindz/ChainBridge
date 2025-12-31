@@ -25,7 +25,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Final
+from typing import Any, Final, Optional
 
 from core.governance.event_sink import emit_event
 
@@ -81,7 +81,7 @@ class BootCheckResult:
 
     path: str
     valid: bool
-    error: str | None = None
+    error: Optional[str] = None
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -114,7 +114,7 @@ def _find_repo_root() -> Path:
 
 def validate_governance_file(
     file_path: str,
-    repo_root: Path | None = None,
+    repo_root: Optional[Path] = None,
 ) -> BootCheckResult:
     """
     Validate a single governance file.
@@ -210,7 +210,7 @@ def validate_governance_file(
 
 
 def validate_all_governance_files(
-    repo_root: Path | None = None,
+    repo_root: Optional[Path] = None,
 ) -> list[BootCheckResult]:
     """
     Validate all governance root files.
@@ -230,7 +230,7 @@ def validate_all_governance_files(
 # ═══════════════════════════════════════════════════════════════════════════════
 
 
-def enforce_governance_boot(repo_root: Path | None = None) -> None:
+def enforce_governance_boot(repo_root: Optional[Path] = None) -> None:
     """
     Enforce governance boot checks — FAIL CLOSED.
 
@@ -263,7 +263,7 @@ def enforce_governance_boot(repo_root: Path | None = None) -> None:
             raise GovernanceBootError(result.path, result.error or "Unknown error")
 
 
-def check_governance_boot(repo_root: Path | None = None) -> bool:
+def check_governance_boot(repo_root: Optional[Path] = None) -> bool:
     """
     Check governance boot status without raising.
 
@@ -284,7 +284,7 @@ def get_governance_files() -> dict[str, dict[str, Any]]:
     return dict(GOVERNANCE_FILES)
 
 
-def get_governance_status(repo_root: Path | None = None) -> dict[str, Any]:
+def get_governance_status(repo_root: Optional[Path] = None) -> dict[str, Any]:
     """
     Get detailed governance boot status.
 

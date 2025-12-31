@@ -45,7 +45,7 @@ from typing import Any, Dict, List, Optional, Tuple
 class DecisionEconomics(str, Enum):
     """
     Decision types mapped to economic outcomes.
-    
+
     Risk scoring ultimately translates to:
     RISK → CASH → SETTLEMENT
     """
@@ -61,30 +61,30 @@ class DecisionEconomics(str, Enum):
 class FalseOutcomeCost:
     """
     Cost structure for false positive / false negative decisions.
-    
+
     FALSE POSITIVE: Flagged as risky, but was actually safe
     - Cost: Lost revenue, customer friction, operational overhead
-    
+
     FALSE NEGATIVE: Flagged as safe, but was actually risky
     - Cost: Fraud loss, regulatory penalty, reputation damage
-    
+
     ASYMMETRY: FN cost typically >> FP cost for financial fraud
     """
     false_positive_cost: float  # $ cost of wrongly flagging good transaction
     false_negative_cost: float  # $ cost of missing bad transaction
-    
+
     @property
     def asymmetry_ratio(self) -> float:
         """FN/FP cost ratio — higher means bias toward caution."""
         if self.false_positive_cost == 0:
             return float("inf")
         return self.false_negative_cost / self.false_positive_cost
-    
+
     @property
     def optimal_threshold_hint(self) -> float:
         """
         Theoretical optimal threshold given cost asymmetry.
-        
+
         From decision theory: threshold = FP_cost / (FP_cost + FN_cost)
         """
         total = self.false_positive_cost + self.false_negative_cost
@@ -108,7 +108,7 @@ DEFAULT_PAYMENT_COSTS = FalseOutcomeCost(
 class FeatureProvenance(str, Enum):
     """
     Provenance classification for risk features.
-    
+
     Each feature must have documented provenance to ensure:
     - No data leakage (future info bleeding into past)
     - No proxy discrimination (protected class proxies)
@@ -144,7 +144,7 @@ class FeatureAuditRecord:
     temporal_validity: str          # When this feature is available
     monotonic_direction: Optional[str]  # "increasing", "decreasing", or None
     economic_justification: str     # Why this feature matters economically
-    
+
     def is_safe_to_use(self) -> bool:
         """Feature is safe if leakage risk is low or none."""
         return self.leakage_risk in (LeakageRisk.NONE, LeakageRisk.LOW)
@@ -168,9 +168,9 @@ class MonotonicConstraint(str, Enum):
 class ShapeFunctionSpec:
     """
     Specification for a single feature's shape function in EBM/GAM.
-    
+
     Shape function: f_i(x_i) → contribution to log-odds
-    
+
     For glass-box models, each feature has an independent shape function
     that can be inspected, plotted, and audited.
     """
@@ -179,7 +179,7 @@ class ShapeFunctionSpec:
     monotonic: MonotonicConstraint
     smoothness: str                      # "smooth", "step", "linear"
     max_bins: int                        # Maximum discretization bins
-    
+
     # Audit fields
     economic_interpretation: str         # What this shape function means
     edge_case_handling: str              # How extremes are handled
@@ -189,11 +189,11 @@ class ShapeFunctionSpec:
 class GlassBoxModelSpec:
     """
     Complete specification for a glass-box risk model.
-    
+
     Structure: GAM/EBM with additive feature contributions
-    
+
     score = sigmoid( intercept + Σ f_i(x_i) )
-    
+
     Where each f_i is an inspectable, potentially monotonic shape function.
     """
     model_id: str
@@ -202,22 +202,22 @@ class GlassBoxModelSpec:
     intercept: float                     # Base log-odds (prior)
     target_definition: str               # What "risk" means operationally
     calibration_method: str              # "platt", "isotonic", "none"
-    
+
     # Audit metadata
     training_window: str                 # Time period of training data
     validation_window: str               # Time period of validation data
     created_at: str
     created_by: str                      # Must be "MAGGIE (GID-10)"
-    
+
     @property
     def feature_count(self) -> int:
         return len(self.feature_specs)
-    
+
     @property
     def is_fully_monotonic(self) -> bool:
         """Check if all features have monotonic constraints."""
         return all(
-            fs.monotonic != MonotonicConstraint.NONE 
+            fs.monotonic != MonotonicConstraint.NONE
             for fs in self.feature_specs
         )
 
@@ -247,7 +247,7 @@ class CalibrationBin:
     predicted_prob: float       # Average predicted probability in bin
     observed_rate: float        # Actual positive rate in bin
     sample_count: int           # Number of samples in bin
-    
+
     @property
     def calibration_error(self) -> float:
         """Absolute calibration error for this bin."""
@@ -264,27 +264,27 @@ class CalibrationReport:
     ece: float                  # Expected Calibration Error
     mce: float                  # Maximum Calibration Error
     brier_score: float          # Brier score (mean squared error)
-    
+
     # Cohort stability
     cohorts_tested: int
     worst_cohort_ece: float
-    
+
     # Time stability
     time_windows_tested: int
     worst_window_ece: float
-    
+
     # Metadata
     sample_count: int
     positive_rate: float        # Base rate of positive class
     computed_at: str
-    
+
     @property
     def is_well_calibrated(self) -> bool:
         """
         Calibration is acceptable if ECE < 0.05 (5%).
         """
         return self.ece < 0.05
-    
+
     @property
     def is_stable(self) -> bool:
         """
@@ -309,7 +309,7 @@ class FeatureContribution:
     contribution: float         # Additive contribution to log-odds
     direction: str              # "increases_risk" or "decreases_risk"
     rank: int                   # Importance rank (1 = most important)
-    
+
     @property
     def contribution_description(self) -> str:
         """Human-readable contribution description."""
@@ -321,7 +321,7 @@ class FeatureContribution:
 class PDOExplanation:
     """
     Payment Decision Outcome explanation artifact.
-    
+
     This is the primary explanation format consumed by:
     - OC (Operator Control) for decision review
     - Trust Center for audit queries
@@ -332,27 +332,27 @@ class PDOExplanation:
     risk_tier: str                      # MINIMAL, LOW, MODERATE, HIGH, CRITICAL
     confidence_lower: float             # Lower bound of confidence interval
     confidence_upper: float             # Upper bound of confidence interval
-    
+
     # Top contributing factors (ranked)
     top_factors: Tuple[FeatureContribution, ...]
-    
+
     # Decision rationale
     primary_reason: str                 # Single sentence primary reason
     secondary_reasons: Tuple[str, ...]  # Additional context
-    
+
     # Provenance
     model_id: str
     model_version: str
     computed_at: str
-    
+
     # MANDATORY: Advisory flag
     advisory_only: bool = True
-    
+
     def __post_init__(self) -> None:
         """Enforce advisory_only is always True."""
         if not self.advisory_only:
             raise ValueError("PDOExplanation.advisory_only must always be True")
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Serialize for JSON output."""
         return {
@@ -384,7 +384,7 @@ class PDOExplanation:
             },
             "advisory_only": self.advisory_only,
         }
-    
+
     def to_human_readable(self) -> str:
         """Generate human-readable explanation string."""
         lines = [
@@ -395,20 +395,20 @@ class PDOExplanation:
             "",
             "Contributing Factors:",
         ]
-        
+
         for fc in self.top_factors[:5]:  # Top 5 factors
             lines.append(f"  {fc.rank}. {fc.contribution_description}")
-        
+
         if self.secondary_reasons:
             lines.append("")
             lines.append("Additional Context:")
             for reason in self.secondary_reasons[:3]:  # Top 3 secondary
                 lines.append(f"  - {reason}")
-        
+
         lines.append("")
         lines.append(f"[Model: {self.model_id} v{self.model_version}]")
         lines.append("[ADVISORY ONLY - Not a governance decision]")
-        
+
         return "\n".join(lines)
 
 
@@ -427,7 +427,7 @@ def generate_pdo_explanation(
 ) -> PDOExplanation:
     """
     Generate PDO explanation from model output.
-    
+
     Args:
         decision_id: Unique decision identifier
         risk_score: Calibrated risk probability [0.0, 1.0]
@@ -435,7 +435,7 @@ def generate_pdo_explanation(
         feature_contributions: List of (feature_id, feature_name, value, contribution)
         model_id: Model identifier
         model_version: Model version
-        
+
     Returns:
         PDOExplanation artifact ready for OC/Trust Center consumption
     """
@@ -445,7 +445,7 @@ def generate_pdo_explanation(
         key=lambda x: abs(x[3]),
         reverse=True,
     )
-    
+
     # Build FeatureContribution objects
     top_factors = []
     for rank, (fid, fname, fval, fcontrib) in enumerate(sorted_contribs[:5], 1):
@@ -460,7 +460,7 @@ def generate_pdo_explanation(
                 rank=rank,
             )
         )
-    
+
     # Determine risk tier
     if risk_score < 0.20:
         tier = "MINIMAL"
@@ -472,7 +472,7 @@ def generate_pdo_explanation(
         tier = "HIGH"
     else:
         tier = "CRITICAL"
-    
+
     # Generate primary reason from top factor
     if top_factors:
         top = top_factors[0]
@@ -482,12 +482,12 @@ def generate_pdo_explanation(
             primary_reason = f"Risk mitigated by favorable {top.feature_name}"
     else:
         primary_reason = "Risk assessment based on aggregate factors"
-    
+
     # Generate secondary reasons from remaining factors
     secondary_reasons = []
     for fc in top_factors[1:3]:
         secondary_reasons.append(fc.contribution_description)
-    
+
     return PDOExplanation(
         decision_id=decision_id,
         risk_score=risk_score,

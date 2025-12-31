@@ -22,7 +22,7 @@ from core.spine.executor import SpineExecutor, ExecutionProof
 
 __all__ = [
     "SpineEvent",
-    "SpineEventType", 
+    "SpineEventType",
     "DecisionEngine",
     "DecisionResult",
     "SpineExecutor",

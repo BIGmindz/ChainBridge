@@ -25,7 +25,7 @@ import shutil
 import threading
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterator
+from typing import TYPE_CHECKING, Any, Iterator, Optional
 
 if TYPE_CHECKING:
     from core.governance.events import GovernanceEvent
@@ -79,7 +79,7 @@ class RotatingJSONLSink:
 
     def __init__(
         self,
-        path: str | Path | None = None,
+        path: str | Optional[Path] = None,
         max_file_size_bytes: int = MAX_FILE_SIZE_BYTES,
         max_file_count: int = MAX_FILE_COUNT,
     ):
@@ -327,7 +327,7 @@ class GovernanceEventExporter:
     - Compliance reporting
     """
 
-    def __init__(self, log_path: str | Path | None = None):
+    def __init__(self, log_path: str | Optional[Path] = None):
         """
         Initialize exporter.
 
@@ -372,7 +372,7 @@ class GovernanceEventExporter:
 
         return files
 
-    def _parse_event(self, line: str) -> dict[str, Any] | None:
+    def _parse_event(self, line: str) -> Optional[Dict[str, Any]]:
         """Parse a single JSON line, return None on failure."""
         try:
             return json.loads(line.strip())
@@ -472,7 +472,7 @@ class GovernanceEventExporter:
         self,
         start_time: datetime | None = None,
         end_time: datetime | None = None,
-        limit: int | None = None,
+        limit: Optional[int] = None,
     ) -> list[dict[str, Any]]:
         """
         Export events to a list.
@@ -557,7 +557,7 @@ class GovernanceEventExporter:
 
 
 def configure_rotating_sink(
-    path: str | Path | None = None,
+    path: str | Optional[Path] = None,
     max_file_size_bytes: int = MAX_FILE_SIZE_BYTES,
     max_file_count: int = MAX_FILE_COUNT,
 ) -> RotatingJSONLSink:
@@ -582,7 +582,7 @@ def configure_rotating_sink(
     )
 
 
-def create_exporter(log_path: str | Path | None = None) -> GovernanceEventExporter:
+def create_exporter(log_path: str | Optional[Path] = None) -> GovernanceEventExporter:
     """
     Create a governance event exporter.
 

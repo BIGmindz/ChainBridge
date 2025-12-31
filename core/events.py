@@ -28,7 +28,7 @@ from pydantic import BaseModel, Field, field_validator
 class IngestEvent(BaseModel):
     """
     Canonical event schema for /events/ingest endpoint.
-    
+
     Minimal schema - event_type + payload.
     event_id and timestamp are generated server-side.
     """
@@ -39,9 +39,9 @@ class IngestEvent(BaseModel):
         default_factory=lambda: datetime.now(timezone.utc).isoformat(),
         description="ISO8601 timestamp of event creation"
     )
-    
+
     model_config = {"frozen": True}  # Immutable
-    
+
     @field_validator("event_type")
     @classmethod
     def validate_event_type(cls, v: str) -> str:
@@ -49,7 +49,7 @@ class IngestEvent(BaseModel):
         if not v or not v.strip():
             raise ValueError("event_type cannot be empty")
         return v.strip()
-    
+
     @field_validator("payload")
     @classmethod
     def validate_payload_not_empty(cls, v: Dict[str, Any]) -> Dict[str, Any]:
@@ -57,7 +57,7 @@ class IngestEvent(BaseModel):
         if not v:
             raise ValueError("payload cannot be empty")
         return v
-    
+
     def to_canonical_dict(self) -> Dict[str, Any]:
         """
         Return canonical dict representation for hashing.
@@ -69,7 +69,7 @@ class IngestEvent(BaseModel):
             "payload": self.payload,
             "timestamp": self.timestamp,
         }
-    
+
     def compute_hash(self) -> str:
         """
         Compute deterministic SHA-256 hash of this event.
@@ -90,7 +90,7 @@ class IngestEventRequest(BaseModel):
     """
     event_type: str = Field(..., min_length=1, description="Type of event")
     payload: Dict[str, Any] = Field(..., description="Event payload data")
-    
+
     @field_validator("event_type")
     @classmethod
     def validate_event_type(cls, v: str) -> str:
@@ -98,7 +98,7 @@ class IngestEventRequest(BaseModel):
         if not v or not v.strip():
             raise ValueError("event_type cannot be empty")
         return v.strip()
-    
+
     @field_validator("payload")
     @classmethod
     def validate_payload_not_empty(cls, v: Dict[str, Any]) -> Dict[str, Any]:
@@ -111,11 +111,11 @@ class IngestEventRequest(BaseModel):
 def create_event(event_type: str, payload: Dict[str, Any]) -> IngestEvent:
     """
     Factory function to create an IngestEvent from request data.
-    
+
     Args:
         event_type: Type of event
         payload: Event payload data
-        
+
     Returns:
         Immutable IngestEvent with generated event_id and timestamp
     """

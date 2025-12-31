@@ -94,7 +94,7 @@ class AtlasScope:
         return False
 
 
-def load_atlas_scope(scope_file: Path | None = None) -> AtlasScope:
+def load_atlas_scope(scope_file: Optional[Path] = None) -> AtlasScope:
     """Load Atlas scope configuration from YAML file.
 
     Args:

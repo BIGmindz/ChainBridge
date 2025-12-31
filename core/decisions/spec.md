@@ -1,9 +1,9 @@
 # Decision Logic Specification
 
-**PAC ID**: PAC-MAGGIE-DECISION-LOGIC-01  
-**Author**: MAGGIE (GID-10) — ML & Applied AI Lead  
-**Version**: 1.0.0  
-**Status**: LOCKED  
+**PAC ID**: PAC-MAGGIE-DECISION-LOGIC-01
+**Author**: MAGGIE (GID-10) — ML & Applied AI Lead
+**Version**: 1.0.0
+**Status**: LOCKED
 
 ---
 
@@ -61,8 +61,8 @@ All decision logic in ChainBridge follows these principles:
 
 ### 3.1 Rule: Payment Threshold (RULE-PAYMENT-THRESHOLD-V1)
 
-**Version**: 1.0.0  
-**Threshold**: $10,000.00 USD  
+**Version**: 1.0.0
+**Threshold**: $10,000.00 USD
 
 ```
 IF amount <= THRESHOLD:
@@ -78,28 +78,28 @@ ELSE:
 
 ### 3.2 Rule: Input Validation (RULE-INPUT-VALIDATION-V1)
 
-**Version**: 1.0.0  
+**Version**: 1.0.0
 
 ```
 IF amount IS NULL:
     RETURN ERROR("Missing required field: amount")
-    
+
 IF amount IS NOT NUMERIC:
     RETURN ERROR("Invalid amount type")
-    
+
 IF amount <= 0:
     RETURN ERROR("Amount must be positive")
-    
+
 IF vendor_id IS NULL OR EMPTY:
     RETURN ERROR("Missing required field: vendor_id")
-    
+
 IF requestor_id IS NULL OR EMPTY:
     RETURN ERROR("Missing required field: requestor_id")
 ```
 
 ### 3.3 Rule: Event Type Validation (RULE-EVENT-TYPE-V1)
 
-**Version**: 1.0.0  
+**Version**: 1.0.0
 
 ```
 IF event_type NOT IN SUPPORTED_TYPES:

@@ -20,7 +20,7 @@ import threading
 from abc import abstractmethod
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable, Optional
 
 if TYPE_CHECKING:
     from core.governance.events import GovernanceEvent
@@ -84,7 +84,7 @@ class JSONLFileSink:
         _file: File handle (lazy opened)
     """
 
-    def __init__(self, path: str | Path | None = None):
+    def __init__(self, path: str | Optional[Path] = None):
         """
         Initialize JSONL file sink.
 
@@ -187,7 +187,7 @@ class InMemorySink:
         with self._lock:
             self.events.clear()
 
-    def get_events(self, event_type: str | None = None) -> list[GovernanceEvent]:
+    def get_events(self, event_type: Optional[str] = None) -> list[GovernanceEvent]:
         """
         Get captured events, optionally filtered by type.
 
@@ -320,7 +320,7 @@ def emit_event(event: GovernanceEvent) -> None:
     emitter.emit(event)
 
 
-def configure_default_sink(path: str | Path | None = None) -> JSONLFileSink:
+def configure_default_sink(path: str | Optional[Path] = None) -> JSONLFileSink:
     """
     Configure the default JSONL file sink.
 
