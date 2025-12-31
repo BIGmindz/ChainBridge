@@ -1,6 +1,6 @@
 # PROOF DECISION OUTCOME (PDO) — CANONICAL SPEC v1
 
-**AUTHORITY:** Benson — CTO / Canonical Authority  
+**AUTHORITY:** Benson — CTO / Canonical Authority
 **STATUS:** LOCKED (v1)
 
 ---
@@ -17,17 +17,17 @@ A PDO is the **digital receipt for a decision**.
 
 Every PDO **must** include the following fields:
 
-1. **pdo_id**  
+1. **pdo_id**
    - Globally unique, canonical identifier
 
-2. **decision_subject**  
+2. **decision_subject**
    - What the decision was about (shipment, payment, agent action, etc.)
 
 3. **actor**
    - Human or agent identity responsible for the decision
 
 4. **inputs**
-   - References or hashes of all inputs used in the decision  
+   - References or hashes of all inputs used in the decision
    - Inputs must be reproducible or verifiable
 
 5. **policy_reference**
@@ -43,14 +43,14 @@ Every PDO **must** include the following fields:
    - Observed result after execution (success, failure, partial, pending)
 
 9. **timestamps**
-   - Decision time  
-   - Execution time (if applicable)  
+   - Decision time
+   - Execution time (if applicable)
    - Outcome observation time
 
 10. **integrity_guarantee**
     - Mechanism asserting immutability and tamper resistance
 
-No required field may be omitted.  
+No required field may be omitted.
 Optional fields are not permitted unless explicitly versioned in a future spec.
 
 ---
@@ -100,12 +100,12 @@ These invariants are non-negotiable.
 
 A PDO is **not**:
 
-- A log file  
-- A workflow definition  
-- A model output  
-- An explanation report  
-- An opinion or recommendation  
-- A monitoring trace  
+- A log file
+- A workflow definition
+- A model output
+- An explanation report
+- An opinion or recommendation
+- A monitoring trace
 
-PDOs do not explain *how* a model works.  
+PDOs do not explain *how* a model works.
 PDOs prove *that* a decision occurred, *why* it was allowed, and *what* happened.

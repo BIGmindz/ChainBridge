@@ -146,7 +146,7 @@ lock_supersession:
   new_lock_id: LOCK-GW-EXAMPLE-002
   reason: "Expanding scope to include OCC domain"
   strictness_comparison: NEW_IS_STRICTER
-  
+
   new_lock:
     lock_id: LOCK-GW-EXAMPLE-002
     description: Updated description
@@ -359,12 +359,12 @@ Each lock maintains implicit version history through Git:
 ❌ WRONG (modification):
    - lock_id: LOCK-GW-IMMUTABILITY-001
      description: "Updated description"  # Changed!
-     
+
 ✓ CORRECT (supersession):
    - lock_id: LOCK-GW-IMMUTABILITY-001
      status: SUPERSEDED
      superseded_by: LOCK-GW-IMMUTABILITY-002
-     
+
    - lock_id: LOCK-GW-IMMUTABILITY-002
      description: "New stricter description"
 ```

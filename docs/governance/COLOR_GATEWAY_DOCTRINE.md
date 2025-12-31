@@ -130,7 +130,7 @@ Validation rules per `color_gateway_spec.json`:
 
 ---
 
-**Prepared by:** ALEX (GID-08)  
-**Date:** 2025-12-19  
-**PAC Reference:** PAC-BENSON-COLOR-GATEWAY-CANONICAL-SPEC-01  
+**Prepared by:** ALEX (GID-08)
+**Date:** 2025-12-19
+**PAC Reference:** PAC-BENSON-COLOR-GATEWAY-CANONICAL-SPEC-01
 **Classification:** Reference document. Non-authoritative.

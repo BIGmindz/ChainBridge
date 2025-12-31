@@ -165,7 +165,7 @@ Every action MUST have:
 
 ---
 
-**Prepared by:** ALEX (GID-08)  
-**Date:** 2025-12-19  
-**PAC Reference:** PAC-ALEX-GOVERNANCE-LOCK-01  
+**Prepared by:** ALEX (GID-08)
+**Date:** 2025-12-19
+**PAC Reference:** PAC-ALEX-GOVERNANCE-LOCK-01
 **Classification:** Reference document. Navigational aid only. Non-authoritative.

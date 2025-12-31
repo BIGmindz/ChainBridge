@@ -1,8 +1,8 @@
 # Proof Artifact Persistence
 
-**PAC-DAN-PROOF-PERSISTENCE-01**  
-**Author:** DAN (GID-07)  
-**Date:** 2025-12-19  
+**PAC-DAN-PROOF-PERSISTENCE-01**
+**Author:** DAN (GID-07)
+**Date:** 2025-12-19
 **Status:** ACTIVE
 
 ---
@@ -35,7 +35,7 @@
 # Override proof log location
 CHAINBRIDGE_PROOF_LOG_PATH=./data/proofs.jsonl
 
-# Override manifest location  
+# Override manifest location
 CHAINBRIDGE_PROOF_MANIFEST_PATH=./data/proofs_manifest.json
 ```
 

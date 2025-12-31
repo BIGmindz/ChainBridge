@@ -146,7 +146,7 @@ RESOLUTION:
 
 ---
 
-**Prepared by:** ALEX (GID-08)  
-**Date:** 2025-12-19  
-**PAC Reference:** PAC-BENSON-COLOR-GATEWAY-IMPLEMENTATION-01  
+**Prepared by:** ALEX (GID-08)
+**Date:** 2025-12-19
+**PAC Reference:** PAC-BENSON-COLOR-GATEWAY-IMPLEMENTATION-01
 **Classification:** Reference document. Non-authoritative.

@@ -299,7 +299,7 @@ jobs:
       - name: Run PDO enforcement tests
         run: |
           pytest tests/test_pdo_enforcement.py -v --tb=short
-          
+
       - name: Verify PDO coverage
         run: |
           pytest tests/test_pdo_enforcement.py --cov=app/services/pdo --cov=app/middleware/pdo_enforcement --cov-fail-under=90

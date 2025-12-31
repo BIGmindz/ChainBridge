@@ -96,5 +96,5 @@ Do NOT use `--no-verify` to skip hooks. CI will still block the PR.
 
 ---
 
-**PAC Reference:** PAC-BENSON-ATLAS-GOVERNANCE-HARDENING-01  
+**PAC Reference:** PAC-BENSON-ATLAS-GOVERNANCE-HARDENING-01
 **Maintained by:** ATLAS (GID-11)

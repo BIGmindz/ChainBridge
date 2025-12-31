@@ -71,7 +71,7 @@ git log --oneline | grep -v "PAC-" | head -5
 
 ### STOP-05: Proof Integrity Failure
 
-**Trigger:** 
+**Trigger:**
 - Proof hash mismatch
 - Proof artifact corruption
 - Missing proof for completed execution
@@ -241,7 +241,7 @@ All STOP events MUST be logged to `logs/governance/stop_events.log`:
 
 ---
 
-**Prepared by:** ALEX (GID-08)  
-**Date:** 2025-12-19  
-**PAC Reference:** PAC-ALEX-GOVERNANCE-LOCK-01  
+**Prepared by:** ALEX (GID-08)
+**Date:** 2025-12-19
+**PAC Reference:** PAC-ALEX-GOVERNANCE-LOCK-01
 **Classification:** Reference document. Navigational aid only. Non-authoritative.
