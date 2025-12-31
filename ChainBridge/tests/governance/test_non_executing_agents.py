@@ -265,32 +265,32 @@ END — PAC-CODY-TEST-001
 
 class TestRegistryConstants:
     """Test that registry constants are correctly defined."""
-    
+
     def test_pax_in_non_executing_agents(self):
         """PAX must be in NON_EXECUTING_AGENTS list."""
         assert "PAX" in NON_EXECUTING_AGENTS
-    
+
     def test_pax_in_non_executing_strategy_agents(self):
         """PAX must be in NON_EXECUTING_STRATEGY_AGENTS list."""
         assert "PAX" in NON_EXECUTING_STRATEGY_AGENTS
-    
+
     def test_dana_in_forbidden_aliases(self):
         """DANA must be in FORBIDDEN_AGENT_ALIASES list."""
         assert "DANA" in FORBIDDEN_AGENT_ALIASES
-    
+
     def test_pax_not_in_forbidden_aliases(self):
         """PAX is non-executing but NOT forbidden (can exist as strategy agent)."""
         # PAX is a strategy agent, not permanently forbidden like DANA
         # This is the key distinction from PAC-PAX-P37
         assert "PAX" not in FORBIDDEN_AGENT_ALIASES
-    
+
     def test_allowed_outputs_defined(self):
         """Strategy agent allowed outputs must be defined."""
         assert len(STRATEGY_AGENT_ALLOWED_OUTPUTS) > 0
         assert "RESEARCH_PACK" in STRATEGY_AGENT_ALLOWED_OUTPUTS
         assert "STRATEGY_MEMO" in STRATEGY_AGENT_ALLOWED_OUTPUTS
         assert "POLICY_RECOMMENDATION" in STRATEGY_AGENT_ALLOWED_OUTPUTS
-    
+
     def test_forbidden_outputs_defined(self):
         """Strategy agent forbidden outputs must be defined."""
         assert len(STRATEGY_AGENT_FORBIDDEN_OUTPUTS) > 0
@@ -306,19 +306,19 @@ class TestRegistryConstants:
 
 class TestPaxPacEmission:
     """Test that PAX cannot emit PACs (GS_090)."""
-    
+
     def test_pax_pac_emission_fails(self, pax_pac_content, registry):
         """PAX emitting a PAC must trigger GS_090."""
         errors = validate_non_executing_strategy_agent(pax_pac_content, registry)
-        
+
         assert len(errors) > 0
         error_codes = [e.code for e in errors]
         assert ErrorCode.GS_090 in error_codes
-    
+
     def test_pax_pac_emission_error_message(self, pax_pac_content, registry):
         """GS_090 error must include informative message."""
         errors = validate_non_executing_strategy_agent(pax_pac_content, registry)
-        
+
         gs_090_errors = [e for e in errors if e.code == ErrorCode.GS_090]
         assert len(gs_090_errors) > 0
         assert "PAX" in gs_090_errors[0].message
@@ -327,11 +327,11 @@ class TestPaxPacEmission:
 
 class TestPaxWrapEmission:
     """Test that PAX cannot emit WRAPs (GS_091)."""
-    
+
     def test_pax_wrap_emission_fails(self, pax_wrap_content, registry):
         """PAX emitting a WRAP must trigger GS_091."""
         errors = validate_non_executing_strategy_agent(pax_wrap_content, registry)
-        
+
         assert len(errors) > 0
         error_codes = [e.code for e in errors]
         assert ErrorCode.GS_091 in error_codes
@@ -339,11 +339,11 @@ class TestPaxWrapEmission:
 
 class TestPaxCodeCreation:
     """Test that PAX cannot create code/files (GS_092)."""
-    
+
     def test_pax_code_creation_fails(self, pax_with_code_content, registry):
         """PAX emitting code must trigger GS_092."""
         errors = validate_non_executing_strategy_agent(pax_with_code_content, registry)
-        
+
         assert len(errors) > 0
         error_codes = [e.code for e in errors]
         assert ErrorCode.GS_092 in error_codes
@@ -351,12 +351,12 @@ class TestPaxCodeCreation:
 
 class TestPaxPositiveClosure:
     """Test that PAX cannot issue POSITIVE_CLOSURE (GS_093)."""
-    
+
     def test_pax_positive_closure_fails(self, pax_wrap_content, registry):
         """PAX issuing POSITIVE_CLOSURE must trigger GS_093."""
         # The WRAP content includes POSITIVE_CLOSURE
         errors = validate_non_executing_strategy_agent(pax_wrap_content, registry)
-        
+
         assert len(errors) > 0
         error_codes = [e.code for e in errors]
         assert ErrorCode.GS_093 in error_codes
@@ -364,11 +364,11 @@ class TestPaxPositiveClosure:
 
 class TestPaxAdvisoryOutputs:
     """Test that PAX advisory outputs are allowed."""
-    
+
     def test_pax_advisory_passes(self, pax_advisory_content, registry):
         """PAX advisory content without PAC/WRAP/CODE should pass."""
         errors = validate_non_executing_strategy_agent(pax_advisory_content, registry)
-        
+
         # Should have no GS_090-093 errors
         error_codes = [e.code for e in errors]
         assert ErrorCode.GS_090 not in error_codes
@@ -383,11 +383,11 @@ class TestPaxAdvisoryOutputs:
 
 class TestForbiddenAliases:
     """Test that forbidden aliases are blocked."""
-    
+
     def test_dana_pac_fails(self, dana_pac_content, registry):
         """DANA in PAC ID must trigger GS_073."""
         errors = validate_pac_naming_and_roles(dana_pac_content, registry)
-        
+
         assert len(errors) > 0
         error_codes = [e.code for e in errors]
         assert ErrorCode.GS_073 in error_codes
@@ -399,18 +399,18 @@ class TestForbiddenAliases:
 
 class TestExecutingAgents:
     """Test that executing agents can emit PACs normally."""
-    
+
     def test_cody_pac_no_strategy_errors(self, valid_cody_pac_content, registry):
         """CODY (executing agent) should not trigger GS_090-093."""
         errors = validate_non_executing_strategy_agent(valid_cody_pac_content, registry)
-        
+
         # Should have no strategy agent errors
         assert len(errors) == 0
-    
+
     def test_cody_pac_naming_passes(self, valid_cody_pac_content, registry):
         """CODY PAC should not trigger naming errors."""
         errors = validate_pac_naming_and_roles(valid_cody_pac_content, registry)
-        
+
         # Should not have GS_071 (non-executing) or GS_073 (forbidden alias)
         error_codes = [e.code for e in errors]
         assert ErrorCode.GS_071 not in error_codes
@@ -423,20 +423,20 @@ class TestExecutingAgents:
 
 class TestFullValidation:
     """Integration tests using full validate_content function."""
-    
+
     def test_pax_pac_full_validation_fails(self, pax_pac_content, registry):
         """Full validation of PAX PAC must fail."""
         result = validate_content(pax_pac_content, registry)
-        
+
         assert result.valid is False
         error_codes = [e.code for e in result.errors]
         # Should have both GS_071 (non-executing in PAC ID) and GS_090 (PAC emission)
         assert ErrorCode.GS_071 in error_codes or ErrorCode.GS_090 in error_codes
-    
+
     def test_cody_pac_full_validation_structure(self, valid_cody_pac_content, registry):
         """Full validation of CODY PAC should not fail on strategy agent rules."""
         result = validate_content(valid_cody_pac_content, registry)
-        
+
         # Check that none of the strategy agent errors are present
         error_codes = [e.code for e in result.errors]
         assert ErrorCode.GS_090 not in error_codes
@@ -451,7 +451,7 @@ class TestFullValidation:
 
 class TestRegressionPaxEnforcement:
     """Regression tests to prevent future PAX execution bypass."""
-    
+
     def test_pax_cannot_bypass_via_uppercase(self, registry):
         """PAX detection must be case-insensitive."""
         content = """
@@ -464,23 +464,23 @@ PAC-PAX-TEST
         errors = validate_non_executing_strategy_agent(content, registry)
         # PAX in lowercase should still be detected
         # Note: The function should handle case normalization
-    
+
     def test_pax_enforcement_deterministic(self, pax_pac_content, registry):
         """PAX enforcement must be deterministic across multiple runs."""
         results = []
         for _ in range(10):
             errors = validate_non_executing_strategy_agent(pax_pac_content, registry)
             results.append(len(errors))
-        
+
         # All runs must produce same number of errors
         assert len(set(results)) == 1
-    
+
     def test_registry_is_authority(self, registry):
         """Registry must be the source of truth for agent roles."""
         # Check that non-executing agents are defined in registry
         non_exec = registry.get("non_executing_agents", [])
         strategy = registry.get("non_executing_strategy_agents", {})
-        
+
         # PAX should be in at least one of these
         assert "PAX" in non_exec or "PAX" in strategy
 
@@ -491,23 +491,23 @@ PAC-PAX-TEST
 
 class TestErrorCodes:
     """Test that error codes are properly defined."""
-    
+
     def test_gs_090_exists(self):
         """GS_090 error code must exist."""
         assert hasattr(ErrorCode, "GS_090")
-    
+
     def test_gs_091_exists(self):
         """GS_091 error code must exist."""
         assert hasattr(ErrorCode, "GS_091")
-    
+
     def test_gs_092_exists(self):
         """GS_092 error code must exist."""
         assert hasattr(ErrorCode, "GS_092")
-    
+
     def test_gs_093_exists(self):
         """GS_093 error code must exist."""
         assert hasattr(ErrorCode, "GS_093")
-    
+
     def test_error_messages_informative(self):
         """Error code messages must be informative."""
         assert "PAC" in ErrorCode.GS_090.value
@@ -522,13 +522,13 @@ class TestErrorCodes:
 
 class TestTrainingSignal:
     """Test training signal propagation for PAX violations."""
-    
+
     def test_training_signal_pattern(self):
         """Training signal pattern must be defined for this PAC."""
         # The training signal for PAX enforcement
         expected_pattern = "ROLE_CLARITY_PREVENTS_SYSTEMIC_DRIFT"
         expected_lesson = "Strategy informs execution; it does not perform it."
-        
+
         # These should be documented in gate_pack.py comments
         # This test documents the expected values for audit purposes
         assert expected_pattern is not None

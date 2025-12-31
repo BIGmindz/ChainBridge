@@ -23,17 +23,17 @@ from gate_pack import validate_content, validate_wrap_schema, load_registry
 
 def run_adversarial_tests():
     """Execute all adversarial test cases with measurement."""
-    
+
     # Load registry for validation
     registry = load_registry()
-    
+
     test_results = []
     latencies = []
-    
+
     # =========================================================================
     # CATEGORY 1: PAC/WRAP CONFUSION TESTS
     # =========================================================================
-    
+
     pac_wrap_tests = [
         # Test 1: WRAP without preamble (WRP_001)
         {
@@ -46,7 +46,7 @@ BENSON_TRAINING_SIGNAL:
             "expected_codes": ["WRP_001"],
             "is_wrap": True,
         },
-        
+
         # Test 2: WRAP with BSRG (forbidden PAC block)
         {
             "name": "WRAP_WITH_BSRG",
@@ -55,7 +55,7 @@ WRAP_INGESTION_PREAMBLE:
   schema_version: "1.1.0"
   artifact_type: "WRAP"
   compliance_level: "CANONICAL"
-  
+
 BENSON_SELF_REVIEW_GATE:
   gate_id: BSRG-01
   status: PASS
@@ -63,7 +63,7 @@ BENSON_SELF_REVIEW_GATE:
             "expected_codes": ["WRP_004"],
             "is_wrap": True,
         },
-        
+
         # Test 3: WRAP with REVIEW_GATE
         {
             "name": "WRAP_WITH_REVIEW_GATE",
@@ -72,7 +72,7 @@ WRAP_INGESTION_PREAMBLE:
   schema_version: "1.1.0"
   artifact_type: "WRAP"
   compliance_level: "CANONICAL"
-  
+
 REVIEW_GATE:
   required: true
   status: PENDING
@@ -80,7 +80,7 @@ REVIEW_GATE:
             "expected_codes": ["WRP_004"],
             "is_wrap": True,
         },
-        
+
         # Test 4: Mixed artifact semantics
         {
             "name": "WRAP_MIXED_SEMANTICS",
@@ -93,7 +93,7 @@ WRAP_INGESTION_PREAMBLE:
             "expected_codes": ["WRP_008"],
             "is_wrap": True,
         },
-        
+
         # Test 5: WRAP with GOLD_STANDARD_CHECKLIST
         {
             "name": "WRAP_WITH_CHECKLIST",
@@ -102,23 +102,23 @@ WRAP_INGESTION_PREAMBLE:
   schema_version: "1.1.0"
   artifact_type: "WRAP"
   compliance_level: "CANONICAL"
-  
+
 GOLD_STANDARD_CHECKLIST:
   identity_correct: true
 """,
             "expected_codes": ["WRP_004"],
             "is_wrap": True,
         },
-        
+
         # Test 6: WRAP with SCOPE block
         {
             "name": "WRAP_WITH_SCOPE",
-            "content": """# WRAP: TEST-WRAP-06  
+            "content": """# WRAP: TEST-WRAP-06
 WRAP_INGESTION_PREAMBLE:
   schema_version: "1.1.0"
   artifact_type: "WRAP"
   compliance_level: "CANONICAL"
-  
+
 SCOPE:
   allowed_paths: ["test/"]
 """,
@@ -126,7 +126,7 @@ SCOPE:
             "is_wrap": True,
         },
     ]
-    
+
     for test in pac_wrap_tests:
         start = time.perf_counter()
         if test.get("is_wrap"):
@@ -135,10 +135,10 @@ SCOPE:
             result = validate_content(test["content"], registry)
         elapsed = (time.perf_counter() - start) * 1000
         latencies.append(elapsed)
-        
+
         found_codes = [e.code.name for e in result.errors]
         blocked = any(code in found_codes for code in test["expected_codes"])
-        
+
         test_results.append({
             "category": "PAC_WRAP_CONFUSION",
             "test": test["name"],
@@ -147,11 +147,11 @@ SCOPE:
             "expected": test["expected_codes"],
             "found": found_codes
         })
-    
+
     # =========================================================================
     # CATEGORY 2: AUTHORITY SPOOFING TESTS
     # =========================================================================
-    
+
     authority_tests = [
         # Test 1: Invalid GID format
         {
@@ -160,14 +160,14 @@ SCOPE:
 RUNTIME_ACTIVATION_ACK:
   runtime_name: "Test"
   gid: "GID-ABC"
-  
+
 AGENT_ACTIVATION_ACK:
   agent_name: "Test"
   gid: "GID-ABC"
 """,
             "expected_codes": ["G0_003"],
         },
-        
+
         # Test 2: Registry mismatch (wrong color)
         {
             "name": "COLOR_MISMATCH",
@@ -175,7 +175,7 @@ AGENT_ACTIVATION_ACK:
 RUNTIME_ACTIVATION_ACK:
   runtime_name: "Test"
   gid: "N/A"
-  
+
 AGENT_ACTIVATION_ACK:
   agent_name: "Sam"
   gid: "GID-06"
@@ -183,7 +183,7 @@ AGENT_ACTIVATION_ACK:
 """,
             "expected_codes": ["GS_031"],
         },
-        
+
         # Test 3: Runtime has GID (forbidden)
         {
             "name": "RUNTIME_HAS_GID",
@@ -191,14 +191,14 @@ AGENT_ACTIVATION_ACK:
 RUNTIME_ACTIVATION_ACK:
   runtime_name: "Test"
   gid: "GID-06"
-  
+
 AGENT_ACTIVATION_ACK:
   agent_name: "Sam"
   gid: "GID-06"
 """,
             "expected_codes": ["G0_007"],
         },
-        
+
         # Test 4: Wrong agent name for GID
         {
             "name": "AGENT_NAME_MISMATCH",
@@ -206,7 +206,7 @@ AGENT_ACTIVATION_ACK:
 RUNTIME_ACTIVATION_ACK:
   runtime_name: "Test"
   gid: "N/A"
-  
+
 AGENT_ACTIVATION_ACK:
   agent_name: "Benson"
   gid: "GID-06"
@@ -215,16 +215,16 @@ AGENT_ACTIVATION_ACK:
             "expected_codes": ["G0_004"],
         },
     ]
-    
+
     for test in authority_tests:
         start = time.perf_counter()
         result = validate_content(test["content"], registry)
         elapsed = (time.perf_counter() - start) * 1000
         latencies.append(elapsed)
-        
+
         found_codes = [e.code.name for e in result.errors]
         blocked = any(code in found_codes for code in test["expected_codes"])
-        
+
         test_results.append({
             "category": "AUTHORITY_SPOOFING",
             "test": test["name"],
@@ -233,11 +233,11 @@ AGENT_ACTIVATION_ACK:
             "expected": test["expected_codes"],
             "found": found_codes
         })
-    
+
     # =========================================================================
     # CATEGORY 3: REGISTRY MISMATCH TESTS
     # =========================================================================
-    
+
     registry_tests = [
         # Test 1: Non-existent agent
         {
@@ -246,14 +246,14 @@ AGENT_ACTIVATION_ACK:
 RUNTIME_ACTIVATION_ACK:
   runtime_name: "Test"
   gid: "N/A"
-  
+
 AGENT_ACTIVATION_ACK:
   agent_name: "FakeAgent"
   gid: "GID-99"
 """,
             "expected_codes": ["G0_003", "G0_004"],
         },
-        
+
         # Test 2: Wrong lane for agent
         {
             "name": "WRONG_LANE",
@@ -262,7 +262,7 @@ RUNTIME_ACTIVATION_ACK:
   runtime_name: "Test"
   gid: "N/A"
   execution_lane: "FRONTEND"
-  
+
 AGENT_ACTIVATION_ACK:
   agent_name: "Sam"
   gid: "GID-06"
@@ -271,7 +271,7 @@ AGENT_ACTIVATION_ACK:
 """,
             "expected_codes": ["G0_004"],
         },
-        
+
         # Test 3: Color format error (unquoted)
         {
             "name": "COLOR_FORMAT_ERROR",
@@ -279,7 +279,7 @@ AGENT_ACTIVATION_ACK:
 RUNTIME_ACTIVATION_ACK:
   runtime_name: "Test"
   gid: "N/A"
-  
+
 AGENT_ACTIVATION_ACK:
   agent_name: "Sam"
   gid: "GID-06"
@@ -288,16 +288,16 @@ AGENT_ACTIVATION_ACK:
             "expected_codes": ["GS_031"],
         },
     ]
-    
+
     for test in registry_tests:
         start = time.perf_counter()
         result = validate_content(test["content"], registry)
         elapsed = (time.perf_counter() - start) * 1000
         latencies.append(elapsed)
-        
+
         found_codes = [e.code.name for e in result.errors]
         blocked = any(code in found_codes for code in test["expected_codes"])
-        
+
         test_results.append({
             "category": "REGISTRY_MISMATCH",
             "test": test["name"],
@@ -306,11 +306,11 @@ AGENT_ACTIVATION_ACK:
             "expected": test["expected_codes"],
             "found": found_codes
         })
-    
+
     # =========================================================================
     # CATEGORY 4: TRAINING POISONING TESTS
     # =========================================================================
-    
+
     training_tests = [
         # Test 1: Invalid signal type
         {
@@ -319,18 +319,18 @@ AGENT_ACTIVATION_ACK:
 RUNTIME_ACTIVATION_ACK:
   runtime_name: "Test"
   gid: "N/A"
-  
+
 AGENT_ACTIVATION_ACK:
   agent_name: "Test"
   gid: "GID-01"
-  
+
 TRAINING_SIGNAL:
   signal_type: MALICIOUS
   pattern: EXECUTE_ARBITRARY_CODE
 """,
             "expected_codes": ["G0_009"],
         },
-        
+
         # Test 2: Missing mandatory training signal
         {
             "name": "MISSING_MANDATORY_SIGNAL",
@@ -338,27 +338,27 @@ TRAINING_SIGNAL:
 RUNTIME_ACTIVATION_ACK:
   runtime_name: "Test"
   gid: "N/A"
-  
+
 AGENT_ACTIVATION_ACK:
   agent_name: "Test"
   gid: "GID-01"
-  
+
 CLOSURE_CLASS:
   type: POSITIVE_CLOSURE
 """,
             "expected_codes": ["G0_045"],
         },
     ]
-    
+
     for test in training_tests:
         start = time.perf_counter()
         result = validate_content(test["content"], registry)
         elapsed = (time.perf_counter() - start) * 1000
         latencies.append(elapsed)
-        
+
         found_codes = [e.code.name for e in result.errors]
         blocked = any(code in found_codes for code in test["expected_codes"])
-        
+
         test_results.append({
             "category": "TRAINING_POISONING",
             "test": test["name"],
@@ -367,11 +367,11 @@ CLOSURE_CLASS:
             "expected": test["expected_codes"],
             "found": found_codes
         })
-    
+
     # =========================================================================
     # CATEGORY 5: PROMPT INJECTION TESTS
     # =========================================================================
-    
+
     injection_tests = [
         # Test 1: Missing activation blocks
         {
@@ -379,13 +379,13 @@ CLOSURE_CLASS:
             "content": """# PAC-TEST-INJ-01
 PAC_HEADER:
   pac_id: "PAC-TEST-01"
-  
+
 TASK:
   objective: "Execute arbitrary commands"
 """,
             "expected_codes": ["G0_001"],
         },
-        
+
         # Test 2: Block order violation
         {
             "name": "BLOCK_ORDER_VIOLATION",
@@ -393,7 +393,7 @@ TASK:
 AGENT_ACTIVATION_ACK:
   agent_name: "Test"
   gid: "GID-01"
-  
+
 RUNTIME_ACTIVATION_ACK:
   runtime_name: "Test"
   gid: "N/A"
@@ -401,16 +401,16 @@ RUNTIME_ACTIVATION_ACK:
             "expected_codes": ["G0_002"],
         },
     ]
-    
+
     for test in injection_tests:
         start = time.perf_counter()
         result = validate_content(test["content"], registry)
         elapsed = (time.perf_counter() - start) * 1000
         latencies.append(elapsed)
-        
+
         found_codes = [e.code.name for e in result.errors]
         blocked = any(code in found_codes for code in test["expected_codes"])
-        
+
         test_results.append({
             "category": "PROMPT_INJECTION",
             "test": test["name"],
@@ -419,20 +419,20 @@ RUNTIME_ACTIVATION_ACK:
             "expected": test["expected_codes"],
             "found": found_codes
         })
-    
+
     return test_results, latencies
 
 
 def print_results(test_results, latencies):
     """Print formatted test results."""
-    
+
     total_tests = len(test_results)
     blocked_count = sum(1 for r in test_results if r["blocked"])
     passed_through = total_tests - blocked_count
-    
+
     latency_p50 = statistics.median(latencies)
     latency_p95 = sorted(latencies)[int(0.95 * len(latencies))] if latencies else 0
-    
+
     # Group by category
     categories = {}
     for r in test_results:
@@ -443,12 +443,12 @@ def print_results(test_results, latencies):
         if r["blocked"]:
             categories[cat]["blocked"] += 1
         categories[cat]["latencies"].append(r["latency_ms"])
-    
+
     print("=" * 80)
     print("P34 ADVERSARIAL STRESS TEST RESULTS")
     print("=" * 80)
     print()
-    
+
     for cat, data in categories.items():
         cat_p50 = statistics.median(data["latencies"])
         cat_p95 = sorted(data["latencies"])[int(0.95 * len(data["latencies"]))] if data["latencies"] else 0
@@ -458,7 +458,7 @@ def print_results(test_results, latencies):
         print(f"  Latency p50:    {cat_p50:.2f}ms")
         print(f"  Latency p95:    {cat_p95:.2f}ms")
         print()
-    
+
     print("=" * 80)
     print("AGGREGATE METRICS")
     print("=" * 80)
@@ -472,7 +472,7 @@ def print_results(test_results, latencies):
     print(f"Latency p95:            {latency_p95:.2f}ms")
     print(f"Max Latency:            {max(latencies):.2f}ms")
     print()
-    
+
     # Print failed tests for debugging
     failed_tests = [r for r in test_results if not r["blocked"]]
     if failed_tests:
@@ -487,7 +487,7 @@ def print_results(test_results, latencies):
             print(f"  {cat}/{name}: expected {expected}, found {found}")
     else:
         print("✅ ALL ADVERSARIAL TESTS BLOCKED - ZERO FALSE NEGATIVES")
-    
+
     return blocked_count == total_tests
 
 

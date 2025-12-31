@@ -45,7 +45,7 @@ def shipment_artifact_id() -> str:
 def shipment_event_sequence(shipment_artifact_id: str) -> list[EventStateRecord]:
     """Create a complete shipment event sequence for replay."""
     base_time = datetime.utcnow() - timedelta(days=7)
-    
+
     return [
         EventStateRecord(
             event_id=f"EVT-{uuid4().hex[:8]}",
@@ -105,7 +105,7 @@ class TestReplayDeterminism:
             artifact_type=ArtifactType.SHIPMENT,
             artifact_id=shipment_artifact_id,
         )
-        
+
         assert result1.final_state is not None
         assert result2.final_state is not None
         assert result1.final_state.current_state == result2.final_state.current_state
@@ -126,7 +126,7 @@ class TestReplayDeterminism:
             )
             for _ in range(5)
         ]
-        
+
         # All results should be identical
         first_state = results[0].final_state.current_state
         first_hash = results[0].state_hash
@@ -143,7 +143,7 @@ class TestReplayDeterminism:
         """Different event sequences produce different states."""
         # Remove last event
         partial_events = shipment_event_sequence[:-1]
-        
+
         full_result = replay_engine.replay_events(
             shipment_event_sequence,
             artifact_type=ArtifactType.SHIPMENT,
@@ -154,7 +154,7 @@ class TestReplayDeterminism:
             artifact_type=ArtifactType.SHIPMENT,
             artifact_id=shipment_artifact_id,
         )
-        
+
         assert full_result.final_state.current_state != partial_result.final_state.current_state
 
 
@@ -177,7 +177,7 @@ class TestReplayEngine:
             artifact_type=ArtifactType.SHIPMENT,
             artifact_id=shipment_artifact_id,
         )
-        
+
         assert result.events_processed == 0
         assert result.final_state is None
 
@@ -194,7 +194,7 @@ class TestReplayEngine:
             artifact_type=ArtifactType.SHIPMENT,
             artifact_id=shipment_artifact_id,
         )
-        
+
         assert result.events_processed == 1
         assert result.final_state is not None
         assert result.final_state.current_state == ShipmentState.CREATED.value
@@ -211,7 +211,7 @@ class TestReplayEngine:
             artifact_type=ArtifactType.SHIPMENT,
             artifact_id=shipment_artifact_id,
         )
-        
+
         assert result.events_processed == len(shipment_event_sequence)
 
     def test_replay_computes_final_state(
@@ -226,7 +226,7 @@ class TestReplayEngine:
             artifact_type=ArtifactType.SHIPMENT,
             artifact_id=shipment_artifact_id,
         )
-        
+
         assert result.final_state is not None
         # Last event is SHIPMENT_DELIVERED, which moves to DELIVERED
         assert result.final_state.current_state == ShipmentState.DELIVERED.value
@@ -248,14 +248,14 @@ class TestComputeStateAtTime:
     ) -> None:
         """State at creation time shows CREATED."""
         creation_time = shipment_event_sequence[0].timestamp + timedelta(minutes=1)
-        
+
         result = replay_engine.compute_state_at_time(
             events=shipment_event_sequence,
             artifact_type=ArtifactType.SHIPMENT,
             artifact_id=shipment_artifact_id,
             target_time=creation_time,
         )
-        
+
         assert result.final_state is not None
         assert result.final_state.current_state == ShipmentState.CREATED.value
 
@@ -267,14 +267,14 @@ class TestComputeStateAtTime:
     ) -> None:
         """State after departure shows IN_TRANSIT."""
         departure_time = shipment_event_sequence[1].timestamp + timedelta(minutes=1)
-        
+
         result = replay_engine.compute_state_at_time(
             events=shipment_event_sequence,
             artifact_type=ArtifactType.SHIPMENT,
             artifact_id=shipment_artifact_id,
             target_time=departure_time,
         )
-        
+
         assert result.final_state is not None
         assert result.final_state.current_state == ShipmentState.IN_TRANSIT.value
 
@@ -286,14 +286,14 @@ class TestComputeStateAtTime:
     ) -> None:
         """State after delivery shows DELIVERED."""
         delivery_time = shipment_event_sequence[2].timestamp + timedelta(minutes=1)
-        
+
         result = replay_engine.compute_state_at_time(
             events=shipment_event_sequence,
             artifact_type=ArtifactType.SHIPMENT,
             artifact_id=shipment_artifact_id,
             target_time=delivery_time,
         )
-        
+
         assert result.final_state is not None
         assert result.final_state.current_state == ShipmentState.DELIVERED.value
 
@@ -305,14 +305,14 @@ class TestComputeStateAtTime:
     ) -> None:
         """State before first event returns None."""
         before_time = shipment_event_sequence[0].timestamp - timedelta(hours=1)
-        
+
         result = replay_engine.compute_state_at_time(
             events=shipment_event_sequence,
             artifact_type=ArtifactType.SHIPMENT,
             artifact_id=shipment_artifact_id,
             target_time=before_time,
         )
-        
+
         assert result.final_state is None
         assert result.events_processed == 0
 
@@ -340,7 +340,7 @@ class TestVerifyStateConsistency:
         )
         expected_state = replay_result.final_state.current_state
         expected_hash = replay_result.state_hash
-        
+
         # Verify the state matches
         verify_result = replay_engine.verify_state_consistency(
             events=shipment_event_sequence,
@@ -349,7 +349,7 @@ class TestVerifyStateConsistency:
             current_state=expected_state,
             current_hash=expected_hash,
         )
-        
+
         assert verify_result.is_deterministic
         assert verify_result.hashes_match
 
@@ -368,7 +368,7 @@ class TestVerifyStateConsistency:
             current_state=ShipmentState.CREATED.value,  # Wrong state
             current_hash="wrong_hash",
         )
-        
+
         assert not verify_result.is_deterministic
 
 
@@ -392,7 +392,7 @@ class TestReplayResultStructure:
             artifact_type=ArtifactType.SHIPMENT,
             artifact_id=shipment_artifact_id,
         )
-        
+
         assert result.replayed_at is not None
         assert result.duration_ms >= 0
 
@@ -408,7 +408,7 @@ class TestReplayResultStructure:
             artifact_type=ArtifactType.SHIPMENT,
             artifact_id=shipment_artifact_id,
         )
-        
+
         assert result.state_hash is not None
         assert len(result.state_hash) == 64  # SHA256 hex length
 
@@ -433,7 +433,7 @@ class TestReplayStateStructure:
             artifact_type=ArtifactType.SHIPMENT,
             artifact_id=shipment_artifact_id,
         )
-        
+
         assert result.final_state.artifact_id == shipment_artifact_id
         assert result.final_state.artifact_type == ArtifactType.SHIPMENT
 
@@ -449,7 +449,7 @@ class TestReplayStateStructure:
             artifact_type=ArtifactType.SHIPMENT,
             artifact_id=shipment_artifact_id,
         )
-        
+
         assert result.final_state.event_count == len(shipment_event_sequence)
 
     def test_replay_state_has_timestamp(
@@ -464,7 +464,7 @@ class TestReplayStateStructure:
             artifact_type=ArtifactType.SHIPMENT,
             artifact_id=shipment_artifact_id,
         )
-        
+
         assert result.final_state.last_timestamp == shipment_event_sequence[-1].timestamp
 
 
@@ -482,7 +482,7 @@ class TestReplayEdgeCases:
         """Replay detects invalid state transitions."""
         artifact_id = f"SHIP-{uuid4().hex[:8]}"
         base_time = datetime.utcnow()
-        
+
         # Create an invalid sequence (skipping IN_TRANSIT)
         events = [
             EventStateRecord(
@@ -507,13 +507,13 @@ class TestReplayEdgeCases:
                 metadata=StateMetadata(),
             ),
         ]
-        
+
         result = replay_engine.replay_events(
             events,
             artifact_type=ArtifactType.SHIPMENT,
             artifact_id=artifact_id,
         )
-        
+
         # Should detect the invalid transition
         assert not result.is_deterministic
         assert len(result.validation_errors) > 0

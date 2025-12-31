@@ -221,17 +221,17 @@ AGENT_ACTIVATION_ACK:
 
 class TestPAG01ViolationCode:
     """Tests for violation code enum."""
-    
+
     def test_all_codes_exist(self):
         """Verify all 10 violation codes are defined."""
         codes = list(PAG01ViolationCode)
         assert len(codes) == 10
-    
+
     def test_code_names(self):
         """Verify code naming convention."""
         for code in PAG01ViolationCode:
             assert code.name.startswith("PAG_")
-    
+
     def test_code_descriptions(self):
         """Verify all codes have descriptions."""
         for code in PAG01ViolationCode:
@@ -244,7 +244,7 @@ class TestPAG01ViolationCode:
 
 class TestPAG01Violation:
     """Tests for violation dataclass."""
-    
+
     def test_violation_creation(self):
         """Test basic violation creation."""
         v = PAG01Violation(
@@ -255,7 +255,7 @@ class TestPAG01Violation:
         assert v.code == PAG01ViolationCode.PAG_001_MISSING_BLOCK
         assert v.message == "Test message"
         assert v.file_path == "test.md"
-    
+
     def test_violation_with_agent(self):
         """Test violation with agent information."""
         v = PAG01Violation(
@@ -275,7 +275,7 @@ class TestPAG01Violation:
 
 class TestPAG01AuditResult:
     """Tests for single file audit result."""
-    
+
     def test_compliant_result(self):
         """Test compliant audit result."""
         result = PAG01AuditResult(
@@ -285,7 +285,7 @@ class TestPAG01AuditResult:
         )
         assert result.compliant is True
         assert len(result.violations) == 0
-    
+
     def test_non_compliant_result(self):
         """Test non-compliant audit result."""
         v = PAG01Violation(
@@ -308,7 +308,7 @@ class TestPAG01AuditResult:
 
 class TestPAG01RepoAuditResult:
     """Tests for repository-wide audit result."""
-    
+
     def test_empty_repo_result(self):
         """Test audit result with no files."""
         result = PAG01RepoAuditResult(
@@ -320,7 +320,7 @@ class TestPAG01RepoAuditResult:
         )
         assert result.total_files == 0
         assert result.all_compliant is True
-    
+
     def test_repo_result_with_violations(self):
         """Test audit result with violations."""
         v1 = PAG01Violation(
@@ -348,7 +348,7 @@ class TestPAG01RepoAuditResult:
         assert result.non_compliant_files == 1
         assert result.all_compliant is False
         assert len(result.violations) == 2
-    
+
     def test_to_json(self):
         """Test JSON serialization."""
         result = PAG01RepoAuditResult(
@@ -370,57 +370,57 @@ class TestPAG01RepoAuditResult:
 
 class TestAuditPAG01SingleFile:
     """Integration tests for single file audit."""
-    
+
     def test_valid_pac_passes(self, valid_pac_content, mock_registry, tmp_path):
         """Test that valid PAC passes audit."""
         pac_file = tmp_path / "valid.md"
         pac_file.write_text(valid_pac_content)
-        
+
         result = audit_pag01_single_file(pac_file, mock_registry)
         assert result.compliant is True
         assert len(result.violations) == 0
-    
+
     def test_missing_agent_block_fails(self, pac_missing_agent_block, mock_registry, tmp_path):
         """Test that missing AGENT_ACTIVATION_ACK fails."""
         pac_file = tmp_path / "missing_agent.md"
         pac_file.write_text(pac_missing_agent_block)
-        
+
         result = audit_pag01_single_file(pac_file, mock_registry)
         assert result.compliant is False
-        
+
         codes = [v.code for v in result.violations]
         assert PAG01ViolationCode.PAG_001_MISSING_BLOCK in codes
-    
+
     def test_missing_runtime_block_fails(self, pac_missing_runtime_block, mock_registry, tmp_path):
         """Test that missing RUNTIME_ACTIVATION_ACK fails."""
         pac_file = tmp_path / "missing_runtime.md"
         pac_file.write_text(pac_missing_runtime_block)
-        
+
         result = audit_pag01_single_file(pac_file, mock_registry)
         assert result.compliant is False
-        
+
         codes = [v.code for v in result.violations]
         assert PAG01ViolationCode.PAG_002_MISSING_RUNTIME in codes
-    
+
     def test_wrong_order_fails(self, pac_wrong_order, mock_registry, tmp_path):
         """Test that wrong block order fails."""
         pac_file = tmp_path / "wrong_order.md"
         pac_file.write_text(pac_wrong_order)
-        
+
         result = audit_pag01_single_file(pac_file, mock_registry)
         assert result.compliant is False
-        
+
         codes = [v.code for v in result.violations]
         assert PAG01ViolationCode.PAG_005_ORDERING_VIOLATION in codes
-    
+
     def test_registry_mismatch_fails(self, pac_registry_mismatch, mock_registry, tmp_path):
         """Test that registry mismatch fails."""
         pac_file = tmp_path / "mismatch.md"
         pac_file.write_text(pac_registry_mismatch)
-        
+
         result = audit_pag01_single_file(pac_file, mock_registry)
         assert result.compliant is False
-        
+
         codes = [v.code for v in result.violations]
         # Should detect color mismatch
         mismatch_codes = [
@@ -437,7 +437,7 @@ class TestAuditPAG01SingleFile:
 
 class TestAuditPAG01Repository:
     """Integration tests for repository audit."""
-    
+
     def test_repository_audit_runs(self):
         """Test that repo audit runs and returns result."""
         result = audit_pag01_repository()
@@ -453,12 +453,12 @@ class TestAuditPAG01Repository:
 
 class TestLoadRegistry:
     """Tests for registry loading."""
-    
+
     def test_load_registry_returns_dict(self):
         """Test that load_registry returns dict."""
         registry = load_registry()
         assert isinstance(registry, dict)
-    
+
     def test_registry_has_agents(self, mock_registry):
         """Test registry structure."""
         assert "agents" in mock_registry
@@ -471,7 +471,7 @@ class TestLoadRegistry:
 
 class TestCLIIntegration:
     """Tests for CLI integration with gate_pack.py."""
-    
+
     def test_audit_pag01_flag_exists(self):
         """Verify --audit-pag01 flag is accepted."""
         # This is validated by the gate_pack.py argument parser
@@ -480,7 +480,7 @@ class TestCLIIntegration:
         parser.add_argument("--audit-pag01", action="store_true")
         args = parser.parse_args(["--audit-pag01"])
         assert args.audit_pag01 is True
-    
+
     def test_json_flag_exists(self):
         """Verify --json flag is accepted."""
         import argparse
@@ -488,7 +488,7 @@ class TestCLIIntegration:
         parser.add_argument("--json", action="store_true")
         args = parser.parse_args(["--json"])
         assert args.json is True
-    
+
     def test_no_fail_flag_exists(self):
         """Verify --no-fail flag is accepted."""
         import argparse
@@ -504,26 +504,26 @@ class TestCLIIntegration:
 
 class TestEdgeCases:
     """Edge case tests."""
-    
+
     def test_empty_file_is_compliant(self, mock_registry, tmp_path):
         """Test audit of empty file - considered compliant (no governance content to validate)."""
         empty_file = tmp_path / "empty.md"
         empty_file.write_text("")
-        
+
         result = audit_pag01_single_file(empty_file, mock_registry)
         # Empty files are considered compliant - no governance content to validate
         assert result.compliant is True
-    
+
     def test_non_governance_file_is_compliant(self, mock_registry, tmp_path):
         """Test audit of non-governance markdown file - considered compliant."""
         readme = tmp_path / "README.md"
         readme.write_text("# Project Readme\n\nThis is not a governance file.")
-        
+
         result = audit_pag01_single_file(readme, mock_registry)
         # Non-governance files without activation blocks are considered compliant
         # (no governance claims to validate)
         assert result.compliant is True
-    
+
     def test_file_with_partial_activation_block(self, mock_registry, tmp_path):
         """Test audit of file with incomplete AGENT_ACTIVATION_ACK."""
         partial = tmp_path / "partial.md"
@@ -532,7 +532,7 @@ class TestEdgeCases:
 ## AGENT_ACTIVATION_ACK
 This block has the header but no actual YAML content
 ''')
-        
+
         result = audit_pag01_single_file(partial, mock_registry)
         # Should handle gracefully - incomplete blocks may be flagged
         assert isinstance(result.compliant, bool)

@@ -67,7 +67,7 @@ def sample_events() -> list[EventStateRecord]:
     """Create a sample event sequence."""
     base_time = datetime.utcnow()
     artifact_id = f"SHIP-{uuid4().hex[:8]}"
-    
+
     return [
         EventStateRecord(
             event_id=f"EVT-{uuid4().hex[:8]}",
@@ -268,7 +268,7 @@ class TestInvS05TimeMonotonicity:
         """Out-of-order timestamps detected."""
         # Swap timestamps to create violation
         sample_events[1].timestamp = sample_events[0].timestamp - timedelta(hours=1)
-        
+
         result = validator.validate_event_sequence(sample_events)
         assert not result.is_valid
         assert any(

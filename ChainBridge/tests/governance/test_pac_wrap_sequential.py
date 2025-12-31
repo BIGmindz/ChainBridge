@@ -67,10 +67,10 @@ def temp_ledger():
         }
         json.dump(initial_data, f, indent=2)
         temp_path = Path(f.name)
-    
+
     ledger = GovernanceLedger(temp_path)
     yield ledger
-    
+
     # Cleanup
     temp_path.unlink(missing_ok=True)
 
@@ -312,41 +312,41 @@ PAC-ATLAS-P01-TEST-01
 
 class TestValidatePacWrapSequential:
     """Tests for ledger-backed PAC↔WRAP sequential validation."""
-    
+
     def test_sequential_valid_when_wrap_accepted(self, ledger_with_pac_and_wrap):
         """PAC P43 should validate when WRAP P42 is accepted."""
         result = ledger_with_pac_and_wrap.validate_pac_wrap_sequential(
             pac_id="PAC-ALEX-P43-TEST-01",
             agent_gid="GID-08"
         )
-        
+
         assert result["valid"] is True
         assert result["error_code"] is None
         assert "WRAP P42 is ACCEPTED" in result["message"]
-    
+
     def test_sequential_blocked_when_wrap_missing(self, ledger_with_pac_no_wrap):
         """PAC P43 should be blocked when WRAP P42 is missing."""
         result = ledger_with_pac_no_wrap.validate_pac_wrap_sequential(
             pac_id="PAC-ALEX-P43-TEST-01",
             agent_gid="GID-08"
         )
-        
+
         assert result["valid"] is False
         assert result["error_code"] == "GS_111"
         assert "WRAP P42" in result["message"]
         assert result["required_wrap_number"] == 42
-    
+
     def test_first_pac_allowed_without_prior_wrap(self, temp_ledger):
         """First PAC (P1) should be allowed without any prior WRAP."""
         result = temp_ledger.validate_pac_wrap_sequential(
             pac_id="PAC-ATLAS-P01-TEST-01",
             agent_gid="GID-11"
         )
-        
+
         assert result["valid"] is True
         assert result["error_code"] is None
         assert "no prior WRAP required" in result["message"]
-    
+
     def test_benson_override_allowed(self, ledger_with_pac_no_wrap):
         """BENSON (GID-00) should bypass sequential check."""
         # Even without WRAP P42, BENSON can issue P43
@@ -354,22 +354,22 @@ class TestValidatePacWrapSequential:
             pac_id="PAC-BENSON-P43-TEST-01",
             agent_gid="GID-00"
         )
-        
+
         assert result["valid"] is True
         assert result["error_code"] is None
         assert "BENSON" in result["message"]
-    
+
     def test_invalid_pac_id_format(self, temp_ledger):
         """Invalid PAC ID format should return error."""
         result = temp_ledger.validate_pac_wrap_sequential(
             pac_id="INVALID-ID",
             agent_gid="GID-08"
         )
-        
+
         assert result["valid"] is False
         assert result["error_code"] == "GS_111"
         assert "Cannot extract PAC number" in result["message"]
-    
+
     def test_wrap_from_different_agent_not_counted(self, temp_ledger):
         """WRAP from different agent should not satisfy dependency."""
         # Issue PAC P42 for ALEX
@@ -385,16 +385,16 @@ class TestValidatePacWrapSequential:
             agent_name="ATLAS",
             ratified_by="BENSON (GID-00)"
         )
-        
+
         # ALEX P43 should still be blocked (ALEX's WRAP P42 is missing)
         result = temp_ledger.validate_pac_wrap_sequential(
             pac_id="PAC-ALEX-P43-TEST-01",
             agent_gid="GID-08"
         )
-        
+
         assert result["valid"] is False
         assert result["error_code"] == "GS_111"
-    
+
     def test_wrap_submitted_not_accepted_not_counted(self, temp_ledger):
         """WRAP_SUBMITTED (not ACCEPTED) should not satisfy dependency."""
         # Issue PAC P42 for ALEX
@@ -410,13 +410,13 @@ class TestValidatePacWrapSequential:
             agent_name="ALEX",
             parent_pac_id="PAC-ALEX-P42-TEST-01"
         )
-        
+
         # P43 should still be blocked
         result = temp_ledger.validate_pac_wrap_sequential(
             pac_id="PAC-ALEX-P43-TEST-01",
             agent_gid="GID-08"
         )
-        
+
         assert result["valid"] is False
         assert result["error_code"] == "GS_111"
 
@@ -427,49 +427,49 @@ class TestValidatePacWrapSequential:
 
 class TestGatePackIntegration:
     """Tests for sequential validation integration with gate_pack.py."""
-    
+
     def test_gate_pack_calls_sequential_validation(
-        self, 
-        sample_pac_content_p43, 
+        self,
+        sample_pac_content_p43,
         ledger_with_pac_no_wrap
     ):
         """gate_pack should call validate_pac_wrap_sequential."""
         # Patch the ledger module to return our test ledger
         with patch('tools.governance.ledger_writer.GovernanceLedger') as MockLedger:
             MockLedger.return_value = ledger_with_pac_no_wrap
-            
+
             registry = {}
             errors = validate_pac_sequence_and_reservations(
-                sample_pac_content_p43, 
+                sample_pac_content_p43,
                 registry
             )
-            
+
             # Should have GS_111 error
             gs_111_errors = [e for e in errors if e.code == ErrorCode.GS_111]
             assert len(gs_111_errors) >= 1
-    
+
     def test_gate_pack_passes_when_wrap_accepted(
         self,
         sample_pac_content_p43,
         ledger_with_pac_and_wrap
     ):
         """gate_pack should pass when WRAP is accepted."""
-        # Patch the ledger module to return our test ledger  
+        # Patch the ledger module to return our test ledger
         with patch('tools.governance.ledger_writer.GovernanceLedger') as MockLedger:
             MockLedger.return_value = ledger_with_pac_and_wrap
-            
+
             registry = {}
             errors = validate_pac_sequence_and_reservations(
                 sample_pac_content_p43,
                 registry
             )
-            
+
             # Should NOT have GS_111 error for sequential validation
             gs_111_errors = [e for e in errors if e.code == ErrorCode.GS_111]
             # Note: May still have other errors from other validations
             # We're checking that sequential validation specifically passes
             sequential_messages = [
-                e for e in gs_111_errors 
+                e for e in gs_111_errors
                 if "sequential" in str(e.message).lower() or "WRAP P42" in str(e.message)
             ]
             assert len(sequential_messages) == 0
@@ -481,7 +481,7 @@ class TestGatePackIntegration:
 
 class TestEdgeCases:
     """Edge case tests for PAC↔WRAP sequential validation."""
-    
+
     def test_multiple_wraps_for_same_pac(self, temp_ledger):
         """Multiple WRAP_ACCEPTED entries for same P## should work."""
         # Issue PAC P42
@@ -498,15 +498,15 @@ class TestEdgeCases:
                 agent_name="ALEX",
                 ratified_by="BENSON (GID-00)"
             )
-        
+
         # P43 should be valid
         result = temp_ledger.validate_pac_wrap_sequential(
             pac_id="PAC-ALEX-P43-TEST-01",
             agent_gid="GID-08"
         )
-        
+
         assert result["valid"] is True
-    
+
     def test_pac_sequence_gap(self, temp_ledger):
         """PAC P44 should require WRAP P43, not P42."""
         # Issue PAC P42 and accept WRAP P42
@@ -521,17 +521,17 @@ class TestEdgeCases:
             agent_name="ALEX",
             ratified_by="BENSON (GID-00)"
         )
-        
+
         # Try to issue P44 (skipping P43)
         result = temp_ledger.validate_pac_wrap_sequential(
             pac_id="PAC-ALEX-P44-TEST-01",
             agent_gid="GID-08"
         )
-        
+
         # Should fail because WRAP P43 is missing
         assert result["valid"] is False
         assert result["required_wrap_number"] == 43
-    
+
     def test_ledger_only_no_filesystem(self, temp_ledger):
         """Validation must only check ledger, not filesystem."""
         # Issue PAC P42, no WRAP
@@ -540,14 +540,14 @@ class TestEdgeCases:
             agent_gid="GID-08",
             agent_name="ALEX"
         )
-        
+
         # Even if a WRAP file exists on filesystem, it shouldn't count
         # The validation only checks the ledger
         result = temp_ledger.validate_pac_wrap_sequential(
             pac_id="PAC-ALEX-P43-TEST-01",
             agent_gid="GID-08"
         )
-        
+
         # Should fail — no WRAP_ACCEPTED in ledger
         assert result["valid"] is False
         assert result["error_code"] == "GS_111"
@@ -559,7 +559,7 @@ class TestEdgeCases:
 
 class TestRequiredWrapNumber:
     """Tests for required_wrap_number reporting."""
-    
+
     def test_reports_correct_required_wrap_number(self, temp_ledger):
         """Should report the correct required WRAP number."""
         # Issue PAC P42
@@ -568,15 +568,15 @@ class TestRequiredWrapNumber:
             agent_gid="GID-08",
             agent_name="ALEX"
         )
-        
+
         # Try P43 — requires WRAP P42
         result = temp_ledger.validate_pac_wrap_sequential(
             pac_id="PAC-ALEX-P43-TEST-01",
             agent_gid="GID-08"
         )
-        
+
         assert result["required_wrap_number"] == 42
-        
+
         # Accept WRAP P42, try P44 — requires WRAP P43
         temp_ledger.record_wrap_accepted(
             artifact_id="WRAP-ALEX-P42-TEST-01",
@@ -584,12 +584,12 @@ class TestRequiredWrapNumber:
             agent_name="ALEX",
             ratified_by="BENSON (GID-00)"
         )
-        
+
         result = temp_ledger.validate_pac_wrap_sequential(
             pac_id="PAC-ALEX-P44-TEST-01",
             agent_gid="GID-08"
         )
-        
+
         assert result["required_wrap_number"] == 43
 
 
