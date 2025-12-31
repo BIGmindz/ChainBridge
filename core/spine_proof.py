@@ -43,7 +43,7 @@ PROOF_STORE_DIR = Path(os.getenv("PROOF_STORE_DIR", "proofpacks/spine"))
 class ProofArtifact:
     """
     Immutable proof artifact linking event → decision → action.
-    
+
     All fields except proof_hash are used to compute the proof_hash.
     proof_hash is computed after all other fields are set.
     """
@@ -62,16 +62,16 @@ class ProofArtifact:
     action_error: Optional[str]
     timestamp: str
     proof_hash: str = field(default="")
-    
+
     def __post_init__(self):
         """Compute proof_hash after initialization if not set."""
         if not self.proof_hash:
             self.proof_hash = self._compute_hash()
-    
+
     def _compute_hash(self) -> str:
         """
         Compute deterministic SHA-256 hash of proof.
-        
+
         Uses all fields except proof_hash itself.
         Canonical JSON encoding (sorted keys, no whitespace).
         """
@@ -93,7 +93,7 @@ class ProofArtifact:
         }
         canonical = json.dumps(canonical_data, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dict for serialization."""
         return {
@@ -113,7 +113,7 @@ class ProofArtifact:
             "timestamp": self.timestamp,
             "proof_hash": self.proof_hash,
         }
-    
+
     def verify_hash(self) -> bool:
         """Verify that proof_hash matches computed hash."""
         return self.proof_hash == self._compute_hash()
@@ -126,17 +126,17 @@ def build_proof(
 ) -> ProofArtifact:
     """
     Build proof artifact from event, decision, and action result.
-    
+
     Args:
         event: The original IngestEvent
         decision: The DecisionResult from core/decisions
         action_result: The ActionResult from executing the decision
-        
+
     Returns:
         ProofArtifact with computed proof_hash
     """
     timestamp = datetime.now(timezone.utc).isoformat()
-    
+
     proof = ProofArtifact(
         proof_id=uuid4(),
         event_id=str(event.event_id),
@@ -153,7 +153,7 @@ def build_proof(
         action_error=action_result.error,
         timestamp=timestamp,
     )
-    
+
     logger.info(
         "build_proof: proof artifact created",
         extra={
@@ -162,38 +162,38 @@ def build_proof(
             "proof_hash": proof.proof_hash,
         }
     )
-    
+
     return proof
 
 
 def persist_proof(proof: ProofArtifact) -> str:
     """
     Persist proof artifact to append-only storage.
-    
+
     Creates storage directory if it doesn't exist.
     Each proof is stored as a separate JSON file named by proof_id.
     Also appends to proof_log.jsonl for append-only audit trail.
-    
+
     Args:
         proof: The ProofArtifact to persist
-        
+
     Returns:
         Path to the persisted proof file
     """
     PROOF_STORE_DIR.mkdir(parents=True, exist_ok=True)
-    
+
     # Write individual proof file
     proof_file = PROOF_STORE_DIR / f"{proof.proof_id}.json"
     proof_dict = proof.to_dict()
-    
+
     with open(proof_file, "w", encoding="utf-8") as f:
         json.dump(proof_dict, f, indent=2, sort_keys=True)
-    
+
     # Append to proof log (append-only audit trail)
     log_file = PROOF_STORE_DIR / "proof_log.jsonl"
     with open(log_file, "a", encoding="utf-8") as f:
         f.write(json.dumps(proof_dict, sort_keys=True, separators=(",", ":")) + "\n")
-    
+
     logger.info(
         "persist_proof: proof persisted",
         extra={
@@ -202,32 +202,32 @@ def persist_proof(proof: ProofArtifact) -> str:
             "proof_hash": proof.proof_hash,
         }
     )
-    
+
     return str(proof_file)
 
 
 def load_proof(proof_id: str) -> Optional[ProofArtifact]:
     """
     Load proof artifact from storage by proof_id.
-    
+
     Args:
         proof_id: The UUID of the proof to load
-        
+
     Returns:
         ProofArtifact if found, None otherwise
     """
     proof_file = PROOF_STORE_DIR / f"{proof_id}.json"
-    
+
     if not proof_file.exists():
         logger.warning(
             "load_proof: proof not found",
             extra={"proof_id": proof_id}
         )
         return None
-    
+
     with open(proof_file, "r", encoding="utf-8") as f:
         data = json.load(f)
-    
+
     proof = ProofArtifact(
         proof_id=UUID(data["proof_id"]),
         event_id=data["event_id"],
@@ -245,7 +245,7 @@ def load_proof(proof_id: str) -> Optional[ProofArtifact]:
         timestamp=data["timestamp"],
         proof_hash=data["proof_hash"],
     )
-    
+
     # Verify integrity
     if not proof.verify_hash():
         logger.error(
@@ -253,5 +253,5 @@ def load_proof(proof_id: str) -> Optional[ProofArtifact]:
             extra={"proof_id": proof_id}
         )
         raise ValueError(f"Proof {proof_id} failed integrity check - hash mismatch")
-    
+
     return proof

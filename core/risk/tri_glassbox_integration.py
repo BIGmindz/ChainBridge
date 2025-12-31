@@ -29,13 +29,13 @@ INVARIANTS (ABSOLUTE):
 
 1. ACTIVATION BINDING:
    IF activation_reference IS MISSING → INTEGRATION = HARD_FAIL
-   
+
 2. MONOTONICITY:
    Higher risk_score MUST NOT yield a lower-severity TRI action
-   
+
 3. EXPLANATION COMPLETENESS:
    Every GlassBoxRiskOutput MUST include top_contributors
-   
+
 4. PDO EMBEDDING:
    IF PDO missing required risk fields → PDO = INVALID
 
@@ -63,7 +63,7 @@ SEVERITY_MEDIUM_UPPER_BOUND: float = 0.66   # [0.33, 0.66)
 class RiskSeverityTier(str, Enum):
     """
     Risk severity tiers mapped to TRI score ranges.
-    
+
     INVARIANT: Thresholds are immutable per PAC specification.
     """
     LOW = "low"         # [0.00, 0.33) → Standard processing
@@ -74,12 +74,12 @@ class RiskSeverityTier(str, Enum):
 class TRIAction(str, Enum):
     """
     Actions mapped to severity tiers.
-    
+
     MONOTONICITY CONSTRAINT:
     LOW → STANDARD → no intervention
     MEDIUM → REVIEW → manual review required
     HIGH → ESCALATE → senior review + potential block
-    
+
     INVARIANT: Action severity MUST NOT decrease as risk_score increases.
     """
     STANDARD = "standard"     # LOW tier → proceed normally
@@ -98,15 +98,15 @@ ACTION_SEVERITY_ORDER: Dict[TRIAction, int] = {
 def score_to_severity_tier(risk_score: float) -> RiskSeverityTier:
     """
     Map risk score to severity tier.
-    
+
     INVARIANT: This mapping is monotonic and deterministic.
-    
+
     Args:
         risk_score: Float in [0.0, 1.0]
-        
+
     Returns:
         RiskSeverityTier corresponding to the score
-        
+
     Raises:
         ValueError: If risk_score is outside [0.0, 1.0]
     """
@@ -114,7 +114,7 @@ def score_to_severity_tier(risk_score: float) -> RiskSeverityTier:
         raise ValueError(
             f"risk_score must be in [0.0, 1.0], got {risk_score}"
         )
-    
+
     if risk_score < SEVERITY_LOW_UPPER_BOUND:
         return RiskSeverityTier.LOW
     elif risk_score < SEVERITY_MEDIUM_UPPER_BOUND:
@@ -126,7 +126,7 @@ def score_to_severity_tier(risk_score: float) -> RiskSeverityTier:
 def severity_tier_to_action(tier: RiskSeverityTier) -> TRIAction:
     """
     Map severity tier to TRI action.
-    
+
     INVARIANT: This mapping is deterministic and monotonic.
     """
     mapping = {
@@ -140,7 +140,7 @@ def severity_tier_to_action(tier: RiskSeverityTier) -> TRIAction:
 def score_to_action(risk_score: float) -> TRIAction:
     """
     Map risk score directly to TRI action.
-    
+
     Convenience function combining tier mapping and action mapping.
     """
     tier = score_to_severity_tier(risk_score)
@@ -155,27 +155,27 @@ def score_to_action(risk_score: float) -> TRIAction:
 class IntegrationFailureMode(str, Enum):
     """
     Exhaustive enumeration of TRI ⇄ Glass-Box integration failure modes.
-    
+
     INVARIANT: ALL failure modes result in HARD FAIL — no fallback.
     """
     # Activation failures
     MISSING_ACTIVATION = "missing_activation"
     INVALID_ACTIVATION = "invalid_activation"
     EXPIRED_ACTIVATION = "expired_activation"
-    
+
     # Contract violations
     RISK_CONTRACT_VIOLATION = "risk_contract_violation"
     MONOTONICITY_VIOLATION = "monotonicity_violation"
-    
+
     # Explanation failures
     UNEXPLAINED_DECISION = "unexplained_decision"
     MISSING_CONTRIBUTORS = "missing_contributors"
-    
+
     # Schema violations
     INVALID_RISK_SCORE = "invalid_risk_score"
     INVALID_CONFIDENCE_BAND = "invalid_confidence_band"
     MISSING_REQUIRED_FIELD = "missing_required_field"
-    
+
     # Model violations
     UNKNOWN_MODEL_ID = "unknown_model_id"
     MODEL_VERSION_MISMATCH = "model_version_mismatch"
@@ -185,14 +185,14 @@ class IntegrationFailureMode(str, Enum):
 class IntegrationFailure:
     """
     Integration failure record.
-    
+
     INVARIANT: All failures are terminal — no recovery pathway.
     """
     mode: IntegrationFailureMode
     message: str
     context: Dict[str, Any]
     timestamp: datetime
-    
+
     @classmethod
     def create(
         cls,
@@ -218,18 +218,18 @@ class IntegrationFailure:
 class ActivationReference:
     """
     Reference to the agent's activation block.
-    
+
     INVARIANT: Every risk computation MUST have a valid activation reference.
     """
     agent_gid: str              # e.g., "GID-10"
     activation_hash: str        # Hash of the activation block
     activation_timestamp: datetime
     scope_constraints: Tuple[str, ...]  # Permitted operation scopes
-    
+
     def is_valid(self) -> bool:
         """
         Check if activation reference is structurally valid.
-        
+
         Note: This checks structure only, not cryptographic validity.
         """
         return bool(
@@ -243,14 +243,14 @@ class ActivationReference:
 class TRIRiskInput:
     """
     Input schema for TRI ⇄ Glass-Box integration.
-    
+
     REQUIRED FIELDS (all mandatory):
     - activation_reference: Agent activation context
     - event_window_start: Start of analysis window
     - event_window_end: End of analysis window
     - entity_id: Entity being scored
     - request_id: Unique request identifier
-    
+
     OPTIONAL FIELDS:
     - domain_focus: Specific risk domain to emphasize
     - feature_overrides: Pre-computed features (for testing)
@@ -261,15 +261,15 @@ class TRIRiskInput:
     event_window_end: datetime
     entity_id: str
     request_id: str
-    
+
     # === OPTIONAL ===
     domain_focus: Optional[str] = None
     feature_overrides: Optional[Dict[str, float]] = None
-    
+
     def validate(self) -> Tuple[bool, Optional[IntegrationFailure]]:
         """
         Validate input against schema requirements.
-        
+
         Returns:
             (True, None) if valid
             (False, IntegrationFailure) if invalid
@@ -284,7 +284,7 @@ class TRIRiskInput:
                     context={"request_id": self.request_id},
                 ),
             )
-        
+
         if not self.activation_reference.is_valid():
             return (
                 False,
@@ -300,7 +300,7 @@ class TRIRiskInput:
                     },
                 ),
             )
-        
+
         # Check temporal validity
         if self.event_window_end < self.event_window_start:
             return (
@@ -315,7 +315,7 @@ class TRIRiskInput:
                     },
                 ),
             )
-        
+
         # Check entity_id
         if not self.entity_id:
             return (
@@ -326,7 +326,7 @@ class TRIRiskInput:
                     context={"request_id": self.request_id},
                 ),
             )
-        
+
         return (True, None)
 
 
@@ -339,7 +339,7 @@ class TRIRiskInput:
 class FeatureContribution:
     """
     Single feature's contribution to the risk score.
-    
+
     INVARIANT: Contributions must sum to risk_score (within tolerance).
     """
     feature_id: str
@@ -353,14 +353,14 @@ class FeatureContribution:
 class ConfidenceBand:
     """
     Confidence interval for the risk score.
-    
+
     INVARIANT: lower <= point_estimate <= upper
     """
     lower: float
     point_estimate: float
     upper: float
     confidence_level: float = 0.95  # 95% CI by default
-    
+
     def is_valid(self) -> bool:
         """Check structural validity of confidence band."""
         return (
@@ -373,7 +373,7 @@ class ConfidenceBand:
 class ModelIdentity:
     """
     Identity of the model that produced the score.
-    
+
     INVARIANT: model_id + model_version must uniquely identify the model.
     """
     model_id: str               # e.g., "glassbox-ebm-v1"
@@ -386,9 +386,9 @@ class ModelIdentity:
 class GlassBoxRiskOutput:
     """
     Output schema for TRI ⇄ Glass-Box integration.
-    
+
     ALL FIELDS ARE REQUIRED — no optional fields in output.
-    
+
     INVARIANTS:
     - risk_score in [0.0, 1.0]
     - risk_tier consistent with risk_score
@@ -400,26 +400,26 @@ class GlassBoxRiskOutput:
     risk_score: float
     risk_tier: RiskSeverityTier
     action: TRIAction
-    
+
     # === CONFIDENCE ===
     confidence_band: ConfidenceBand
-    
+
     # === EXPLAINABILITY ===
     top_contributors: Tuple[FeatureContribution, ...]
     explanation_summary: str
-    
+
     # === MODEL IDENTITY ===
     model_identity: ModelIdentity
-    
+
     # === PROVENANCE ===
     request_id: str
     computation_timestamp: datetime
     activation_hash: str  # From input activation_reference
-    
+
     def validate(self) -> Tuple[bool, Optional[IntegrationFailure]]:
         """
         Validate output against schema requirements.
-        
+
         Returns:
             (True, None) if valid
             (False, IntegrationFailure) if invalid
@@ -434,7 +434,7 @@ class GlassBoxRiskOutput:
                     context={"request_id": self.request_id},
                 ),
             )
-        
+
         # Check risk_tier consistency
         expected_tier = score_to_severity_tier(self.risk_score)
         if self.risk_tier != expected_tier:
@@ -450,7 +450,7 @@ class GlassBoxRiskOutput:
                     },
                 ),
             )
-        
+
         # Check action consistency
         expected_action = severity_tier_to_action(self.risk_tier)
         if self.action != expected_action:
@@ -466,7 +466,7 @@ class GlassBoxRiskOutput:
                     },
                 ),
             )
-        
+
         # Check confidence band
         if not self.confidence_band.is_valid():
             return (
@@ -484,7 +484,7 @@ class GlassBoxRiskOutput:
                     },
                 ),
             )
-        
+
         # Check top_contributors
         if not self.top_contributors:
             return (
@@ -495,7 +495,7 @@ class GlassBoxRiskOutput:
                     context={"request_id": self.request_id},
                 ),
             )
-        
+
         # Check model_identity
         if not self.model_identity.model_id or not self.model_identity.model_version:
             return (
@@ -506,7 +506,7 @@ class GlassBoxRiskOutput:
                     context={"request_id": self.request_id},
                 ),
             )
-        
+
         return (True, None)
 
 
@@ -519,9 +519,9 @@ class GlassBoxRiskOutput:
 class PDORiskEmbedding:
     """
     Risk data that MUST be embedded in every PDO (Payment Decision Outcome).
-    
+
     INVARIANT: IF any field is missing → PDO = INVALID
-    
+
     This is the minimum risk context required for audit-grade PDOs.
     """
     # === REQUIRED RISK FIELDS ===
@@ -529,21 +529,21 @@ class PDORiskEmbedding:
     risk_tier: str              # RiskSeverityTier.value
     confidence_lower: float
     confidence_upper: float
-    
+
     # === REQUIRED EXPLANATION FIELDS ===
     top_contributor_1_id: str
     top_contributor_1_value: float
     top_contributor_2_id: Optional[str]  # May be None if only 1 contributor
     top_contributor_2_value: Optional[float]
-    
+
     # === REQUIRED MODEL FIELDS ===
     model_id: str
     model_version: str
-    
+
     # === REQUIRED PROVENANCE ===
     computation_timestamp: str  # ISO format
     activation_hash: str
-    
+
     @classmethod
     def from_glass_box_output(
         cls,
@@ -551,14 +551,14 @@ class PDORiskEmbedding:
     ) -> "PDORiskEmbedding":
         """
         Extract PDO embedding from GlassBoxRiskOutput.
-        
+
         This is the canonical extraction — no other method should be used.
         """
         # Get top 2 contributors
         contributors = output.top_contributors
         top_1 = contributors[0] if len(contributors) > 0 else None
         top_2 = contributors[1] if len(contributors) > 1 else None
-        
+
         return cls(
             risk_score=output.risk_score,
             risk_tier=output.risk_tier.value,
@@ -573,11 +573,11 @@ class PDORiskEmbedding:
             computation_timestamp=output.computation_timestamp.isoformat(),
             activation_hash=output.activation_hash,
         )
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """
         Convert to dictionary for PDO embedding.
-        
+
         INVARIANT: All required fields are present in output.
         """
         return {
@@ -599,12 +599,12 @@ class PDORiskEmbedding:
 def validate_pdo_risk_embedding(embedding_dict: Dict[str, Any]) -> Tuple[bool, Optional[IntegrationFailure]]:
     """
     Validate that a PDO has all required risk embedding fields.
-    
+
     INVARIANT: IF any required field is missing → PDO = INVALID
-    
+
     Args:
         embedding_dict: Dictionary from PDO risk_context field
-        
+
     Returns:
         (True, None) if valid
         (False, IntegrationFailure) if invalid
@@ -621,7 +621,7 @@ def validate_pdo_risk_embedding(embedding_dict: Dict[str, Any]) -> Tuple[bool, O
         "computation_timestamp",
         "activation_hash",
     ]
-    
+
     for field in required_fields:
         if field not in embedding_dict:
             return (
@@ -632,7 +632,7 @@ def validate_pdo_risk_embedding(embedding_dict: Dict[str, Any]) -> Tuple[bool, O
                     context={"missing_field": field},
                 ),
             )
-    
+
     # Validate risk_score bounds
     risk_score = embedding_dict.get("risk_score")
     if risk_score is not None and not (0.0 <= risk_score <= 1.0):
@@ -644,7 +644,7 @@ def validate_pdo_risk_embedding(embedding_dict: Dict[str, Any]) -> Tuple[bool, O
                 context={"risk_score": risk_score},
             ),
         )
-    
+
     return (True, None)
 
 
@@ -661,13 +661,13 @@ def enforce_monotonicity(
 ) -> Tuple[bool, Optional[IntegrationFailure]]:
     """
     Enforce monotonicity constraint between two score-action pairs.
-    
+
     INVARIANT: IF score_a < score_b THEN action_severity(a) <= action_severity(b)
-    
+
     Args:
         score_a, action_a: First score-action pair
         score_b, action_b: Second score-action pair
-        
+
     Returns:
         (True, None) if monotonicity holds
         (False, IntegrationFailure) if violated
@@ -675,11 +675,11 @@ def enforce_monotonicity(
     # Order by score
     if score_a > score_b:
         score_a, action_a, score_b, action_b = score_b, action_b, score_a, action_a
-    
+
     # Check action severity ordering
     severity_a = ACTION_SEVERITY_ORDER[action_a]
     severity_b = ACTION_SEVERITY_ORDER[action_b]
-    
+
     if severity_a > severity_b:
         return (
             False,
@@ -699,7 +699,7 @@ def enforce_monotonicity(
                 },
             ),
         )
-    
+
     return (True, None)
 
 

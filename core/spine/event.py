@@ -29,7 +29,7 @@ from pydantic import BaseModel, Field, field_validator
 class SpineEventType(str, Enum):
     """
     Canonical event types for V1 Minimum Execution Spine.
-    
+
     V1: Single event type - payment_request
     Future: Add event types as needed
     """
@@ -39,7 +39,7 @@ class SpineEventType(str, Enum):
 class SpineEvent(BaseModel):
     """
     Canonical event schema for the Minimum Execution Spine.
-    
+
     Immutable after creation. All fields are required.
     """
     id: UUID = Field(default_factory=uuid4, description="Unique event identifier")
@@ -49,9 +49,9 @@ class SpineEvent(BaseModel):
         default_factory=lambda: datetime.now(timezone.utc).isoformat(),
         description="ISO8601 timestamp of event creation"
     )
-    
+
     model_config = {"frozen": True}  # Immutable
-    
+
     @field_validator("payload")
     @classmethod
     def validate_payload_not_empty(cls, v: Dict[str, Any]) -> Dict[str, Any]:
@@ -59,7 +59,7 @@ class SpineEvent(BaseModel):
         if not v:
             raise ValueError("payload cannot be empty")
         return v
-    
+
     @field_validator("timestamp")
     @classmethod
     def validate_timestamp_format(cls, v: str) -> str:
@@ -69,11 +69,11 @@ class SpineEvent(BaseModel):
         except ValueError as e:
             raise ValueError(f"timestamp must be valid ISO8601: {e}")
         return v
-    
+
     def compute_hash(self) -> str:
         """
         Compute deterministic SHA-256 hash of this event.
-        
+
         Uses canonical JSON encoding (sorted keys, no whitespace).
         """
         canonical = json.dumps(
@@ -92,14 +92,14 @@ class SpineEvent(BaseModel):
 class PaymentRequestPayload(BaseModel):
     """
     V1 Canonical Event Payload: Payment Request
-    
+
     Minimal schema for deterministic payment decisions.
     """
     amount: float = Field(..., gt=0, description="Payment amount (must be positive)")
     currency: str = Field(default="USD", description="Currency code")
     vendor_id: str = Field(..., min_length=1, description="Vendor identifier")
     requestor_id: str = Field(..., min_length=1, description="Requestor identifier")
-    
+
     @field_validator("currency")
     @classmethod
     def validate_currency(cls, v: str) -> str:
@@ -117,13 +117,13 @@ def create_payment_request_event(
 ) -> SpineEvent:
     """
     Factory function to create a canonical payment request event.
-    
+
     Args:
         amount: Payment amount (must be positive)
         vendor_id: Vendor identifier
         requestor_id: Requestor identifier
         currency: Currency code (default: USD)
-        
+
     Returns:
         Immutable SpineEvent
     """
@@ -134,7 +134,7 @@ def create_payment_request_event(
         vendor_id=vendor_id,
         requestor_id=requestor_id,
     )
-    
+
     return SpineEvent(
         event_type=SpineEventType.PAYMENT_REQUEST,
         payload=payload.model_dump(),

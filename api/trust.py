@@ -24,6 +24,8 @@ Endpoints:
 
 from __future__ import annotations
 
+from typing import Optional
+
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
@@ -83,10 +85,10 @@ class TrustCoverageResponse(BaseModel):
 class TrustAuditLatestResponse(BaseModel):
     """Latest audit bundle metadata."""
 
-    bundle_id: str | None = Field(None, description="Audit bundle identifier")
-    created_at: str | None = Field(None, description="ISO-8601 bundle creation timestamp")
-    bundle_hash: str | None = Field(None, description="SHA-256 hash of bundle contents")
-    schema_version: str | None = Field(None, description="Audit bundle schema version")
+    bundle_id: Optional[str] = Field(None, description="Audit bundle identifier")
+    created_at: Optional[str] = Field(None, description="ISO-8601 bundle creation timestamp")
+    bundle_hash: Optional[str] = Field(None, description="SHA-256 hash of bundle contents")
+    schema_version: Optional[str] = Field(None, description="Audit bundle schema version")
     offline_verifiable: bool = Field(True, description="Bundle can be verified offline")
 
 

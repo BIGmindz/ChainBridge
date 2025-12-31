@@ -56,7 +56,7 @@ _REGISTRY_DATA = _load_canonical_registry()
 
 class AgentColor(Enum):
     """Canonical agent colors — derived from AGENT_REGISTRY.json."""
-    
+
     TEAL = "TEAL"
     BLUE = "BLUE"
     YELLOW = "YELLOW"
@@ -71,14 +71,14 @@ class AgentColor(Enum):
 @dataclass(frozen=True)
 class Agent:
     """Immutable agent definition."""
-    
+
     name: str
     gid: str
     role: str
     emoji: str
     color: str
     aliases: FrozenSet[str] = frozenset()
-    
+
     @property
     def gid_number(self) -> int:
         """Extract numeric GID (e.g., 'GID-01' -> 1)."""
@@ -134,26 +134,26 @@ ALWAYS_IMMUTABLE_FIELDS: FrozenSet[str] = frozenset([
 def validate_registry_schema(registry_data: dict) -> tuple[bool, list[str]]:
     """
     Validate registry schema against v3.0.0 requirements.
-    
+
     HARD STOP on failure — no silent coercion.
-    
+
     Returns:
         (is_valid, list_of_errors)
     """
     errors: list[str] = []
-    
+
     # Check required top-level fields
     for field in REQUIRED_REGISTRY_FIELDS:
         if field not in registry_data:
             errors.append(f"Missing required top-level field: {field}")
-    
+
     # Validate registry_version format
     version = registry_data.get("registry_version", "")
     if not version or not isinstance(version, str):
         errors.append("registry_version must be a non-empty string")
     elif not _is_valid_semver(version):
         errors.append(f"registry_version '{version}' is not valid semver (X.Y.Z)")
-    
+
     # Validate schema_metadata
     metadata = registry_data.get("schema_metadata", {})
     if not isinstance(metadata, dict):
@@ -163,7 +163,7 @@ def validate_registry_schema(registry_data: dict) -> tuple[bool, list[str]]:
             errors.append("schema_metadata missing 'agent_levels'")
         if "field_mutability" not in metadata:
             errors.append("schema_metadata missing 'field_mutability'")
-    
+
     # Validate each agent
     agents = registry_data.get("agents", {})
     if not isinstance(agents, dict):
@@ -172,7 +172,7 @@ def validate_registry_schema(registry_data: dict) -> tuple[bool, list[str]]:
         for agent_name, agent_data in agents.items():
             agent_errors = _validate_agent_schema(agent_name, agent_data)
             errors.extend(agent_errors)
-    
+
     return len(errors) == 0, errors
 
 
@@ -186,46 +186,46 @@ def _is_valid_semver(version: str) -> bool:
 def _validate_agent_schema(agent_name: str, agent_data: dict) -> list[str]:
     """
     Validate individual agent schema.
-    
+
     Returns list of errors (empty if valid).
     """
     errors: list[str] = []
     prefix = f"Agent {agent_name}:"
-    
+
     # Check required fields
     for field in REQUIRED_AGENT_FIELDS:
         if field not in agent_data:
             errors.append(f"{prefix} missing required field '{field}'")
-    
+
     # Validate GID format
     gid = agent_data.get("gid", "")
     if gid and not _is_valid_gid_format(gid):
         errors.append(f"{prefix} invalid GID format '{gid}' (expected GID-NN)")
-    
+
     # Validate agent_level
     level = agent_data.get("agent_level", "")
     if level and level not in VALID_AGENT_LEVELS:
         errors.append(f"{prefix} invalid agent_level '{level}' (expected L0-L3)")
-    
+
     # Validate diversity_profile is a list
     diversity = agent_data.get("diversity_profile")
     if diversity is not None and not isinstance(diversity, list):
         errors.append(f"{prefix} diversity_profile must be a list")
-    
+
     # Validate emoji_aliases is a list
     aliases = agent_data.get("emoji_aliases")
     if aliases is not None and not isinstance(aliases, list):
         errors.append(f"{prefix} emoji_aliases must be a list")
-    
+
     # Validate mutable_fields and immutable_fields are lists
     mutable = agent_data.get("mutable_fields")
     if mutable is not None and not isinstance(mutable, list):
         errors.append(f"{prefix} mutable_fields must be a list")
-    
+
     immutable = agent_data.get("immutable_fields")
     if immutable is not None and not isinstance(immutable, list):
         errors.append(f"{prefix} immutable_fields must be a list")
-    
+
     # Validate immutable_fields contains ALWAYS_IMMUTABLE
     if immutable and isinstance(immutable, list):
         missing_immutable = ALWAYS_IMMUTABLE_FIELDS - set(immutable)
@@ -233,7 +233,7 @@ def _validate_agent_schema(agent_name: str, agent_data: dict) -> list[str]:
             errors.append(
                 f"{prefix} immutable_fields missing required: {missing_immutable}"
             )
-    
+
     return errors
 
 
@@ -249,35 +249,35 @@ def validate_mutability(
 ) -> tuple[bool, list[str]]:
     """
     Validate that no immutable fields have changed between registry versions.
-    
+
     HARD STOP if immutable field mutation detected without version bump.
-    
+
     Returns:
         (is_valid, list_of_violations)
     """
     violations: list[str] = []
-    
+
     old_version = old_registry.get("registry_version", "0.0.0")
     new_version = new_registry.get("registry_version", "0.0.0")
-    
+
     # If version unchanged, check for immutable field mutations
     if old_version == new_version:
         old_agents = old_registry.get("agents", {})
         new_agents = new_registry.get("agents", {})
-        
+
         for agent_name in old_agents:
             if agent_name not in new_agents:
                 violations.append(f"Agent {agent_name} removed without version bump")
                 continue
-            
+
             old_data = old_agents[agent_name]
             new_data = new_agents[agent_name]
-            
+
             # Get immutable fields for this agent
             immutable_fields = set(old_data.get("immutable_fields", []))
             # Always include ALWAYS_IMMUTABLE_FIELDS
             immutable_fields.update(ALWAYS_IMMUTABLE_FIELDS)
-            
+
             for field in immutable_fields:
                 old_val = old_data.get(field)
                 new_val = new_data.get(field)
@@ -286,33 +286,33 @@ def validate_mutability(
                         f"Agent {agent_name}: immutable field '{field}' changed "
                         f"from '{old_val}' to '{new_val}' without version bump"
                     )
-    
+
     return len(violations) == 0, violations
 
 
 def get_agent_level(agent_name: str) -> Optional[str]:
     """
     Get agent level (L0-L3) for a named agent.
-    
+
     Returns None if agent not found.
     """
     name_upper = agent_name.upper().replace(" ", "-")
     agent_data = _REGISTRY_DATA.get("agents", {}).get(name_upper)
     if agent_data:
         return agent_data.get("agent_level")
-    
+
     # Check aliases
     for name, data in _REGISTRY_DATA.get("agents", {}).items():
         if name_upper in [a.upper() for a in data.get("aliases", [])]:
             return data.get("agent_level")
-    
+
     return None
 
 
 def get_agent_diversity_profile(agent_name: str) -> Optional[list[str]]:
     """
     Get diversity profile for a named agent.
-    
+
     Returns None if agent not found.
     """
     name_upper = agent_name.upper().replace(" ", "-")
@@ -330,19 +330,19 @@ def get_registry_version() -> str:
 def is_field_mutable(agent_name: str, field: str) -> bool:
     """
     Check if a field is mutable for a given agent.
-    
+
     Returns False if field is immutable or agent not found.
     """
     name_upper = agent_name.upper().replace(" ", "-")
     agent_data = _REGISTRY_DATA.get("agents", {}).get(name_upper)
-    
+
     if not agent_data:
         return False
-    
+
     # Always immutable fields are never mutable
     if field in ALWAYS_IMMUTABLE_FIELDS:
         return False
-    
+
     mutable = agent_data.get("mutable_fields", [])
     return field in mutable
 
@@ -350,21 +350,21 @@ def is_field_mutable(agent_name: str, field: str) -> bool:
 def is_deprecated_agent(agent_name: str) -> bool:
     """
     Check if an agent is deprecated (not in current registry).
-    
+
     Returns True if agent not found in registry.
     """
     name_upper = agent_name.upper().replace(" ", "-")
-    
+
     # Direct match
     if name_upper in _REGISTRY_DATA.get("agents", {}):
         return False
-    
+
     # Alias match
     for name, data in _REGISTRY_DATA.get("agents", {}).items():
         aliases = [a.upper() for a in data.get("aliases", [])]
         if name_upper in aliases:
             return False
-    
+
     return True
 
 
@@ -388,7 +388,7 @@ GOVERNANCE_INVARIANTS: Dict[str, str] = _get_governance_invariants()
 def validate_invariant_agent_single_color() -> tuple[bool, list[str]]:
     """
     INV-AGENT-01: No agent may appear in more than one color lane.
-    
+
     Returns (is_valid, list_of_violations)
     """
     violations = []
@@ -403,7 +403,7 @@ def validate_invariant_agent_single_color() -> tuple[bool, list[str]]:
 def validate_invariant_color_registry_match() -> tuple[bool, list[str]]:
     """
     INV-AGENT-02: No color may be claimed without registry match.
-    
+
     Returns (is_valid, list_of_violations)
     """
     violations = []
@@ -422,7 +422,7 @@ def validate_invariant_color_registry_match() -> tuple[bool, list[str]]:
 def validate_invariant_teal_reserved() -> tuple[bool, list[str]]:
     """
     INV-AGENT-03: TEAL is reserved for GID-00 (BENSON) and GID-04 (CINDY) only.
-    
+
     Returns (is_valid, list_of_violations)
     """
     violations = []
@@ -438,27 +438,27 @@ def validate_invariant_teal_reserved() -> tuple[bool, list[str]]:
 def validate_all_invariants() -> tuple[bool, Dict[str, list[str]]]:
     """
     Validate all governance invariants.
-    
+
     Returns (all_valid, dict_of_invariant_to_violations)
     """
     results = {}
     all_valid = True
-    
+
     valid, violations = validate_invariant_agent_single_color()
     results["INV-AGENT-01"] = violations
     if not valid:
         all_valid = False
-    
+
     valid, violations = validate_invariant_color_registry_match()
     results["INV-AGENT-02"] = violations
     if not valid:
         all_valid = False
-    
+
     valid, violations = validate_invariant_teal_reserved()
     results["INV-AGENT-03"] = violations
     if not valid:
         all_valid = False
-    
+
     return all_valid, results
 
 
@@ -508,16 +508,16 @@ VALID_GIDS: FrozenSet[str] = frozenset(a.gid for a in CANONICAL_AGENTS.values())
 def get_agent_by_name(name: str) -> Optional[Agent]:
     """Get agent by canonical name or alias."""
     name_upper = name.upper().replace(" ", "-")
-    
+
     # Direct match
     if name_upper in CANONICAL_AGENTS:
         return CANONICAL_AGENTS[name_upper]
-    
+
     # Alias match
     for agent in CANONICAL_AGENTS.values():
         if name_upper in agent.aliases:
             return agent
-    
+
     return None
 
 
@@ -656,39 +656,39 @@ def is_teal_allowed(gid: str) -> bool:
 def validate_agent_color(agent_name: str, declared_color: str) -> tuple[bool, str]:
     """
     Validate that agent is using their canonical color.
-    
+
     Returns:
         (is_valid, error_message)
     """
     canonical = get_agent_color(agent_name)
     if canonical is None:
         return False, f"Unknown agent: {agent_name}"
-    
+
     declared_upper = declared_color.upper().strip()
-    
+
     if canonical != declared_upper:
         return False, f"Agent {agent_name} declared color '{declared_color}' but canonical is '{canonical}'"
-    
+
     return True, ""
 
 
 def validate_teal_usage(agent_name: str, gid: str, color: str) -> tuple[bool, str]:
     """
     Validate TEAL color is only used by authorized agents.
-    
+
     TEAL is reserved for GID-00 (Benson) ONLY.
-    
+
     Returns:
         (is_valid, error_message)
     """
     color_upper = color.upper().strip()
-    
+
     if color_upper != "TEAL":
         return True, ""  # Not using TEAL, pass
-    
+
     if not is_teal_allowed(gid):
         return False, f"TEAL color reserved for GID-00 (Benson). Agent {agent_name} ({gid}) cannot use TEAL."
-    
+
     return True, ""
 
 
@@ -700,39 +700,39 @@ def validate_color_gateway(
 ) -> tuple[bool, list[str]]:
     """
     Full color gateway validation.
-    
+
     Checks:
     1. Agent exists in registry
     2. GID matches agent
     3. Color matches canonical assignment
     4. TEAL is reserved for Benson only
     5. Emoji matches color (if provided)
-    
+
     Returns:
         (all_valid, list_of_errors)
     """
     errors: list[str] = []
-    
+
     # Check 1: Agent exists
     agent = get_agent_by_name(agent_name)
     if agent is None:
         errors.append(f"Unknown agent: {agent_name}")
         return False, errors
-    
+
     # Check 2: GID matches
     if agent.gid != gid.upper():
         errors.append(f"GID mismatch: {agent_name} is {agent.gid}, not {gid}")
-    
+
     # Check 3: Color matches canonical
     valid, err = validate_agent_color(agent_name, declared_color)
     if not valid:
         errors.append(err)
-    
+
     # Check 4: TEAL reservation
     valid, err = validate_teal_usage(agent_name, gid, declared_color)
     if not valid:
         errors.append(err)
-    
+
     # Check 5: Emoji matches color (if provided)
     if declared_emoji:
         emoji_color = EMOJI_TO_COLOR.get(declared_emoji)
@@ -740,6 +740,5 @@ def validate_color_gateway(
             errors.append(
                 f"Emoji {declared_emoji} is {emoji_color}, but declared color is {declared_color}"
             )
-    
-    return len(errors) == 0, errors
 
+    return len(errors) == 0, errors

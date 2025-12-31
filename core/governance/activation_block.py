@@ -42,7 +42,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import FrozenSet
+from typing import FrozenSet, Optional
 
 from core.governance.agent_roster import (
     Agent,
@@ -60,9 +60,9 @@ logger = logging.getLogger("governance.activation_block")
 class ActivationBlockViolationError(Exception):
     """
     Activation Block validation failed. HARD STOP.
-    
+
     This exception MUST halt all execution. No recovery, no fallback.
-    
+
     Raised when:
     - Activation Block is missing
     - Agent name is missing or invalid
@@ -72,20 +72,20 @@ class ActivationBlockViolationError(Exception):
     - Prohibited actions are missing
     - Persona binding is missing
     """
-    
+
     def __init__(
         self,
         message: str,
         violation_code: str,
-        pac_id: str | None = None,
-        claimed_agent: str | None = None,
+        pac_id: Optional[str] = None,
+        claimed_agent: Optional[str] = None,
     ):
         self.message = message
         self.violation_code = violation_code
         self.pac_id = pac_id
         self.claimed_agent = claimed_agent
         self.timestamp = datetime.utcnow().isoformat()
-        
+
         super().__init__(
             f"ACTIVATION BLOCK VIOLATION [{violation_code}]: {message} "
             f"(PAC: {pac_id or 'unknown'}, Agent: {claimed_agent or 'unknown'})"
@@ -94,7 +94,7 @@ class ActivationBlockViolationError(Exception):
 
 class ActivationBlockViolationCode(str, Enum):
     """Explicit violation codes for Activation Block failures."""
-    
+
     MISSING_BLOCK = "MISSING_ACTIVATION_BLOCK"
     MISSING_AGENT = "MISSING_AGENT_NAME"
     INVALID_AGENT = "INVALID_AGENT_NAME"
@@ -130,10 +130,10 @@ class ActivationBlockViolationCode(str, Enum):
 class ActivationBlock:
     """
     Immutable Activation Block declaration.
-    
+
     Every agent execution MUST provide a valid ActivationBlock.
     """
-    
+
     agent_name: str
     gid: str
     role: str
@@ -141,14 +141,14 @@ class ActivationBlock:
     emoji: str
     prohibited_actions: FrozenSet[str]
     persona_binding: str
-    
+
     # Lane is derived from color but explicitly declared for verification
     lane: str = ""
-    
+
     # Optional metadata
-    pac_id: str | None = None
+    pac_id: Optional[str] = None
     timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
-    
+
     def __post_init__(self) -> None:
         """Validate basic structure on creation."""
         if not self.agent_name:
@@ -170,12 +170,12 @@ class ActivationBlock:
 @dataclass(frozen=True)
 class ActivationValidationResult:
     """Result of Activation Block validation."""
-    
+
     is_valid: bool
     agent: Agent | None
     violations: tuple[str, ...]
     validated_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
-    
+
     @property
     def passed(self) -> bool:
         return self.is_valid and len(self.violations) == 0
@@ -240,39 +240,39 @@ PERSONA_BINDING_PATTERN = re.compile(
 class ActivationBlockValidator:
     """
     Validates Activation Blocks against canonical agent registry.
-    
+
     ENFORCEMENT MODEL:
     - All validation is fail-closed
     - No defaults or inference allowed
     - No warnings — only HARD FAIL
     - Must run BEFORE any execution logic
     """
-    
+
     def __init__(self):
         self._validation_count = 0
         self._failure_count = 0
-    
+
     def validate(
         self,
         block: ActivationBlock,
-        pac_id: str | None = None,
+        pac_id: Optional[str] = None,
     ) -> ActivationValidationResult:
         """
         Validate an Activation Block against canonical registry.
-        
+
         Args:
             block: The ActivationBlock to validate
             pac_id: Optional PAC ID for error reporting
-            
+
         Returns:
             ActivationValidationResult with validation outcome
-            
+
         Raises:
             ActivationBlockViolationError: If validation fails (HARD STOP)
         """
         self._validation_count += 1
         violations: list[str] = []
-        
+
         # Step 1: Resolve agent from registry
         agent = get_agent_by_name(block.agent_name)
         if agent is None:
@@ -283,7 +283,7 @@ class ActivationBlockValidator:
                 pac_id=pac_id,
                 claimed_agent=block.agent_name,
             )
-        
+
         # Step 2: Validate GID matches canonical
         if block.gid.upper() != agent.gid:
             self._failure_count += 1
@@ -293,7 +293,7 @@ class ActivationBlockValidator:
                 pac_id=pac_id,
                 claimed_agent=block.agent_name,
             )
-        
+
         # Step 3: Validate role matches canonical
         canonical_role = agent.role.upper()
         declared_role = block.role.upper()
@@ -306,7 +306,7 @@ class ActivationBlockValidator:
                 pac_id=pac_id,
                 claimed_agent=block.agent_name,
             )
-        
+
         # Step 4: Validate color matches canonical
         declared_color = block.color.upper().replace(" ", "_").replace("-", "_")
         canonical_color = agent.color.upper().replace(" ", "_").replace("-", "_")
@@ -318,7 +318,7 @@ class ActivationBlockValidator:
                 pac_id=pac_id,
                 claimed_agent=block.agent_name,
             )
-        
+
         # Step 5: Validate emoji matches canonical
         if block.emoji != agent.emoji:
             self._failure_count += 1
@@ -328,7 +328,7 @@ class ActivationBlockValidator:
                 pac_id=pac_id,
                 claimed_agent=block.agent_name,
             )
-        
+
         # Step 6: Validate lane matches color (if provided)
         if block.lane:
             # Lane should match the color lane assignment
@@ -345,7 +345,7 @@ class ActivationBlockValidator:
                         pac_id=pac_id,
                         claimed_agent=block.agent_name,
                     )
-        
+
         # All validations passed
         logger.info(
             "Activation Block validated: %s (%s) for PAC %s",
@@ -353,30 +353,30 @@ class ActivationBlockValidator:
             agent.gid,
             pac_id or "unknown",
         )
-        
+
         return ActivationValidationResult(
             is_valid=True,
             agent=agent,
             violations=tuple(violations),
         )
-    
+
     def validate_or_raise(
         self,
         block: ActivationBlock | None,
-        pac_id: str | None = None,
+        pac_id: Optional[str] = None,
     ) -> Agent:
         """
         Validate Activation Block and return canonical Agent, or raise.
-        
+
         This is the primary enforcement entrypoint.
-        
+
         Args:
             block: The ActivationBlock to validate (REQUIRED)
             pac_id: Optional PAC ID for error reporting
-            
+
         Returns:
             The canonical Agent from registry
-            
+
         Raises:
             ActivationBlockViolationError: If block is missing or invalid
         """
@@ -387,7 +387,7 @@ class ActivationBlockValidator:
                 violation_code=ActivationBlockViolationCode.MISSING_BLOCK.value,
                 pac_id=pac_id,
             )
-        
+
         result = self.validate(block, pac_id)
         if not result.is_valid or result.agent is None:
             self._failure_count += 1
@@ -397,27 +397,27 @@ class ActivationBlockValidator:
                 pac_id=pac_id,
                 claimed_agent=block.agent_name,
             )
-        
+
         return result.agent
-    
+
     def _role_matches(self, declared: str, canonical: str) -> bool:
         """Check if declared role matches canonical role (with flexibility)."""
         # Exact match
         if declared == canonical:
             return True
-        
+
         # Key word matching (e.g., "Backend" in "Senior Backend Engineer")
         declared_words = set(declared.split())
         canonical_words = set(canonical.split())
-        
+
         # At least one significant word must match
         significant_words = declared_words & canonical_words
         # Filter out common non-significant words
         noise_words = {"SENIOR", "JUNIOR", "LEAD", "CHIEF", "ENGINEER", "LANE", "/"}
         significant_words -= noise_words
-        
+
         return len(significant_words) > 0
-    
+
     @property
     def stats(self) -> dict:
         """Return validation statistics."""
@@ -439,11 +439,11 @@ class ActivationBlockValidator:
 
 def parse_activation_block_from_text(
     content: str,
-    pac_id: str | None = None,
+    pac_id: Optional[str] = None,
 ) -> ActivationBlock | None:
     """
     Parse an Activation Block from PAC text content.
-    
+
     Looks for the structured Activation Block section containing:
     - EXECUTING AGENT
     - GID
@@ -451,7 +451,7 @@ def parse_activation_block_from_text(
     - Role/lane information
     - Prohibited actions
     - Persona binding
-    
+
     Returns:
         ActivationBlock if found and parseable, None otherwise
     """
@@ -460,32 +460,32 @@ def parse_activation_block_from_text(
     if not agent_match:
         return None
     agent_name = agent_match.group(1)
-    
+
     # Find GID
     gid_match = GID_PATTERN.search(content)
     if not gid_match:
         return None
     gid = gid_match.group(1) or gid_match.group(2)
-    
+
     # Find color
     color_match = COLOR_PATTERN.search(content)
     if not color_match:
         return None
     color_raw = color_match.group(1)
-    
+
     # Extract emoji from the color line (single or dual emoji at start)
     emoji_in_color = re.search(r"^([⚪🔵🟣🟨🟦🟧🟥🟩🩷]{1,2})", color_raw)
     emoji = emoji_in_color.group(1) if emoji_in_color else ""
-    
+
     # If no emoji in color line, look up canonical emoji for agent
     if not emoji:
         agent = get_agent_by_name(agent_name)
         if agent:
             emoji = agent.emoji
-    
+
     # Extract just the color name (remove emoji prefix)
     color = re.sub(r"[⚪🔵🟣🟨🟦🟧🟥🟩🩷]+\s*", "", color_raw).strip()
-    
+
     # Find role (ROLE: explicitly, or from color line, or from registry)
     role = ""
     role_match = ROLE_PATTERN.search(content)
@@ -501,19 +501,19 @@ def parse_activation_block_from_text(
         )
         if color_line_match:
             role = color_line_match.group(1).strip()
-    
+
     # Look for role in context (fallback to canonical role)
     if not role:
         agent = get_agent_by_name(agent_name)
         if agent:
             role = agent.role
-    
+
     # Extract lane if present (separate from role)
     lane = ""
     lane_match = LANE_PATTERN.search(content)
     if lane_match:
         lane = lane_match.group(1).strip()
-    
+
     # Find prohibited actions
     prohibited: set[str] = set()
     if PROHIBITED_PATTERN.search(content):
@@ -526,11 +526,11 @@ def parse_activation_block_from_text(
         if prohibited_section:
             items = re.findall(r"[•\-\*]\s*(.+)", prohibited_section.group(1))
             prohibited = set(items)
-    
+
     # Ensure at least one prohibited action
     if not prohibited:
         prohibited = {"identity_drift", "color_violation", "unauthorized_execution"}
-    
+
     # Find persona binding
     persona = ""
     binding_match = PERSONA_BINDING_PATTERN.search(content)
@@ -539,7 +539,7 @@ def parse_activation_block_from_text(
     else:
         # Default persona binding
         persona = f"Executing as {agent_name}"
-    
+
     try:
         return ActivationBlock(
             agent_name=agent_name,
@@ -579,11 +579,11 @@ def reset_activation_block_validator() -> None:
 
 def validate_activation_block(
     block: ActivationBlock | None,
-    pac_id: str | None = None,
+    pac_id: Optional[str] = None,
 ) -> Agent:
     """
     Convenience function to validate an Activation Block.
-    
+
     Returns canonical Agent on success, raises on failure.
     """
     validator = get_activation_block_validator()
@@ -592,11 +592,11 @@ def validate_activation_block(
 
 def require_activation_block(
     content: str,
-    pac_id: str | None = None,
+    pac_id: Optional[str] = None,
 ) -> Agent:
     """
     Parse and validate Activation Block from content.
-    
+
     HARD FAIL if block is missing or invalid.
     """
     block = parse_activation_block_from_text(content, pac_id)
@@ -654,14 +654,14 @@ EXECUTION_CONTENT_PATTERNS = [
 @dataclass(frozen=True)
 class ActivationBlockIntegrityResult:
     """Result of Activation Block structural integrity validation."""
-    
+
     is_valid: bool
     violations: tuple[str, ...]
     activation_block_count: int
-    activation_block_position: int | None  # Line number of first activation block
+    activation_block_position: Optional[int]  # Line number of first activation block
     has_content_before_activation: bool
     has_structural_symmetry: bool
-    
+
     @property
     def passed(self) -> bool:
         return self.is_valid and len(self.violations) == 0
@@ -669,22 +669,22 @@ class ActivationBlockIntegrityResult:
 
 def validate_activation_block_position(
     content: str,
-    pac_id: str | None = None,
-) -> tuple[bool, list[str], int | None]:
+    pac_id: Optional[str] = None,
+) -> tuple[bool, list[str], Optional[int]]:
     """
     Validate that Activation Block appears BEFORE any execution content.
-    
+
     RULE: Any execution-relevant content before the Activation Block → HARD FAIL
-    
+
     Returns:
         (is_valid, list_of_violations, activation_line_number)
     """
     violations: list[str] = []
     lines = content.split("\n")
-    
+
     # Find the Activation Block marker or header
-    activation_line: int | None = None
-    
+    activation_line: Optional[int] = None
+
     for i, line in enumerate(lines, 1):
         # Check for AGENT ACTIVATION BLOCK marker
         if ACTIVATION_BLOCK_MARKER.search(line):
@@ -699,14 +699,14 @@ def validate_activation_block_position(
                 if "GID-" in next_line.upper() or "AGENT" in next_line.upper():
                     activation_line = i
                     break
-    
+
     if activation_line is None:
         # No activation block found - will be caught by other validators
         return True, [], None
-    
+
     # Check for execution content BEFORE the activation block
     content_before = "\n".join(lines[:activation_line - 1])
-    
+
     for pattern in EXECUTION_CONTENT_PATTERNS:
         match = pattern.search(content_before)
         if match:
@@ -716,32 +716,32 @@ def validate_activation_block_position(
                 f"Line {match_line}: Execution content '{match.group().strip()}' "
                 f"appears BEFORE Activation Block at line {activation_line}"
             )
-    
+
     return len(violations) == 0, violations, activation_line
 
 
 def validate_single_activation_block(
     content: str,
-    pac_id: str | None = None,
+    pac_id: Optional[str] = None,
 ) -> tuple[bool, list[str], int]:
     """
     Validate exactly ONE Activation Block per execution context.
-    
+
     RULE: Multiple Activation Blocks → HARD FAIL
-    
+
     An Activation Block is identified by:
     - "AGENT ACTIVATION BLOCK" marker text, OR
     - Emoji border followed by GID line AND "ACTIVATION" or "LOCK" marker
-    
+
     Returns:
         (is_valid, list_of_violations, count_of_blocks)
     """
     violations: list[str] = []
-    
+
     # Count AGENT ACTIVATION BLOCK markers (primary detection)
     marker_matches = list(ACTIVATION_BLOCK_MARKER.finditer(content))
     block_count = len(marker_matches)
-    
+
     # If explicit markers found, use that count
     if block_count > 0:
         if block_count > 1:
@@ -750,12 +750,12 @@ def validate_single_activation_block(
                 f"exactly ONE required per execution context"
             )
         return len(violations) == 0, violations, block_count
-    
+
     # Fallback: Look for activation block by structure
     # Must have emoji border + GID + one of: ACTIVATION, LOCK, PERSONA BINDING
     lines = content.split("\n")
     activation_indicators = 0
-    
+
     for i, line in enumerate(lines):
         stripped = line.strip()
         if len(stripped) >= 10 and all(c in "🔵⚪🟣🟨🟦🟧🟥🟩🩷" for c in stripped[:10]):
@@ -777,9 +777,9 @@ def validate_single_activation_block(
                 )
                 if has_activation_marker and not is_execution_pack:
                     activation_indicators += 1
-    
+
     effective_count = activation_indicators if activation_indicators > 0 else 0
-    
+
     if effective_count == 0:
         violations.append("No Activation Block found — execution denied")
     elif effective_count > 1:
@@ -787,47 +787,47 @@ def validate_single_activation_block(
             f"Multiple Activation Blocks detected ({effective_count}) — "
             f"exactly ONE required per execution context"
         )
-    
+
     return len(violations) == 0, violations, effective_count
 
 
 def validate_activation_block_structure(
     content: str,
-    pac_id: str | None = None,
+    pac_id: Optional[str] = None,
 ) -> tuple[bool, list[str]]:
     """
     Validate header/footer symmetry and required fields.
-    
+
     RULE: Header agent/GID/emoji MUST match footer agent/GID/emoji
     RULE: All required fields MUST be present
-    
+
     Returns:
         (is_valid, list_of_violations)
     """
     violations: list[str] = []
-    
+
     # Extract header info
     header_match = ACTIVATION_HEADER_PATTERN.search(content)
-    header_emoji: str | None = None
-    header_gid: str | None = None
-    header_agent: str | None = None
-    
+    header_emoji: Optional[str] = None
+    header_gid: Optional[str] = None
+    header_agent: Optional[str] = None
+
     if header_match:
         header_emoji = header_match.group(1)[0] if header_match.group(1) else None
         header_gid = header_match.group(2).upper() if header_match.group(2) else None
         header_agent = header_match.group(3).upper() if header_match.group(3) else None
-    
+
     # Extract footer info
     footer_match = ACTIVATION_FOOTER_PATTERN.search(content)
-    footer_agent: str | None = None
-    footer_gid: str | None = None
-    footer_emoji: str | None = None
-    
+    footer_agent: Optional[str] = None
+    footer_gid: Optional[str] = None
+    footer_emoji: Optional[str] = None
+
     if footer_match:
         footer_agent = footer_match.group(1).upper() if footer_match.group(1) else None
         footer_gid = footer_match.group(2).upper() if footer_match.group(2) else None
         footer_emoji = footer_match.group(3)[0] if footer_match.group(3) else None
-    
+
     # Validate symmetry if both header and footer exist
     if header_match and footer_match:
         if header_agent and footer_agent and header_agent != footer_agent:
@@ -844,7 +844,7 @@ def validate_activation_block_structure(
             )
     elif header_match and not footer_match:
         violations.append("Activation Block has header but missing proper footer")
-    
+
     # Validate required fields are present
     content_upper = content.upper()
     for field_name in REQUIRED_ACTIVATION_FIELDS:
@@ -856,50 +856,50 @@ def validate_activation_block_structure(
             f"{field_name} —",
         ]
         found = any(p.upper() in content_upper for p in field_patterns)
-        
+
         # Special handling for PERSONA BINDING (may be "PERSONA BINDING: ACTIVE")
         if field_name == "PERSONA BINDING" and not found:
             found = "PERSONA" in content_upper and "BINDING" in content_upper
-        
+
         if not found:
             violations.append(f"Missing required Activation Block field: {field_name}")
-    
+
     return len(violations) == 0, violations
 
 
 def validate_activation_block_integrity(
     content: str,
-    pac_id: str | None = None,
+    pac_id: Optional[str] = None,
 ) -> ActivationBlockIntegrityResult:
     """
     Full structural integrity validation for Activation Block.
-    
+
     Validates:
     1. Position — Activation Block before execution content
     2. Uniqueness — Exactly one Activation Block
     3. Structure — Header/footer symmetry, required fields
-    
+
     Returns:
         ActivationBlockIntegrityResult with all validation details
     """
     all_violations: list[str] = []
-    
+
     # Check position
     pos_valid, pos_violations, activation_line = validate_activation_block_position(
         content, pac_id
     )
     all_violations.extend(pos_violations)
-    
+
     # Check single activation
     single_valid, single_violations, block_count = validate_single_activation_block(
         content, pac_id
     )
     all_violations.extend(single_violations)
-    
+
     # Check structure
     struct_valid, struct_violations = validate_activation_block_structure(content, pac_id)
     all_violations.extend(struct_violations)
-    
+
     return ActivationBlockIntegrityResult(
         is_valid=len(all_violations) == 0,
         violations=tuple(all_violations),
@@ -912,18 +912,18 @@ def validate_activation_block_integrity(
 
 def require_activation_block_integrity(
     content: str,
-    pac_id: str | None = None,
+    pac_id: Optional[str] = None,
 ) -> ActivationBlockIntegrityResult:
     """
     Validate Activation Block structural integrity, raising on failure.
-    
+
     HARD FAIL if any integrity check fails.
-    
+
     Raises:
         ActivationBlockViolationError: If integrity validation fails
     """
     result = validate_activation_block_integrity(content, pac_id)
-    
+
     if not result.is_valid:
         # Determine the most severe violation code
         if result.has_content_before_activation:
@@ -936,13 +936,13 @@ def require_activation_block_integrity(
             code = ActivationBlockViolationCode.STRUCTURAL_MISMATCH
         else:
             code = ActivationBlockViolationCode.MISSING_REQUIRED_FIELD
-        
+
         raise ActivationBlockViolationError(
             message="; ".join(result.violations),
             violation_code=code.value,
             pac_id=pac_id,
         )
-    
+
     return result
 
 
@@ -961,10 +961,10 @@ _activation_gate_state: dict[str, bool] = {
 class ExecutionGateError(Exception):
     """
     Execution gate violation. HARD STOP.
-    
+
     Raised when execution order is violated.
     """
-    
+
     def __init__(self, gate_name: str, reason: str):
         self.gate_name = gate_name
         self.reason = reason
@@ -1004,7 +1004,7 @@ def is_activation_validated() -> bool:
 def require_activation_before_color_gateway() -> None:
     """
     GATE: Activation must precede color gateway validation.
-    
+
     Raises ExecutionGateError if activation not validated.
     """
     if not _activation_gate_state["activation_validated"]:
@@ -1017,7 +1017,7 @@ def require_activation_before_color_gateway() -> None:
 def require_activation_before_pac_admission() -> None:
     """
     GATE: Activation must precede PAC admission.
-    
+
     Raises ExecutionGateError if activation not validated.
     """
     if not _activation_gate_state["activation_validated"]:
@@ -1030,7 +1030,7 @@ def require_activation_before_pac_admission() -> None:
 def require_activation_before_tool_execution() -> None:
     """
     GATE: Activation must precede any tool/MCP execution.
-    
+
     Raises ExecutionGateError if activation not validated.
     """
     if not _activation_gate_state["activation_validated"]:
@@ -1043,9 +1043,9 @@ def require_activation_before_tool_execution() -> None:
 def require_full_validation_chain() -> None:
     """
     GATE: Require full validation chain before execution.
-    
+
     Order: Activation → Color Gateway → PAC Admission
-    
+
     Raises ExecutionGateError if any gate not passed.
     """
     if not _activation_gate_state["activation_validated"]:
@@ -1078,50 +1078,50 @@ def get_gate_state() -> dict[str, bool]:
 def check_activation_block_presence(content: str) -> tuple[bool, list[str]]:
     """
     Check if content contains a valid Activation Block structure.
-    
+
     Returns:
         (has_activation_block, list_of_missing_elements)
     """
     missing = []
-    
+
     # Check for EXECUTING AGENT
     if not EXECUTING_AGENT_PATTERN.search(content):
         missing.append("EXECUTING AGENT declaration")
-    
+
     # Check for GID
     if not GID_PATTERN.search(content):
         missing.append("GID declaration")
-    
+
     # Check for COLOR
     if not COLOR_PATTERN.search(content):
         missing.append("COLOR declaration")
-    
+
     # Check for PROHIBITED section
     if not PROHIBITED_PATTERN.search(content):
         missing.append("PROHIBITED ACTIONS section")
-    
+
     return len(missing) == 0, missing
 
 
 def validate_activation_block_fields(content: str) -> tuple[bool, list[str]]:
     """
     Validate Activation Block fields against registry.
-    
+
     Returns:
         (is_valid, list_of_errors)
     """
     errors = []
-    
+
     # Parse the block
     block = parse_activation_block_from_text(content)
     if block is None:
         return False, ["Could not parse Activation Block from content"]
-    
+
     # Validate against registry
     try:
         validator = get_activation_block_validator()
         validator.validate(block)
     except ActivationBlockViolationError as e:
         errors.append(str(e))
-    
+
     return len(errors) == 0, errors

@@ -192,7 +192,7 @@ def format_sse_event(event_type: str, data: dict) -> str:
     return f"event: {event_type}\ndata: {json_data}\n\n"
 
 
-async def audit_event_generator(store: ArtifactStore, max_events: int | None = None):
+async def audit_event_generator(store: ArtifactStore, max_events: Optional[int] = None):
     """
     Generate SSE events from OCC audit events.
 
@@ -271,7 +271,7 @@ async def audit_event_generator(store: ArtifactStore, max_events: int | None = N
 @router.get("/events/stream")
 async def events_stream(
     store: ArtifactStore = Depends(get_artifact_store),
-    max_events: int | None = None,
+    max_events: Optional[int] = None,
 ) -> StreamingResponse:
     """
     Server-Sent Events stream for ChainBoard real-time updates.

@@ -21,6 +21,8 @@ FLOW:
 
 from __future__ import annotations
 
+from typing import Optional
+
 import logging
 
 from fastapi import APIRouter, HTTPException, status
@@ -49,7 +51,7 @@ class ErrorResponse(BaseModel):
     """Error response schema."""
     error: str = Field(..., description="Error type")
     detail: str = Field(..., description="Error details")
-    event_id: str | None = Field(None, description="Event ID if available")
+    event_id: Optional[str] = Field(None, description="Event ID if available")
 
 
 @router.post(
@@ -66,7 +68,7 @@ class ErrorResponse(BaseModel):
 async def ingest_event(request: IngestEventRequest) -> IngestResponse:
     """
     Ingest event and execute the canonical Event → Decision → Action → Proof loop.
-    
+
     Steps:
     1. Validate minimal event schema (done by Pydantic)
     2. Create IngestEvent with generated event_id and timestamp
@@ -78,7 +80,7 @@ async def ingest_event(request: IngestEventRequest) -> IngestResponse:
     8. Return proof_id + hash in response
     """
     event: IngestEvent | None = None
-    
+
     try:
         # Step 2: Create event with generated ID and timestamp
         logger.info(
@@ -90,12 +92,12 @@ async def ingest_event(request: IngestEventRequest) -> IngestResponse:
             payload=request.payload,
         )
         event_id_str = str(event.event_id)
-        
+
         logger.info(
             "ingest: event created",
             extra={"event_id": event_id_str, "event_type": event.event_type}
         )
-        
+
         # Step 3: Pass to canonical decision function
         # Step 3: Pass to canonical decision function
         decision = decide(event.event_type, event.payload)
@@ -107,7 +109,7 @@ async def ingest_event(request: IngestEventRequest) -> IngestResponse:
                 "rule": decision.rule_id,
             }
         )
-        
+
         # Step 4: Execute action handler
         action_result = execute_action(decision, event.payload, event_id_str)
         logger.info(
@@ -118,7 +120,7 @@ async def ingest_event(request: IngestEventRequest) -> IngestResponse:
                 "action_status": action_result.status.value,
             }
         )
-        
+
         # Check for action failure
         if action_result.status == ActionStatus.FAILURE:
             logger.error(
@@ -136,7 +138,7 @@ async def ingest_event(request: IngestEventRequest) -> IngestResponse:
                     "event_id": event_id_str,
                 },
             )
-        
+
         # Step 5-6: Build proof artifact (hash computed in build_proof)
         proof = build_proof(event, decision, action_result)
         logger.info(
@@ -147,7 +149,7 @@ async def ingest_event(request: IngestEventRequest) -> IngestResponse:
                 "proof_hash": proof.proof_hash,
             }
         )
-        
+
         # Step 7: Persist proof
         proof_path = persist_proof(proof)
         logger.info(
@@ -158,7 +160,7 @@ async def ingest_event(request: IngestEventRequest) -> IngestResponse:
                 "proof_path": proof_path,
             }
         )
-        
+
         # Step 8: Return response
         return IngestResponse(
             proof_id=str(proof.proof_id),
@@ -167,7 +169,7 @@ async def ingest_event(request: IngestEventRequest) -> IngestResponse:
             decision_outcome=decision.outcome.value,
             action_status=action_result.status.value,
         )
-        
+
     except HTTPException:
         # Re-raise HTTP exceptions as-is
         raise

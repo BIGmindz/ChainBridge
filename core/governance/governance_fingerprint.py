@@ -118,7 +118,7 @@ class GovernanceFingerprintEngine:
     5. Detects drift if files change after boot
     """
 
-    def __init__(self, project_root: Path | str | None = None) -> None:
+    def __init__(self, project_root: Path | Optional[str] = None) -> None:
         """Initialize the fingerprint engine.
 
         Args:
@@ -371,7 +371,7 @@ class GovernanceFingerprintEngine:
 _fingerprint_engine: Optional[GovernanceFingerprintEngine] = None
 
 
-def get_fingerprint_engine(project_root: Path | str | None = None) -> GovernanceFingerprintEngine:
+def get_fingerprint_engine(project_root: Path | Optional[str] = None) -> GovernanceFingerprintEngine:
     """Get or create the fingerprint engine singleton.
 
     Args:
@@ -386,7 +386,7 @@ def get_fingerprint_engine(project_root: Path | str | None = None) -> Governance
     return _fingerprint_engine
 
 
-def compute_governance_fingerprint(project_root: Path | str | None = None) -> GovernanceFingerprint:
+def compute_governance_fingerprint(project_root: Path | Optional[str] = None) -> GovernanceFingerprint:
     """Compute governance fingerprint (convenience function).
 
     Args:

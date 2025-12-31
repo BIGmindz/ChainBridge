@@ -67,7 +67,7 @@ from core.risk.tri_glassbox_integration import (
 class ExecutorFailureMode(str, Enum):
     """
     Executor-specific failure modes.
-    
+
     These extend IntegrationFailureMode for execution-phase failures.
     """
     ACTIVATION_NOT_BOUND = "activation_not_bound"
@@ -86,10 +86,10 @@ class ExecutorFailureMode(str, Enum):
 class TRIExecutionError(Exception):
     """
     Raised when TRI execution fails.
-    
+
     HARD FAIL — no recovery, no retry.
     """
-    
+
     def __init__(
         self,
         message: str,
@@ -111,7 +111,7 @@ class TRIExecutionError(Exception):
 class TRIExecutionResult:
     """
     Complete execution result with full provenance chain.
-    
+
     INVARIANTS:
     - activation_hash MUST be present
     - glass_box_output MUST be validated
@@ -120,17 +120,17 @@ class TRIExecutionResult:
     """
     execution_id: str
     request_id: str
-    
+
     # Glass-box output (validated)
     glass_box_output: GlassBoxRiskOutput
-    
+
     # PDO embedding (ready for persistence)
     pdo_embedding: PDORiskEmbedding
-    
+
     # Provenance
     activation_hash: str
     execution_timestamp: datetime
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Serialize for audit trail."""
         return {
@@ -154,13 +154,13 @@ class TRIExecutionResult:
 class MonotonicityState:
     """
     Tracks monotonicity state across repeated calls.
-    
+
     INVARIANT: Higher scores MUST NOT produce lower severity actions.
     """
     last_score: Optional[float] = None
     last_action: Optional[TRIAction] = None
     last_request_id: Optional[str] = None
-    
+
     def check_and_update(
         self,
         score: float,
@@ -169,7 +169,7 @@ class MonotonicityState:
     ) -> Tuple[bool, Optional[IntegrationFailure]]:
         """
         Check monotonicity against previous call and update state.
-        
+
         Returns:
             (True, None) if monotonicity holds
             (False, IntegrationFailure) if violated
@@ -183,14 +183,14 @@ class MonotonicityState:
             )
             if not is_monotonic:
                 return (False, failure)
-        
+
         # Update state
         self.last_score = score
         self.last_action = action
         self.last_request_id = request_id
-        
+
         return (True, None)
-    
+
     def reset(self) -> None:
         """Reset monotonicity state."""
         self.last_score = None
@@ -215,17 +215,17 @@ def default_glass_box_scoring(
 ) -> Tuple[float, List[FeatureContribution], str]:
     """
     Default glass-box scoring implementation.
-    
+
     This is a placeholder that produces deterministic output.
     In production, this should be replaced by the actual ChainIQ scoring function.
-    
+
     INVARIANT: Output is deterministic given input.
     """
     # Deterministic score based on entity_id hash
     import hashlib
     entity_hash = hashlib.sha256(risk_input.entity_id.encode()).hexdigest()
     score = (int(entity_hash[:8], 16) % 100) / 100.0
-    
+
     # Build feature contributions
     contributors = [
         FeatureContribution(
@@ -243,12 +243,12 @@ def default_glass_box_scoring(
             explanation=f"Temporal pattern contributes {score * 0.4:.2f} to risk score",
         ),
     ]
-    
+
     explanation = (
         f"Risk score of {score:.2f} computed from entity history and temporal patterns. "
         f"Entity {risk_input.entity_id} scored via deterministic glass-box model."
     )
-    
+
     return (score, contributors, explanation)
 
 
@@ -260,9 +260,9 @@ def default_glass_box_scoring(
 class TRIGlassBoxExecutor:
     """
     TRI ⇄ Glass-Box executor with full contract enforcement.
-    
+
     This is the CANONICAL entry point for all TRI risk computations.
-    
+
     GUARANTEES:
     - Activation reference is validated FIRST
     - Glass-box output is validated before return
@@ -270,10 +270,10 @@ class TRIGlassBoxExecutor:
     - PDO embedding is extracted and validated
     - All failures are explicit and terminal
     """
-    
+
     MODEL_ID = "glassbox-tri-v1"
     MODEL_VERSION = "1.0.0"
-    
+
     def __init__(
         self,
         scoring_fn: Optional[GlassBoxScoringFn] = None,
@@ -281,7 +281,7 @@ class TRIGlassBoxExecutor:
     ):
         """
         Initialize executor.
-        
+
         Args:
             scoring_fn: Glass-box scoring function (defaults to placeholder)
             enforce_monotonicity: Whether to enforce cross-call monotonicity
@@ -289,14 +289,14 @@ class TRIGlassBoxExecutor:
         self._scoring_fn = scoring_fn or default_glass_box_scoring
         self._enforce_monotonicity = enforce_monotonicity
         self._monotonicity_state = MonotonicityState()
-    
+
     def execute(
         self,
         risk_input: TRIRiskInput,
     ) -> TRIExecutionResult:
         """
         Execute TRI risk computation with full contract enforcement.
-        
+
         EXECUTION FLOW:
         1. Validate input (activation FIRST)
         2. Execute glass-box scoring
@@ -305,19 +305,19 @@ class TRIGlassBoxExecutor:
         5. Check monotonicity
         6. Extract PDO embedding
         7. Return execution result
-        
+
         Args:
             risk_input: Validated TRIRiskInput
-            
+
         Returns:
             TRIExecutionResult with full provenance
-            
+
         Raises:
             TRIExecutionError: On any failure (HARD FAIL)
         """
         execution_id = str(uuid4())
         execution_timestamp = datetime.now(timezone.utc)
-        
+
         # === STEP 1: VALIDATE INPUT (ACTIVATION FIRST) ===
         is_valid, failure = risk_input.validate()
         if not is_valid:
@@ -326,7 +326,7 @@ class TRIGlassBoxExecutor:
                 failure_mode=failure.mode if failure else ExecutorFailureMode.ACTIVATION_NOT_BOUND,
                 context={"request_id": risk_input.request_id},
             )
-        
+
         # === STEP 2: EXECUTE GLASS-BOX SCORING ===
         try:
             score, contributors, explanation = self._scoring_fn(risk_input)
@@ -336,7 +336,7 @@ class TRIGlassBoxExecutor:
                 failure_mode=ExecutorFailureMode.GLASS_BOX_EXECUTION_FAILED,
                 context={"request_id": risk_input.request_id},
             ) from e
-        
+
         # === STEP 3: VALIDATE SCORE BOUNDS ===
         if not (0.0 <= score <= 1.0):
             raise TRIExecutionError(
@@ -344,11 +344,11 @@ class TRIGlassBoxExecutor:
                 failure_mode=IntegrationFailureMode.INVALID_RISK_SCORE,
                 context={"request_id": risk_input.request_id, "score": score},
             )
-        
+
         # === STEP 4: MAP SCORE TO TIER AND ACTION ===
         tier = score_to_severity_tier(score)
         action = severity_tier_to_action(tier)
-        
+
         # === STEP 5: BUILD CONFIDENCE BAND ===
         # Confidence band width based on contributor count
         contributor_count = len(contributors)
@@ -359,7 +359,7 @@ class TRIGlassBoxExecutor:
             upper=min(1.0, score + base_width),
             confidence_level=0.95,
         )
-        
+
         # === STEP 6: BUILD MODEL IDENTITY ===
         model_identity = ModelIdentity(
             model_id=self.MODEL_ID,
@@ -367,7 +367,7 @@ class TRIGlassBoxExecutor:
             calibration_date=datetime(2025, 1, 1, tzinfo=timezone.utc),
             feature_count=contributor_count,
         )
-        
+
         # === STEP 7: BUILD GLASS-BOX OUTPUT ===
         glass_box_output = GlassBoxRiskOutput(
             risk_score=score,
@@ -381,7 +381,7 @@ class TRIGlassBoxExecutor:
             computation_timestamp=execution_timestamp,
             activation_hash=risk_input.activation_reference.activation_hash,
         )
-        
+
         # === STEP 8: VALIDATE OUTPUT ===
         is_valid, failure = glass_box_output.validate()
         if not is_valid:
@@ -390,7 +390,7 @@ class TRIGlassBoxExecutor:
                 failure_mode=failure.mode if failure else ExecutorFailureMode.OUTPUT_VALIDATION_FAILED,
                 context={"request_id": risk_input.request_id},
             )
-        
+
         # === STEP 9: CHECK MONOTONICITY ===
         if self._enforce_monotonicity:
             is_monotonic, failure = self._monotonicity_state.check_and_update(
@@ -410,10 +410,10 @@ class TRIGlassBoxExecutor:
                         "previous_action": self._monotonicity_state.last_action.value if self._monotonicity_state.last_action else None,
                     },
                 )
-        
+
         # === STEP 10: EXTRACT PDO EMBEDDING ===
         pdo_embedding = PDORiskEmbedding.from_glass_box_output(glass_box_output)
-        
+
         # === STEP 11: VALIDATE PDO EMBEDDING ===
         is_valid, failure = validate_pdo_risk_embedding(pdo_embedding.to_dict())
         if not is_valid:
@@ -422,7 +422,7 @@ class TRIGlassBoxExecutor:
                 failure_mode=ExecutorFailureMode.PDO_EMBEDDING_FAILED,
                 context={"request_id": risk_input.request_id},
             )
-        
+
         # === STEP 12: BUILD AND RETURN RESULT ===
         return TRIExecutionResult(
             execution_id=execution_id,
@@ -432,7 +432,7 @@ class TRIGlassBoxExecutor:
             activation_hash=risk_input.activation_reference.activation_hash,
             execution_timestamp=execution_timestamp,
         )
-    
+
     def reset_monotonicity_state(self) -> None:
         """Reset monotonicity tracking state."""
         self._monotonicity_state.reset()
@@ -450,15 +450,15 @@ def create_activation_reference(
 ) -> ActivationReference:
     """
     Create an ActivationReference with validation.
-    
+
     Args:
         agent_gid: Agent GID (e.g., "GID-10")
         activation_hash: Hash of activation block
         scope_constraints: Permitted operation scopes
-        
+
     Returns:
         Validated ActivationReference
-        
+
     Raises:
         ValueError: If required fields are missing
     """
@@ -466,7 +466,7 @@ def create_activation_reference(
         raise ValueError("agent_gid is required")
     if not activation_hash:
         raise ValueError("activation_hash is required")
-    
+
     return ActivationReference(
         agent_gid=agent_gid,
         activation_hash=activation_hash,
@@ -483,16 +483,16 @@ def create_tri_risk_input(
 ) -> TRIRiskInput:
     """
     Create a TRIRiskInput with validation.
-    
+
     Args:
         entity_id: Entity being scored
         activation_reference: Agent activation context
         event_window_hours: Analysis window size in hours
         domain_focus: Optional domain to emphasize
-        
+
     Returns:
         Validated TRIRiskInput
-        
+
     Raises:
         ValueError: If required fields are missing
     """
@@ -500,10 +500,10 @@ def create_tri_risk_input(
         raise ValueError("entity_id is required")
     if activation_reference is None:
         raise ValueError("activation_reference is required")
-    
+
     now = datetime.now(timezone.utc)
     from datetime import timedelta
-    
+
     return TRIRiskInput(
         activation_reference=activation_reference,
         event_window_start=now - timedelta(hours=event_window_hours),

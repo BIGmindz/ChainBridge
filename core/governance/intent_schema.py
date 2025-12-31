@@ -142,9 +142,9 @@ def create_intent(
     agent_gid: str,
     verb: str | IntentVerb,
     target: str,
-    scope: str | None = None,
+    scope: Optional[str] = None,
     metadata: Dict[str, str] | None = None,
-    correlation_id: str | None = None,
+    correlation_id: Optional[str] = None,
 ) -> AgentIntent:
     """Factory function to create a validated intent.
 

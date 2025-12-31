@@ -37,7 +37,7 @@ class DecisionOutcome(str, Enum):
 class Decision:
     """
     Immutable decision result.
-    
+
     Attributes:
         outcome: The decision outcome (approve, escalate, acknowledge, reject)
         reason: Human-readable reason for the decision
@@ -48,7 +48,7 @@ class Decision:
     reason: str
     event_id: str
     rule_applied: str
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dict for serialization."""
         return {
@@ -66,29 +66,29 @@ PAYMENT_APPROVAL_THRESHOLD = 10000.0
 def decide(event: IngestEvent) -> Decision:
     """
     Deterministic decision function.
-    
+
     Rules:
     1. event_type == "payment_request":
        - amount <= 10000 → APPROVE
        - amount > 10000 → ESCALATE
     2. All other event types → ACKNOWLEDGE
-    
+
     Args:
         event: The IngestEvent to decide on
-        
+
     Returns:
         Decision object with outcome and reason
     """
     event_id_str = str(event.event_id)
-    
+
     logger.info(
         "decide: processing event",
         extra={"event_id": event_id_str, "event_type": event.event_type}
     )
-    
+
     if event.event_type == "payment_request":
         return _decide_payment_request(event, event_id_str)
-    
+
     # Default: acknowledge all other event types
     logger.info(
         "decide: acknowledging event",
@@ -105,7 +105,7 @@ def decide(event: IngestEvent) -> Decision:
 def _decide_payment_request(event: IngestEvent, event_id_str: str) -> Decision:
     """
     Decision logic for payment_request events.
-    
+
     Rule:
     - amount <= 10000 → APPROVE
     - amount > 10000 → ESCALATE
@@ -113,7 +113,7 @@ def _decide_payment_request(event: IngestEvent, event_id_str: str) -> Decision:
     """
     payload = event.payload
     amount = payload.get("amount")
-    
+
     # Validate amount exists and is numeric
     if amount is None:
         logger.warning(
@@ -126,7 +126,7 @@ def _decide_payment_request(event: IngestEvent, event_id_str: str) -> Decision:
             event_id=event_id_str,
             rule_applied="payment_validation",
         )
-    
+
     try:
         amount_value = float(amount)
     except (TypeError, ValueError):
@@ -140,7 +140,7 @@ def _decide_payment_request(event: IngestEvent, event_id_str: str) -> Decision:
             event_id=event_id_str,
             rule_applied="payment_validation",
         )
-    
+
     # Apply threshold rule
     if amount_value <= PAYMENT_APPROVAL_THRESHOLD:
         logger.info(

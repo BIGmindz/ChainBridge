@@ -27,7 +27,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 from core.governance.constitution_engine import (
     ConstitutionEngine,
@@ -57,14 +57,14 @@ logger = logging.getLogger("governance.pac_admission")
 class EndBannerViolationError(Exception):
     """
     END banner validation failed. HARD STOP.
-    
+
     Raised when:
     - END banner agent doesn't match EXECUTING AGENT
     - END banner GID doesn't match agent's canonical GID
     - END banner color doesn't match agent's canonical color
     """
-    
-    def __init__(self, message: str, pac_id: str | None = None):
+
+    def __init__(self, message: str, pac_id: Optional[str] = None):
         self.message = message
         self.pac_id = pac_id
         super().__init__(f"END banner violation: {message} (PAC: {pac_id or 'unknown'})")
@@ -146,12 +146,12 @@ class PACDeclaration:
     acknowledged_locks: tuple[str, ...]
     affected_scopes: tuple[str, ...]
     touched_files: tuple[str, ...] = field(default_factory=tuple)
-    executing_agent: str | None = None
-    executing_gid: str | None = None
-    executing_color: str | None = None
-    end_banner_agent: str | None = None
-    end_banner_gid: str | None = None
-    end_banner_color: str | None = None
+    executing_agent: Optional[str] = None
+    executing_gid: Optional[str] = None
+    executing_color: Optional[str] = None
+    end_banner_agent: Optional[str] = None
+    end_banner_gid: Optional[str] = None
+    end_banner_color: Optional[str] = None
     # Activation Block — REQUIRED for execution (PAC-BENSON-ACTIVATION-BLOCK-IMPLEMENTATION-01)
     activation_block: ActivationBlock | None = None
 
@@ -356,17 +356,17 @@ class PACAdmissionGate:
                 violations.append(f"FORBIDDEN_ZONE:{lock.lock_id}:{file_path}")
         return violations
 
-    def _validate_end_banner(self, declaration: PACDeclaration) -> str | None:
+    def _validate_end_banner(self, declaration: PACDeclaration) -> Optional[str]:
         """
         Validate END banner against executing agent info.
-        
+
         Returns:
             Error message if validation fails, None if passes
         """
         # Skip if no END banner info provided
         if not declaration.end_banner_agent:
             return None
-        
+
         # Check: END banner agent must match EXECUTING AGENT
         if declaration.executing_agent:
             if declaration.end_banner_agent.upper() != declaration.executing_agent.upper():
@@ -374,35 +374,35 @@ class PACAdmissionGate:
                     f"END banner agent '{declaration.end_banner_agent}' "
                     f"does not match EXECUTING AGENT '{declaration.executing_agent}'"
                 )
-        
+
         # Check: END banner GID must match canonical GID
         if declaration.end_banner_gid:
             agent = get_agent_by_name(declaration.end_banner_agent)
             if agent is None:
                 return f"Unknown agent in END banner: {declaration.end_banner_agent}"
-            
+
             if declaration.end_banner_gid.upper() != agent.gid:
                 return (
                     f"END banner GID '{declaration.end_banner_gid}' "
                     f"does not match canonical GID '{agent.gid}' for {agent.name}"
                 )
-        
+
         # Check: END banner color must match canonical color
         if declaration.end_banner_color:
             agent = get_agent_by_name(declaration.end_banner_agent)
             if agent is None:
                 return f"Unknown agent in END banner: {declaration.end_banner_agent}"
-            
+
             # Normalize color names
             declared_color = declaration.end_banner_color.upper().replace(" ", "_")
             canonical_color = agent.color.upper().replace(" ", "_")
-            
+
             if declared_color != canonical_color:
                 return (
                     f"END banner color '{declaration.end_banner_color}' "
                     f"does not match canonical color '{agent.color}' for {agent.name}"
                 )
-        
+
         return None
 
     def _emit_event(self, event: PACAdmissionEvent) -> None:

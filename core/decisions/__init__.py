@@ -14,7 +14,7 @@ This module provides:
 
 CONSTRAINTS (ABSOLUTE):
 - No probabilities
-- No learned weights  
+- No learned weights
 - No hidden state
 - Every rule is auditable
 - Every output has an explanation

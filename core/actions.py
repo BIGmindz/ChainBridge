@@ -44,7 +44,7 @@ class ActionStatus(str, Enum):
 class ActionResult:
     """
     Immutable action result.
-    
+
     Attributes:
         status: success or failure
         action_type: type of action executed
@@ -61,7 +61,7 @@ class ActionResult:
     timestamp: str
     details: Dict[str, Any]
     error: Optional[str] = None
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dict for serialization."""
         result = {
@@ -80,23 +80,23 @@ class ActionResult:
 def execute_action(decision: DecisionResult, event_payload: Dict[str, Any], event_id: str) -> ActionResult:
     """
     Execute action based on decision outcome.
-    
+
     Maps canonical decision outcomes to action handlers:
     - APPROVED → record_approval
     - REQUIRES_REVIEW → record_escalation
     - REJECTED → record_rejection
     - ERROR → record_error
-    
+
     Args:
         decision: The DecisionResult from core/decisions
         event_payload: Original event payload for context
         event_id: ID of the event being processed
-        
+
     Returns:
         ActionResult with status and details
     """
     timestamp = datetime.now(timezone.utc).isoformat()
-    
+
     logger.info(
         "execute_action: starting",
         extra={
@@ -104,14 +104,14 @@ def execute_action(decision: DecisionResult, event_payload: Dict[str, Any], even
             "decision": decision.outcome.value,
         }
     )
-    
+
     action_handlers = {
         DecisionOutcome.APPROVED: _handle_approval,
         DecisionOutcome.REQUIRES_REVIEW: _handle_escalation,
         DecisionOutcome.REJECTED: _handle_rejection,
         DecisionOutcome.ERROR: _handle_error,
     }
-    
+
     handler = action_handlers.get(decision.outcome)
     if handler is None:
         # Should never happen - defensive
@@ -128,7 +128,7 @@ def execute_action(decision: DecisionResult, event_payload: Dict[str, Any], even
             details={},
             error=f"Unknown decision outcome: {decision.outcome}",
         )
-    
+
     try:
         result = handler(decision, event_payload, timestamp, event_id)
         logger.info(
@@ -175,9 +175,9 @@ def _handle_approval(
         },
         "timestamp": timestamp,
     }
-    
+
     _append_to_action_log(action_record)
-    
+
     return ActionResult(
         status=ActionStatus.SUCCESS,
         action_type="record_approval",
@@ -208,9 +208,9 @@ def _handle_escalation(
         "escalation_required": True,
         "timestamp": timestamp,
     }
-    
+
     _append_to_action_log(action_record)
-    
+
     return ActionResult(
         status=ActionStatus.SUCCESS,
         action_type="record_escalation",
@@ -237,9 +237,9 @@ def _handle_rejection(
         "payload": event_payload,
         "timestamp": timestamp,
     }
-    
+
     _append_to_action_log(action_record)
-    
+
     return ActionResult(
         status=ActionStatus.SUCCESS,
         action_type="record_rejection",
@@ -266,9 +266,9 @@ def _handle_error(
         "payload": event_payload,
         "timestamp": timestamp,
     }
-    
+
     _append_to_action_log(action_record)
-    
+
     return ActionResult(
         status=ActionStatus.SUCCESS,
         action_type="record_error",
@@ -282,16 +282,16 @@ def _handle_error(
 def _append_to_action_log(record: Dict[str, Any]) -> None:
     """
     Append record to action log file (append-only).
-    
+
     Creates log directory if it doesn't exist.
     Each record is a single JSON line.
     """
     ACTION_LOG_DIR.mkdir(parents=True, exist_ok=True)
     log_file = ACTION_LOG_DIR / "action_log.jsonl"
-    
+
     with open(log_file, "a", encoding="utf-8") as f:
         f.write(json.dumps(record, sort_keys=True, separators=(",", ":")) + "\n")
-    
+
     logger.debug(
         "action_log: record appended",
         extra={"log_file": str(log_file), "event_id": record.get("event_id")}

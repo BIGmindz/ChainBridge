@@ -18,7 +18,7 @@ import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # EVENT TYPES
@@ -120,13 +120,13 @@ class GovernanceEvent:
     event_type: GovernanceEventType | str
     timestamp: datetime = field(default_factory=_utc_now)
     event_id: str = field(default_factory=_generate_event_id)
-    agent_gid: str | None = None
-    verb: str | None = None
-    target: str | None = None
-    decision: str | None = None
-    reason_code: str | None = None
-    audit_ref: str | None = None
-    artifact_hash: str | None = None
+    agent_gid: Optional[str] = None
+    verb: Optional[str] = None
+    target: Optional[str] = None
+    decision: Optional[str] = None
+    reason_code: Optional[str] = None
+    audit_ref: Optional[str] = None
+    artifact_hash: Optional[str] = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -171,8 +171,8 @@ def acm_evaluated_event(
     target: str,
     decision: str,
     *,
-    reason_code: str | None = None,
-    metadata: dict[str, Any] | None = None,
+    reason_code: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> GovernanceEvent:
     """Create ACM_EVALUATED event."""
     return GovernanceEvent(
@@ -191,8 +191,8 @@ def decision_allowed_event(
     verb: str,
     target: str,
     *,
-    audit_ref: str | None = None,
-    metadata: dict[str, Any] | None = None,
+    audit_ref: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> GovernanceEvent:
     """Create DECISION_ALLOWED event."""
     return GovernanceEvent(
@@ -212,8 +212,8 @@ def decision_denied_event(
     target: str,
     reason_code: str,
     *,
-    audit_ref: str | None = None,
-    metadata: dict[str, Any] | None = None,
+    audit_ref: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> GovernanceEvent:
     """Create DECISION_DENIED event."""
     return GovernanceEvent(
@@ -234,8 +234,8 @@ def decision_escalated_event(
     target: str,
     reason_code: str,
     *,
-    audit_ref: str | None = None,
-    metadata: dict[str, Any] | None = None,
+    audit_ref: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> GovernanceEvent:
     """Create DECISION_ESCALATED event."""
     return GovernanceEvent(
@@ -256,8 +256,8 @@ def drcp_triggered_event(
     target: str,
     reason_code: str,
     *,
-    audit_ref: str | None = None,
-    metadata: dict[str, Any] | None = None,
+    audit_ref: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> GovernanceEvent:
     """Create DRCP_TRIGGERED event."""
     return GovernanceEvent(
@@ -275,9 +275,9 @@ def diggi_correction_event(
     agent_gid: str,
     target: str,
     *,
-    correction_type: str | None = None,
-    audit_ref: str | None = None,
-    metadata: dict[str, Any] | None = None,
+    correction_type: Optional[str] = None,
+    audit_ref: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> GovernanceEvent:
     """Create DIGGI_CORRECTION_ISSUED event."""
     meta = metadata or {}
@@ -297,9 +297,9 @@ def tool_execution_event(
     tool_name: str,
     allowed: bool,
     *,
-    reason_code: str | None = None,
-    audit_ref: str | None = None,
-    metadata: dict[str, Any] | None = None,
+    reason_code: Optional[str] = None,
+    audit_ref: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> GovernanceEvent:
     """Create TOOL_EXECUTION_ALLOWED or TOOL_EXECUTION_DENIED event."""
     event_type = GovernanceEventType.TOOL_EXECUTION_ALLOWED if allowed else GovernanceEventType.TOOL_EXECUTION_DENIED
@@ -317,14 +317,14 @@ def tool_execution_event(
 
 def artifact_verification_event(
     passed: bool,
-    artifact_hash: str | None = None,
+    artifact_hash: Optional[str] = None,
     *,
-    file_count: int | None = None,
-    files_verified: int | None = None,  # Alias for file_count
-    mismatches: list[str] | None = None,
-    manifest_path: str | None = None,
-    audit_ref: str | None = None,
-    metadata: dict[str, Any] | None = None,
+    file_count: Optional[int] = None,
+    files_verified: Optional[int] = None,  # Alias for file_count
+    mismatches: Optional[List[str]] = None,
+    manifest_path: Optional[str] = None,
+    audit_ref: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> GovernanceEvent:
     """Create ARTIFACT_VERIFIED or ARTIFACT_VERIFICATION_FAILED event."""
     event_type = GovernanceEventType.ARTIFACT_VERIFIED if passed else GovernanceEventType.ARTIFACT_VERIFICATION_FAILED
@@ -351,8 +351,8 @@ def scope_violation_event(
     file_path: str,
     violation_type: str,
     *,
-    pattern: str | None = None,
-    metadata: dict[str, Any] | None = None,
+    pattern: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> GovernanceEvent:
     """Create SCOPE_VIOLATION event."""
     meta = metadata or {}
@@ -370,10 +370,10 @@ def scope_violation_event(
 def governance_boot_event(
     passed: bool,
     *,
-    checks_passed: int | None = None,
-    checks_failed: int | None = None,
-    failures: list[str] | None = None,
-    metadata: dict[str, Any] | None = None,
+    checks_passed: Optional[int] = None,
+    checks_failed: Optional[int] = None,
+    failures: Optional[List[str]] = None,
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> GovernanceEvent:
     """Create GOVERNANCE_BOOT_PASSED or GOVERNANCE_BOOT_FAILED event."""
     event_type = GovernanceEventType.GOVERNANCE_BOOT_PASSED if passed else GovernanceEventType.GOVERNANCE_BOOT_FAILED
@@ -396,7 +396,7 @@ def governance_drift_event(
     current_hash: str,
     message: str,
     *,
-    metadata: dict[str, Any] | None = None,
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> GovernanceEvent:
     """Create GOVERNANCE_DRIFT_DETECTED event (PAC-GOV-OBS-01)."""
     meta = metadata or {}

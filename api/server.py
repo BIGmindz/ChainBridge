@@ -17,6 +17,12 @@ from pydantic import BaseModel, Field
 
 from api.chainboard_stub import router as chainboard_router
 from api.ingress import router as ingress_router
+from api.operator_console import router as operator_console_router
+from api.agent_oc import router as agent_oc_router
+from api.trace_oc import router as trace_oc_router
+from api.governance_oc import governance_oc_router
+from api.controlplane_oc import controlplane_oc_router
+from api.lintv2_oc import lintv2_oc_router  # Lint v2 OC (PAC-JEFFREY-P06R)
 from api.spine import router as spine_router
 from api.trust import router as trust_router
 from core.data_processor import DataProcessor
@@ -245,6 +251,12 @@ app.include_router(chainboard_router)
 app.include_router(trust_router)
 app.include_router(spine_router)  # Minimum Execution Spine (PAC-BENSON-EXEC-SPINE-01)
 app.include_router(ingress_router)  # Event Ingress (PAC-CODY-EXEC-SPINE-01)
+app.include_router(operator_console_router)  # OC Read-Only APIs (PAC-007C)
+app.include_router(agent_oc_router)  # Agent Execution Visibility (PAC-008)
+app.include_router(trace_oc_router)  # End-to-End Trace Visibility (PAC-009)
+app.include_router(governance_oc_router)  # Governance OC Visibility (PAC-012)
+app.include_router(controlplane_oc_router)  # Control Plane OC (PAC-CP-UI-EXEC-001)
+app.include_router(lintv2_oc_router)  # Lint v2 Invariant OC (PAC-JEFFREY-P06R)
 
 
 @app.get("/", response_model=Dict[str, str])

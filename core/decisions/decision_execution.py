@@ -55,7 +55,7 @@ from core.decisions.rules import (
 class DecisionExecutionFailure(str, Enum):
     """
     Explicit failure codes for decision execution pipeline.
-    
+
     Maps to deterministic ERROR outcomes. No silent failures.
     """
     ACTIVATION_MISSING = "ACTIVATION_MISSING"
@@ -76,10 +76,10 @@ class DecisionExecutionFailure(str, Enum):
 class DecisionExecutionError(Exception):
     """
     Raised when decision execution fails.
-    
+
     HARD STOP — no recovery, no retry.
     """
-    
+
     def __init__(
         self,
         message: str,
@@ -100,10 +100,10 @@ class DecisionExecutionError(Exception):
 class PersistenceRejectionError(Exception):
     """
     Raised when a decision cannot be persisted due to missing activation.
-    
+
     HARD STOP — decisions without activation MUST NOT be persisted.
     """
-    
+
     def __init__(self, message: str, decision_id: Optional[str] = None):
         self.message = message
         self.decision_id = decision_id
@@ -119,7 +119,7 @@ class PersistenceRejectionError(Exception):
 class ExecutableDecision:
     """
     Decision record with mandatory activation binding for persistence.
-    
+
     INVARIANTS:
     - activation_reference is MANDATORY (no default)
     - All decisions must have explicit outcome
@@ -138,7 +138,7 @@ class ExecutableDecision:
     )
     failure_code: Optional[DecisionExecutionFailure] = None
     is_persisted: bool = False
-    
+
     def __post_init__(self) -> None:
         """Enforce persistence contract invariants."""
         if self.activation_reference is None:
@@ -151,7 +151,7 @@ class ExecutableDecision:
                 "ERROR outcome requires explicit failure_code",
                 ActivationDecisionFailure.CONTRACT_VIOLATION,
             )
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Serialize for persistence/audit."""
         return {
@@ -182,28 +182,28 @@ def execute_decision(
 ) -> ExecutableDecision:
     """
     Execute decision logic through the activation-aware gate.
-    
+
     INVARIANT: No decision without valid activation.
-    
+
     This is the CANONICAL entry point for all decision execution.
     All decisions MUST flow through this function.
-    
+
     Args:
         activation_reference: Reference to validated activation block (MANDATORY)
         rule_id: Rule identifier to execute
         rule_version: Rule version
         inputs: Decision inputs
         decision_fn: Deterministic decision function
-        
+
     Returns:
         ExecutableDecision with full traceability
-        
+
     Raises:
         DecisionExecutionError: If activation is missing/invalid
         PersistenceRejectionError: If decision cannot be persisted
     """
     decision_id = str(uuid4())
-    
+
     # === ACTIVATION GATE (FIRST CHECK) ===
     if activation_reference is None:
         # HARD FAIL: No activation → No decision
@@ -212,7 +212,7 @@ def execute_decision(
             failure_code=DecisionExecutionFailure.ACTIVATION_MISSING,
             decision_inputs=inputs,
         )
-    
+
     # === VALIDATE ACTIVATION REFERENCE ===
     if not activation_reference.agent_name or activation_reference.agent_name in ("UNKNOWN", "NONE", "INVALID"):
         raise DecisionExecutionError(
@@ -220,14 +220,14 @@ def execute_decision(
             failure_code=DecisionExecutionFailure.ACTIVATION_INVALID,
             decision_inputs=inputs,
         )
-    
+
     if not activation_reference.gid or activation_reference.gid in ("UNKNOWN", "NONE", "INVALID"):
         raise DecisionExecutionError(
             message=f"Invalid activation reference: gid='{activation_reference.gid}'",
             failure_code=DecisionExecutionFailure.ACTIVATION_INVALID,
             decision_inputs=inputs,
         )
-    
+
     # === EXECUTE DECISION FUNCTION ===
     try:
         outcome_raw, explanation = decision_fn(inputs)
@@ -243,10 +243,10 @@ def execute_decision(
             activation_reference=activation_reference,
             failure_code=DecisionExecutionFailure.RULE_EXECUTION_FAILURE,
         )
-    
+
     # === MAP OUTCOME ===
     outcome = _map_decision_outcome(outcome_raw)
-    
+
     # === VERIFY EXPLANATION COMPLETENESS ===
     if not explanation or len(explanation.strip()) < 10:
         return ExecutableDecision(
@@ -259,7 +259,7 @@ def execute_decision(
             activation_reference=activation_reference,
             failure_code=DecisionExecutionFailure.CONTRACT_VIOLATION,
         )
-    
+
     # === BUILD EXECUTABLE DECISION ===
     return ExecutableDecision(
         decision_id=decision_id,
@@ -291,42 +291,42 @@ def _map_decision_outcome(raw_outcome: DecisionOutcome) -> ActivationAwareOutcom
 def validate_for_persistence(decision: ExecutableDecision) -> Tuple[bool, Optional[str]]:
     """
     Validate that a decision meets persistence contract requirements.
-    
+
     PERSISTENCE CONTRACT:
     - activation_reference MUST be present
     - activation_reference MUST have valid agent_name, gid, color
     - decision MUST have non-empty explanation
     - decision_id MUST be non-empty
-    
+
     Returns:
         (is_valid, rejection_reason)
     """
     if decision.activation_reference is None:
         return False, "PERSISTENCE_REJECTED: activation_reference is MANDATORY"
-    
+
     ref = decision.activation_reference
     if not ref.agent_name or ref.agent_name in ("UNKNOWN", "NONE", "INVALID"):
         return False, f"PERSISTENCE_REJECTED: invalid agent_name='{ref.agent_name}'"
-    
+
     if not ref.gid or ref.gid in ("UNKNOWN", "NONE", "INVALID"):
         return False, f"PERSISTENCE_REJECTED: invalid gid='{ref.gid}'"
-    
+
     if not ref.color or ref.color in ("UNKNOWN", "NONE", "INVALID"):
         return False, f"PERSISTENCE_REJECTED: invalid color='{ref.color}'"
-    
+
     if not decision.explanation or len(decision.explanation.strip()) < 10:
         return False, "PERSISTENCE_REJECTED: explanation is incomplete"
-    
+
     if not decision.decision_id:
         return False, "PERSISTENCE_REJECTED: decision_id is required"
-    
+
     return True, None
 
 
 def require_persistence_contract(decision: ExecutableDecision) -> None:
     """
     Assert persistence contract compliance. Raises on violation.
-    
+
     HARD FAIL: Decisions that fail persistence contract MUST NOT be stored.
     """
     is_valid, rejection_reason = validate_for_persistence(decision)
@@ -350,16 +350,16 @@ def enforce_payment_monotonicity(
 ) -> Tuple[bool, Optional[str]]:
     """
     Enforce monotonicity for payment decisions.
-    
+
     RULE: If amount_a > amount_b, then severity_a >= severity_b.
     Higher amounts MUST NOT produce lower severity outcomes.
-    
+
     Args:
         amount_a: First payment amount
         amount_b: Second payment amount
         decision_a: First decision
         decision_b: Second decision
-        
+
     Returns:
         (is_monotonic, violation_message)
     """
@@ -377,37 +377,37 @@ def verify_monotonicity_invariant(
 ) -> Tuple[bool, Optional[str]]:
     """
     Verify monotonicity invariant across a sequence of decisions.
-    
+
     INVARIANT: Higher severity inputs → equal or higher severity outcomes.
-    
+
     Args:
         decisions: List of (input_severity, ExecutableDecision) tuples
         severity_key: Function to extract severity from input
-        
+
     Returns:
         (is_monotonic, violation_message)
     """
     if len(decisions) < 2:
         return True, None
-    
+
     # Sort by input severity
     sorted_decisions = sorted(decisions, key=lambda x: severity_key(x[0]))
-    
+
     # Check monotonicity
     for i in range(len(sorted_decisions) - 1):
         sev_a, dec_a = sorted_decisions[i]
         sev_b, dec_b = sorted_decisions[i + 1]
-        
+
         is_valid, msg = enforce_payment_monotonicity(
             severity_key(sev_a),
             severity_key(sev_b),
             dec_a,
             dec_b,
         )
-        
+
         if not is_valid:
             return False, f"Monotonicity violation at index {i}: {msg}"
-    
+
     return True, None
 
 
@@ -428,15 +428,15 @@ def execute_decision_with_enforcement(
 ) -> ExecutableDecision:
     """
     Execute decision with full enforcement of all invariants.
-    
+
     This is the RECOMMENDED entry point for production use.
-    
+
     Enforcement chain:
     1. Activation gate (MANDATORY)
     2. Decision execution
     3. Persistence contract validation
     4. Monotonicity check (if reference provided)
-    
+
     Args:
         activation_reference: Reference to validated activation block
         rule_id: Rule identifier
@@ -445,10 +445,10 @@ def execute_decision_with_enforcement(
         decision_fn: Deterministic decision function
         enforce_persistence: Whether to validate persistence contract
         enforce_monotonicity_with: Optional (amount, prior_decision) for monotonicity check
-        
+
     Returns:
         ExecutableDecision
-        
+
     Raises:
         DecisionExecutionError: On activation failure
         PersistenceRejectionError: On persistence contract violation
@@ -461,30 +461,30 @@ def execute_decision_with_enforcement(
         inputs=inputs,
         decision_fn=decision_fn,
     )
-    
+
     # Step 2: Validate persistence contract
     if enforce_persistence:
         require_persistence_contract(decision)
-    
+
     # Step 3: Check monotonicity if reference provided
     if enforce_monotonicity_with is not None:
         prior_amount, prior_decision = enforce_monotonicity_with
         current_amount = inputs.get("amount", 0.0)
-        
+
         is_monotonic, violation = enforce_payment_monotonicity(
             current_amount,
             prior_amount,
             decision,
             prior_decision,
         )
-        
+
         if not is_monotonic:
             raise DecisionExecutionError(
                 message=violation or "Monotonicity violation detected",
                 failure_code=DecisionExecutionFailure.MONOTONICITY_VIOLATION,
                 decision_inputs=inputs,
             )
-    
+
     return decision
 
 
@@ -510,7 +510,7 @@ def map_activation_failure(
 ) -> DecisionExecutionFailure:
     """
     Map activation failure to decision execution failure code.
-    
+
     Explicit mapping — no implicit defaults.
     """
     return ACTIVATION_TO_DECISION_FAILURE_MAP.get(

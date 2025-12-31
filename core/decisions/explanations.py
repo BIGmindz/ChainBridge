@@ -82,7 +82,7 @@ def explain_approved_payment(
 ) -> str:
     """
     Generate explanation for APPROVED payment decision.
-    
+
     Template:
         APPROVED — RULE-PAYMENT-THRESHOLD-V1 v1.0.0
         Reason: Payment amount is within auto-approval threshold.
@@ -106,7 +106,7 @@ def explain_requires_review(
 ) -> str:
     """
     Generate explanation for REQUIRES_REVIEW payment decision.
-    
+
     Template:
         REQUIRES_REVIEW — RULE-PAYMENT-THRESHOLD-V1 v1.0.0
         Reason: Payment amount exceeds auto-approval threshold and requires human review.
@@ -125,7 +125,7 @@ def explain_requires_review(
 def explain_validation_error(errors: list[str], raw_payload: Dict[str, Any]) -> str:
     """
     Generate explanation for ERROR due to validation failure.
-    
+
     Template:
         ERROR — RULE-INPUT-VALIDATION-V1 v1.0.0
         Reason: Required field 'amount' is missing from payment request.
@@ -133,10 +133,10 @@ def explain_validation_error(errors: list[str], raw_payload: Dict[str, Any]) -> 
     """
     error_text = "; ".join(errors)
     inputs_text = _format_inputs_summary(
-        raw_payload, 
+        raw_payload,
         ("vendor_id", "requestor_id", "currency")
     )
-    
+
     return (
         f"ERROR — {RULE_INPUT_VALIDATION} v{RULE_VERSIONS[RULE_INPUT_VALIDATION]}\n"
         f"Reason: {error_text}\n"
@@ -147,7 +147,7 @@ def explain_validation_error(errors: list[str], raw_payload: Dict[str, Any]) -> 
 def explain_unsupported_event(event_type: str, supported_types: tuple) -> str:
     """
     Generate explanation for ERROR due to unsupported event type.
-    
+
     Template:
         ERROR — RULE-EVENT-TYPE-V1 v1.0.0
         Reason: Event type 'unknown' is not supported.
@@ -168,18 +168,18 @@ def explain_unsupported_event(event_type: str, supported_types: tuple) -> str:
 def generate_explanation(result: DecisionResult) -> str:
     """
     Generate a complete human-readable explanation from a DecisionResult.
-    
+
     This function reconstructs the explanation using the inputs_snapshot
     stored in the result, ensuring perfect reproducibility.
-    
+
     Args:
         result: The DecisionResult to explain
-        
+
     Returns:
         Multi-line human-readable explanation string
     """
     inputs = result.inputs_snapshot
-    
+
     # Approved payment
     if (
         result.outcome == DecisionOutcome.APPROVED
@@ -191,7 +191,7 @@ def generate_explanation(result: DecisionResult) -> str:
             vendor_id=inputs.get("vendor_id", "unknown"),
             threshold=inputs.get("threshold", PAYMENT_THRESHOLD),
         )
-    
+
     # Requires review
     if (
         result.outcome == DecisionOutcome.REQUIRES_REVIEW
@@ -203,7 +203,7 @@ def generate_explanation(result: DecisionResult) -> str:
             vendor_id=inputs.get("vendor_id", "unknown"),
             threshold=inputs.get("threshold", PAYMENT_THRESHOLD),
         )
-    
+
     # Validation error
     if result.outcome == DecisionOutcome.ERROR and result.rule_id == RULE_INPUT_VALIDATION:
         # Extract error details from explanation
@@ -212,7 +212,7 @@ def generate_explanation(result: DecisionResult) -> str:
             errors=[result.explanation.replace("Input validation failed: ", "")],
             raw_payload=raw_payload,
         )
-    
+
     # Event type error
     if result.outcome == DecisionOutcome.ERROR and result.rule_id == RULE_EVENT_TYPE:
         event_type = inputs.get("event_type", "unknown")
@@ -220,7 +220,7 @@ def generate_explanation(result: DecisionResult) -> str:
             event_type=event_type,
             supported_types=("payment_request",),
         )
-    
+
     # Fallback: return the stored explanation
     return (
         f"{_format_outcome(result.outcome)} — {result.rule_id} v{result.rule_version}\n"
@@ -237,10 +237,10 @@ def generate_explanation(result: DecisionResult) -> str:
 def verify_explanation_completeness(result: DecisionResult) -> tuple[bool, Optional[str]]:
     """
     Verify that a DecisionResult has a complete, valid explanation.
-    
+
     Returns:
         (is_valid, error_message)
-        
+
     Validation Rules:
     - Explanation must not be empty
     - Explanation must not be whitespace only
@@ -248,16 +248,16 @@ def verify_explanation_completeness(result: DecisionResult) -> tuple[bool, Optio
     - Explanation must reference the rule applied
     """
     explanation = result.explanation
-    
+
     if not explanation:
         return False, "Explanation is empty"
-    
+
     if not explanation.strip():
         return False, "Explanation is whitespace only"
-    
+
     # For verbose explanations, verify key components exist
     # (Soft check - detailed validation is handled by determinism checks)
-    
+
     return True, None
 
 
@@ -267,20 +267,20 @@ def verify_explanation_determinism(
 ) -> bool:
     """
     Verify that two identical decisions produce identical explanations.
-    
+
     Used for testing the determinism invariant.
-    
+
     Returns:
         True if explanations match (deterministic)
     """
     if result_a.inputs_snapshot != result_b.inputs_snapshot:
         # Different inputs, can't compare
         return True
-    
+
     if result_a.rule_id != result_b.rule_id:
         # Different rules applied
         return True
-    
+
     # Same inputs, same rule → should have same explanation
     return result_a.explanation == result_b.explanation
 
@@ -293,9 +293,9 @@ def verify_explanation_determinism(
 def format_audit_entry(result: DecisionResult, event_id: Optional[str] = None) -> str:
     """
     Format a DecisionResult as an audit log entry.
-    
+
     Includes all information needed for post-hoc verification.
-    
+
     Format:
         ════════════════════════════════════════════════════════════════
         DECISION AUDIT ENTRY
@@ -319,11 +319,11 @@ def format_audit_entry(result: DecisionResult, event_id: Optional[str] = None) -
     """
     separator = "═" * 64
     subsep = "─" * 64
-    
+
     inputs_lines = "\n".join(
         f"  {k}: {v}" for k, v in sorted(result.inputs_snapshot.items())
     )
-    
+
     return f"""
 {separator}
 DECISION AUDIT ENTRY
@@ -351,11 +351,11 @@ Inputs:
 def get_example_decisions() -> list[Dict[str, Any]]:
     """
     Return example input → output → explanation triples.
-    
+
     Used for documentation and verification.
     """
     from core.decisions.rules import decide
-    
+
     examples = [
         # Example 1: Approved payment
         {
@@ -416,7 +416,7 @@ def get_example_decisions() -> list[Dict[str, Any]]:
             "expected_outcome": "error",
         },
     ]
-    
+
     # Generate actual results
     results = []
     for example in examples:
@@ -432,5 +432,5 @@ def get_example_decisions() -> list[Dict[str, Any]]:
             "full_result": result.to_dict(),
             "audit_entry": format_audit_entry(result),
         })
-    
+
     return results
