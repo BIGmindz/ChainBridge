@@ -98,13 +98,15 @@ class Registry:
         agents = data.get("agents", {})
         for name, info in agents.items():
             upper = name.upper()
+            # Support both "emoji" and "icon" keys (registry uses "icon")
+            emoji = info.get("emoji", "") or info.get("icon", "")
             self.agents[upper] = {
                 "gid": info.get("gid", "").upper(),
-                "emoji": info.get("emoji", ""),
+                "emoji": emoji,
                 "role": info.get("role", ""),
             }
-            if info.get("emoji"):
-                self.valid_emojis.add(info["emoji"])
+            if emoji:
+                self.valid_emojis.add(emoji)
 
         for alias in data.get("forbidden_aliases", []):
             self.forbidden_aliases.add(alias.upper())

@@ -202,7 +202,7 @@ class EscalationRecord:
 class EscalationEngine:
     """
     Governance Escalation & Ratification Engine.
-    
+
     Invariants:
     - No indefinite PENDING states
     - Every state has a timebox
@@ -210,12 +210,12 @@ class EscalationEngine:
     - No silent unblocks
     - No bypass paths
     """
-    
+
     def __init__(self, state_file: Optional[Path] = None):
         self.state_file = state_file or Path("escalation_state.json")
         self.escalations: dict[str, EscalationRecord] = {}
         self._load_state()
-    
+
     def _load_state(self):
         """Load escalation state from disk."""
         if self.state_file.exists():
@@ -223,7 +223,7 @@ class EscalationEngine:
                 data = json.load(f)
                 for eid, record in data.get("escalations", {}).items():
                     self.escalations[eid] = self._dict_to_record(record)
-    
+
     def _save_state(self):
         """Persist escalation state to disk."""
         data = {
@@ -235,7 +235,7 @@ class EscalationEngine:
         }
         with open(self.state_file, "w") as f:
             json.dump(data, f, indent=2)
-    
+
     def _dict_to_record(self, d: dict) -> EscalationRecord:
         """Convert dict to EscalationRecord."""
         return EscalationRecord(
@@ -254,7 +254,7 @@ class EscalationEngine:
             timebox_deadline=d.get("timebox_deadline"),
             next_action_required_by=d.get("next_action_required_by")
         )
-    
+
     def _record_to_dict(self, record: EscalationRecord) -> dict:
         """Convert EscalationRecord to dict."""
         return {
@@ -273,13 +273,13 @@ class EscalationEngine:
             "timebox_deadline": record.timebox_deadline,
             "next_action_required_by": record.next_action_required_by
         }
-    
+
     def _generate_escalation_id(self) -> str:
         """Generate unique escalation ID."""
         timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
         count = len(self.escalations) + 1
         return f"ESC-{timestamp}-{count:04d}"
-    
+
     def _calculate_timebox(self, state: EscalationState) -> str:
         """Calculate timebox deadline for a state."""
         transition = STATE_TRANSITIONS.get(state)
@@ -288,7 +288,7 @@ class EscalationEngine:
         hours = transition["timebox_hours"]
         deadline = datetime.utcnow() + timedelta(hours=hours)
         return deadline.isoformat() + "Z"
-    
+
     def _get_next_action_authority(self, state: EscalationState) -> str:
         """Determine who must act next for a given state."""
         mapping = {
@@ -301,11 +301,11 @@ class EscalationEngine:
             EscalationState.REJECTED: "Affected Agent"
         }
         return mapping.get(state)
-    
+
     # ========================================================================
     # PUBLIC API
     # ========================================================================
-    
+
     def detect_failure(
         self,
         failure_type: GovernanceFailureType,
@@ -315,12 +315,12 @@ class EscalationEngine:
     ) -> EscalationRecord:
         """
         Detect a governance failure and create escalation record.
-        
+
         This is the entry point for all governance failures.
         """
         escalation_id = self._generate_escalation_id()
         now = datetime.utcnow().isoformat() + "Z"
-        
+
         record = EscalationRecord(
             escalation_id=escalation_id,
             failure_type=failure_type,
@@ -337,12 +337,12 @@ class EscalationEngine:
             timebox_deadline=self._calculate_timebox(EscalationState.DETECTED),
             next_action_required_by=self._get_next_action_authority(EscalationState.DETECTED)
         )
-        
+
         self.escalations[escalation_id] = record
         self._save_state()
-        
+
         return record
-    
+
     def transition_to_blocked(
         self,
         escalation_id: str,
@@ -352,12 +352,12 @@ class EscalationEngine:
         record = self.escalations.get(escalation_id)
         if not record:
             raise ValueError(f"Escalation {escalation_id} not found")
-        
+
         if record.current_state != EscalationState.DETECTED:
             raise ValueError(
                 f"Cannot transition to BLOCKED from {record.current_state.value}"
             )
-        
+
         now = datetime.utcnow().isoformat() + "Z"
         record.state_history.append({
             "state": EscalationState.BLOCKED.value,
@@ -367,10 +367,10 @@ class EscalationEngine:
         record.current_state = EscalationState.BLOCKED
         record.timebox_deadline = self._calculate_timebox(EscalationState.BLOCKED)
         record.next_action_required_by = self._get_next_action_authority(EscalationState.BLOCKED)
-        
+
         self._save_state()
         return record
-    
+
     def require_correction(
         self,
         escalation_id: str,
@@ -379,19 +379,19 @@ class EscalationEngine:
     ) -> EscalationRecord:
         """
         Transition to CORRECTION_REQUIRED.
-        
+
         This explicitly requires the affected agent to submit a correction.
         """
         record = self.escalations.get(escalation_id)
         if not record:
             raise ValueError(f"Escalation {escalation_id} not found")
-        
+
         valid_from = [EscalationState.DETECTED, EscalationState.BLOCKED, EscalationState.REJECTED]
         if record.current_state not in valid_from:
             raise ValueError(
                 f"Cannot transition to CORRECTION_REQUIRED from {record.current_state.value}"
             )
-        
+
         now = datetime.utcnow().isoformat() + "Z"
         record.state_history.append({
             "state": EscalationState.CORRECTION_REQUIRED.value,
@@ -403,10 +403,10 @@ class EscalationEngine:
         record.deficiencies = deficiency_details
         record.timebox_deadline = self._calculate_timebox(EscalationState.CORRECTION_REQUIRED)
         record.next_action_required_by = record.affected_agent_gid or "Affected Agent"
-        
+
         self._save_state()
         return record
-    
+
     def submit_correction(
         self,
         escalation_id: str,
@@ -414,7 +414,7 @@ class EscalationEngine:
     ) -> EscalationRecord:
         """
         Submit a correction for review.
-        
+
         Payload must include:
         - deficiency_list (addressed deficiencies)
         - corrected_artifact_path
@@ -424,18 +424,18 @@ class EscalationEngine:
         record = self.escalations.get(escalation_id)
         if not record:
             raise ValueError(f"Escalation {escalation_id} not found")
-        
+
         if record.current_state != EscalationState.CORRECTION_REQUIRED:
             raise ValueError(
                 f"Cannot submit correction from {record.current_state.value}"
             )
-        
+
         # Validate payload
         required_fields = ["corrected_artifact_path", "acknowledgment", "correction_author_gid"]
         for field in required_fields:
             if field not in correction_payload:
                 raise ValueError(f"Correction payload missing required field: {field}")
-        
+
         now = datetime.utcnow().isoformat() + "Z"
         record.state_history.append({
             "state": EscalationState.RESUBMITTED.value,
@@ -447,10 +447,10 @@ class EscalationEngine:
         record.correction_payload = correction_payload
         record.timebox_deadline = self._calculate_timebox(EscalationState.RESUBMITTED)
         record.next_action_required_by = "BENSON (GID-00)"
-        
+
         self._save_state()
         return record
-    
+
     def ratify(
         self,
         escalation_id: str,
@@ -459,21 +459,21 @@ class EscalationEngine:
     ) -> EscalationRecord:
         """
         Ratify a correction and close the escalation.
-        
+
         Only BENSON (GID-00) or ALEX (GID-08) may ratify.
         """
         record = self.escalations.get(escalation_id)
         if not record:
             raise ValueError(f"Escalation {escalation_id} not found")
-        
+
         if record.current_state != EscalationState.RESUBMITTED:
             raise ValueError(
                 f"Cannot ratify from {record.current_state.value}"
             )
-        
+
         if authority not in [Authority.BENSON, Authority.ALEX, Authority.HUMAN_CEO]:
             raise ValueError(f"Authority {authority.value} cannot ratify")
-        
+
         now = datetime.utcnow().isoformat() + "Z"
         record.state_history.append({
             "state": EscalationState.RATIFIED.value,
@@ -487,10 +487,10 @@ class EscalationEngine:
         record.resolution_notes = notes
         record.timebox_deadline = self._calculate_timebox(EscalationState.RATIFIED)
         record.next_action_required_by = "BENSON (GID-00)"
-        
+
         self._save_state()
         return record
-    
+
     def reject(
         self,
         escalation_id: str,
@@ -500,18 +500,18 @@ class EscalationEngine:
     ) -> EscalationRecord:
         """
         Reject a correction and require re-correction.
-        
+
         The escalation loops back to CORRECTION_REQUIRED.
         """
         record = self.escalations.get(escalation_id)
         if not record:
             raise ValueError(f"Escalation {escalation_id} not found")
-        
+
         if record.current_state != EscalationState.RESUBMITTED:
             raise ValueError(
                 f"Cannot reject from {record.current_state.value}"
             )
-        
+
         now = datetime.utcnow().isoformat() + "Z"
         record.state_history.append({
             "state": EscalationState.REJECTED.value,
@@ -521,16 +521,16 @@ class EscalationEngine:
             "additional_deficiencies": additional_deficiencies
         })
         record.current_state = EscalationState.REJECTED
-        
+
         if additional_deficiencies:
             record.deficiencies.extend(additional_deficiencies)
-        
+
         record.timebox_deadline = self._calculate_timebox(EscalationState.REJECTED)
         record.next_action_required_by = record.affected_agent_gid or "Affected Agent"
-        
+
         self._save_state()
         return record
-    
+
     def unblock(
         self,
         escalation_id: str,
@@ -538,18 +538,18 @@ class EscalationEngine:
     ) -> EscalationRecord:
         """
         Unblock after ratification and close the escalation.
-        
+
         This is the terminal successful state.
         """
         record = self.escalations.get(escalation_id)
         if not record:
             raise ValueError(f"Escalation {escalation_id} not found")
-        
+
         if record.current_state != EscalationState.RATIFIED:
             raise ValueError(
                 f"Cannot unblock from {record.current_state.value}"
             )
-        
+
         now = datetime.utcnow().isoformat() + "Z"
         record.state_history.append({
             "state": EscalationState.UNBLOCKED.value,
@@ -559,14 +559,14 @@ class EscalationEngine:
         record.current_state = EscalationState.UNBLOCKED
         record.timebox_deadline = None
         record.next_action_required_by = None
-        
+
         self._save_state()
         return record
-    
+
     # ========================================================================
     # QUERIES
     # ========================================================================
-    
+
     def get_pending_escalations(self) -> list[EscalationRecord]:
         """Get all escalations not in terminal state."""
         terminal = {EscalationState.UNBLOCKED}
@@ -574,7 +574,7 @@ class EscalationEngine:
             r for r in self.escalations.values()
             if r.current_state not in terminal
         ]
-    
+
     def get_overdue_escalations(self) -> list[EscalationRecord]:
         """Get escalations past their timebox deadline."""
         now = datetime.utcnow()
@@ -585,7 +585,7 @@ class EscalationEngine:
                 if now > deadline and record.current_state != EscalationState.UNBLOCKED:
                     overdue.append(record)
         return overdue
-    
+
     def get_next_action_queue(self) -> dict[str, list[EscalationRecord]]:
         """Get escalations grouped by who must act next."""
         queue = {}
@@ -595,15 +595,15 @@ class EscalationEngine:
                 queue[actor] = []
             queue[actor].append(record)
         return queue
-    
+
     def validate_no_deadlocks(self) -> dict:
         """
         Validate that no deadlock paths exist.
-        
+
         Returns validation result with any issues found.
         """
         issues = []
-        
+
         # Check 1: All pending escalations have a next_action_required_by
         for record in self.get_pending_escalations():
             if not record.next_action_required_by:
@@ -613,7 +613,7 @@ class EscalationEngine:
                     "state": record.current_state.value,
                     "message": "No next action authority assigned"
                 })
-        
+
         # Check 2: All states have valid transitions
         for state, config in STATE_TRANSITIONS.items():
             if state == EscalationState.UNBLOCKED:
@@ -624,7 +624,7 @@ class EscalationEngine:
                     "state": state.value,
                     "message": "State has no exit transitions"
                 })
-        
+
         # Check 3: No indefinite timeboxes (except terminal)
         for state, config in STATE_TRANSITIONS.items():
             if state == EscalationState.UNBLOCKED:
@@ -635,7 +635,7 @@ class EscalationEngine:
                     "state": state.value,
                     "message": "State has no timebox and no auto-transition"
                 })
-        
+
         return {
             "valid": len(issues) == 0,
             "deadlock_possible": len(issues) > 0,
@@ -650,20 +650,20 @@ class EscalationEngine:
 def main():
     """CLI for escalation engine."""
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="Governance Escalation Engine")
     parser.add_argument("--mode", choices=["validate", "status", "queue"], required=True)
     parser.add_argument("--state-file", type=Path, default=Path("escalation_state.json"))
-    
+
     args = parser.parse_args()
-    
+
     engine = EscalationEngine(args.state_file)
-    
+
     if args.mode == "validate":
         result = engine.validate_no_deadlocks()
         print(json.dumps(result, indent=2))
         sys.exit(0 if result["valid"] else 1)
-    
+
     elif args.mode == "status":
         pending = engine.get_pending_escalations()
         overdue = engine.get_overdue_escalations()
@@ -671,7 +671,7 @@ def main():
         print(f"Overdue escalations: {len(overdue)}")
         for record in pending:
             print(f"  - {record.escalation_id}: {record.current_state.value} (next: {record.next_action_required_by})")
-    
+
     elif args.mode == "queue":
         queue = engine.get_next_action_queue()
         print("=== NEXT ACTION QUEUE ===")

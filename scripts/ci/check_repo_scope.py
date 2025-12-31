@@ -13,7 +13,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 # ============================================================================
 # SCOPE CONFIGURATION (Source of Truth: scripts/ci/governance_scope.json)
@@ -123,13 +123,13 @@ FORBIDDEN_PATTERNS = [
 class RepoScopeValidator:
     """Validates repository scope against allowed/forbidden definitions."""
 
-    def __init__(self, repo_root: Path, config_path: Path | None = None):
+    def __init__(self, repo_root: Path, config_path: Optional[Path] = None):
         self.repo_root = repo_root
         self.config = self._load_config(config_path)
-        self.violations: list[dict[str, Any]] = []
-        self.warnings: list[dict[str, Any]] = []
+        self.violations: List[Dict[str, Any]] = []
+        self.warnings: List[Dict[str, Any]] = []
 
-    def _load_config(self, config_path: Path | None) -> dict[str, Any]:
+    def _load_config(self, config_path: Optional[Path]) -> Dict[str, Any]:
         """Load scope configuration from JSON file or use defaults."""
         if config_path and config_path.exists():
             with open(config_path) as f:
@@ -207,7 +207,7 @@ class RepoScopeValidator:
 
         return False
 
-    def check_path(self, path: str) -> dict[str, Any] | None:
+    def check_path(self, path: str) -> Optional[Dict[str, Any]]:
         """
         Check a single path for scope violations.
         Returns violation dict if found, None otherwise.
@@ -241,13 +241,13 @@ class RepoScopeValidator:
 
         return None
 
-    def scan_repository(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    def scan_repository(self) -> tuple:
         """
         Scan entire repository for scope violations.
         Returns (errors, warnings).
         """
-        errors: list[dict[str, Any]] = []
-        warnings: list[dict[str, Any]] = []
+        errors: List[Dict[str, Any]] = []
+        warnings: List[Dict[str, Any]] = []
 
         # Walk the repository
         for root, dirs, files in os.walk(self.repo_root):
@@ -299,13 +299,13 @@ class RepoScopeValidator:
 
         return errors, warnings
 
-    def check_staged_files(self, staged_files: list[str]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    def check_staged_files(self, staged_files: List[str]) -> tuple:
         """
         Check only staged files (for pre-commit/PR checks).
         Returns (errors, warnings).
         """
-        errors: list[dict[str, Any]] = []
-        warnings: list[dict[str, Any]] = []
+        errors: List[Dict[str, Any]] = []
+        warnings: List[Dict[str, Any]] = []
 
         for path in staged_files:
             violation = self.check_path(path)

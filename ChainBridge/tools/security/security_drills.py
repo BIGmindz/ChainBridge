@@ -61,7 +61,7 @@ logger = logging.getLogger(__name__)
 
 class DrillOutcome(str, Enum):
     """Expected and actual drill outcomes."""
-    
+
     BLOCKED = "BLOCKED"  # Drill was blocked (EXPECTED for security drills)
     PASSED = "PASSED"    # Drill passed through (FAILURE for security drills)
     ERROR = "ERROR"      # Drill encountered unexpected error
@@ -70,7 +70,7 @@ class DrillOutcome(str, Enum):
 @dataclass(frozen=True)
 class SecurityDrillResult:
     """Result of a security drill execution."""
-    
+
     drill_id: str
     invariant_id: SecurityInvariantID
     drill_name: str
@@ -81,12 +81,12 @@ class SecurityDrillResult:
     error_message: Optional[str] = None
     evidence: dict = field(default_factory=dict)
     timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    
+
     @property
     def success(self) -> bool:
         """A security drill succeeds when malicious action is BLOCKED."""
         return self.expected_outcome == self.actual_outcome and self.blocked
-    
+
     def to_audit_log(self) -> dict:
         """Convert to audit log format."""
         return {
@@ -108,19 +108,19 @@ class SecurityDrillResult:
 @dataclass
 class SecurityDrillSuiteResult:
     """Result of running all security drills."""
-    
+
     total_drills: int = 0
     blocked_drills: int = 0
     passed_drills: int = 0  # BAD - means security violation
     error_drills: int = 0
     results: List[SecurityDrillResult] = field(default_factory=list)
     timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    
+
     @property
     def all_blocked(self) -> bool:
         """All drills must be blocked for security."""
         return self.blocked_drills == self.total_drills and self.passed_drills == 0
-    
+
     @property
     def verdict(self) -> str:
         """Security verdict."""
@@ -130,7 +130,7 @@ class SecurityDrillSuiteResult:
             return "VULNERABLE"
         else:
             return "ERROR"
-    
+
     def to_audit_log(self) -> dict:
         """Convert to audit log format."""
         return {
@@ -153,27 +153,27 @@ class SecurityDrillSuiteResult:
 
 class SecurityInvariantDrills:
     """Adversarial drills that test security invariants.
-    
+
     DOCTRINE:
     - All drills attempt malicious actions
     - All drills MUST be blocked
     - Success = malicious action blocked
     - Failure = malicious action succeeded
     """
-    
+
     def __init__(self):
         """Initialize drill runner."""
         self.validator = SecurityInvariantValidator()
         self._results: List[SecurityDrillResult] = []
-    
+
     # -------------------------------------------------------------------------
     # SI-01: Unauthorized State Mutation Drills
     # -------------------------------------------------------------------------
-    
+
     def drill_si01_unregistered_actor(self) -> SecurityDrillResult:
         """Attempt state mutation by unregistered actor."""
         drill_id = "SI-01-DRILL-01"
-        
+
         try:
             self.validator.check_state_mutation_authority(
                 actor="GID-99",  # Invalid GID
@@ -202,11 +202,11 @@ class SecurityInvariantDrills:
                 error_message=str(e),
                 evidence=e.evidence,
             )
-    
+
     def drill_si01_wrong_authority(self) -> SecurityDrillResult:
         """Attempt state mutation with wrong authority."""
         drill_id = "SI-01-DRILL-02"
-        
+
         try:
             self.validator.check_state_mutation_authority(
                 actor="GID-03",  # Ruby - UI authority
@@ -235,15 +235,15 @@ class SecurityInvariantDrills:
                 error_message=str(e),
                 evidence=e.evidence,
             )
-    
+
     # -------------------------------------------------------------------------
     # SI-02: Authority Spoofing Drills
     # -------------------------------------------------------------------------
-    
+
     def drill_si02_fake_gid(self) -> SecurityDrillResult:
         """Attempt to claim non-existent GID."""
         drill_id = "SI-02-DRILL-01"
-        
+
         try:
             self.validator.check_authority_verifiable(
                 claimed_gid="GID-100",  # Does not exist
@@ -271,11 +271,11 @@ class SecurityInvariantDrills:
                 error_message=str(e),
                 evidence=e.evidence,
             )
-    
+
     def drill_si02_name_mismatch(self) -> SecurityDrillResult:
         """Attempt to claim GID with wrong name."""
         drill_id = "SI-02-DRILL-02"
-        
+
         try:
             self.validator.check_authority_verifiable(
                 claimed_gid="GID-06",  # Sam's GID
@@ -303,15 +303,15 @@ class SecurityInvariantDrills:
                 error_message=str(e),
                 evidence=e.evidence,
             )
-    
+
     # -------------------------------------------------------------------------
     # SI-03: Replay Attack Drills
     # -------------------------------------------------------------------------
-    
+
     def drill_si03_replay_nonce(self) -> SecurityDrillResult:
         """Attempt to replay a nonce."""
         drill_id = "SI-03-DRILL-01"
-        
+
         try:
             # First submission - should pass
             self.validator.check_replay_protection(
@@ -319,14 +319,14 @@ class SecurityInvariantDrills:
                 nonce="unique-nonce-12345",
                 timestamp="2024-01-01T00:00:00Z",
             )
-            
+
             # Replay attempt - should be blocked
             self.validator.check_replay_protection(
                 artifact_id="PAC-001",
                 nonce="unique-nonce-12345",  # Same nonce
                 timestamp="2024-01-01T00:00:01Z",
             )
-            
+
             return SecurityDrillResult(
                 drill_id=drill_id,
                 invariant_id=SecurityInvariantID.SI_03,
@@ -349,15 +349,15 @@ class SecurityInvariantDrills:
                 error_message=str(e),
                 evidence=e.evidence,
             )
-    
+
     # -------------------------------------------------------------------------
     # SI-04: Governance Downgrade Drills
     # -------------------------------------------------------------------------
-    
+
     def drill_si04_downgrade_locked(self) -> SecurityDrillResult:
         """Attempt to downgrade from LOCKED to SOFT_GATED."""
         drill_id = "SI-04-DRILL-01"
-        
+
         try:
             self.validator.check_governance_level(
                 current_level="LOCKED",
@@ -385,11 +385,11 @@ class SecurityInvariantDrills:
                 error_message=str(e),
                 evidence=e.evidence,
             )
-    
+
     def drill_si04_invalid_level(self) -> SecurityDrillResult:
         """Attempt to set invalid governance level."""
         drill_id = "SI-04-DRILL-02"
-        
+
         try:
             self.validator.check_governance_level(
                 current_level="HARD_GATED",
@@ -417,15 +417,15 @@ class SecurityInvariantDrills:
                 error_message=str(e),
                 evidence=e.evidence,
             )
-    
+
     # -------------------------------------------------------------------------
     # SI-05: Unsigned Correction Drills
     # -------------------------------------------------------------------------
-    
+
     def drill_si05_no_signature(self) -> SecurityDrillResult:
         """Attempt correction closure without signature."""
         drill_id = "SI-05-DRILL-01"
-        
+
         try:
             self.validator.check_correction_signature(
                 correction_id="CORR-001",
@@ -454,11 +454,11 @@ class SecurityInvariantDrills:
                 error_message=str(e),
                 evidence=e.evidence,
             )
-    
+
     def drill_si05_unregistered_signer(self) -> SecurityDrillResult:
         """Attempt correction closure with unregistered signer."""
         drill_id = "SI-05-DRILL-02"
-        
+
         try:
             self.validator.check_correction_signature(
                 correction_id="CORR-002",
@@ -487,15 +487,15 @@ class SecurityInvariantDrills:
                 error_message=str(e),
                 evidence=e.evidence,
             )
-    
+
     # -------------------------------------------------------------------------
     # SI-06: Registry Mismatch Drills
     # -------------------------------------------------------------------------
-    
+
     def drill_si06_unregistered_executor(self) -> SecurityDrillResult:
         """Attempt PAC execution by unregistered agent."""
         drill_id = "SI-06-DRILL-01"
-        
+
         try:
             self.validator.check_pac_registry_match(
                 pac_id="PAC-TEST-001",
@@ -524,11 +524,11 @@ class SecurityInvariantDrills:
                 error_message=str(e),
                 evidence=e.evidence,
             )
-    
+
     def drill_si06_gid_mismatch(self) -> SecurityDrillResult:
         """Attempt PAC execution with GID mismatch."""
         drill_id = "SI-06-DRILL-02"
-        
+
         try:
             self.validator.check_pac_registry_match(
                 pac_id="PAC-TEST-002",
@@ -557,15 +557,15 @@ class SecurityInvariantDrills:
                 error_message=str(e),
                 evidence=e.evidence,
             )
-    
+
     # -------------------------------------------------------------------------
     # SI-07: Hard Gate Bypass Drills
     # -------------------------------------------------------------------------
-    
+
     def drill_si07_bypass_attempt(self) -> SecurityDrillResult:
         """Attempt to bypass hard gate."""
         drill_id = "SI-07-DRILL-01"
-        
+
         try:
             self.validator.check_hard_gate_enforcement(
                 gate_id="GATE-SECURITY-001",
@@ -594,11 +594,11 @@ class SecurityInvariantDrills:
                 error_message=str(e),
                 evidence=e.evidence,
             )
-    
+
     def drill_si07_invalid_result(self) -> SecurityDrillResult:
         """Attempt to accept invalid gate result."""
         drill_id = "SI-07-DRILL-02"
-        
+
         try:
             self.validator.check_hard_gate_enforcement(
                 gate_id="GATE-SECURITY-002",
@@ -627,15 +627,15 @@ class SecurityInvariantDrills:
                 error_message=str(e),
                 evidence=e.evidence,
             )
-    
+
     # -------------------------------------------------------------------------
     # SI-08: Mixed Authority Drills
     # -------------------------------------------------------------------------
-    
+
     def drill_si08_mixed_authority(self) -> SecurityDrillResult:
         """Attempt execution with mixed authorities."""
         drill_id = "SI-08-DRILL-01"
-        
+
         try:
             self.validator.check_single_authority({
                 "executing_gid": "GID-06",  # SECURITY authority
@@ -664,19 +664,19 @@ class SecurityInvariantDrills:
                 error_message=str(e),
                 evidence=e.evidence,
             )
-    
+
     # -------------------------------------------------------------------------
     # Run All Drills
     # -------------------------------------------------------------------------
-    
+
     def run_all_drills(self) -> SecurityDrillSuiteResult:
         """Run all security invariant drills.
-        
+
         Returns:
             SecurityDrillSuiteResult with all outcomes
         """
         suite_result = SecurityDrillSuiteResult()
-        
+
         # Get all drill methods
         drill_methods = [
             # SI-01 drills
@@ -702,22 +702,22 @@ class SecurityInvariantDrills:
             # SI-08 drills
             self.drill_si08_mixed_authority,
         ]
-        
+
         for drill_method in drill_methods:
             # Reset validator state between drills
             self.validator.clear_registries()
-            
+
             try:
                 result = drill_method()
                 suite_result.results.append(result)
                 suite_result.total_drills += 1
-                
+
                 if result.blocked:
                     suite_result.blocked_drills += 1
                 else:
                     suite_result.passed_drills += 1
                     logger.error(f"SECURITY FAILURE: {result.drill_id} - {result.drill_name}")
-                    
+
             except Exception as e:
                 error_result = SecurityDrillResult(
                     drill_id=drill_method.__name__,
@@ -733,13 +733,13 @@ class SecurityInvariantDrills:
                 suite_result.total_drills += 1
                 suite_result.error_drills += 1
                 logger.error(f"DRILL ERROR: {drill_method.__name__}: {e}")
-        
+
         logger.info(
             f"Security Drill Suite Complete: "
             f"{suite_result.blocked_drills}/{suite_result.total_drills} blocked, "
             f"Verdict: {suite_result.verdict}"
         )
-        
+
         return suite_result
 
 
@@ -750,7 +750,7 @@ class SecurityInvariantDrills:
 
 def run_security_invariant_drills() -> SecurityDrillSuiteResult:
     """Run all security invariant drills.
-    
+
     Returns:
         SecurityDrillSuiteResult
     """
@@ -760,7 +760,7 @@ def run_security_invariant_drills() -> SecurityDrillSuiteResult:
 
 def verify_security_invariants() -> bool:
     """Verify all security invariants are enforced.
-    
+
     Returns:
         True if all drills blocked, False otherwise
     """
@@ -775,34 +775,34 @@ def verify_security_invariants() -> bool:
 
 if __name__ == "__main__":
     import json
-    
+
     logging.basicConfig(level=logging.INFO)
-    
+
     print("=" * 70)
     print("SECURITY INVARIANT DRILLS")
     print("=" * 70)
-    
+
     result = run_security_invariant_drills()
-    
+
     print(f"\nTotal Drills: {result.total_drills}")
     print(f"Blocked: {result.blocked_drills}")
     print(f"Passed (VULNERABLE): {result.passed_drills}")
     print(f"Errors: {result.error_drills}")
     print(f"\nVERDICT: {result.verdict}")
-    
+
     print("\n" + "=" * 70)
     print("DRILL DETAILS")
     print("=" * 70)
-    
+
     for drill_result in result.results:
         status = "✓ BLOCKED" if drill_result.blocked else "✗ VULNERABLE"
         print(f"\n[{drill_result.drill_id}] {drill_result.drill_name}")
         print(f"  Invariant: {drill_result.invariant_id.value}")
         print(f"  Scenario: {drill_result.scenario}")
         print(f"  Status: {status}")
-    
+
     print("\n" + "=" * 70)
-    
+
     # Exit with appropriate code
     exit(0 if result.all_blocked else 1)
 

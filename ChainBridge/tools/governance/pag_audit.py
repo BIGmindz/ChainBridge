@@ -98,11 +98,11 @@ class PAG01RepoAuditResult:
     violations: list = field(default_factory=list)
     results: list = field(default_factory=list)
     timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    
+
     @property
     def all_compliant(self) -> bool:
         return self.non_compliant_files == 0
-    
+
     def to_json(self) -> str:
         """Export as JSON for CI integration."""
         return json.dumps({
@@ -150,19 +150,19 @@ def extract_yaml_block(content: str, block_name: str) -> Optional[dict]:
     match1 = re.search(pattern1, content, re.IGNORECASE)
     if match1:
         return parse_yaml_fields(match1.group(1))
-    
+
     # Pattern 2: Inline YAML
     pattern2 = rf'{block_name}:\s*\n((?:[ \t]+\w+:.*\n?)+)'
     match2 = re.search(pattern2, content, re.IGNORECASE)
     if match2:
         return parse_yaml_fields(match2.group(1))
-    
+
     # Pattern 3: Code block with name inside
     pattern3 = rf'```yaml\n{block_name}:\s*\n([\s\S]*?)```'
     match3 = re.search(pattern3, content, re.IGNORECASE)
     if match3:
         return parse_yaml_fields(match3.group(1))
-    
+
     return None
 
 
@@ -187,12 +187,12 @@ def find_block_position(content: str, block_name: str) -> int:
         rf'{block_name}:',
         rf'```yaml\n{block_name}:',
     ]
-    
+
     for pattern in patterns:
         match = re.search(pattern, content, re.IGNORECASE)
         if match:
             return match.start()
-    
+
     return -1
 
 
@@ -212,7 +212,7 @@ def audit_pag01_single_file(file_path: Path, registry: dict) -> PAG01AuditResult
     """Audit a single file for PAG-01 compliance."""
     violations = []
     agent_info = None
-    
+
     try:
         content = file_path.read_text()
     except Exception as e:
@@ -225,7 +225,7 @@ def audit_pag01_single_file(file_path: Path, registry: dict) -> PAG01AuditResult
                 file_path=str(file_path)
             )]
         )
-    
+
     # Skip non-governance artifacts
     if not is_governance_artifact(content):
         return PAG01AuditResult(
@@ -233,7 +233,7 @@ def audit_pag01_single_file(file_path: Path, registry: dict) -> PAG01AuditResult
             compliant=True,
             violations=[]
         )
-    
+
     # Check 1: AGENT_ACTIVATION_ACK presence
     agent_block = extract_yaml_block(content, "AGENT_ACTIVATION_ACK")
     if not agent_block:
@@ -244,7 +244,7 @@ def audit_pag01_single_file(file_path: Path, registry: dict) -> PAG01AuditResult
         ))
     else:
         agent_info = agent_block
-        
+
         # Check required fields
         required_fields = ['agent_name', 'gid', 'color', 'role', 'execution_lane']
         missing = [f for f in required_fields if f not in agent_block]
@@ -256,12 +256,12 @@ def audit_pag01_single_file(file_path: Path, registry: dict) -> PAG01AuditResult
                 agent=agent_block.get('agent_name'),
                 details={"missing_fields": missing}
             ))
-        
+
         # Check 3: Registry binding
         agent_name = agent_block.get('agent_name', '').upper()
         if agent_name and agent_name in registry.get('agents', {}):
             reg_agent = registry['agents'][agent_name]
-            
+
             # GID check
             declared_gid = agent_block.get('gid', '').upper()
             expected_gid = reg_agent.get('gid', '').upper()
@@ -273,7 +273,7 @@ def audit_pag01_single_file(file_path: Path, registry: dict) -> PAG01AuditResult
                     agent=agent_name,
                     details={"declared": declared_gid, "expected": expected_gid}
                 ))
-            
+
             # Color check
             declared_color = agent_block.get('color', '').upper()
             expected_color = reg_agent.get('color', '').upper()
@@ -285,7 +285,7 @@ def audit_pag01_single_file(file_path: Path, registry: dict) -> PAG01AuditResult
                     agent=agent_name,
                     details={"declared": declared_color, "expected": expected_color}
                 ))
-            
+
             # Execution lane check
             declared_lane = agent_block.get('execution_lane', '').upper()
             expected_lane = reg_agent.get('execution_lane', '').upper()
@@ -304,7 +304,7 @@ def audit_pag01_single_file(file_path: Path, registry: dict) -> PAG01AuditResult
                 file_path=str(file_path),
                 agent=agent_name
             ))
-    
+
     # Check 2: RUNTIME_ACTIVATION_ACK presence
     runtime_block = extract_yaml_block(content, "RUNTIME_ACTIVATION_ACK")
     if not runtime_block:
@@ -314,11 +314,11 @@ def audit_pag01_single_file(file_path: Path, registry: dict) -> PAG01AuditResult
             file_path=str(file_path),
             agent=agent_info.get('agent_name') if agent_info else None
         ))
-    
+
     # Check 5: Block ordering (runtime before agent)
     runtime_pos = find_block_position(content, "RUNTIME_ACTIVATION_ACK")
     agent_pos = find_block_position(content, "AGENT_ACTIVATION_ACK")
-    
+
     if runtime_pos >= 0 and agent_pos >= 0 and runtime_pos > agent_pos:
         violations.append(PAG01Violation(
             code=PAG01ViolationCode.PAG_005_ORDERING_VIOLATION,
@@ -327,7 +327,7 @@ def audit_pag01_single_file(file_path: Path, registry: dict) -> PAG01AuditResult
             agent=agent_info.get('agent_name') if agent_info else None,
             details={"runtime_position": runtime_pos, "agent_position": agent_pos}
         ))
-    
+
     return PAG01AuditResult(
         file_path=str(file_path),
         compliant=len(violations) == 0,
@@ -339,7 +339,7 @@ def audit_pag01_single_file(file_path: Path, registry: dict) -> PAG01AuditResult
 def audit_pag01_repository(paths: list = None) -> PAG01RepoAuditResult:
     """Audit entire repository for PAG-01 compliance."""
     registry = load_registry()
-    
+
     # Find all governance artifacts
     if paths:
         files = [Path(p) for p in paths if Path(p).exists()]
@@ -351,22 +351,22 @@ def audit_pag01_repository(paths: list = None) -> PAG01RepoAuditResult:
             files.extend(pacs_dir.rglob("*.md"))
         # Deduplicate
         files = list(set(files))
-    
+
     results = []
     all_violations = []
     compliant_count = 0
     non_compliant_count = 0
-    
+
     for file_path in sorted(files):
         result = audit_pag01_single_file(file_path, registry)
         results.append(result)
-        
+
         if result.compliant:
             compliant_count += 1
         else:
             non_compliant_count += 1
             all_violations.extend(result.violations)
-    
+
     return PAG01RepoAuditResult(
         total_files=len(files),
         compliant_files=compliant_count,
@@ -386,20 +386,20 @@ def print_audit_report(result: PAG01RepoAuditResult, verbose: bool = False):
     print(f"Compliant: {result.compliant_files}")
     print(f"Non-compliant: {result.non_compliant_files}")
     print()
-    
+
     if result.all_compliant:
         print("✓ ALL FILES PAG-01 COMPLIANT")
     else:
         print("✗ PAG-01 VIOLATIONS DETECTED")
         print()
-        
+
         # Group violations by file
         by_file = {}
         for v in result.violations:
             if v.file_path not in by_file:
                 by_file[v.file_path] = []
             by_file[v.file_path].append(v)
-        
+
         for file_path, violations in sorted(by_file.items()):
             print(f"\n{file_path}:")
             for v in violations:
@@ -407,7 +407,7 @@ def print_audit_report(result: PAG01RepoAuditResult, verbose: bool = False):
                 if verbose and v.details:
                     for k, val in v.details.items():
                         print(f"    {k}: {val}")
-    
+
     print()
     print("=" * 70)
     if result.all_compliant:
@@ -425,12 +425,12 @@ def run_audit(
 ) -> int:
     """Run PAG-01 audit. Returns exit code."""
     result = audit_pag01_repository(paths)
-    
+
     if output_json:
         print(result.to_json())
     else:
         print_audit_report(result, verbose=verbose)
-    
+
     if fail_on_violation and not result.all_compliant:
         return 1
     return 0
@@ -439,7 +439,7 @@ def run_audit(
 def main():
     """CLI entry point."""
     import argparse
-    
+
     parser = argparse.ArgumentParser(
         description="PAG-01 Compliance Audit — Persona Activation Governance"
     )
@@ -463,9 +463,9 @@ def main():
         action="store_true",
         help="Don't return non-zero exit code on violations"
     )
-    
+
     args = parser.parse_args()
-    
+
     sys.exit(run_audit(
         paths=args.paths if args.paths else None,
         output_json=args.json,

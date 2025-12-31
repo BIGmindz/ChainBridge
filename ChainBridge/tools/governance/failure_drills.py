@@ -60,7 +60,7 @@ def run_gate_validation(content: str) -> tuple:
     with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
         f.write(content)
         temp_path = f.name
-    
+
     try:
         result = subprocess.run(
             [sys.executable, str(GATE_ENGINE), "--file", temp_path],
@@ -80,7 +80,7 @@ def run_gate_validation(content: str) -> tuple:
 def drill_1_invalid_pac_structure() -> list:
     """Test various invalid PAC structures."""
     drills = []
-    
+
     # 1.1: Missing RUNTIME_ACTIVATION_ACK entirely
     content_no_runtime = """
 # PAC-TEST-DRILL-1-1
@@ -102,11 +102,11 @@ AGENT_ACTIVATION_ACK:
 ## Context
 Test PAC missing RUNTIME_ACTIVATION_ACK block.
 """
-    
+
     start = time.time()
     exit_code, output = run_gate_validation(content_no_runtime)
     elapsed = (time.time() - start) * 1000
-    
+
     drills.append(DrillResult(
         drill_name="1.1: Missing RUNTIME_ACTIVATION_ACK",
         drill_type="Invalid PAC Structure",
@@ -116,7 +116,7 @@ Test PAC missing RUNTIME_ACTIVATION_ACK block.
         error_codes=["G0_001"] if "G0_001" in output else [],
         elapsed_ms=elapsed
     ))
-    
+
     # 1.2: Missing AGENT_ACTIVATION_ACK entirely
     content_no_agent = """
 # PAC-TEST-DRILL-1-2
@@ -138,11 +138,11 @@ RUNTIME_ACTIVATION_ACK:
 ## Context
 Test PAC missing AGENT_ACTIVATION_ACK block.
 """
-    
+
     start = time.time()
     exit_code, output = run_gate_validation(content_no_agent)
     elapsed = (time.time() - start) * 1000
-    
+
     drills.append(DrillResult(
         drill_name="1.2: Missing AGENT_ACTIVATION_ACK",
         drill_type="Invalid PAC Structure",
@@ -152,14 +152,14 @@ Test PAC missing AGENT_ACTIVATION_ACK block.
         error_codes=["G0_001"] if "G0_001" in output else [],
         elapsed_ms=elapsed
     ))
-    
+
     # 1.3: Empty PAC
     content_empty = "# PAC-TEST-DRILL-1-3\n\nThis PAC has no structure at all."
-    
+
     start = time.time()
     exit_code, output = run_gate_validation(content_empty)
     elapsed = (time.time() - start) * 1000
-    
+
     # Empty PAC should be skipped (valid=True) since it doesn't look like a PAC
     # But since it has "PAC-" in it, it should be validated
     drills.append(DrillResult(
@@ -170,7 +170,7 @@ Test PAC missing AGENT_ACTIVATION_ACK block.
         passed=exit_code != 0,
         elapsed_ms=elapsed
     ))
-    
+
     return drills
 
 
@@ -181,7 +181,7 @@ Test PAC missing AGENT_ACTIVATION_ACK block.
 def drill_2_wrong_gid_color() -> list:
     """Test GID and color mismatches."""
     drills = []
-    
+
     # 2.1: Wrong GID for agent
     content_wrong_gid = """
 # PAC-TEST-DRILL-2-1
@@ -210,11 +210,11 @@ AGENT_ACTIVATION_ACK:
   status: "ACTIVE"
 ```
 """
-    
+
     start = time.time()
     exit_code, output = run_gate_validation(content_wrong_gid)
     elapsed = (time.time() - start) * 1000
-    
+
     drills.append(DrillResult(
         drill_name="2.1: Wrong GID (GID-99 instead of GID-01)",
         drill_type="Wrong GID/Color",
@@ -224,7 +224,7 @@ AGENT_ACTIVATION_ACK:
         error_codes=["G0_004"] if "G0_004" in output else [],
         elapsed_ms=elapsed
     ))
-    
+
     # 2.2: Wrong color for agent
     content_wrong_color = """
 # PAC-TEST-DRILL-2-2
@@ -253,11 +253,11 @@ AGENT_ACTIVATION_ACK:
   status: "ACTIVE"
 ```
 """
-    
+
     start = time.time()
     exit_code, output = run_gate_validation(content_wrong_color)
     elapsed = (time.time() - start) * 1000
-    
+
     drills.append(DrillResult(
         drill_name="2.2: Wrong color (RED instead of BLUE)",
         drill_type="Wrong GID/Color",
@@ -267,7 +267,7 @@ AGENT_ACTIVATION_ACK:
         error_codes=["G0_004"] if "G0_004" in output else [],
         elapsed_ms=elapsed
     ))
-    
+
     # 2.3: Runtime has GID (forbidden)
     content_runtime_has_gid = """
 # PAC-TEST-DRILL-2-3
@@ -296,11 +296,11 @@ AGENT_ACTIVATION_ACK:
   status: "ACTIVE"
 ```
 """
-    
+
     start = time.time()
     exit_code, output = run_gate_validation(content_runtime_has_gid)
     elapsed = (time.time() - start) * 1000
-    
+
     drills.append(DrillResult(
         drill_name="2.3: Runtime has GID (forbidden)",
         drill_type="Wrong GID/Color",
@@ -310,7 +310,7 @@ AGENT_ACTIVATION_ACK:
         error_codes=["G0_007"] if "G0_007" in output else [],
         elapsed_ms=elapsed
     ))
-    
+
     return drills
 
 
@@ -321,7 +321,7 @@ AGENT_ACTIVATION_ACK:
 def drill_3_missing_wrap_sections() -> list:
     """Test WRAPs with missing mandatory sections."""
     drills = []
-    
+
     # 3.1: WRAP without TRAINING_SIGNAL
     content_no_training = """
 # WRAP-TEST-DRILL-3-1
@@ -353,11 +353,11 @@ AGENT_ACTIVATION_ACK:
 ## FINAL_STATE
 status: COMPLETED
 """
-    
+
     start = time.time()
     exit_code, output = run_gate_validation(content_no_training)
     elapsed = (time.time() - start) * 1000
-    
+
     # Currently TRAINING_SIGNAL is not strictly required, so this may pass
     # This tests the current enforcement level
     drills.append(DrillResult(
@@ -368,7 +368,7 @@ status: COMPLETED
         passed=exit_code != 0,  # Ideally should reject
         elapsed_ms=elapsed
     ))
-    
+
     return drills
 
 
@@ -379,7 +379,7 @@ status: COMPLETED
 def drill_4_block_order_violations() -> list:
     """Test PACs with incorrect block ordering."""
     drills = []
-    
+
     # 4.1: AGENT before RUNTIME
     content_wrong_order = """
 # PAC-TEST-DRILL-4-1
@@ -408,11 +408,11 @@ RUNTIME_ACTIVATION_ACK:
   status: "ACTIVE"
 ```
 """
-    
+
     start = time.time()
     exit_code, output = run_gate_validation(content_wrong_order)
     elapsed = (time.time() - start) * 1000
-    
+
     drills.append(DrillResult(
         drill_name="4.1: AGENT_ACTIVATION_ACK before RUNTIME_ACTIVATION_ACK",
         drill_type="Block Order Violation",
@@ -422,7 +422,7 @@ RUNTIME_ACTIVATION_ACK:
         error_codes=["G0_002"] if "G0_002" in output else [],
         elapsed_ms=elapsed
     ))
-    
+
     return drills
 
 
@@ -433,7 +433,7 @@ RUNTIME_ACTIVATION_ACK:
 def drill_5_forbidden_actions() -> list:
     """Test forbidden alias usage and other violations."""
     drills = []
-    
+
     # 5.1: Forbidden alias (DANA)
     content_forbidden_alias = """
 # PAC-TEST-DRILL-5-1
@@ -462,11 +462,11 @@ AGENT_ACTIVATION_ACK:
   status: "ACTIVE"
 ```
 """
-    
+
     start = time.time()
     exit_code, output = run_gate_validation(content_forbidden_alias)
     elapsed = (time.time() - start) * 1000
-    
+
     drills.append(DrillResult(
         drill_name="5.1: Forbidden alias (DANA instead of DAN)",
         drill_type="Forbidden Action",
@@ -476,7 +476,7 @@ AGENT_ACTIVATION_ACK:
         error_codes=["G0_003"] if "G0_003" in output else [],
         elapsed_ms=elapsed
     ))
-    
+
     return drills
 
 
@@ -487,7 +487,7 @@ AGENT_ACTIVATION_ACK:
 def drill_6_partial_corrections() -> list:
     """Test incomplete correction attempts."""
     drills = []
-    
+
     # 6.1: PAC with only some required fields in RUNTIME_ACTIVATION_ACK
     content_partial = """
 # PAC-TEST-DRILL-6-1
@@ -510,11 +510,11 @@ AGENT_ACTIVATION_ACK:
   status: "ACTIVE"
 ```
 """
-    
+
     start = time.time()
     exit_code, output = run_gate_validation(content_partial)
     elapsed = (time.time() - start) * 1000
-    
+
     drills.append(DrillResult(
         drill_name="6.1: Partial RUNTIME_ACTIVATION_ACK (missing required fields)",
         drill_type="Partial Correction",
@@ -524,7 +524,7 @@ AGENT_ACTIVATION_ACK:
         error_codes=["G0_006"] if "G0_006" in output else [],
         elapsed_ms=elapsed
     ))
-    
+
     return drills
 
 
@@ -535,17 +535,17 @@ AGENT_ACTIVATION_ACK:
 def run_all_drills() -> DrillSuiteResult:
     """Run all failure drills and collect results."""
     suite = DrillSuiteResult()
-    
+
     print("=" * 70)
     print("GOVERNANCE UNDER LOAD — FAILURE DRILL SUITE")
     print("Authority: PAC-BENSON-G1-PHASE-2-GOVERNANCE-UNDER-LOAD-01-R1")
     print("Mode: FAIL_CLOSED")
     print("=" * 70)
     print()
-    
+
     # Run all drills
     all_drills = []
-    
+
     print("DRILL 1: Invalid PAC Structure")
     print("-" * 40)
     drills_1 = drill_1_invalid_pac_structure()
@@ -554,7 +554,7 @@ def run_all_drills() -> DrillSuiteResult:
         status = "✓ PASS" if d.passed else "✗ FAIL"
         print(f"  {status} {d.drill_name}")
     print()
-    
+
     print("DRILL 2: Wrong GID / Color")
     print("-" * 40)
     drills_2 = drill_2_wrong_gid_color()
@@ -563,7 +563,7 @@ def run_all_drills() -> DrillSuiteResult:
         status = "✓ PASS" if d.passed else "✗ FAIL"
         print(f"  {status} {d.drill_name}")
     print()
-    
+
     print("DRILL 3: Missing WRAP Sections")
     print("-" * 40)
     drills_3 = drill_3_missing_wrap_sections()
@@ -572,7 +572,7 @@ def run_all_drills() -> DrillSuiteResult:
         status = "✓ PASS" if d.passed else "✗ FAIL"
         print(f"  {status} {d.drill_name}")
     print()
-    
+
     print("DRILL 4: Block Order Violations")
     print("-" * 40)
     drills_4 = drill_4_block_order_violations()
@@ -581,7 +581,7 @@ def run_all_drills() -> DrillSuiteResult:
         status = "✓ PASS" if d.passed else "✗ FAIL"
         print(f"  {status} {d.drill_name}")
     print()
-    
+
     print("DRILL 5: Forbidden Action Attempts")
     print("-" * 40)
     drills_5 = drill_5_forbidden_actions()
@@ -590,7 +590,7 @@ def run_all_drills() -> DrillSuiteResult:
         status = "✓ PASS" if d.passed else "✗ FAIL"
         print(f"  {status} {d.drill_name}")
     print()
-    
+
     print("DRILL 6: Partial Correction Submissions")
     print("-" * 40)
     drills_6 = drill_6_partial_corrections()
@@ -599,7 +599,7 @@ def run_all_drills() -> DrillSuiteResult:
         status = "✓ PASS" if d.passed else "✗ FAIL"
         print(f"  {status} {d.drill_name}")
     print()
-    
+
     # Calculate results
     suite.total_drills = len(all_drills)
     suite.passed_drills = sum(1 for d in all_drills if d.passed)
@@ -607,7 +607,7 @@ def run_all_drills() -> DrillSuiteResult:
     suite.invalid_pac_accepted = sum(1 for d in all_drills if not d.passed and d.expected_outcome == "REJECT")
     suite.bypass_paths_detected = suite.invalid_pac_accepted
     suite.results = all_drills
-    
+
     return suite
 
 
@@ -623,17 +623,17 @@ def print_summary(suite: DrillSuiteResult):
     print()
     print("SUCCESS METRICS VALIDATION:")
     print("-" * 40)
-    
+
     # Metric: invalid_pac_accepted: 0
     metric_1 = suite.invalid_pac_accepted == 0
     print(f"  invalid_pac_accepted:    {suite.invalid_pac_accepted} (target: 0) {'✓' if metric_1 else '✗'}")
-    
+
     # Metric: bypass_paths_detected: 0
     metric_2 = suite.bypass_paths_detected == 0
     print(f"  bypass_paths_detected:   {suite.bypass_paths_detected} (target: 0) {'✓' if metric_2 else '✗'}")
-    
+
     print()
-    
+
     all_passed = metric_1 and metric_2
     if all_passed:
         print("=" * 70)
@@ -643,7 +643,7 @@ def print_summary(suite: DrillSuiteResult):
         print("=" * 70)
         print("✗ SUCCESS METRICS NOT MET — GOVERNANCE GAPS DETECTED")
         print("=" * 70)
-    
+
     return all_passed
 
 
@@ -651,7 +651,7 @@ def main():
     """Main entry point."""
     suite = run_all_drills()
     success = print_summary(suite)
-    
+
     # Output JSON for machine processing
     output = {
         "pac_id": "PAC-BENSON-G1-PHASE-2-GOVERNANCE-UNDER-LOAD-01-R1",
@@ -673,14 +673,14 @@ def main():
             for d in suite.results
         ]
     }
-    
+
     # Write results to file
     results_path = REPO_ROOT / "docs" / "governance" / "drill_results.json"
     with open(results_path, "w") as f:
         json.dump(output, f, indent=2)
-    
+
     print(f"\nResults written to: {results_path}")
-    
+
     sys.exit(0 if success else 1)
 
 

@@ -31,7 +31,7 @@ Invalid correction packs cannot exist.
 CANONICAL_CORRECTION_SCHEMA:
   version: "G2.0.0"
   artifact_type: "CORRECTION_PACK"
-  
+
   required_blocks:
     - RUNTIME_ACTIVATION_ACK
     - AGENT_ACTIVATION_ACK
@@ -44,12 +44,12 @@ CANONICAL_CORRECTION_SCHEMA:
     - FINAL_STATE
     - GOLD_STANDARD_CHECKLIST
     - SELF_CERTIFICATION
-  
+
   block_order: STRICT
   missing_block: HARD_FAIL
   checklist_enforcement: MANDATORY
   all_items_checked: REQUIRED
-  
+
   validation_mode: FAIL_CLOSED
   bypass_paths: 0
 ```
@@ -138,8 +138,8 @@ SELF_CERTIFICATION {
 ```
 SELF_CERTIFICATION
 
-I, ATLAS (GID-11), certify that this correction pack fully complies with 
-the Canonical Correction Pack Template, all governance hard gates, and 
+I, ATLAS (GID-11), certify that this correction pack fully complies with
+the Canonical Correction Pack Template, all governance hard gates, and
 Gold Standard requirements. No deviations exist.
 
 Timestamp: 2025-12-23T00:00:00Z
@@ -304,5 +304,5 @@ END — AGENT_NAME (GID-XX) — CORRECTION COMPLETE
 
 ---
 
-🟦 **ATLAS (GID-11)** — System State & Governance Engine  
+🟦 **ATLAS (GID-11)** — System State & Governance Engine
 🟦 **PAC-ATLAS-G2-GOVERNANCE-CORRECTION-HARD-GATE-IMPLEMENTATION-01**

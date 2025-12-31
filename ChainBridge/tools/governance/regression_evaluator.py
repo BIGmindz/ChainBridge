@@ -80,7 +80,7 @@ class RegressionReport:
     regressions: List[RegressionResult]
     has_blocking_regression: bool
     execution_time_ms: int = 0
-    
+
     @property
     def summary(self) -> str:
         """Generate summary string."""
@@ -96,7 +96,7 @@ class BaselineLoader:
     """
     Load agent baselines from GOVERNANCE_AGENT_BASELINES.md at runtime.
     """
-    
+
     # Role to GID mapping for binding
     ROLE_TO_GID = {
         "BACKEND": "GID-01",
@@ -106,10 +106,10 @@ class BaselineLoader:
         "STRATEGY": "GID-05",
         "QUALITY_ASSURANCE": "GID-08",
     }
-    
+
     # GID to role mapping
     GID_TO_ROLE = {v: k for k, v in ROLE_TO_GID.items()}
-    
+
     def __init__(self, baselines_path: Optional[Path] = None):
         """Initialize loader with path to baselines file."""
         if baselines_path is None:
@@ -119,25 +119,25 @@ class BaselineLoader:
         self.baselines_path = baselines_path
         self.baselines: Dict[str, AgentBaseline] = {}
         self._loaded = False
-    
+
     def load(self) -> Dict[str, AgentBaseline]:
         """
         Load and parse all baselines from the markdown file.
-        
+
         Returns:
             Dict mapping role_id to AgentBaseline
         """
         if self._loaded:
             return self.baselines
-        
+
         if not self.baselines_path.exists():
             raise FileNotFoundError(f"Baselines file not found: {self.baselines_path}")
-        
+
         content = self.baselines_path.read_text(encoding="utf-8")
-        
+
         # Extract all YAML code blocks
         yaml_blocks = re.findall(r"```yaml\s*\n(.*?)```", content, re.DOTALL)
-        
+
         for block in yaml_blocks:
             try:
                 parsed = yaml.safe_load(block)
@@ -145,10 +145,10 @@ class BaselineLoader:
                     self._process_yaml_block(parsed)
             except yaml.YAMLError:
                 continue
-        
+
         self._loaded = True
         return self.baselines
-    
+
     def _process_yaml_block(self, data: Dict[str, Any]) -> None:
         """Process a single YAML block from the baselines file."""
         # Check for role baselines (e.g., BACKEND_BASELINES, FRONTEND_BASELINES)
@@ -157,34 +157,34 @@ class BaselineLoader:
                 role_id = value.get("role_id")
                 if not role_id:
                     continue
-                
+
                 baseline = AgentBaseline(
                     role_id=role_id,
                     representative_agent=value.get("representative_agent", ""),
                 )
-                
+
                 # Extract speed metrics
                 if "speed_metrics" in value:
                     baseline.speed_metrics = self._extract_metrics(value["speed_metrics"])
-                
+
                 # Extract accuracy metrics
                 if "accuracy_metrics" in value:
                     baseline.accuracy_metrics = self._extract_metrics(value["accuracy_metrics"])
-                
+
                 # Extract scope discipline metrics
                 if "scope_discipline_metrics" in value:
                     baseline.scope_discipline_metrics = self._extract_metrics(value["scope_discipline_metrics"])
-                
+
                 # Extract governance compliance metrics
                 if "governance_compliance_metrics" in value:
                     baseline.governance_compliance_metrics = self._extract_metrics(value["governance_compliance_metrics"])
-                
+
                 # Extract failure quality metrics
                 if "failure_quality_metrics" in value:
                     baseline.failure_quality_metrics = self._extract_metrics(value["failure_quality_metrics"])
-                
+
                 self.baselines[role_id] = baseline
-    
+
     def _extract_metrics(self, metrics_data: Dict[str, Any]) -> Dict[str, BaselineThresholds]:
         """Extract baseline thresholds from metrics data."""
         result = {}
@@ -202,17 +202,17 @@ class BaselineLoader:
                 )
                 result[metric_name] = threshold
         return result
-    
+
     def get_baseline_for_gid(self, gid: str) -> Optional[AgentBaseline]:
         """Get baseline for a specific agent GID."""
         if not self._loaded:
             self.load()
-        
+
         role = self.GID_TO_ROLE.get(gid)
         if role:
             return self.baselines.get(role)
         return None
-    
+
     def get_baseline_for_role(self, role_id: str) -> Optional[AgentBaseline]:
         """Get baseline for a specific role."""
         if not self._loaded:
@@ -223,14 +223,14 @@ class BaselineLoader:
 class RegressionEvaluator:
     """
     Evaluate live metrics against baselines for regression detection.
-    
+
     Enforcement:
       - MINOR regression: Warning only (no block)
       - MODERATE regression: Escalation signal (optional block)
       - SEVERE regression: FAIL_CLOSED (mandatory block, GS_094)
       - CRITICAL regression: FAIL_CLOSED (mandatory block, GS_094)
     """
-    
+
     # Thresholds for regression severity determination
     SEVERITY_THRESHOLDS = {
         "MINOR": 0.0,      # Any deviation below P50
@@ -238,12 +238,12 @@ class RegressionEvaluator:
         "SEVERE": 0.50,    # 50% below P50
         "CRITICAL": 0.75,  # 75% below P50
     }
-    
+
     def __init__(self, baseline_loader: Optional[BaselineLoader] = None):
         """Initialize evaluator with baseline loader."""
         self.loader = baseline_loader or BaselineLoader()
         self.loader.load()
-    
+
     def evaluate(
         self,
         agent_gid: str,
@@ -253,13 +253,13 @@ class RegressionEvaluator:
     ) -> RegressionReport:
         """
         Evaluate metrics against baseline for regression.
-        
+
         Args:
             agent_gid: Agent GID (e.g., "GID-01")
             agent_name: Agent name (e.g., "Cody")
             execution_lane: Execution lane (e.g., "BACKEND")
             metrics: Dict of metric_name -> current_value
-            
+
         Returns:
             RegressionReport with all evaluation results
         """
@@ -274,10 +274,10 @@ class RegressionEvaluator:
                 regressions=[],
                 has_blocking_regression=False,
             )
-        
+
         regressions = []
         total_evaluated = 0
-        
+
         # Evaluate all metric categories
         for category_name, category_metrics in [
             ("speed", baseline.speed_metrics),
@@ -297,9 +297,9 @@ class RegressionEvaluator:
                     )
                     if result.severity != RegressionSeverity.NONE:
                         regressions.append(result)
-        
+
         has_blocking = any(r.should_block for r in regressions)
-        
+
         return RegressionReport(
             agent_gid=agent_gid,
             agent_name=agent_name,
@@ -308,7 +308,7 @@ class RegressionEvaluator:
             regressions=regressions,
             has_blocking_regression=has_blocking,
         )
-    
+
     def _evaluate_single_metric(
         self,
         metric_name: str,
@@ -318,7 +318,7 @@ class RegressionEvaluator:
     ) -> RegressionResult:
         """
         Evaluate a single metric against its baseline.
-        
+
         For most metrics, lower is worse (accuracy, compliance).
         For some metrics, higher is worse (violations, time).
         """
@@ -336,9 +336,9 @@ class RegressionEvaluator:
             "correction_ratio",
             "silent_failure_rate",
         }
-        
+
         is_inverted = metric_name in inverted_metrics
-        
+
         # Check hard limits first
         if threshold.maximum is not None and current_value > threshold.maximum:
             return RegressionResult(
@@ -352,7 +352,7 @@ class RegressionEvaluator:
                 error_code="GS_094",
                 message=f"{metric_name}: {current_value} exceeds maximum {threshold.maximum}",
             )
-        
+
         if threshold.minimum is not None and current_value < threshold.minimum:
             return RegressionResult(
                 metric_name=metric_name,
@@ -365,7 +365,7 @@ class RegressionEvaluator:
                 error_code="GS_094",
                 message=f"{metric_name}: {current_value} below minimum {threshold.minimum}",
             )
-        
+
         # Calculate deviation from P50
         if is_inverted:
             # Higher values are worse (e.g., time, violations)
@@ -392,7 +392,7 @@ class RegressionEvaluator:
                 deviation_pct = 0.0 if current_value == 0 else 1.0
             else:
                 deviation_pct = (threshold.P50 - current_value) / threshold.P50
-        
+
         # Determine severity based on deviation
         if deviation_pct <= 0:
             severity = RegressionSeverity.NONE
@@ -404,18 +404,18 @@ class RegressionEvaluator:
             severity = RegressionSeverity.SEVERE
         else:
             severity = RegressionSeverity.CRITICAL
-        
+
         # Determine if should block
         should_block = severity in (RegressionSeverity.SEVERE, RegressionSeverity.CRITICAL)
         error_code = "GS_094" if should_block else None
-        
+
         # Build message
         if severity == RegressionSeverity.NONE:
             message = f"{metric_name}: {current_value} meets baseline P50={threshold.P50}"
         else:
             direction = "above" if is_inverted else "below"
             message = f"{metric_name}: {current_value} is {deviation_pct:.1%} {direction} baseline P50={threshold.P50}"
-        
+
         return RegressionResult(
             metric_name=metric_name,
             current_value=current_value,
@@ -437,7 +437,7 @@ def evaluate_regression(
 ) -> Tuple[bool, List[str]]:
     """
     Convenience function for gate_pack.py integration.
-    
+
     Returns:
         Tuple of (has_regression, error_messages)
     """
@@ -448,13 +448,13 @@ def evaluate_regression(
         execution_lane=execution_lane,
         metrics=metrics,
     )
-    
+
     errors = []
     if report.has_blocking_regression:
         for r in report.regressions:
             if r.should_block:
                 errors.append(f"[GS_094] {r.message}")
-    
+
     return (report.has_blocking_regression, errors)
 
 
@@ -463,7 +463,7 @@ def main():
     import argparse
     import json
     import time
-    
+
     parser = argparse.ArgumentParser(
         description="Evaluate metrics against baselines for regression detection"
     )
@@ -476,17 +476,17 @@ def main():
         help="JSON string of metrics (e.g., '{\"first_pass_validity\": 0.5}')",
     )
     parser.add_argument("--format", choices=["text", "json"], default="text")
-    
+
     args = parser.parse_args()
-    
+
     try:
         metrics = json.loads(args.metrics)
     except json.JSONDecodeError as e:
         print(f"ERROR: Invalid metrics JSON: {e}")
         return 1
-    
+
     start_time = time.time()
-    
+
     evaluator = RegressionEvaluator()
     report = evaluator.evaluate(
         agent_gid=args.gid,
@@ -495,7 +495,7 @@ def main():
         metrics=metrics,
     )
     report.execution_time_ms = int((time.time() - start_time) * 1000)
-    
+
     if args.format == "json":
         output = {
             "agent_gid": report.agent_gid,
@@ -528,18 +528,18 @@ def main():
         print(f"Metrics Evaluated: {report.total_metrics_evaluated}")
         print(f"Execution Time: {report.execution_time_ms}ms")
         print("-" * 70)
-        
+
         if not report.regressions:
             print("✓ NO REGRESSIONS DETECTED")
         else:
             for r in report.regressions:
                 icon = "✗" if r.should_block else "⚠"
                 print(f"{icon} [{r.severity.value}] {r.message}")
-        
+
         print("-" * 70)
         print(report.summary)
         print("=" * 70)
-    
+
     return 1 if report.has_blocking_regression else 0
 
 

@@ -15,7 +15,7 @@ Failure Classes:
 
 Usage:
     from ci_failure_classifier import FailureClassifier, FailureClass
-    
+
     classifier = FailureClassifier()
     result = classifier.classify("GS_094")
     print(result.remediation_hint)
@@ -69,19 +69,19 @@ class FailureSummary:
     failures: List[ClassifiedFailure] = field(default_factory=list)
     passed: int = 0
     skipped: int = 0
-    
+
     def add_failure(self, failure: ClassifiedFailure) -> None:
         """Add a failure to the summary."""
         self.total_failures += 1
         self.failures.append(failure)
         self.by_class[failure.failure_class] = self.by_class.get(failure.failure_class, 0) + 1
         self.by_severity[failure.severity] = self.by_severity.get(failure.severity, 0) + 1
-    
+
     @property
     def has_blocking_failures(self) -> bool:
         """Check if any failures are blocking."""
         return self.by_severity.get(FailureSeverity.CRITICAL, 0) > 0
-    
+
     @property
     def exit_code(self) -> int:
         """Determine exit code based on failures."""
@@ -135,11 +135,11 @@ ERROR_CLASS_MAP: Dict[str, FailureClass] = {
     "BSRG_010": FailureClass.CONFIG,
     "BSRG_011": FailureClass.CONFIG,
     "BSRG_012": FailureClass.CONFIG,
-    
+
     # REGRESSION class - Performance regression
     "GS_094": FailureClass.REGRESSION,
     "GS_115": FailureClass.REGRESSION,
-    
+
     # DRIFT class - Semantic drift
     "GS_095": FailureClass.DRIFT,
     "GS_060": FailureClass.DRIFT,
@@ -149,7 +149,7 @@ ERROR_CLASS_MAP: Dict[str, FailureClass] = {
     "GS_030": FailureClass.DRIFT,
     "GS_031": FailureClass.DRIFT,
     "GS_032": FailureClass.DRIFT,
-    
+
     # SEQUENTIAL class - PAC/WRAP sequencing
     "GS_096": FailureClass.SEQUENTIAL,
     "GS_097": FailureClass.SEQUENTIAL,
@@ -160,7 +160,7 @@ ERROR_CLASS_MAP: Dict[str, FailureClass] = {
     "GS_112": FailureClass.SEQUENTIAL,
     "GS_113": FailureClass.SEQUENTIAL,
     "GS_114": FailureClass.SEQUENTIAL,
-    
+
     # RUNTIME class - Runtime validation
     "G0_003": FailureClass.RUNTIME,
     "G0_004": FailureClass.RUNTIME,
@@ -220,7 +220,7 @@ REMEDIATION_HINTS: Dict[str, Dict[str, str]] = {
         "hint": "Ensure all checklist_results items are set to PASS.",
         "action": "FIX_BSRG_CHECKLIST",
     },
-    
+
     # REGRESSION class
     "GS_094": {
         "hint": "Performance regression detected. Review baseline in GOVERNANCE_AGENT_BASELINES.md. Either improve performance or update baseline with justification.",
@@ -230,7 +230,7 @@ REMEDIATION_HINTS: Dict[str, Dict[str, str]] = {
         "hint": "Illegal PAC state transition. Check PAC lifecycle and ensure valid state progression.",
         "action": "FIX_STATE_TRANSITION",
     },
-    
+
     # DRIFT class
     "GS_095": {
         "hint": "Semantic drift detected. Agent output has deviated from calibration envelope. Review and recalibrate or escalate.",
@@ -244,7 +244,7 @@ REMEDIATION_HINTS: Dict[str, Dict[str, str]] = {
         "hint": "Agent color does not match registry. Check AGENT_REGISTRY.json and use canonical color.",
         "action": "FIX_AGENT_COLOR",
     },
-    
+
     # SEQUENTIAL class
     "GS_096": {
         "hint": "PAC sequence violation. PAC numbers must be globally monotonic. Check ledger for next valid number.",
@@ -262,7 +262,7 @@ REMEDIATION_HINTS: Dict[str, Dict[str, str]] = {
         "hint": "WRAP does not cryptographically bind to PAC. Regenerate WRAP with correct PAC reference.",
         "action": "REGENERATE_WRAP",
     },
-    
+
     # RUNTIME class
     "G0_003": {
         "hint": "Invalid GID format. GID must match pattern GID-XX (e.g., GID-07).",
@@ -294,7 +294,7 @@ ERROR_SEVERITY_MAP: Dict[str, FailureSeverity] = {
     "GS_115": FailureSeverity.CRITICAL,
     "GS_090": FailureSeverity.CRITICAL,
     "GS_091": FailureSeverity.CRITICAL,
-    
+
     # HIGH - requires immediate attention
     "G0_001": FailureSeverity.HIGH,
     "G0_002": FailureSeverity.HIGH,
@@ -302,7 +302,7 @@ ERROR_SEVERITY_MAP: Dict[str, FailureSeverity] = {
     "BSRG_001": FailureSeverity.HIGH,
     "WRP_001": FailureSeverity.HIGH,
     "GS_060": FailureSeverity.HIGH,
-    
+
     # MEDIUM - should be fixed soon
     "G0_005": FailureSeverity.MEDIUM,
     "G0_006": FailureSeverity.MEDIUM,
@@ -315,43 +315,43 @@ ERROR_SEVERITY_MAP: Dict[str, FailureSeverity] = {
 class FailureClassifier:
     """
     CI failure classifier with remediation hints.
-    
+
     Classifies governance errors into failure categories and provides
     actionable remediation guidance.
     """
-    
+
     def __init__(self):
         """Initialize classifier."""
         self._class_map = ERROR_CLASS_MAP.copy()
         self._remediation_hints = REMEDIATION_HINTS.copy()
         self._severity_map = ERROR_SEVERITY_MAP.copy()
-    
+
     def classify(self, error_code: str, description: str = "") -> ClassifiedFailure:
         """
         Classify an error code into a failure category.
-        
+
         Args:
             error_code: The error code (e.g., "GS_094", "G0_001")
             description: Optional error description
-            
+
         Returns:
             ClassifiedFailure with remediation guidance
         """
         # Normalize error code
         code = self._normalize_code(error_code)
-        
+
         # Get failure class (UNKNOWN if not mapped - FAIL_CLOSED)
         failure_class = self._class_map.get(code, FailureClass.UNKNOWN)
-        
+
         # Get severity
         severity = self._severity_map.get(code, FailureSeverity.MEDIUM)
-        
+
         # Get remediation hint
         hint_data = self._remediation_hints.get(code, {
             "hint": f"Unknown error code {code}. Check governance documentation or escalate to BENSON.",
             "action": "ESCALATE_TO_BENSON",
         })
-        
+
         return ClassifiedFailure(
             error_code=code,
             failure_class=failure_class,
@@ -362,25 +362,25 @@ class FailureClassifier:
             documentation_ref=self._get_doc_ref(code),
             related_codes=self._get_related_codes(code),
         )
-    
+
     def classify_multiple(self, error_codes: List[str]) -> FailureSummary:
         """
         Classify multiple error codes and produce a summary.
-        
+
         Args:
             error_codes: List of error codes
-            
+
         Returns:
             FailureSummary with all classified failures
         """
         summary = FailureSummary()
-        
+
         for code in error_codes:
             failure = self.classify(code)
             summary.add_failure(failure)
-        
+
         return summary
-    
+
     def _normalize_code(self, code: str) -> str:
         """Normalize error code format."""
         # Extract code from bracketed format: [G0_001] or plain G0_001
@@ -393,7 +393,7 @@ class FailureClassifier:
         if match:
             return match.group(1)
         return code.upper().strip()
-    
+
     def _get_doc_ref(self, code: str) -> Optional[str]:
         """Get documentation reference for error code."""
         if code.startswith("G0_"):
@@ -407,27 +407,27 @@ class FailureClassifier:
         elif code.startswith("WRP_"):
             return "docs/governance/pacs/PAC-BENSON-P28-CANONICAL-WRAP-SCHEMA-ENFORCEMENT-01.md"
         return None
-    
+
     def _get_related_codes(self, code: str) -> List[str]:
         """Get related error codes."""
         related = []
         prefix = code.split("_")[0] if "_" in code else code[:2]
-        
+
         for other_code in self._class_map:
             if other_code != code and other_code.startswith(prefix):
                 related.append(other_code)
-        
+
         return related[:3]  # Limit to 3 related codes
 
 
 def format_failure_summary(summary: FailureSummary, use_color: bool = True) -> str:
     """
     Format a failure summary for CI output.
-    
+
     Args:
         summary: The failure summary to format
         use_color: Whether to use ANSI colors
-        
+
     Returns:
         Formatted string for CI output
     """
@@ -437,16 +437,16 @@ def format_failure_summary(summary: FailureSummary, use_color: bool = True) -> s
     YELLOW = "\033[93m" if use_color else ""
     GREEN = "\033[92m" if use_color else ""
     CYAN = "\033[96m" if use_color else ""
-    
+
     lines = []
     width = 80
-    
+
     # Header
     lines.append("")
     lines.append("═" * width)
     lines.append(f"{BOLD}CI FAILURE SUMMARY{RESET}")
     lines.append("═" * width)
-    
+
     # Counts by class
     lines.append(f"\n{BOLD}By Failure Class:{RESET}")
     for fc in FailureClass:
@@ -454,7 +454,7 @@ def format_failure_summary(summary: FailureSummary, use_color: bool = True) -> s
         if count > 0:
             color = RED if fc == FailureClass.UNKNOWN else CYAN
             lines.append(f"  {color}[{fc.value}]{RESET}: {count}")
-    
+
     # Counts by severity
     lines.append(f"\n{BOLD}By Severity:{RESET}")
     for sev in FailureSeverity:
@@ -462,12 +462,12 @@ def format_failure_summary(summary: FailureSummary, use_color: bool = True) -> s
         if count > 0:
             color = RED if sev == FailureSeverity.CRITICAL else YELLOW if sev == FailureSeverity.HIGH else ""
             lines.append(f"  {color}[{sev.value}]{RESET}: {count}")
-    
+
     # Individual failures with remediation
     if summary.failures:
         lines.append(f"\n{BOLD}Failures & Remediation:{RESET}")
         lines.append("-" * width)
-        
+
         for i, failure in enumerate(summary.failures, 1):
             color = RED if failure.severity == FailureSeverity.CRITICAL else YELLOW
             lines.append(f"\n{color}{i}. [{failure.error_code}] {failure.failure_class.value}{RESET}")
@@ -476,11 +476,11 @@ def format_failure_summary(summary: FailureSummary, use_color: bool = True) -> s
             lines.append(f"   {CYAN}Agent Action:{RESET} {failure.agent_action}")
             if failure.documentation_ref:
                 lines.append(f"   Reference: {failure.documentation_ref}")
-    
+
     # Final status
     lines.append("")
     lines.append("═" * width)
-    
+
     if summary.has_blocking_failures:
         lines.append(f"{RED}{BOLD}❌ CI BLOCKED — Critical failures detected{RESET}")
         lines.append(f"{RED}Exit code: {summary.exit_code}{RESET}")
@@ -489,19 +489,19 @@ def format_failure_summary(summary: FailureSummary, use_color: bool = True) -> s
         lines.append(f"{YELLOW}Exit code: {summary.exit_code}{RESET}")
     else:
         lines.append(f"{GREEN}{BOLD}✓ CI PASSED — No failures detected{RESET}")
-    
+
     lines.append("═" * width)
-    
+
     return "\n".join(lines)
 
 
 def format_failure_json(summary: FailureSummary) -> dict:
     """
     Format failure summary as JSON for machine consumption.
-    
+
     Args:
         summary: The failure summary
-        
+
     Returns:
         Dict suitable for JSON serialization
     """
@@ -528,7 +528,7 @@ def format_failure_json(summary: FailureSummary) -> dict:
 # Demo / self-test
 if __name__ == "__main__":
     classifier = FailureClassifier()
-    
+
     # Test classification
     test_codes = [
         "G0_001",
@@ -538,13 +538,13 @@ if __name__ == "__main__":
         "BSRG_001",
         "UNKNOWN_CODE",
     ]
-    
+
     print("Testing CI Failure Classifier")
     print("=" * 60)
-    
+
     summary = classifier.classify_multiple(test_codes)
     print(format_failure_summary(summary))
-    
+
     print("\nJSON Output:")
     import json
     print(json.dumps(format_failure_json(summary), indent=2))

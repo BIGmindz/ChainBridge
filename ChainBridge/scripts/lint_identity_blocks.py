@@ -67,7 +67,7 @@ class Violation:
     file_path: str
     line_number: int
     context: str
-    
+
     def __str__(self) -> str:
         return (
             f"❌ {self.violation_type.value}\n"
@@ -84,11 +84,11 @@ class LintResult:
     files_checked: int = 0
     runtime_blocks_found: int = 0
     agent_blocks_found: int = 0
-    
+
     @property
     def passed(self) -> bool:
         return len(self.violations) == 0
-    
+
     def add_violation(self, v: Violation) -> None:
         self.violations.append(v)
 
@@ -132,7 +132,7 @@ def find_line_number(content: str, match_start: int) -> int:
 
 def remove_code_blocks(content: str) -> str:
     """Remove markdown code blocks to avoid linting examples/documentation.
-    
+
     Code blocks in markdown (```...``` or `...`) often contain example
     activation blocks that are documentation, not real violations.
     """
@@ -144,7 +144,7 @@ def lint_runtime_block(content: str, match: re.Match, file_path: str) -> list[Vi
     violations = []
     block_content = match.group(1)
     line_num = find_line_number(content, match.start())
-    
+
     for pattern in RUNTIME_FORBIDDEN_FIELDS:
         if re.search(pattern, block_content, re.IGNORECASE):
             # Determine specific violation type
@@ -152,14 +152,14 @@ def lint_runtime_block(content: str, match: re.Match, file_path: str) -> list[Vi
                 vtype = ViolationType.RUNTIME_HAS_GID
             else:
                 vtype = ViolationType.RUNTIME_HAS_AGENT_NAME
-            
+
             violations.append(Violation(
                 violation_type=vtype,
                 file_path=file_path,
                 line_number=line_num,
                 context=f"RUNTIME_ACTIVATION_ACK contains forbidden field: {pattern}"
             ))
-    
+
     return violations
 
 
@@ -168,7 +168,7 @@ def lint_agent_block(content: str, match: re.Match, file_path: str) -> list[Viol
     violations = []
     block_content = match.group(1)
     line_num = find_line_number(content, match.start())
-    
+
     # Check for gid
     if not re.search(r'\bgid\b\s*:', block_content, re.IGNORECASE):
         violations.append(Violation(
@@ -177,7 +177,7 @@ def lint_agent_block(content: str, match: re.Match, file_path: str) -> list[Viol
             line_number=line_num,
             context="AGENT_ACTIVATION_ACK missing required 'gid' field"
         ))
-    
+
     # Check for agent_name
     if not re.search(r'\bagent_name\b\s*:', block_content, re.IGNORECASE):
         violations.append(Violation(
@@ -186,17 +186,17 @@ def lint_agent_block(content: str, match: re.Match, file_path: str) -> list[Viol
             line_number=line_num,
             context="AGENT_ACTIVATION_ACK missing required 'agent_name' field"
         ))
-    
+
     return violations
 
 
 def check_block_ordering(content: str, file_path: str) -> list[Violation]:
     """Ensure RUNTIME block appears before AGENT block if both present."""
     violations = []
-    
+
     runtime_match = RUNTIME_BLOCK_PATTERN.search(content)
     agent_match = AGENT_BLOCK_PATTERN.search(content)
-    
+
     if runtime_match and agent_match:
         # Both blocks present - check ordering
         if agent_match.start() < runtime_match.start():
@@ -206,7 +206,7 @@ def check_block_ordering(content: str, file_path: str) -> list[Violation]:
                 line_number=find_line_number(content, agent_match.start()),
                 context="AGENT_ACTIVATION_ACK must appear AFTER RUNTIME_ACTIVATION_ACK"
             ))
-    
+
     return violations
 
 
@@ -215,31 +215,31 @@ def lint_file(file_path: Path) -> tuple[list[Violation], int, int]:
     violations = []
     runtime_count = 0
     agent_count = 0
-    
+
     try:
         content = file_path.read_text(encoding='utf-8')
     except (OSError, UnicodeDecodeError):
         return violations, 0, 0
-    
+
     # For markdown files, remove code blocks to avoid linting examples
     if file_path.suffix.lower() == '.md':
         lint_content = remove_code_blocks(content)
     else:
         lint_content = content
-    
+
     # Find and check runtime blocks (using lint_content to exclude examples)
     for match in RUNTIME_BLOCK_PATTERN.finditer(lint_content):
         runtime_count += 1
         violations.extend(lint_runtime_block(lint_content, match, str(file_path)))
-    
+
     # Find and check agent blocks (using lint_content to exclude examples)
     for match in AGENT_BLOCK_PATTERN.finditer(lint_content):
         agent_count += 1
         violations.extend(lint_agent_block(lint_content, match, str(file_path)))
-    
+
     # Check block ordering (use lint_content to match what we're counting)
     violations.extend(check_block_ordering(lint_content, str(file_path)))
-    
+
     return violations, runtime_count, agent_count
 
 
@@ -250,28 +250,28 @@ def lint_directory(
 ) -> LintResult:
     """Recursively lint all files in directory."""
     result = LintResult()
-    
+
     for file_path in root.rglob('*'):
         # Skip excluded directories
         if any(excluded in file_path.parts for excluded in exclude_dirs):
             continue
-        
+
         # Skip non-matching extensions
         if file_path.suffix.lower() not in extensions:
             continue
-        
+
         # Skip if not a file
         if not file_path.is_file():
             continue
-        
+
         violations, runtime_count, agent_count = lint_file(file_path)
         result.files_checked += 1
         result.runtime_blocks_found += runtime_count
         result.agent_blocks_found += agent_count
-        
+
         for v in violations:
             result.add_violation(v)
-    
+
     return result
 
 
@@ -289,7 +289,7 @@ def print_report(result: LintResult) -> None:
     print(f"RUNTIME_ACTIVATION_ACK blocks found: {result.runtime_blocks_found}")
     print(f"AGENT_ACTIVATION_ACK blocks found: {result.agent_blocks_found}")
     print()
-    
+
     if result.passed:
         print("━" * 60)
         print("✅ IDENTITY LINT PASSED")
@@ -330,13 +330,13 @@ def main() -> int:
             if (candidate / '.git').exists():
                 root = candidate
                 break
-    
+
     print(f"Scanning: {root}")
     print()
-    
+
     result = lint_directory(root)
     print_report(result)
-    
+
     # Exit code: 0 = pass, 1 = fail
     return 0 if result.passed else 1
 
