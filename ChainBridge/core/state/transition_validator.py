@@ -112,10 +112,10 @@ class TransitionRequest:
 class TransitionValidator:
     """
     Deterministic transition validator.
-    
+
     This validator is READ-ONLY. It does not modify any state.
     All validation methods return results without side effects.
-    
+
     Implements fail-closed semantics:
     - Undefined transition → REJECT
     - Missing proof when required → REJECT
@@ -133,10 +133,10 @@ class TransitionValidator:
     ) -> TransitionValidationResult:
         """
         Validate a transition request.
-        
+
         Returns TransitionValidationResult with detailed rejection reason
         if the transition is not allowed.
-        
+
         This method has NO SIDE EFFECTS.
         """
         self._validation_count += 1
@@ -288,7 +288,7 @@ class TransitionValidator:
     def _authority_matches(self, required: str, provided: str) -> bool:
         """
         Check if provided authority matches required authority.
-        
+
         Handles special authority types:
         - SYSTEM: Any system authority
         - GID-XX: Specific agent

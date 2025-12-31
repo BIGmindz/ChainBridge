@@ -107,7 +107,7 @@ class TransitionRule:
 class StateMachine:
     """
     Canonical state machine definition for an artifact type.
-    
+
     Defines the complete lifecycle including:
     - All valid states
     - Initial state
@@ -155,7 +155,7 @@ class StateMachine:
     def validate_machine_integrity(self) -> list[str]:
         """
         Validate the state machine definition is internally consistent.
-        
+
         Returns list of errors (empty if valid).
         """
         errors: list[str] = []

@@ -52,7 +52,7 @@ logger = logging.getLogger(__name__)
 
 class SettlementBlockReason(str, Enum):
     """Deterministic reasons for settlement blocks.
-    
+
     Each reason maps to a specific enforcement failure.
     """
     MISSING_PDO = "MISSING_PDO"
@@ -75,7 +75,7 @@ class SettlementBlockReason(str, Enum):
 @dataclass(frozen=True)
 class SettlementGateResult:
     """Immutable result from settlement gate validation.
-    
+
     Attributes:
         allowed: True if settlement can proceed
         blocked: True if settlement is blocked
@@ -90,7 +90,7 @@ class SettlementGateResult:
     pdo_id: Optional[str]
     details: str
     checked_at: str
-    
+
     def __bool__(self) -> bool:
         """Allow if result: ... for checking allowed."""
         return self.allowed
@@ -98,11 +98,11 @@ class SettlementGateResult:
 
 class SettlementGate:
     """Mandatory settlement gate with backend guards.
-    
+
     DOCTRINE (FAIL-CLOSED):
     All settlements MUST pass through this gate.
     Direct calls to settlement services are blocked.
-    
+
     Usage:
         gate = SettlementGate()
         result = gate.validate_settlement(pdo_data, proof_chain, caller_identity)
@@ -111,12 +111,12 @@ class SettlementGate:
             log_blocked_settlement(result)
             raise SettlementBlockedException(result.reason)
     """
-    
+
     def __init__(self):
         """Initialize settlement gate."""
         self._direct_call_protection = True
         self._settlement_executed_cache: Dict[str, str] = {}  # pdo_id -> timestamp
-    
+
     def validate_settlement(
         self,
         pdo_data: Optional[Dict[str, Any]],
@@ -126,22 +126,22 @@ class SettlementGate:
         skip_proof_validation: bool = False,
     ) -> SettlementGateResult:
         """Validate settlement request through all guards.
-        
+
         DOCTRINE (FAIL-CLOSED):
         ALL guards must pass for settlement to proceed.
         Any failure → BLOCK (no exceptions, no soft bypasses).
-        
+
         Args:
             pdo_data: The PDO authorizing the settlement
             proof_chain: Ordered proof chain for lineage validation
             caller_identity: Identity of the caller (agent GID or "runtime")
             skip_proof_validation: Skip proof chain validation (for testing only)
-        
+
         Returns:
             SettlementGateResult indicating allowed/blocked
         """
         timestamp = datetime.now(timezone.utc).isoformat()
-        
+
         # GUARD 1: PDO must exist
         if pdo_data is None:
             return self._block(
@@ -150,9 +150,9 @@ class SettlementGate:
                 details="Settlement requires valid PDO - none provided",
                 timestamp=timestamp,
             )
-        
+
         pdo_id = pdo_data.get("pdo_id")
-        
+
         # GUARD 2: PDO must be valid
         validation_result = self._validate_pdo(pdo_data)
         if not validation_result["valid"]:
@@ -162,7 +162,7 @@ class SettlementGate:
                 details=f"PDO validation failed: {validation_result['errors']}",
                 timestamp=timestamp,
             )
-        
+
         # GUARD 3: CRO decision must allow execution
         cro_result = self._check_cro_decision(pdo_data)
         if cro_result["blocks"]:
@@ -179,7 +179,7 @@ class SettlementGate:
                 details=f"CRO decision blocks settlement: {cro_result['decision']} - {cro_result['reasons']}",
                 timestamp=timestamp,
             )
-        
+
         # GUARD 4: Caller must have settlement authority
         if caller_identity is not None:
             caller_result = self._check_caller_authority(caller_identity)
@@ -192,7 +192,7 @@ class SettlementGate:
                     details=f"Caller not authorized for settlement: {caller_identity}",
                     timestamp=timestamp,
                 )
-        
+
         # GUARD 5: Proof lineage must be intact (unless skipped)
         if not skip_proof_validation and proof_chain is not None:
             lineage_result = self._check_proof_lineage(proof_chain)
@@ -210,7 +210,7 @@ class SettlementGate:
                     details=f"Proof lineage invalid: {lineage_result['details']}",
                     timestamp=timestamp,
                 )
-        
+
         # GUARD 6: Settlement must not be already executed
         if pdo_id and pdo_id in self._settlement_executed_cache:
             return self._block(
@@ -219,7 +219,7 @@ class SettlementGate:
                 details=f"Settlement already executed at {self._settlement_executed_cache[pdo_id]}",
                 timestamp=timestamp,
             )
-        
+
         # ALL GUARDS PASSED
         self._log_gate_pass(pdo_id, timestamp)
         return SettlementGateResult(
@@ -230,32 +230,32 @@ class SettlementGate:
             details="All settlement guards passed",
             checked_at=timestamp,
         )
-    
+
     def mark_settlement_executed(self, pdo_id: str) -> None:
         """Mark a PDO as having its settlement executed.
-        
+
         Prevents double-execution attacks.
         """
         self._settlement_executed_cache[pdo_id] = datetime.now(timezone.utc).isoformat()
-    
+
     def _validate_pdo(self, pdo_data: Dict[str, Any]) -> Dict[str, Any]:
         """Validate PDO using PDOValidator.
-        
+
         Returns dict with 'valid' and 'errors' keys.
         """
         from app.services.pdo.validator import PDOValidator
-        
+
         validator = PDOValidator()
         result = validator.validate(pdo_data)
-        
+
         return {
             "valid": result.valid,
             "errors": [e.message for e in result.errors] if result.errors else [],
         }
-    
+
     def _check_cro_decision(self, pdo_data: Dict[str, Any]) -> Dict[str, Any]:
         """Check CRO decision allows settlement.
-        
+
         DOCTRINE:
         - HOLD → blocks settlement
         - ESCALATE → blocks settlement
@@ -263,76 +263,76 @@ class SettlementGate:
         """
         cro_decision = pdo_data.get("cro_decision")
         cro_reasons = pdo_data.get("cro_reasons", [])
-        
+
         # No CRO decision means ALLOW by default
         if cro_decision is None:
             return {"blocks": False, "decision": None, "reasons": []}
-        
+
         blocking_decisions = {"HOLD", "ESCALATE"}
-        
+
         return {
             "blocks": cro_decision in blocking_decisions,
             "decision": cro_decision,
             "reasons": cro_reasons,
         }
-    
+
     def _check_caller_authority(self, caller_identity: str) -> Dict[str, Any]:
         """Check caller has settlement authority.
-        
+
         DOCTRINE:
         - Runtimes CANNOT call settlement services
         - Only agents with valid GIDs can settle
         """
         import re
-        
+
         # Runtime identities are explicitly blocked
         runtime_patterns = ["runtime", "copilot", "chatgpt", "assistant"]
         caller_lower = caller_identity.lower()
-        
+
         for pattern in runtime_patterns:
             if pattern in caller_lower:
                 return {
                     "authorized": False,
                     "reason": "runtime_boundary",
                 }
-        
+
         # Valid agent GID pattern
         gid_pattern = re.compile(r"^GID-\d{2}$")
-        
+
         # Check if caller looks like an agent GID
         if gid_pattern.match(caller_identity):
             return {"authorized": True, "reason": None}
-        
+
         # Check if caller identity contains a valid GID
         gid_match = re.search(r"GID-\d{2}", caller_identity)
         if gid_match:
             return {"authorized": True, "reason": None}
-        
+
         # Unknown caller format - block for safety
         return {
             "authorized": False,
             "reason": "unauthorized",
         }
-    
+
     def _check_proof_lineage(self, proof_chain: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Check proof lineage is intact.
-        
+
         DOCTRINE:
         - Forward-only hash chaining
         - No sequence gaps
         - No mutations detected
         """
         from core.proof.validation import ProofLineageValidator, GENESIS_HASH
-        
+
         if not proof_chain:
             return {"valid": True, "error_type": None, "details": "Empty chain"}
-        
+
         validator = ProofLineageValidator()
-        
+
         # Validate chain integrity
         for i, proof in enumerate(proof_chain):
             existing = proof_chain[:i]
-            
+
             if i > 0:
                 result = validator.validate_lineage(proof, existing, GENESIS_HASH)
                 if not result.passed:
@@ -343,15 +343,15 @@ class SettlementGate:
                             error_type = "mutation"
                         elif "sequence" in error.lower() or "gap" in error.lower():
                             error_type = "gap"
-                    
+
                     return {
                         "valid": False,
                         "error_type": error_type,
                         "details": "; ".join(result.errors[:3]),
                     }
-        
+
         return {"valid": True, "error_type": None, "details": "Chain valid"}
-    
+
     def _block(
         self,
         reason: SettlementBlockReason,
@@ -369,7 +369,7 @@ class SettlementGate:
             details=details,
             checked_at=timestamp,
         )
-    
+
     def _log_gate_pass(self, pdo_id: Optional[str], timestamp: str) -> None:
         """Log successful gate passage."""
         logger.info(
@@ -377,7 +377,7 @@ class SettlementGate:
             pdo_id,
             timestamp,
         )
-    
+
     def _log_gate_block(
         self,
         reason: SettlementBlockReason,
@@ -417,14 +417,14 @@ def validate_settlement_request(
     caller_identity: Optional[str] = None,
 ) -> SettlementGateResult:
     """Validate a settlement request through the gate.
-    
+
     Module-level convenience function.
-    
+
     Args:
         pdo_data: The PDO authorizing settlement
         proof_chain: Optional proof chain for lineage validation
         caller_identity: Identity of the caller
-    
+
     Returns:
         SettlementGateResult indicating allowed/blocked
     """
@@ -436,25 +436,25 @@ def block_direct_settlement(
     caller_context: str = "unknown",
 ) -> SettlementGateResult:
     """Block direct settlement calls that bypass the gate.
-    
+
     DOCTRINE (FAIL-CLOSED):
     All settlement calls MUST go through validate_settlement_request.
     Direct calls to settlement services are blocked.
-    
+
     Args:
         caller_context: Context string for audit logging
-    
+
     Returns:
         SettlementGateResult with DIRECT_CALL_BLOCKED reason
     """
     timestamp = datetime.now(timezone.utc).isoformat()
-    
+
     logger.warning(
         "Direct settlement call BLOCKED: context=%s timestamp=%s",
         caller_context,
         timestamp,
     )
-    
+
     return SettlementGateResult(
         allowed=False,
         blocked=True,
