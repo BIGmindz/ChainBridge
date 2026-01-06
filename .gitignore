@@ -16,6 +16,10 @@ venv/
 .DS_Store
 logs/
 *.log
+
+# Uplink staging area (PAC-OCC-P29)
+_incoming/
+
 *.json
 !docs/governance/*.json
 !.github/**/*.json
@@ -85,3 +89,4 @@ chainpay.db
 .github/ALEX_RULES.json
 .github/agents/
 /chainboard-ui/
+*.zip
