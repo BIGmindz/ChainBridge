@@ -1,0 +1,466 @@
+# OCC Override Invariants v1.0
+# PAC Reference: PAC-OCC-P01
+# Classification: CONSTITUTIONAL
+# Author: BENSON (GID-00)
+# Enforced By: ALEX (GID-08), Lex
+# Effective Date: 2026-01-05
+
+schema_version: "1.0.0"
+document_id: "OCC-OVERRIDE-INVARIANTS-v1.0"
+constitution_reference: "OCC-CONSTITUTION-v1.0"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CORE OVERRIDE INVARIANTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+invariants:
+  # ---------------------------------------------------------------------------
+  # INV-OVR-001: Override Identity Requirement
+  # ---------------------------------------------------------------------------
+  INV-OVR-001:
+    name: "Override Identity Requirement"
+    description: "Every override must be linked to a verified human identity"
+    severity: CRITICAL
+    enforcement: BLOCK
+    
+    requirements:
+      - operator_id_present: true
+      - operator_id_verified: true
+      - operator_tier_sufficient: true
+      - session_valid: true
+      - mfa_completed: true
+      
+    validation:
+      - check: "operator_id IS NOT NULL"
+        error: "Override missing operator identity"
+      - check: "operator_verified = true"
+        error: "Operator identity not verified"
+      - check: "operator_tier >= 'T4'"
+        error: "Insufficient tier for override (T4+ required)"
+        
+    violation_response:
+      action: BLOCK
+      alert_tier: T4
+      incident_required: false
+      
+  # ---------------------------------------------------------------------------
+  # INV-OVR-002: Override Justification Requirement
+  # ---------------------------------------------------------------------------
+  INV-OVR-002:
+    name: "Override Justification Requirement"
+    description: "Every override must include substantive justification"
+    severity: CRITICAL
+    enforcement: BLOCK
+    
+    requirements:
+      - justification_present: true
+      - justification_min_length: 50
+      - justification_not_templated: true
+      - constitutional_citation_present: true
+      
+    validation:
+      - check: "justification IS NOT NULL"
+        error: "Override missing justification"
+      - check: "LENGTH(justification) >= 50"
+        error: "Justification too short (minimum 50 characters)"
+      - check: "constitutional_citation IS NOT NULL"
+        error: "Override missing constitutional citation"
+      - check: "justification NOT IN (SELECT template FROM blocked_templates)"
+        error: "Justification appears to be templated boilerplate"
+        
+    blocked_templates:
+      - "Per policy"
+      - "As required"
+      - "Business need"
+      - "Approved by management"
+      - "See above"
+      - "N/A"
+      
+    violation_response:
+      action: BLOCK
+      alert_tier: T4
+      incident_required: false
+      
+  # ---------------------------------------------------------------------------
+  # INV-OVR-003: Override Immutability
+  # ---------------------------------------------------------------------------
+  INV-OVR-003:
+    name: "Override Immutability"
+    description: "Override records cannot be modified after creation"
+    severity: CRITICAL
+    enforcement: BLOCK
+    
+    requirements:
+      - override_record_append_only: true
+      - no_delete_operations: true
+      - no_update_operations: true
+      - hash_chain_intact: true
+      
+    blocked_operations:
+      - UPDATE on override_records
+      - DELETE on override_records
+      - TRUNCATE on override_records
+      - DROP on override_records
+      
+    allowed_operations:
+      - INSERT on override_records
+      - SELECT on override_records
+      - INSERT on override_annotations  # Annotations are additions, not modifications
+      
+    validation:
+      - check: "operation NOT IN ('UPDATE', 'DELETE', 'TRUNCATE', 'DROP')"
+        error: "Mutation of override records is constitutionally prohibited"
+        
+    violation_response:
+      action: BLOCK
+      alert_tier: T5
+      incident_required: true
+      
+  # ---------------------------------------------------------------------------
+  # INV-OVR-004: Override Audit Trail
+  # ---------------------------------------------------------------------------
+  INV-OVR-004:
+    name: "Override Audit Trail"
+    description: "Every override generates complete audit record"
+    severity: CRITICAL
+    enforcement: BLOCK
+    
+    required_audit_fields:
+      - override_id
+      - operator_id
+      - operator_tier
+      - target_pdo_id
+      - original_decision
+      - override_decision
+      - justification
+      - constitutional_citation
+      - risk_acknowledgment
+      - timestamp
+      - session_id
+      - ip_address
+      - user_agent
+      - hash_previous
+      - hash_current
+      
+    validation:
+      - check: "ALL required_audit_fields ARE NOT NULL"
+        error: "Override audit record incomplete"
+      - check: "hash_current = SHA256(record_content || hash_previous)"
+        error: "Override hash chain broken"
+        
+    violation_response:
+      action: BLOCK
+      alert_tier: T4
+      incident_required: true
+      
+  # ---------------------------------------------------------------------------
+  # INV-OVR-005: Override Risk Acknowledgment
+  # ---------------------------------------------------------------------------
+  INV-OVR-005:
+    name: "Override Risk Acknowledgment"
+    description: "Operator must explicitly acknowledge override risk"
+    severity: HIGH
+    enforcement: BLOCK
+    
+    requirements:
+      - risk_acknowledgment_present: true
+      - risk_acknowledgment_explicit: true
+      - risk_acknowledgment_timestamped: true
+      
+    acknowledgment_text: |
+      I acknowledge that this override supersedes an agent/automated decision.
+      I accept responsibility for this action and understand it will be
+      permanently recorded in the audit trail.
+      
+    validation:
+      - check: "risk_acknowledgment = true"
+        error: "Operator must acknowledge override risk"
+      - check: "risk_acknowledgment_timestamp IS NOT NULL"
+        error: "Risk acknowledgment not timestamped"
+        
+    violation_response:
+      action: BLOCK
+      alert_tier: T4
+      incident_required: false
+      
+  # ---------------------------------------------------------------------------
+  # INV-OVR-006: Override Marker Permanence
+  # ---------------------------------------------------------------------------
+  INV-OVR-006:
+    name: "Override Marker Permanence"
+    description: "Overridden operations carry permanent markers"
+    severity: HIGH
+    enforcement: BLOCK
+    
+    marker_requirements:
+      - is_overridden: true
+      - override_id: "NOT NULL"
+      - override_timestamp: "NOT NULL"
+      - original_decision_preserved: true
+      
+    marker_cannot_be_removed: true
+    marker_visible_in_all_views: true
+    marker_included_in_exports: true
+    
+    validation:
+      - check: "overridden_pdo.is_overridden = true"
+        error: "Override marker not set on PDO"
+      - check: "overridden_pdo.override_id IS NOT NULL"
+        error: "Override ID not linked to PDO"
+        
+    violation_response:
+      action: BLOCK
+      alert_tier: T4
+      incident_required: false
+      
+  # ---------------------------------------------------------------------------
+  # INV-OVR-007: Override Constitutional Basis
+  # ---------------------------------------------------------------------------
+  INV-OVR-007:
+    name: "Override Constitutional Basis"
+    description: "Override must cite constitutional authority"
+    severity: HIGH
+    enforcement: BLOCK
+    
+    valid_citations:
+      - pattern: "Article [IVX]+, Section \\d+\\.\\d+"
+        document: "OCC_CONSTITUTION_v1.0"
+      - pattern: "INV-OCC-\\d{3}"
+        document: "OCC_INVARIANTS"
+      - pattern: "INV-OVR-\\d{3}"
+        document: "OCC_OVERRIDE_INVARIANTS"
+        
+    validation:
+      - check: "constitutional_citation MATCHES valid_pattern"
+        error: "Constitutional citation format invalid"
+      - check: "cited_authority EXISTS IN constitution"
+        error: "Cited constitutional authority does not exist"
+        
+    violation_response:
+      action: BLOCK
+      alert_tier: T4
+      incident_required: false
+      
+  # ---------------------------------------------------------------------------
+  # INV-OVR-008: Override Scope Limits
+  # ---------------------------------------------------------------------------
+  INV-OVR-008:
+    name: "Override Scope Limits"
+    description: "Override cannot exceed operator authority bounds"
+    severity: CRITICAL
+    enforcement: BLOCK
+    
+    scope_checks:
+      - check: "pdo_value <= operator_tier_max_value"
+        error: "PDO value exceeds operator tier authority"
+      - check: "operation_type IN operator_tier_permissions"
+        error: "Operation type not permitted for operator tier"
+      - check: "NOT (operation IN emergency_actions AND tier < T4)"
+        error: "Emergency actions require T4+ authority"
+        
+    tier_value_limits:
+      T4: 10000000  # $10M
+      T5: null      # Unlimited
+      
+    violation_response:
+      action: BLOCK
+      alert_tier: T5
+      incident_required: true
+      
+  # ---------------------------------------------------------------------------
+  # INV-OVR-009: Override Replay Determinism
+  # ---------------------------------------------------------------------------
+  INV-OVR-009:
+    name: "Override Replay Determinism"
+    description: "Override state must be deterministically reproducible"
+    severity: HIGH
+    enforcement: ALERT
+    
+    requirements:
+      - pre_override_state_captured: true
+      - post_override_state_captured: true
+      - state_diff_recorded: true
+      - replay_input_preserved: true
+      
+    replay_guarantee:
+      description: "Given the same input state and override action, replay produces identical output"
+      tolerance: EXACT
+      
+    validation:
+      - check: "pre_state_snapshot IS NOT NULL"
+        error: "Pre-override state not captured"
+      - check: "post_state_snapshot IS NOT NULL"
+        error: "Post-override state not captured"
+        
+    violation_response:
+      action: ALERT
+      alert_tier: T4
+      incident_required: false
+      
+  # ---------------------------------------------------------------------------
+  # INV-OVR-010: No Self-Override
+  # ---------------------------------------------------------------------------
+  INV-OVR-010:
+    name: "No Self-Override"
+    description: "Operator cannot override their own prior decisions"
+    severity: HIGH
+    enforcement: BLOCK
+    
+    requirements:
+      - override_operator != original_operator: true
+      
+    exceptions:
+      - condition: "T5 executive with documented emergency"
+        requires: "incident_id AND emergency_flag = true"
+        
+    validation:
+      - check: "override_operator_id != original_operator_id"
+        error: "Self-override prohibited"
+        exception_check: "tier = T5 AND emergency = true"
+        
+    violation_response:
+      action: BLOCK
+      alert_tier: T4
+      incident_required: false
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ENFORCEMENT CONFIGURATION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+enforcement:
+  engine: "ALEX"
+  engine_gid: "GID-08"
+  
+  enforcement_points:
+    - location: "occ_actions.py::execute_override"
+      invariants: [INV-OVR-001, INV-OVR-002, INV-OVR-005, INV-OVR-007, INV-OVR-008, INV-OVR-010]
+      
+    - location: "occ_audit_log.py::record_override"
+      invariants: [INV-OVR-003, INV-OVR-004]
+      
+    - location: "pdo_state_machine.py::apply_override"
+      invariants: [INV-OVR-006, INV-OVR-009]
+      
+  violation_handling:
+    CRITICAL:
+      action: BLOCK
+      alert: IMMEDIATE
+      incident: REQUIRED
+      
+    HIGH:
+      action: BLOCK
+      alert: IMMEDIATE
+      incident: OPTIONAL
+      
+    MEDIUM:
+      action: WARN
+      alert: DELAYED
+      incident: OPTIONAL
+      
+  audit_all_checks: true
+  audit_violation_attempts: true
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# OVERRIDE RECORD SCHEMA
+# ═══════════════════════════════════════════════════════════════════════════════
+
+override_record_schema:
+  required_fields:
+    override_id:
+      type: string
+      format: "OVR-{YYYY}-{MM}-{DD}-{NNNNN}"
+      unique: true
+      immutable: true
+      
+    operator_id:
+      type: string
+      format: "OP-{NNNNN}"
+      verified: true
+      
+    operator_tier:
+      type: enum
+      values: [T4, T5]
+      
+    target_pdo_id:
+      type: string
+      format: "PDO-{UUID}"
+      
+    original_decision:
+      type: enum
+      values: [AGENT_APPROVED, AGENT_BLOCKED, POLICY_APPROVED, POLICY_BLOCKED, PENDING]
+      
+    override_decision:
+      type: enum
+      values: [OPERATOR_APPROVED, OPERATOR_BLOCKED, OPERATOR_MODIFIED]
+      
+    justification:
+      type: string
+      min_length: 50
+      max_length: 2000
+      
+    constitutional_citation:
+      type: string
+      pattern: "(Article [IVX]+, Section \\d+\\.\\d+|INV-(OCC|OVR)-\\d{3})"
+      
+    risk_acknowledgment:
+      type: boolean
+      required_value: true
+      
+    timestamp:
+      type: datetime
+      format: ISO8601
+      source: trusted_time_authority
+      
+    session_id:
+      type: string
+      format: UUID
+      
+    ip_address:
+      type: string
+      format: IPv4|IPv6
+      
+    user_agent:
+      type: string
+      
+    hash_previous:
+      type: string
+      format: SHA256
+      nullable: true  # Null for first record
+      
+    hash_current:
+      type: string
+      format: SHA256
+      computed: true
+      
+  optional_fields:
+    modification_details:
+      type: object
+      description: "For OPERATOR_MODIFIED decisions only"
+      
+    escalation_chain:
+      type: array
+      items: operator_id
+      
+    related_incidents:
+      type: array
+      items: incident_id
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ATTESTATION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+attestation:
+  document_id: "OCC-OVERRIDE-INVARIANTS-v1.0"
+  version: "1.0.0"
+  effective_date: "2026-01-05"
+  author: "BENSON (GID-00)"
+  enforcer: "ALEX (GID-08)"
+  status: "ACTIVE"
+  
+  invariant_count: 10
+  critical_invariants: 4
+  high_invariants: 5
+  medium_invariants: 1
+  
+  fail_closed: true
+  constitutional_compliance: true
