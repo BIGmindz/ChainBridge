@@ -1,0 +1,131 @@
+{
+  "law_id": "LAW-PAC-FLOW-001",
+  "title": "Canonical PAC Flow Codification",
+  "version": "1.0.0",
+  "classification": "LAW",
+  "governance_tier": "SUPREME",
+  "status": "ACTIVE",
+  "immutable": true,
+  "issued_by": {
+    "name": "JEFFREY",
+    "role": "CTO"
+  },
+  "enforced_by": [
+    {
+      "agent": "BENSON",
+      "gid": "GID-00",
+      "role": "Orchestration & Execution Gating"
+    },
+    {
+      "agent": "ALEX",
+      "gid": "GID-08",
+      "role": "Deterministic Governance Enforcement"
+    }
+  ],
+  "effective_date": "2026-01-02T00:00:00Z",
+  "retroactivity": "NON-RETROACTIVE",
+  "invariants": [
+    {
+      "id": "INV-LAW-001",
+      "rule": "No Loop Closure → No Next PAC",
+      "consequence": "FAIL-CLOSED"
+    },
+    {
+      "id": "INV-LAW-002",
+      "rule": "No BER → No Forward Execution",
+      "consequence": "FAIL-CLOSED"
+    },
+    {
+      "id": "INV-LAW-003",
+      "rule": "No WRAP → No BER",
+      "consequence": "FAIL-CLOSED"
+    },
+    {
+      "id": "INV-LAW-004",
+      "rule": "No Artifacts → No WRAP",
+      "consequence": "FAIL-CLOSED"
+    },
+    {
+      "id": "INV-LAW-005",
+      "rule": "No Proof → No Artifact Validity",
+      "consequence": "FAIL-CLOSED"
+    }
+  ],
+  "container_structure": {
+    "container_1": {
+      "name": "Loop Closure",
+      "blocks": [
+        {"block": 1, "name": "Pack Administration", "required": true},
+        {"block": 2, "name": "Metadata", "required": true},
+        {"block": 3, "name": "Runtime Acknowledgment", "required": true},
+        {"block": 4, "name": "Execution Summary", "required": true},
+        {"block": 5, "name": "Artifact Inventory", "required": true},
+        {"block": 6, "name": "WRAP Collection Status", "required": true},
+        {"block": 7, "name": "Review Gate (RG-01)", "required": true},
+        {"block": 8, "name": "Benson Self-Review Gate (BSRG-01)", "required": true},
+        {"block": 9, "name": "BER Issuance", "required": true},
+        {"block": 10, "name": "Training Signals", "required": true},
+        {"block": 11, "name": "Positive or Negative Closure", "required": true},
+        {"block": 12, "name": "Ledger Commit Attestation", "required": true}
+      ]
+    },
+    "container_2": {
+      "name": "Next PAC Issuance",
+      "blocks": [
+        {"block": 13, "name": "New PAC Administration", "required": true},
+        {"block": 14, "name": "Context & Goal", "required": true},
+        {"block": 15, "name": "Scope & Non-Goals", "required": true},
+        {"block": 16, "name": "Constraints & Guardrails", "required": true},
+        {"block": 17, "name": "Task Plan (Deterministic)", "required": true},
+        {"block": 18, "name": "Agent Assignment & Activation", "required": true},
+        {"block": 19, "name": "Execution & WRAP Requirements", "required": true},
+        {"block": 20, "name": "Pre-Commit Declaration", "required": true}
+      ],
+      "prerequisite": "Container 1 must reach terminal state"
+    }
+  },
+  "fail_closed_conditions": [
+    "Missing Loop Closure container",
+    "Missing BER",
+    "Missing WRAP(s)",
+    "Missing Training Signals",
+    "Dual active PACs",
+    "Supersession of CLOSED PAC"
+  ],
+  "ber_authority": {
+    "issuer": "BENSON (GID-00)",
+    "acceptor": "JEFFREY (CTO)",
+    "accepted_effect": "PAC becomes IMMUTABLE",
+    "rejected_effect": "Execution terminates; corrective PAC required"
+  },
+  "training_signal_requirements": [
+    "Positive signals",
+    "Negative signals (if any)",
+    "Lessons learned",
+    "Governance deltas"
+  ],
+  "violation_consequence": {
+    "automatic_rejection": true,
+    "non_executable": true,
+    "corrective_action": "LAW-TIER corrective PAC required"
+  },
+  "acknowledgments": [
+    {
+      "agent": "BENSON",
+      "gid": "GID-00",
+      "status": "ACKNOWLEDGED",
+      "timestamp": "2026-01-02T00:00:00Z"
+    },
+    {
+      "agent": "ALEX",
+      "gid": "GID-08",
+      "status": "ACKNOWLEDGED",
+      "timestamp": "2026-01-02T00:00:00Z"
+    }
+  ],
+  "ledger_commit": {
+    "committed": true,
+    "timestamp": "2026-01-02T00:00:00Z",
+    "audit_visible": true
+  }
+}
