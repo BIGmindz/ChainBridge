@@ -28,6 +28,12 @@ from api.occ_dashboard import router as occ_dashboard_router  # OCC Dashboard AP
 from api.occ_timeline import router as occ_timeline_router  # OCC Timeline API (PAC-BENSON-P22-C)
 from api.occ_agents import router as occ_agents_router  # OCC Agents API (PAC-BENSON-P22-C)
 from api.occ_diff import router as occ_diff_router  # OCC Diff API (PAC-BENSON-P22-C)
+from api.proofpack_download import router as proofpack_download_router  # ProofPack Download (PAC-BENSON-P33)
+from api.occ_events import router as occ_events_router  # OCC Event Stream (PAC-BENSON-P33)
+from api.occ_kill_switch import router as occ_kill_switch_router  # Kill Switch Control (PAC-BENSON-P42)
+from api.occ_emergency import router as occ_emergency_router  # Emergency Kill Switch (PAC-OCC-P16 / EU AI Act Art. 14)
+from api.occ_auth import router as occ_auth_router  # OCC Auth API (PAC-BENSON-P42)
+from api.occ_benson import router as occ_benson_router  # Benson Orchestrator API (PAC-OCC-P14)
 from api.spine import router as spine_router
 from api.trust import router as trust_router
 from core.data_processor import DataProcessor
@@ -99,7 +105,8 @@ ALLOW_DYNAMIC_MODULES = _env_bool("GATEWAY_ALLOW_DYNAMIC_MODULES", default=not I
 REQUIRE_PDO = _env_bool("GATEWAY_REQUIRE_PDO", default=IS_PROD)
 ENFORCE_RATE_LIMITS = _env_bool("GATEWAY_ENFORCE_RATE_LIMITS", default=IS_PROD)
 
-_default_dev_origins = "http://localhost:3000,http://127.0.0.1:3000"
+# PAC-OCC-P20: ChainBoard Link — Vite dev server runs on port 5173
+_default_dev_origins = "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173"
 _default_prod_origins = "https://chainbridge.app,https://dashboard.chainbridge.app"
 _cors_origins_raw = os.getenv("GATEWAY_CORS_ORIGINS", _default_prod_origins if IS_PROD else _default_dev_origins)
 _cors_origins = [origin.strip() for origin in _cors_origins_raw.split(",") if origin.strip()]
@@ -267,6 +274,12 @@ app.include_router(occ_dashboard_router)  # OCC Dashboard API (PAC-BENSON-P21-C)
 app.include_router(occ_timeline_router)  # OCC Timeline API (PAC-BENSON-P22-C)
 app.include_router(occ_agents_router)  # OCC Agents Drilldown API (PAC-BENSON-P22-C)
 app.include_router(occ_diff_router)  # OCC Decision Diff API (PAC-BENSON-P22-C)
+app.include_router(proofpack_download_router)  # ProofPack Download (PAC-BENSON-P33)
+app.include_router(occ_events_router)  # OCC Event Stream WebSocket (PAC-BENSON-P33)
+app.include_router(occ_kill_switch_router)  # Kill Switch Control (PAC-BENSON-P42)
+app.include_router(occ_emergency_router)  # Emergency Kill Switch (PAC-OCC-P16 / EU AI Act Art. 14)
+app.include_router(occ_auth_router)  # OCC Auth API (PAC-BENSON-P42)
+app.include_router(occ_benson_router)  # Benson Orchestrator API (PAC-OCC-P14)
 
 
 @app.get("/", response_model=Dict[str, str])

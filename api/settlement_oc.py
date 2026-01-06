@@ -538,6 +538,16 @@ def execute_ledger_commit(request: LedgerCommitRequest) -> LedgerCommitResponse:
             detail=f"Settlement lifecycle {request.settlement_id} not found",
         )
     
+    # ═══════════════════════════════════════════════════════════════════════════
+    # PAC-P10 GUARD: INV-CP-023 — NO VERDICT = NO COMMIT
+    # ═══════════════════════════════════════════════════════════════════════════
+    if not lifecycle.readiness_verdict_hash:
+        raise HTTPException(
+            status_code=400,
+            detail="SettlementError: Violation INV-CP-023 — No Readiness Verdict. "
+                   "Cannot commit to ledger without readiness evaluation.",
+        )
+    
     try:
         commit_result = engine.execute_ledger_commit(lifecycle, request.ber_hash)
         return _ledger_commit_to_response(commit_result)
