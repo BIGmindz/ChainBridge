@@ -1,0 +1,43 @@
+"""Observer access control module."""
+
+from core.occ.observer.permission_lattice import (
+    ObserverCategory,
+    ObserverPermissionLattice,
+    ObserverRateLimits,
+    ObserverSessionConfig,
+    Permission,
+    PermissionLevel,
+    ResourceType,
+    Operation,
+    OBSERVER_READ_PERMISSIONS,
+    OBSERVER_DENIED_PERMISSIONS,
+    REGULATORY_OBSERVER_LATTICE,
+    EXTERNAL_AUDITOR_LATTICE,
+    COMPLIANCE_OBSERVER_LATTICE,
+    DISABLED_OBSERVER_LATTICE,
+    get_observer_lattice,
+    check_observer_access,
+    check_observer_endpoint_access,
+    verify_lattice_invariants,
+)
+
+__all__ = [
+    "ObserverCategory",
+    "ObserverPermissionLattice",
+    "ObserverRateLimits",
+    "ObserverSessionConfig",
+    "Permission",
+    "PermissionLevel",
+    "ResourceType",
+    "Operation",
+    "OBSERVER_READ_PERMISSIONS",
+    "OBSERVER_DENIED_PERMISSIONS",
+    "REGULATORY_OBSERVER_LATTICE",
+    "EXTERNAL_AUDITOR_LATTICE",
+    "COMPLIANCE_OBSERVER_LATTICE",
+    "DISABLED_OBSERVER_LATTICE",
+    "get_observer_lattice",
+    "check_observer_access",
+    "check_observer_endpoint_access",
+    "verify_lattice_invariants",
+]

@@ -320,6 +320,7 @@ class ProofPackVerifier:
             canonical_data = {
                 "pdo_id": str(pdo_data.get("pdo_id")),
                 "version": pdo_data.get("version", "1.0"),
+                "classification": pdo_data.get("classification", "shadow"),
                 "input_refs": sorted(pdo_data.get("input_refs", [])),
                 "decision_ref": pdo_data.get("decision_ref"),
                 "outcome_ref": pdo_data.get("outcome_ref"),
