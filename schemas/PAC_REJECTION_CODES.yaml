@@ -1,0 +1,402 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# ChainBridge PAC Rejection Codes Registry
+# PAC-JEFFREY-C05: Canonical rejection code definitions
+# 
+# INVARIANTS:
+# - INV-PAC-010: Rejection reasons MUST be enumerable
+# - INV-PAC-011: Schema MUST be machine-verifiable
+# - INV-PAC-012: Operator feedback MUST be deterministic
+#
+# Author: BENSON (GID-00) + ATLAS (GID-11)
+# Constitutional Reference: OCC_CONSTITUTION_v1.0
+# ═══════════════════════════════════════════════════════════════════════════════
+
+schema_version: "1.0.0"
+created_at: "2026-01-06T06:30:00Z"
+pac_reference: "PAC-JEFFREY-C05"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# REJECTION CATEGORIES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+categories:
+  SCHEMA:
+    code_prefix: "REJ-SCH"
+    description: "Schema validation failures"
+    severity: HARD
+    
+  STRUCTURE:
+    code_prefix: "REJ-STR"
+    description: "PAC structure violations"
+    severity: HARD
+    
+  BLOCK:
+    code_prefix: "REJ-BLK"
+    description: "Block-level validation failures"
+    severity: HARD
+    
+  INTEGRITY:
+    code_prefix: "REJ-INT"
+    description: "Hash and integrity failures"
+    severity: HARD
+    
+  GOVERNANCE:
+    code_prefix: "REJ-GOV"
+    description: "Governance tier violations"
+    severity: HARD
+    
+  AUTHORITY:
+    code_prefix: "REJ-AUT"
+    description: "Authority and permission failures"
+    severity: HARD
+    
+  SEMANTIC:
+    code_prefix: "REJ-SEM"
+    description: "Semantic validation failures"
+    severity: HARD
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SCHEMA REJECTION CODES (REJ-SCH-XXX)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+rejection_codes:
+  # Schema validation
+  REJ-SCH-001:
+    category: SCHEMA
+    message: "Invalid schema version"
+    description: "PAC schema_version does not match required CHAINBRIDGE_PAC_SCHEMA_v1.0.0"
+    operator_feedback: "Upload failed: Schema version mismatch. Required: CHAINBRIDGE_PAC_SCHEMA_v1.0.0"
+    resolution: "Update pac.schema_version to CHAINBRIDGE_PAC_SCHEMA_v1.0.0"
+    
+  REJ-SCH-002:
+    category: SCHEMA
+    message: "Missing required field"
+    description: "One or more required top-level fields are missing"
+    operator_feedback: "Upload failed: Missing required field '{field_name}'"
+    resolution: "Add the missing field to the PAC document"
+    field_param: true
+    
+  REJ-SCH-003:
+    category: SCHEMA
+    message: "Invalid field type"
+    description: "Field value does not match expected type"
+    operator_feedback: "Upload failed: Field '{field_name}' must be type '{expected_type}', got '{actual_type}'"
+    resolution: "Correct the field type"
+    field_param: true
+    
+  REJ-SCH-004:
+    category: SCHEMA
+    message: "Invalid enum value"
+    description: "Field value not in allowed enum set"
+    operator_feedback: "Upload failed: Field '{field_name}' must be one of {allowed_values}"
+    resolution: "Use a valid enum value"
+    field_param: true
+    
+  REJ-SCH-005:
+    category: SCHEMA
+    message: "Invalid PAC ID format"
+    description: "pac_id does not match pattern PAC-{ISSUER}-{TYPE}{SEQ}"
+    operator_feedback: "Upload failed: Invalid PAC ID format. Expected: PAC-{ISSUER}-{TYPE}{SEQ}"
+    resolution: "Format pac_id as PAC-ISSUER-X00 (e.g., PAC-JEFFREY-P03)"
+    
+  REJ-SCH-006:
+    category: SCHEMA
+    message: "Invalid timestamp format"
+    description: "Timestamp field is not valid ISO 8601 format"
+    operator_feedback: "Upload failed: Field '{field_name}' must be ISO 8601 datetime"
+    resolution: "Use format: YYYY-MM-DDTHH:MM:SSZ"
+    field_param: true
+    
+  REJ-SCH-007:
+    category: SCHEMA
+    message: "Additional properties not allowed"
+    description: "PAC contains fields not defined in schema"
+    operator_feedback: "Upload failed: Unknown field '{field_name}' not permitted"
+    resolution: "Remove the unknown field"
+    field_param: true
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # STRUCTURE REJECTION CODES (REJ-STR-XXX)
+  # ═══════════════════════════════════════════════════════════════════════════════
+  
+  REJ-STR-001:
+    category: STRUCTURE
+    message: "Incorrect block count"
+    description: "PAC must contain exactly 20 blocks"
+    operator_feedback: "Upload failed: PAC must have exactly 20 blocks, found {actual_count}"
+    resolution: "Ensure blocks array contains exactly 20 blocks (indices 0-19)"
+    
+  REJ-STR-002:
+    category: STRUCTURE
+    message: "Missing block index"
+    description: "One or more block indices are missing from the sequence"
+    operator_feedback: "Upload failed: Missing block index {missing_index}"
+    resolution: "Add the missing block at index {missing_index}"
+    
+  REJ-STR-003:
+    category: STRUCTURE
+    message: "Duplicate block index"
+    description: "Block index appears more than once"
+    operator_feedback: "Upload failed: Duplicate block index {duplicate_index}"
+    resolution: "Remove duplicate block at index {duplicate_index}"
+    
+  REJ-STR-004:
+    category: STRUCTURE
+    message: "Out-of-order blocks"
+    description: "Blocks are not in sequential order"
+    operator_feedback: "Upload failed: Blocks must be in sequential order (0-19)"
+    resolution: "Reorder blocks to sequential indices"
+    
+  REJ-STR-005:
+    category: STRUCTURE
+    message: "Empty blocks array"
+    description: "PAC blocks array is empty or null"
+    operator_feedback: "Upload failed: PAC must contain 20 blocks"
+    resolution: "Populate blocks array with all 20 required blocks"
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # BLOCK REJECTION CODES (REJ-BLK-XXX)
+  # ═══════════════════════════════════════════════════════════════════════════════
+  
+  REJ-BLK-001:
+    category: BLOCK
+    message: "Block type mismatch"
+    description: "Block type does not match required type for index"
+    operator_feedback: "Upload failed: Block {index} must be type '{expected_type}', got '{actual_type}'"
+    resolution: "Set block {index} type to '{expected_type}'"
+    
+  REJ-BLK-002:
+    category: BLOCK
+    message: "Missing block content"
+    description: "Block content is missing or null"
+    operator_feedback: "Upload failed: Block {index} ({type}) has no content"
+    resolution: "Add required content to block {index}"
+    
+  REJ-BLK-003:
+    category: BLOCK
+    message: "Invalid block content schema"
+    description: "Block content does not match block type schema"
+    operator_feedback: "Upload failed: Block {index} ({type}) content invalid: {validation_error}"
+    resolution: "Correct block content per block type specification"
+    
+  REJ-BLK-004:
+    category: BLOCK
+    message: "METADATA block mismatch"
+    description: "Block 0 METADATA does not match top-level PAC fields"
+    operator_feedback: "Upload failed: METADATA block must match top-level PAC fields"
+    resolution: "Ensure Block 0 content matches pac_id, classification, governance_tier, etc."
+    
+  REJ-BLK-005:
+    category: BLOCK
+    message: "Missing required block field"
+    description: "Block is missing a required field for its type"
+    operator_feedback: "Upload failed: Block {index} ({type}) missing required field '{field_name}'"
+    resolution: "Add '{field_name}' to block {index}"
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # INTEGRITY REJECTION CODES (REJ-INT-XXX)
+  # ═══════════════════════════════════════════════════════════════════════════════
+  
+  REJ-INT-001:
+    category: INTEGRITY
+    message: "Hash mismatch"
+    description: "PAC hash does not match computed hash of content"
+    operator_feedback: "Upload failed: Hash verification failed. Expected {expected_hash}, computed {actual_hash}"
+    resolution: "Recompute SHA-256 hash of canonical PAC content"
+    
+  REJ-INT-002:
+    category: INTEGRITY
+    message: "Invalid hash format"
+    description: "Hash is not a valid 64-character hex string"
+    operator_feedback: "Upload failed: Hash must be 64 hex characters (SHA-256)"
+    resolution: "Provide valid SHA-256 hash (64 lowercase hex characters)"
+    
+  REJ-INT-003:
+    category: INTEGRITY
+    message: "Ledger hash mismatch"
+    description: "Block 19 LEDGER_COMMIT hash does not match PAC hash"
+    operator_feedback: "Upload failed: LEDGER_COMMIT hash must match PAC hash"
+    resolution: "Set Block 19 hash to match top-level PAC hash"
+    
+  REJ-INT-004:
+    category: INTEGRITY
+    message: "Tampered content detected"
+    description: "PAC content appears to have been modified after signing"
+    operator_feedback: "Upload failed: Content integrity violation detected"
+    resolution: "Regenerate PAC with fresh hash"
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # GOVERNANCE REJECTION CODES (REJ-GOV-XXX)
+  # ═══════════════════════════════════════════════════════════════════════════════
+  
+  REJ-GOV-001:
+    category: GOVERNANCE
+    message: "Invalid governance tier"
+    description: "governance_tier is not LAW, POLICY, or OPERATIONAL"
+    operator_feedback: "Upload failed: governance_tier must be LAW, POLICY, or OPERATIONAL"
+    resolution: "Set governance_tier to valid value"
+    
+  REJ-GOV-002:
+    category: GOVERNANCE
+    message: "Tier authority violation"
+    description: "Issuer does not have authority for specified governance tier"
+    operator_feedback: "Upload failed: Issuer '{issuer}' cannot issue {tier}-tier PACs"
+    resolution: "Use appropriate issuer for governance tier or change tier"
+    
+  REJ-GOV-003:
+    category: GOVERNANCE
+    message: "fail_closed must be true"
+    description: "PAC must have fail_closed: true"
+    operator_feedback: "Upload failed: fail_closed must be true (ChainBridge requirement)"
+    resolution: "Set fail_closed to true"
+    
+  REJ-GOV-004:
+    category: GOVERNANCE
+    message: "Invalid drift tolerance for tier"
+    description: "LAW-tier PACs must have ZERO drift tolerance"
+    operator_feedback: "Upload failed: LAW-tier PACs require drift_tolerance: ZERO"
+    resolution: "Set drift_tolerance to ZERO for LAW-tier PACs"
+    
+  REJ-GOV-005:
+    category: GOVERNANCE
+    message: "CORRECTIVE PAC missing supersedes"
+    description: "CORRECTIVE classification requires supersedes field"
+    operator_feedback: "Upload failed: CORRECTIVE PACs must specify supersedes"
+    resolution: "Add supersedes field with PAC ID being corrected"
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # AUTHORITY REJECTION CODES (REJ-AUT-XXX)
+  # ═══════════════════════════════════════════════════════════════════════════════
+  
+  REJ-AUT-001:
+    category: AUTHORITY
+    message: "Unknown issuer"
+    description: "issuer_gid is not a recognized agent"
+    operator_feedback: "Upload failed: Issuer '{issuer_gid}' not recognized"
+    resolution: "Use valid issuer GID (e.g., JEFFREY, BENSON, GID-00)"
+    
+  REJ-AUT-002:
+    category: AUTHORITY
+    message: "Issuer role mismatch"
+    description: "issuer_role does not match issuer_gid's registered role"
+    operator_feedback: "Upload failed: Issuer '{issuer_gid}' role is '{actual_role}', not '{claimed_role}'"
+    resolution: "Correct issuer_role to match registered role"
+    
+  REJ-AUT-003:
+    category: AUTHORITY
+    message: "PAC admission denied"
+    description: "Block 1 PAC_ADMISSION shows admission: DENIED"
+    operator_feedback: "Upload failed: PAC admission was denied"
+    resolution: "Review admission criteria and resubmit"
+    
+  REJ-AUT-004:
+    category: AUTHORITY
+    message: "Missing runtime ACK"
+    description: "Block 4 RUNTIME_ACK_COLLECTION incomplete"
+    operator_feedback: "Upload failed: Runtime acknowledgement not collected"
+    resolution: "Ensure runtime ACK is collected before submission"
+    
+  REJ-AUT-005:
+    category: AUTHORITY
+    message: "Missing agent ACK"
+    description: "Block 7 AGENT_ACK_COLLECTION incomplete"
+    operator_feedback: "Upload failed: Agent acknowledgements not collected"
+    resolution: "Ensure all agent ACKs are collected before submission"
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # SEMANTIC REJECTION CODES (REJ-SEM-XXX)
+  # ═══════════════════════════════════════════════════════════════════════════════
+  
+  REJ-SEM-001:
+    category: SEMANTIC
+    message: "Empty goal state"
+    description: "Block 10 GOAL_STATE has no goals defined"
+    operator_feedback: "Upload failed: PAC must define at least one goal"
+    resolution: "Add at least one goal to Block 10"
+    
+  REJ-SEM-002:
+    category: SEMANTIC
+    message: "Empty task list"
+    description: "Block 13 TASKS_PLAN has no tasks defined"
+    operator_feedback: "Upload failed: PAC must define at least one task"
+    resolution: "Add at least one task to Block 13"
+    
+  REJ-SEM-003:
+    category: SEMANTIC
+    message: "Invalid invariant format"
+    description: "Invariant ID does not match pattern INV-{DOMAIN}-{SEQ}"
+    operator_feedback: "Upload failed: Invalid invariant ID '{invariant_id}'. Format: INV-XXX-000"
+    resolution: "Use format INV-DOMAIN-000 (e.g., INV-OCC-001)"
+    
+  REJ-SEM-004:
+    category: SEMANTIC
+    message: "Scope too short"
+    description: "PAC scope is less than 10 characters"
+    operator_feedback: "Upload failed: Scope must be at least 10 characters"
+    resolution: "Provide more detailed scope description"
+    
+  REJ-SEM-005:
+    category: SEMANTIC
+    message: "Scope too long"
+    description: "PAC scope exceeds 500 characters"
+    operator_feedback: "Upload failed: Scope must not exceed 500 characters"
+    resolution: "Shorten scope description"
+    
+  REJ-SEM-006:
+    category: SEMANTIC
+    message: "Circular task dependency"
+    description: "Task dependencies form a cycle"
+    operator_feedback: "Upload failed: Circular dependency detected in tasks"
+    resolution: "Remove circular task dependencies"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# REJECTION RESPONSE TEMPLATE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+response_template:
+  success:
+    status: "ACCEPTED"
+    pac_id: "{pac_id}"
+    accepted_at: "{timestamp}"
+    hash: "{hash}"
+    
+  rejection:
+    status: "REJECTED"
+    pac_id: "{pac_id}"
+    rejected_at: "{timestamp}"
+    rejection_code: "{code}"
+    rejection_message: "{message}"
+    operator_feedback: "{feedback}"
+    resolution: "{resolution}"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# OCC UI BINDING CONFIGURATION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+ui_binding:
+  component: "PACUploadPanel"
+  display_mode: "DETERMINISTIC"
+  
+  severity_colors:
+    HARD: "#DC2626"  # red-600
+    SOFT: "#F59E0B"  # amber-500
+    
+  category_icons:
+    SCHEMA: "📋"
+    STRUCTURE: "🏗️"
+    BLOCK: "📦"
+    INTEGRITY: "🔐"
+    GOVERNANCE: "⚖️"
+    AUTHORITY: "🔑"
+    SEMANTIC: "📝"
+    
+  feedback_display:
+    show_code: true
+    show_message: true
+    show_resolution: true
+    expandable_details: true
+    
+  invariants_displayed:
+    - INV-PAC-010
+    - INV-PAC-011
+    - INV-PAC-012

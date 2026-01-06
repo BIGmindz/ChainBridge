@@ -1,0 +1,175 @@
+{
+  "rule_id": "RULE-TEST-001",
+  "pac_reference": "PAC-JEFFREY-P48",
+  "title": "Infinite Test Suite Governance Rules",
+  "doctrine_references": ["DOC-001", "DOC-002"],
+  "version": "1.0.0",
+  "enacted": "2026-01-02T00:00:00Z",
+  "rules": [
+    {
+      "id": "RULE-TEST-001-A",
+      "name": "No Test Regression",
+      "description": "Test count must be monotonically increasing",
+      "invariant": "current_test_count >= baseline_test_count",
+      "trigger": "pull_request",
+      "enforcement": {
+        "action": "BLOCK_MERGE",
+        "message": "Test regression detected: {baseline} → {current}",
+        "override_requires": "LAW_TIER_PAC"
+      }
+    },
+    {
+      "id": "RULE-TEST-001-B",
+      "name": "CCI Monotonicity",
+      "description": "Chaos Coverage Index must not decrease",
+      "invariant": "current_cci >= baseline_cci",
+      "trigger": "pull_request",
+      "enforcement": {
+        "action": "BLOCK_MERGE",
+        "message": "CCI decrease detected: {baseline_cci} → {current_cci}",
+        "override_requires": "LAW_TIER_PAC"
+      }
+    },
+    {
+      "id": "RULE-TEST-001-C",
+      "name": "Dimension Coverage Minimum",
+      "description": "All canonical chaos dimensions must have at least one test",
+      "invariant": "all(dimension_count >= 1 for dimension in CANONICAL_DIMENSIONS)",
+      "trigger": "pull_request",
+      "dimensions": ["AUTH", "STATE", "CONC", "TIME", "DATA", "GOV"],
+      "enforcement": {
+        "action": "BLOCK_MERGE",
+        "message": "Uncovered chaos dimensions: {uncovered}",
+        "override_requires": "LAW_TIER_PAC"
+      }
+    },
+    {
+      "id": "RULE-TEST-001-D",
+      "name": "Test Suite Must Pass",
+      "description": "All tests must pass before merge",
+      "invariant": "failed_tests == 0",
+      "trigger": "pull_request",
+      "enforcement": {
+        "action": "BLOCK_MERGE",
+        "message": "{failed_count} tests failed",
+        "override_requires": null
+      }
+    },
+    {
+      "id": "RULE-TEST-001-E",
+      "name": "Critical Tests Always Run",
+      "description": "Critical-tier tests must always execute regardless of optimization",
+      "invariant": "critical_tests.all_executed == true",
+      "trigger": "any_test_run",
+      "enforcement": {
+        "action": "FAIL_CI",
+        "message": "Critical tests were skipped: {skipped_critical}",
+        "override_requires": null
+      }
+    }
+  ],
+  "thresholds": {
+    "cci_minimum": 1.0,
+    "test_count_minimum": 5000,
+    "flakiness_maximum": 0.01,
+    "pr_runtime_target_ms": 30000,
+    "merge_runtime_target_ms": 120000
+  },
+  "chaos_dimensions": {
+    "AUTH": {
+      "code": "AUTH",
+      "name": "Authentication",
+      "description": "Identity, session, permission failures",
+      "marker": "chaos_auth",
+      "minimum_coverage": 1
+    },
+    "STATE": {
+      "code": "STATE",
+      "name": "State",
+      "description": "Inconsistent, stale, corrupted state",
+      "marker": "chaos_state",
+      "minimum_coverage": 1
+    },
+    "CONC": {
+      "code": "CONC",
+      "name": "Concurrency",
+      "description": "Race conditions, deadlocks, ordering",
+      "marker": "chaos_conc",
+      "minimum_coverage": 1
+    },
+    "TIME": {
+      "code": "TIME",
+      "name": "Time",
+      "description": "Clock skew, timeout, scheduling",
+      "marker": "chaos_time",
+      "minimum_coverage": 1
+    },
+    "DATA": {
+      "code": "DATA",
+      "name": "Data",
+      "description": "Malformed, missing, overflow, injection",
+      "marker": "chaos_data",
+      "minimum_coverage": 1
+    },
+    "GOV": {
+      "code": "GOV",
+      "name": "Governance",
+      "description": "Rule violations, policy conflicts",
+      "marker": "chaos_gov",
+      "minimum_coverage": 1
+    }
+  },
+  "test_intelligence": {
+    "enabled": true,
+    "priority_ordering": true,
+    "risk_tiers": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "BASELINE"],
+    "blast_radius_categories": ["SYSTEM", "SERVICE", "MODULE", "FUNCTION", "ISOLATED"],
+    "pre_ber_brief_required": true
+  },
+  "optimization": {
+    "parallel_execution": {
+      "enabled": true,
+      "max_workers": 8,
+      "sequential_marker": "sequential"
+    },
+    "sharding": {
+      "enabled": true,
+      "default_shards": 4,
+      "balance_by": "duration"
+    },
+    "affected_only": {
+      "enabled": true,
+      "pr_scope": true,
+      "always_include_critical": true,
+      "full_suite_on_merge": true
+    }
+  },
+  "agent_responsibilities": {
+    "BENSON": {
+      "gid": "GID-00",
+      "role": "Review Pre-BER Risk Brief",
+      "actions": ["review_risk_brief", "approve_merge"]
+    },
+    "CODY": {
+      "gid": "GID-01",
+      "role": "Test generation and optimization",
+      "actions": ["generate_tests", "optimize_execution"]
+    },
+    "SAM": {
+      "gid": "GID-06",
+      "role": "Adversarial and security tests",
+      "actions": ["generate_chaos_tests", "security_fuzzing"]
+    },
+    "DAN": {
+      "gid": "GID-07",
+      "role": "CI performance and sharding",
+      "actions": ["optimize_ci", "manage_sharding"]
+    },
+    "ALEX": {
+      "gid": "GID-08",
+      "role": "Rule enforcement",
+      "actions": ["enforce_rules", "block_violations"]
+    }
+  },
+  "status": "ACTIVE"
+}
