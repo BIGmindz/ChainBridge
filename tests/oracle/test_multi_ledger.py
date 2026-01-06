@@ -63,6 +63,7 @@ class TestHederaAdapter:
         from src.core.oracle.hedera_adapter import HCSMessage
         
         msg = HCSMessage(
+            message_id="HCS-TEST-001",
             proof_hash="abc123",
             timestamp=datetime.now(timezone.utc).isoformat(),
             pac_id="PAC-OCC-P34",
@@ -88,7 +89,7 @@ class TestHederaAdapter:
         adapter.submit_proof("hash3", blocking=True)
         
         stats = adapter.get_stats()
-        assert stats["total_submissions"] == 3
+        assert stats["submissions"]["total"] == 3
         assert stats["enabled"] is False
     
     def test_hedera_singleton_pattern(self):
@@ -177,7 +178,7 @@ class TestXRPAdapter:
         adapter.submit_attestation("hash2", blocking=True)
         
         stats = adapter.get_stats()
-        assert stats["total_submissions"] == 2
+        assert stats["submissions"]["total"] == 2
         assert stats["enabled"] is False
     
     def test_xrp_singleton_pattern(self):
