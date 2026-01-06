@@ -50,6 +50,19 @@ class PDOSourceSystem(str, Enum):
     MANUAL = "manual"
 
 
+class PDOClassification(str, Enum):
+    """PDO classification for Shadow vs Production distinction.
+    
+    PAC-BENSON-P42: Shadow-PDO enforcement.
+    
+    - SHADOW: Internal testing/development, non-settlement
+    - PRODUCTION: Real production operations, can settle
+    """
+    
+    SHADOW = "shadow"
+    PRODUCTION = "production"
+
+
 class PDORecord(BaseModel):
     """
     Immutable PDO Record Schema.
@@ -153,6 +166,15 @@ class PDORecord(BaseModel):
     )
 
     # =========================================================================
+    # CLASSIFICATION (PAC-BENSON-P42: Shadow vs Production)
+    # =========================================================================
+
+    classification: PDOClassification = Field(
+        default=PDOClassification.SHADOW,
+        description="PDO classification: SHADOW (non-settlement) or PRODUCTION",
+    )
+
+    # =========================================================================
     # CRYPTOGRAPHIC SEAL (computed at write time, immutable)
     # =========================================================================
 
@@ -207,6 +229,7 @@ class PDORecord(BaseModel):
         canonical_data = {
             "pdo_id": str(self.pdo_id),
             "version": self.version,
+            "classification": self.classification.value,
             "input_refs": sorted(self.input_refs),
             "decision_ref": self.decision_ref,
             "outcome_ref": self.outcome_ref,
@@ -296,6 +319,12 @@ class PDOCreate(BaseModel):
     actor_type: str = Field(
         default="system",
         description="Actor type",
+    )
+
+    # Classification field - critical for JEFFREY_INTERNAL mode
+    classification: PDOClassification = Field(
+        default=PDOClassification.SHADOW,
+        description="PDO classification: SHADOW (non-settlement) or PRODUCTION",
     )
 
     # Optional fields
