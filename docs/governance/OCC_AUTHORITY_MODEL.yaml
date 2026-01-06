@@ -1,0 +1,421 @@
+# OCC Authority Model v1.0
+# PAC Reference: PAC-OCC-P01
+# Classification: CONSTITUTIONAL
+# Author: BENSON (GID-00)
+# Effective Date: 2026-01-05
+
+schema_version: "1.0.0"
+document_id: "OCC-AUTHORITY-MODEL-v1.0"
+constitution_reference: "OCC-CONSTITUTION-v1.0"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# AUTHORITY TIERS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+authority_tiers:
+  T1:
+    name: "OBSERVER"
+    level: 1
+    description: "Read-only access to operations and audit logs"
+    permissions:
+      - VIEW
+      - COMMENT
+    restrictions:
+      - NO_APPROVE
+      - NO_BLOCK
+      - NO_MODIFY
+      - NO_OVERRIDE
+    max_value_authority: 0  # Cannot authorize any value
+    escalation_target: T2
+    
+  T2:
+    name: "OPERATOR"
+    level: 2
+    description: "Standard operational authority for routine PDOs"
+    permissions:
+      - VIEW
+      - COMMENT
+      - APPROVE
+      - BLOCK
+      - ESCALATE
+      - DEFER
+    restrictions:
+      - NO_MODIFY
+      - NO_OVERRIDE
+      - NO_EMERGENCY_ACTIONS
+    max_value_authority: 100000  # USD equivalent
+    escalation_target: T3
+    approval_timeout_minutes: 30
+    
+  T3:
+    name: "SENIOR_OPERATOR"
+    level: 3
+    description: "Elevated authority for high-value and complex operations"
+    permissions:
+      - VIEW
+      - COMMENT
+      - APPROVE
+      - BLOCK
+      - ESCALATE
+      - DEFER
+      - MODIFY
+      - EXPEDITE
+    restrictions:
+      - NO_OVERRIDE
+      - NO_KILL_SWITCH
+    max_value_authority: 1000000  # USD equivalent
+    escalation_target: T4
+    approval_timeout_minutes: 60
+    modify_bounds:
+      allowed_fields:
+        - settlement_timing
+        - counterparty_priority
+        - batch_grouping
+      forbidden_fields:
+        - amount
+        - recipient
+        - source_account
+        
+  T4:
+    name: "SUPERVISOR"
+    level: 4
+    description: "Supervisory authority with override capability"
+    permissions:
+      - VIEW
+      - COMMENT
+      - APPROVE
+      - BLOCK
+      - ESCALATE
+      - DEFER
+      - MODIFY
+      - EXPEDITE
+      - OVERRIDE
+      - EMERGENCY_HALT
+      - QUARANTINE
+    restrictions:
+      - NO_KILL_SWITCH
+    max_value_authority: 10000000  # USD equivalent
+    escalation_target: T5
+    approval_timeout_minutes: 120
+    override_requirements:
+      - justification_min_length: 50
+      - constitutional_citation_required: true
+      - risk_acknowledgment_required: true
+      
+  T5:
+    name: "EXECUTIVE"
+    level: 5
+    description: "Executive authority with emergency and policy exception powers"
+    permissions:
+      - VIEW
+      - COMMENT
+      - APPROVE
+      - BLOCK
+      - ESCALATE
+      - DEFER
+      - MODIFY
+      - EXPEDITE
+      - OVERRIDE
+      - EMERGENCY_HALT
+      - QUARANTINE
+      - KILL_SWITCH
+      - POLICY_EXCEPTION
+      - REGULATORY_INTERFACE
+    restrictions: []
+    max_value_authority: null  # Unlimited
+    escalation_target: null  # No further escalation
+    approval_timeout_minutes: null  # No timeout
+    kill_switch_requirements:
+      - dual_confirmation: true
+      - incident_report_required: true
+      - regulatory_notification: true
+      
+  T6:
+    name: "SYSTEM_ADMIN"
+    level: 6
+    description: "Administrative authority for system configuration (non-operational)"
+    permissions:
+      - VIEW
+      - USER_MANAGEMENT
+      - SYSTEM_CONFIG
+      - AUDIT_EXPORT
+    restrictions:
+      - NO_OPERATIONAL_AUTHORITY
+      - NO_APPROVE
+      - NO_BLOCK
+      - NO_MODIFY
+      - NO_OVERRIDE
+    operational_authority: false
+    notes: "System administrators cannot approve, block, or modify operational decisions"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ACTION DEFINITIONS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+actions:
+  # Standard Actions
+  VIEW:
+    description: "Observe operation details and status"
+    minimum_tier: T1
+    audit_required: true
+    justification_required: false
+    
+  COMMENT:
+    description: "Add annotation to operation record"
+    minimum_tier: T1
+    audit_required: true
+    justification_required: false
+    
+  APPROVE:
+    description: "Authorize operation to proceed"
+    minimum_tier: T2
+    audit_required: true
+    justification_required: false
+    creates_commitment: true
+    
+  BLOCK:
+    description: "Prevent operation from proceeding"
+    minimum_tier: T2
+    audit_required: true
+    justification_required: true
+    justification_min_length: 20
+    
+  ESCALATE:
+    description: "Raise to higher authority tier"
+    minimum_tier: T2
+    audit_required: true
+    justification_required: true
+    target_tier_increment: 1
+    
+  DEFER:
+    description: "Delay operation for later review"
+    minimum_tier: T2
+    audit_required: true
+    justification_required: false
+    max_defer_hours: 72
+    
+  # Elevated Actions
+  MODIFY:
+    description: "Alter bounded parameters within policy"
+    minimum_tier: T3
+    audit_required: true
+    justification_required: true
+    bounds_check_required: true
+    
+  EXPEDITE:
+    description: "Bypass standard queue priority"
+    minimum_tier: T3
+    audit_required: true
+    justification_required: true
+    
+  OVERRIDE:
+    description: "Supersede agent or automated decision"
+    minimum_tier: T4
+    audit_required: true
+    justification_required: true
+    justification_min_length: 50
+    constitutional_citation_required: true
+    risk_acknowledgment_required: true
+    creates_override_marker: true
+    
+  # Emergency Actions
+  EMERGENCY_HALT:
+    description: "Immediately stop specific operation"
+    minimum_tier: T4
+    audit_required: true
+    justification_required: true
+    incident_report_required: true
+    
+  QUARANTINE:
+    description: "Isolate operation for investigation"
+    minimum_tier: T4
+    audit_required: true
+    justification_required: true
+    investigation_id_required: true
+    
+  KILL_SWITCH:
+    description: "Halt ALL operations globally"
+    minimum_tier: T5
+    audit_required: true
+    justification_required: true
+    incident_report_required: true
+    regulatory_notification: true
+    dual_confirmation: true
+    recovery_requires_t5: true
+    
+  POLICY_EXCEPTION:
+    description: "Grant one-time exception to policy rule"
+    minimum_tier: T5
+    audit_required: true
+    justification_required: true
+    expiry_required: true
+    review_required_after: true
+    
+  # Administrative Actions
+  USER_MANAGEMENT:
+    description: "Manage operator accounts and tier assignments"
+    minimum_tier: T6
+    audit_required: true
+    operational: false
+    
+  SYSTEM_CONFIG:
+    description: "Modify system configuration parameters"
+    minimum_tier: T6
+    audit_required: true
+    operational: false
+    change_control_required: true
+    
+  AUDIT_EXPORT:
+    description: "Export audit records for compliance"
+    minimum_tier: T6
+    audit_required: true
+    operational: false
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ESCALATION RULES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+escalation:
+  timeout_behavior: BLOCK  # BLOCK or ESCALATE_AUTO
+  default_timeout_minutes: 15
+  max_escalation_chain: 3  # Maximum escalations before forced T5 review
+  
+  triggers:
+    - condition: "value_exceeds_tier_authority"
+      action: "MANDATORY_ESCALATE"
+      
+    - condition: "high_risk_score"
+      threshold: 0.85
+      action: "MANDATORY_ESCALATE"
+      
+    - condition: "regulatory_flagged"
+      action: "MANDATORY_ESCALATE"
+      target_tier: T5
+      
+    - condition: "agent_confidence_low"
+      threshold: 0.60
+      action: "RECOMMENDED_ESCALATE"
+      
+    - condition: "counterparty_new"
+      action: "RECOMMENDED_ESCALATE"
+      
+  escalation_chain:
+    T2: [T3, T4, T5]
+    T3: [T4, T5]
+    T4: [T5]
+    T5: []  # No further escalation
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# DELEGATION RULES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+delegation:
+  allowed: true
+  constraints:
+    - delegate_tier_must_be_equal_or_higher: true
+    - delegation_to_agents_forbidden: true
+    - delegation_to_automation_forbidden: true
+    - delegation_expiry_required: true
+    - delegation_max_duration_hours: 168  # 1 week
+    
+  audit:
+    - delegator_identity
+    - delegate_identity
+    - delegation_scope
+    - delegation_start
+    - delegation_expiry
+    - delegation_reason
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# IDENTITY REQUIREMENTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+identity:
+  verification_required: true
+  verification_methods:
+    - type: "SSO"
+      provider: "enterprise_idp"
+      mfa_required: true
+      
+    - type: "CERTIFICATE"
+      issuer: "chainbridge_ca"
+      key_type: "ECDSA_P384"
+      
+    - type: "HARDWARE_TOKEN"
+      vendors: ["yubikey", "nitrokey"]
+      
+  session_requirements:
+    max_session_hours: 12
+    idle_timeout_minutes: 30
+    reauthentication_for_emergency: true
+    
+  non_repudiation:
+    enabled: true
+    signature_algorithm: "ECDSA_P384"
+    timestamp_authority: "internal_tsa"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# AUDIT REQUIREMENTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+audit:
+  all_actions_logged: true
+  immutable: true
+  hash_chain: true
+  
+  required_fields:
+    - action_type
+    - operator_id
+    - operator_tier
+    - target_reference
+    - timestamp
+    - session_id
+    - ip_address
+    - user_agent
+    
+  additional_fields_for_override:
+    - original_state
+    - new_state
+    - justification
+    - constitutional_citation
+    - risk_acknowledgment
+    
+  retention:
+    standard_actions: "7_years"
+    overrides: "10_years"
+    incidents: "permanent"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FAIL-CLOSED CONFIGURATION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+fail_closed:
+  enabled: true
+  
+  conditions:
+    - occ_service_unavailable: BLOCK_ALL
+    - identity_verification_failure: BLOCK_OPERATION
+    - authority_check_failure: BLOCK_OPERATION
+    - audit_logging_failure: BLOCK_OPERATION
+    - timeout_exceeded: BLOCK_OPERATION
+    - unknown_state: BLOCK_OPERATION
+    - database_unreachable: BLOCK_ALL
+    - message_queue_failure: BLOCK_ALL
+    
+  recovery:
+    requires_tier: T5
+    staged_restoration: true
+    post_incident_report_required: true
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ATTESTATION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+attestation:
+  document_id: "OCC-AUTHORITY-MODEL-v1.0"
+  version: "1.0.0"
+  effective_date: "2026-01-05"
+  author: "BENSON (GID-00)"
+  status: "ACTIVE"
+  constitutional_compliance: true
+  alex_review_required: true
