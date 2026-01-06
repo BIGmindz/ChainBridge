@@ -1,0 +1,271 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# BENSON-JEFFREY GOVERNANCE CONTRACT
+# PAC-JEFFREY-C07: Permanent BER Enforcement & Directive Hardening
+# 
+# This contract defines the immutable interface between:
+#   - BENSON (GID-00): Execution Runtime / BER Emitter
+#   - JEFFREY: Constitutional Architect / LAW Reviewer
+#
+# INVARIANTS ENFORCED:
+#   - INV-GOV-010: Every PAC produces exactly one BER
+#   - INV-GOV-011: WRAP ≠ Decision (Proof only)
+#   - INV-GOV-012: LAW review without BER is FORBIDDEN
+#   - INV-GOV-013: Benson MUST emit BER before any closure
+#
+# Author: JEFFREY (Constitutional Architect)
+# Executor: BENSON (GID-00)
+# Constitutional Reference: OCC_CONSTITUTION_v1.0
+# ═══════════════════════════════════════════════════════════════════════════════
+
+contract_id: CONTRACT-BENSON-JEFFREY-001
+contract_version: "1.0.0"
+governance_tier: LAW
+created_at: "2026-01-06T07:30:00Z"
+pac_reference: PAC-JEFFREY-C07
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PARTIES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+parties:
+  benson:
+    gid: GID-00
+    role: ORCHESTRATOR
+    subrole: EXECUTION_RUNTIME
+    responsibilities:
+      - Execute PACs according to governance tier
+      - Emit WRAP after execution
+      - Emit BER after WRAP (MANDATORY)
+      - Submit BER to Jeffrey for LAW review
+      
+  jeffrey:
+    gid: null  # Constitutional role, not agent
+    role: CONSTITUTIONAL_ARCHITECT
+    tier: LAW
+    responsibilities:
+      - Issue PACs (PROACTIVE, CORRECTIVE, CONSTITUTIONAL)
+      - Perform LAW review on BERs
+      - Accept or reject BER decisions
+      - Close governance loops
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ARTIFACT FLOW
+# ═══════════════════════════════════════════════════════════════════════════════
+
+artifact_flow:
+  sequence:
+    1:
+      artifact: PAC
+      emitter: JEFFREY
+      receiver: BENSON
+      purpose: "Issue execution directive"
+      
+    2:
+      artifact: RUNTIME_ACK
+      emitter: BENSON
+      receiver: JEFFREY
+      purpose: "Acknowledge PAC receipt and authority"
+      
+    3:
+      artifact: EXECUTION_OUTPUT
+      emitter: BENSON
+      receiver: null  # Internal
+      purpose: "Produce deliverables"
+      
+    4:
+      artifact: WRAP
+      emitter: BENSON
+      receiver: JEFFREY
+      purpose: "Document execution as proof"
+      classification: PROOF_ONLY
+      can_close_loop: false  # CRITICAL
+      
+    5:
+      artifact: BER
+      emitter: BENSON
+      receiver: JEFFREY
+      purpose: "Provide decision on PAC execution"
+      classification: DECISION
+      can_close_loop: true
+      mandatory: true  # INV-GOV-010
+      
+    6:
+      artifact: LAW_REVIEW
+      emitter: JEFFREY
+      receiver: null  # Terminal
+      purpose: "Accept or reject BER decision"
+      requires: BER  # INV-GOV-012
+      
+    7:
+      artifact: LOOP_CLOSURE
+      emitter: JEFFREY
+      receiver: null  # Terminal
+      purpose: "Close governance loop"
+      requires: [WRAP, BER, LAW_REVIEW]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BENSON OBLIGATIONS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+benson_obligations:
+  ber_emission:
+    rule: "Benson MUST emit BER for every PAC"
+    exceptions: NONE
+    timing: AFTER_WRAP_BEFORE_LAW_REVIEW
+    
+    required_fields:
+      - ber_id
+      - pac_reference
+      - wrap_reference
+      - evaluator
+      - timestamp
+      - decision
+      - rationale
+      
+    decision_values:
+      - ACCEPT
+      - REJECT
+      - CONDITIONAL_ACCEPT
+      
+  wrap_emission:
+    rule: "Benson MUST emit WRAP documenting execution"
+    classification: PROOF_ONLY
+    cannot: "Close loop or substitute for BER"
+    
+  sequence_compliance:
+    rule: "Benson MUST follow artifact sequence"
+    order: [EXECUTION, WRAP, BER]
+    skip_allowed: false
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# JEFFREY OBLIGATIONS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+jeffrey_obligations:
+  law_review:
+    rule: "Jeffrey MUST only perform LAW review on BER artifacts"
+    input: BER
+    prohibited_inputs:
+      - WRAP_WITHOUT_BER
+      - IMPLICIT_CLOSURE
+      - BENSON_DIRECT_OUTPUT
+      
+  pac_issuance:
+    rule: "Jeffrey MAY issue PACs of any classification"
+    classifications:
+      - PROACTIVE
+      - CORRECTIVE
+      - CONSTITUTIONAL
+      - EMERGENCY
+      
+  loop_closure:
+    rule: "Jeffrey MAY close loop only after LAW review of BER"
+    requires: [WRAP, BER, LAW_REVIEW]
+    cannot: "Close loop without BER"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# VIOLATIONS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+violations:
+  benson_violations:
+    missing_ber:
+      severity: CRITICAL
+      invariant: INV-GOV-010
+      consequence: LOOP_BLOCKED
+      recovery: "Issue BER before requesting LAW review"
+      
+    wrap_as_decision:
+      severity: CRITICAL
+      invariant: INV-GOV-011
+      consequence: LOOP_BLOCKED
+      recovery: "Emit BER — WRAP is proof only"
+      
+    ber_before_wrap:
+      severity: HIGH
+      consequence: SEQUENCE_VIOLATION
+      recovery: "Emit WRAP before BER"
+      
+  jeffrey_violations:
+    law_review_without_ber:
+      severity: CRITICAL
+      invariant: INV-GOV-012
+      consequence: REVIEW_BLOCKED
+      recovery: "Request BER from Benson before LAW review"
+      
+    implicit_closure:
+      severity: CRITICAL
+      invariant: INV-GOV-013
+      consequence: CLOSURE_BLOCKED
+      recovery: "Require explicit BER and LAW review"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ENFORCEMENT
+# ═══════════════════════════════════════════════════════════════════════════════
+
+enforcement:
+  mechanism: MECHANICAL
+  human_override: false
+  
+  gates:
+    - gate_id: GATE-BER-REQUIRED
+      enforces: [INV-GOV-010, INV-GOV-011]
+      timing: BEFORE_LAW_REVIEW
+      failure_action: HARD_STOP
+      
+    - gate_id: GATE-LAW-REVIEW-REQUIRES-BER
+      enforces: [INV-GOV-012]
+      timing: BEFORE_LAW_REVIEW
+      failure_action: HARD_STOP
+      
+    - gate_id: GATE-CLOSURE-REQUIRES-BER
+      enforces: [INV-GOV-013]
+      timing: BEFORE_LOOP_CLOSURE
+      failure_action: HARD_STOP
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INVARIANTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+invariants:
+  INV-GOV-010:
+    statement: "Every PAC produces exactly one BER"
+    enforced_by: benson_obligations.ber_emission
+    violation_consequence: LOOP_BLOCKED
+    
+  INV-GOV-011:
+    statement: "WRAP ≠ Decision (Proof only)"
+    enforced_by: artifact_flow.sequence.4.classification
+    violation_consequence: LOOP_BLOCKED
+    
+  INV-GOV-012:
+    statement: "LAW review without BER is FORBIDDEN"
+    enforced_by: jeffrey_obligations.law_review.input
+    violation_consequence: REVIEW_BLOCKED
+    
+  INV-GOV-013:
+    statement: "Benson MUST emit BER before any closure"
+    enforced_by: benson_obligations.sequence_compliance
+    violation_consequence: CLOSURE_BLOCKED
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TRAINING SIGNAL
+# ═══════════════════════════════════════════════════════════════════════════════
+
+training_signal:
+  type: CONSTITUTIONAL_HARDENING
+  durability: PERMANENT
+  
+  lessons:
+    - "BER is mandatory for ALL PACs — no exceptions"
+    - "WRAP documents execution — BER authorizes closure"
+    - "Proof → Decision → Outcome is inviolable"
+    - "Jeffrey only acts on BER, never WRAP alone"
+    - "Governance ordering must be mechanical, not inferred"
+    
+  anti_patterns:
+    - "Treating WRAP as sufficient for closure"
+    - "Implicit acceptance through silence"
+    - "Context-based BER omission"
+    - "Conditional governance interpretations"
+    - "LAW review on WRAP without BER"

@@ -1,0 +1,230 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# BER REQUIREMENT DIRECTIVE — CONSTITUTIONAL AUTHORITY
+# PAC-JEFFREY-C07: Permanent BER Enforcement & Directive Hardening
+# 
+# This directive is IMMUTABLE and has LAW-tier authority.
+# No exceptions, no conditional omissions, no context-based interpretations.
+#
+# INVARIANTS ENFORCED:
+# - INV-GOV-010: Every PAC produces exactly one BER
+# - INV-GOV-011: WRAP ≠ Decision (Proof only)
+# - INV-GOV-012: LAW review without BER is FORBIDDEN
+# - INV-GOV-013: Benson MUST emit BER before any closure
+#
+# Author: JEFFREY (Constitutional Architect)
+# Executor: BENSON (GID-00)
+# Constitutional Reference: OCC_CONSTITUTION_v1.0
+# ═══════════════════════════════════════════════════════════════════════════════
+
+directive_id: DIR-BER-001
+directive_version: "1.0.0"
+directive_type: CONSTITUTIONAL
+governance_tier: LAW
+
+title: "Mandatory BER Requirement"
+description: |
+  Benson Execution MUST issue a BER (Benson Execution Report) for every PAC.
+  WRAP is insufficient for loop closure.
+  Jeffrey may only perform LAW review on BER artifacts.
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# APPLICABILITY
+# ═══════════════════════════════════════════════════════════════════════════════
+
+applicability:
+  applies_to: ALL_PACS
+  pac_classifications:
+    - PROACTIVE
+    - CORRECTIVE
+    - CONSTITUTIONAL
+    - EMERGENCY
+  exceptions: NONE
+  exception_authority: null  # No authority can grant exceptions
+  
+# ═══════════════════════════════════════════════════════════════════════════════
+# CORE RULE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+rule:
+  statement: |
+    Benson Execution MUST issue a BER for every PAC.
+    WRAP is insufficient for loop closure.
+    Jeffrey may only review BER artifacts.
+    
+  mechanical_enforcement: true
+  human_override: false
+  
+  sequence:
+    required_order:
+      - PAC_ISSUED
+      - RUNTIME_ACK
+      - AGENT_ACK
+      - EXECUTION
+      - WRAP_ISSUED
+      - BER_ISSUED          # <-- MANDATORY, NO SKIP
+      - LAW_REVIEW
+      - LOOP_CLOSED
+      
+    ber_position: AFTER_WRAP_BEFORE_LAW_REVIEW
+    skip_allowed: false
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BER REQUIREMENTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+ber_requirements:
+  schema: CHAINBRIDGE_BER_SCHEMA_v1.0.0
+  
+  required_fields:
+    - ber_id
+    - pac_reference
+    - wrap_reference
+    - evaluator
+    - timestamp
+    - decision
+    - rationale
+    
+  decision_values:
+    - ACCEPT
+    - REJECT
+    - CONDITIONAL_ACCEPT  # Requires follow-up PAC
+    
+  prohibited:
+    - implicit_acceptance
+    - decision_by_omission
+    - wrap_as_decision
+    - conditional_ber_skip
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# WRAP CONSTRAINTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+wrap_constraints:
+  role: PROOF_ONLY
+  capabilities:
+    - document_execution
+    - record_deliverables
+    - capture_metrics
+    - provide_evidence
+    
+  prohibited_capabilities:
+    - close_loop
+    - substitute_for_ber
+    - trigger_law_review
+    - authorize_advancement
+    
+  explicit_declaration: |
+    WRAP is a proof artifact. It documents what was done.
+    WRAP is NOT a decision artifact. It cannot authorize advancement.
+    Only BER can authorize loop closure and LAW review.
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# JEFFREY CONTRACT
+# ═══════════════════════════════════════════════════════════════════════════════
+
+jeffrey_contract:
+  role: CONSTITUTIONAL_ARCHITECT
+  tier: LAW
+  
+  allowed_inputs:
+    - BER  # ONLY BER, never WRAP alone
+    
+  prohibited_inputs:
+    - WRAP_WITHOUT_BER
+    - IMPLICIT_CLOSURE
+    - BENSON_DIRECT_OUTPUT
+    
+  action_on_violation:
+    type: HARD_STOP
+    message: "LAW review requires BER. WRAP is insufficient."
+    recovery: "Issue BER-{pac_id} before requesting LAW review."
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ENFORCEMENT
+# ═══════════════════════════════════════════════════════════════════════════════
+
+enforcement:
+  mechanism: PREFLIGHT_GATE
+  gate_id: GATE-BER-REQUIRED
+  
+  checks:
+    - name: ber_exists
+      condition: "BER artifact must exist for PAC"
+      failure: HARD_STOP
+      
+    - name: ber_references_wrap
+      condition: "BER must reference corresponding WRAP"
+      failure: HARD_STOP
+      
+    - name: ber_has_decision
+      condition: "BER must contain explicit decision"
+      failure: HARD_STOP
+      
+    - name: law_review_has_ber
+      condition: "LAW review request must include BER reference"
+      failure: HARD_STOP
+
+  failure_responses:
+    HARD_STOP:
+      action: BLOCK_ADVANCEMENT
+      notification: IMMEDIATE
+      recovery_required: true
+      
+# ═══════════════════════════════════════════════════════════════════════════════
+# TRAINING SIGNAL
+# ═══════════════════════════════════════════════════════════════════════════════
+
+training_signal:
+  type: CONSTITUTIONAL_HARDENING
+  durability: PERMANENT
+  
+  lessons:
+    - "BER is mandatory for ALL PACs — no exceptions"
+    - "WRAP documents execution — BER authorizes closure"
+    - "Proof → Decision → Outcome is inviolable"
+    - "Jeffrey only acts on BER, never WRAP alone"
+    
+  anti_patterns:
+    - "Treating WRAP as sufficient for closure"
+    - "Implicit acceptance through silence"
+    - "Context-based BER omission"
+    - "Conditional governance interpretations"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# AUDIT
+# ═══════════════════════════════════════════════════════════════════════════════
+
+audit:
+  log_all_checks: true
+  log_violations: true
+  retention: PERMANENT
+  
+  violation_record:
+    - timestamp
+    - pac_id
+    - violation_type
+    - gate_failed
+    - recovery_action
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# METADATA
+# ═══════════════════════════════════════════════════════════════════════════════
+
+metadata:
+  created_at: "2026-01-06T07:30:00Z"
+  created_by: PAC-JEFFREY-C07
+  constitutional_reference: OCC_CONSTITUTION_v1.0
+  supersedes: "ALL_PRIOR_IMPLICIT_INTERPRETATIONS"
+  
+  invariants:
+    - id: INV-GOV-010
+      statement: "Every PAC produces exactly one BER"
+      
+    - id: INV-GOV-011
+      statement: "WRAP ≠ Decision (Proof only)"
+      
+    - id: INV-GOV-012
+      statement: "LAW review without BER is FORBIDDEN"
+      
+    - id: INV-GOV-013
+      statement: "Benson MUST emit BER before any closure"
