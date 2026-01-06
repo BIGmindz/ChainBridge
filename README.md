@@ -2,7 +2,38 @@
 
 ChainBridge is the freight intelligence platform that closes enterprise logistics deals. It unifies shipment health (ChainIQ), settlements (ChainPay), the Operator Console (ChainBoard), and upcoming ChainSense insights behind a single API gateway.
 
-## Quickstart (Local)
+---
+
+## 🚀 V1.0.0 Quick Start (One Command)
+
+```bash
+./start_chainbridge.sh
+```
+
+That's it. The script will:
+- ✅ Check Kill Switch safety status
+- ✅ Activate Python virtual environment
+- ✅ Start API Server (Port 8000)
+- ✅ Start UI Dashboard (Port 5173)
+- ✅ Open ChainBoard in your browser
+- ✅ Clean shutdown on `Ctrl+C`
+
+### V1.0.0 Core Features
+
+| Feature | Description |
+|---------|-------------|
+| 🧠 **Benson Orchestrator** | Constitutional CPU with PDO governance |
+| 🛑 **Kill Switch** | EU AI Act Art. 14 compliant emergency stop |
+| 👁️ **God-View Dashboard** | Real-time system status, agents, policies |
+| 📜 **ChainDocs Policy Engine** | Immutable policies with SHA256 hash citations |
+| 🤖 **Agent Swarm Factory** | 12-agent registry with spawn/delegate capability |
+| 🔑 **Single-Command Launchpad** | Zero-config startup with clean shutdown |
+
+> **See [V1_RELEASE_NOTES.md](V1_RELEASE_NOTES.md) for complete release details.**
+
+---
+
+## Quickstart (Manual Setup)
 
 1. **Prepare Python + Node toolchain**
    ```bash
