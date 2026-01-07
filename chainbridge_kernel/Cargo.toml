@@ -1,0 +1,41 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# PAC-OCC-P20-BOOTSTRAP — ChainBridge Constitutional Kernel
+# Governance Tier: LAW
+# Invariant: BINARY_PDO_PARITY | ZERO_UNSAFE_RUST
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[package]
+name = "chainbridge_kernel"
+version = "0.1.0"
+edition = "2021"
+authors = ["ChainBridge Governance <governance@chainbridge.io>"]
+description = "Constitutional Kernel - Binary Gatekeeper for PAC validation"
+license = "MIT"
+repository = "https://github.com/BIGmindz/ChainBridge"
+
+[lib]
+name = "chainbridge_kernel"
+path = "src/lib.rs"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+thiserror = "1.0"
+sha2 = "0.10"
+hex = "0.4"
+
+[dev-dependencies]
+pretty_assertions = "1.4"
+
+[features]
+default = []
+strict = []  # Enables additional compile-time checks
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Build Profile: Release with LTO for production binary
+# ═══════════════════════════════════════════════════════════════════════════════
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"

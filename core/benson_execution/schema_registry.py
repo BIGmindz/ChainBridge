@@ -511,6 +511,10 @@ class BensonSchemaRegistry:
         errors = []
         
         for schema_block in schema_blocks:
+            # Skip block 0 (METADATA) - validated separately at top level
+            if schema_block.block_number == 0:
+                continue
+            
             block_key = str(schema_block.block_number)
             block_data = blocks.get(block_key) or blocks.get(schema_block.block_number)
             
