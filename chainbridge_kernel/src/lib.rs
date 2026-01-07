@@ -115,6 +115,11 @@ pub mod hal;
 /// Uses write-ahead logging: temp file → fsync → atomic rename.
 pub mod ledger;
 pub mod models;
+/// Hardware Signal Handler for OS-level emergency termination (PAC-OCC-P16).
+///
+/// Async-signal-safe handlers for SIGINT/SIGTERM/SIGHUP with < 5ms latency.
+/// Invariant: HARDWARE_SUPREMACY - "When the plug is pulled, the lights must go out."
+pub mod signal_handler;
 pub mod validator;
 
 // Re-exports for convenience

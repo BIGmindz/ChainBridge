@@ -1,8 +1,8 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-// PAC-OCC-P20-BINDING — Cockpit Terminal Component
+// PAC-OCC-P20-BINDING + PAC-OCC-P21-FRICTION — Cockpit Terminal Component
 // Lane 9 (UX / GID-SONNY) Implementation
 // Governance Tier: LAW
-// Invariant: ARCHITECT_CONTROL | AGENT_OBSERVE | KILL_SWITCH_VISIBLE
+// Invariant: ARCHITECT_CONTROL | AGENT_OBSERVE | KILL_SWITCH_VISIBLE | DWELL_TIME
 // ═══════════════════════════════════════════════════════════════════════════════
 /**
  * Cockpit Terminal Component
@@ -16,6 +16,11 @@
  * - Agents have read-only observation
  * - Emergency KILL SESSION button always visible
  * - All connections require valid auth tokens
+ * 
+ * P21 Integration:
+ * - Kill button enforces LAW-tier dwell time (5s)
+ * - Requires confirmation click after dwell satisfied
+ * - Speed is negligence - no panic clicks allowed
  */
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
@@ -23,6 +28,9 @@ import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import '@xterm/xterm/css/xterm.css';
+
+// P21 Friction imports
+import { SafeButton, KillButton } from './SafeButton';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -75,7 +83,8 @@ export const CockpitTerminal: React.FC<CockpitTerminalProps> = ({
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [commandCount, setCommandCount] = useState(0);
   const [bytesTransferred, setBytesTransferred] = useState({ sent: 0, received: 0 });
-  const [killConfirm, setKillConfirm] = useState(false);
+  const [manualConnect, setManualConnect] = useState(false); // P20-V2: Explicit connect required
+  // Note: killConfirm removed - P21 SafeButton handles confirmation with dwell timer
 
   // ═══════════════════════════════════════════════════════════════════════════
   // TERMINAL INITIALIZATION
@@ -141,7 +150,7 @@ export const CockpitTerminal: React.FC<CockpitTerminalProps> = ({
     term.writeln(`\x1b[90mRole: ${role === 'architect' ? '\x1b[1;32mARCHITECT (READ/WRITE)' : '\x1b[1;33mAGENT (READ-ONLY)'}\x1b[0m`);
     term.writeln(`\x1b[90mGID:  ${gid}\x1b[0m`);
     term.writeln('');
-    term.writeln('\x1b[90mConnecting to backend...\x1b[0m');
+    term.writeln('\x1b[90mClick [Connect] to establish WebSocket connection...\x1b[0m');
 
     // Handle window resize
     const handleResize = () => {
@@ -160,11 +169,12 @@ export const CockpitTerminal: React.FC<CockpitTerminalProps> = ({
 
   // ═══════════════════════════════════════════════════════════════════════════
   // WEBSOCKET CONNECTION
+  // P20-V2: Explicit connect required - no auto-connect on mount
   // ═══════════════════════════════════════════════════════════════════════════
 
   useEffect(() => {
     const term = terminalInstance.current;
-    if (!term) return;
+    if (!term || !manualConnect) return; // P20-V2: Wait for explicit connect
 
     // Build WebSocket URL with auth
     const fullUrl = `${wsUrl}?token=${encodeURIComponent(token)}&gid=${encodeURIComponent(gid)}`;
@@ -288,18 +298,44 @@ export const CockpitTerminal: React.FC<CockpitTerminalProps> = ({
     return () => {
       ws.close();
     };
-  }, [token, gid, role, wsUrl, onConnectionChange, onSessionEnd]);
+  }, [token, gid, role, wsUrl, onConnectionChange, onSessionEnd, manualConnect]);
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // KILL SESSION HANDLER
+  // CONNECTION HANDLERS (P20-V2: Explicit Connect Required)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  const handleConnect = useCallback(() => {
+    // P20-V2: Explicit connect action by operator
+    const term = terminalInstance.current;
+    if (term) {
+      term.writeln('\x1b[90mInitiating connection...\x1b[0m');
+    }
+    setManualConnect(true);
+  }, []);
+
+  const handleDisconnect = useCallback(() => {
+    // P20-V2: Explicit disconnect action
+    if (wsRef.current) {
+      wsRef.current.close(1000, 'User disconnected');
+    }
+    setManualConnect(false);
+    setStatus('disconnected');
+    
+    const term = terminalInstance.current;
+    if (term) {
+      term.writeln('');
+      term.writeln('\x1b[1;33m⚠ Disconnected by operator\x1b[0m');
+      term.writeln('\x1b[90mClick [Connect] to reconnect...\x1b[0m');
+    }
+  }, []);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // KILL SESSION HANDLER (P21 Friction-Gated)
   // ═══════════════════════════════════════════════════════════════════════════
 
   const handleKillSession = useCallback(async () => {
-    if (!killConfirm) {
-      setKillConfirm(true);
-      setTimeout(() => setKillConfirm(false), 3000);
-      return;
-    }
+    // P21: This is only called AFTER dwell time is satisfied AND confirmation is clicked
+    // The SafeButton/KillButton component handles the friction enforcement
 
     // Send kill command via WebSocket
     if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -320,9 +356,7 @@ export const CockpitTerminal: React.FC<CockpitTerminalProps> = ({
     } catch (e) {
       console.error('Kill request failed:', e);
     }
-
-    setKillConfirm(false);
-  }, [killConfirm, gid]);
+  }, [gid]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // RENDER
@@ -372,17 +406,39 @@ export const CockpitTerminal: React.FC<CockpitTerminalProps> = ({
             <span>↑{bytesTransferred.sent}B ↓{bytesTransferred.received}B</span>
           </div>
 
-          {/* KILL SESSION BUTTON - Always visible */}
-          <button
+          {/* CONNECT/DISCONNECT BUTTONS - P20-V2: Explicit action required */}
+          {status === 'disconnected' ? (
+            <SafeButton
+              onClick={handleConnect}
+              tier="OPERATIONAL"
+              size="sm"
+              showProgress
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              Connect
+            </SafeButton>
+          ) : status === 'connected' ? (
+            <SafeButton
+              onClick={handleDisconnect}
+              tier="GUIDANCE"
+              size="sm"
+              showProgress
+              className="bg-yellow-600 hover:bg-yellow-700 text-white"
+            >
+              Disconnect
+            </SafeButton>
+          ) : null}
+
+          {/* KILL SESSION BUTTON - P21 Friction Enforced */}
+          {/* LAW tier: 5s dwell + confirmation required */}
+          <KillButton
             onClick={handleKillSession}
-            className={`px-3 py-1 text-xs font-bold rounded transition-all ${
-              killConfirm
-                ? 'bg-red-600 text-white animate-pulse'
-                : 'bg-red-900 text-red-300 hover:bg-red-700'
-            }`}
+            size="sm"
+            showProgress
+            disabled={status !== 'connected'}
           >
-            {killConfirm ? '⚠ CONFIRM KILL?' : '🛑 KILL SESSION'}
-          </button>
+            KILL SESSION
+          </KillButton>
         </div>
       </div>
 
