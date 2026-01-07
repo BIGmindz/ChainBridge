@@ -7,10 +7,10 @@
     "schema_version": "1.0.0"
   },
   "sequence_state": {
-    "next_sequence": 211,
-    "last_entry_timestamp": "2026-01-07T16:00:00.000000Z",
-    "total_entries": 210,
-    "last_entry_hash": "e22a9f8d0c4b567890fedcba12345678901abcdef9876543210deadbeefcafe22"
+    "next_sequence": 212,
+    "last_entry_timestamp": "2026-01-07T16:30:00.000000Z",
+    "total_entries": 211,
+    "last_entry_hash": "f23b0a9e1d5c678901fedcba23456789012bcdef0a98765432deadbeefcafe23"
   },
   "agent_sequences": {
     "GID-00": {
@@ -6834,6 +6834,64 @@
       "notes": "SOVEREIGN GATE V2.0.0 COMMITTED. 19 files, 6330 insertions. The Triad is Secured. P17 Swarm unlocked.",
       "prior_hash": "d22b8e9c0d5a456789fedcba23456789012abcdef0987654321deadbeefcafe21",
       "entry_hash": "e22a9f8d0c4b567890fedcba12345678901abcdef9876543210deadbeefcafe22"
+    },
+    {
+      "sequence": 211,
+      "timestamp": "2026-01-07T16:30:00.000000Z",
+      "entry_type": "CONSTITUTIONAL_LAW",
+      "law_id": "LAW-EAP-001",
+      "law_name": "Executor Accountability Protocol (The Benson Bond)",
+      "authority": "GID-JEFFREY",
+      "governance_tier": "LAW",
+      "binding_agent": {
+        "gid": "GID-00",
+        "name": "BENSON",
+        "role": "Orchestrator"
+      },
+      "protocol": {
+        "name": "WRAP/BER Handshake",
+        "version": "1.0.0",
+        "constraint": "NO_WRAP_NO_BER",
+        "description": "Every Bridge Execution Report (BER) MUST reference a valid WRAP ID. Execution without authorization is VOID."
+      },
+      "mandates": [
+        {
+          "id": "EAP-M1",
+          "rule": "NO_GHOST_PROTOCOL",
+          "description": "Benson SHALL NOT execute any task that lacks a traceable WRAP parent."
+        },
+        {
+          "id": "EAP-M2",
+          "rule": "STRICT_LIABILITY",
+          "description": "Every BER outcome is attributable to the issuing WRAP. Plausible deniability is removed."
+        },
+        {
+          "id": "EAP-M3",
+          "rule": "VERBAL_ORDER_REJECTION",
+          "description": "Implied tasks, verbal orders, and informal instructions are constitutionally VOID."
+        },
+        {
+          "id": "EAP-M4",
+          "rule": "WRAP_REQUEST_PROTOCOL",
+          "description": "Agents requiring authorization MUST submit a formal WRAP Request to the Architect."
+        }
+      ],
+      "enforcement": {
+        "fail_mode": "FAIL_CLOSED",
+        "violation_response": "REJECT_EXECUTION",
+        "audit_requirement": "ALL_BERS_LOGGED"
+      },
+      "acknowledgment": {
+        "acknowledged_by": "GID-COPILOT",
+        "acknowledged_at": "2026-01-07T16:30:00.000000Z",
+        "acknowledgment_hash": "BENSON_BOND_ACK_2026_01_07"
+      },
+      "effective_date": "2026-01-07",
+      "sunset_date": null,
+      "supersedes": null,
+      "notes": "THE BENSON BOND: Executor Accountability Protocol is now Constitutional Law. NO WRAP = NO BER. Ghost Protocol execution is VOID. Strict Liability active.",
+      "prior_hash": "e22a9f8d0c4b567890fedcba12345678901abcdef9876543210deadbeefcafe22",
+      "entry_hash": "f23b0a9e1d5c678901fedcba23456789012bcdef0a98765432deadbeefcafe23"
     }
   ]
 }
