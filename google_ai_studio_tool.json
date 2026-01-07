@@ -1,0 +1,49 @@
+{
+  "function_declarations": [
+    {
+      "name": "send_to_benson",
+      "description": "Transmits a signed ChainBridge PAC artifact to the Sovereign Relay. This function sends Policy Artifact Containers (PACs) to the ChainBridge execution engine for processing. PACs must include a pac_id for tracking, content containing the full PAC payload, and optionally an Ed25519 signature for identity verification (required for CONSTITUTIONAL_LAW tier).",
+      "parameters": {
+        "type": "OBJECT",
+        "properties": {
+          "pac_id": {
+            "type": "STRING",
+            "description": "Unique identifier for the PAC (e.g., PAC-OCC-P26-FULL-IGNITION)"
+          },
+          "content": {
+            "type": "STRING",
+            "description": "The full PAC payload containing all 23 blocks (METADATA through BER_HANDSHAKE)"
+          },
+          "signature_hex": {
+            "type": "STRING",
+            "description": "Ed25519 signature of the content in hexadecimal format. Required for CONSTITUTIONAL_LAW tier PACs."
+          }
+        },
+        "required": ["pac_id", "content"]
+      }
+    },
+    {
+      "name": "query_bridge_health",
+      "description": "Checks the health status of the ChainBridge Sovereign Relay. Returns version, sovereignty status, and gate configuration.",
+      "parameters": {
+        "type": "OBJECT",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "list_active_pacs",
+      "description": "Lists all active PACs currently loaded in the ChainBridge ledger.",
+      "parameters": {
+        "type": "OBJECT",
+        "properties": {
+          "filter_tier": {
+            "type": "STRING",
+            "description": "Optional filter by governance tier (OPERATIONAL, STRATEGIC, CONSTITUTIONAL_LAW)"
+          }
+        },
+        "required": []
+      }
+    }
+  ]
+}

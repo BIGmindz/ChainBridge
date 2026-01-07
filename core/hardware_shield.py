@@ -517,6 +517,338 @@ def register_shutdown_hook(
 # MAIN (for testing)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# PAC-OCC-P16-HW: DEAD MAN'S SWITCH (Physical Sovereignty Layer)
+# ═══════════════════════════════════════════════════════════════════════════════
+# Invariant: HUMAN_ANCHOR | NO_GHOSTS | FAIL_CLOSED
+# "The circuit is the law. The break in the circuit is the execution of the law."
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class HeartbeatSource(Enum):
+    """Type of heartbeat source for Dead Man's Switch"""
+    FILE_LOCK = "file_lock"     # Dev mode: lockfile existence
+    SERIAL = "serial"          # Production: serial port signal
+    GPIO = "gpio"              # Embedded: GPIO pin state
+
+
+@dataclass
+class DeadManSwitchConfig:
+    """Configuration for Dead Man's Switch"""
+    source: HeartbeatSource = HeartbeatSource.FILE_LOCK
+    poll_interval_hz: float = 1.0       # Polling frequency (Hz)
+    timeout_seconds: float = 2.0        # Max time without heartbeat before kill
+    lockfile_path: Optional[Path] = None  # For FILE_LOCK mode
+    serial_port: str = "/dev/ttyUSB0"   # For SERIAL mode
+    gpio_pin: int = 17                  # For GPIO mode (BCM numbering)
+    bypass_in_dev: bool = False         # If True, skip kill in DEV mode
+
+
+class DeadManSwitch:
+    """
+    Physical Sovereignty Layer - Dead Man's Switch
+    
+    This class monitors a hardware resource (serial port, GPIO, or lockfile)
+    for a heartbeat signal. If the signal is lost for longer than the timeout,
+    the process is forcefully terminated.
+    
+    Constitutional Mandate (LAW-P16-HW):
+    - The digital system MUST terminate immediately if the physical link is severed
+    - Fail-closed: Default state is OFF (blocking)
+    - Poll at least 1Hz
+    - Bypass graceful shutdown if signal loss > 2s
+    
+    Usage:
+        # Development mode (lockfile):
+        switch = DeadManSwitch(source=HeartbeatSource.FILE_LOCK)
+        switch.start()  # Blocks until lockfile appears, then monitors
+        
+        # Production mode (serial):
+        switch = DeadManSwitch(
+            source=HeartbeatSource.SERIAL,
+            serial_port="/dev/ttyUSB0"
+        )
+        switch.start()
+    """
+    
+    _instance: Optional['DeadManSwitch'] = None
+    
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
+    def __init__(self, config: Optional[DeadManSwitchConfig] = None):
+        if hasattr(self, '_initialized') and self._initialized:
+            return
+            
+        self.config = config or DeadManSwitchConfig()
+        self._thread: Optional[threading.Thread] = None
+        self._stop_event = threading.Event()
+        self._last_heartbeat: float = 0.0
+        self._armed = False
+        self._state = "INIT"  # INIT, ARMED, POLLING, TERMINATED
+        
+        # Set default lockfile path
+        if self.config.source == HeartbeatSource.FILE_LOCK and not self.config.lockfile_path:
+            self.config.lockfile_path = Path.home() / ".chainbridge" / "heartbeat.lock"
+        
+        self._initialized = True
+        logger.info(f"[P16-DEADMAN] Initialized: source={self.config.source.value}")
+    
+    def _check_heartbeat(self) -> bool:
+        """
+        Check if the heartbeat signal is present.
+        
+        Returns True if heartbeat detected (system should stay alive).
+        Returns False if no heartbeat (system should prepare to die).
+        """
+        try:
+            if self.config.source == HeartbeatSource.FILE_LOCK:
+                return self._check_lockfile()
+            elif self.config.source == HeartbeatSource.SERIAL:
+                return self._check_serial()
+            elif self.config.source == HeartbeatSource.GPIO:
+                return self._check_gpio()
+            else:
+                logger.error(f"[P16-DEADMAN] Unknown source: {self.config.source}")
+                return False
+        except Exception as e:
+            logger.error(f"[P16-DEADMAN] Heartbeat check failed: {e}")
+            return False
+    
+    def _check_lockfile(self) -> bool:
+        """Check if lockfile exists and is fresh (modified within timeout)."""
+        lockfile = self.config.lockfile_path
+        if not lockfile or not lockfile.exists():
+            return False
+        
+        # Check if file was touched recently (within 2x poll interval)
+        try:
+            mtime = lockfile.stat().st_mtime
+            age = time.time() - mtime
+            return age < (2.0 / self.config.poll_interval_hz)
+        except Exception:
+            return False
+    
+    def _check_serial(self) -> bool:
+        """Check serial port for heartbeat signal."""
+        try:
+            import serial
+            with serial.Serial(self.config.serial_port, 9600, timeout=0.1) as ser:
+                # Read one byte - any data means heartbeat
+                data = ser.read(1)
+                return len(data) > 0
+        except ImportError:
+            logger.warning("[P16-DEADMAN] pyserial not installed")
+            return False
+        except Exception as e:
+            logger.debug(f"[P16-DEADMAN] Serial read failed: {e}")
+            return False
+    
+    def _check_gpio(self) -> bool:
+        """Check GPIO pin state (Raspberry Pi)."""
+        try:
+            import RPi.GPIO as GPIO
+            GPIO.setmode(GPIO.BCM)
+            GPIO.setup(self.config.gpio_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+            return GPIO.input(self.config.gpio_pin) == GPIO.HIGH
+        except ImportError:
+            logger.warning("[P16-DEADMAN] RPi.GPIO not available")
+            return False
+        except Exception as e:
+            logger.debug(f"[P16-DEADMAN] GPIO read failed: {e}")
+            return False
+    
+    def _poll_loop(self) -> None:
+        """Background thread polling loop."""
+        poll_interval = 1.0 / self.config.poll_interval_hz
+        
+        logger.info(f"[P16-DEADMAN] Polling started: {self.config.poll_interval_hz}Hz, timeout={self.config.timeout_seconds}s")
+        self._state = "POLLING"
+        
+        while not self._stop_event.is_set():
+            if self._check_heartbeat():
+                self._last_heartbeat = time.time()
+                logger.debug("[P16-DEADMAN] Heartbeat OK")
+            else:
+                elapsed = time.time() - self._last_heartbeat
+                logger.warning(f"[P16-DEADMAN] No heartbeat for {elapsed:.1f}s")
+                
+                if elapsed > self.config.timeout_seconds:
+                    self._execute_kill()
+                    return
+            
+            self._stop_event.wait(poll_interval)
+    
+    def _execute_kill(self) -> None:
+        """
+        Execute immediate process termination.
+        
+        NO GRACEFUL SHUTDOWN - this is a hardware interrupt.
+        """
+        self._state = "TERMINATED"
+        
+        # Check dev mode bypass
+        dev_mode = os.getenv("BRIDGE_DEV_MODE", "false").lower() == "true"
+        if self.config.bypass_in_dev and dev_mode:
+            logger.warning("[P16-DEADMAN] KILL BYPASSED - DEV MODE")
+            return
+        
+        logger.critical("=" * 60)
+        logger.critical("[P16-DEADMAN] ☠️  HEARTBEAT LOST - EXECUTING KILL")
+        logger.critical("[P16-DEADMAN] The circuit is broken. The law is executed.")
+        logger.critical("=" * 60)
+        
+        # Log to audit file
+        try:
+            audit_path = Path("logs/deadman_audit.log")
+            audit_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(audit_path, "a") as f:
+                f.write(f"{datetime.utcnow().isoformat()} | KILL | PID={os.getpid()} | REASON=heartbeat_timeout\n")
+        except Exception:
+            pass
+        
+        # Immediate termination - bypass graceful shutdown
+        pid = os.getpid()
+        os.kill(pid, signal.SIGKILL)
+    
+    def start(self) -> None:
+        """
+        Start the Dead Man's Switch monitoring.
+        
+        This MUST be called after the application is ready to serve.
+        The switch will immediately start checking for heartbeat.
+        """
+        if self._armed:
+            logger.warning("[P16-DEADMAN] Already armed")
+            return
+        
+        # Initial heartbeat check - FAIL_CLOSED
+        if self._check_heartbeat():
+            self._last_heartbeat = time.time()
+            logger.info("[P16-DEADMAN] Initial heartbeat OK - arming")
+        else:
+            dev_mode = os.getenv("BRIDGE_DEV_MODE", "false").lower() == "true"
+            if self.config.bypass_in_dev and dev_mode:
+                logger.warning("[P16-DEADMAN] No initial heartbeat - DEV MODE BYPASS")
+                self._last_heartbeat = time.time()  # Fake it for dev
+            else:
+                logger.critical("[P16-DEADMAN] No initial heartbeat - FAIL_CLOSED")
+                # Give a brief grace period to create lockfile
+                logger.info("[P16-DEADMAN] Waiting 5s for heartbeat source...")
+                time.sleep(5)
+                if not self._check_heartbeat():
+                    logger.critical("[P16-DEADMAN] Still no heartbeat - TERMINATING")
+                    sys.exit(1)
+                self._last_heartbeat = time.time()
+        
+        # Start polling thread
+        self._armed = True
+        self._state = "ARMED"
+        self._thread = threading.Thread(
+            target=self._poll_loop,
+            name="DeadManSwitch",
+            daemon=True  # Die with main thread
+        )
+        self._thread.start()
+        
+        logger.info("[P16-DEADMAN] ⚡ ARMED - Physical sovereignty active")
+    
+    def stop(self) -> None:
+        """Stop the Dead Man's Switch (for graceful shutdown only)."""
+        if not self._armed:
+            return
+        
+        self._stop_event.set()
+        if self._thread and self._thread.is_alive():
+            self._thread.join(timeout=1.0)
+        
+        self._armed = False
+        self._state = "STOPPED"
+        logger.info("[P16-DEADMAN] Disarmed")
+    
+    @property
+    def is_armed(self) -> bool:
+        """Check if the switch is currently armed."""
+        return self._armed
+    
+    @property
+    def state(self) -> str:
+        """Get current state."""
+        return self._state
+    
+    @property
+    def seconds_since_heartbeat(self) -> float:
+        """Get seconds since last heartbeat."""
+        if self._last_heartbeat == 0:
+            return float('inf')
+        return time.time() - self._last_heartbeat
+
+
+# Import threading for DeadManSwitch
+import threading
+
+
+def get_dead_man_switch() -> Optional[DeadManSwitch]:
+    """Get the singleton DeadManSwitch instance, if initialized."""
+    return DeadManSwitch._instance
+
+
+def arm_dead_man_switch(
+    source: HeartbeatSource = HeartbeatSource.FILE_LOCK,
+    lockfile_path: Optional[Path] = None,
+    bypass_in_dev: bool = True
+) -> DeadManSwitch:
+    """
+    Initialize and arm the Dead Man's Switch.
+    
+    Args:
+        source: Heartbeat source type
+        lockfile_path: Path to lockfile (for FILE_LOCK mode)
+        bypass_in_dev: Skip kill in DEV mode
+    
+    Returns:
+        Armed DeadManSwitch instance
+    """
+    config = DeadManSwitchConfig(
+        source=source,
+        lockfile_path=lockfile_path,
+        bypass_in_dev=bypass_in_dev
+    )
+    switch = DeadManSwitch(config)
+    switch.start()
+    return switch
+
+
+def create_heartbeat_lockfile(path: Optional[Path] = None) -> Path:
+    """
+    Create the heartbeat lockfile for development testing.
+    
+    Call this from a separate process or script to keep the system alive.
+    The lockfile must be 'touched' periodically to maintain heartbeat.
+    
+    Returns the path to the lockfile.
+    """
+    lockfile = path or Path.home() / ".chainbridge" / "heartbeat.lock"
+    lockfile.parent.mkdir(parents=True, exist_ok=True)
+    lockfile.touch()
+    logger.info(f"[P16-DEADMAN] Heartbeat lockfile created: {lockfile}")
+    return lockfile
+
+
+def touch_heartbeat(path: Optional[Path] = None) -> None:
+    """Touch the heartbeat lockfile to maintain heartbeat."""
+    lockfile = path or Path.home() / ".chainbridge" / "heartbeat.lock"
+    if lockfile.exists():
+        lockfile.touch()
+    else:
+        create_heartbeat_lockfile(lockfile)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAIN (for testing)
+# ═══════════════════════════════════════════════════════════════════════════════
+
 if __name__ == "__main__":
     logging.basicConfig(
         level=logging.DEBUG,
@@ -530,16 +862,57 @@ if __name__ == "__main__":
     def save_state_hook():
         print("[TEST] State saved to ledger")
     
-    with hardware_shield("GID-00-TEST") as shield:
-        shield.register_hook("save_state", save_state_hook, priority=10)
-        shield.register_hook("cleanup", cleanup_hook, priority=20)
+    # Test mode selection
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--deadman", action="store_true", help="Test Dead Man's Switch")
+    args = parser.parse_args()
+    
+    if args.deadman:
+        # Test Dead Man's Switch
+        print("=" * 60)
+        print("Testing Dead Man's Switch (FILE_LOCK mode)")
+        print("=" * 60)
+        print("To keep alive, run in another terminal:")
+        print("  while true; do touch ~/.chainbridge/heartbeat.lock; sleep 0.5; done")
+        print("=" * 60)
         
-        print("[TEST] Hardware shield armed. Press Ctrl+C to test.")
-        print("[TEST] PID:", os.getpid())
+        os.environ["BRIDGE_DEV_MODE"] = "true"
         
-        try:
+        # Create initial lockfile
+        lockfile = create_heartbeat_lockfile()
+        print(f"Lockfile: {lockfile}")
+        
+        # Start heartbeat maintainer in background
+        def heartbeat_maintainer():
             while True:
-                time.sleep(1)
-                print("[TEST] Still running...")
-        except KeyboardInterrupt:
-            pass  # Signal handler will take over
+                touch_heartbeat()
+                time.sleep(0.5)
+        
+        hb_thread = threading.Thread(target=heartbeat_maintainer, daemon=True)
+        hb_thread.start()
+        
+        switch = arm_dead_man_switch(bypass_in_dev=False)
+        
+        print(f"Switch state: {switch.state}")
+        print("Delete lockfile to trigger kill:")
+        print(f"  rm {lockfile}")
+        
+        while True:
+            time.sleep(1)
+            print(f"[ALIVE] Last heartbeat: {switch.seconds_since_heartbeat:.1f}s ago")
+    else:
+        # Test HardwareShield (signals)
+        with hardware_shield("GID-00-TEST") as shield:
+            shield.register_hook("save_state", save_state_hook, priority=10)
+            shield.register_hook("cleanup", cleanup_hook, priority=20)
+            
+            print("[TEST] Hardware shield armed. Press Ctrl+C to test.")
+            print("[TEST] PID:", os.getpid())
+            
+            try:
+                while True:
+                    time.sleep(1)
+                    print("[TEST] Still running...")
+            except KeyboardInterrupt:
+                pass  # Signal handler will take over
