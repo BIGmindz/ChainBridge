@@ -109,6 +109,11 @@ pub mod friction;
 /// Note: The `hal::secure_memory` submodule uses controlled unsafe code
 /// for volatile writes to ensure memory zeroization is not optimized away.
 pub mod hal;
+/// Atomic Ledger operations with file-level locking (PAC-OCC-P25).
+///
+/// Thread-safe, atomic append operations for GOVERNANCE_LEDGER.json.
+/// Uses write-ahead logging: temp file → fsync → atomic rename.
+pub mod ledger;
 pub mod models;
 pub mod validator;
 

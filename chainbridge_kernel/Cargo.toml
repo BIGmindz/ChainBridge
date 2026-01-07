@@ -25,6 +25,7 @@ chrono = { version = "0.4", features = ["serde"] }
 thiserror = "1.0"
 sha2 = "0.10"
 hex = "0.4"
+fs2 = "0.4"  # PAC-OCC-P25: Cross-platform file locking
 
 [dev-dependencies]
 pretty_assertions = "1.4"
