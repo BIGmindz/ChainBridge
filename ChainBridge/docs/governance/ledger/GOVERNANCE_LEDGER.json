@@ -7,10 +7,10 @@
     "schema_version": "1.0.0"
   },
   "sequence_state": {
-    "next_sequence": 212,
-    "last_entry_timestamp": "2026-01-07T16:30:00.000000Z",
-    "total_entries": 211,
-    "last_entry_hash": "f23b0a9e1d5c678901fedcba23456789012bcdef0a98765432deadbeefcafe23"
+    "next_sequence": 213,
+    "last_entry_timestamp": "2026-01-07T17:00:00.000000Z",
+    "total_entries": 212,
+    "last_entry_hash": "a24c1b0f2e6d789012fedcba34567890123cdef1b09876543deadbeefcafe24"
   },
   "agent_sequences": {
     "GID-00": {
@@ -6892,6 +6892,88 @@
       "notes": "THE BENSON BOND: Executor Accountability Protocol is now Constitutional Law. NO WRAP = NO BER. Ghost Protocol execution is VOID. Strict Liability active.",
       "prior_hash": "e22a9f8d0c4b567890fedcba12345678901abcdef9876543210deadbeefcafe22",
       "entry_hash": "f23b0a9e1d5c678901fedcba23456789012bcdef0a98765432deadbeefcafe23"
+    },
+    {
+      "sequence": 212,
+      "timestamp": "2026-01-07T17:00:00.000000Z",
+      "entry_type": "CONSTITUTIONAL_LAW",
+      "law_id": "LAW-TLH-001",
+      "law_name": "Triple-Lock Handshake (Radical Determinism)",
+      "authority": "GID-JEFFREY",
+      "governance_tier": "LAW",
+      "version": "v2.1.2",
+      "protocol": {
+        "name": "Triple-Lock Handshake",
+        "version": "1.0.0",
+        "phases": [
+          {
+            "phase": 1,
+            "name": "ACKNOWLEDGE",
+            "signal": "ACK_READY",
+            "description": "Agent confirms activation and readiness to receive Dispatch."
+          },
+          {
+            "phase": 2,
+            "name": "DISPATCH",
+            "signal": "DISPATCH_TOKEN",
+            "description": "Benson issues authorization token after verifying Agent context."
+          },
+          {
+            "phase": 3,
+            "name": "WORK",
+            "signal": "BER_SUBMITTED",
+            "description": "Agent executes and submits verified Bridge Execution Report."
+          }
+        ],
+        "constraint": "ACTIVATION_NOT_AUTHORIZATION",
+        "description": "Activation (ACK) does not imply Authorization (DISPATCH). Work cannot begin without explicit Dispatch Token."
+      },
+      "role_changes": {
+        "BENSON": {
+          "previous_role": "EXECUTOR",
+          "new_role": "REVIEWER_EXECUTOR",
+          "description": "Benson now reviews Agent readiness before issuing Dispatch. Silent failures eliminated."
+        }
+      },
+      "mandates": [
+        {
+          "id": "TLH-M1",
+          "rule": "NO_SILENT_FAILURE",
+          "description": "If an Agent does not Acknowledge, the system halts before Dispatch."
+        },
+        {
+          "id": "TLH-M2",
+          "rule": "DISPATCH_REQUIRED",
+          "description": "Work cannot begin without an explicit Dispatch Token from Benson."
+        },
+        {
+          "id": "TLH-M3",
+          "rule": "CONTEXT_VERIFICATION",
+          "description": "Benson verifies Agent context/readiness before burning compute resources."
+        },
+        {
+          "id": "TLH-M4",
+          "rule": "WRAP_VALIDATION",
+          "description": "Invalid WRAP triggers Benson block before BER submission."
+        }
+      ],
+      "enforcement": {
+        "fail_mode": "FAIL_CLOSED",
+        "violation_response": "HALT_BEFORE_DISPATCH",
+        "timeout_handling": "CALIBRATE_VIA_P23"
+      },
+      "acknowledgment": {
+        "acknowledged_by": "GID-COPILOT",
+        "acknowledged_at": "2026-01-07T17:00:00.000000Z",
+        "acknowledgment_hash": "RADICAL_LAW_ACK_2026_01_07"
+      },
+      "effective_date": "2026-01-07",
+      "sunset_date": null,
+      "supersedes": null,
+      "next_authorized_pac": "PAC-OCC-P23-FFI-BRIDGE",
+      "notes": "RADICAL DETERMINISM v2.1.2: Triple-Lock Handshake is now Constitutional Law. ACK -> DISPATCH -> WORK. Activation != Authorization. Silent Failure vector eliminated.",
+      "prior_hash": "f23b0a9e1d5c678901fedcba23456789012bcdef0a98765432deadbeefcafe23",
+      "entry_hash": "a24c1b0f2e6d789012fedcba34567890123cdef1b09876543deadbeefcafe24"
     }
   ]
 }
