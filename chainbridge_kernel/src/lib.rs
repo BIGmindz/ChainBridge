@@ -55,7 +55,7 @@
 //!
 //! | Gate | Name | Description |
 //! |------|------|-------------|
-//! | G1 | Structural Lint | PAC has exactly 20 blocks |
+//! | G1 | Structural Lint | PAC has exactly 23 blocks (v2.1.4) |
 //! | G2 | Governance Tier | Valid governance tier |
 //! | G3 | Constitutional Continuity | Schema version compatible |
 //! | G4 | Block Index Integrity | Block indices match types |
@@ -132,8 +132,8 @@ pub const KERNEL_VERSION: &str = "0.1.0";
 /// Schema version this kernel validates against.
 pub const SUPPORTED_SCHEMA_PREFIX: &str = "CHAINBRIDGE_PAC_SCHEMA_v1.";
 
-/// Number of blocks in a valid PAC.
-pub const PAC_BLOCK_COUNT: usize = 20;
+/// Number of blocks in a valid PAC (v2.1.4 schema: Blocks 00-22).
+pub const PAC_BLOCK_COUNT: usize = 23;
 
 /// Number of pre-flight gates (G1-G9).
 pub const PREFLIGHT_GATE_COUNT: usize = 9;
@@ -143,8 +143,8 @@ pub const PREFLIGHT_GATE_COUNT: usize = 9;
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const _: () = {
-    // Ensure PAC block count matches BlockType variant count
-    assert!(PAC_BLOCK_COUNT == 20);
+    // Ensure PAC block count matches BlockType variant count (v2.1.4: 23 blocks)
+    assert!(PAC_BLOCK_COUNT == 23);
     
     // Ensure pre-flight gate count matches PreflightGate variant count (G1-G9)
     assert!(PREFLIGHT_GATE_COUNT == 9);
@@ -176,7 +176,7 @@ mod tests {
     #[test]
     fn test_kernel_constants() {
         assert_eq!(KERNEL_VERSION, "0.1.0");
-        assert_eq!(PAC_BLOCK_COUNT, 20);
+        assert_eq!(PAC_BLOCK_COUNT, 23); // v2.1.4 schema: Blocks 00-22
         assert_eq!(PREFLIGHT_GATE_COUNT, 9);
     }
 
@@ -198,7 +198,7 @@ mod tests {
         
         let metadata = PacMetadata {
             pac_id: "PAC-TEST".to_string(),
-            pac_version: "v1.1.0".to_string(),
+            pac_version: "v2.1.4".to_string(),
             classification: "TEST".to_string(),
             governance_tier: GovernanceTier::Law,
             issuer_gid: "GID-00".to_string(),
@@ -208,15 +208,19 @@ mod tests {
             supersedes: None,
             drift_tolerance: "ZERO".to_string(),
             fail_closed: true,
-            schema_version: "CHAINBRIDGE_PAC_SCHEMA_v1.1.0".to_string(),
+            schema_version: "CHAINBRIDGE_PAC_SCHEMA_v2.1.4".to_string(),
         };
 
         let mut pac = Pac::new(metadata);
         let block_types = BlockType::all();
         
         for (i, bt) in block_types.iter().enumerate() {
-            let content = if *bt == BlockType::FinalState {
+            let content = if *bt == BlockType::PositiveClosureAndFinalState {
                 "execution_blocking: TRUE".to_string()
+            } else if *bt == BlockType::BensonAnchor {
+                "BENSON ACK: I am GID-00-EXEC".to_string()
+            } else if *bt == BlockType::AgentWrapBerHandshake {
+                "WRAP/BER HANDSHAKE: EXECUTE".to_string()
             } else {
                 format!("Block {} content", i)
             };

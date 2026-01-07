@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-// PAC-OCC-P20-BOOTSTRAP — models.rs
-// Constitutional Kernel: PAC Schema and Block Type Definitions
+// PAC-OCC-P20-BOOTSTRAP + PAC-OCC-P20-G1-SYNC — models.rs
+// Constitutional Kernel: PAC Schema and Block Type Definitions (v2.1.4)
 // Governance Tier: LAW
 // Invariant: BINARY_PDO_PARITY | ZERO_UNSAFE_RUST
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -8,37 +8,44 @@
 use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
 
-/// The 20 canonical block types in a v1.1.0 PAC.
+/// The 23 canonical block types in a v2.1.4 PAC.
 /// Order is immutable. Index must match block position.
+/// v2.1.4 adds: BensonAnchor (00), TestTermination (20), AgentWrapBerHandshake (21)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[repr(u8)]
 pub enum BlockType {
-    Metadata = 0,
-    PacAdmission = 1,
-    RuntimeActivation = 2,
-    RuntimeAcknowledgment = 3,
-    RuntimeCollection = 4,
-    GovernanceModeActivation = 5,
-    GovernanceModeAcknowledgment = 6,
-    GovernanceModeCollection = 7,
-    AgentActivation = 8,
-    AgentAcknowledgment = 9,
-    AgentCollection = 10,
-    DecisionAuthorityExecutionLane = 11,
-    Context = 12,
-    GoalState = 13,
-    ConstraintsAndGuardrails = 14,
-    InvariantsEnforced = 15,
-    TasksAndPlan = 16,
-    FileAndCodeInterfacesAndContracts = 17,
-    SecurityThreatTestingFailure = 18,
-    FinalState = 19,
+    /// Block 00: BENSON_EXECUTION_ACTIVATION_ACKNOWLEDGMENT_COLLECTION (Anchor)
+    BensonAnchor = 0,
+    Metadata = 1,
+    PacAdmission = 2,
+    RuntimeActivation = 3,
+    RuntimeAcknowledgment = 4,
+    RuntimeCollection = 5,
+    GovernanceModeActivation = 6,
+    GovernanceModeAcknowledgment = 7,
+    GovernanceModeCollection = 8,
+    AgentActivation = 9,
+    AgentAcknowledgment = 10,
+    AgentCollection = 11,
+    DecisionAuthorityExecutionLane = 12,
+    Context = 13,
+    GoalState = 14,
+    ConstraintsAndGuardrails = 15,
+    InvariantsEnforced = 16,
+    TasksAndPlan = 17,
+    TrainingSignal = 18,
+    PositiveClosureAndFinalState = 19,
+    LedgerCommitAndAttestation = 20,
+    TestTerminationEnforcement = 21,
+    /// Block 22: AGENT_WRAP_BER_HANDSHAKE (Terminal)
+    AgentWrapBerHandshake = 22,
 }
 
 impl BlockType {
     /// Returns the canonical block name as a string slice.
     pub const fn as_str(&self) -> &'static str {
         match self {
+            BlockType::BensonAnchor => "BENSON_EXECUTION_ACTIVATION_ACKNOWLEDGMENT_COLLECTION",
             BlockType::Metadata => "METADATA",
             BlockType::PacAdmission => "PAC_ADMISSION",
             BlockType::RuntimeActivation => "RUNTIME_ACTIVATION",
@@ -56,15 +63,18 @@ impl BlockType {
             BlockType::ConstraintsAndGuardrails => "CONSTRAINTS_AND_GUARDRAILS",
             BlockType::InvariantsEnforced => "INVARIANTS_ENFORCED",
             BlockType::TasksAndPlan => "TASKS_AND_PLAN",
-            BlockType::FileAndCodeInterfacesAndContracts => "FILE_AND_CODE_INTERFACES_AND_CONTRACTS",
-            BlockType::SecurityThreatTestingFailure => "SECURITY_THREAT_TESTING_FAILURE",
-            BlockType::FinalState => "FINAL_STATE",
+            BlockType::TrainingSignal => "TRAINING_SIGNAL",
+            BlockType::PositiveClosureAndFinalState => "POSITIVE_CLOSURE_AND_FINAL_STATE",
+            BlockType::LedgerCommitAndAttestation => "LEDGER_COMMIT_AND_ATTESTATION",
+            BlockType::TestTerminationEnforcement => "TEST_TERMINATION_ENFORCEMENT",
+            BlockType::AgentWrapBerHandshake => "AGENT_WRAP_BER_HANDSHAKE",
         }
     }
 
-    /// Returns all block types in canonical order.
-    pub const fn all() -> [BlockType; 20] {
+    /// Returns all block types in canonical order (v2.1.4: 23 blocks).
+    pub const fn all() -> [BlockType; 23] {
         [
+            BlockType::BensonAnchor,
             BlockType::Metadata,
             BlockType::PacAdmission,
             BlockType::RuntimeActivation,
@@ -82,9 +92,11 @@ impl BlockType {
             BlockType::ConstraintsAndGuardrails,
             BlockType::InvariantsEnforced,
             BlockType::TasksAndPlan,
-            BlockType::FileAndCodeInterfacesAndContracts,
-            BlockType::SecurityThreatTestingFailure,
-            BlockType::FinalState,
+            BlockType::TrainingSignal,
+            BlockType::PositiveClosureAndFinalState,
+            BlockType::LedgerCommitAndAttestation,
+            BlockType::TestTerminationEnforcement,
+            BlockType::AgentWrapBerHandshake,
         ]
     }
 }
@@ -151,7 +163,7 @@ pub struct PacMetadata {
     pub schema_version: String,
 }
 
-/// The complete 20-block PAC structure.
+/// The complete 23-block PAC structure (v2.1.4 schema).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Pac {
     pub metadata: PacMetadata,
@@ -164,14 +176,14 @@ impl Pac {
     pub fn new(metadata: PacMetadata) -> Self {
         Self {
             metadata,
-            blocks: Vec::with_capacity(20),
+            blocks: Vec::with_capacity(23),
             content_hash: None,
         }
     }
 
-    /// Returns true if the PAC has exactly 20 blocks.
+    /// Returns true if the PAC has exactly 23 blocks (v2.1.4 schema).
     pub fn has_complete_blocks(&self) -> bool {
-        self.blocks.len() == 20
+        self.blocks.len() == 23
     }
 
     /// Returns true if all block indices are valid.
@@ -284,9 +296,9 @@ impl Pdo {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const _: () = {
-    // Ensure BlockType has exactly 20 variants matching indices 0-19
-    assert!(BlockType::Metadata as u8 == 0);
-    assert!(BlockType::FinalState as u8 == 19);
+    // Ensure BlockType has exactly 23 variants matching indices 0-22 (v2.1.4)
+    assert!(BlockType::BensonAnchor as u8 == 0);
+    assert!(BlockType::AgentWrapBerHandshake as u8 == 22);
     
     // Ensure PreflightGate has exactly 9 variants matching indices 1-9
     assert!(PreflightGate::G1StructuralLint as u8 == 1);
@@ -307,7 +319,7 @@ mod tests {
 
     #[test]
     fn test_block_type_count() {
-        assert_eq!(BlockType::all().len(), 20);
+        assert_eq!(BlockType::all().len(), 23); // v2.1.4: Blocks 00-22
     }
 
     #[test]
@@ -317,12 +329,17 @@ mod tests {
 
     #[test]
     fn test_block_index_validation() {
-        let valid_block = Block::new(0, BlockType::Metadata, "test".to_string());
+        // BensonAnchor is at index 0 in v2.1.4 schema
+        let valid_block = Block::new(0, BlockType::BensonAnchor, "BENSON ACK".to_string());
         assert!(valid_block.is_index_valid());
+
+        // Metadata is now at index 1
+        let valid_metadata = Block::new(1, BlockType::Metadata, "test".to_string());
+        assert!(valid_metadata.is_index_valid());
 
         let invalid_block = Block {
             index: 5,
-            block_type: BlockType::Metadata,
+            block_type: BlockType::Metadata, // Metadata is index 1, not 5
             content: "test".to_string(),
             hash: None,
         };

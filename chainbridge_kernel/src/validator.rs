@@ -13,7 +13,7 @@
 //!
 //! | Gate | Name | Description |
 //! |------|------|-------------|
-//! | G1 | Structural Lint | PAC has exactly 20 blocks |
+//! | G1 | Structural Lint | PAC has exactly 23 blocks (v2.1.4) |
 //! | G2 | Governance Tier | Valid governance tier |
 //! | G3 | Constitutional Continuity | Schema version compatible |
 //! | G4 | Block Index Integrity | Block indices match types |
@@ -177,13 +177,13 @@ impl ConstitutionalValidator {
     // GATE IMPLEMENTATIONS (G1-G8: Structural/Governance)
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /// G1: Structural Lint - Validates PAC has exactly 20 blocks.
+    /// G1: Structural Lint - Validates PAC has exactly 23 blocks (v2.1.4).
     fn gate_g1_structural_lint(&self, pac: &Pac) -> GateResult {
         let passed = pac.has_complete_blocks();
         let message = if passed {
-            "PAC has exactly 20 blocks".to_string()
+            "PAC has exactly 23 blocks (v2.1.4 schema)".to_string()
         } else {
-            format!("PAC has {} blocks, expected 20", pac.blocks.len())
+            format!("PAC has {} blocks, expected 23 (v2.1.4)", pac.blocks.len())
         };
 
         GateResult {
@@ -217,11 +217,13 @@ impl ConstitutionalValidator {
     /// G3: Constitutional Continuity Check - Validates schema version.
     fn gate_g3_constitutional_continuity(&self, pac: &Pac) -> GateResult {
         let schema = &pac.metadata.schema_version;
-        let passed = schema.starts_with("CHAINBRIDGE_PAC_SCHEMA_v1.");
+        // Accept both v1.x and v2.x schemas for backward compatibility
+        let passed = schema.starts_with("CHAINBRIDGE_PAC_SCHEMA_v1.")
+            || schema.starts_with("CHAINBRIDGE_PAC_SCHEMA_v2.");
         let message = if passed {
             format!("Schema version '{}' is compatible", schema)
         } else {
-            format!("Schema version '{}' is not compatible with v1.x", schema)
+            format!("Schema version '{}' is not compatible with v1.x or v2.x", schema)
         };
 
         GateResult {
@@ -333,12 +335,13 @@ impl ConstitutionalValidator {
         }
     }
 
-    /// G8: Final State Assertion - Validates FINAL_STATE block content.
+    /// G8: Final State Assertion - Validates POSITIVE_CLOSURE_AND_FINAL_STATE block content.
     fn gate_g8_final_state(&self, pac: &Pac) -> GateResult {
+        // In v2.1.4, FinalState is now PositiveClosureAndFinalState at index 19
         let final_block = pac
             .blocks
             .iter()
-            .find(|b| b.block_type == BlockType::FinalState);
+            .find(|b| b.block_type == BlockType::PositiveClosureAndFinalState);
 
         let (passed, message) = match final_block {
             Some(block) => {
@@ -432,10 +435,11 @@ mod tests {
     use crate::models::{Block, PacMetadata};
     use chrono::Duration;
 
+    /// Create a v2.1.4 compliant test PAC with 23 blocks.
     fn create_test_pac(num_blocks: usize) -> Pac {
         let metadata = PacMetadata {
             pac_id: "PAC-TEST-001".to_string(),
-            pac_version: "v1.1.0".to_string(),
+            pac_version: "v2.1.4".to_string(),
             classification: "TEST".to_string(),
             governance_tier: GovernanceTier::Law,
             issuer_gid: "GID-00".to_string(),
@@ -445,15 +449,19 @@ mod tests {
             supersedes: None,
             drift_tolerance: "ZERO".to_string(),
             fail_closed: true,
-            schema_version: "CHAINBRIDGE_PAC_SCHEMA_v1.1.0".to_string(),
+            schema_version: "CHAINBRIDGE_PAC_SCHEMA_v2.1.4".to_string(),
         };
 
         let mut pac = Pac::new(metadata);
         let block_types = BlockType::all();
 
-        for i in 0..num_blocks.min(20) {
-            let content = if block_types[i] == BlockType::FinalState {
+        for i in 0..num_blocks.min(23) {
+            let content = if block_types[i] == BlockType::PositiveClosureAndFinalState {
                 "execution_blocking: TRUE".to_string()
+            } else if block_types[i] == BlockType::BensonAnchor {
+                "BENSON ACK: I am GID-00-EXEC".to_string()
+            } else if block_types[i] == BlockType::AgentWrapBerHandshake {
+                "WRAP/BER HANDSHAKE: EXECUTE".to_string()
             } else {
                 format!("Block {} content", i)
             };
@@ -472,7 +480,7 @@ mod tests {
     #[test]
     fn test_valid_pac_passes_all_gates_with_dwell() {
         let validator = ConstitutionalValidator::new("GID-00-EXEC");
-        let pac = create_test_pac(20);
+        let pac = create_test_pac(23); // v2.1.4: 23 blocks
 
         // Simulate 10 seconds of review time (exceeds LAW tier 5s requirement)
         let admission_ts = create_past_admission(10);
@@ -496,7 +504,7 @@ mod tests {
     #[test]
     fn test_valid_pac_fails_g9_without_dwell() {
         let validator = ConstitutionalValidator::new("GID-00-EXEC");
-        let pac = create_test_pac(20);
+        let pac = create_test_pac(23); // v2.1.4: 23 blocks
 
         // No dwell time - admission just now
         let admission_ts = AdmissionTimestamp::now();
@@ -521,7 +529,7 @@ mod tests {
     #[test]
     fn test_incomplete_pac_fails_g1() {
         let validator = ConstitutionalValidator::new("GID-00-EXEC");
-        let pac = create_test_pac(15); // Only 15 blocks
+        let pac = create_test_pac(15); // Only 15 blocks (needs 23)
 
         // Even with adequate dwell time, G1 should fail
         let admission_ts = create_past_admission(10);
@@ -542,7 +550,7 @@ mod tests {
     #[test]
     fn test_law_tier_requires_zero_drift() {
         let validator = ConstitutionalValidator::new("GID-00-EXEC");
-        let mut pac = create_test_pac(20);
+        let mut pac = create_test_pac(23); // v2.1.4: 23 blocks
         pac.metadata.drift_tolerance = "LOW".to_string(); // Invalid for LAW tier
 
         let admission_ts = create_past_admission(10);
@@ -563,7 +571,7 @@ mod tests {
     #[test]
     fn test_operational_tier_requires_less_dwell() {
         let validator = ConstitutionalValidator::new("GID-00-EXEC");
-        let mut pac = create_test_pac(20);
+        let mut pac = create_test_pac(23); // v2.1.4: 23 blocks
         pac.metadata.governance_tier = GovernanceTier::Operational;
         pac.metadata.drift_tolerance = "HIGH".to_string(); // OK for operational
 
@@ -586,7 +594,7 @@ mod tests {
     #[test]
     fn test_pdo_contains_9_gate_results() {
         let validator = ConstitutionalValidator::new("GID-00-EXEC");
-        let pac = create_test_pac(20);
+        let pac = create_test_pac(23); // v2.1.4: 23 blocks
         let admission_ts = create_past_admission(10);
 
         let pdo = validator

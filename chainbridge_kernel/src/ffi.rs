@@ -391,10 +391,11 @@ mod tests {
     use std::ffi::CString;
 
     fn create_test_pac_json() -> CString {
+        // v2.1.4 schema: 23 blocks (00-22)
         let pac_json = r#"{
             "metadata": {
                 "pac_id": "PAC-TEST-FFI",
-                "pac_version": "v1.0.0",
+                "pac_version": "v2.1.4",
                 "classification": "TEST",
                 "governance_tier": "Law",
                 "issuer_gid": "GID-00",
@@ -404,29 +405,32 @@ mod tests {
                 "supersedes": null,
                 "drift_tolerance": "ZERO",
                 "fail_closed": true,
-                "schema_version": "CHAINBRIDGE_PAC_SCHEMA_v1.1.0"
+                "schema_version": "CHAINBRIDGE_PAC_SCHEMA_v2.1.4"
             },
             "blocks": [
-                {"index": 0, "block_type": "Metadata", "content": "Test", "hash": null},
-                {"index": 1, "block_type": "PacAdmission", "content": "Test", "hash": null},
-                {"index": 2, "block_type": "RuntimeActivation", "content": "Test", "hash": null},
-                {"index": 3, "block_type": "RuntimeAcknowledgment", "content": "Test", "hash": null},
-                {"index": 4, "block_type": "RuntimeCollection", "content": "Test", "hash": null},
-                {"index": 5, "block_type": "GovernanceModeActivation", "content": "Test", "hash": null},
-                {"index": 6, "block_type": "GovernanceModeAcknowledgment", "content": "Test", "hash": null},
-                {"index": 7, "block_type": "GovernanceModeCollection", "content": "Test", "hash": null},
-                {"index": 8, "block_type": "AgentActivation", "content": "Test", "hash": null},
-                {"index": 9, "block_type": "AgentAcknowledgment", "content": "Test", "hash": null},
-                {"index": 10, "block_type": "AgentCollection", "content": "Test", "hash": null},
-                {"index": 11, "block_type": "DecisionAuthorityExecutionLane", "content": "Test", "hash": null},
-                {"index": 12, "block_type": "Context", "content": "Test", "hash": null},
-                {"index": 13, "block_type": "GoalState", "content": "Test", "hash": null},
-                {"index": 14, "block_type": "ConstraintsAndGuardrails", "content": "Test", "hash": null},
-                {"index": 15, "block_type": "InvariantsEnforced", "content": "Test", "hash": null},
-                {"index": 16, "block_type": "TasksAndPlan", "content": "Test", "hash": null},
-                {"index": 17, "block_type": "FileAndCodeInterfacesAndContracts", "content": "Test", "hash": null},
-                {"index": 18, "block_type": "SecurityThreatTestingFailure", "content": "Test", "hash": null},
-                {"index": 19, "block_type": "FinalState", "content": "execution_blocking: TRUE", "hash": null}
+                {"index": 0, "block_type": "BensonAnchor", "content": "BENSON ACK: GID-00-EXEC", "hash": null},
+                {"index": 1, "block_type": "Metadata", "content": "Test", "hash": null},
+                {"index": 2, "block_type": "PacAdmission", "content": "Test", "hash": null},
+                {"index": 3, "block_type": "RuntimeActivation", "content": "Test", "hash": null},
+                {"index": 4, "block_type": "RuntimeAcknowledgment", "content": "Test", "hash": null},
+                {"index": 5, "block_type": "RuntimeCollection", "content": "Test", "hash": null},
+                {"index": 6, "block_type": "GovernanceModeActivation", "content": "Test", "hash": null},
+                {"index": 7, "block_type": "GovernanceModeAcknowledgment", "content": "Test", "hash": null},
+                {"index": 8, "block_type": "GovernanceModeCollection", "content": "Test", "hash": null},
+                {"index": 9, "block_type": "AgentActivation", "content": "Test", "hash": null},
+                {"index": 10, "block_type": "AgentAcknowledgment", "content": "Test", "hash": null},
+                {"index": 11, "block_type": "AgentCollection", "content": "Test", "hash": null},
+                {"index": 12, "block_type": "DecisionAuthorityExecutionLane", "content": "Test", "hash": null},
+                {"index": 13, "block_type": "Context", "content": "Test", "hash": null},
+                {"index": 14, "block_type": "GoalState", "content": "Test", "hash": null},
+                {"index": 15, "block_type": "ConstraintsAndGuardrails", "content": "Test", "hash": null},
+                {"index": 16, "block_type": "InvariantsEnforced", "content": "Test", "hash": null},
+                {"index": 17, "block_type": "TasksAndPlan", "content": "Test", "hash": null},
+                {"index": 18, "block_type": "TrainingSignal", "content": "Test", "hash": null},
+                {"index": 19, "block_type": "PositiveClosureAndFinalState", "content": "execution_blocking: TRUE", "hash": null},
+                {"index": 20, "block_type": "LedgerCommitAndAttestation", "content": "Test", "hash": null},
+                {"index": 21, "block_type": "TestTerminationEnforcement", "content": "Test", "hash": null},
+                {"index": 22, "block_type": "AgentWrapBerHandshake", "content": "WRAP/BER: EXECUTE", "hash": null}
             ],
             "content_hash": null
         }"#;
