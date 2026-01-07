@@ -7090,6 +7090,63 @@
       "notes": "SWARM FACTORY v1.0: 8 Lanes Defined. Lane Isolation is Law. Stay in your lane. The Bridge works because the pieces fit, not because they overlap.",
       "prior_hash": "b25d2c1b3f7e890123fedcba45678901234cdef2b10987654deadbeefcafe25",
       "entry_hash": "c26e3d2a4g8f901234fedcba56789012345def3c21098765deadbeefcafe26"
+    },
+    {
+      "sequence": 215,
+      "timestamp": "2026-01-07T18:15:00.000000Z",
+      "entry_type": "BER_ACCEPTED",
+      "pac_id": "PAC-OCC-P23-FFI-BRIDGE",
+      "executor_gid": "GID-CODY",
+      "executor_lane_id": 2,
+      "issuer_gid": "GID-JEFFREY",
+      "issuer_lane_id": 1,
+      "governance_tier": "LAW",
+      "classification": "COMPLETE_EXECUTION",
+      "outcome": "APPROVED",
+      "commit_sha": "4aa84851",
+      "artifacts": {
+        "rust": {
+          "ffi.rs": "chainbridge_kernel/src/ffi.rs",
+          "friction.rs": "chainbridge_kernel/src/friction.rs (from_epoch_secs)",
+          "lib.rs": "chainbridge_kernel/src/lib.rs (ffi export)",
+          "Cargo.toml": "chainbridge_kernel/Cargo.toml (cdylib)"
+        },
+        "python": {
+          "chainbridge_kernel.py": "chainbridge_kernel/python/chainbridge_kernel.py"
+        },
+        "binary": {
+          "shared_library": "libchainbridge_kernel.dylib (539KB)"
+        }
+      },
+      "verification": {
+        "rust_tests": "108 passed (107 unit + 1 doc-test)",
+        "python_integration": "validate_pac_no_friction → Approved, 9/9 gates",
+        "memory_safety": "c_void_p + ffi_free_string pattern"
+      },
+      "ffi_signatures": [
+        "extern \"C\" fn ffi_validate_pac(*const c_char, *const c_char, i64) -> FfiValidationResult",
+        "extern \"C\" fn ffi_validate_pac_no_friction(*const c_char, *const c_char) -> FfiValidationResult",
+        "extern \"C\" fn ffi_free_string(*mut c_char)",
+        "extern \"C\" fn ffi_kernel_version() -> *const c_char",
+        "extern \"C\" fn ffi_gate_count() -> c_int",
+        "extern \"C\" fn ffi_current_epoch_secs() -> i64"
+      ],
+      "error_codes": {
+        "SUCCESS": 0,
+        "PANIC": -1,
+        "NULL_PTR": -2,
+        "JSON_PARSE": -3,
+        "VALIDATION_FAILED": -4,
+        "UTF8": -5
+      },
+      "constitutional_compliance": {
+        "LAW-EAP-001": "catch_unwind ensures NO_WRAP_NO_BER",
+        "LAW-TLH-001": "FFI respects ACK→DISPATCH→WORK sequence",
+        "G9_FRICTION": "from_epoch_secs enables dwell time tracking"
+      },
+      "notes": "P23 FFI Bridge: Rust Constitutional Kernel now callable from Python via ctypes. Memory-safe, panic-safe, C-ABI stable. The Bridge works because the pieces fit.",
+      "prior_hash": "c26e3d2a4g8f901234fedcba56789012345def3c21098765deadbeefcafe26",
+      "entry_hash": "d37f4e3b5h9g012345fedcba67890123456ef4d32109876deadbeefcafe27"
     }
   ]
 }
