@@ -86,6 +86,15 @@ impl AdmissionTimestamp {
         Self { timestamp }
     }
 
+    /// Create an admission timestamp from Unix epoch seconds.
+    /// Used by FFI layer for cross-language compatibility.
+    pub fn from_epoch_secs(secs: i64) -> Self {
+        use chrono::TimeZone;
+        Self {
+            timestamp: Utc.timestamp_opt(secs, 0).single().unwrap_or_else(Utc::now),
+        }
+    }
+
     /// Get the underlying timestamp.
     pub fn timestamp(&self) -> DateTime<Utc> {
         self.timestamp

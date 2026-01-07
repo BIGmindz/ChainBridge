@@ -85,7 +85,7 @@
 //!
 
 // NOTE: unsafe_code is denied by default but allowed in hal::secure_memory
-// for volatile writes needed for secure zeroization
+// and ffi module for C-ABI interop
 #![deny(unsafe_code)]
 #![warn(missing_docs)]
 #![warn(clippy::all)]
@@ -96,6 +96,12 @@
 /// and velocity limits on human decision-making.
 pub mod cognitive;
 pub mod error;
+/// Foreign Function Interface for Python/C integration (PAC-OCC-P23).
+///
+/// Note: The `ffi` module uses unsafe code for C-ABI compatibility.
+/// All functions use `catch_unwind` to prevent panics crossing FFI boundary.
+#[allow(unsafe_code)]
+pub mod ffi;
 /// Friction gate for G9 cognitive friction validation.
 pub mod friction;
 /// Hardware Abstraction Layer for Sovereign Gate security.

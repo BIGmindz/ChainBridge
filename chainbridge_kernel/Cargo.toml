@@ -16,6 +16,7 @@ repository = "https://github.com/BIGmindz/ChainBridge"
 [lib]
 name = "chainbridge_kernel"
 path = "src/lib.rs"
+crate-type = ["lib", "cdylib"]  # PAC-OCC-P23: cdylib for FFI shared library
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
