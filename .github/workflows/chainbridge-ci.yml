@@ -1,0 +1,499 @@
+name: ChainBridge Constitutional CI/CD Pipeline
+
+# Constitutional governance pipeline for ChainBridge enterprise platform
+# Implements: Drift Check, PDO Audit, Path Protection, Secret Scanning, Fail-Closed Security
+# Authority: PAC-SYS-FOUNDATION-P154
+# Protocol: Replace-Not-Patch (RNP)
+# Security Posture: FAIL_CLOSED
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  PYTHON_VERSION: '3.11'
+  FAIL_MODE: 'FAIL_CLOSED'
+
+jobs:
+  # ============================================================================
+  # DRIFT CHECK - Verify RNP Protocol Compliance
+  # ============================================================================
+  drift-check:
+    name: 🔍 Drift Check - RNP Protocol Compliance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for drift detection
+      
+      - name: Verify constitutional rules exist
+        run: |
+          echo "🔍 Verifying constitutional governance files..."
+          
+          # Check for constitutional rules
+          if [ ! -f ".github/chainbridge-rules.md" ]; then
+            echo "❌ DRIFT DETECTED: Missing constitutional rules file"
+            echo "FAIL_CLOSED: Constitutional governance framework required"
+            exit 1
+          fi
+          
+          # Check for ISO-20022 schema
+          if [ ! -f "core/iso20022_mapping_p160.json" ]; then
+            echo "❌ DRIFT DETECTED: Missing ISO-20022 KYB schema"
+            echo "FAIL_CLOSED: Identity verification schema required"
+            exit 1
+          fi
+          
+          # Check for legal vault structure
+          if [ ! -d "docs/legal/kyb" ]; then
+            echo "❌ DRIFT DETECTED: Missing legal vault directory"
+            echo "FAIL_CLOSED: KYB compliance structure required"
+            exit 1
+          fi
+          
+          echo "✅ Constitutional framework intact - no drift detected"
+      
+      - name: Verify RNP protocol markers
+        run: |
+          echo "🔍 Checking for patch-style violations..."
+          
+          # Check for .patch files (violation of RNP)
+          PATCH_FILES=$(find . -name "*.patch" -o -name "*.diff" | grep -v ".git" || true)
+          if [ -n "$PATCH_FILES" ]; then
+            echo "❌ RNP VIOLATION: Patch files detected"
+            echo "$PATCH_FILES"
+            echo "FAIL_CLOSED: Replace-Not-Patch protocol requires full replacement"
+            exit 1
+          fi
+          
+          echo "✅ RNP protocol compliance verified"
+      
+      - name: Configuration drift check
+        run: |
+          echo "🔍 Verifying ISO-20022 schema integrity..."
+          
+          # Verify schema structure
+          python3 -c "
+          import json
+          import sys
+          
+          with open('core/iso20022_mapping_p160.json', 'r') as f:
+              schema = json.load(f)
+          
+          required_fields = [
+              'protocol',
+              'iso_reference', 
+              'document_shards',
+              'verification_gate'
+          ]
+          
+          for field in required_fields:
+              if field not in schema:
+                  print(f'❌ DRIFT DETECTED: Missing required field: {field}')
+                  sys.exit(1)
+          
+          # Verify fail-closed mode
+          if schema.get('verification_gate', {}).get('fail_mode') != 'FAIL_CLOSED':
+              print('❌ DRIFT DETECTED: Verification gate not in FAIL_CLOSED mode')
+              sys.exit(1)
+          
+          print('✅ ISO-20022 schema structure validated')
+          "
+
+  # ============================================================================
+  # PDO STRUCTURE AUDIT - Validate Logic Structures
+  # ============================================================================
+  pdo-audit:
+    name: 📋 PDO Structure Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Audit PDO documentation
+        run: |
+          echo "📋 Auditing PDO (Proof → Decision → Outcome) structures..."
+          
+          # Check if PR description or commit messages contain PDO markers
+          # This is a basic check - can be enhanced with custom tooling
+          
+          echo "Checking for PDO framework compliance in documentation..."
+          
+          # Verify constitutional rules document PDO framework
+          if grep -q "Proof > Execution" .github/chainbridge-rules.md; then
+            echo "✅ PDO framework documented in constitutional rules"
+          else
+            echo "⚠️  WARNING: PDO framework not found in constitutional rules"
+          fi
+          
+          # Check for common anti-patterns
+          echo "Checking for anti-patterns..."
+          
+          # Look for quick-fix markers (anti-pattern)
+          QUICK_FIX=$(git log --all --oneline | grep -iE "(quick.?fix|hotfix|band.?aid)" | head -5 || true)
+          if [ -n "$QUICK_FIX" ]; then
+            echo "⚠️  WARNING: Quick-fix patterns detected in commit history"
+            echo "$QUICK_FIX"
+            echo "Consider RNP methodology for sustainable solutions"
+          fi
+          
+          echo "✅ PDO audit complete"
+      
+      - name: Validate governance documentation
+        run: |
+          echo "📋 Validating governance documentation completeness..."
+          
+          # Check for required sections in constitutional rules
+          REQUIRED_SECTIONS=(
+            "Control > Autonomy"
+            "Replace-Not-Patch"
+            "Fail-Closed"
+            "Audit-Aware Logging"
+          )
+          
+          for section in "${REQUIRED_SECTIONS[@]}"; do
+            if grep -q "$section" .github/chainbridge-rules.md; then
+              echo "✅ Found: $section"
+            else
+              echo "❌ MISSING: $section"
+              echo "FAIL_CLOSED: Incomplete constitutional documentation"
+              exit 1
+            fi
+          done
+          
+          echo "✅ Governance documentation validated"
+
+  # ============================================================================
+  # SECRET SCANNER - Detect Sensitive Data Leakage
+  # ============================================================================
+  secret-scanner:
+    name: 🔐 Secret Scanner - Sensitive Data Protection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for comprehensive scanning
+      
+      - name: Install Gitleaks
+        run: |
+          echo "📥 Installing Gitleaks secret scanner..."
+          wget -q https://github.com/gitleaks/gitleaks/releases/download/v8.18.1/gitleaks_8.18.1_linux_x64.tar.gz
+          tar -xzf gitleaks_8.18.1_linux_x64.tar.gz
+          chmod +x gitleaks
+          sudo mv gitleaks /usr/local/bin/
+          gitleaks version
+      
+      - name: Create Gitleaks configuration
+        run: |
+          cat > .gitleaks.toml << 'EOF'
+          title = "ChainBridge Constitutional Secret Scanning"
+          
+          [extend]
+          useDefault = true
+          
+          # Additional custom rules for ChainBridge
+          [[rules]]
+          id = "chainbridge-ein-pattern"
+          description = "Detects unhashed EIN (Employer Identification Number)"
+          regex = '''\b\d{2}-\d{7}\b'''
+          tags = ["ein", "pii", "kyb"]
+          
+          [[rules]]
+          id = "chainbridge-private-key-begin"
+          description = "Detects private key headers"
+          regex = '''-----BEGIN (RSA |EC |OPENSSH |ENCRYPTED )?PRIVATE KEY-----'''
+          tags = ["private-key", "security"]
+          
+          [[rules]]
+          id = "chainbridge-ssn-pattern"
+          description = "Detects Social Security Numbers"
+          regex = '''\b\d{3}-\d{2}-\d{4}\b'''
+          tags = ["ssn", "pii"]
+          
+          [[rules]]
+          id = "chainbridge-api-key"
+          description = "Detects potential API keys"
+          regex = '''(?i)(api[_-]?key|apikey|access[_-]?token)\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+          tags = ["api-key", "credentials"]
+          
+          [allowlist]
+          description = "Allowlist for false positives"
+          paths = [
+            '''\.git/''',
+            '''docs/legal/kyb/README\.md''',  # Contains example patterns in documentation
+            '''\.github/chainbridge-rules\.md''',  # Contains example patterns in documentation
+            '''\.gitleaks\.toml'''
+          ]
+          EOF
+          
+          echo "✅ Gitleaks configuration created"
+      
+      - name: Run Gitleaks secret scan
+        run: |
+          echo "🔐 Scanning for secrets and sensitive data..."
+          echo "Mode: FAIL_CLOSED - Any detection terminates build"
+          
+          # Run gitleaks
+          if gitleaks detect --config .gitleaks.toml --verbose --report-path gitleaks-report.json; then
+            echo "✅ No secrets detected - scan passed"
+          else
+            echo "❌ SECURITY VIOLATION: Secrets or sensitive data detected!"
+            echo ""
+            echo "FAIL_CLOSED MODE ACTIVATED"
+            echo "Build terminated immediately per constitutional rules"
+            echo ""
+            echo "Review gitleaks-report.json for details"
+            if [ -f gitleaks-report.json ]; then
+              echo "=== DETECTED VIOLATIONS ==="
+              cat gitleaks-report.json
+            fi
+            exit 1
+          fi
+      
+      - name: Upload scan results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-report
+          path: gitleaks-report.json
+          retention-days: 30
+
+  # ============================================================================
+  # PATH-BASED GATING - Protected Directory Security
+  # ============================================================================
+  path-protection:
+    name: 🛡️ Path-Based Gating - Protected Directories
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Detect changes in protected paths
+        id: protected-paths
+        run: |
+          echo "🛡️ Checking for changes in protected directories..."
+          
+          PROTECTED_PATHS=(
+            "docs/legal/"
+            "keys/"
+            ".github/workflows/"
+            "core/iso20022_mapping_p160.json"
+            ".github/chainbridge-rules.md"
+          )
+          
+          # Get list of changed files
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          else
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD || git ls-files)
+          fi
+          
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          echo ""
+          
+          PROTECTED_CHANGES=""
+          for path in "${PROTECTED_PATHS[@]}"; do
+            if echo "$CHANGED_FILES" | grep -q "^$path"; then
+              echo "⚠️  PROTECTED PATH MODIFIED: $path"
+              PROTECTED_CHANGES="true"
+            fi
+          done
+          
+          if [ -n "$PROTECTED_CHANGES" ]; then
+            echo "protected_modified=true" >> $GITHUB_OUTPUT
+            echo ""
+            echo "🔒 Protected paths modified - additional verification required"
+          else
+            echo "protected_modified=false" >> $GITHUB_OUTPUT
+            echo "✅ No protected paths modified"
+          fi
+      
+      - name: Additional verification for protected paths
+        if: steps.protected-paths.outputs.protected_modified == 'true'
+        run: |
+          echo "🔍 Running additional verification for protected path changes..."
+          
+          # Verify changes to legal vault
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD 2>/dev/null | grep -q "docs/legal/"; then
+            echo "⚠️  Legal vault modification detected"
+            echo "Verifying GID-13/GID-15 compliance..."
+            
+            # Check for plain-text violations in legal docs
+            if git diff origin/${{ github.base_ref }}...HEAD -- docs/legal/ | grep -iE "(BEGIN (RSA )?PRIVATE KEY|\d{2}-\d{7}|\d{3}-\d{2}-\d{4})"; then
+              echo "❌ SECURITY VIOLATION: Plain-text sensitive data in legal vault"
+              echo "FAIL_CLOSED: GID-13 (Lira) compliance requires hashed documents only"
+              exit 1
+            fi
+            
+            echo "✅ Legal vault changes appear compliant"
+          fi
+          
+          # Verify changes to ISO-20022 schema
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD 2>/dev/null | grep -q "core/iso20022_mapping_p160.json"; then
+            echo "⚠️  ISO-20022 schema modification detected"
+            echo "Validating schema integrity..."
+            
+            python3 -c "
+            import json
+            with open('core/iso20022_mapping_p160.json', 'r') as f:
+                schema = json.load(f)
+            assert schema['verification_gate']['fail_mode'] == 'FAIL_CLOSED', 'Schema must maintain FAIL_CLOSED mode'
+            print('✅ Schema integrity validated')
+            "
+          fi
+          
+          # Verify changes to constitutional rules
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD 2>/dev/null | grep -q ".github/chainbridge-rules.md"; then
+            echo "⚠️  Constitutional rules modification detected"
+            echo "This requires manual review and approval"
+            echo ""
+            echo "⚠️  WARNING: Constitutional changes affect entire platform governance"
+            echo "Ensure proper PDO documentation and stakeholder approval"
+          fi
+          
+          echo "✅ Protected path verification complete"
+
+  # ============================================================================
+  # COMPLIANCE VERIFICATION - Final Constitutional Check
+  # ============================================================================
+  compliance-verification:
+    name: ✅ Compliance Verification
+    runs-on: ubuntu-latest
+    needs: [drift-check, pdo-audit, secret-scanner, path-protection]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Verify all constitutional components
+        run: |
+          echo "✅ Running final compliance verification..."
+          
+          # Verify file structure
+          echo "Checking constitutional file structure..."
+          
+          REQUIRED_FILES=(
+            ".github/chainbridge-rules.md"
+            ".github/workflows/chainbridge-ci.yml"
+            "core/iso20022_mapping_p160.json"
+            "docs/legal/kyb/README.md"
+            "docs/legal/kyb/.gitkeep"
+          )
+          
+          ALL_PRESENT=true
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [ -f "$file" ]; then
+              echo "✅ $file"
+            else
+              echo "❌ MISSING: $file"
+              ALL_PRESENT=false
+            fi
+          done
+          
+          if [ "$ALL_PRESENT" = false ]; then
+            echo ""
+            echo "❌ COMPLIANCE FAILURE: Missing required constitutional files"
+            echo "FAIL_CLOSED: Cannot proceed without complete governance framework"
+            exit 1
+          fi
+          
+          echo ""
+          echo "✅ All constitutional components verified"
+          echo "✅ PAC-SYS-FOUNDATION-P154 compliance achieved"
+      
+      - name: Generate compliance report
+        run: |
+          echo "📊 Generating compliance report..."
+          
+          cat > compliance-report.md << 'EOF'
+          # ChainBridge Constitutional Compliance Report
+          
+          **Pipeline**: PAC-SYS-FOUNDATION-P154
+          **Timestamp**: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          **Status**: COMPLIANT
+          
+          ## Verification Results
+          
+          - ✅ Drift Check: PASSED
+          - ✅ PDO Audit: PASSED
+          - ✅ Secret Scanner: PASSED
+          - ✅ Path Protection: PASSED
+          - ✅ Compliance Verification: PASSED
+          
+          ## Constitutional Framework
+          
+          - ✅ Governance rules documented
+          - ✅ CI/CD pipeline operational
+          - ✅ Legal vault structure established
+          - ✅ ISO-20022 schema deployed
+          - ✅ Fail-closed security active
+          
+          ## Security Posture
+          
+          - Mode: FAIL_CLOSED
+          - Secret Scanning: ACTIVE (Gitleaks)
+          - Path Protection: ACTIVE
+          - Drift Detection: ACTIVE
+          
+          ## Next Phase
+          
+          Ready for **P165 - KYB Document Anchoring**
+          
+          ---
+          
+          *This report is automatically generated by the ChainBridge constitutional CI/CD pipeline.*
+          EOF
+          
+          cat compliance-report.md
+      
+      - name: Upload compliance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-report
+          path: compliance-report.md
+          retention-days: 90
+
+  # ============================================================================
+  # SUMMARY - Build Status Report
+  # ============================================================================
+  summary:
+    name: 📊 Pipeline Summary
+    runs-on: ubuntu-latest
+    needs: [compliance-verification]
+    if: always()
+    steps:
+      - name: Report pipeline status
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "  ChainBridge Constitutional CI/CD Pipeline"
+          echo "  PAC-SYS-FOUNDATION-P154"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "Protocol: Replace-Not-Patch (RNP)"
+          echo "Security Posture: FAIL_CLOSED"
+          echo "Compliance Framework: GID-13 (Lira), GID-15 (Vera)"
+          echo ""
+          
+          if [ "${{ needs.compliance-verification.result }}" == "success" ]; then
+            echo "✅ Pipeline Status: SUCCESS"
+            echo "✅ Constitutional compliance achieved"
+            echo "✅ Ready for P165 (KYB Document Anchoring)"
+          else
+            echo "❌ Pipeline Status: FAILED"
+            echo "❌ Constitutional compliance not achieved"
+            echo "🔒 FAIL_CLOSED mode - manual review required"
+          fi
+          
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
