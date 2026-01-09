@@ -3,8 +3,24 @@ name: Trading Bot CI/CD Pipeline
 on:
   push:
     branches: [ main, develop ]
+    paths:
+      - '*.py'
+      - 'modules/**'
+      - 'strategies/**'
+      - 'config/**'
+      - 'requirements*.txt'
+      - '.github/workflows/trading-bot-ci.yml'
+      - '!ChainBridge/**'
   pull_request:
     branches: [ main ]
+    paths:
+      - '*.py'
+      - 'modules/**'
+      - 'strategies/**'
+      - 'config/**'
+      - 'requirements*.txt'
+      - '.github/workflows/trading-bot-ci.yml'
+      - '!ChainBridge/**'
 
 env:
   PYTHON_VERSION: 3.11
