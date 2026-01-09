@@ -1,0 +1,55 @@
+name: ALEX Governance
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  alex-governance:
+    name: alex-governance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate ALEX Scope Declaration
+        run: |
+          SCOPE_FILE="docs/governance/ALEX_SCOPE.yaml"
+          
+          if [ ! -f "$SCOPE_FILE" ]; then
+            echo "❌ ALEX_SCOPE.yaml not found at $SCOPE_FILE"
+            exit 1
+          fi
+          
+          echo "✅ ALEX_SCOPE.yaml exists"
+          
+          # Validate YAML syntax using native Python (available on ubuntu-latest)
+          python3 -c "import yaml; yaml.safe_load(open('$SCOPE_FILE'))" || {
+            echo "❌ ALEX_SCOPE.yaml is not valid YAML"
+            exit 1
+          }
+          echo "✅ ALEX_SCOPE.yaml is valid YAML"
+          
+          # Verify required fields
+          REPO_NAME=$(python3 -c "import yaml; print(yaml.safe_load(open('$SCOPE_FILE'))['repo']['name'])")
+          if [ "$REPO_NAME" != "ChainBridge" ]; then
+            echo "❌ repo.name must be ChainBridge (found: $REPO_NAME)"
+            exit 1
+          fi
+          echo "✅ repo.name = ChainBridge"
+          
+          # Verify enforcement mode
+          ENFORCEMENT_MODE=$(python3 -c "import yaml; print(yaml.safe_load(open('$SCOPE_FILE'))['enforcement']['mode'])")
+          if [ "$ENFORCEMENT_MODE" != "fail_closed" ]; then
+            echo "❌ enforcement.mode must be fail_closed (found: $ENFORCEMENT_MODE)"
+            exit 1
+          fi
+          echo "✅ enforcement.mode = fail_closed"
+          
+          echo "✅ Scope declaration valid"
+
+      - name: Governance Status
+        run: |
+          echo "✅ alex-governance: PASS"
+          echo "Constitutional scope: ChainBridge logistics_governance_platform"
