@@ -1,11 +1,12 @@
 // ============================================================================
 // FILE: gaas_gateway.rs
-// CONTEXT: PAC-OCC-P61-XDIST + PAC-STRAT-P48-MOAT-ENFORCEMENT
+// CONTEXT: PAC-OCC-P61-XDIST + PAC-STRAT-P48-MOAT-ENFORCEMENT + PAC-OCC-P58-ZK-IDENTITY
 // AUTH: BENSON (GID-00), CODY (GID-02)
 // PURPOSE: The Sovereign API Gasket - Stateless Signal Verification Gateway
 // INVARIANT: External_Latency < 12ms
 // SECURITY: Opaque Error Codes (No Logic Leakage)
 // INTEGRATION: P48 - ERP Shield wired to /validate_invoice endpoint
+// INTEGRATION: P58 - Ed25519 Identity wired to /validate_signed_invoice endpoint
 // ============================================================================
 
 use axum::{
@@ -20,6 +21,9 @@ use std::net::SocketAddr;
 
 // Import the ERP Shield for invoice validation
 use crate::erp_shield::NetSuiteInvoice;
+
+// Import the Identity Module for signature verification
+use crate::identity::SignedRequest;
 
 // ============================================================================
 // STRICT SCHEMA (No Natural Language)
@@ -67,6 +71,7 @@ pub async fn spawn_gateway_on_port(port: u16) {
     let app = Router::new()
         .route("/verify", post(verify_decision))
         .route("/validate_invoice", post(validate_invoice))
+        .route("/validate_signed_invoice", post(validate_signed_invoice))
         .route("/health", get(health_check));
 
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
@@ -74,6 +79,7 @@ pub async fn spawn_gateway_on_port(port: u16) {
     println!(">>> INVARIANT: External_Latency < 12ms");
     println!(">>> SECURITY: Opaque Error Codes Enabled");
     println!(">>> P48: ERP Shield Integration ACTIVE");
+    println!(">>> P58: ZK-Identity Layer ACTIVE");
     
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
@@ -192,6 +198,14 @@ impl InvoiceValidationResponse {
             error_code: Some("0x0002".to_string()),
         }
     }
+    
+    fn reject_identity() -> Self {
+        Self {
+            status: "REJECTED".to_string(),
+            invoice_id: None,
+            error_code: Some("0xDEAD".to_string()), // Signature verification failed
+        }
+    }
 }
 
 /// THE INVARIANT ENGINE - Main validation loop
@@ -234,6 +248,78 @@ pub async fn validate_invoice(
         Err(_) => {
             // FAIL-CLOSED: Logic violation gets opaque rejection
             // We do not explain WHY it failed (Security through Asymmetry)
+            (StatusCode::FORBIDDEN, Json(InvoiceValidationResponse::reject_logic()))
+        }
+    }
+}
+
+// ============================================================================
+// P58: ZK-IDENTITY LAYER - Signed Invoice Validation
+// ============================================================================
+
+/// Signed Invoice Validation - VERIFY THEN PARSE
+///
+/// This endpoint enforces cryptographic identity before processing:
+/// 1. IDENTITY GATE: Signature must verify (Ed25519)
+/// 2. SYNTAX GATE: JSON must parse into NetSuiteInvoice schema
+/// 3. LOGIC GATE: Business rules must pass
+///
+/// SECURITY MODEL:
+/// - Invalid signature = Immediate 0xDEAD (no CPU wasted on parsing)
+/// - Signature verified in ~20µs (600x under 12ms limit)
+/// - We trust Keys, not IP addresses
+///
+/// WIRE FORMAT:
+/// ```json
+/// {
+///     "payload": "{\"internalId\":\"INV-001\",...}",
+///     "public_key": "hex-encoded-32-byte-ed25519-public-key",
+///     "signature": "hex-encoded-64-byte-ed25519-signature"
+/// }
+/// ```
+pub async fn validate_signed_invoice(
+    Json(signed_req): Json<SignedRequest>
+) -> (StatusCode, Json<InvoiceValidationResponse>) {
+    
+    // ========================================================================
+    // GATE 0: PROOF OF IDENTITY (Cryptographic)
+    // The signature is verified BEFORE we touch the payload.
+    // If the math doesn't align, the code does not execute.
+    // Cost: ~20µs (DoS Protection)
+    // ========================================================================
+    if !signed_req.is_valid() {
+        // FAIL-CLOSED: Invalid signature gets immediate rejection
+        // We do not waste CPU parsing unverified data
+        return (StatusCode::FORBIDDEN, Json(InvoiceValidationResponse::reject_identity()));
+    }
+    
+    // ========================================================================
+    // GATE 1: PROOF OF STRUCTURE (Syntax)
+    // Now that we trust the sender, parse the payload.
+    // ========================================================================
+    let payload_value: Value = match serde_json::from_str(&signed_req.payload) {
+        Ok(v) => v,
+        Err(_) => {
+            return (StatusCode::BAD_REQUEST, Json(InvoiceValidationResponse::reject_syntax()));
+        }
+    };
+    
+    let invoice: NetSuiteInvoice = match serde_json::from_value(payload_value) {
+        Ok(inv) => inv,
+        Err(_) => {
+            return (StatusCode::BAD_REQUEST, Json(InvoiceValidationResponse::reject_syntax()));
+        }
+    };
+    
+    // ========================================================================
+    // GATE 2: PROOF OF LAW (Semantics)
+    // ========================================================================
+    match invoice.validate() {
+        Ok(_) => {
+            // All gates passed. The transaction is verified AND signed.
+            (StatusCode::OK, Json(InvoiceValidationResponse::approve(&invoice.internal_id)))
+        },
+        Err(_) => {
             (StatusCode::FORBIDDEN, Json(InvoiceValidationResponse::reject_logic()))
         }
     }

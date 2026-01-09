@@ -2,6 +2,7 @@
 // CHAINBRIDGE KERNEL - Core Library
 // PAC-OCC-P61-XDIST: GaaS Parallelization Swarm
 // PAC-STRAT-P48: The Invariant Engine (ERP Shield Integration)
+// PAC-OCC-P58: ZK-Identity / Ed25519 Signature Enforcement
 // AUTH: BENSON (GID-00), CODY (GID-02)
 // ============================================================================
 
@@ -12,6 +13,10 @@ pub mod gaas_gateway;
 /// ERP Shield - NetSuite Schema Validation
 /// Structural and semantic validation for enterprise financial data
 pub mod erp_shield;
+
+/// Identity Module - Ed25519 Cryptographic Signature Enforcement
+/// We do not trust IP addresses; we trust Keys.
+pub mod identity;
 
 // Re-export primary types for ergonomic access
 pub use gaas_gateway::{
@@ -29,6 +34,11 @@ pub use erp_shield::{
     ValidationError,
 };
 
+pub use identity::{
+    SignedRequest,
+    IdentityError,
+};
+
 // ============================================================================
 // KERNEL ENTRY POINT
 // ============================================================================
@@ -38,11 +48,13 @@ pub use erp_shield::{
 /// This is the canonical entry point for the Rust-based invariant engine.
 /// The gasket handles all external API traffic; the kernel handles verification.
 /// P48: ERP Shield is now wired to the /validate_invoice endpoint.
+/// P58: Ed25519 Identity Layer enforces cryptographic signatures.
 #[tokio::main]
 pub async fn run_kernel() {
     println!(">>> CHAINBRIDGE KERNEL INITIALIZING...");
     println!(">>> PAC-OCC-P61-XDIST: SPEED MOAT ACTIVE");
     println!(">>> PAC-STRAT-P48: INVARIANT ENGINE WIRED");
+    println!(">>> PAC-OCC-P58: ZK-IDENTITY LAYER ACTIVE");
     gaas_gateway::spawn_gateway().await;
 }
 
