@@ -1,10 +1,28 @@
-name: CI/CD
+name: Legacy Trading Bot CI/CD
+
+# LEGACY WORKFLOW: This workflow is for historical trading bot functionality
+# ChainBridge governance now uses .github/workflows/chainbridge-ci.yml
+# This workflow only runs if trading bot files are modified
 
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'benson_rsi_bot.py'
+      - 'live_trading_bot.py'
+      - 'integrated_trading_system.py'
+      - 'strategies/**'
+      - 'modules/adaptive_weight_module/**'
+      - 'modules/market_regime_module/**'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'benson_rsi_bot.py'
+      - 'live_trading_bot.py'
+      - 'integrated_trading_system.py'
+      - 'strategies/**'
+      - 'modules/adaptive_weight_module/**'
+      - 'modules/market_regime_module/**'
 
 jobs:
   build-test:
@@ -29,7 +47,13 @@ jobs:
       - name: Run unit tests
         run: |
           source .venv/bin/activate
-          python benson_rsi_bot.py --test
+          # Only run if benson_rsi_bot.py exists (legacy trading bot)
+          if [ -f benson_rsi_bot.py ]; then
+            python benson_rsi_bot.py --test
+          else
+            echo "⚠️  Legacy trading bot file not found - skipping tests"
+            echo "This workflow is for historical compatibility only"
+          fi
 
   deploy:
     runs-on: ubuntu-latest
@@ -55,5 +79,11 @@ jobs:
       - name: Deploy Bot (example command)
         run: |
           source .venv/bin/activate
-          nohup python benson_rsi_bot.py > bot.log 2>&1 &
-          echo "Bot deployed."
+          # Only deploy if benson_rsi_bot.py exists (legacy trading bot)
+          if [ -f benson_rsi_bot.py ]; then
+            nohup python benson_rsi_bot.py > bot.log 2>&1 &
+            echo "Bot deployed."
+          else
+            echo "⚠️  Legacy trading bot file not found - skipping deployment"
+            echo "This workflow is for historical compatibility only"
+          fi
