@@ -3,8 +3,24 @@ name: CI/CD
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'benson_rsi_bot.py'
+      - 'benson_system.py'
+      - 'data_ingestor.py'
+      - 'test_rsi.py'
+      - 'requirements.txt'
+      - 'requirements-dev.txt'
+      - '.github/workflows/ci.yml'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'benson_rsi_bot.py'
+      - 'benson_system.py'
+      - 'data_ingestor.py'
+      - 'test_rsi.py'
+      - 'requirements.txt'
+      - 'requirements-dev.txt'
+      - '.github/workflows/ci.yml'
 
 jobs:
   build-test:
