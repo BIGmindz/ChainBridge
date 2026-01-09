@@ -107,20 +107,16 @@ docker-compose up -d
 
 ```bash
 # ChainBoard (Driver Identity) - Port 8000
-cd ChainBridge/chainboard-service
-uvicorn app.main:app --reload --port 8000
+cd ChainBridge/chainboard-service && uvicorn app.main:app --reload --port 8000
 
 # ChainIQ (Risk Scoring) - Port 8001
-cd ChainBridge/chainiq-service
-uvicorn app.main:app --reload --port 8001
+cd ChainBridge/chainiq-service && uvicorn app.main:app --reload --port 8001
 
 # ChainFreight (Shipment Tracking) - Port 8002
-cd ChainBridge/chainfreight-service
-uvicorn app.main:app --reload --port 8002
+cd ChainBridge/chainfreight-service && uvicorn app.main:app --reload --port 8002
 
 # ChainPay (Payment Settlement) - Port 8003
-cd ChainBridge/chainpay-service
-uvicorn app.main:app --reload --port 8003
+cd ChainBridge/chainpay-service && uvicorn app.main:app --reload --port 8003
 ```
 
 ### API Documentation
@@ -181,7 +177,7 @@ curl -X POST http://localhost:8003/payment_intents/1/settle \
 |-----------|-------------|-------------------|-------|
 | **LOW** | 0.0 - 0.33 | Immediate approval | None |
 | **MEDIUM** | 0.33 - 0.67 | Delayed approval | 24 hours |
-| **HIGH** | 0.67 - 1.0 | Manual review required | ∞ (requires override) |
+| **HIGH** | 0.67 - 1.0 | Manual review required | Indefinite (requires override) |
 
 ## 🔐 Security & Governance
 
