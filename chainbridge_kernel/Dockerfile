@@ -12,7 +12,7 @@
 # │ Purpose: Compile the Rust binary in a clean, reproducible environment.      │
 # │ This stage contains the full Rust toolchain (~1.2GB) but is DISCARDED.      │
 # └─────────────────────────────────────────────────────────────────────────────┘
-FROM rust:1.75-slim-bookworm AS builder
+FROM rust:1.83-slim-bookworm AS builder
 
 # Install build dependencies for crypto libs
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -54,10 +54,16 @@ FROM gcr.io/distroless/cc-debian12
 COPY --from=builder /usr/src/chainbridge/target/release/chainbridge_kernel /usr/local/bin/chainbridge_kernel
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# INVARIANT: Port 3000 is the ONLY door into this container.
+# SECURITY: Run as non-root user to minimize attack surface
+# distroless/cc includes 'nonroot' user (UID 65532)
+# ═══════════════════════════════════════════════════════════════════════════════
+USER nonroot:nonroot
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INVARIANT: Port 8080 is the ONLY door into this container.
 # All traffic flows through the GaaS Gateway HTTP endpoint.
 # ═══════════════════════════════════════════════════════════════════════════════
-EXPOSE 3000
+EXPOSE 8080
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # INVARIANT: Fail-Closed Entrypoint
