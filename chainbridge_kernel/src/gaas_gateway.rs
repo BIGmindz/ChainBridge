@@ -114,7 +114,7 @@ async fn verify_decision(
         .unwrap()
         .as_secs();
     
-    if req.timestamp > now + 30 || req.timestamp < now.saturating_sub(30) {
+    if req.timestamp >= now + 30 || req.timestamp < now.saturating_sub(30) {
         warn!(event = "tx_rejected", error_code = "0x0001", reason = "timestamp_violation");
         return reject(0x0001); // OPAQUE: Timestamp violation
     }

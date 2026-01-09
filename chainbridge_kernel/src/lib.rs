@@ -63,7 +63,6 @@ pub use observability::{
 /// P48: ERP Shield is now wired to the /validate_invoice endpoint.
 /// P58: Ed25519 Identity Layer enforces cryptographic signatures.
 /// P65: Structured audit logging captures every decision.
-#[tokio::main]
 pub async fn run_kernel() {
     // P65: Initialize structured audit logging FIRST
     // The guard MUST be held for the lifetime of the application
