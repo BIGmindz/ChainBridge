@@ -1,0 +1,29 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# PAC-OPS-P110: TERRAFORM STATE & SECRETS EXCLUSIONS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Terraform state files (contains secrets!)
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Variable override files (may contain secrets)
+*.tfvars
+*.tfvars.json
+!example.tfvars
+
+# Plan files
+*.tfplan
+
+# SSH keys
+*.pem
+*.key
+
+# AWS credentials (NEVER commit these)
+credentials
+.aws/
