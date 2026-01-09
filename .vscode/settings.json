@@ -10,7 +10,9 @@
   "python.analysis.useLibraryCodeForTypes": true,
   "python.analysis.autoSearchPaths": true,
   "python.analysis.exclude": [
-    "/Users/johnbozza/crypto1.0/**"
+    "/Users/johnbozza/crypto1.0/**",
+    "**/target/**",
+    "**/logs/**"
   ],
   "files.exclude": {
     "**/.git": true,
@@ -23,14 +25,30 @@
     "**/node_modules": true,
     "**/__pycache__": true,
     "**/*.pyc": true,
-    "**/.pytest_cache": true
+    "**/.pytest_cache": true,
+    "**/target": true,
+    "**/logs": true,
+    "**/htmlcov": true
   },
   "search.exclude": {
     "**/.venv": true,
     "**/node_modules": true,
     "**/__pycache__": true,
-    "vscode-vfs://**": true
+    "vscode-vfs://**": true,
+    "**/target": true,
+    "**/logs": true,
+    "**/htmlcov": true
   },
+  "rust-analyzer.files.excludeDirs": [
+    "target",
+    "logs",
+    "node_modules",
+    "htmlcov",
+    "__pycache__",
+    ".venv"
+  ],
+  "rust-analyzer.checkOnSave.enable": true,
+  "rust-analyzer.cargo.buildScripts.enable": true,
   "markdownlint.run": "onSave",
   "markdownlint.config": {
     "default": false
