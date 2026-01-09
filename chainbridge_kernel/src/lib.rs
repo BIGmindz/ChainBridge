@@ -3,6 +3,7 @@
 // PAC-OCC-P61-XDIST: GaaS Parallelization Swarm
 // PAC-STRAT-P48: The Invariant Engine (ERP Shield Integration)
 // PAC-OCC-P58: ZK-Identity / Ed25519 Signature Enforcement
+// PAC-STRAT-P65: Structured Audit Logging (Memory)
 // AUTH: BENSON (GID-00), CODY (GID-02)
 // ============================================================================
 
@@ -17,6 +18,10 @@ pub mod erp_shield;
 /// Identity Module - Ed25519 Cryptographic Signature Enforcement
 /// We do not trust IP addresses; we trust Keys.
 pub mod identity;
+
+/// Observability Module - Structured Audit Logging
+/// A Judge without a Court Reporter is just a tyrant.
+pub mod observability;
 
 // Re-export primary types for ergonomic access
 pub use gaas_gateway::{
@@ -39,6 +44,14 @@ pub use identity::{
     IdentityError,
 };
 
+pub use observability::{
+    init_tracing,
+    init_tracing_default,
+    AuditConfig,
+    AuditEvent,
+    error_codes,
+};
+
 // ============================================================================
 // KERNEL ENTRY POINT
 // ============================================================================
@@ -49,12 +62,23 @@ pub use identity::{
 /// The gasket handles all external API traffic; the kernel handles verification.
 /// P48: ERP Shield is now wired to the /validate_invoice endpoint.
 /// P58: Ed25519 Identity Layer enforces cryptographic signatures.
+/// P65: Structured audit logging captures every decision.
 #[tokio::main]
 pub async fn run_kernel() {
-    println!(">>> CHAINBRIDGE KERNEL INITIALIZING...");
-    println!(">>> PAC-OCC-P61-XDIST: SPEED MOAT ACTIVE");
-    println!(">>> PAC-STRAT-P48: INVARIANT ENGINE WIRED");
-    println!(">>> PAC-OCC-P58: ZK-IDENTITY LAYER ACTIVE");
+    // P65: Initialize structured audit logging FIRST
+    // The guard MUST be held for the lifetime of the application
+    let _guard = observability::init_tracing_default();
+    
+    tracing::info!(
+        event = "kernel_ignite",
+        version = env!("CARGO_PKG_VERSION"),
+        ">>> CHAINBRIDGE KERNEL INITIALIZING"
+    );
+    tracing::info!(">>> PAC-OCC-P61-XDIST: SPEED MOAT ACTIVE");
+    tracing::info!(">>> PAC-STRAT-P48: INVARIANT ENGINE WIRED");
+    tracing::info!(">>> PAC-OCC-P58: ZK-IDENTITY LAYER ACTIVE");
+    tracing::info!(">>> PAC-STRAT-P65: AUDIT LOGGING ACTIVE");
+    
     gaas_gateway::spawn_gateway().await;
 }
 

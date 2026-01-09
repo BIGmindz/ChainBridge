@@ -1,12 +1,14 @@
 // ============================================================================
 // FILE: gaas_gateway.rs
 // CONTEXT: PAC-OCC-P61-XDIST + PAC-STRAT-P48-MOAT-ENFORCEMENT + PAC-OCC-P58-ZK-IDENTITY
+//          + PAC-STRAT-P65-AUDIT-LOG
 // AUTH: BENSON (GID-00), CODY (GID-02)
 // PURPOSE: The Sovereign API Gasket - Stateless Signal Verification Gateway
 // INVARIANT: External_Latency < 12ms
 // SECURITY: Opaque Error Codes (No Logic Leakage)
 // INTEGRATION: P48 - ERP Shield wired to /validate_invoice endpoint
 // INTEGRATION: P58 - Ed25519 Identity wired to /validate_signed_invoice endpoint
+// INTEGRATION: P65 - Structured audit logging for every decision
 // ============================================================================
 
 use axum::{
@@ -18,6 +20,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::net::SocketAddr;
+use tracing::{info, warn, instrument};
 
 // Import the ERP Shield for invoice validation
 use crate::erp_shield::NetSuiteInvoice;
@@ -75,11 +78,18 @@ pub async fn spawn_gateway_on_port(port: u16) {
         .route("/health", get(health_check));
 
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
-    println!(">>> CHAINBRIDGE GAAS GATEWAY ACTIVE ON: {}", addr);
-    println!(">>> INVARIANT: External_Latency < 12ms");
-    println!(">>> SECURITY: Opaque Error Codes Enabled");
-    println!(">>> P48: ERP Shield Integration ACTIVE");
-    println!(">>> P58: ZK-Identity Layer ACTIVE");
+    
+    info!(
+        event = "gateway_start",
+        port = port,
+        address = %addr,
+        ">>> CHAINBRIDGE GAAS GATEWAY ACTIVE"
+    );
+    info!(">>> INVARIANT: External_Latency < 12ms");
+    info!(">>> SECURITY: Opaque Error Codes Enabled");
+    info!(">>> P48: ERP Shield Integration ACTIVE");
+    info!(">>> P58: ZK-Identity Layer ACTIVE");
+    info!(">>> P65: Audit Logging ACTIVE");
     
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
@@ -94,6 +104,7 @@ async fn health_check() -> &'static str {
 /// 
 /// This function MUST NOT hold state - it only passes verified signals
 /// to the kernel and returns opaque results.
+#[instrument(skip(req), fields(payload_hash = %req.payload_hash))]
 async fn verify_decision(
     Json(req): Json<VerificationRequest>
 ) -> (StatusCode, Json<VerificationResponse>) {
@@ -104,11 +115,13 @@ async fn verify_decision(
         .as_secs();
     
     if req.timestamp > now + 30 || req.timestamp < now.saturating_sub(30) {
+        warn!(event = "tx_rejected", error_code = "0x0001", reason = "timestamp_violation");
         return reject(0x0001); // OPAQUE: Timestamp violation
     }
 
     // STEP 2: Validate signature format
     if !validate_signature_format(&req.signature) {
+        warn!(event = "tx_rejected", error_code = "0x0002", reason = "format_violation");
         return reject(0x0002); // OPAQUE: Format violation
     }
 
@@ -118,12 +131,14 @@ async fn verify_decision(
 
     if is_valid {
         let tx_id = generate_tx_id(&req.payload_hash);
+        info!(event = "tx_finalized", tx_id = %tx_id, status = "VERIFIED");
         (StatusCode::OK, Json(VerificationResponse {
             status: "VERIFIED".to_string(),
             tx_id: Some(tx_id),
             error_code: None,
         }))
     } else {
+        warn!(event = "tx_rejected", error_code = "0xDEAD", reason = "kernel_rejection");
         reject(0xDEAD) // OPAQUE: Kernel rejection
     }
 }
@@ -218,6 +233,7 @@ impl InvoiceValidationResponse {
 /// ERROR CODES:
 /// - 0x0001: Malformed data (wrong types, missing fields, floats instead of ints)
 /// - 0x0002: Logic violation (invalid currency, negative amount, bad subsidiary)
+#[instrument(skip(payload))]
 pub async fn validate_invoice(
     Json(payload): Json<Value>
 ) -> (StatusCode, Json<InvoiceValidationResponse>) {
@@ -231,6 +247,7 @@ pub async fn validate_invoice(
         Ok(inv) => inv,
         Err(_) => {
             // FAIL-CLOSED: Malformed data gets opaque rejection
+            warn!(event = "tx_rejected", error_code = "0x0001", gate = "syntax");
             return (StatusCode::BAD_REQUEST, Json(InvoiceValidationResponse::reject_syntax()));
         }
     };
@@ -243,11 +260,23 @@ pub async fn validate_invoice(
         Ok(_) => {
             // GATE 3: REWARD (Positive Closure)
             // Logic passed. In a full system, we would sign/stamp here.
+            info!(
+                event = "tx_finalized",
+                invoice_id = %invoice.internal_id,
+                status = "VERIFIED",
+                gate = "logic_passed"
+            );
             (StatusCode::OK, Json(InvoiceValidationResponse::approve(&invoice.internal_id)))
         },
         Err(_) => {
             // FAIL-CLOSED: Logic violation gets opaque rejection
             // We do not explain WHY it failed (Security through Asymmetry)
+            warn!(
+                event = "tx_rejected",
+                invoice_id = %invoice.internal_id,
+                error_code = "0x0002",
+                gate = "logic"
+            );
             (StatusCode::FORBIDDEN, Json(InvoiceValidationResponse::reject_logic()))
         }
     }
@@ -277,6 +306,7 @@ pub async fn validate_invoice(
 ///     "signature": "hex-encoded-64-byte-ed25519-signature"
 /// }
 /// ```
+#[instrument(skip(signed_req), fields(signer = %signed_req.public_key))]
 pub async fn validate_signed_invoice(
     Json(signed_req): Json<SignedRequest>
 ) -> (StatusCode, Json<InvoiceValidationResponse>) {
@@ -290,8 +320,20 @@ pub async fn validate_signed_invoice(
     if !signed_req.is_valid() {
         // FAIL-CLOSED: Invalid signature gets immediate rejection
         // We do not waste CPU parsing unverified data
+        warn!(
+            event = "auth_failed",
+            signer = %signed_req.public_key,
+            error_code = "0xDEAD",
+            gate = "identity"
+        );
         return (StatusCode::FORBIDDEN, Json(InvoiceValidationResponse::reject_identity()));
     }
+    
+    info!(
+        event = "auth_success",
+        signer = %signed_req.public_key,
+        gate = "identity_passed"
+    );
     
     // ========================================================================
     // GATE 1: PROOF OF STRUCTURE (Syntax)
@@ -300,6 +342,12 @@ pub async fn validate_signed_invoice(
     let payload_value: Value = match serde_json::from_str(&signed_req.payload) {
         Ok(v) => v,
         Err(_) => {
+            warn!(
+                event = "tx_rejected",
+                signer = %signed_req.public_key,
+                error_code = "0x0001",
+                gate = "syntax"
+            );
             return (StatusCode::BAD_REQUEST, Json(InvoiceValidationResponse::reject_syntax()));
         }
     };
@@ -307,6 +355,12 @@ pub async fn validate_signed_invoice(
     let invoice: NetSuiteInvoice = match serde_json::from_value(payload_value) {
         Ok(inv) => inv,
         Err(_) => {
+            warn!(
+                event = "tx_rejected",
+                signer = %signed_req.public_key,
+                error_code = "0x0001",
+                gate = "syntax"
+            );
             return (StatusCode::BAD_REQUEST, Json(InvoiceValidationResponse::reject_syntax()));
         }
     };
@@ -317,9 +371,23 @@ pub async fn validate_signed_invoice(
     match invoice.validate() {
         Ok(_) => {
             // All gates passed. The transaction is verified AND signed.
+            info!(
+                event = "tx_finalized",
+                signer = %signed_req.public_key,
+                invoice_id = %invoice.internal_id,
+                status = "VERIFIED",
+                gates_passed = "identity,syntax,logic"
+            );
             (StatusCode::OK, Json(InvoiceValidationResponse::approve(&invoice.internal_id)))
         },
         Err(_) => {
+            warn!(
+                event = "tx_rejected",
+                signer = %signed_req.public_key,
+                invoice_id = %invoice.internal_id,
+                error_code = "0x0002",
+                gate = "logic"
+            );
             (StatusCode::FORBIDDEN, Json(InvoiceValidationResponse::reject_logic()))
         }
     }
