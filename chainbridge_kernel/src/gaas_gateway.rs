@@ -1,20 +1,25 @@
 // ============================================================================
 // FILE: gaas_gateway.rs
-// CONTEXT: PAC-OCC-P61-XDIST (GaaS PARALLELIZATION SWARM)
-// AUTH: BENSON (GID-00)
+// CONTEXT: PAC-OCC-P61-XDIST + PAC-STRAT-P48-MOAT-ENFORCEMENT
+// AUTH: BENSON (GID-00), CODY (GID-02)
 // PURPOSE: The Sovereign API Gasket - Stateless Signal Verification Gateway
 // INVARIANT: External_Latency < 12ms
 // SECURITY: Opaque Error Codes (No Logic Leakage)
+// INTEGRATION: P48 - ERP Shield wired to /validate_invoice endpoint
 // ============================================================================
 
 use axum::{
-    routing::post,
+    routing::{post, get},
     Router,
     Json,
     http::StatusCode,
 };
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::net::SocketAddr;
+
+// Import the ERP Shield for invoice validation
+use crate::erp_shield::NetSuiteInvoice;
 
 // ============================================================================
 // STRICT SCHEMA (No Natural Language)
@@ -61,12 +66,14 @@ pub async fn spawn_gateway() {
 pub async fn spawn_gateway_on_port(port: u16) {
     let app = Router::new()
         .route("/verify", post(verify_decision))
-        .route("/health", axum::routing::get(health_check));
+        .route("/validate_invoice", post(validate_invoice))
+        .route("/health", get(health_check));
 
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
     println!(">>> CHAINBRIDGE GAAS GATEWAY ACTIVE ON: {}", addr);
     println!(">>> INVARIANT: External_Latency < 12ms");
     println!(">>> SECURITY: Opaque Error Codes Enabled");
+    println!(">>> P48: ERP Shield Integration ACTIVE");
     
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
@@ -140,6 +147,96 @@ fn reject(code: u16) -> (StatusCode, Json<VerificationResponse>) {
         tx_id: None,
         error_code: Some(code),
     }))
+}
+
+// ============================================================================
+// P48: THE INVARIANT ENGINE - ERP Shield Integration
+// ============================================================================
+
+/// Invoice validation response - opaque by design
+#[derive(Debug, Serialize)]
+pub struct InvoiceValidationResponse {
+    /// Status: "VERIFIED" | "REJECTED"
+    pub status: String,
+    /// Invoice ID (only present on success)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub invoice_id: Option<String>,
+    /// Opaque error code (only present on failure)
+    /// 0x0001 = Malformed JSON (Syntax Error)
+    /// 0x0002 = Business Logic Violation (Semantic Error)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error_code: Option<String>,
+}
+
+impl InvoiceValidationResponse {
+    fn approve(invoice_id: &str) -> Self {
+        Self {
+            status: "VERIFIED".to_string(),
+            invoice_id: Some(invoice_id.to_string()),
+            error_code: None,
+        }
+    }
+    
+    fn reject_syntax() -> Self {
+        Self {
+            status: "REJECTED".to_string(),
+            invoice_id: None,
+            error_code: Some("0x0001".to_string()),
+        }
+    }
+    
+    fn reject_logic() -> Self {
+        Self {
+            status: "REJECTED".to_string(),
+            invoice_id: None,
+            error_code: Some("0x0002".to_string()),
+        }
+    }
+}
+
+/// THE INVARIANT ENGINE - Main validation loop
+/// 
+/// This endpoint validates NetSuite invoices against:
+/// 1. SYNTAX GATE: JSON must parse into NetSuiteInvoice schema
+/// 2. LOGIC GATE: Business rules must pass (currency, amounts, subsidiaries)
+/// 
+/// SECURITY: We never expose WHY validation failed - only that it did.
+/// ERROR CODES:
+/// - 0x0001: Malformed data (wrong types, missing fields, floats instead of ints)
+/// - 0x0002: Logic violation (invalid currency, negative amount, bad subsidiary)
+pub async fn validate_invoice(
+    Json(payload): Json<Value>
+) -> (StatusCode, Json<InvoiceValidationResponse>) {
+    
+    // ========================================================================
+    // GATE 1: PROOF OF STRUCTURE (Syntax)
+    // Attempt to mold raw JSON into strict NetSuiteInvoice schema.
+    // If it has floats, missing fields, or bad types, it fails here.
+    // ========================================================================
+    let invoice: NetSuiteInvoice = match serde_json::from_value(payload) {
+        Ok(inv) => inv,
+        Err(_) => {
+            // FAIL-CLOSED: Malformed data gets opaque rejection
+            return (StatusCode::BAD_REQUEST, Json(InvoiceValidationResponse::reject_syntax()));
+        }
+    };
+    
+    // ========================================================================
+    // GATE 2: PROOF OF LAW (Semantics)
+    // Run business logic: currency codes, negative values, subsidiaries.
+    // ========================================================================
+    match invoice.validate() {
+        Ok(_) => {
+            // GATE 3: REWARD (Positive Closure)
+            // Logic passed. In a full system, we would sign/stamp here.
+            (StatusCode::OK, Json(InvoiceValidationResponse::approve(&invoice.internal_id)))
+        },
+        Err(_) => {
+            // FAIL-CLOSED: Logic violation gets opaque rejection
+            // We do not explain WHY it failed (Security through Asymmetry)
+            (StatusCode::FORBIDDEN, Json(InvoiceValidationResponse::reject_logic()))
+        }
+    }
 }
 
 // ============================================================================
