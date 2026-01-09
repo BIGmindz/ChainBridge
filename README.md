@@ -1,610 +1,568 @@
-# BensonBot – Multi-Signal Decision Bot with Modular Architecture
+# ChainBridge – Enterprise Logistics & Settlement Platform
 
-[![Tests](https://github.com/BIGmindz/ChainBridge/workflows/Tests/badge.svg)](https://github.com/BIGmindz/ChainBridge/actions/workflows/tests.yml)
-[![codecov](https://codecov.io/gh/BIGmindz/ChainBridge/branch/main/graph/badge.svg)](https://codecov.io/gh/BIGmindz/ChainBridge)
+[![CI/CD](https://github.com/BIGmindz/ChainBridge/workflows/CI/CD/badge.svg)](https://github.com/BIGmindz/ChainBridge/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-BensonBot is a sophisticated multi-signal cryptocurrency decision bot built with a modular architecture to support both Light and Enterprise versions. The system provides flexible data ingestion, ML-powered analysis, and automated decision-making capabilities with market regime detection to optimize trading strategies for bull, bear, and sideways markets.
+ChainBridge is an enterprise-grade logistics and settlement platform that combines freight management, tokenization, payment processing, and ML-driven risk scoring to optimize supply chain operations and financial settlements. Built with a microservices architecture, ChainBridge provides scalable, secure, and intelligent automation for logistics, payments, and compliance workflows.
 
-## 🚀 New Features - September 17, 2025 Update
+## 🚀 Platform Overview
 
-### 📡 New Listings Radar
+ChainBridge is built around four core microservices that work together to deliver end-to-end logistics automation:
 
-- Detects new coin listings on major exchanges in real-time
+### 🚛 ChainFreight – Shipment Lifecycle Management
+- **Shipment tracking** from origin to destination
+- **Freight tokenization** for fractional ownership and trading
+- **Real-time status updates** and exception handling
+- **Delivery confirmation** with proof of delivery
+- Integration with ChainIQ for risk-based decision making
 
-- Implements risk filters and confidence scoring for trading opportunities
+### 💰 ChainPay – Intelligent Payment Settlement
+- **Risk-based conditional settlement** logic
+- **Automated payment intents** tied to freight tokens
+- **Multi-tier settlement delays**: LOW (immediate), MEDIUM (24h), HIGH (manual review)
+- **Audit logging** of all settlement decisions
+- Integration with freight risk scoring
 
-- Generates trade signals with entry timing, stop-loss, and take-profit levels
+### 👤 ChainBoard – Driver Identity & Onboarding
+- **Driver registration** and compliance tracking
+- **Profile management** with verification workflows
+- **DOT and CDL validation**
+- Future: Enterprise identity and organizational support
 
-- 20-40% average returns per successful listing
+### 🧠 ChainIQ – ML-Powered Risk Scoring
+- **Shipment risk assessment** (0.0-1.0 score)
+- **Driver reliability analysis**
+- **Route optimization** recommendations
+- **Predictive analytics** for delivery reliability
+- Adaptive ML models with multi-signal aggregation
 
-### 🌐 Region-Specific Crypto Mapping
+## 🏗️ Architecture
 
-- Maps macroeconomic signals to specific cryptocurrencies by region
+ChainBridge follows a microservices architecture with the following design principles:
 
-- Targets the right assets for regional economic conditions
-
-- Integrates with global macro module for comprehensive signal generation
-
-### 📊 System Monitoring and Dashboard
-
-- Real-time monitoring of all system components
-
-- Trading performance dashboard with key metrics
-
-- Automatic restart of critical components if they fail
-
-- Resource usage tracking and optimization
-
-## 🚀 Previous Features - Professional Budget Management & Volatile Crypto Selection
-
-The latest version includes professional budget management with Kelly Criterion position sizing, automatic selection of the most volatile cryptocurrencies, and a comprehensive multi-signal approach combining RSI, MACD, Bollinger Bands, Volume Profile, and Sentiment Analysis.
-
-### 💰 Professional Budget Management
-
-- Kelly Criterion position sizing for mathematically optimal growth
-
-- Risk management with stop-loss and take-profit
-
-- Portfolio tracking with performance dashboard
-
-- Dynamic risk adjustment based on drawdown
-
-- Capital preservation with maximum position limits
-
-### 📊 Volatile Cryptocurrency Selection
-
-- Automatic identification of highest-volatility trading pairs
-
-- Volatility calculation using price standard deviation
-
-- Configuration updates with selected pairs
-
-### 🚢 Logistics-Based Signal Module (NEW!)
-
-- **Forward-looking signals** (30-45 days) based on supply chain metrics
-
-- **Ultra-low correlation** (0.05) with traditional signals
-
-- **Competitive advantage**: No other bot has these signals
-
-- Port congestion analysis for inflation hedge predictions
-
-- Diesel price monitoring for mining cost economics
-
-- Container rate tracking for supply chain stress indicators
-
-- Predictive power superior to lagging technical indicators
-
-### One-Step Trading System
-
-```bash
-
-## Start the complete automated trading system
-
-./start_trading.sh
-
-## Run in test mode to verify functionality
-
-./start_trading.sh --test
-
-## Run performance analysis on your trading history
-
-./start_trading.sh --analyze
-
-## Set up enhanced trading with volatile cryptos and budget management
-
-python3 run_enhanced_bot_setup.py
-
-## Monitor performance in real-time
-
-python3 monitor_performance.py
+### Service Architecture
 
 ```text
+┌─────────────────────────────────────────────────────────────┐
+│                      ChainBridge Platform                    │
+├──────────────┬──────────────┬──────────────┬────────────────┤
+│  ChainBoard  │ ChainFreight │   ChainPay   │    ChainIQ     │
+│   :8000      │    :8002     │    :8003     │     :8001      │
+├──────────────┼──────────────┼──────────────┼────────────────┤
+│   Driver     │   Shipment   │   Payment    │  Risk Scoring  │
+│   Identity   │   Tracking   │  Settlement  │   Analytics    │
+│   Onboard    │   Tokens     │   Audit      │   Prediction   │
+└──────────────┴──────────────┴──────────────┴────────────────┘
+```
 
-### Individual Components
+### Key Features
+
+- ✅ **Microservices Architecture**: Independent, scalable services
+- ✅ **RESTful APIs**: OpenAPI/Swagger documentation
+- ✅ **Freight Tokenization**: Asset-backed tokens for trading and financing
+- ✅ **Risk-Based Settlement**: Conditional payment logic with multi-tier delays
+- ✅ **ML-Powered Scoring**: Adaptive risk assessment and optimization
+- ✅ **Proof Pack Governance**: Customer-controlled evidence and compliance
+- ✅ **Cloud-Native Design**: Containerized deployment with Docker
+- ✅ **Database Flexibility**: SQLite (dev) / PostgreSQL (production)
+- ✅ **Security First**: Environment-based secrets, TLS, tenant isolation
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Python 3.11+
+- pip
+- Docker (optional, for containerized deployment)
+
+### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/BIGmindz/ChainBridge.git
+cd ChainBridge
 
-## Find the most volatile cryptocurrencies to trade
+# Create virtual environment
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
-python3 dynamic_crypto_selector.py
-python3 src/crypto_selector.py  # Alternative implementation
-
-## Run the multi-signal trading bot with budget management
-
-python3 multi_signal_bot.py
-
-## Test the budget manager independently
-
-python3 budget_manager.py
-
-## Analyze trading performance with visualizations
-
-python3 analyze_trading_performance.py
-
-## Full automated system (selection + trading)
-
-python3 automated_trader.py
-
-## Monitor portfolio in real-time
-
-python3 monitor_performance.py
-
-```text
-
-### Legacy API and Bot Compatibility
-
-```bash
-
-## Install dependencies
-
+# Install dependencies
 pip install -r requirements.txt
+```
 
-## Start the API server
+### Running Services
 
-python benson_system.py --mode api-server
-
-## Run the original RSI bot functionality
-
-python benson_system.py --mode rsi-compat --once
-
-```text
-
-## 🔐 Security Configuration
-
-BensonBot prioritizes security by using environment variables for sensitive data. **Never commit API keys or secrets to version control.**
-
-### Setting Up API Credentials
-
-1. **Copy the environment template:**
-
-   ```bash
-
-   cp .env.example .env
-
-   ```
-
-1. **Edit `.env` with your credentials:**
-
-   ```bash
-
-   # Replace placeholder values with your actual API credentials
-
-   API_KEY="your_actual_api_key_here"
-   API_SECRET="your_actual_api_secret_here"
-   EXCHANGE="kraken"  # or your preferred exchange
-
-   ```
-
-1. **Verify `.env` is in your `.gitignore`:**
-
-   The `.env` file should never be committed to version control as it contains sensitive credentials.
-
-### Environment Variables Reference
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `API_KEY` | Exchange API key for live trading | `"ak_1234567890abcdef"` |
-| `API_SECRET` | Exchange API secret for live trading | `"sk_abcdef1234567890"` |
-| `EXCHANGE` | Exchange to use (kraken, coinbase, binance) | `"kraken"` |
-| `PAPER` | Set to "true" for paper trading | `"true"` |
-
-### Configuration Loading
-
-The bot automatically loads environment variables using the `${VARIABLE_NAME}` syntax in `config/config.yaml`:
-
-```yaml
-
-api:
-  key: ${API_KEY}
-  secret: ${API_SECRET}
-
-```text
-
-### Security Best Practices
-
-- ✅ **DO**: Store API keys in environment variables or secure vaults
-
-- ✅ **DO**: Use paper trading (`PAPER="true"`) for testing
-
-- ✅ **DO**: Regularly rotate API keys
-
-- ❌ **DON'T**: Commit `.env` files or API keys to version control
-
-- ❌ **DON'T**: Share API keys in chat, logs, or screenshots
-
-- ❌ **DON'T**: Use production API keys in development environments
-
-## ✅ Preflight Checks & Market Validation
-
-Before running the bot in live mode (`PAPER=false`), the system performs a preflight check to ensure your configured symbols have exchange-reported minima and valid price data. This prevents creating orders below exchange minimums or acting on symbols with invalid prices (for example, symbols returning a last price of 0.0).
-
-Maintainers can validate a local markets dump (an export of `exchange.markets`) using the helper script:
+#### Start All Services with Docker
 
 ```bash
+# Build and start all services
+docker-compose up --build
 
-.venv/bin/python3 scripts/validate_markets.py /path/to/markets.json
+# Or run in detached mode
+docker-compose up -d
+```
 
-```text
-
-This script reads `config.yaml` to find configured symbols and prints any symbols for which minima could not be detected. Use it during diagnostics or when you update exchange market metadata.
-
-## 🏗️ Enhanced Architecture & Features
-
-### New Trading Components
-
-- **Dynamic Crypto Selector**: Automatically finds the most volatile cryptocurrencies with sufficient volume
-
-- **Multi-Signal Integration**: Combines 5 different trading signals for better decision-making
-
-- **Adaptive Risk Management**: Trading parameters optimized based on each crypto's volatility profile
-
-- **Performance Analysis**: Detailed metrics and visualizations for strategy evaluation
-
-- **Regime Detection**: Optimizes strategies for bull, bear, and sideways markets
-
-### Core Architecture
-
-Benson features a modular architecture with the following components:
-
-- **Core System**: Module management, data processing, and pipeline orchestration
-
-- **API Layer**: RESTful endpoints for system interaction and integration
-
-- **Pluggable Modules**: CSV ingestion, RSI, MACD, Bollinger Bands, Volume Profile, and Sentiment Analysis
-
-- **Business Impact Tracking**: ROI metrics, usage analytics, and adoption tracking
-
-- **Cloud-Native Design**: Containerized deployment with scalability support
-
-## 📊 Available Modules
-
-### Data Ingestion
-
-- **CSV Ingestion**: Process CSV files with flexible column mapping
-
-- **Alternative Data**: Geopolitical and sentiment data integration
-
-### Trading Signal Analysis
-
-- **RSI Module**: Technical analysis with Wilder's RSI calculation
-
-- **MACD Module**: Moving Average Convergence Divergence momentum indicator
-
-- **Bollinger Bands Module**: Volatility-based analysis with band squeeze detection
-
-- **Volume Profile Module**: Volume-based support/resistance and POC analysis
-
-- **Sentiment Analysis Module**: Alternative data sentiment scoring from multiple sources
-
-- **Multi-Signal Aggregator**: Intelligent combination of uncorrelated signals
-
-### Machine Learning & Forecasting
-
-- **Sales Forecasting**: ML-powered sales predictions with trend analysis
-
-- **Market Regime Detection**: Automatic identification of bull, bear, and sideways markets
-
-- **Adaptive Signal Optimization**: Regime-specific signal weighting and position sizing
-
-- **Custom Modules**: Extensible framework for additional analysis
-
-### Business Intelligence
-
-- **Metrics Collection**: Automated tracking of usage and performance
-
-- **ROI Calculation**: Business impact measurement and reporting
-
-## 📘 Documentation
-
-- [Regime-Specific Backtesting](./docs/REGIME_SPECIFIC_BACKTESTING.md): Learn how to evaluate trading strategy performance across different market regimes
-
-- [Market Regime Detection](./docs/MARKET_REGIME_DETECTION.md): Understand how the system identifies bull, bear, and sideways markets
-
-## 🔧 API Examples
-
-### Multi-Signal Analysis
+#### Start Individual Services
 
 ```bash
+# ChainBoard (Driver Identity) - Port 8000
+cd ChainBridge/chainboard-service
+uvicorn app.main:app --reload --port 8000
 
-curl -X POST http://localhost:8000/analysis/multi-signal \
+# ChainIQ (Risk Scoring) - Port 8001
+cd ChainBridge/chainiq-service
+uvicorn app.main:app --reload --port 8001
+
+# ChainFreight (Shipment Tracking) - Port 8002
+cd ChainBridge/chainfreight-service
+uvicorn app.main:app --reload --port 8002
+
+# ChainPay (Payment Settlement) - Port 8003
+cd ChainBridge/chainpay-service
+uvicorn app.main:app --reload --port 8003
+```
+
+### API Documentation
+
+Once services are running, access interactive API documentation:
+
+- **ChainBoard**: http://localhost:8000/docs
+- **ChainIQ**: http://localhost:8001/docs
+- **ChainFreight**: http://localhost:8002/docs
+- **ChainPay**: http://localhost:8003/docs
+
+## 💼 Use Cases
+
+### Freight Tokenization Workflow
+
+```bash
+# 1. Create a shipment in ChainFreight
+curl -X POST http://localhost:8002/shipments \
   -H "Content-Type: application/json" \
   -d '{
-    "price_data": [
-      {"close": 45000, "high": 45200, "low": 44800, "volume": 1000},
-      {"close": 45100, "high": 45300, "low": 44900, "volume": 1200}
-    ],
-    "include_individual_signals": true
+    "shipper_name": "ACME Corp",
+    "origin": "Los Angeles, CA",
+    "destination": "Chicago, IL",
+    "pickup_date": "2025-11-08T08:00:00",
+    "planned_delivery_date": "2025-11-15T12:00:00",
+    "cargo_value": 100000
   }'
 
-```text
-
-### Individual Signal Analysis
-
-#### Execute RSI Analysis
-
-```bash
-
-curl -X POST http://localhost:8000/modules/RSIModule/execute \
+# 2. Tokenize the shipment (includes ChainIQ risk scoring)
+curl -X POST http://localhost:8002/shipments/1/tokenize \
   -H "Content-Type: application/json" \
   -d '{
-    "module_name": "RSIModule",
-    "input_data": {
-      "price_data": [{"close": 45000}, {"close": 45100}]
-    }
+    "face_value": 100000.00,
+    "currency": "USD"
   }'
 
-```text
-
-#### Execute MACD Analysis
-
-```bash
-
-curl -X POST http://localhost:8000/modules/MACDModule/execute \
+# 3. Create payment intent (ChainPay)
+curl -X POST http://localhost:8003/payment_intents \
   -H "Content-Type: application/json" \
   -d '{
-    "module_name": "MACDModule",
-    "input_data": {
-      "price_data": [{"close": 45000}, {"close": 45100}]
-    }
+    "freight_token_id": 1,
+    "amount": 100000.00,
+    "currency": "USD",
+    "description": "Payment for shipment LA→CHI"
   }'
 
-```text
-
-### Available Signal Modules
-
-```bash
-
-curl http://localhost:8000/signals/available
-
-```text
-
-### Multi-Signal Backtesting
-
-```bash
-
-curl -X POST http://localhost:8000/analysis/multi-signal/backtest \
+# 4. Settle payment (risk-based logic applies)
+curl -X POST http://localhost:8003/payment_intents/1/settle \
   -H "Content-Type: application/json" \
   -d '{
-    "historical_data": [
-      {"close": 45000, "high": 45200, "low": 44800, "volume": 1000},
-      {"close": 45100, "high": 45300, "low": 44900, "volume": 1200}
-    ],
-    "initial_balance": 10000
+    "settlement_notes": "Approved by finance team"
   }'
+```
 
-```text
+### Risk-Based Settlement Tiers
 
-### Process CSV Data
+| Risk Level | Score Range | Settlement Action | Delay |
+|-----------|-------------|-------------------|-------|
+| **LOW** | 0.0 - 0.33 | Immediate approval | None |
+| **MEDIUM** | 0.33 - 0.67 | Delayed approval | 24 hours |
+| **HIGH** | 0.67 - 1.0 | Manual review required | ∞ (requires override) |
+
+## 🔐 Security & Governance
+
+ChainBridge implements enterprise-grade security and governance controls:
+
+### Security Features
+
+- **Environment-Based Secrets**: All sensitive credentials stored in `.env` files (never committed)
+- **TLS Encryption**: All service-to-service communication encrypted in transit
+- **Tenant Isolation**: Multi-tenant architecture with strict data separation
+- **Role-Based Access Control (RBAC)**: Fine-grained permissions per service
+- **Customer KMS**: Option to use customer-managed encryption keys at rest
+- **IP Allowlisting**: Restrict service access to authorized networks
+- **SOC 2 Compliance Track**: Security audit trail and compliance reporting
+
+### Proof Pack Governance
+
+ChainBridge implements **customer-controlled, ChainBridge-executed** governance:
+
+- **Data Controller (Customer)**: Defines proof pack templates, redaction rules, storage location, and retention policies
+- **Processor (ChainBridge)**: Executes policies, assembles proof packs, routes payments, anchors hashes
+- **Auditors/Insurers**: Read-only access to export bundles and audit trails
+
+#### Key Governance Features
+
+- **Template-Based Evidence**: Customer-defined templates for each lane, corridor, or risk tier
+- **Redaction & Data Minimization**: Per-field control (`drop`, `mask`, or `hash`)
+- **Customer-Owned Storage**: Primary storage in customer vaults (S3/Azure/GCS/on-prem)
+- **Integrity Anchoring**: Manifest hashes anchored to public/neutral ledger (XRP Ledger)
+- **Versioned Templates**: Change control with finance/compliance approval
+- **Audit Logging**: Complete settlement decision log with timestamps and signatures
+
+#### Runtime Modes
+
+1. **Observe-only**: Generate proof packs without fund movement
+2. **Simulated**: "Would-have-paid" testing runs
+3. **Controlled live**: Single milestone (e.g., pickup 20%) with dual approval
+4. **Full automation**: All milestones with exception alerts
+
+See [Proof Pack Governance](./proofpacks/PROOFPACK_GOVERNANCE.md) for complete details.
+
+### Environment Configuration
 
 ```bash
+# Copy the environment template
+cp .env.example .env
 
-curl -X POST http://localhost:8000/modules/CSVIngestionModule/execute \
-  -H "Content-Type: application/json" \
-  -d '{
-    "module_name": "CSVIngestionModule",
-    "input_data": {
-      "file_path": "sample_data/btc_price_data.csv"
-    }
-  }'
+# Edit .env with your configuration
+DATABASE_URL=postgresql://user:password@localhost/chainbridge
+CHAINFREIGHT_URL=http://localhost:8002
+CHAINIQ_URL=http://localhost:8001
+CHAINBOARD_URL=http://localhost:8000
+CHAINPAY_URL=http://localhost:8003
 
-```text
+# Security settings
+KMS_KEY_ID=your-kms-key-id
+ENABLE_TLS=true
+ALLOWED_IPS=10.0.0.0/8,172.16.0.0/12
+```
 
-### Sales Forecasting
+**⚠️ Never commit `.env` files to version control**
 
-```bash
+## 📊 Service Documentation
 
-curl -X POST http://localhost:8000/modules/SalesForecastingModule/execute \
-  -H "Content-Type: application/json" \
-  -d '{
-    "module_name": "SalesForecastingModule",
-    "input_data": {
-      "historical_sales": [
-        {"date": "2024-01-01", "amount": 15000}
-      ],
-      "forecast_periods": 5
-    }
-  }'
+### ChainBoard (Driver Identity & Onboarding)
 
-```text
+**Port**: 8000 | **Path**: `ChainBridge/chainboard-service/`
+
+- Driver registration with DOT/CDL validation
+- Profile management and compliance tracking
+- Soft-delete support for inactive drivers
+- Search by email or DOT number
+
+[ChainBoard README](./ChainBridge/chainboard-service/README.md)
+
+### ChainIQ (ML Risk Scoring Engine)
+
+**Port**: 8001 | **Path**: `ChainBridge/chainiq-service/`
+
+- Shipment risk scoring (0.0-1.0)
+- Driver reliability assessment
+- Route optimization recommendations
+- Adaptive ML models with multi-signal aggregation
+- Integration with ChainFreight for automatic risk assessment
+
+[ChainIQ README](./ChainBridge/chainiq-service/README.md)
+
+### ChainFreight (Shipment Lifecycle & Tokenization)
+
+**Port**: 8002 | **Path**: `ChainBridge/chainfreight-service/`
+
+- Shipment tracking and status management
+- Freight tokenization for fractional ownership
+- Integration with ChainIQ for risk scoring
+- Delivery confirmation and exception handling
+- Shipment lifecycle: `pending → picked_up → in_transit → delivered`
+
+[ChainFreight README](./ChainBridge/chainfreight-service/README.md)
+
+### ChainPay (Intelligent Payment Settlement)
+
+**Port**: 8003 | **Path**: `ChainBridge/chainpay-service/`
+
+- Risk-based conditional settlement logic
+- Multi-tier payment delays (LOW/MEDIUM/HIGH risk)
+- Freight token consumption and settlement
+- Complete audit logging of decisions
+- Settlement history and compliance reporting
+
+[ChainPay README](./ChainBridge/chainpay-service/README.md)
 
 ## 🧪 Testing
 
-```bash
+ChainBridge includes comprehensive testing for all services and components.
 
-## Run comprehensive system tests (includes all signal modules)
-
-python benson_system.py --mode test
-
-## Run multi-signal demonstration across market scenarios
-
-python benson_system.py --mode multi-signal-demo
-
-## Run comprehensive integration demo
-
-python multi_signal_demo.py
-
-## Test original RSI functionality
-
-python benson_rsi_bot.py --test
-
-```text
-
-### Developer quick checks (lean path)
-
-See README-QUICK-CHECKS.md for a fast, TensorFlow-free validation path and pre-commit setup.
-
-## 📈 Business Impact Features
-
-- **Automation Savings**: Tracks time saved through automated processes
-
-- **Usage Analytics**: Module execution patterns and adoption metrics
-
-- **ROI Reporting**: Cost-benefit analysis of system usage
-
-- **Performance Monitoring**: Error rates, execution times, and reliability metrics
-
-View metrics:
+### Running Tests
 
 ```bash
+# Run unit tests
+python -m pytest tests/
 
-curl http://localhost:8000/metrics
+# Run specific service tests
+cd ChainBridge/chainfreight-service
+pytest tests/
 
-```text
+# Run integration tests (requires all services running)
+python -m pytest tests/integration/
 
-## 🔌 Extensibility
+# Run with coverage
+pytest --cov=ChainBridge --cov-report=html
+```
 
-Create custom modules by extending the base `Module` class:
+### CI/CD Pipeline
 
-```python
+ChainBridge uses GitHub Actions for continuous integration:
 
-from core.module_manager import Module
+- **Build**: Python 3.11+ virtual environment setup
+- **Test**: Automated unit test execution
+- **Deploy**: Automated deployment on main branch
 
-class CustomAnalyzer(Module):
-    def process(self, data):
+See [.github/workflows/ci.yml](./.github/workflows/ci.yml) for details.
 
-## Your custom logic here
-
-        return {"result": "processed"}
-
-```text
-
-Register and use:
-
-```bash
-
-curl -X POST http://localhost:8000/modules/register \
-  -d '{"module_name": "CustomAnalyzer", "module_path": "path.to.module"}'
-
-```text
-
-## 📋 Configuration
-
-### Environment Variables
-
-- `PORT`: API server port (default: 8000)
-
-- `HOST`: API server host (default: 0.0.0.0)
-
-- `BENSON_CONFIG`: Configuration file path
-
-### Module Configuration
-
-Configure modules with custom parameters:
-
-```python
-
-{
-  "rsi": {
-    "period": 14,
-    "buy_threshold": 30,
-    "sell_threshold": 70
-  }
-}
-
-```text
-
-## 🐳 Docker Support
-
-Multiple deployment options:
+### Manual Service Testing
 
 ```bash
+# Test ChainFreight health
+curl http://localhost:8002/health
 
-## API server mode
+# Test ChainIQ risk scoring
+curl -X POST http://localhost:8001/score/shipment \
+  -H "Content-Type: application/json" \
+  -d '{
+    "shipment_id": "SHIP-12345",
+    "origin": "Los Angeles, CA",
+    "destination": "Chicago, IL"
+  }'
 
-docker-compose up benson-api
+# Test ChainBoard driver creation
+curl -X POST http://localhost:8000/drivers \
+  -H "Content-Type: application/json" \
+  -d '{
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "john@example.com",
+    "phone": "555-1234"
+  }'
+```
 
-## Legacy RSI bot mode
+## 🐳 Docker Deployment
 
-docker-compose --profile legacy up benson-legacy
+ChainBridge supports containerized deployment with Docker and Docker Compose.
 
-## One-time RSI analysis
+### Using Docker Compose
 
-docker-compose --profile rsi-only up benson-rsi
+```bash
+# Build all services
+docker-compose build
 
-```text
+# Start all services
+docker-compose up
 
-## 📚 Additional Documentation
+# Run in background
+docker-compose up -d
 
-- [Modular Architecture Guide](MODULAR_ARCHITECTURE.md)
+# View logs
+docker-compose logs -f
 
-- [API Documentation](http://localhost:8000/docs) (when running)
+# Stop all services
+docker-compose down
 
-- [Module Development Guide](MODULAR_ARCHITECTURE.md#creating-custom-modules)
+# Rebuild and restart specific service
+docker-compose up --build chainfreight-service
+```
+
+### Individual Container Builds
+
+```bash
+# Build ChainBoard
+docker build -t chainboard:latest -f ChainBridge/chainboard-service/Dockerfile .
+
+# Build ChainFreight
+docker build -t chainfreight:latest -f ChainBridge/chainfreight-service/Dockerfile .
+
+# Build ChainPay
+docker build -t chainpay:latest -f ChainBridge/chainpay-service/Dockerfile .
+
+# Build ChainIQ
+docker build -t chainiq:latest -f ChainBridge/chainiq-service/Dockerfile .
+```
+
+### Kubernetes Deployment
+
+ChainBridge includes Kubernetes manifests for production deployment:
+
+```bash
+# Apply Kubernetes configurations
+kubectl apply -f k8s/
+
+# Check deployment status
+kubectl get pods
+kubectl get services
+
+# View logs
+kubectl logs -f deployment/chainfreight-deployment
+```
+
+See [k8s/](./k8s/) directory for complete Kubernetes configurations.
 
 ## 🛠️ Development
 
 ### Project Structure
 
 ```plaintext
+ChainBridge/
+├── ChainBridge/                    # Main package directory
+│   ├── chainboard-service/         # Driver identity service
+│   ├── chainfreight-service/       # Shipment tracking service
+│   ├── chainpay-service/           # Payment settlement service
+│   ├── chainiq-service/            # ML risk scoring service
+│   ├── core/                       # Core system components
+│   ├── api/                        # REST API server
+│   └── ml_models/                  # Machine learning models
+├── modules/                        # Pluggable analysis modules
+│   ├── adaptive_weight_module/     # Dynamic signal weighting
+│   ├── market_regime_module/       # Regime detection
+│   └── risk_management/            # Risk assessment
+├── strategies/                     # Strategy configurations
+│   ├── bull/                       # Bull market strategies
+│   ├── bear/                       # Bear market strategies
+│   └── sideways/                   # Sideways strategies
+├── proofpacks/                     # Governance and compliance
+├── tests/                          # Test suite
+├── k8s/                           # Kubernetes manifests
+├── docs/                          # Documentation
+├── .github/workflows/             # CI/CD pipelines
+├── docker-compose.yml             # Container orchestration
+├── requirements.txt               # Python dependencies
+├── pyproject.toml                 # Project configuration
+└── README.md                      # This file
+```
 
-├── core/                   # Core system components
-├── modules/               # Pluggable analysis modules
-├── api/                   # REST API server
-├── tracking/              # Business impact tracking
-├── sample_data/           # Example data files
-├── config/                # Configuration files
-└── benson_system.py       # Main entry point
+### Adding New Features
 
-```text
+1. **Create Feature Branch**: `git checkout -b feature/your-feature`
+2. **Implement Changes**: Follow existing patterns in service directories
+3. **Write Tests**: Add tests in `tests/` directory
+4. **Update Documentation**: Update relevant README files
+5. **Run Tests**: `pytest tests/`
+6. **Submit PR**: Create pull request for review
 
-### Running Tests
+### Code Quality Standards
 
 ```bash
+# Format code with Black
+black ChainBridge/ --line-length 140
 
-make test                  # Run all tests
-python benson_system.py --mode test  # System tests
+# Sort imports with isort
+isort ChainBridge/ --profile black
 
-```text
+# Lint with Ruff
+ruff check ChainBridge/
 
-## 🌟 Features
+# Type checking with Pylance (VS Code)
+# Configure in .vscode/settings.json
+```
 
-- ✅ **Multi-Signal Architecture**: 6 uncorrelated trading signal modules
+Configuration files:
+- **Black/isort/Ruff**: `pyproject.toml`
+- **Pre-commit hooks**: `.pre-commit-config.yaml`
+- **Flake8**: `.flake8`
+- **Pylint**: `.pylintrc`
 
-- ✅ **Intelligent Signal Aggregation**: Consensus-based decision making
+## 🌟 Key Features
 
-- ✅ **Risk-Aware Trading**: Automatic risk assessment and position sizing
+### Freight Management
+- ✅ **End-to-End Shipment Tracking**: From origin to destination with real-time updates
+- ✅ **Freight Tokenization**: Asset-backed tokens for fractional ownership and trading
+- ✅ **Delivery Confirmation**: Proof of delivery with automated status updates
+- ✅ **Exception Handling**: Automated incident detection and management
 
-- ✅ **Market Regime Detection**: Automatic optimization for bull, bear, and sideways markets ([learn more](docs/MARKET_REGIME_DETECTION.md))
+### Payment & Settlement
+- ✅ **Risk-Based Settlement**: Multi-tier conditional payment logic
+- ✅ **Automated Payment Intents**: Tied to freight tokens with risk assessment
+- ✅ **Audit Logging**: Complete settlement decision history
+- ✅ **Flexible Settlement Delays**: LOW (immediate), MEDIUM (24h), HIGH (manual)
 
-- ✅ **Signal Independence**: Verified uncorrelated indicators (diversification score: 0.90)
+### Risk & Intelligence
+- ✅ **ML-Powered Risk Scoring**: 0.0-1.0 risk assessment for shipments
+- ✅ **Driver Reliability Analysis**: Historical performance tracking
+- ✅ **Route Optimization**: Predictive analytics for best routes
+- ✅ **Adaptive Learning**: Multi-signal aggregation with dynamic weights
 
-- ✅ **Enhanced Machine Learning**: Faster adaptation to changing market conditions
+### Compliance & Governance
+- ✅ **Proof Pack System**: Customer-controlled evidence and compliance
+- ✅ **Template-Based Governance**: Versioned templates with approval workflows
+- ✅ **Data Minimization**: Per-field redaction controls
+- ✅ **Integrity Anchoring**: Cryptographic hashes on public ledgers
 
-- ✅ Modular, extensible architecture
-
-- ✅ REST API with OpenAPI documentation
-
-- ✅ Multiple data ingestion formats
-
-- ✅ Advanced RSI analysis with Wilder's smoothing
-
-- ✅ ML-powered sales forecasting
-
-- ✅ Business impact tracking and ROI metrics
-
-- ✅ Docker containerization support
-
-- ✅ Cloud-native deployment ready
-
-- ✅ Backward compatibility with existing RSI bot
+### Platform & Architecture
+- ✅ **Microservices Design**: Independent, scalable services
+- ✅ **RESTful APIs**: OpenAPI/Swagger documentation
+- ✅ **Cloud-Native**: Containerized with Docker/Kubernetes support
+- ✅ **Database Flexibility**: SQLite (dev) / PostgreSQL (production)
+- ✅ **Security First**: TLS, RBAC, tenant isolation, KMS integration
 
 ## 🤝 Contributing
 
-1. Create custom modules following the `Module` interface
+We welcome contributions to ChainBridge! Please follow these guidelines:
 
-1. Add new API endpoints for additional functionality
+### Getting Started
 
-1. Extend business impact tracking for new metrics
+1. **Fork the repository** on GitHub
+2. **Clone your fork**: `git clone https://github.com/YOUR_USERNAME/ChainBridge.git`
+3. **Create a feature branch**: `git checkout -b feature/your-feature-name`
+4. **Make your changes** following our code standards
+5. **Write tests** for new functionality
+6. **Run the test suite**: `pytest tests/`
+7. **Commit your changes**: `git commit -m "Add feature: your feature description"`
+8. **Push to your fork**: `git push origin feature/your-feature-name`
+9. **Submit a pull request** to the main repository
 
-1. Improve ML models and forecasting accuracy
+### Code Standards
+
+- **Type Hints**: Always use full type hints for function parameters and return values
+- **Pydantic Schemas**: Use separate request/response models for API endpoints
+- **Documentation**: Add docstrings to all classes and functions
+- **Error Handling**: Return appropriate HTTP status codes with descriptive messages
+- **Dependency Injection**: Use FastAPI's `Depends()` pattern for database sessions
+- **Testing**: Maintain or improve code coverage with unit and integration tests
+
+### Development Workflow
+
+1. Install pre-commit hooks: `pre-commit install`
+2. Format code before committing: `black ChainBridge/ && isort ChainBridge/`
+3. Run linters: `ruff check ChainBridge/`
+4. Run tests: `pytest tests/ --cov=ChainBridge`
+5. Update documentation if adding new features
+
+### Areas for Contribution
+
+- 🆕 **New Features**: Additional microservices or integrations
+- 🐛 **Bug Fixes**: Identify and fix issues
+- 📚 **Documentation**: Improve guides, examples, and API docs
+- 🧪 **Testing**: Expand test coverage
+- ⚡ **Performance**: Optimization and scaling improvements
+- 🔒 **Security**: Security enhancements and vulnerability fixes
 
 ## 📄 License
 
-This project is part of the BIGmindz Multiple Signal Decision Bot system.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+**Copyright © 2025 BIGmindz - ChainBridge Platform**
 
 ---
 
-## Get started with the modular Benson system today and unlock scalable, automated decision-making capabilities
+## 📞 Support & Contact
+
+- **Issues**: [GitHub Issues](https://github.com/BIGmindz/ChainBridge/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/BIGmindz/ChainBridge/discussions)
+- **Documentation**: [GitHub Wiki](https://github.com/BIGmindz/ChainBridge/wiki)
+
+---
+
+**Get started with ChainBridge today and transform your logistics operations with intelligent automation, risk-based settlement, and enterprise-grade governance.**
