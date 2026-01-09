@@ -1,6 +1,6 @@
 ## Trading Bot De-Coupling
 
-As of 2026-01, all trading bot systems have been intentionally removed from
+Effective January 2026, all trading bot systems have been intentionally removed from
 the ChainBridge repository.
 
 ### Rationale
