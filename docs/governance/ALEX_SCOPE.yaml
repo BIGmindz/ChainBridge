@@ -1,0 +1,19 @@
+repo:
+  name: ChainBridge
+  constitutional_scope: logistics_governance_platform
+  prohibited_domains:
+    - trading
+    - market_making
+    - signal_generation
+    - portfolio_management
+    - backtesting
+    - exchange_connectors
+
+enforcement:
+  required_checks:
+    - alex-governance
+  mode: fail_closed
+
+attestation:
+  approved_by: Benson CTO
+  effective_date: 2026-01
