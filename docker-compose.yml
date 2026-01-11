@@ -1,10 +1,53 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# CHAINBRIDGE SOVEREIGN NODE - DOCKER COMPOSE
+# PAC-OPS-P95-CONTAINERIZATION
+# ══════════════════════════════════════════════════════════════════════════════
+# "The Sovereign Node is a ship, not a building."
+# ══════════════════════════════════════════════════════════════════════════════
+
 services:
-  # Main Benson API Server
+  # ─────────────────────────────────────────────────────────────────────────────
+  # SOVEREIGN NODE - Main ChainBridge Trinity Gateway
+  # ─────────────────────────────────────────────────────────────────────────────
+  sovereign-node:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chainbridge-sovereign
+    image: chainbridge/sovereign-node:1.0.0
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PORT=8000
+      - LOG_LEVEL=INFO
+    volumes:
+      # Persist logs outside container
+      - ./logs:/app/logs
+      # Mount config for runtime customization (read-only)
+      - ./config:/app/config:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 5s
+      retries: 3
+    networks:
+      - chainbridge-net
+    labels:
+      - "com.chainbridge.service=sovereign-node"
+      - "com.chainbridge.version=1.0.0"
+      - "com.chainbridge.pac=PAC-OPS-P95"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # LEGACY: Benson API Server (backward compatibility)
+  # ─────────────────────────────────────────────────────────────────────────────
   benson-api:
     build: .
     container_name: benson-api
     ports:
-      - "8000:8000"
+      - "8001:8000"
     env_file:
       - .env
     volumes:
@@ -18,8 +61,13 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    profiles: ["legacy"]
+    networks:
+      - chainbridge-net
 
-  # RSI Bot in compatibility mode (optional)
+  # ─────────────────────────────────────────────────────────────────────────────
+  # RSI Bot (optional, one-shot execution)
+  # ─────────────────────────────────────────────────────────────────────────────
   benson-rsi:
     build: .
     container_name: benson-rsi
@@ -27,11 +75,15 @@ services:
       - .env
     volumes:
       - ./:/app
-    restart: "no"  # Don't restart automatically
+    restart: "no"
     command: python benson_system.py --mode rsi-compat --once
-    profiles: ["rsi-only"]  # Only start with --profile rsi-only
+    profiles: ["rsi-only"]
+    networks:
+      - chainbridge-net
 
-  # Original RSI Bot (for backward compatibility)
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Legacy RSI Bot (backward compatibility)
+  # ─────────────────────────────────────────────────────────────────────────────
   benson-legacy:
     build: .
     container_name: benson-legacy
@@ -41,4 +93,23 @@ services:
       - ./:/app
     restart: unless-stopped
     command: python benson_rsi_bot.py
-    profiles: ["legacy"]  # Only start with --profile legacy
+    profiles: ["legacy"]
+    networks:
+      - chainbridge-net
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NETWORKS
+# ─────────────────────────────────────────────────────────────────────────────
+networks:
+  chainbridge-net:
+    driver: bridge
+    name: chainbridge-network
+
+# ─────────────────────────────────────────────────────────────────────────────
+# VOLUMES (Optional persistent storage)
+# ─────────────────────────────────────────────────────────────────────────────
+volumes:
+  chainbridge-logs:
+    driver: local
+  chainbridge-data:
+    driver: local
