@@ -59,6 +59,21 @@ from modules.finance.fees import (
     create_tiered_percentage_strategy,
 )
 
+from modules.finance.currency import (
+    CurrencyEngine,
+    CurrencyRegistry,
+    Currency,
+    Money,
+    ExchangeRate,
+    ConversionResult,
+    CurrencyError,
+    UnknownCurrencyError,
+    ExchangeRateNotFoundError,
+    StaleExchangeRateError,
+    PrecisionViolationError,
+    create_default_engine_with_rates,
+)
+
 __all__ = [
     # Ledger Classes
     "Ledger",
@@ -99,6 +114,21 @@ __all__ = [
     # Fee Helpers
     "create_stripe_strategy",
     "create_tiered_percentage_strategy",
+    # Currency Classes
+    "CurrencyEngine",
+    "CurrencyRegistry",
+    "Currency",
+    "Money",
+    "ExchangeRate",
+    "ConversionResult",
+    # Currency Exceptions
+    "CurrencyError",
+    "UnknownCurrencyError",
+    "ExchangeRateNotFoundError",
+    "StaleExchangeRateError",
+    "PrecisionViolationError",
+    # Currency Helpers
+    "create_default_engine_with_rates",
 ]
 
 __version__ = "2.0.0"

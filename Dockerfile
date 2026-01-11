@@ -1,16 +1,22 @@
 # ══════════════════════════════════════════════════════════════════════════════
-# CHAINBRIDGE SOVEREIGN NODE - CONTAINERIZATION
-# PAC-OPS-P95-CONTAINERIZATION
+# CHAINBRIDGE SOVEREIGN NODE v2.0.0 - CONTAINERIZATION
+# PAC-OPS-P220-CONTAINER-V2
 # ══════════════════════════════════════════════════════════════════════════════
+# CAPABILITIES:
+#   - Trinity Gates (P85/P65/P75): Biometric, AML, Customs
+#   - Invisible Bank (P200-P203): Ledger, Settlement, Fees, Currency
+#   - Sovereign API v2.0 (P211): Financial Transparency
 # INVARIANTS:
 #   INV-OPS-001 (Portability): System must not depend on host OS
 #   INV-OPS-002 (Isolation): Dependencies locked within image
+#   INV-OPS-005 (Version Alignment): Container == API == Controller
 # ══════════════════════════════════════════════════════════════════════════════
 
 # ─────────────────────────────────────────────────────────────────────────────
 # STAGE 1: BUILDER - Install dependencies in isolated layer
+# PAC-OPS-P251: Runtime upgraded to Python 3.14.2 (vulnerability-free)
 # ─────────────────────────────────────────────────────────────────────────────
-FROM python:3.11-slim AS builder
+FROM python:3.14.2-slim AS builder
 
 WORKDIR /build
 
@@ -31,8 +37,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 # ─────────────────────────────────────────────────────────────────────────────
 # STAGE 2: RUNTIME - Minimal production image
+# PAC-OPS-P251: Runtime upgraded to Python 3.14.2 (vulnerability-free)
 # ─────────────────────────────────────────────────────────────────────────────
-FROM python:3.11-slim AS runtime
+FROM python:3.14.2-slim AS runtime
 
 # Security: Create non-root user for container execution
 RUN useradd --create-home --shell /bin/bash --uid 1000 sovereign && \
@@ -42,7 +49,7 @@ RUN useradd --create-home --shell /bin/bash --uid 1000 sovereign && \
 WORKDIR /app
 
 # Copy Python environment from builder
-COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/lib/python3.14/site-packages /usr/local/lib/python3.14/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code (respects .dockerignore)
@@ -75,8 +82,9 @@ CMD ["uvicorn", "sovereign_server:app", "--host", "0.0.0.0", "--port", "8000"]
 # LABELS - Container Metadata
 # ══════════════════════════════════════════════════════════════════════════════
 LABEL org.opencontainers.image.title="ChainBridge Sovereign Node" \
-      org.opencontainers.image.description="Trinity Gate Transaction Processor" \
-      org.opencontainers.image.version="1.0.0" \
+      org.opencontainers.image.description="Trinity Gates + Invisible Bank Transaction Processor" \
+      org.opencontainers.image.version="2.0.0" \
       org.opencontainers.image.vendor="ChainBridge" \
       org.opencontainers.image.authors="Benson (GID-00)" \
-      com.chainbridge.pac="PAC-OPS-P95-CONTAINERIZATION"
+      com.chainbridge.pac="PAC-OPS-P220-CONTAINER-V2" \
+      com.chainbridge.capabilities="Trinity Gates, Invisible Bank, Financial Transparency"

@@ -1,26 +1,28 @@
 # ══════════════════════════════════════════════════════════════════════════════
-# CHAINBRIDGE SOVEREIGN NODE - DOCKER COMPOSE
-# PAC-OPS-P95-CONTAINERIZATION
+# CHAINBRIDGE SOVEREIGN NODE v2.0.0 - DOCKER COMPOSE
+# PAC-OPS-P220-CONTAINER-V2
 # ══════════════════════════════════════════════════════════════════════════════
-# "The Sovereign Node is a ship, not a building."
+# "The Bank is in the Box."
+# CAPABILITIES: Trinity Gates + Invisible Bank + Financial Transparency
 # ══════════════════════════════════════════════════════════════════════════════
 
 services:
   # ─────────────────────────────────────────────────────────────────────────────
-  # SOVEREIGN NODE - Main ChainBridge Trinity Gateway
+  # SOVEREIGN NODE v2.0 - ChainBridge Trinity + Invisible Bank Gateway
   # ─────────────────────────────────────────────────────────────────────────────
   sovereign-node:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: chainbridge-sovereign
-    image: chainbridge/sovereign-node:1.0.0
+    image: chainbridge/sovereign-node:2.0.0
     ports:
       - "8000:8000"
     environment:
       - PYTHONUNBUFFERED=1
       - PORT=8000
       - LOG_LEVEL=INFO
+      - CHAINBRIDGE_VERSION=2.0.0
     volumes:
       # Persist logs outside container
       - ./logs:/app/logs
@@ -37,8 +39,9 @@ services:
       - chainbridge-net
     labels:
       - "com.chainbridge.service=sovereign-node"
-      - "com.chainbridge.version=1.0.0"
-      - "com.chainbridge.pac=PAC-OPS-P95"
+      - "com.chainbridge.version=2.0.0"
+      - "com.chainbridge.pac=PAC-OPS-P220"
+      - "com.chainbridge.capabilities=Trinity Gates, Invisible Bank"
 
   # ─────────────────────────────────────────────────────────────────────────────
   # LEGACY: Benson API Server (backward compatibility)
