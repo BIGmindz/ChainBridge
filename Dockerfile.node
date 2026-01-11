@@ -1,0 +1,94 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# CHAINBRIDGE SOVEREIGN NODE v3.0.0 - CONTAINERIZATION
+# PAC-DEP-P700-CONTAINERIZATION
+# ══════════════════════════════════════════════════════════════════════════════
+# "The Code is the Soul. The Container is the Body."
+#
+# INVARIANTS:
+#   INV-DEP-001 (Environment Isolation): Identical behavior across Dev/Test/Prod
+#   INV-DEP-002 (Ephemeral Compute): Containers can die; Data survives (Volumes)
+#
+# CONFIGURATION: Via environment variables only (Immutable Infrastructure)
+#   NODE_ID, NODE_PORT, API_PORT, PEERS, DATA_DIR, LOG_LEVEL
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STAGE 1: BUILDER - Install dependencies in isolated layer
+# ─────────────────────────────────────────────────────────────────────────────
+FROM python:3.11-slim AS builder
+
+WORKDIR /build
+
+# Install build dependencies (temporary, not in final image)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first (layer caching optimization)
+COPY requirements.txt requirements-runtime.txt ./
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements-runtime.txt && \
+    pip install --no-cache-dir fastapi uvicorn pydantic
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STAGE 2: RUNTIME - Minimal production image
+# ─────────────────────────────────────────────────────────────────────────────
+FROM python:3.11-slim AS runtime
+
+# Security: Create non-root user 'chainbridge'
+# INV-DEP-001: Consistent user across all environments
+RUN useradd --create-home --shell /bin/bash --uid 1000 chainbridge && \
+    mkdir -p /app/logs /app/data && \
+    chown -R chainbridge:chainbridge /app
+
+WORKDIR /app
+
+# Copy installed packages from builder
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Copy application code
+COPY --chown=chainbridge:chainbridge . .
+
+# Runtime configuration
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    NODE_ID=node_1 \
+    NODE_PORT=5000 \
+    API_PORT=8000 \
+    HOST=0.0.0.0 \
+    PEERS="" \
+    DATA_DIR=/app/data \
+    LOGS_DIR=/app/logs \
+    LOG_LEVEL=INFO \
+    ENABLE_API=true \
+    ENABLE_MESH=true \
+    FEDERATION_ID=chainbridge-federation
+
+# Expose ports
+# 5000: Mesh networking (peer-to-peer)
+# 8000: HTTP API
+EXPOSE 5000 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:${API_PORT}/health || exit 1
+
+# Switch to non-root user
+USER chainbridge
+
+# Default command: Run Sovereign Node
+CMD ["python", "-m", "modules.core.node"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LABELS
+# ─────────────────────────────────────────────────────────────────────────────
+LABEL org.opencontainers.image.title="ChainBridge Sovereign Node" \
+      org.opencontainers.image.description="Federated blockchain node with mesh networking" \
+      org.opencontainers.image.version="3.0.0" \
+      org.opencontainers.image.vendor="ChainBridge" \
+      com.chainbridge.pac="PAC-DEP-P700" \
+      com.chainbridge.invariants="INV-DEP-001,INV-DEP-002"

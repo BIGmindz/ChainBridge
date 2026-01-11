@@ -1,0 +1,390 @@
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║                    CHAINBRIDGE TITAN CLUSTER - DISTROLESS                    ║
+# ║                    PAC-DEP-P780-TITAN-CONTAINER                              ║
+# ║                                                                              ║
+# ║  5-Node Sovereign Cluster with Military-Grade Hardening                      ║
+# ║                                                                              ║
+# ║  INVARIANTS:                                                                 ║
+# ║    INV-DEP-003 (Shell-less Execution): docker exec /bin/sh WILL FAIL        ║
+# ║    INV-DEP-004 (Immutable Runtime): read_only: true on all containers       ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+version: "3.9"
+
+# ══════════════════════════════════════════════════════════════════════════════
+# NETWORKS
+# ══════════════════════════════════════════════════════════════════════════════
+networks:
+  titan-mesh:
+    name: titan-mesh
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.30.0.0/24
+          gateway: 172.30.0.1
+
+# ══════════════════════════════════════════════════════════════════════════════
+# VOLUMES
+# Persistent storage for each node's ledger data
+# ══════════════════════════════════════════════════════════════════════════════
+volumes:
+  titan-1-data:
+    name: titan-1-data
+  titan-2-data:
+    name: titan-2-data
+  titan-3-data:
+    name: titan-3-data
+  titan-4-data:
+    name: titan-4-data
+  titan-5-data:
+    name: titan-5-data
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SERVICES
+# 5-Node Titan Cluster
+# ══════════════════════════════════════════════════════════════════════════════
+services:
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # TITAN NODE 1 (Bootstrap/Seed Node)
+  # ────────────────────────────────────────────────────────────────────────────
+  titan-1:
+    build:
+      context: ..
+      dockerfile: Dockerfile.distroless
+    image: chainbridge/titan-node:1.0.0
+    container_name: titan-1
+    hostname: titan-1
+    
+    # SECURITY: Read-only root filesystem (INV-DEP-004)
+    read_only: true
+    
+    # SECURITY: Run as nonroot (UID 65532)
+    user: "65532:65532"
+    
+    # SECURITY: Drop all capabilities, add only what's needed
+    cap_drop:
+      - ALL
+    
+    # SECURITY: No new privileges
+    security_opt:
+      - no-new-privileges:true
+    
+    networks:
+      titan-mesh:
+        ipv4_address: 172.30.0.10
+    
+    ports:
+      - "8010:8000"   # API Gateway
+      - "8011:8001"   # Mesh P2P
+    
+    volumes:
+      # Persistent data volume (writable)
+      - titan-1-data:/data
+      # Temporary filesystem for runtime (Python cache, etc.)
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 64M
+    
+    environment:
+      - CHAINBRIDGE_NODE_ID=titan-1
+      - CHAINBRIDGE_NODE_TYPE=titan
+      - CHAINBRIDGE_DATA_DIR=/data
+      - CHAINBRIDGE_LOG_LEVEL=INFO
+      - CHAINBRIDGE_API_HOST=0.0.0.0
+      - CHAINBRIDGE_API_PORT=8000
+      - CHAINBRIDGE_MESH_PORT=8001
+      - CHAINBRIDGE_CONSENSUS_PORT=8002
+      - CHAINBRIDGE_FEDERATION_PORT=8003
+      # Peer discovery
+      - CHAINBRIDGE_BOOTSTRAP_NODE=true
+      - CHAINBRIDGE_PEERS=titan-2:8001,titan-3:8001,titan-4:8001,titan-5:8001
+      # Titan Protocol
+      - CHAINBRIDGE_HLC_ENABLED=true
+      - CHAINBRIDGE_AEGIS_ENABLED=true
+      - CHAINBRIDGE_REAPER_ENABLED=true
+    
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import socket; s=socket.socket(); s.settimeout(5); s.connect(('localhost',8000)); s.close()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    restart: unless-stopped
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # TITAN NODE 2
+  # ────────────────────────────────────────────────────────────────────────────
+  titan-2:
+    build:
+      context: ..
+      dockerfile: Dockerfile.distroless
+    image: chainbridge/titan-node:1.0.0
+    container_name: titan-2
+    hostname: titan-2
+    read_only: true
+    user: "65532:65532"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    
+    networks:
+      titan-mesh:
+        ipv4_address: 172.30.0.20
+    
+    ports:
+      - "8020:8000"
+      - "8021:8001"
+    
+    volumes:
+      - titan-2-data:/data
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 64M
+    
+    environment:
+      - CHAINBRIDGE_NODE_ID=titan-2
+      - CHAINBRIDGE_NODE_TYPE=titan
+      - CHAINBRIDGE_DATA_DIR=/data
+      - CHAINBRIDGE_LOG_LEVEL=INFO
+      - CHAINBRIDGE_API_HOST=0.0.0.0
+      - CHAINBRIDGE_API_PORT=8000
+      - CHAINBRIDGE_MESH_PORT=8001
+      - CHAINBRIDGE_CONSENSUS_PORT=8002
+      - CHAINBRIDGE_FEDERATION_PORT=8003
+      - CHAINBRIDGE_BOOTSTRAP_NODE=false
+      - CHAINBRIDGE_PEERS=titan-1:8001,titan-3:8001,titan-4:8001,titan-5:8001
+      - CHAINBRIDGE_HLC_ENABLED=true
+      - CHAINBRIDGE_AEGIS_ENABLED=true
+      - CHAINBRIDGE_REAPER_ENABLED=true
+    
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import socket; s=socket.socket(); s.settimeout(5); s.connect(('localhost',8000)); s.close()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    depends_on:
+      titan-1:
+        condition: service_healthy
+    
+    restart: unless-stopped
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # TITAN NODE 3
+  # ────────────────────────────────────────────────────────────────────────────
+  titan-3:
+    build:
+      context: ..
+      dockerfile: Dockerfile.distroless
+    image: chainbridge/titan-node:1.0.0
+    container_name: titan-3
+    hostname: titan-3
+    read_only: true
+    user: "65532:65532"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    
+    networks:
+      titan-mesh:
+        ipv4_address: 172.30.0.30
+    
+    ports:
+      - "8030:8000"
+      - "8031:8001"
+    
+    volumes:
+      - titan-3-data:/data
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 64M
+    
+    environment:
+      - CHAINBRIDGE_NODE_ID=titan-3
+      - CHAINBRIDGE_NODE_TYPE=titan
+      - CHAINBRIDGE_DATA_DIR=/data
+      - CHAINBRIDGE_LOG_LEVEL=INFO
+      - CHAINBRIDGE_API_HOST=0.0.0.0
+      - CHAINBRIDGE_API_PORT=8000
+      - CHAINBRIDGE_MESH_PORT=8001
+      - CHAINBRIDGE_CONSENSUS_PORT=8002
+      - CHAINBRIDGE_FEDERATION_PORT=8003
+      - CHAINBRIDGE_BOOTSTRAP_NODE=false
+      - CHAINBRIDGE_PEERS=titan-1:8001,titan-2:8001,titan-4:8001,titan-5:8001
+      - CHAINBRIDGE_HLC_ENABLED=true
+      - CHAINBRIDGE_AEGIS_ENABLED=true
+      - CHAINBRIDGE_REAPER_ENABLED=true
+    
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import socket; s=socket.socket(); s.settimeout(5); s.connect(('localhost',8000)); s.close()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    depends_on:
+      titan-1:
+        condition: service_healthy
+    
+    restart: unless-stopped
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # TITAN NODE 4
+  # ────────────────────────────────────────────────────────────────────────────
+  titan-4:
+    build:
+      context: ..
+      dockerfile: Dockerfile.distroless
+    image: chainbridge/titan-node:1.0.0
+    container_name: titan-4
+    hostname: titan-4
+    read_only: true
+    user: "65532:65532"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    
+    networks:
+      titan-mesh:
+        ipv4_address: 172.30.0.40
+    
+    ports:
+      - "8040:8000"
+      - "8041:8001"
+    
+    volumes:
+      - titan-4-data:/data
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 64M
+    
+    environment:
+      - CHAINBRIDGE_NODE_ID=titan-4
+      - CHAINBRIDGE_NODE_TYPE=titan
+      - CHAINBRIDGE_DATA_DIR=/data
+      - CHAINBRIDGE_LOG_LEVEL=INFO
+      - CHAINBRIDGE_API_HOST=0.0.0.0
+      - CHAINBRIDGE_API_PORT=8000
+      - CHAINBRIDGE_MESH_PORT=8001
+      - CHAINBRIDGE_CONSENSUS_PORT=8002
+      - CHAINBRIDGE_FEDERATION_PORT=8003
+      - CHAINBRIDGE_BOOTSTRAP_NODE=false
+      - CHAINBRIDGE_PEERS=titan-1:8001,titan-2:8001,titan-3:8001,titan-5:8001
+      - CHAINBRIDGE_HLC_ENABLED=true
+      - CHAINBRIDGE_AEGIS_ENABLED=true
+      - CHAINBRIDGE_REAPER_ENABLED=true
+    
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import socket; s=socket.socket(); s.settimeout(5); s.connect(('localhost',8000)); s.close()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    depends_on:
+      titan-1:
+        condition: service_healthy
+    
+    restart: unless-stopped
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # TITAN NODE 5
+  # ────────────────────────────────────────────────────────────────────────────
+  titan-5:
+    build:
+      context: ..
+      dockerfile: Dockerfile.distroless
+    image: chainbridge/titan-node:1.0.0
+    container_name: titan-5
+    hostname: titan-5
+    read_only: true
+    user: "65532:65532"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    
+    networks:
+      titan-mesh:
+        ipv4_address: 172.30.0.50
+    
+    ports:
+      - "8050:8000"
+      - "8051:8001"
+    
+    volumes:
+      - titan-5-data:/data
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 64M
+    
+    environment:
+      - CHAINBRIDGE_NODE_ID=titan-5
+      - CHAINBRIDGE_NODE_TYPE=titan
+      - CHAINBRIDGE_DATA_DIR=/data
+      - CHAINBRIDGE_LOG_LEVEL=INFO
+      - CHAINBRIDGE_API_HOST=0.0.0.0
+      - CHAINBRIDGE_API_PORT=8000
+      - CHAINBRIDGE_MESH_PORT=8001
+      - CHAINBRIDGE_CONSENSUS_PORT=8002
+      - CHAINBRIDGE_FEDERATION_PORT=8003
+      - CHAINBRIDGE_BOOTSTRAP_NODE=false
+      - CHAINBRIDGE_PEERS=titan-1:8001,titan-2:8001,titan-3:8001,titan-4:8001
+      - CHAINBRIDGE_HLC_ENABLED=true
+      - CHAINBRIDGE_AEGIS_ENABLED=true
+      - CHAINBRIDGE_REAPER_ENABLED=true
+    
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import socket; s=socket.socket(); s.settimeout(5); s.connect(('localhost',8000)); s.close()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    depends_on:
+      titan-1:
+        condition: service_healthy
+    
+    restart: unless-stopped
+
+# ══════════════════════════════════════════════════════════════════════════════
+# DEPLOYMENT NOTES
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# BUILD:
+#   docker-compose -f deploy/docker-compose.yml build
+#
+# START CLUSTER:
+#   docker-compose -f deploy/docker-compose.yml up -d
+#
+# VERIFY SHELL-LESS (INV-DEP-003):
+#   docker exec -it titan-1 /bin/sh
+#   Expected: OCI runtime exec failed: exec failed: unable to start container process:
+#             exec: "/bin/sh": stat /bin/sh: no such file or directory
+#
+# VERIFY READ-ONLY (INV-DEP-004):
+#   docker exec -it titan-1 python3 -c "open('/app/test.txt', 'w')"
+#   Expected: PermissionError: [Errno 30] Read-only file system
+#
+# VIEW LOGS:
+#   docker-compose -f deploy/docker-compose.yml logs -f
+#
+# STOP CLUSTER:
+#   docker-compose -f deploy/docker-compose.yml down
+#
+# CLEAN UP (INCLUDING VOLUMES):
+#   docker-compose -f deploy/docker-compose.yml down -v
+#
+# ══════════════════════════════════════════════════════════════════════════════
