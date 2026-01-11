@@ -21,18 +21,22 @@ FROM python:3.14.2-slim AS builder
 WORKDIR /build
 
 # Install build dependencies (temporary, not in final image)
+# PAC-OPS-P251: Added gfortran for scipy/numpy compilation on Python 3.14
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    gfortran \
+    pkg-config \
+    libopenblas-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy only requirements first (layer caching optimization)
-COPY requirements.txt ./
+# PAC-P251: Using runtime requirements (TensorFlow excluded for Python 3.14.2 compatibility)
 COPY requirements-runtime.txt ./
 
-# Install Python dependencies
+# Install Python dependencies (lean runtime without TensorFlow)
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -r requirements-runtime.txt && \
     pip install --no-cache-dir fastapi uvicorn pydantic
 
 # ─────────────────────────────────────────────────────────────────────────────
