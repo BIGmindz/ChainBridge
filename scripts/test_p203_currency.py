@@ -59,7 +59,7 @@ def run_tests():
         # Check crypto
         btc = registry.get("BTC")
         assert btc.decimals == 8
-        assert btc.is_crypto == True
+        assert btc.is_crypto is True
         
         eth = registry.get("ETH")
         assert eth.decimals == 18
