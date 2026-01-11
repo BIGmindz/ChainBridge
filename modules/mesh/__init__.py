@@ -49,6 +49,7 @@ from .discovery import GossipProtocol, PeerRegistry, DiscoveryEvent
 from .identity import NodeIdentity, IdentityManager
 from .trust import TrustRegistry, BanProof, TrustLevel, BanReason
 from .consensus import ConsensusEngine, RaftState, LogEntry, ClusterSimulator
+from .explorer import MeshExplorer, NodeStatus, NetworkTopology, HealthReport, NodeRole, NodeHealth
 
 __all__ = [
     # Networking (P300)
@@ -72,4 +73,11 @@ __all__ = [
     "RaftState",
     "LogEntry",
     "ClusterSimulator",
+    # Explorer (P330)
+    "MeshExplorer",
+    "NodeStatus",
+    "NetworkTopology",
+    "HealthReport",
+    "NodeRole",
+    "NodeHealth",
 ]
