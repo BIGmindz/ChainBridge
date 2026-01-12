@@ -1,0 +1,23 @@
+# PAC-SEC-P818: Post-Quantum Cryptography Requirements
+# ML-DSA-65 (FIPS 204) Digital Signatures
+#
+# Validated: 2026-01-12
+# Environment: Python 3.11+, cryptography==46.0.1 compatible
+# Status: TESTED AND APPROVED
+
+# Primary PQC Library - ML-DSA-65 signatures
+pqcrypto==0.3.4
+
+# Note: pqcrypto provides:
+# - ml_dsa_44 (Security Level 2)
+# - ml_dsa_65 (Security Level 3) ← TARGET
+# - ml_dsa_87 (Security Level 5)
+# - falcon_512, falcon_1024
+# - sphincs_* variants
+
+# Dependencies (auto-installed)
+# cffi>=2.0.0 (already satisfied by cryptography)
+
+# NOT REQUIRED (issues identified):
+# liboqs-python  # Requires native liboqs library
+# oqs            # Wrong package (query language)

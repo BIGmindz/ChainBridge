@@ -1,0 +1,33 @@
+{
+  "pac_id": "PAC-SEC-P818",
+  "title": "PQC Dependency Proof Gate",
+  "executor": "BENSON",
+  "timestamp": "2025-01-12T04:15:00Z",
+  "verdict": "PASS",
+  "library": "pqcrypto==0.3.4",
+  "algorithm": "ML-DSA-65",
+  "python_version": "3.11.13",
+  "tests_executed": 11,
+  "tests_passed": 11,
+  "invariants": {
+    "INV-PQC-001": "PASS - FIPS 204 ML-DSA-65 supported",
+    "INV-PQC-002": "PASS - Python 3.11+ installation verified",
+    "INV-PQC-003": "PASS - No conflicts with cryptography==46.0.1",
+    "INV-PQC-004": "PASS - Sign/verify cycle executes without error",
+    "INV-PQC-005": "PASS - Library matrix documented"
+  },
+  "key_sizes": {
+    "public_key_bytes": 1952,
+    "secret_key_bytes": 4032,
+    "signature_bytes": 3309
+  },
+  "deliverables": [
+    "docs/p818_library_matrix.md",
+    "requirements-pqc.txt",
+    "tests/crypto/test_pqc_compat.py",
+    "tests/crypto/__init__.py",
+    "logs/pqc/P818_BER.json"
+  ],
+  "prior_ber": "1bd9d1457582733bb5784f0876eb14dd01bac29acb5108d877d63b90a621c59e",
+  "ber_hash": "9a74744d19f93f4d56271b3892bac3e5fd06eb9d1b279c6e7908f93f39b31490"
+}
