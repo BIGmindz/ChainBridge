@@ -52,14 +52,16 @@ COPY . /build/app
 FROM gcr.io/distroless/python3-debian12:nonroot
 
 # Metadata labels
-LABEL org.opencontainers.image.title="ChainBridge Titan Node" \
-      org.opencontainers.image.description="Distroless Sovereign Node - Military Grade" \
-      org.opencontainers.image.version="1.0.0" \
+LABEL org.opencontainers.image.title="ChainBridge Titan Node (PQC)" \
+      org.opencontainers.image.description="Distroless Sovereign Node - Quantum-Safe" \
+      org.opencontainers.image.version="pqc" \
       org.opencontainers.image.vendor="ChainBridge" \
       org.opencontainers.image.authors="ARCHITECT JEFFREY" \
-      org.chainbridge.pac="PAC-DEP-P780-TITAN-CONTAINER" \
-      org.chainbridge.invariants="INV-DEP-003,INV-DEP-004" \
-      org.chainbridge.security="DISTROLESS"
+      org.chainbridge.pac="PAC-DEP-P780,PAC-SEC-P820,PAC-OPS-P825" \
+      org.chainbridge.invariants="INV-DEP-003,INV-DEP-004,INV-SEC-016" \
+      org.chainbridge.security="DISTROLESS+PQC" \
+      org.chainbridge.pqc.algorithm="ML-DSA-65 (FIPS 204)" \
+      org.chainbridge.pqc.library="dilithium-py==1.4.0"
 
 # Environment configuration
 # PYTHONPATH must include both app and installed packages

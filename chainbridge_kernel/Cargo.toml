@@ -1,0 +1,47 @@
+[package]
+name = "titan_sentinel"
+version = "1.0.0"
+edition = "2021"
+authors = ["ChainBridge Team <engineering@chainbridge.io>"]
+description = "Hardware-bound process supervisor for ChainBridge Sovereign Nodes"
+license = "UNLICENSED"
+repository = "https://github.com/chainbridge/chainbridge"
+
+# PAC Reference: PAC-OCC-P16-HW-TITAN-SENTINEL
+# Purpose: Physical Root of Trust - Rust supervisor for Python node
+
+[dependencies]
+# Unix signal handling (SIGKILL, SIGTERM)
+nix = { version = "0.27", features = ["signal", "process"] }
+
+# Serial port for hardware key detection
+serialport = "4.3"
+
+# Logging
+log = "0.4"
+env_logger = "0.10"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Time handling
+chrono = "0.4"
+
+# JSON for config/logging
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Signal handling for graceful shutdown
+ctrlc = "3.4"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+opt-level = 0
+debug = true

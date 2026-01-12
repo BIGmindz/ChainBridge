@@ -1,12 +1,13 @@
 # ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║                    CHAINBRIDGE TITAN CLUSTER - DISTROLESS                    ║
-# ║                    PAC-DEP-P780-TITAN-CONTAINER                              ║
+# ║                    CHAINBRIDGE TITAN CLUSTER - QUANTUM-SAFE                  ║
+# ║                    PAC-DEP-P780 + PAC-OPS-P825 (PQC Integration)             ║
 # ║                                                                              ║
-# ║  5-Node Sovereign Cluster with Military-Grade Hardening                      ║
+# ║  5-Node Sovereign Cluster with Hybrid ED25519 + ML-DSA-65 Identity           ║
 # ║                                                                              ║
 # ║  INVARIANTS:                                                                 ║
 # ║    INV-DEP-003 (Shell-less Execution): docker exec /bin/sh WILL FAIL        ║
 # ║    INV-DEP-004 (Immutable Runtime): read_only: true on all containers       ║
+# ║    INV-SEC-016 (Quantum Readiness): Nodes prove PQC capability on startup   ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 
 version: "3.9"
@@ -53,7 +54,7 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile.distroless
-    image: chainbridge/titan-node:1.0.0
+    image: chainbridge/titan-node:pqc
     container_name: titan-1
     hostname: titan-1
     
@@ -122,7 +123,7 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile.distroless
-    image: chainbridge/titan-node:1.0.0
+    image: chainbridge/titan-node:pqc
     container_name: titan-2
     hostname: titan-2
     read_only: true
@@ -183,7 +184,7 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile.distroless
-    image: chainbridge/titan-node:1.0.0
+    image: chainbridge/titan-node:pqc
     container_name: titan-3
     hostname: titan-3
     read_only: true
@@ -244,7 +245,7 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile.distroless
-    image: chainbridge/titan-node:1.0.0
+    image: chainbridge/titan-node:pqc
     container_name: titan-4
     hostname: titan-4
     read_only: true
@@ -305,7 +306,7 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile.distroless
-    image: chainbridge/titan-node:1.0.0
+    image: chainbridge/titan-node:pqc
     container_name: titan-5
     hostname: titan-5
     read_only: true
