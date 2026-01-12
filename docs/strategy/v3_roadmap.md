@@ -1,4 +1,5 @@
 # ChainBridge v3.0.0 Roadmap — "The Mesh"
+
 ## Phase 3: Federated Sovereignty
 
 **STATUS: ✅ COMPLETE**  
@@ -37,7 +38,7 @@ Total: **8,208 lines of code** across **13 modules**.
 
 ## Module Architecture
 
-```
+```text
 ChainBridge v3.0.0
 ├── modules/mesh/           (5,445 LOC)
 │   ├── networking.py       # P300: The Listener
@@ -59,26 +60,32 @@ ChainBridge v3.0.0
 ## Invariants Enforced
 
 ### Network Layer
+
 - **INV-NET-001**: Message Authenticity — All messages cryptographically signed
 - **INV-NET-002**: Connection Integrity — Encrypted channels only
 
 ### Identity Layer
+
 - **INV-ID-001**: Identity Uniqueness — One key per node
 - **INV-ID-002**: Cryptographic Binding — Identity bound to public key
 
 ### Consensus Layer
+
 - **INV-CON-001**: Single Leader — At most one leader per term
 - **INV-CON-002**: Log Consistency — Committed entries are durable
 
 ### Governance Layer
+
 - **INV-GOV-001**: Constitutional Rigidity — Policy changes require 2/3 quorum
 - **INV-GOV-002**: Automated Justice — Slashing is code, not discretion
 
 ### Interface Layer
+
 - **INV-INT-001**: Observer Effect — Observation must not interfere with consensus
 - **INV-INT-002**: Public Transparency — Federation status is public (keys sanitized)
 
 ### Data Layer
+
 - **INV-DATA-001**: Universal Truth — State root identical across nodes
 - **INV-DATA-002**: Atomic Application — Log entries fully applied or not at all
 
@@ -87,36 +94,42 @@ ChainBridge v3.0.0
 ## Capabilities Unlocked
 
 ### The Listener (P300)
+
 - Peer-to-peer mesh communication
 - Connection pooling with health checks
 - Message routing and broadcasting
 - Encrypted channels
 
 ### The Seal (P305)
+
 - Cryptographic node identity
 - Ed25519 key generation
 - Node registration and lookup
 - Trust score management
 
 ### The Parliament (P310)
+
 - Raft leader election
 - Log replication
 - Commit coordination
 - Fault tolerance (N/2 - 1 failures)
 
 ### The Constitution (P320)
+
 - Federation policy management
 - Peering contracts with unbonding
 - Stake-based voting (2/3 quorum)
 - Double-sign detection and slashing
 
 ### The Observatory (P330)
+
 - Real-time topology visualization
 - Node health monitoring
 - Leader/follower tracking
 - Partition detection
 
 ### The Bridge (P340)
+
 - SHA-256 Merkle tree verification
 - State snapshots
 - Log-to-ledger bridge
@@ -128,7 +141,7 @@ ChainBridge v3.0.0
 
 All test suites passing:
 
-```
+```text
 ✅ scripts/test_p300_mesh.py        — Networking tests
 ✅ scripts/test_p305_identity.py    — Identity tests
 ✅ scripts/test_p310_consensus.py   — Consensus tests
@@ -144,6 +157,7 @@ All test suites passing:
 With the Mesh complete, we transition from **"Many Nodes"** to **"One Economy"**.
 
 ### Planned PACs
+
 - **P400**: Token Economics
 - **P410**: Transaction Engine
 - **P420**: Settlement Layer
@@ -151,6 +165,7 @@ With the Mesh complete, we transition from **"Many Nodes"** to **"One Economy"**
 - **P440**: Fee Markets
 
 ### Focus
+
 Economic Sovereignty — The rules of value flow.
 
 ---
