@@ -1,24 +1,47 @@
 [package]
-name = "chainbridge_kernel"
-version = "0.1.0"
+name = "titan_sentinel"
+version = "1.0.0"
 edition = "2021"
+authors = ["ChainBridge Team <engineering@chainbridge.io>"]
+description = "Hardware-bound process supervisor for ChainBridge Sovereign Nodes"
+license = "UNLICENSED"
+repository = "https://github.com/chainbridge/chainbridge"
+
+# PAC Reference: PAC-OCC-P16-HW-TITAN-SENTINEL
+# Purpose: Physical Root of Trust - Rust supervisor for Python node
 
 [dependencies]
-axum = "0.8.8"
-chrono = { version = "0.4.42", features = ["serde"] }
-ed25519-dalek = { version = "2.2.0", features = ["serde"] }
-hex = "0.4.3"
-lazy_static = "1.5.0"
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.149"
-tokio = { version = "1.49.0", features = ["full"] }
-tracing = "0.1.44"
-tracing-appender = "0.2.4"
-tracing-subscriber = { version = "0.3.22", features = ["json", "env-filter"] }
+# Unix signal handling (SIGKILL, SIGTERM)
+nix = { version = "0.27", features = ["signal", "process"] }
 
-[dev-dependencies]
-criterion = { version = "0.8.1", features = ["html_reports"] }
+# Serial port for hardware key detection
+serialport = "4.3"
 
-[[bench]]
-name = "speed_moat"
-harness = false
+# Logging
+log = "0.4"
+env_logger = "0.10"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Time handling
+chrono = "0.4"
+
+# JSON for config/logging
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Signal handling for graceful shutdown
+ctrlc = "3.4"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+opt-level = 0
+debug = true

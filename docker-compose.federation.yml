@@ -1,0 +1,249 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# CHAINBRIDGE 5-NODE FEDERATION - DOCKER COMPOSE
+# PAC-DEP-P700-CONTAINERIZATION
+# ══════════════════════════════════════════════════════════════════════════════
+# "The Vessel is built. The Fleet is ready to launch."
+#
+# ARCHITECTURE:
+#   5 Sovereign Nodes forming a federation via mesh networking.
+#   Nodes discover each other via Docker DNS (service names).
+#
+# USAGE:
+#   docker-compose -f docker-compose.federation.yml up -d
+#   docker-compose -f docker-compose.federation.yml ps
+#   docker-compose -f docker-compose.federation.yml logs -f
+#   docker-compose -f docker-compose.federation.yml down
+#
+# INVARIANTS:
+#   INV-DEP-001 (Environment Isolation): All nodes identical except NODE_ID
+#   INV-DEP-002 (Ephemeral Compute): Data persisted to named volumes
+# ══════════════════════════════════════════════════════════════════════════════
+
+services:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # NODE 1 - Primary bootstrap node
+  # ─────────────────────────────────────────────────────────────────────────────
+  node_1:
+    build:
+      context: .
+      dockerfile: Dockerfile.node
+    container_name: chainbridge-node-1
+    hostname: node_1
+    environment:
+      - NODE_ID=node_1
+      - NODE_PORT=5000
+      - API_PORT=8000
+      - PEERS=node_2:5000,node_3:5000,node_4:5000,node_5:5000
+      - LOG_LEVEL=INFO
+      - FEDERATION_ID=chainbridge-federation
+    ports:
+      - "8001:8000"  # API exposed on host
+      - "5001:5000"  # Mesh (optional, for debugging)
+    volumes:
+      - node_1_data:/app/data
+      - node_1_logs:/app/logs
+    networks:
+      - chainbridge-mesh
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    labels:
+      - "com.chainbridge.node=1"
+      - "com.chainbridge.role=bootstrap"
+      - "com.chainbridge.pac=PAC-DEP-P700"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # NODE 2
+  # ─────────────────────────────────────────────────────────────────────────────
+  node_2:
+    build:
+      context: .
+      dockerfile: Dockerfile.node
+    container_name: chainbridge-node-2
+    hostname: node_2
+    environment:
+      - NODE_ID=node_2
+      - NODE_PORT=5000
+      - API_PORT=8000
+      - PEERS=node_1:5000,node_3:5000,node_4:5000,node_5:5000
+      - LOG_LEVEL=INFO
+      - FEDERATION_ID=chainbridge-federation
+    ports:
+      - "8002:8000"
+      - "5002:5000"
+    volumes:
+      - node_2_data:/app/data
+      - node_2_logs:/app/logs
+    networks:
+      - chainbridge-mesh
+    restart: unless-stopped
+    depends_on:
+      node_1:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    labels:
+      - "com.chainbridge.node=2"
+      - "com.chainbridge.pac=PAC-DEP-P700"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # NODE 3
+  # ─────────────────────────────────────────────────────────────────────────────
+  node_3:
+    build:
+      context: .
+      dockerfile: Dockerfile.node
+    container_name: chainbridge-node-3
+    hostname: node_3
+    environment:
+      - NODE_ID=node_3
+      - NODE_PORT=5000
+      - API_PORT=8000
+      - PEERS=node_1:5000,node_2:5000,node_4:5000,node_5:5000
+      - LOG_LEVEL=INFO
+      - FEDERATION_ID=chainbridge-federation
+    ports:
+      - "8003:8000"
+      - "5003:5000"
+    volumes:
+      - node_3_data:/app/data
+      - node_3_logs:/app/logs
+    networks:
+      - chainbridge-mesh
+    restart: unless-stopped
+    depends_on:
+      node_1:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    labels:
+      - "com.chainbridge.node=3"
+      - "com.chainbridge.pac=PAC-DEP-P700"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # NODE 4
+  # ─────────────────────────────────────────────────────────────────────────────
+  node_4:
+    build:
+      context: .
+      dockerfile: Dockerfile.node
+    container_name: chainbridge-node-4
+    hostname: node_4
+    environment:
+      - NODE_ID=node_4
+      - NODE_PORT=5000
+      - API_PORT=8000
+      - PEERS=node_1:5000,node_2:5000,node_3:5000,node_5:5000
+      - LOG_LEVEL=INFO
+      - FEDERATION_ID=chainbridge-federation
+    ports:
+      - "8004:8000"
+      - "5004:5000"
+    volumes:
+      - node_4_data:/app/data
+      - node_4_logs:/app/logs
+    networks:
+      - chainbridge-mesh
+    restart: unless-stopped
+    depends_on:
+      node_1:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    labels:
+      - "com.chainbridge.node=4"
+      - "com.chainbridge.pac=PAC-DEP-P700"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # NODE 5
+  # ─────────────────────────────────────────────────────────────────────────────
+  node_5:
+    build:
+      context: .
+      dockerfile: Dockerfile.node
+    container_name: chainbridge-node-5
+    hostname: node_5
+    environment:
+      - NODE_ID=node_5
+      - NODE_PORT=5000
+      - API_PORT=8000
+      - PEERS=node_1:5000,node_2:5000,node_3:5000,node_4:5000
+      - LOG_LEVEL=INFO
+      - FEDERATION_ID=chainbridge-federation
+    ports:
+      - "8005:8000"
+      - "5005:5000"
+    volumes:
+      - node_5_data:/app/data
+      - node_5_logs:/app/logs
+    networks:
+      - chainbridge-mesh
+    restart: unless-stopped
+    depends_on:
+      node_1:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    labels:
+      - "com.chainbridge.node=5"
+      - "com.chainbridge.pac=PAC-DEP-P700"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NETWORKS
+# ─────────────────────────────────────────────────────────────────────────────
+networks:
+  chainbridge-mesh:
+    name: chainbridge-mesh
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
+    labels:
+      - "com.chainbridge.network=mesh"
+      - "com.chainbridge.pac=PAC-DEP-P700"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# VOLUMES - INV-DEP-002: Persistent storage survives container restarts
+# ─────────────────────────────────────────────────────────────────────────────
+volumes:
+  node_1_data:
+    name: chainbridge-node-1-data
+  node_1_logs:
+    name: chainbridge-node-1-logs
+  node_2_data:
+    name: chainbridge-node-2-data
+  node_2_logs:
+    name: chainbridge-node-2-logs
+  node_3_data:
+    name: chainbridge-node-3-data
+  node_3_logs:
+    name: chainbridge-node-3-logs
+  node_4_data:
+    name: chainbridge-node-4-data
+  node_4_logs:
+    name: chainbridge-node-4-logs
+  node_5_data:
+    name: chainbridge-node-5-data
+  node_5_logs:
+    name: chainbridge-node-5-logs

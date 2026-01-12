@@ -1,0 +1,17 @@
+# ChainBridge v1.0.0-rc1 Release Candidate
+# Generated: 2026-01-09T20:53:18.599899+00:00
+# Master Checksum (SHA-256):
+c03d70e82f4c39711f3fccfaf0bbc0d5b3ac5d19488f946c42d68335baeed50b  chainbridge_v1.0.0-rc1.tar.gz
+
+# Individual Checksums:
+ba7f25a8685b931b00e34a5194e4bee009589aee6b05f11a2166bb03dc9ed9a8  core/finance
+72788a818ebd015f069bad3a6d1cfaa344cb6e815b10b8bdf073340a2f7873a4  core/ledger
+02b106c70bd5f01b3d9ec4c7208184e22f0becf1d1f688e7eac4f57640c50999  core/registry
+43f3b7f4657fbcc667a5b16c9da269869af80f6298502595b7ae97f9db24838d  core/security
+05adca96f41d6812a0da95db5e638093254f05027ad8db32dac34382d6791493  core/swarm
+2cd281362818b8c631956cbe39a86abed5717d2178ab7d4a8a898ac1b5344dc3  logs/chain/block_01.json
+94430d41bab4e74d2fcef7dd69aad1266d37c92340f19ab1713a0ea78875e3a4  logs/chain/block_02.json
+506549d1bd20209444f335003dbc2f1dbfa83aa296a588d5d166da6be8e7ca2d  logs/finance/SETTLEMENT_REPORT.json
+dc511e9b19f4644ebe7d5ca7437c05175eed92fcfa4818729cafdde562d331b4  logs/security/RED_TEAM_REPORT.json
+1f683c4454e666dd4085f60783ec6171ef9be4d548b260049401efe0f605f26d  logs/security/attack_log.json
+ec752e00f597181ec2ee29326289767aee286d55a0d74e21679279ae664c4b29  logs/system/OPTIMIZATION_REPORT.json
