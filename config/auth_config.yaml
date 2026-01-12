@@ -1,0 +1,230 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# ChainBridge Authentication Configuration
+# PAC-SEC-P821: AUTHENTICATION MIDDLEWARE HARDENING
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# This file configures the authentication middleware stack for all ChainBridge APIs.
+# Environment variables take precedence over values defined here.
+#
+# INVARIANTS ENFORCED:
+#   INV-AUTH-001: Fail-closed authentication
+#   INV-AUTH-002: GID registry binding
+#   INV-AUTH-003: Redis-backed sessions
+#   INV-AUTH-004: Sliding window rate limiting
+#   INV-AUTH-005: Cryptographic signatures
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ──────────────────────────────────────────────────────────────────────────────
+# JWT Configuration
+# ──────────────────────────────────────────────────────────────────────────────
+jwt:
+  # Secret key for HMAC signing (REQUIRED - set via JWT_SECRET_KEY env var)
+  # In production, use a 256-bit random key
+  secret_key: ${JWT_SECRET_KEY:-}
+  
+  # Signing algorithm
+  # Supported: HS256, HS384, HS512
+  algorithm: HS256
+  
+  # Token expiry in seconds (1 hour default)
+  expiry_seconds: 3600
+  
+  # Issuer claim
+  issuer: chainbridge
+  
+  # Audience claim
+  audience: chainbridge-api
+  
+  # Allow token refresh within N seconds of expiry
+  refresh_window_seconds: 300
+
+# ──────────────────────────────────────────────────────────────────────────────
+# API Key Configuration
+# ──────────────────────────────────────────────────────────────────────────────
+api_key:
+  # Header name for API key
+  header: X-API-Key
+  
+  # Hash algorithm for stored keys
+  hash_algorithm: sha256
+  
+  # Path to API keys file
+  keys_file: config/api_keys.json
+  
+  # Allow API key in query parameter (lower security)
+  allow_query_param: true
+  query_param_name: api_key
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Redis Configuration
+# ──────────────────────────────────────────────────────────────────────────────
+redis:
+  # Connection URL (override with REDIS_URL env var)
+  url: ${REDIS_URL:-redis://localhost:6379/0}
+  
+  # Connection pool settings
+  max_connections: 10
+  socket_timeout: 5
+  socket_connect_timeout: 5
+  
+  # Retry settings
+  retry_on_timeout: true
+  health_check_interval: 30
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Session Configuration
+# ──────────────────────────────────────────────────────────────────────────────
+session:
+  # Session TTL in seconds (1 hour)
+  ttl_seconds: 3600
+  
+  # Refresh session if less than N seconds remaining
+  refresh_threshold_seconds: 300
+  
+  # Session ID entropy (32 bytes = 256 bits)
+  id_bytes: 32
+  
+  # Header name for session ID
+  header: X-Session-ID
+  
+  # Cookie settings
+  cookie:
+    name: chainbridge_session
+    httponly: true
+    secure: true  # Set to false for local development
+    samesite: lax
+    # Domain left unset = current domain only
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Rate Limiting Configuration
+# ──────────────────────────────────────────────────────────────────────────────
+rate_limit:
+  # Default rate limit (requests per window)
+  default_limit: 100
+  default_window_seconds: 60
+  
+  # Per-endpoint overrides
+  # Format: endpoint: [limit, window_seconds]
+  endpoint_limits:
+    /v1/transaction: [10, 60]
+    /v1/governance: [20, 60]
+    /v1/governance/scram: [5, 60]
+    /health: [1000, 60]
+    /metrics: [100, 60]
+  
+  # Multiplier for authenticated users
+  authenticated_multiplier: 2.0
+  
+  # Tier-based multipliers
+  tier_multipliers:
+    free: 1.0
+    basic: 2.0
+    pro: 5.0
+    enterprise: 10.0
+  
+  # Response headers
+  headers:
+    limit: X-RateLimit-Limit
+    remaining: X-RateLimit-Remaining
+    reset: X-RateLimit-Reset
+    retry_after: Retry-After
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Signature Verification Configuration
+# ──────────────────────────────────────────────────────────────────────────────
+signature:
+  # Secret key for HMAC (REQUIRED - set via SIGNATURE_SECRET_KEY env var)
+  secret_key: ${SIGNATURE_SECRET_KEY:-}
+  
+  # Algorithm
+  # Supported: hmac-sha256, hmac-sha512
+  algorithm: hmac-sha256
+  
+  # Timestamp tolerance in seconds (5 minutes)
+  timestamp_tolerance_seconds: 300
+  
+  # Nonce replay protection
+  enable_nonce_check: true
+  nonce_ttl_seconds: 600
+  
+  # Headers
+  headers:
+    signature: X-Signature
+    timestamp: X-Timestamp
+    nonce: X-Nonce
+  
+  # Endpoints requiring signature
+  required_endpoints:
+    - /v1/transaction
+    - /v1/governance/scram
+  
+  # Require signature for all endpoints
+  require_all: false
+
+# ──────────────────────────────────────────────────────────────────────────────
+# GID Registry Configuration
+# ──────────────────────────────────────────────────────────────────────────────
+gid:
+  # Path to GID registry
+  registry_path: core/governance/gid_registry.json
+  
+  # Require GID for all agent requests
+  require_gid: false
+  
+  # Enable lane permission checks
+  enforce_lanes: true
+  
+  # GIDs with ALL lane access
+  all_lane_gids:
+    - GID-00
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Exempt Paths
+# ──────────────────────────────────────────────────────────────────────────────
+exempt_paths:
+  - /
+  - /health
+  - /healthz
+  - /ready
+  - /readyz
+  - /metrics
+  - /docs
+  - /redoc
+  - /openapi.json
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Security Settings
+# ──────────────────────────────────────────────────────────────────────────────
+security:
+  # Fail-closed mode (MUST be true per INV-AUTH-001)
+  fail_closed: true
+  
+  # Log authentication failures
+  log_auth_failures: true
+  
+  # Max authentication attempts before lockout
+  max_auth_attempts: 5
+  
+  # Lockout duration in seconds
+  lockout_duration_seconds: 300
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Audit Configuration
+# ──────────────────────────────────────────────────────────────────────────────
+audit:
+  # Enable audit logging
+  enabled: true
+  
+  # Log level for auth events
+  log_level: INFO
+  
+  # Include request metadata in logs
+  include_metadata: true
+  
+  # Fields to redact from logs
+  redacted_fields:
+    - password
+    - api_key
+    - token
+    - secret
+    - authorization
