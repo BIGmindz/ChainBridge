@@ -1,0 +1,282 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# OCC AUTHORITY MODEL v1.0
+# Classification: LAW
+# Governance Tier: CONSTITUTIONAL
+# Effective: 2026-01-12
+# ═══════════════════════════════════════════════════════════════════════════════
+
+metadata:
+  document_id: OCC-AUTH-MODEL-v1.0
+  version: "1.0.0"
+  classification: LAW
+  governance_tier: CONSTITUTIONAL
+  effective_date: "2026-01-12"
+  approved_by: "Benson (GID-00)"
+  drift_tolerance: ZERO
+  fail_closed: true
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# AUTHORITY TIERS
+# ─────────────────────────────────────────────────────────────────────────────────
+
+authority_tiers:
+  T0_LAW:
+    name: "Constitutional Law"
+    level: 0
+    description: "Immutable constitutional rules. Cannot be overridden."
+    mutation_rights: NONE
+    examples:
+      - "Fail-closed behavior"
+      - "Audit immutability"
+      - "Single-instance rule"
+    escalation_target: null  # No higher tier exists
+    approval_required:
+      parties: 2
+      ceremony: true
+      cooling_period_hours: 48
+
+  T1_POLICY:
+    name: "Governance Policy"
+    level: 1
+    description: "Governance rules that shape system behavior."
+    mutation_rights: LAW_TIER_PAC_REQUIRED
+    examples:
+      - "Agent permission matrices"
+      - "Threshold configurations"
+      - "Workflow definitions"
+    escalation_target: T0_LAW
+    approval_required:
+      parties: 1
+      justification: true
+      witness: true
+
+  T2_OPERATIONAL:
+    name: "Operational Control"
+    level: 2
+    description: "Day-to-day operational decisions and configurations."
+    mutation_rights: POLICY_TIER_APPROVAL
+    examples:
+      - "Deployment authorizations"
+      - "Resource allocations"
+      - "Schedule modifications"
+    escalation_target: T1_POLICY
+    approval_required:
+      parties: 1
+      justification: true
+      witness: false
+
+  T3_TACTICAL:
+    name: "Tactical Execution"
+    level: 3
+    description: "Runtime execution and immediate actions."
+    mutation_rights: STANDARD_PAC_ADMISSION
+    examples:
+      - "Task execution"
+      - "Status queries"
+      - "Routine operations"
+    escalation_target: T2_OPERATIONAL
+    approval_required:
+      parties: 1
+      justification: false
+      witness: false
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# PERMISSION MATRIX
+# ─────────────────────────────────────────────────────────────────────────────────
+
+permissions:
+  # Human Operator Permissions
+  human_operator:
+    view_system_state:
+      tier_required: T3_TACTICAL
+      confirmation: none
+      audit: true
+    submit_pac:
+      tier_required: T3_TACTICAL
+      confirmation: identity
+      audit: true
+    approve_pac:
+      tier_required: T2_OPERATIONAL
+      confirmation: identity_justification
+      audit: true
+    override_decision:
+      tier_required: T1_POLICY
+      confirmation: identity_justification_witness
+      audit: true
+    emergency_halt:
+      tier_required: T0_LAW
+      confirmation: identity_only  # Speed priority
+      audit: true
+    modify_constitution:
+      tier_required: T0_LAW
+      confirmation: multiparty_ceremony
+      audit: true
+
+  # OCC System Permissions
+  occ_system:
+    validate_pac:
+      automatic: true
+      audit: true
+    authorize_execution:
+      automatic: true
+      requires: valid_pac
+      audit: true
+    emit_telemetry:
+      automatic: true
+      audit: false  # Meta-audit not required
+    trigger_scram:
+      automatic: true
+      conditions:
+        - invariant_breach
+        - drift_detected
+        - operator_command
+      audit: true
+
+  # Benson Execution Permissions
+  benson_execution:
+    enforce_preflight:
+      automatic: true
+      bypass: forbidden
+    execute_pac:
+      requires: occ_authorization
+      audit: true
+    emit_audit:
+      automatic: true
+      immutable: true
+    halt_on_failure:
+      automatic: true
+      override: forbidden
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# ENTITY TRUST LEVELS
+# ─────────────────────────────────────────────────────────────────────────────────
+
+trust_levels:
+  TRUSTED:
+    description: "Full authority within tier boundaries"
+    entities:
+      - human_operator
+    capabilities:
+      - override
+      - halt
+      - amend
+
+  AUTHORITATIVE:
+    description: "System authority for validation and control"
+    entities:
+      - occ
+    capabilities:
+      - validate
+      - authorize
+      - enforce
+
+  DETERMINISTIC:
+    description: "Mechanical enforcement without discretion"
+    entities:
+      - benson_execution
+    capabilities:
+      - execute
+      - audit
+      - halt_on_failure
+
+  SUBORDINATE:
+    description: "Policy enforcement under OCC authority"
+    entities:
+      - alex_gid_08
+      - lex_gid_09
+    capabilities:
+      - enforce_policy
+      - validate_schema
+      - detect_drift
+
+  UNTRUSTED:
+    description: "Task execution only, no authority"
+    entities:
+      - agents
+    capabilities:
+      - execute_task
+    restrictions:
+      - no_self_authorization
+      - no_policy_modification
+      - no_override
+
+  NON_AUTHORITATIVE:
+    description: "Display and input only, no execution authority"
+    entities:
+      - ui
+      - api_surface
+    capabilities:
+      - display
+      - relay_input
+    restrictions:
+      - no_execution
+      - no_validation
+      - no_authorization
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# ESCALATION PATHS
+# ─────────────────────────────────────────────────────────────────────────────────
+
+escalation:
+  default_path:
+    - T3_TACTICAL
+    - T2_OPERATIONAL
+    - T1_POLICY
+    - T0_LAW
+
+  emergency_path:
+    description: "Direct escalation for critical situations"
+    allowed_from: any
+    allowed_to: T0_LAW
+    requires: emergency_justification
+    audit: mandatory
+
+  blocked_paths:
+    - from: any
+      to: self  # No self-escalation
+    - from: agent
+      to: T0_LAW  # Agents cannot escalate to LAW tier
+    - from: ui
+      to: any  # UI has no escalation authority
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# IDENTITY REQUIREMENTS
+# ─────────────────────────────────────────────────────────────────────────────────
+
+identity:
+  binding_type: CRYPTOGRAPHIC
+  signature_algorithm: Ed25519
+  attestation: REQUIRED
+  repudiation: FORBIDDEN
+
+  verification_chain:
+    - signature_valid
+    - identity_registered
+    - tier_authorized
+    - action_permitted
+
+  failure_response: HALT
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# DELEGATION RULES
+# ─────────────────────────────────────────────────────────────────────────────────
+
+delegation:
+  allowed: false  # Constitutional authority cannot be delegated
+  exceptions: []
+  agent_self_authorization: forbidden
+  transitive_authority: forbidden
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# ATTESTATION
+# ─────────────────────────────────────────────────────────────────────────────────
+
+attestation:
+  document_hash: TO_BE_COMPUTED_ON_COMMIT
+  approved_by: "Benson (GID-00)"
+  effective_date: "2026-01-12"
+  status: ACTIVE
+  references:
+    - OCC_CONSTITUTION_v1.0.md
+    - OCC_OVERRIDE_INVARIANTS.yaml
+    - BENSON_EXECUTION_TEMPLATE.md

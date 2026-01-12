@@ -1,0 +1,343 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# OCC OVERRIDE INVARIANTS v1.0
+# Classification: LAW
+# Governance Tier: CONSTITUTIONAL
+# Effective: 2026-01-12
+# ═══════════════════════════════════════════════════════════════════════════════
+
+metadata:
+  document_id: OCC-OVERRIDE-INV-v1.0
+  version: "1.0.0"
+  classification: LAW
+  governance_tier: CONSTITUTIONAL
+  effective_date: "2026-01-12"
+  approved_by: "Benson (GID-00)"
+  drift_tolerance: ZERO
+  fail_closed: true
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# CONSTITUTIONAL INVARIANTS
+# These invariants are LAW-tier and may NEVER be violated
+# ─────────────────────────────────────────────────────────────────────────────────
+
+invariants:
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # EXECUTION INVARIANTS
+  # ═══════════════════════════════════════════════════════════════════════════════
+
+  CB-INV-001:
+    id: CB-INV-001
+    name: "No Execution Without Valid PAC"
+    tier: LAW
+    description: |
+      No execution, decision, settlement, or state transition may occur
+      without an explicitly authorized, validated PAC.
+    enforcement: ALEX + Benson Execution
+    violation_response: SCRAM
+    bypass_permitted: false
+    test_cases:
+      - TC-INV-001-A: "Reject execution request with no PAC"
+      - TC-INV-001-B: "Reject execution request with invalid PAC"
+      - TC-INV-001-C: "Accept execution request with valid PAC"
+
+  CB-INV-002:
+    id: CB-INV-002
+    name: "No Self-Attestation"
+    tier: LAW
+    description: |
+      No PAC may self-attest its own compliance. Validation must be
+      performed by an independent validator (Lex).
+    enforcement: Lex
+    violation_response: SCRAM
+    bypass_permitted: false
+    test_cases:
+      - TC-INV-002-A: "Reject PAC with self-attestation field"
+      - TC-INV-002-B: "Require external validator signature"
+
+  CB-INV-003:
+    id: CB-INV-003
+    name: "Override Identity Requirement"
+    tier: LAW
+    description: |
+      All overrides must include cryptographically verified identity
+      and human-readable justification. No anonymous overrides permitted.
+    enforcement: OCC + ALEX
+    violation_response: HALT
+    bypass_permitted: false
+    required_fields:
+      - operator_gid
+      - signature
+      - justification
+      - timestamp
+      - scope
+    test_cases:
+      - TC-INV-003-A: "Reject override without identity"
+      - TC-INV-003-B: "Reject override without justification"
+      - TC-INV-003-C: "Accept override with all required fields"
+
+  CB-INV-004:
+    id: CB-INV-004
+    name: "Fail-Closed Enforcement"
+    tier: LAW
+    description: |
+      On any validation failure, unknown state, or error condition,
+      the system MUST halt execution. Fail-open is forbidden.
+    enforcement: Benson Execution
+    violation_response: SCRAM
+    bypass_permitted: false
+    triggers:
+      - schema_validation_failure
+      - signature_verification_failure
+      - tier_boundary_violation
+      - timeout_exceeded
+      - unknown_state
+      - invariant_breach
+    test_cases:
+      - TC-INV-004-A: "Halt on schema validation failure"
+      - TC-INV-004-B: "Halt on signature failure"
+      - TC-INV-004-C: "Halt on timeout"
+
+  CB-INV-005:
+    id: CB-INV-005
+    name: "Single Instance Rule"
+    tier: LAW
+    description: |
+      Exactly one Benson Execution instance may exist at any time.
+      Shadow, forked, duplicate, or parallel instances are forbidden.
+    enforcement: OCC + Infrastructure
+    violation_response: SCRAM
+    bypass_permitted: false
+    detection_methods:
+      - instance_heartbeat_monitor
+      - process_enumeration
+      - network_signature_analysis
+    test_cases:
+      - TC-INV-005-A: "Detect and halt duplicate instance"
+      - TC-INV-005-B: "Prevent fork of execution context"
+
+  CB-INV-006:
+    id: CB-INV-006
+    name: "Audit Completeness"
+    tier: LAW
+    description: |
+      Every action, decision, and state transition must be logged
+      without exception. Audit gaps are forbidden.
+    enforcement: Benson Execution + Audit Subsystem
+    violation_response: SCRAM
+    bypass_permitted: false
+    guarantees:
+      - no_gaps: true
+      - immutable: true
+      - traceable: true
+      - replayable: true
+    test_cases:
+      - TC-INV-006-A: "Verify audit entry for every PAC execution"
+      - TC-INV-006-B: "Detect and alert on audit gap"
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # PREFLIGHT INVARIANTS
+  # ═══════════════════════════════════════════════════════════════════════════════
+
+  CB-INV-PREFLIGHT-LAW-001:
+    id: CB-INV-PREFLIGHT-LAW-001
+    name: "Canonical Preflight Enforcement"
+    tier: LAW
+    description: |
+      For every PAC submitted:
+      1. Canonical preflight gates MUST execute
+      2. Gates MUST execute in fixed order
+      3. Any failure MUST halt execution
+      4. No bypass paths may exist
+      5. No PAC may self-attest compliance
+      This invariant is structural, not procedural.
+    enforcement: Benson Execution
+    violation_response: SCRAM
+    bypass_permitted: false
+    gate_order:
+      - preflight_gates
+      - schema_validation
+      - lint_validation
+      - admission_decision
+      - execution_authorization
+      - audit_commit
+    test_cases:
+      - TC-PREFLIGHT-001-A: "Verify gate order is immutable"
+      - TC-PREFLIGHT-001-B: "Verify no gate can be skipped"
+      - TC-PREFLIGHT-001-C: "Verify failure at any gate halts execution"
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # OVERRIDE INVARIANTS
+  # ═══════════════════════════════════════════════════════════════════════════════
+
+  CB-INV-OVERRIDE-001:
+    id: CB-INV-OVERRIDE-001
+    name: "Override Scope Boundary"
+    tier: LAW
+    description: |
+      An override may not exceed its declared scope. Scope creep
+      during execution is forbidden.
+    enforcement: OCC + ALEX
+    violation_response: HALT
+    bypass_permitted: false
+    scope_types:
+      - transaction_bounded
+      - time_bounded
+      - resource_bounded
+    test_cases:
+      - TC-OVERRIDE-001-A: "Reject override exceeding transaction scope"
+      - TC-OVERRIDE-001-B: "Reject override exceeding time boundary"
+
+  CB-INV-OVERRIDE-002:
+    id: CB-INV-OVERRIDE-002
+    name: "Override Immutability"
+    tier: LAW
+    description: |
+      Once recorded, an override cannot be modified or deleted.
+      Override history is append-only.
+    enforcement: Audit Subsystem
+    violation_response: SCRAM
+    bypass_permitted: false
+    test_cases:
+      - TC-OVERRIDE-002-A: "Reject modification of recorded override"
+      - TC-OVERRIDE-002-B: "Reject deletion of override record"
+
+  CB-INV-OVERRIDE-003:
+    id: CB-INV-OVERRIDE-003
+    name: "T1+ Witness Requirement"
+    tier: LAW
+    description: |
+      Overrides at T1 (Policy) tier or above require a second-party
+      witness attestation in addition to operator identity.
+    enforcement: OCC
+    violation_response: HALT
+    bypass_permitted: false
+    test_cases:
+      - TC-OVERRIDE-003-A: "Reject T1 override without witness"
+      - TC-OVERRIDE-003-B: "Accept T1 override with witness"
+      - TC-OVERRIDE-003-C: "Accept T3 override without witness"
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# FAIL-CLOSED CONDITIONS
+# ─────────────────────────────────────────────────────────────────────────────────
+
+fail_closed:
+  enabled: true
+  override_permitted: false
+
+  halt_triggers:
+    - condition: schema_validation_failure
+      response: IMMEDIATE_HALT
+      recovery: resubmit_valid_pac
+      
+    - condition: signature_verification_failure
+      response: IMMEDIATE_HALT
+      recovery: reauthenticate
+      
+    - condition: tier_boundary_violation
+      response: IMMEDIATE_HALT
+      recovery: escalate_to_proper_tier
+      
+    - condition: invariant_breach
+      response: SCRAM
+      recovery: law_tier_recovery_pac
+      
+    - condition: drift_detected
+      response: SCRAM
+      recovery: reanchoring_ceremony
+      
+    - condition: timeout_exceeded
+      response: IMMEDIATE_HALT
+      recovery: retry_with_valid_timeout
+      
+    - condition: unknown_state
+      response: IMMEDIATE_HALT
+      recovery: state_reconciliation
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SCRAM PROTOCOL
+# ─────────────────────────────────────────────────────────────────────────────────
+
+scram:
+  description: "Safety Control Rod Axe Man - Emergency shutdown protocol"
+  
+  triggers:
+    - INVARIANT_BREACH
+    - DRIFT_DETECTED
+    - OPERATOR_COMMAND
+    - MULTI_INSTANCE_DETECTED
+    - AUDIT_GAP_DETECTED
+  
+  actions:
+    sequence:
+      - halt_all_execution
+      - freeze_state
+      - emit_scram_event
+      - notify_operators
+      - await_recovery_pac
+  
+  recovery:
+    required_tier: LAW
+    self_recovery: FORBIDDEN
+    minimum_cooling_period_hours: 1
+    required_attestations: 2
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# DRIFT DETECTION
+# ─────────────────────────────────────────────────────────────────────────────────
+
+drift_detection:
+  enabled: true
+  
+  drift_conditions:
+    - behavior_outside_declared_responsibilities
+    - missing_preflight_enforcement
+    - soft_acceptance_of_invalid_pacs
+    - learning_or_inference_detected
+    - self_modification_attempted
+    - authority_exceeded
+  
+  detection_methods:
+    - behavioral_hash_comparison
+    - execution_trace_analysis
+    - invariant_continuous_monitoring
+  
+  response: SCRAM
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# RECOVERY PROCEDURES
+# ─────────────────────────────────────────────────────────────────────────────────
+
+recovery:
+  after_halt:
+    steps:
+      - identify_cause
+      - remediate_issue
+      - submit_valid_pac
+      - resume_execution
+    tier_required: varies_by_cause
+
+  after_scram:
+    steps:
+      - complete_state_freeze
+      - root_cause_analysis
+      - submit_law_tier_recovery_pac
+      - multi_party_approval
+      - controlled_restart
+      - verification_tests
+    tier_required: LAW
+    minimum_parties: 2
+    cooling_period_hours: 1
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# ATTESTATION
+# ─────────────────────────────────────────────────────────────────────────────────
+
+attestation:
+  document_hash: TO_BE_COMPUTED_ON_COMMIT
+  approved_by: "Benson (GID-00)"
+  effective_date: "2026-01-12"
+  status: ACTIVE
+  references:
+    - OCC_CONSTITUTION_v1.0.md
+    - OCC_AUTHORITY_MODEL.yaml
+    - BENSON_EXECUTION_TEMPLATE.md
