@@ -26,15 +26,43 @@ TRAINING SIGNAL:
   "The Parliament's Laws are now written in Stone across the Realm."
 """
 
-__version__ = "3.0.0"
+__version__ = "3.2.0"
 __phase__ = "THE_MESH"
 
 from .merkle import MerkleTree, MerkleProof
 from .replication import ReplicationEngine, StateSnapshot
+from .sharding import TenantShard, ShardManager, ShardConfig, ShardState
+from .schemas import (
+    TransactionSchema, AuditLogSchema, ProofReceipt,
+    PIIHasher, SchemaRegistry, SchemaVersion,
+)
+from .sxt_bridge import (
+    SxTBridge, SxTConfig, AsyncAnchor, AnchorRequest, AnchorState,
+    create_sxt_bridge,
+)
 
 __all__ = [
     "MerkleTree",
     "MerkleProof",
     "ReplicationEngine",
     "StateSnapshot",
+    # P920 Sharding
+    "TenantShard",
+    "ShardManager",
+    "ShardConfig",
+    "ShardState",
+    # P930 SxT Bridge
+    "SxTBridge",
+    "SxTConfig",
+    "AsyncAnchor",
+    "AnchorRequest",
+    "AnchorState",
+    "create_sxt_bridge",
+    # Schemas
+    "TransactionSchema",
+    "AuditLogSchema",
+    "ProofReceipt",
+    "PIIHasher",
+    "SchemaRegistry",
+    "SchemaVersion",
 ]
