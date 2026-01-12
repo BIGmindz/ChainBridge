@@ -26,7 +26,7 @@ Total: **8,208 lines of code** across **13 modules**.
 ## PAC Completion Matrix
 
 | PAC | Name | Codename | Status | LOC | Attestation |
-|-----|------|----------|--------|-----|-------------|
+| --- | --- | --- | --- | --- | --- |
 | P300 | Mesh Networking | The Listener | ✅ COMPLETE | 1,066 | `NETWORKING_INIT.json` |
 | P305 | Federated Identity | The Seal | ✅ COMPLETE | 629 | `IDENTITY_INIT.json` |
 | P310 | Consensus Engine | The Parliament | ✅ COMPLETE | 1,026 | `CONSENSUS_INIT.json` |
@@ -173,7 +173,7 @@ Economic Sovereignty — The rules of value flow.
 ## Certification
 
 | Role | Agent | GID |
-|------|-------|-----|
+| --- | --- | --- |
 | Architect | JEFFREY | — |
 | Executor | BENSON | GID-00 |
 | Auditor | ATLAS | — |
