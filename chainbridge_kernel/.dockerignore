@@ -1,0 +1,43 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# PAC-OCC-P66: Docker Build Context Exclusions
+# ═══════════════════════════════════════════════════════════════════════════════
+# These files/directories are EXCLUDED from the Docker build context.
+# This keeps the build fast and prevents accidental secret leakage.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Build artifacts (we rebuild fresh in Docker)
+target/
+
+# Version control (not needed in container)
+.git/
+.gitignore
+
+# Logs (ephemeral, should go to stdout)
+logs/
+*.log
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation (not runtime)
+*.md
+docs/
+
+# Test artifacts
+*.profraw
+*.profdata
+coverage/
+
+# Local environment
+.env
+.env.local
+*.pem
+*.key
