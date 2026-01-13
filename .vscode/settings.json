@@ -47,5 +47,6 @@
   "python.testing.unittestEnabled": false,
   "yaml.validate": true,
   "json.schemas": [],
-  "json.schemaDownload.enable": false
+  "json.schemaDownload.enable": false,
+  "github.copilot.chat.virtualTools.threshold": 0
 }
