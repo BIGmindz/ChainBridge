@@ -27,7 +27,7 @@ import hashlib
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -106,11 +106,11 @@ class DoctrineEnforcer:
         doctrine_path = self.governance_root / self.DOCTRINE_FILE
         
         if not doctrine_path.exists():
-            self.logger.error(f"Doctrine file not found: {doctrine_path}")
+            self.logger.error("Doctrine file not found: %s", doctrine_path)
             # FAIL_CLOSED: No doctrine = no operations permitted
             return {"locked": False, "principles": {}}
         
-        with open(doctrine_path) as f:
+        with open(doctrine_path, encoding="utf-8") as f:
             return json.load(f)
     
     def _log_audit(self, action: str, context: GovernanceContext, result: EnforcementResult) -> Dict:

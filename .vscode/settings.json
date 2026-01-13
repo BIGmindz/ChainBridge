@@ -6,10 +6,15 @@
     "${workspaceFolder}"
   ],
   "python.analysis.typeCheckingMode": "basic",
-  "python.analysis.diagnosticMode": "workspace",
+  "python.analysis.diagnosticMode": "openFilesOnly",
   "python.analysis.useLibraryCodeForTypes": true,
   "python.analysis.autoSearchPaths": true,
   "python.analysis.exclude": [
+    "**/.venv/**",
+    "**/node_modules/**",
+    "**/__pycache__/**",
+    "**/build/**",
+    "**/dist/**",
     "/Users/johnbozza/crypto1.0/**"
   ],
   "files.exclude": {
@@ -40,5 +45,7 @@
   ],
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
-  "yaml.validate": true
+  "yaml.validate": true,
+  "json.schemas": [],
+  "json.schemaDownload.enable": false
 }

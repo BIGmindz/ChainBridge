@@ -1,3 +1,5 @@
+# pylint: disable=redefined-outer-name,protected-access
+# ruff: noqa: W0621, W0212
 """
 SCRAM Controller Test Suite
 ============================

@@ -17,7 +17,6 @@ Classification: LAW_TIER
 
 import argparse
 import json
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -33,7 +32,7 @@ def load_pipeline_status(pipeline_id: str, governance_root: Path) -> Optional[di
     
     # Parse log entries
     entries = []
-    with open(audit_path) as f:
+    with open(audit_path, encoding="utf-8") as f:
         for line in f:
             entries.append(line.strip())
     
@@ -79,11 +78,11 @@ def manual_approve(pipeline_id: str, stage: str, operator_gid: str,
         "action": "APPROVED"
     }
     
-    with open(audit_path / f"{pipeline_id}_manual.log", "a") as f:
+    with open(audit_path / f"{pipeline_id}_manual.log", "a", encoding="utf-8") as f:
         f.write(json.dumps(approval_log) + "\n")
     
     print(f"\n✓ Stage '{stage}' manually approved")
-    print(f"✓ Audit entry created")
+    print("✓ Audit entry created")
     return True
 
 
@@ -113,11 +112,11 @@ def manual_reject(pipeline_id: str, stage: str, operator_gid: str,
         "action": "REJECTED"
     }
     
-    with open(audit_path / f"{pipeline_id}_manual.log", "a") as f:
+    with open(audit_path / f"{pipeline_id}_manual.log", "a", encoding="utf-8") as f:
         f.write(json.dumps(rejection_log) + "\n")
     
     print(f"\n✗ Stage '{stage}' manually rejected")
-    print(f"✗ Pipeline halted")
+    print("✗ Pipeline halted")
     return True
 
 
@@ -136,7 +135,7 @@ def list_pending_approvals(governance_root: Path) -> None:
     pending = []
     for log_file in audit_path.glob("PIPE-*.log"):
         pipeline_id = log_file.stem
-        with open(log_file) as f:
+        with open(log_file, encoding="utf-8") as f:
             lines = f.readlines()
             if lines:
                 last_line = lines[-1]

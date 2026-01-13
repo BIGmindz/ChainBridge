@@ -11,6 +11,25 @@ skip = [".venv", ".venv*"]
 line-length = 140
 exclude = [".venv", ".venv*", "__pycache__"]
 
+[tool.ruff.lint]
+# Ignore common style warnings that conflict with codebase patterns
+ignore = [
+    "W0621",   # Redefining name from outer scope (pytest fixtures, local functions)
+    "W0212",   # Protected member access (needed for singleton tests)
+    "W1203",   # Lazy logging format (f-strings are fine for our use case)
+    "W0603",   # Global statement (used for singletons)
+    "E501",    # Line too long (handled by black)
+]
+
+[tool.pylint.messages_control]
+disable = [
+    "redefined-outer-name",
+    "protected-access", 
+    "logging-fstring-interpolation",
+    "global-statement",
+    "line-too-long",
+]
+
 [tool.pylance]
 typeCheckingMode = "basic"
 reportGeneralTypeIssues = false

@@ -203,9 +203,9 @@ class GovernancePipeline:
         
         required_fields = ["pac_id", "authority", "classification", "goal_state"]
         
-        for field in required_fields:
-            if field not in pac_data:
-                self._fail_closed(f"Missing required PAC field: {field}", gid)
+        for field_name in required_fields:
+            if field_name not in pac_data:
+                self._fail_closed(f"Missing required PAC field: {field_name}", gid)
                 return False
         
         # Check GID authorization
@@ -248,7 +248,7 @@ class GovernancePipeline:
         if not registry_path.exists():
             return False
         
-        with open(registry_path) as f:
+        with open(registry_path, encoding="utf-8") as f:
             registry = json.load(f)
         
         return gid in registry.get("agents", {})
@@ -396,8 +396,11 @@ class GovernancePipeline:
 
 
 # Module-level factory function
-def create_pipeline(pac_id: str, created_by: str, 
-                   governance_root: Optional[Path] = None) -> GovernancePipeline:
+def create_pipeline(
+    pac_id: str,
+    created_by: str,
+    governance_root: Optional[Path] = None
+) -> GovernancePipeline:
     """
     Factory function to create a new governance pipeline.
     

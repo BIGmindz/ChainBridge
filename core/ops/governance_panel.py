@@ -30,9 +30,8 @@ Authors:
 
 import streamlit as st
 import json
-from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict, List
 import hashlib
 
 
@@ -45,14 +44,14 @@ def load_doctrine_state() -> Dict:
     doctrine_path = Path(__file__).parent.parent.parent / "governance" / "DOCTRINE_FULL_SWARM_EXECUTION.json"
     
     if doctrine_path.exists():
-        with open(doctrine_path) as f:
+        with open(doctrine_path, encoding="utf-8") as f:
             return json.load(f)
     
     # Fallback to parent search
     for parent in Path(__file__).parents:
         candidate = parent / "core" / "governance" / "DOCTRINE_FULL_SWARM_EXECUTION.json"
         if candidate.exists():
-            with open(candidate) as f:
+            with open(candidate, encoding="utf-8") as f:
                 return json.load(f)
     
     return {"doctrine_id": "NOT_FOUND", "attestation": {"statement": "DOCTRINE NOT LOADED"}}
@@ -63,14 +62,14 @@ def load_ledger_state() -> Dict:
     ledger_path = Path(__file__).parent.parent.parent / "governance" / "SOVEREIGNTY_LEDGER.json"
     
     if ledger_path.exists():
-        with open(ledger_path) as f:
+        with open(ledger_path, encoding="utf-8") as f:
             return json.load(f)
     
     # Fallback search
     for parent in Path(__file__).parents:
         candidate = parent / "core" / "governance" / "SOVEREIGNTY_LEDGER.json"
         if candidate.exists():
-            with open(candidate) as f:
+            with open(candidate, encoding="utf-8") as f:
                 return json.load(f)
     
     return {"sovereignty_version": "NOT_FOUND"}
@@ -85,7 +84,7 @@ def load_pending_pacs() -> List[Dict]:
         if pacs_dir.exists():
             for pac_file in pacs_dir.glob("*.json"):
                 try:
-                    with open(pac_file) as f:
+                    with open(pac_file, encoding="utf-8") as f:
                         pac = json.load(f)
                         pacs.append({
                             "file": pac_file.name,
@@ -124,7 +123,7 @@ def render_governance_panel():
     
     # Load states
     doctrine = load_doctrine_state()
-    ledger = load_ledger_state()
+    _ = load_ledger_state()  # Reserved for future ledger display
     pending_pacs = load_pending_pacs()
     
     # Doctrine Lock Status (Most Critical)

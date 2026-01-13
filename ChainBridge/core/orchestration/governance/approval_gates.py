@@ -19,7 +19,6 @@ Authors:
 - ALEX (GID-08) - Governance Guardrails
 """
 
-import hashlib
 import json
 import logging
 from datetime import datetime, timezone

@@ -25,7 +25,7 @@ CONSTRAINTS:
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 # Import governance enforcement
@@ -35,12 +35,11 @@ from pathlib import Path
 # Add parent paths for import resolution
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from core.orchestration.governance import (
+from core.orchestration.governance import (  # type: ignore[import-not-found]
     get_enforcer,
     get_gate,
     GovernanceContext,
-    GovernanceTier,
-    ActionStatus
+    GovernanceTier
 )
 
 
