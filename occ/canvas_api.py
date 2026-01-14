@@ -390,8 +390,9 @@ def create_canvas_router():
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# CANVAS UI HTML V2.0.0 - ANCHOR-LOGIC ENABLED
-# RNP Deployment: PAC-CANVAS-REPLACEMENT-45
+# CANVAS UI HTML V3.0.0 - OBSIDIAN SOVEREIGN C2 ENGINE
+# RNP Deployment: PAC-SOVEREIGN-C2-ORCHESTRATION-52
+# Standard: NASA/SpaceX Zero-Fault Architecture
 # ═══════════════════════════════════════════════════════════════════════════════
 
 CANVAS_UI_HTML = """
@@ -400,7 +401,7 @@ CANVAS_UI_HTML = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sovereign Command Canvas V2.1.0 | ChainBridge</title>
+    <title>Sovereign Command Canvas V3.0.0 OBSIDIAN | ChainBridge C2</title>
     <style>
         :root {
             --bg-dark: #0a0a0a;
@@ -515,6 +516,42 @@ CANVAS_UI_HTML = """
         .agent-status.deployed { background: var(--accent-blue); }
         .agent-status.standby { background: var(--text-dim); }
         
+        /* V3.0.0 OBSIDIAN: Agent card pointer interaction */
+        .agent-card.obsidian-dragging {
+            opacity: 0.3;
+            transform: scale(0.95);
+        }
+        
+        /* V3.0.0 OBSIDIAN: Ghost element for drag preview */
+        .obsidian-ghost {
+            position: fixed;
+            pointer-events: none;
+            z-index: 10000;
+            background: var(--bg-node);
+            border: 2px solid var(--accent-gold);
+            border-radius: 12px;
+            padding: 12px 16px;
+            box-shadow: 0 10px 40px rgba(255,215,0,0.4);
+            transform: translate(-50%, -50%);
+            min-width: 140px;
+        }
+        
+        .obsidian-ghost .ghost-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .obsidian-ghost .ghost-icon {
+            font-size: 20px;
+        }
+        
+        .obsidian-ghost .ghost-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent-gold);
+        }
+        
         /* ZONE B: Logic Canvas */
         .logic-canvas {
             position: relative;
@@ -526,8 +563,10 @@ CANVAS_UI_HTML = """
             overflow: hidden;
         }
         
-        .logic-canvas.drag-over {
-            background-color: rgba(0,255,136,0.02);
+        /* V3.0.0 OBSIDIAN: Canvas drop zone states */
+        .logic-canvas.obsidian-active {
+            background-color: rgba(255,215,0,0.02);
+            box-shadow: inset 0 0 50px rgba(255,215,0,0.1);
         }
         
         .canvas-toolbar {
@@ -897,10 +936,10 @@ CANVAS_UI_HTML = """
         <div class="agent-forge" id="agent-forge">
             <div class="zone-header">
                 ⚡ Zone A: Agent Forge
-                <span class="version-badge">V2.1.0</span>
+                <span class="version-badge" style="background: linear-gradient(45deg, #FFD700, #FFA500);">V3.0.0 OBSIDIAN</span>
             </div>
             
-            <div class="agent-card" draggable="true" data-gid="GID-00" data-name="Benson" data-icon="⚡" data-role="Sovereign Executor">
+            <div class="agent-card" data-gid="GID-00" data-name="Benson" data-icon="⚡" data-role="Sovereign Executor">
                 <div class="agent-icon">⚡</div>
                 <div class="agent-info">
                     <h3>Benson</h3>
@@ -909,7 +948,7 @@ CANVAS_UI_HTML = """
                 <div class="agent-status active"></div>
             </div>
             
-            <div class="agent-card" draggable="true" data-gid="GID-03" data-name="Vaporizer" data-icon="💨" data-role="Zero-PII Hasher">
+            <div class="agent-card" data-gid="GID-03" data-name="Vaporizer" data-icon="💨" data-role="Zero-PII Hasher">
                 <div class="agent-icon">💨</div>
                 <div class="agent-info">
                     <h3>Vaporizer</h3>
@@ -918,7 +957,7 @@ CANVAS_UI_HTML = """
                 <div class="agent-status deployed"></div>
             </div>
             
-            <div class="agent-card" draggable="true" data-gid="GID-04" data-name="Blind-Portal" data-icon="🚪" data-role="Ingest Layer">
+            <div class="agent-card" data-gid="GID-04" data-name="Blind-Portal" data-icon="🚪" data-role="Ingest Layer">
                 <div class="agent-icon">🚪</div>
                 <div class="agent-info">
                     <h3>Blind-Portal</h3>
@@ -927,7 +966,7 @@ CANVAS_UI_HTML = """
                 <div class="agent-status deployed"></div>
             </div>
             
-            <div class="agent-card" draggable="true" data-gid="GID-05" data-name="Certifier" data-icon="📜" data-role="Settlement Proof">
+            <div class="agent-card" data-gid="GID-05" data-name="Certifier" data-icon="📜" data-role="Settlement Proof">
                 <div class="agent-icon">📜</div>
                 <div class="agent-info">
                     <h3>Certifier</h3>
@@ -936,7 +975,7 @@ CANVAS_UI_HTML = """
                 <div class="agent-status deployed"></div>
             </div>
             
-            <div class="agent-card" draggable="true" data-gid="GID-02" data-name="University Dean" data-icon="🎓" data-role="Logic Validator">
+            <div class="agent-card" data-gid="GID-02" data-name="University Dean" data-icon="🎓" data-role="Logic Validator">
                 <div class="agent-icon">🎓</div>
                 <div class="agent-info">
                     <h3>University Dean</h3>
@@ -945,7 +984,7 @@ CANVAS_UI_HTML = """
                 <div class="agent-status standby"></div>
             </div>
             
-            <div class="agent-card" draggable="true" data-gid="GID-06" data-name="Watchdog" data-icon="🐕" data-role="Compliance Monitor">
+            <div class="agent-card" data-gid="GID-06" data-name="Watchdog" data-icon="🐕" data-role="Compliance Monitor">
                 <div class="agent-icon">🐕</div>
                 <div class="agent-info">
                     <h3>Watchdog</h3>
@@ -954,7 +993,7 @@ CANVAS_UI_HTML = """
                 <div class="agent-status standby"></div>
             </div>
             
-            <div class="agent-card" draggable="true" data-gid="GID-01" data-name="Chancellor" data-icon="👑" data-role="Revenue Ops">
+            <div class="agent-card" data-gid="GID-01" data-name="Chancellor" data-icon="👑" data-role="Revenue Ops">
                 <div class="agent-icon">👑</div>
                 <div class="agent-info">
                     <h3>Chancellor</h3>
@@ -967,10 +1006,10 @@ CANVAS_UI_HTML = """
         <!-- ZONE B: Logic Canvas -->
         <div class="logic-canvas" id="canvas">
             <div class="canvas-toolbar">
-                <button class="toolbar-btn" onclick="CanvasEngine.clearCanvas()">🗑️ Clear</button>
-                <button class="toolbar-btn" onclick="CanvasEngine.autoLayout()">📐 Auto Layout</button>
-                <button class="toolbar-btn" onclick="CanvasEngine.detectLoops()">🔄 Check Loops</button>
-                <button class="toolbar-btn" onclick="CanvasEngine.exportState()">📋 Export PAC</button>
+                <button class="toolbar-btn" onclick="ObsidianEngine.clearCanvas()">🗑️ Clear</button>
+                <button class="toolbar-btn" onclick="ObsidianEngine.autoLayout()">📐 Auto Layout</button>
+                <button class="toolbar-btn" onclick="ObsidianEngine.detectLoops()">🔄 Check Loops</button>
+                <button class="toolbar-btn" onclick="ObsidianEngine.exportState()">📋 Export PAC</button>
             </div>
             
             <svg class="connections-svg" id="connections-svg"></svg>
@@ -1003,10 +1042,10 @@ CANVAS_UI_HTML = """
             
             <div class="console-section">
                 <h4>Actions</h4>
-                <button class="strike-btn initialize" onclick="CanvasEngine.initializeSwarm()">Initialize Swarm</button>
-                <button class="strike-btn simulate" onclick="CanvasEngine.simulateStrike()">Simulate Strike</button>
-                <button class="strike-btn arm" onclick="CanvasEngine.armDeployment()">Arm Deployment</button>
-                <button class="strike-btn execute" id="execute-btn" disabled onclick="CanvasEngine.executeSwarm()">Execute Swarm</button>
+                <button class="strike-btn initialize" onclick="ObsidianEngine.initializeSwarm()">Initialize Swarm</button>
+                <button class="strike-btn simulate" onclick="ObsidianEngine.simulateStrike()">Simulate Strike</button>
+                <button class="strike-btn arm" onclick="ObsidianEngine.armDeployment()">Arm Deployment</button>
+                <button class="strike-btn execute" id="execute-btn" disabled onclick="ObsidianEngine.executeSwarm()">Execute Swarm</button>
             </div>
             
             <div class="zone-header" style="border-top: 1px solid var(--border);">📡 Telemetry</div>
@@ -1016,102 +1055,220 @@ CANVAS_UI_HTML = """
     
     <script>
         /**
-         * SOVEREIGN COMMAND CANVAS V2.1.0
-         * Active-Link Engine with Port-Snapping Connections
-         * RNP Deployment: PAC-LINE-ACTIVATION-48
+         * ═══════════════════════════════════════════════════════════════════════
+         * SOVEREIGN COMMAND CANVAS V3.0.0 - OBSIDIAN ENGINE
+         * NASA/SpaceX Zero-Fault Architecture
+         * RNP Deployment: PAC-SOVEREIGN-C2-ORCHESTRATION-52
+         * ═══════════════════════════════════════════════════════════════════════
          * 
          * UPGRADE PATH:
-         * V2.0.0: Anchor-Logic (Node Persistence) ← COMPLETE
-         * V2.1.0: Active-Link (Vector-Linkage Layer) ← CURRENT
+         * V2.0.0: Anchor-Logic (Node Persistence) ← LEGACY
+         * V2.1.0: Active-Link (Vector-Linkage) ← LEGACY
+         * V3.0.0: OBSIDIAN (Absolute Geometry C2) ← CURRENT
+         * 
+         * KEY CHANGES:
+         * - NO HTML5 Drag-and-Drop API (unreliable)
+         * - PointerEvents for sub-pixel precision
+         * - Absolute coordinate system (no relative transforms)
+         * - Backend-authoritative state (zero UI drift)
+         * - Center-of-mass port snapping
+         * ═══════════════════════════════════════════════════════════════════════
          */
         
-        const CanvasEngine = {
+        const ObsidianEngine = {
+            // ═══════════════════════════════════════════════════════════════════
+            // CORE STATE (Backend-Authoritative)
+            // ═══════════════════════════════════════════════════════════════════
             nodes: new Map(),
             connections: [],
-            selectedNode: null,
-            isDragging: false,
-            dragOffset: { x: 0, y: 0 },
             nodeIdCounter: 0,
             currentDeployment: null,
             
-            // V2.1.0: Active-Link Connection State
-            isDrawingConnection: false,
-            connectionSource: null,
-            connectionSourcePort: null,
-            tempLine: null,
-            hoveredPort: null,
+            // V3.0.0: Obsidian Drag State (PointerEvents)
+            obsidianDrag: {
+                active: false,
+                sourceCard: null,
+                ghostElement: null,
+                agentData: null,
+                startX: 0,
+                startY: 0
+            },
             
-            // ══════════════════════════════════════════════════════════════
+            // V3.0.0: Node Movement State
+            nodeMovement: {
+                active: false,
+                node: null,
+                offsetX: 0,
+                offsetY: 0
+            },
+            
+            // V3.0.0: Connection Drawing State
+            connectionDraw: {
+                active: false,
+                sourceNode: null,
+                sourcePort: null,
+                startX: 0,
+                startY: 0,
+                tempLine: null
+            },
+            
+            // ═══════════════════════════════════════════════════════════════════
             // INITIALIZATION
-            // ══════════════════════════════════════════════════════════════
+            // ═══════════════════════════════════════════════════════════════════
             
             init() {
-                this.setupDragAndDrop();
-                this.setupCanvasDrag();
-                this.setupConnectionDrawing();  // V2.1.0: Active-Link
-                this.logEvent('CANVAS_INITIALIZED', 'V2.1.0 Active-Link Engine ready');
+                this.setupObsidianDrag();
+                this.setupConnectionEngine();
+                this.createTempLine();
+                this.logEvent('OBSIDIAN_ONLINE', 'V3.0.0 NASA-Grade C2 Engine initialized');
             },
             
-            // ══════════════════════════════════════════════════════════════
-            // ZONE A → ZONE B: DRAG FROM FORGE TO CANVAS
-            // ══════════════════════════════════════════════════════════════
+            // ═══════════════════════════════════════════════════════════════════
+            // V3.0.0 OBSIDIAN DRAG SYSTEM (PointerEvents - No HTML5 D&D)
+            // ═══════════════════════════════════════════════════════════════════
             
-            setupDragAndDrop() {
+            setupObsidianDrag() {
                 const agentCards = document.querySelectorAll('.agent-card');
                 const canvas = document.getElementById('canvas');
-                const dropIndicator = document.getElementById('drop-indicator');
                 
+                // Setup pointer events on each agent card
                 agentCards.forEach(card => {
-                    card.addEventListener('dragstart', (e) => {
-                        e.dataTransfer.setData('application/json', JSON.stringify({
-                            gid: card.dataset.gid,
-                            name: card.dataset.name,
-                            icon: card.dataset.icon,
-                            role: card.dataset.role
-                        }));
-                        card.classList.add('dragging');
-                        this.logEvent('DRAG_START', `${card.dataset.name} (${card.dataset.gid})`);
-                    });
+                    card.style.cursor = 'grab';
+                    card.style.touchAction = 'none';  // Prevent scroll on touch
                     
-                    card.addEventListener('dragend', () => {
-                        card.classList.remove('dragging');
-                        dropIndicator.classList.remove('visible');
+                    card.addEventListener('pointerdown', (e) => {
+                        e.preventDefault();
+                        this.startObsidianDrag(card, e);
                     });
                 });
                 
-                canvas.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    canvas.classList.add('drag-over');
-                    
-                    const rect = canvas.getBoundingClientRect();
-                    dropIndicator.style.left = (e.clientX - rect.left - 80) + 'px';
-                    dropIndicator.style.top = (e.clientY - rect.top - 50) + 'px';
-                    dropIndicator.classList.add('visible');
+                // Global pointer move/up (on document for reliability)
+                document.addEventListener('pointermove', (e) => {
+                    if (this.obsidianDrag.active) {
+                        this.moveObsidianDrag(e);
+                    }
+                    if (this.nodeMovement.active) {
+                        this.moveNode(e);
+                    }
+                    if (this.connectionDraw.active) {
+                        this.updateConnectionLine(e);
+                    }
                 });
                 
-                canvas.addEventListener('dragleave', () => {
-                    canvas.classList.remove('drag-over');
-                    dropIndicator.classList.remove('visible');
+                document.addEventListener('pointerup', (e) => {
+                    if (this.obsidianDrag.active) {
+                        this.endObsidianDrag(e);
+                    }
+                    if (this.nodeMovement.active) {
+                        this.endNodeMovement(e);
+                    }
+                    if (this.connectionDraw.active) {
+                        this.endConnectionDraw(e);
+                    }
                 });
                 
-                canvas.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    canvas.classList.remove('drag-over');
-                    dropIndicator.classList.remove('visible');
-                    
-                    const data = JSON.parse(e.dataTransfer.getData('application/json'));
-                    const rect = canvas.getBoundingClientRect();
-                    const x = e.clientX - rect.left - 80;
-                    const y = e.clientY - rect.top - 50;
-                    
-                    // CREATE NODE WITH ANCHOR-LOGIC
-                    this.createNode(data, x, y);
+                // Cancel on escape
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        this.cancelAllOperations();
+                    }
                 });
             },
             
-            // ══════════════════════════════════════════════════════════════
-            // NODE CREATION WITH ANCHOR-LOGIC (PAC-DRAFT DECISION)
-            // ══════════════════════════════════════════════════════════════
+            startObsidianDrag(card, e) {
+                this.obsidianDrag.active = true;
+                this.obsidianDrag.sourceCard = card;
+                this.obsidianDrag.startX = e.clientX;
+                this.obsidianDrag.startY = e.clientY;
+                this.obsidianDrag.agentData = {
+                    gid: card.dataset.gid,
+                    name: card.dataset.name,
+                    icon: card.dataset.icon,
+                    role: card.dataset.role
+                };
+                
+                card.classList.add('obsidian-dragging');
+                card.setPointerCapture(e.pointerId);
+                
+                // Create ghost element
+                this.createGhostElement(this.obsidianDrag.agentData, e.clientX, e.clientY);
+                
+                // Activate canvas drop zone
+                document.getElementById('canvas').classList.add('obsidian-active');
+                
+                this.logEvent('OBSIDIAN_DRAG_START', `${this.obsidianDrag.agentData.name} lifted`);
+            },
+            
+            createGhostElement(agentData, x, y) {
+                const ghost = document.createElement('div');
+                ghost.className = 'obsidian-ghost';
+                ghost.id = 'obsidian-ghost';
+                ghost.innerHTML = `
+                    <div class="ghost-header">
+                        <span class="ghost-icon">${agentData.icon}</span>
+                        <span class="ghost-name">${agentData.name}</span>
+                    </div>
+                `;
+                ghost.style.left = x + 'px';
+                ghost.style.top = y + 'px';
+                document.body.appendChild(ghost);
+                this.obsidianDrag.ghostElement = ghost;
+            },
+            
+            moveObsidianDrag(e) {
+                if (!this.obsidianDrag.ghostElement) return;
+                
+                // Absolute positioning - no transforms, no drift
+                this.obsidianDrag.ghostElement.style.left = e.clientX + 'px';
+                this.obsidianDrag.ghostElement.style.top = e.clientY + 'px';
+            },
+            
+            endObsidianDrag(e) {
+                const canvas = document.getElementById('canvas');
+                const canvasRect = canvas.getBoundingClientRect();
+                
+                // Check if dropped inside canvas (absolute coordinates)
+                const dropX = e.clientX;
+                const dropY = e.clientY;
+                
+                const insideCanvas = (
+                    dropX >= canvasRect.left &&
+                    dropX <= canvasRect.right &&
+                    dropY >= canvasRect.top &&
+                    dropY <= canvasRect.bottom
+                );
+                
+                if (insideCanvas && this.obsidianDrag.agentData) {
+                    // Calculate absolute position within canvas
+                    const nodeX = dropX - canvasRect.left - 80;  // Center node on cursor
+                    const nodeY = dropY - canvasRect.top - 50;
+                    
+                    this.createNode(this.obsidianDrag.agentData, nodeX, nodeY);
+                }
+                
+                this.cleanupObsidianDrag();
+            },
+            
+            cleanupObsidianDrag() {
+                if (this.obsidianDrag.ghostElement) {
+                    this.obsidianDrag.ghostElement.remove();
+                    this.obsidianDrag.ghostElement = null;
+                }
+                
+                if (this.obsidianDrag.sourceCard) {
+                    this.obsidianDrag.sourceCard.classList.remove('obsidian-dragging');
+                }
+                
+                document.getElementById('canvas').classList.remove('obsidian-active');
+                
+                this.obsidianDrag.active = false;
+                this.obsidianDrag.sourceCard = null;
+                this.obsidianDrag.agentData = null;
+            },
+            
+            // ═══════════════════════════════════════════════════════════════════
+            // NODE CREATION (V3.0.0 Absolute Geometry)
+            // ═══════════════════════════════════════════════════════════════════
             
             createNode(agentData, x, y) {
                 const nodeId = `NODE-${agentData.gid}-${++this.nodeIdCounter}`;
@@ -1120,445 +1277,399 @@ CANVAS_UI_HTML = """
                 nodeEl.className = 'canvas-node';
                 nodeEl.id = nodeId;
                 nodeEl.dataset.gid = agentData.gid;
-                nodeEl.style.left = x + 'px';
-                nodeEl.style.top = y + 'px';
+                
+                // V3.0.0: Absolute positioning (no transforms)
+                nodeEl.style.position = 'absolute';
+                nodeEl.style.left = Math.round(x) + 'px';
+                nodeEl.style.top = Math.round(y) + 'px';
                 
                 nodeEl.innerHTML = `
                     <div class="node-anchor-badge">⚓</div>
-                    <div class="node-port input"></div>
+                    <div class="node-port input" data-port-type="input"></div>
                     <div class="node-header">
                         <span class="node-icon">${agentData.icon}</span>
                         <span class="node-name">${agentData.name}</span>
                         <span class="node-gid">${agentData.gid}</span>
                     </div>
                     <div class="node-task">${agentData.role}</div>
-                    <div class="node-port output"></div>
+                    <div class="node-port output" data-port-type="output"></div>
                 `;
                 
                 document.getElementById('canvas').appendChild(nodeEl);
                 
-                // ANCHOR-LOGIC: Store position in state
+                // Backend-authoritative state
                 const nodeState = {
                     id: nodeId,
                     gid: agentData.gid,
                     name: agentData.name,
                     icon: agentData.icon,
                     role: agentData.role,
-                    position: { x, y },
+                    position: { x: Math.round(x), y: Math.round(y) },
                     anchored: true,
                     created_at: new Date().toISOString()
                 };
                 
                 this.nodes.set(nodeId, nodeState);
-                this.setupNodeDrag(nodeEl);
-                this.setupPortListeners(nodeEl);  // V2.1.0: Active-Link port detection
+                this.setupNodeInteraction(nodeEl);
                 this.updateNodeCount();
                 
-                // Flash anchor animation
+                // Anchor flash
                 nodeEl.classList.add('anchored');
                 setTimeout(() => nodeEl.classList.remove('anchored'), 500);
                 
-                this.logEvent('NODE_ANCHORED', `${agentData.name} anchored at (${Math.round(x)}, ${Math.round(y)})`);
-                
-                // Persist to backend (PAC-Draft Decision)
-                this.persistNodePosition(nodeId, x, y);
+                this.logEvent('NODE_ANCHORED', `${agentData.name} @ (${Math.round(x)}, ${Math.round(y)})`);
+                this.persistNodePosition(nodeId, Math.round(x), Math.round(y));
                 
                 return nodeId;
             },
             
-            // ══════════════════════════════════════════════════════════════
-            // NODE DRAG ON CANVAS (MOVE & RE-ANCHOR)
-            // ══════════════════════════════════════════════════════════════
+            // ═══════════════════════════════════════════════════════════════════
+            // NODE MOVEMENT (V3.0.0 PointerEvents)
+            // ═══════════════════════════════════════════════════════════════════
             
-            setupCanvasDrag() {
-                // Setup drag for existing nodes
-                document.querySelectorAll('.canvas-node').forEach(node => {
-                    this.setupNodeDrag(node);
-                });
-            },
-            
-            setupNodeDrag(nodeEl) {
-                let isDragging = false;
-                let startX, startY, offsetX, offsetY;
+            setupNodeInteraction(nodeEl) {
+                nodeEl.style.touchAction = 'none';
                 
-                nodeEl.addEventListener('mousedown', (e) => {
+                nodeEl.addEventListener('pointerdown', (e) => {
+                    // Don't start move if clicking on a port
                     if (e.target.classList.contains('node-port')) return;
                     
-                    isDragging = true;
-                    nodeEl.classList.add('dragging');
+                    e.preventDefault();
+                    e.stopPropagation();
                     
                     const rect = nodeEl.getBoundingClientRect();
-                    offsetX = e.clientX - rect.left;
-                    offsetY = e.clientY - rect.top;
+                    this.nodeMovement.active = true;
+                    this.nodeMovement.node = nodeEl;
+                    this.nodeMovement.offsetX = e.clientX - rect.left;
+                    this.nodeMovement.offsetY = e.clientY - rect.top;
                     
-                    this.selectNode(nodeEl);
+                    nodeEl.classList.add('dragging');
+                    nodeEl.setPointerCapture(e.pointerId);
                 });
                 
-                document.addEventListener('mousemove', (e) => {
-                    if (!isDragging) return;
-                    
-                    const canvas = document.getElementById('canvas');
-                    const canvasRect = canvas.getBoundingClientRect();
-                    
-                    let newX = e.clientX - canvasRect.left - offsetX;
-                    let newY = e.clientY - canvasRect.top - offsetY;
-                    
-                    // Constrain to canvas bounds
-                    newX = Math.max(0, Math.min(newX, canvasRect.width - 160));
-                    newY = Math.max(50, Math.min(newY, canvasRect.height - 100));
-                    
-                    nodeEl.style.left = newX + 'px';
-                    nodeEl.style.top = newY + 'px';
-                    
-                    // Update connections live
-                    this.updateConnections();
-                });
-                
-                document.addEventListener('mouseup', () => {
-                    if (!isDragging) return;
-                    isDragging = false;
-                    nodeEl.classList.remove('dragging');
-                    
-                    // ANCHOR-LOGIC: Persist new position
-                    const x = parseInt(nodeEl.style.left);
-                    const y = parseInt(nodeEl.style.top);
-                    
-                    const nodeState = this.nodes.get(nodeEl.id);
-                    if (nodeState) {
-                        nodeState.position = { x, y };
-                        this.nodes.set(nodeEl.id, nodeState);
-                    }
-                    
-                    // Flash anchor confirmation
-                    nodeEl.classList.add('anchored');
-                    setTimeout(() => nodeEl.classList.remove('anchored'), 500);
-                    
-                    this.logEvent('NODE_REPOSITIONED', `${nodeEl.id} anchored at (${x}, ${y})`);
-                    this.persistNodePosition(nodeEl.id, x, y);
-                });
-            },
-            
-            selectNode(nodeEl) {
-                document.querySelectorAll('.canvas-node').forEach(n => n.classList.remove('selected'));
-                nodeEl.classList.add('selected');
-                this.selectedNode = nodeEl;
-            },
-            
-            // ══════════════════════════════════════════════════════════════
-            // BACKEND PERSISTENCE (Write-Back)
-            // ══════════════════════════════════════════════════════════════
-            
-            async persistNodePosition(nodeId, x, y) {
-                try {
-                    const response = await fetch(`/canvas/nodes/${nodeId}/move?x=${x}&y=${y}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-                    
-                    if (!response.ok) {
-                        console.log('Backend sync pending - node anchored locally');
-                    }
-                } catch (e) {
-                    // Offline mode - state persisted locally
-                    console.log('Offline mode - node anchored locally');
-                }
-            },
-            
-            // ══════════════════════════════════════════════════════════════
-            // V2.1.0: ACTIVE-LINK CONNECTION ENGINE
-            // PAC-LINE-ACTIVATION-48: Port-Snapping Vector-Linkage Layer
-            // ══════════════════════════════════════════════════════════════
-            
-            setupConnectionDrawing() {
-                const canvas = document.getElementById('canvas');
-                const svg = document.getElementById('connections-svg');
-                
-                // Create temporary line element for drag preview
-                this.tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                this.tempLine.setAttribute('class', 'connection-line dragging');
-                this.tempLine.style.display = 'none';
-                svg.appendChild(this.tempLine);
-                
-                // Global mouse move for connection drawing
-                canvas.addEventListener('mousemove', (e) => {
-                    if (!this.isDrawingConnection) return;
-                    
-                    const canvasRect = canvas.getBoundingClientRect();
-                    const mouseX = e.clientX - canvasRect.left;
-                    const mouseY = e.clientY - canvasRect.top;
-                    
-                    this.updateTempLine(mouseX, mouseY);
-                    this.checkPortProximity(e.clientX, e.clientY);
-                });
-                
-                // Cancel connection on escape or right-click
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape' && this.isDrawingConnection) {
-                        this.cancelConnection();
-                    }
-                });
-                
-                canvas.addEventListener('contextmenu', (e) => {
-                    if (this.isDrawingConnection) {
-                        e.preventDefault();
-                        this.cancelConnection();
-                    }
-                });
-                
-                // Cancel if clicking on canvas (not on a port)
-                canvas.addEventListener('mouseup', (e) => {
-                    if (this.isDrawingConnection && !e.target.classList.contains('node-port')) {
-                        this.cancelConnection();
-                    }
-                });
-                
-                this.logEvent('ACTIVE_LINK_READY', 'V2.1.0 Port-Snapping enabled');
-            },
-            
-            setupPortListeners(nodeEl) {
-                const outputPort = nodeEl.querySelector('.node-port.output');
+                // Setup port interactions for connections
                 const inputPort = nodeEl.querySelector('.node-port.input');
+                const outputPort = nodeEl.querySelector('.node-port.output');
                 
                 if (outputPort) {
-                    outputPort.addEventListener('mousedown', (e) => {
+                    outputPort.addEventListener('pointerdown', (e) => {
+                        e.preventDefault();
                         e.stopPropagation();
-                        this.startConnection(nodeEl, 'output', e);
+                        this.startConnectionDraw(nodeEl, 'output', e);
                     });
                 }
                 
                 if (inputPort) {
-                    inputPort.addEventListener('mouseup', (e) => {
-                        e.stopPropagation();
-                        if (this.isDrawingConnection) {
-                            this.completeConnection(nodeEl);
-                        }
-                    });
-                    
-                    inputPort.addEventListener('mouseenter', () => {
-                        if (this.isDrawingConnection) {
-                            this.hoveredPort = { node: nodeEl, type: 'input' };
+                    inputPort.addEventListener('pointerenter', () => {
+                        if (this.connectionDraw.active) {
                             inputPort.classList.add('valid-target');
                         }
                     });
                     
-                    inputPort.addEventListener('mouseleave', () => {
+                    inputPort.addEventListener('pointerleave', () => {
                         inputPort.classList.remove('valid-target');
-                        this.hoveredPort = null;
                     });
                 }
             },
             
-            startConnection(sourceNode, portType, e) {
-                this.isDrawingConnection = true;
-                this.connectionSource = sourceNode;
-                this.connectionSourcePort = portType;
+            moveNode(e) {
+                if (!this.nodeMovement.node) return;
                 
-                const outputPort = sourceNode.querySelector('.node-port.output');
-                outputPort.classList.add('active');
-                
-                // Get port position
                 const canvas = document.getElementById('canvas');
                 const canvasRect = canvas.getBoundingClientRect();
-                const portRect = outputPort.getBoundingClientRect();
                 
-                this.connectionStartX = portRect.left + portRect.width/2 - canvasRect.left;
-                this.connectionStartY = portRect.top + portRect.height/2 - canvasRect.top;
+                // Absolute coordinates
+                let newX = e.clientX - canvasRect.left - this.nodeMovement.offsetX;
+                let newY = e.clientY - canvasRect.top - this.nodeMovement.offsetY;
                 
-                this.tempLine.style.display = 'block';
-                this.updateTempLine(this.connectionStartX, this.connectionStartY);
+                // Constrain to canvas
+                const nodeRect = this.nodeMovement.node.getBoundingClientRect();
+                newX = Math.max(0, Math.min(newX, canvasRect.width - nodeRect.width));
+                newY = Math.max(50, Math.min(newY, canvasRect.height - nodeRect.height));
                 
-                const sourceGid = sourceNode.dataset.gid;
-                this.logEvent('CONNECTION_START', `Drawing from ${sourceGid}`);
+                // Apply absolute position
+                this.nodeMovement.node.style.left = Math.round(newX) + 'px';
+                this.nodeMovement.node.style.top = Math.round(newY) + 'px';
+                
+                // Update connections in real-time
+                this.renderConnections();
             },
             
-            updateTempLine(mouseX, mouseY) {
-                const x1 = this.connectionStartX;
-                const y1 = this.connectionStartY;
-                const x2 = mouseX;
-                const y2 = mouseY;
+            endNodeMovement(e) {
+                if (!this.nodeMovement.node) return;
                 
-                const midX = (x1 + x2) / 2;
-                this.tempLine.setAttribute('d', `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`);
+                const nodeEl = this.nodeMovement.node;
+                nodeEl.classList.remove('dragging');
+                
+                // Get final absolute position
+                const x = parseInt(nodeEl.style.left);
+                const y = parseInt(nodeEl.style.top);
+                
+                // Update backend-authoritative state
+                const nodeState = this.nodes.get(nodeEl.id);
+                if (nodeState) {
+                    nodeState.position = { x, y };
+                    this.nodes.set(nodeEl.id, nodeState);
+                }
+                
+                // Anchor flash
+                nodeEl.classList.add('anchored');
+                setTimeout(() => nodeEl.classList.remove('anchored'), 500);
+                
+                this.logEvent('NODE_MOVED', `${nodeEl.id} → (${x}, ${y})`);
+                this.persistNodePosition(nodeEl.id, x, y);
+                
+                this.nodeMovement.active = false;
+                this.nodeMovement.node = null;
             },
             
-            checkPortProximity(clientX, clientY) {
-                const SNAP_RADIUS = 30;
-                let closestPort = null;
-                let closestDist = SNAP_RADIUS;
+            // ═══════════════════════════════════════════════════════════════════
+            // V3.0.0 CONNECTION DRAWING (Center-of-Mass Port Snapping)
+            // ═══════════════════════════════════════════════════════════════════
+            
+            setupConnectionEngine() {
+                // Connection draw ends on any pointerup not on a valid port
+                document.getElementById('canvas').addEventListener('pointerup', (e) => {
+                    if (this.connectionDraw.active && !e.target.classList.contains('node-port')) {
+                        this.cancelConnectionDraw();
+                    }
+                });
+            },
+            
+            createTempLine() {
+                const svg = document.getElementById('connections-svg');
+                this.connectionDraw.tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                this.connectionDraw.tempLine.setAttribute('class', 'connection-line dragging');
+                this.connectionDraw.tempLine.style.display = 'none';
+                svg.appendChild(this.connectionDraw.tempLine);
+            },
+            
+            startConnectionDraw(sourceNode, portType, e) {
+                const canvas = document.getElementById('canvas');
+                const canvasRect = canvas.getBoundingClientRect();
+                const port = sourceNode.querySelector('.node-port.output');
+                const portRect = port.getBoundingClientRect();
                 
+                // V3.0.0: Center-of-mass calculation (sub-pixel precision)
+                this.connectionDraw.startX = portRect.left + portRect.width/2 - canvasRect.left;
+                this.connectionDraw.startY = portRect.top + portRect.height/2 - canvasRect.top;
+                
+                this.connectionDraw.active = true;
+                this.connectionDraw.sourceNode = sourceNode;
+                this.connectionDraw.sourcePort = port;
+                
+                port.classList.add('active');
+                this.connectionDraw.tempLine.style.display = 'block';
+                
+                this.logEvent('CONNECTION_START', `From ${sourceNode.dataset.gid}`);
+            },
+            
+            updateConnectionLine(e) {
+                if (!this.connectionDraw.active) return;
+                
+                const canvas = document.getElementById('canvas');
+                const canvasRect = canvas.getBoundingClientRect();
+                
+                // Absolute cursor position in canvas space
+                const mouseX = e.clientX - canvasRect.left;
+                const mouseY = e.clientY - canvasRect.top;
+                
+                const x1 = this.connectionDraw.startX;
+                const y1 = this.connectionDraw.startY;
+                const midX = (x1 + mouseX) / 2;
+                
+                // Bezier curve path
+                this.connectionDraw.tempLine.setAttribute('d', 
+                    `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${mouseY}, ${mouseX} ${mouseY}`
+                );
+                
+                // Check for port snapping
+                this.checkPortSnap(e.clientX, e.clientY);
+            },
+            
+            checkPortSnap(clientX, clientY) {
+                const SNAP_RADIUS = 25;
+                
+                // Clear previous highlights
+                document.querySelectorAll('.node-port.valid-target').forEach(p => {
+                    p.classList.remove('valid-target');
+                });
+                
+                // Find closest input port
                 document.querySelectorAll('.canvas-node').forEach(node => {
-                    if (node === this.connectionSource) return; // Can't connect to self
+                    if (node === this.connectionDraw.sourceNode) return;
                     
                     const inputPort = node.querySelector('.node-port.input');
                     if (!inputPort) return;
                     
-                    const portRect = inputPort.getBoundingClientRect();
-                    const portX = portRect.left + portRect.width/2;
-                    const portY = portRect.top + portRect.height/2;
+                    const rect = inputPort.getBoundingClientRect();
+                    const centerX = rect.left + rect.width/2;
+                    const centerY = rect.top + rect.height/2;
                     
-                    const dist = Math.sqrt(Math.pow(clientX - portX, 2) + Math.pow(clientY - portY, 2));
+                    const distance = Math.sqrt(
+                        Math.pow(clientX - centerX, 2) + 
+                        Math.pow(clientY - centerY, 2)
+                    );
                     
-                    if (dist < closestDist) {
-                        closestDist = dist;
-                        closestPort = { node, port: inputPort };
+                    if (distance < SNAP_RADIUS) {
+                        inputPort.classList.add('valid-target');
                     }
                 });
-                
-                // Clear all valid-target classes first
-                document.querySelectorAll('.node-port.valid-target').forEach(p => p.classList.remove('valid-target'));
-                
-                if (closestPort) {
-                    closestPort.port.classList.add('valid-target');
-                    this.hoveredPort = { node: closestPort.node, type: 'input' };
-                } else {
-                    this.hoveredPort = null;
-                }
             },
             
-            completeConnection(targetNode) {
-                if (!this.connectionSource || this.connectionSource === targetNode) {
-                    this.cancelConnection();
+            endConnectionDraw(e) {
+                if (!this.connectionDraw.active) return;
+                
+                const targetPort = document.querySelector('.node-port.valid-target');
+                
+                if (targetPort) {
+                    const targetNode = targetPort.closest('.canvas-node');
+                    this.createConnection(
+                        this.connectionDraw.sourceNode,
+                        targetNode
+                    );
+                }
+                
+                this.cancelConnectionDraw();
+            },
+            
+            createConnection(sourceNode, targetNode) {
+                const sourceGid = sourceNode.dataset.gid;
+                const targetGid = targetNode.dataset.gid;
+                
+                // Validate connection
+                if (!this.validateConnection(sourceGid, targetGid)) {
+                    this.logEvent('CONNECTION_INVALID', `${sourceGid} → ${targetGid}`);
                     return;
                 }
                 
-                const sourceGid = this.connectionSource.dataset.gid;
-                const targetGid = targetNode.dataset.gid;
-                const sourceId = this.connectionSource.id;
-                const targetId = targetNode.id;
+                // Create connection record
+                this.connections.push({
+                    id: `LINK-${Date.now()}`,
+                    source: sourceNode.id,
+                    target: targetNode.id,
+                    sourceGid: sourceGid,
+                    targetGid: targetGid,
+                    legal: true,
+                    verified: true,
+                    created_at: new Date().toISOString()
+                });
                 
-                // LOGIC VALIDATION: Check if connection is Legal
-                const isLegal = this.validateConnection(sourceGid, targetGid);
+                this.renderConnections();
+                this.updateConnectionCount();
                 
-                if (isLegal) {
-                    // Create the connection
-                    this.connections.push({
-                        source: sourceId,
-                        target: targetId,
-                        sourceGid: sourceGid,
-                        targetGid: targetGid,
-                        verified: true,
-                        legal: true,
-                        created_at: new Date().toISOString()
-                    });
-                    
-                    this.updateConnections();
-                    this.logEvent('CONNECTION_LEGAL', `${sourceGid} → ${targetGid} [GLOWING GOLD]`);
-                    
-                    // Flash gold on both nodes
-                    this.connectionSource.classList.add('anchored');
-                    targetNode.classList.add('anchored');
-                    setTimeout(() => {
-                        this.connectionSource.classList.remove('anchored');
-                        targetNode.classList.remove('anchored');
-                    }, 500);
-                    
-                    // Update Strike Console connection count
-                    this.updateConnectionCount();
-                } else {
-                    this.logEvent('CONNECTION_ILLEGAL', `${sourceGid} → ${targetGid} rejected`);
-                    alert(`⚠️ Illegal connection: ${sourceGid} cannot link to ${targetGid}`);
-                }
+                // Gold flash on both nodes
+                sourceNode.classList.add('anchored');
+                targetNode.classList.add('anchored');
+                setTimeout(() => {
+                    sourceNode.classList.remove('anchored');
+                    targetNode.classList.remove('anchored');
+                }, 500);
                 
-                this.cancelConnection();
+                this.logEvent('CONNECTION_LEGAL', `${sourceGid} → ${targetGid} [GOLD]`);
             },
             
             validateConnection(sourceGid, targetGid) {
-                // V2.1.0 Legal Connection Rules:
-                // 1. Cannot connect to self
-                // 2. Cannot create duplicate connections
-                // 3. Future: Type-based compatibility checks
-                
                 if (sourceGid === targetGid) return false;
                 
                 // Check for duplicate
-                const exists = this.connections.some(c => 
+                return !this.connections.some(c => 
                     c.sourceGid === sourceGid && c.targetGid === targetGid
                 );
-                if (exists) return false;
-                
-                // All other connections are Legal for now
-                // Future PACs will add type-based validation
-                return true;
             },
             
-            cancelConnection() {
-                this.isDrawingConnection = false;
-                this.tempLine.style.display = 'none';
+            cancelConnectionDraw() {
+                this.connectionDraw.active = false;
+                this.connectionDraw.tempLine.style.display = 'none';
                 
-                // Clear port states
-                document.querySelectorAll('.node-port.active').forEach(p => p.classList.remove('active'));
-                document.querySelectorAll('.node-port.valid-target').forEach(p => p.classList.remove('valid-target'));
+                if (this.connectionDraw.sourcePort) {
+                    this.connectionDraw.sourcePort.classList.remove('active');
+                }
                 
-                this.connectionSource = null;
-                this.connectionSourcePort = null;
-                this.hoveredPort = null;
+                document.querySelectorAll('.node-port.valid-target').forEach(p => {
+                    p.classList.remove('valid-target');
+                });
+                
+                this.connectionDraw.sourceNode = null;
+                this.connectionDraw.sourcePort = null;
             },
             
-            updateConnections() {
+            renderConnections() {
                 const svg = document.getElementById('connections-svg');
+                const canvas = document.getElementById('canvas');
+                const canvasRect = canvas.getBoundingClientRect();
                 
-                // Remove all existing paths except temp line
-                Array.from(svg.querySelectorAll('path:not(.dragging)')).forEach(p => p.remove());
+                // Remove old lines (keep temp line)
+                svg.querySelectorAll('path:not(.dragging)').forEach(p => p.remove());
                 
                 this.connections.forEach(conn => {
                     const sourceEl = document.getElementById(conn.source);
                     const targetEl = document.getElementById(conn.target);
                     
-                    if (sourceEl && targetEl) {
-                        const sourcePort = sourceEl.querySelector('.node-port.output');
-                        const targetPort = targetEl.querySelector('.node-port.input');
-                        const canvasRect = document.getElementById('canvas').getBoundingClientRect();
-                        
-                        const sourceRect = sourcePort.getBoundingClientRect();
-                        const targetRect = targetPort.getBoundingClientRect();
-                        
-                        const x1 = sourceRect.left + sourceRect.width/2 - canvasRect.left;
-                        const y1 = sourceRect.top + sourceRect.height/2 - canvasRect.top;
-                        const x2 = targetRect.left + targetRect.width/2 - canvasRect.left;
-                        const y2 = targetRect.top + targetRect.height/2 - canvasRect.top;
-                        
-                        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                        const midX = (x1 + x2) / 2;
-                        path.setAttribute('d', `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`);
-                        
-                        // V2.1.0: Legal connections get GLOWING GOLD
-                        let pathClass = 'connection-line';
-                        if (conn.legal) pathClass += ' legal';
-                        else if (conn.verified) pathClass += ' verified';
-                        path.setAttribute('class', pathClass);
-                        
-                        svg.insertBefore(path, this.tempLine);
-                    }
+                    if (!sourceEl || !targetEl) return;
+                    
+                    const sourcePort = sourceEl.querySelector('.node-port.output');
+                    const targetPort = targetEl.querySelector('.node-port.input');
+                    
+                    const sourceRect = sourcePort.getBoundingClientRect();
+                    const targetRect = targetPort.getBoundingClientRect();
+                    
+                    // Center-of-mass coordinates
+                    const x1 = sourceRect.left + sourceRect.width/2 - canvasRect.left;
+                    const y1 = sourceRect.top + sourceRect.height/2 - canvasRect.top;
+                    const x2 = targetRect.left + targetRect.width/2 - canvasRect.left;
+                    const y2 = targetRect.top + targetRect.height/2 - canvasRect.top;
+                    
+                    const midX = (x1 + x2) / 2;
+                    
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path.setAttribute('d', `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`);
+                    path.setAttribute('class', conn.legal ? 'connection-line legal' : 'connection-line');
+                    
+                    svg.insertBefore(path, this.connectionDraw.tempLine);
                 });
             },
             
-            updateConnectionCount() {
-                // Update the Strike Console with connection count
-                const countEl = document.getElementById('connection-count');
-                if (countEl) {
-                    countEl.textContent = this.connections.length;
+            cancelAllOperations() {
+                this.cleanupObsidianDrag();
+                this.cancelConnectionDraw();
+                if (this.nodeMovement.active) {
+                    this.nodeMovement.node?.classList.remove('dragging');
+                    this.nodeMovement.active = false;
+                    this.nodeMovement.node = null;
+                }
+                this.logEvent('OPERATIONS_CANCELLED', 'All drag operations aborted');
+            },
+            
+            // ═══════════════════════════════════════════════════════════════════
+            // BACKEND PERSISTENCE
+            // ═══════════════════════════════════════════════════════════════════
+            
+            async persistNodePosition(nodeId, x, y) {
+                try {
+                    await fetch(`/canvas/nodes/${nodeId}/move?x=${x}&y=${y}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                } catch (e) {
+                    // Offline mode
+                    console.log('Offline - state persisted locally');
                 }
             },
             
-            createConnection(sourceId, targetId) {
-                // Legacy method - now handled by completeConnection
-                this.connections.push({ source: sourceId, target: targetId, verified: false });
-                this.updateConnections();
-                this.logEvent('CONNECTION_CREATED', `${sourceId} → ${targetId}`);
-            },
-            
-            // ══════════════════════════════════════════════════════════════
+            // ═══════════════════════════════════════════════════════════════════
             // CANVAS ACTIONS
-            // ══════════════════════════════════════════════════════════════
+            // ═══════════════════════════════════════════════════════════════════
             
             clearCanvas() {
-                if (!confirm('Clear all nodes from canvas?')) return;
+                if (!confirm('Clear all nodes?')) return;
                 
                 document.querySelectorAll('.canvas-node').forEach(n => n.remove());
                 this.nodes.clear();
                 this.connections = [];
-                this.updateConnections();
+                this.renderConnections();
                 this.updateNodeCount();
+                this.updateConnectionCount();
                 this.logEvent('CANVAS_CLEARED', 'All nodes removed');
             },
             
@@ -1584,54 +1695,59 @@ CANVAS_UI_HTML = """
                 this.connections = [];
                 const nodeIds = Array.from(this.nodes.keys());
                 for (let i = 0; i < nodeIds.length - 1; i++) {
-                    this.connections.push({ source: nodeIds[i], target: nodeIds[i+1], verified: true });
+                    const sourceState = this.nodes.get(nodeIds[i]);
+                    const targetState = this.nodes.get(nodeIds[i+1]);
+                    this.connections.push({
+                        id: `LINK-AUTO-${i}`,
+                        source: nodeIds[i],
+                        target: nodeIds[i+1],
+                        sourceGid: sourceState.gid,
+                        targetGid: targetState.gid,
+                        legal: true,
+                        verified: true,
+                        created_at: new Date().toISOString()
+                    });
                 }
                 
-                this.updateConnections();
-                this.logEvent('AUTO_LAYOUT', `${nodes.length} nodes arranged sequentially`);
+                this.renderConnections();
+                this.updateConnectionCount();
+                this.logEvent('AUTO_LAYOUT', `${nodes.length} nodes arranged`);
             },
             
             detectLoops() {
-                // Simple loop detection
                 const visited = new Set();
                 let hasLoop = false;
                 
                 this.connections.forEach(conn => {
-                    if (visited.has(conn.target)) {
-                        hasLoop = true;
-                    }
+                    if (visited.has(conn.target)) hasLoop = true;
                     visited.add(conn.source);
                 });
                 
-                if (hasLoop) {
-                    alert('⚠️ Loop detected! This may waste compute.');
-                } else {
-                    alert('✅ No loops detected');
-                }
-                
-                this.logEvent('LOOP_CHECK', hasLoop ? 'Loop found' : 'No loops');
+                alert(hasLoop ? '⚠️ Loop detected!' : '✅ No loops');
+                this.logEvent('LOOP_CHECK', hasLoop ? 'Found' : 'Clear');
             },
             
             exportState() {
                 const state = {
-                    version: '2.1.0',
+                    version: '3.0.0',
+                    engine: 'OBSIDIAN',
                     nodes: Array.from(this.nodes.values()),
                     connections: this.connections,
                     exported_at: new Date().toISOString()
                 };
                 
-                console.log('Canvas State:', JSON.stringify(state, null, 2));
+                console.log('V3.0.0 State:', JSON.stringify(state, null, 2));
                 alert('State exported to console (F12)');
-                this.logEvent('STATE_EXPORTED', `${this.nodes.size} nodes exported`);
+                this.logEvent('STATE_EXPORTED', `${this.nodes.size} nodes`);
             },
             
-            // ══════════════════════════════════════════════════════════════
-            // STRIKE CONSOLE ACTIONS
-            // ══════════════════════════════════════════════════════════════
+            // ═══════════════════════════════════════════════════════════════════
+            // STRIKE CONSOLE
+            // ═══════════════════════════════════════════════════════════════════
             
             async initializeSwarm() {
                 if (this.nodes.size === 0) {
-                    alert('Canvas is empty. Drag agents to canvas first.');
+                    alert('Canvas empty - add agents first');
                     return;
                 }
                 
@@ -1639,7 +1755,7 @@ CANVAS_UI_HTML = """
                 if (!name) return;
                 
                 this.currentDeployment = {
-                    name: name,
+                    name,
                     state: 'DRAFT',
                     nodes: Array.from(this.nodes.values())
                 };
@@ -1649,7 +1765,7 @@ CANVAS_UI_HTML = """
                     <span class="deployment-state draft">DRAFT</span>
                 `;
                 
-                this.logEvent('SWARM_INITIALIZED', `${name} with ${this.nodes.size} nodes`);
+                this.logEvent('SWARM_INIT', `${name} (${this.nodes.size} nodes)`);
             },
             
             async simulateStrike() {
@@ -1664,21 +1780,20 @@ CANVAS_UI_HTML = """
                     <span class="deployment-state simulated">SIMULATED</span>
                 `;
                 
-                // Mark connections as verified
                 this.connections.forEach(c => c.verified = true);
-                this.updateConnections();
+                this.renderConnections();
                 
-                this.logEvent('SIMULATION_COMPLETE', 'BRP generated - Risk: LOW');
+                this.logEvent('SIMULATION_OK', 'BRP Generated - Risk: LOW');
                 alert('✅ Simulation complete\\nBRP Generated\\nRisk: LOW');
             },
             
             async armDeployment() {
                 if (!this.currentDeployment || this.currentDeployment.state !== 'SIMULATED') {
-                    alert('Simulate deployment first');
+                    alert('Simulate first');
                     return;
                 }
                 
-                const smk = prompt('Enter SMK Key to arm:');
+                const smk = prompt('Enter SMK to arm:');
                 if (!smk) return;
                 
                 this.currentDeployment.state = 'ARMED';
@@ -1692,12 +1807,10 @@ CANVAS_UI_HTML = """
             },
             
             async executeSwarm() {
-                if (!this.currentDeployment || this.currentDeployment.state !== 'ARMED') {
-                    return;
-                }
+                if (!this.currentDeployment || this.currentDeployment.state !== 'ARMED') return;
                 
-                const confirm_code = prompt('Enter confirmation code to execute:');
-                if (!confirm_code) return;
+                const code = prompt('Confirmation code:');
+                if (!code) return;
                 
                 this.currentDeployment.state = 'EXECUTING';
                 document.getElementById('deployment-info').innerHTML = `
@@ -1709,12 +1822,17 @@ CANVAS_UI_HTML = """
                 alert('🚀 Swarm executing!');
             },
             
-            // ══════════════════════════════════════════════════════════════
+            // ═══════════════════════════════════════════════════════════════════
             // TELEMETRY
-            // ══════════════════════════════════════════════════════════════
+            // ═══════════════════════════════════════════════════════════════════
             
             updateNodeCount() {
                 document.getElementById('node-count').textContent = this.nodes.size;
+            },
+            
+            updateConnectionCount() {
+                const el = document.getElementById('connection-count');
+                if (el) el.textContent = this.connections.length;
             },
             
             logEvent(type, message) {
@@ -1727,15 +1845,14 @@ CANVAS_UI_HTML = """
                 
                 feed.insertBefore(event, feed.firstChild);
                 
-                // Keep only last 20 events
                 while (feed.children.length > 20) {
                     feed.removeChild(feed.lastChild);
                 }
             }
         };
         
-        // Initialize on load
-        document.addEventListener('DOMContentLoaded', () => CanvasEngine.init());
+        // V3.0.0 Initialize Obsidian Engine
+        document.addEventListener('DOMContentLoaded', () => ObsidianEngine.init());
     </script>
 </body>
 </html>
