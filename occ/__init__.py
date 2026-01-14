@@ -13,11 +13,15 @@ Components:
 - ARRCounter: Live financial odometer
 - KillSwitch: Hardware-level emergency stop
 - SovereignKeyManager: Architect authentication
+- SovereignCommandCanvas: Visual Swarm Builder (PAC-CANVAS-DEPLOY-39)
+- AgentForge: Draggable agent roster
+- LogicCanvas: Node-based workflow editor
+- StrikeConsole: Deployment execution
 
 Author: BENSON-GID-00
 Authority: ARCHITECT-JEFFREY
 Epoch: EPOCH_001
-PAC: PAC-OCC-COMMAND-34
+PAC: PAC-OCC-COMMAND-34, PAC-CANVAS-DEPLOY-39
 """
 
 from occ.command_center import (
@@ -96,4 +100,58 @@ __all__ = [
     "CURRENT_ARR_USD",
     "TOTAL_GATES",
     "GATE_GRID_SIZE",
+]
+
+# Canvas exports
+from occ.command_canvas import (
+    SovereignCommandCanvas,
+    AgentForge,
+    LogicCanvas,
+    StrikeConsole,
+    LogicPreFlight,
+    SwarmAgent,
+    CanvasNode,
+    CanvasConnection,
+    SwarmDeployment,
+    BinaryReasonProof,
+    AgentStatus,
+    NodeType,
+    ConnectionType,
+    SwarmState,
+    EnclaveLockReason,
+    launch_command_canvas,
+    CANVAS_VERSION,
+    MAX_AGENTS_STANDARD,
+    MAX_AGENTS_CLUSTERED,
+)
+
+__all__ += [
+    # Canvas components
+    "SovereignCommandCanvas",
+    "AgentForge",
+    "LogicCanvas",
+    "StrikeConsole",
+    "LogicPreFlight",
+    
+    # Canvas data classes
+    "SwarmAgent",
+    "CanvasNode",
+    "CanvasConnection",
+    "SwarmDeployment",
+    "BinaryReasonProof",
+    
+    # Canvas enums
+    "AgentStatus",
+    "NodeType",
+    "ConnectionType",
+    "SwarmState",
+    "EnclaveLockReason",
+    
+    # Canvas entry point
+    "launch_command_canvas",
+    
+    # Canvas constants
+    "CANVAS_VERSION",
+    "MAX_AGENTS_STANDARD",
+    "MAX_AGENTS_CLUSTERED",
 ]
