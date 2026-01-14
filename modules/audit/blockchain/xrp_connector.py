@@ -209,11 +209,11 @@ class XRPLConnector:
                 
                 # For now, use mock connection for testing
                 self._connected = True
-                logger.info(f"Connected to XRPL {self.config.network.value}")
+                logger.info("Connected to XRPL %s", self.config.network.value)
                 return True
                 
             except Exception as e:
-                logger.error(f"Failed to connect to XRPL: {e}")
+                logger.error("Failed to connect to XRPL: %s", e)
                 self._connected = False
                 return False
     
@@ -234,10 +234,11 @@ class XRPLConnector:
             # In production: generate_faucet_wallet(client)
             pass
     
-    def anchor_to_xrpl(self, 
-                        merkle_root: str,
-                        metadata: Optional[Dict[str, Any]] = None,
-                        ) -> TransactionReceipt:
+    def anchor_to_xrpl(
+        self,
+        merkle_root: str,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> TransactionReceipt:
         """
         Anchor a Merkle root hash to XRP Ledger.
         
@@ -271,7 +272,7 @@ class XRPLConnector:
                 "version": "1.0",
             }
             if metadata:
-                memo_data["metadata"] = metadata
+                memo_data["metadata"] = json.dumps(metadata)
             
             memo_hex = json.dumps(memo_data).encode().hex()
             
@@ -295,7 +296,7 @@ class XRPLConnector:
                     
                 except Exception as e:
                     last_error = e
-                    logger.warning(f"XRPL anchor attempt {attempt + 1} failed: {e}")
+                    logger.warning("XRPL anchor attempt %d failed: %s", attempt + 1, e)
                     if attempt < self.config.retry_attempts - 1:
                         time.sleep(self.config.retry_delay_seconds * (2 ** attempt))
             
@@ -313,9 +314,14 @@ class XRPLConnector:
         2. Autofill sequence and fee
         3. Sign with wallet
         4. Submit and wait for validation
+        
+        Args:
+            merkle_root: The merkle root hash being anchored
+            memo_hex: Hex-encoded memo data for the transaction
         """
         # Mock implementation for testing
         # In production, would use actual XRPL submission
+        _ = memo_hex  # Will be used in production XRPL transaction
         
         now = datetime.now(timezone.utc)
         tx_hash = hashlib.sha256(
@@ -335,7 +341,7 @@ class XRPLConnector:
             network=self.config.network,
         )
         
-        logger.info(f"Anchored merkle root to XRPL: {tx_hash}")
+        logger.info("Anchored merkle root to XRPL: %s", tx_hash)
         return receipt
     
     def verify_xrpl_anchor(self, 
@@ -372,7 +378,7 @@ class XRPLConnector:
                 return True, None
                 
             except Exception as e:
-                logger.error(f"Failed to verify XRPL anchor: {e}")
+                logger.error("Failed to verify XRPL anchor: %s", e)
                 return False, None
     
     def get_transaction_proof(self, tx_hash: str) -> Optional[AnchorProof]:

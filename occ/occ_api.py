@@ -22,18 +22,21 @@ PAC: PAC-OCC-COMMAND-34
 import json
 import hmac
 import hashlib
+import asyncio
 from datetime import datetime, timezone
 from typing import Optional
 from functools import wraps
 
 try:
-    from fastapi import FastAPI, HTTPException, Header, Depends, Request
+    from fastapi import FastAPI, HTTPException, Header, Depends, Request, WebSocket, WebSocketDisconnect
     from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
     from fastapi.middleware.cors import CORSMiddleware
     from pydantic import BaseModel
     FASTAPI_AVAILABLE = True
+    WEBSOCKET_AVAILABLE = True
 except ImportError:
     FASTAPI_AVAILABLE = False
+    WEBSOCKET_AVAILABLE = False
     FastAPI = None
 
 from occ.command_center import (
@@ -747,6 +750,20 @@ def create_occ_app() -> "FastAPI":
     if not FASTAPI_AVAILABLE:
         raise ImportError("FastAPI not available")
     
+    from pathlib import Path
+    
+    # Import UI Push Service for WebSocket support
+    from occ.ui_push_service import (
+        get_session_manager,
+        get_push_service,
+        handle_websocket_connection,
+        AgentStatePayload,
+        CanvasStatePayload,
+        TelemetryPayload,
+        CURRENT_SWARM_ID,
+    )
+    from occ.command_canvas import AgentForge, SovereignCommandCanvas, SwarmState
+    
     app = FastAPI(
         title="OCC Command Center",
         description="Operators Control in Command - ChainBridge Sovereign Systems",
@@ -761,16 +778,124 @@ def create_occ_app() -> "FastAPI":
         allow_headers=["*"],
     )
     
+    # Initialize singleton services
+    session_manager = get_session_manager()
+    push_service = get_push_service()
+    agent_forge = AgentForge()
+    command_canvas = SovereignCommandCanvas()
+    occ = get_occ()
+    
+    # ─────────────────────────────────────────────────────────────────────────
+    # STATE PROVIDERS FOR WEBSOCKET BROADCAST
+    # ─────────────────────────────────────────────────────────────────────────
+    
+    def provide_agent_state() -> AgentStatePayload:
+        """Provide current agent forge state"""
+        roster = agent_forge.get_roster()
+        agents = [a.to_dict() for a in agent_forge.agents.values()]
+        return AgentStatePayload(
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            swarm_id=CURRENT_SWARM_ID,
+            agents=agents,
+            active_count=roster.get("active", 0),
+            deployed_count=roster.get("deployed", 0),
+            total_count=roster.get("total_agents", 10)
+        )
+    
+    def provide_canvas_state() -> CanvasStatePayload:
+        """Provide current canvas state"""
+        state = command_canvas.get_canvas_state()
+        return CanvasStatePayload(
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            swarm_id=CURRENT_SWARM_ID,
+            nodes=[n.to_dict() for n in state.get("nodes", [])],
+            connections=[c.to_dict() for c in state.get("connections", [])],
+            execution_state=state.get("execution_state", "IDLE")
+        )
+    
+    def provide_telemetry() -> TelemetryPayload:
+        """Provide current telemetry"""
+        dashboard = occ.get_dashboard_state()
+        gate_stats = dashboard.get("gate_stats", {})
+        return TelemetryPayload(
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            arr_usd=dashboard.get("arr_usd", 13197500.00),
+            arr_target_usd=100000000.00,
+            arr_progress_pct=dashboard.get("arr_progress", 13.2),
+            gates_compliant=gate_stats.get("compliant", 9950),
+            gates_blocked=gate_stats.get("blocked", 50),
+            gates_total=10000,
+            lanes_active=sum(1 for l in dashboard.get("lanes", []) if l.get("status") == "EXECUTING"),
+            epoch="EPOCH_001"
+        )
+    
+    # Register state providers
+    push_service.register_state_provider("agents", provide_agent_state)
+    push_service.register_state_provider("canvas", provide_canvas_state)
+    push_service.register_state_provider("telemetry", provide_telemetry)
+    
+    # ─────────────────────────────────────────────────────────────────────────
+    # WEBSOCKET ENDPOINT - PAC-UI-HANDSHAKE-INIT-42
+    # ─────────────────────────────────────────────────────────────────────────
+    
+    @app.websocket("/ws/occ")
+    async def websocket_endpoint(websocket: WebSocket):
+        """WebSocket endpoint for live OCC updates"""
+        await handle_websocket_connection(websocket, session_manager, push_service)
+    
+    @app.on_event("startup")
+    async def startup_event():
+        """Start push service on app startup"""
+        await push_service.start()
+        print("[OCC] UI Push Service started - WebSocket bridge active")
+    
+    @app.on_event("shutdown")
+    async def shutdown_event():
+        """Stop push service on app shutdown"""
+        await push_service.stop()
+    
     # Mount OCC router
     app.include_router(create_occ_router())
     
+    # ─────────────────────────────────────────────────────────────────────────
+    # SOVEREIGN ENTRY LANDING PAGE - PAC-LANDING-PAGE-41
+    # ─────────────────────────────────────────────────────────────────────────
+    
     @app.get("/", response_class=HTMLResponse)
-    async def root():
+    async def sovereign_entry():
+        """Sovereign Entry landing page - SMK authentication portal"""
+        template_path = Path(__file__).parent / "templates" / "login.html"
+        if template_path.exists():
+            return HTMLResponse(content=template_path.read_text())
+        # Fallback to direct dashboard if template missing
+        return HTMLResponse(content=OCC_DASHBOARD_HTML)
+    
+    @app.get("/occ/canvas", response_class=HTMLResponse)
+    async def occ_canvas():
+        """Visual OCC Command Canvas - post-authentication dashboard"""
+        template_path = Path(__file__).parent / "templates" / "canvas.html"
+        if template_path.exists():
+            return HTMLResponse(content=template_path.read_text())
         return HTMLResponse(content=OCC_DASHBOARD_HTML)
     
     @app.get("/occ/ui", response_class=HTMLResponse)
     async def occ_ui():
+        """Legacy UI endpoint - redirects to canvas"""
         return HTMLResponse(content=OCC_DASHBOARD_HTML)
+    
+    # ─────────────────────────────────────────────────────────────────────────
+    # SESSION STATUS ENDPOINT
+    # ─────────────────────────────────────────────────────────────────────────
+    
+    @app.get("/occ/session-status")
+    async def session_status():
+        """Get current WebSocket session status"""
+        return {
+            "active_sessions": session_manager.get_session_count(),
+            "push_service_running": push_service._running,
+            "swarm_id": CURRENT_SWARM_ID,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
     
     return app
 
@@ -781,7 +906,9 @@ if __name__ == "__main__":
     print("=" * 80)
     print("LAUNCHING OCC COMMAND CENTER")
     print("=" * 80)
-    print("Open: http://localhost:8080/occ/ui")
-    print("API:  http://localhost:8080/occ/admin")
+    print("HTTP:      http://localhost:8080/")
+    print("Canvas:    http://localhost:8080/occ/canvas")
+    print("WebSocket: ws://localhost:8080/ws/occ")
+    print("API:       http://localhost:8080/occ/admin")
     print("=" * 80)
     uvicorn.run(app, host="0.0.0.0", port=8080)

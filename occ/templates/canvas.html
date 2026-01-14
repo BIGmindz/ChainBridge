@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCC | Visual Command Canvas</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-panel: #1a1a24;
+            --bg-tertiary: #22222e;
+            --accent-green: #00ff88;
+            --accent-blue: #00aaff;
+            --accent-gold: #d4af37;
+            --accent-red: #ff4444;
+            --accent-yellow: #ffcc00;
+            --accent-purple: #9900ff;
+            --text-primary: #ffffff;
+            --text-secondary: #888899;
+            --border-color: #2a2a3a;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(90deg, var(--bg-secondary), var(--bg-panel));
+            border-bottom: 2px solid var(--accent-green);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+        }
+        
+        .logo {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--accent-green);
+        }
+        
+        .logo span { color: var(--text-secondary); font-weight: normal; }
+        
+        .status-bar {
+            display: flex;
+            gap: 20px;
+            font-size: 11px;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .status-dot.green { background: var(--accent-green); animation: pulse 2s infinite; }
+        .status-dot.yellow { background: var(--accent-yellow); animation: pulse 1s infinite; }
+        .status-dot.red { background: var(--accent-red); }
+        .status-dot.blue { background: var(--accent-blue); animation: pulse 1.5s infinite; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        
+        /* Main Layout */
+        .main-container {
+            display: grid;
+            grid-template-columns: 280px 1fr 300px;
+            height: calc(100vh - 60px);
+        }
+        
+        /* Zone A: Agent Forge Sidebar */
+        .agent-forge {
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+        }
+        
+        .panel-header {
+            background: var(--bg-tertiary);
+            padding: 12px 16px;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: var(--accent-gold);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+        }
+        
+        .agent-card {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: grab;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .agent-card:hover {
+            background: var(--bg-tertiary);
+            border-left: 3px solid var(--accent-green);
+            padding-left: 13px;
+        }
+        
+        .agent-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+        
+        .agent-icon {
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .agent-info {
+            flex: 1;
+        }
+        
+        .agent-name {
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        
+        .agent-role {
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+        
+        .agent-status {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        .agent-status.ACTIVE { background: var(--accent-green); animation: pulse 1s infinite; }
+        .agent-status.DEPLOYED { background: var(--accent-blue); }
+        .agent-status.STANDBY { background: var(--accent-yellow); }
+        .agent-status.LOCKED { background: var(--accent-red); }
+        
+        /* Zone B: Logic Canvas */
+        .logic-canvas {
+            background: var(--bg-primary);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .canvas-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(42, 42, 58, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(42, 42, 58, 0.3) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+        
+        .canvas-content {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .canvas-node {
+            position: absolute;
+            width: 120px;
+            padding: 12px;
+            background: var(--bg-panel);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: move;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        
+        .canvas-node:hover {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+        }
+        
+        .canvas-node.active {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.4);
+        }
+        
+        .node-icon {
+            font-size: 20px;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+        
+        .node-label {
+            font-size: 10px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+        
+        /* Connection lines (SVG overlay) */
+        .connection-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .connection-line {
+            stroke: var(--accent-green);
+            stroke-width: 2;
+            fill: none;
+            opacity: 0.6;
+        }
+        
+        .connection-line.active {
+            stroke-dasharray: 10 5;
+            animation: flowLine 1s linear infinite;
+        }
+        
+        @keyframes flowLine {
+            to { stroke-dashoffset: -15; }
+        }
+        
+        /* Zone C: Telemetry Panel */
+        .telemetry-panel {
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            overflow-y: auto;
+        }
+        
+        .metric-card {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .metric-label {
+            font-size: 10px;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--accent-green);
+        }
+        
+        .metric-value.gold { color: var(--accent-gold); }
+        .metric-value.blue { color: var(--accent-blue); }
+        
+        .progress-bar {
+            height: 6px;
+            background: var(--bg-primary);
+            border-radius: 3px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+        
+        /* Gate Heatmap Mini */
+        .gate-heatmap {
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            gap: 1px;
+            padding: 10px;
+        }
+        
+        .gate-cell {
+            aspect-ratio: 1;
+            background: var(--accent-green);
+            border-radius: 1px;
+            opacity: 0.4;
+        }
+        
+        .gate-cell.blocked {
+            background: var(--accent-red);
+            opacity: 1;
+        }
+        
+        /* Session Log */
+        .session-log {
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 10px;
+            padding: 10px;
+        }
+        
+        .log-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+        
+        .log-entry .time {
+            color: var(--accent-blue);
+            margin-right: 8px;
+        }
+        
+        .log-entry .msg {
+            color: var(--text-primary);
+        }
+        
+        /* Footer */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            z-index: 100;
+        }
+        
+        .footer-left { color: var(--accent-gold); }
+        .footer-center { color: var(--text-secondary); }
+        .footer-right { color: var(--accent-green); }
+        
+        /* Connection Status Overlay */
+        .connection-overlay {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 15, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.3s;
+        }
+        
+        .connection-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .connecting-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+        
+        .connection-text {
+            color: var(--text-secondary);
+            font-size: 12px;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">OCC <span>| Operators Control in Command</span></div>
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-dot" id="wsStatus"></div>
+                <span id="wsStatusText">CONNECTING</span>
+            </div>
+            <div class="status-item">
+                <div class="status-dot green"></div>
+                <span>KILL SWITCH: SAFE</span>
+            </div>
+            <div class="status-item">
+                <div class="status-dot" id="swarmStatus"></div>
+                <span id="swarmId">SWARM: ---</span>
+            </div>
+        </div>
+    </header>
+    
+    <div class="connection-overlay" id="connectionOverlay">
+        <div class="connecting-spinner"></div>
+        <div class="connection-text" id="connectionText">INITIALIZING WEBSOCKET BRIDGE</div>
+    </div>
+    
+    <main class="main-container">
+        <!-- Zone A: Agent Forge -->
+        <aside class="agent-forge">
+            <div class="panel-header">◈ AGENT FORGE</div>
+            <div id="agentList">
+                <!-- Populated by WebSocket -->
+            </div>
+        </aside>
+        
+        <!-- Zone B: Logic Canvas -->
+        <section class="logic-canvas">
+            <div class="canvas-grid"></div>
+            <svg class="connection-layer" id="connectionLayer"></svg>
+            <div class="canvas-content" id="canvasContent">
+                <!-- Nodes populated by WebSocket -->
+            </div>
+        </section>
+        
+        <!-- Zone C: Telemetry -->
+        <aside class="telemetry-panel">
+            <div class="panel-header">◈ TELEMETRY</div>
+            
+            <div class="metric-card">
+                <div class="metric-label">ANNUAL RECURRING REVENUE</div>
+                <div class="metric-value gold" id="arrValue">$0</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="arrProgress" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">ACTIVE LANES</div>
+                <div class="metric-value" id="lanesActive">0</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">GATES COMPLIANT</div>
+                <div class="metric-value blue" id="gatesCompliant">0 / 10000</div>
+            </div>
+            
+            <div class="panel-header">◈ GATE HEATMAP</div>
+            <div class="gate-heatmap" id="gateHeatmap">
+                <!-- 400 cells populated on load -->
+            </div>
+            
+            <div class="panel-header">◈ SESSION LOG</div>
+            <div class="session-log" id="sessionLog">
+                <!-- Log entries populated by WebSocket -->
+            </div>
+        </aside>
+    </main>
+    
+    <footer class="footer">
+        <div class="footer-left">EPOCH_001 | GENESIS ANCHOR</div>
+        <div class="footer-center" id="timestamp">---</div>
+        <div class="footer-right" id="sessionInfo">SESSION: ---</div>
+    </footer>
+    
+    <script>
+        // ═══════════════════════════════════════════════════════════════════
+        // CONSTANTS & STATE
+        // ═══════════════════════════════════════════════════════════════════
+        
+        const WS_URL = `ws://${window.location.host}/ws/occ`;
+        const SMK = sessionStorage.getItem('X-Sovereign-Key') || '';
+        
+        let ws = null;
+        let sessionId = null;
+        let reconnectAttempts = 0;
+        const MAX_RECONNECT = 5;
+        
+        const state = {
+            agents: [],
+            canvasNodes: [],
+            canvasConnections: [],
+            telemetry: null,
+            connected: false
+        };
+        
+        // ═══════════════════════════════════════════════════════════════════
+        // UI ELEMENTS
+        // ═══════════════════════════════════════════════════════════════════
+        
+        const elements = {
+            connectionOverlay: document.getElementById('connectionOverlay'),
+            connectionText: document.getElementById('connectionText'),
+            wsStatus: document.getElementById('wsStatus'),
+            wsStatusText: document.getElementById('wsStatusText'),
+            swarmStatus: document.getElementById('swarmStatus'),
+            swarmId: document.getElementById('swarmId'),
+            agentList: document.getElementById('agentList'),
+            canvasContent: document.getElementById('canvasContent'),
+            connectionLayer: document.getElementById('connectionLayer'),
+            arrValue: document.getElementById('arrValue'),
+            arrProgress: document.getElementById('arrProgress'),
+            lanesActive: document.getElementById('lanesActive'),
+            gatesCompliant: document.getElementById('gatesCompliant'),
+            gateHeatmap: document.getElementById('gateHeatmap'),
+            sessionLog: document.getElementById('sessionLog'),
+            timestamp: document.getElementById('timestamp'),
+            sessionInfo: document.getElementById('sessionInfo')
+        };
+        
+        // ═══════════════════════════════════════════════════════════════════
+        // WEBSOCKET CONNECTION
+        // ═══════════════════════════════════════════════════════════════════
+        
+        function connect() {
+            if (!SMK) {
+                window.location.href = '/';
+                return;
+            }
+            
+            updateConnectionStatus('yellow', 'CONNECTING');
+            elements.connectionText.textContent = 'ESTABLISHING WEBSOCKET BRIDGE';
+            
+            ws = new WebSocket(WS_URL);
+            
+            ws.onopen = () => {
+                console.log('[WS] Connected, sending handshake');
+                elements.connectionText.textContent = 'AUTHENTICATING SESSION';
+                
+                // Send handshake
+                ws.send(JSON.stringify({
+                    type: 'HANDSHAKE',
+                    payload: {
+                        session_id: sessionId,
+                        smk: SMK
+                    }
+                }));
+            };
+            
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    handleMessage(data);
+                } catch (e) {
+                    console.error('[WS] Parse error:', e);
+                }
+            };
+            
+            ws.onclose = () => {
+                console.log('[WS] Disconnected');
+                state.connected = false;
+                updateConnectionStatus('red', 'DISCONNECTED');
+                
+                if (reconnectAttempts < MAX_RECONNECT) {
+                    reconnectAttempts++;
+                    elements.connectionText.textContent = `RECONNECTING (${reconnectAttempts}/${MAX_RECONNECT})`;
+                    elements.connectionOverlay.classList.remove('hidden');
+                    setTimeout(connect, 2000);
+                } else {
+                    elements.connectionText.textContent = 'CONNECTION FAILED - REFRESH PAGE';
+                }
+            };
+            
+            ws.onerror = (error) => {
+                console.error('[WS] Error:', error);
+            };
+        }
+        
+        function handleMessage(data) {
+            switch (data.type) {
+                case 'HANDSHAKE_ACK':
+                    handleHandshakeAck(data.payload);
+                    break;
+                case 'HANDSHAKE_FAIL':
+                    handleHandshakeFail(data.payload);
+                    break;
+                case 'AGENT_STATE':
+                    updateAgentState(data.payload);
+                    break;
+                case 'CANVAS_STATE':
+                    updateCanvasState(data.payload);
+                    break;
+                case 'TELEMETRY':
+                    updateTelemetry(data.payload);
+                    break;
+                case 'GATE_UPDATE':
+                    updateGate(data.payload);
+                    break;
+                case 'ALERT':
+                    showAlert(data.payload);
+                    break;
+                case 'PONG':
+                    // Heartbeat acknowledged
+                    break;
+            }
+        }
+        
+        function handleHandshakeAck(payload) {
+            console.log('[WS] Handshake successful:', payload);
+            sessionId = payload.session_id;
+            state.connected = true;
+            reconnectAttempts = 0;
+            
+            updateConnectionStatus('green', 'CONNECTED');
+            elements.swarmStatus.className = 'status-dot green';
+            elements.swarmId.textContent = `SWARM: ${payload.swarm_id}`;
+            elements.sessionInfo.textContent = `SESSION: ${sessionId.substring(0, 8)}...`;
+            
+            // Hide overlay after brief delay
+            setTimeout(() => {
+                elements.connectionOverlay.classList.add('hidden');
+            }, 500);
+            
+            addLogEntry('WebSocket bridge established');
+            addLogEntry(`Swarm ${payload.swarm_id} connected`);
+            
+            // Start ping interval
+            setInterval(() => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'PING' }));
+                }
+            }, 30000);
+        }
+        
+        function handleHandshakeFail(payload) {
+            console.error('[WS] Handshake failed:', payload.reason);
+            elements.connectionText.textContent = `AUTH FAILED: ${payload.reason}`;
+            updateConnectionStatus('red', 'AUTH FAILED');
+            
+            // Redirect to login after delay
+            setTimeout(() => {
+                sessionStorage.removeItem('X-Sovereign-Key');
+                window.location.href = '/';
+            }, 3000);
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════
+        // STATE UPDATES
+        // ═══════════════════════════════════════════════════════════════════
+        
+        function updateAgentState(payload) {
+            state.agents = payload.agents;
+            renderAgentForge();
+        }
+        
+        function updateCanvasState(payload) {
+            state.canvasNodes = payload.nodes;
+            state.canvasConnections = payload.connections;
+            renderCanvas();
+        }
+        
+        function updateTelemetry(payload) {
+            state.telemetry = payload;
+            
+            // ARR
+            const arr = payload.arr_usd || 0;
+            elements.arrValue.textContent = `$${(arr / 1000000).toFixed(1)}M`;
+            elements.arrProgress.style.width = `${payload.arr_progress_pct || 0}%`;
+            
+            // Lanes
+            elements.lanesActive.textContent = payload.lanes_active || 0;
+            
+            // Gates
+            const compliant = payload.gates_compliant || 0;
+            const total = payload.gates_total || 10000;
+            elements.gatesCompliant.textContent = `${compliant.toLocaleString()} / ${total.toLocaleString()}`;
+            
+            // Timestamp
+            elements.timestamp.textContent = new Date(payload.timestamp).toLocaleTimeString();
+        }
+        
+        function updateGate(payload) {
+            const cells = elements.gateHeatmap.children;
+            const cellIndex = payload.gate_id % 400;
+            if (cells[cellIndex]) {
+                cells[cellIndex].className = payload.status === 'BLOCKED' ? 'gate-cell blocked' : 'gate-cell';
+            }
+            addLogEntry(`Gate ${payload.gate_id} → ${payload.status}`);
+        }
+        
+        function showAlert(payload) {
+            addLogEntry(`[${payload.level}] ${payload.message}`);
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════
+        // RENDERING
+        // ═══════════════════════════════════════════════════════════════════
+        
+        function renderAgentForge() {
+            if (!state.agents.length) return;
+            
+            elements.agentList.innerHTML = state.agents.map(agent => `
+                <div class="agent-card" draggable="true" data-gid="${agent.gid}">
+                    <div class="agent-icon" style="border-color: ${agent.color}">${agent.icon}</div>
+                    <div class="agent-info">
+                        <div class="agent-name" style="color: ${agent.color}">${agent.name}</div>
+                        <div class="agent-role">${agent.role}</div>
+                    </div>
+                    <div class="agent-status ${agent.status}"></div>
+                </div>
+            `).join('');
+            
+            // Add drag handlers
+            document.querySelectorAll('.agent-card').forEach(card => {
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+            });
+        }
+        
+        function renderCanvas() {
+            // Render nodes
+            elements.canvasContent.innerHTML = state.canvasNodes.map((node, i) => {
+                const x = node.position?.x || (100 + i * 150);
+                const y = node.position?.y || (100 + (i % 3) * 100);
+                const agent = node.agent;
+                
+                return `
+                    <div class="canvas-node ${node.node_type === 'AGENT' ? 'active' : ''}" 
+                         style="left: ${x}px; top: ${y}px"
+                         data-node-id="${node.node_id}">
+                        <div class="node-icon">${agent?.icon || '◯'}</div>
+                        <div class="node-label">${node.label || agent?.name || 'Node'}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Render connections
+            renderConnections();
+        }
+        
+        function renderConnections() {
+            const svg = elements.connectionLayer;
+            svg.innerHTML = '';
+            
+            state.canvasConnections.forEach(conn => {
+                const sourceEl = document.querySelector(`[data-node-id="${conn.source_node_id}"]`);
+                const targetEl = document.querySelector(`[data-node-id="${conn.target_node_id}"]`);
+                
+                if (sourceEl && targetEl) {
+                    const sr = sourceEl.getBoundingClientRect();
+                    const tr = targetEl.getBoundingClientRect();
+                    const cr = elements.canvasContent.getBoundingClientRect();
+                    
+                    const x1 = sr.left - cr.left + sr.width / 2;
+                    const y1 = sr.top - cr.top + sr.height / 2;
+                    const x2 = tr.left - cr.left + tr.width / 2;
+                    const y2 = tr.top - cr.top + tr.height / 2;
+                    
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path.setAttribute('d', `M ${x1} ${y1} Q ${(x1+x2)/2} ${y1} ${x2} ${y2}`);
+                    path.setAttribute('class', 'connection-line active');
+                    svg.appendChild(path);
+                }
+            });
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════
+        // DRAG & DROP
+        // ═══════════════════════════════════════════════════════════════════
+        
+        function handleDragStart(e) {
+            e.target.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', e.target.dataset.gid);
+        }
+        
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════
+        // UTILITIES
+        // ═══════════════════════════════════════════════════════════════════
+        
+        function updateConnectionStatus(color, text) {
+            elements.wsStatus.className = `status-dot ${color}`;
+            elements.wsStatusText.textContent = text;
+        }
+        
+        function addLogEntry(msg) {
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="time">${time}</span><span class="msg">${msg}</span>`;
+            elements.sessionLog.insertBefore(entry, elements.sessionLog.firstChild);
+            
+            // Keep only last 50 entries
+            while (elements.sessionLog.children.length > 50) {
+                elements.sessionLog.removeChild(elements.sessionLog.lastChild);
+            }
+        }
+        
+        function initializeGateHeatmap() {
+            for (let i = 0; i < 400; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'gate-cell';
+                elements.gateHeatmap.appendChild(cell);
+            }
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════
+        // INITIALIZATION
+        // ═══════════════════════════════════════════════════════════════════
+        
+        initializeGateHeatmap();
+        addLogEntry('Initializing OCC Command Canvas');
+        connect();
+    </script>
+</body>
+</html>

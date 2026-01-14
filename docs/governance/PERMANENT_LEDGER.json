@@ -1831,11 +1831,80 @@
       "status": "COMMITTED",
       "immutable": true,
       "entry_hash": "SHA256:ENTRY_038_LEGACY_SCUTTLE_h8i9j0k1l2m3n4o5p6q7"
+    },
+    {
+      "entry_id": "PL-039",
+      "timestamp": "2026-01-14T22:45:00.000Z",
+      "epoch": "EPOCH_001",
+      "pac_id": "PAC-VAPORIZER-DEPLOY-27",
+      "event_type": "VAPORIZER_SCRIPT_DEPLOYED",
+      "event_description": "Zero-PII client-side hashing utility synthesized for partner bank pilot",
+      "execution_lanes": {
+        "lane_1": {
+          "lane_id": "LANE-1-SCRIPT-SYNTHESIS",
+          "task": "Synthesize vaporizer.py with embedded Sovereign Salt",
+          "status": "COMPLETE",
+          "artifacts": [
+            {"path": "/tools/vaporizer/vaporizer.py", "lines": 620, "hash": "ec1954eb126e8389442cab7d60a49ef02769c06829e1c94b2ee812c38ca4bcc6"},
+            {"path": "/tools/vaporizer/__init__.py", "type": "MODULE_INIT"}
+          ]
+        },
+        "lane_2": {
+          "lane_id": "LANE-2-INTEGRITY-VALIDATION",
+          "task": "Process 1000 dummy records and verify gate compatibility",
+          "status": "COMPLETE",
+          "results": {
+            "records_processed": 1000,
+            "records_failed": 0,
+            "total_time_seconds": 0.405,
+            "avg_time_per_record_ms": 0.4048,
+            "self_test_passed": true,
+            "tests_passed": ["Basic hashing", "Normalization consistency", "Hash uniqueness", "Salt binding", "CBH integrity"]
+          }
+        },
+        "lane_3": {
+          "lane_id": "LANE-3-DOCUMENTATION",
+          "task": "Generate IT Handover Manual for partner bank CTO",
+          "status": "COMPLETE",
+          "artifact": "/tools/vaporizer/IT_HANDOVER_MANUAL.md"
+        }
+      },
+      "vaporizer_specification": {
+        "version": "1.0.0",
+        "dependencies": "NONE (Standard Library Only)",
+        "python_requirement": "3.7+",
+        "hash_algorithm": "HMAC-SHA256",
+        "output_format": ".cbh (ChainBridge Hash)",
+        "genesis_anchor": "GENESIS-SOVEREIGN-2026-01-14",
+        "salt_fingerprint": "31335eaf...646677a6"
+      },
+      "security_properties": {
+        "one_way_transform": true,
+        "reversible_encryption": false,
+        "pii_storage": "MEMORY_ONLY_THEN_PURGED",
+        "audit_trail": "HASH_ONLY",
+        "cro_signoff_ready": true
+      },
+      "constitutional_compliance": {
+        "FORBID_VAP_001": "No raw data written to disk - VERIFIED",
+        "FORBID_VAP_002": "One-way hash only (no AES/RSA) - VERIFIED",
+        "FORBID_VAP_003": "Gate compatible hashes - VERIFIED"
+      },
+      "pilot_readiness": {
+        "script_ready": true,
+        "documentation_ready": true,
+        "integrity_verified": true,
+        "next_dependency": "JOB-B: BLIND-PORTAL for .cbh file upload"
+      },
+      "brp_id": "BRP-VAPORIZER-001",
+      "status": "COMMITTED",
+      "immutable": true,
+      "entry_hash": "SHA256:ENTRY_039_VAPORIZER_DEPLOY_i9j0k1l2m3n4o5p6q7r8"
     }
   ],
 
   "ledger_totals": {
-    "total_entries": 38,
+    "total_entries": 39,
     "total_revenue_recognized": "1.00000000000000000000000000000000000000000000000000",
     "total_deferred_revenue": "11697500.00000000000000000000000000000000000000000000000000",
     "total_arr": "11697500.00000000000000000000000000000000000000000000000000",
