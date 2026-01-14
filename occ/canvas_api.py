@@ -400,7 +400,7 @@ CANVAS_UI_HTML = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sovereign Command Canvas V2.0.0 | ChainBridge</title>
+    <title>Sovereign Command Canvas V2.1.0 | ChainBridge</title>
     <style>
         :root {
             --bg-dark: #0a0a0a;
@@ -688,6 +688,52 @@ CANVAS_UI_HTML = """
             filter: drop-shadow(0 0 6px rgba(255,215,0,0.5));
         }
         
+        .connection-line.dragging {
+            stroke: var(--accent-blue);
+            stroke-width: 2;
+            stroke-dasharray: 8,4;
+            opacity: 0.8;
+            animation: connection-pulse 0.5s infinite;
+        }
+        
+        @keyframes connection-pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 0.4; }
+        }
+        
+        .connection-line.legal {
+            stroke: var(--accent-gold);
+            stroke-width: 3;
+            stroke-dasharray: none;
+            opacity: 1;
+            filter: drop-shadow(0 0 10px rgba(255,215,0,0.8));
+            animation: legal-glow 0.3s ease-out;
+        }
+        
+        @keyframes legal-glow {
+            0% { filter: drop-shadow(0 0 0 rgba(255,215,0,0)); }
+            50% { filter: drop-shadow(0 0 20px rgba(255,215,0,1)); }
+            100% { filter: drop-shadow(0 0 10px rgba(255,215,0,0.8)); }
+        }
+        
+        .node-port.active {
+            background: var(--accent);
+            transform: translateY(-50%) scale(1.5);
+            box-shadow: 0 0 15px var(--accent);
+        }
+        
+        .node-port.valid-target {
+            background: var(--accent-gold);
+            transform: translateY(-50%) scale(1.5);
+            box-shadow: 0 0 15px var(--accent-gold);
+            animation: port-pulse 0.3s infinite;
+        }
+        
+        @keyframes port-pulse {
+            0%, 100% { box-shadow: 0 0 15px var(--accent-gold); }
+            50% { box-shadow: 0 0 25px var(--accent-gold); }
+        }
+        
         /* Drop Zone Indicator */
         .drop-indicator {
             position: absolute;
@@ -851,7 +897,7 @@ CANVAS_UI_HTML = """
         <div class="agent-forge" id="agent-forge">
             <div class="zone-header">
                 ⚡ Zone A: Agent Forge
-                <span class="version-badge">V2.0.0</span>
+                <span class="version-badge">V2.1.0</span>
             </div>
             
             <div class="agent-card" draggable="true" data-gid="GID-00" data-name="Benson" data-icon="⚡" data-role="Sovereign Executor">
@@ -941,6 +987,10 @@ CANVAS_UI_HTML = """
                     <div class="node-count-number" id="node-count">0</div>
                     <div class="node-count-label">Nodes Anchored</div>
                 </div>
+                <div class="node-count-display" style="margin-top: 8px;">
+                    <div class="node-count-number" id="connection-count" style="color: var(--accent-gold);">0</div>
+                    <div class="node-count-label">Links Active</div>
+                </div>
             </div>
             
             <div class="console-section">
@@ -966,9 +1016,13 @@ CANVAS_UI_HTML = """
     
     <script>
         /**
-         * SOVEREIGN COMMAND CANVAS V2.0.0
-         * Anchor-Logic Engine with PAC-Draft Decision Support
-         * RNP Deployment: PAC-CANVAS-REPLACEMENT-45
+         * SOVEREIGN COMMAND CANVAS V2.1.0
+         * Active-Link Engine with Port-Snapping Connections
+         * RNP Deployment: PAC-LINE-ACTIVATION-48
+         * 
+         * UPGRADE PATH:
+         * V2.0.0: Anchor-Logic (Node Persistence) ← COMPLETE
+         * V2.1.0: Active-Link (Vector-Linkage Layer) ← CURRENT
          */
         
         const CanvasEngine = {
@@ -980,6 +1034,13 @@ CANVAS_UI_HTML = """
             nodeIdCounter: 0,
             currentDeployment: null,
             
+            // V2.1.0: Active-Link Connection State
+            isDrawingConnection: false,
+            connectionSource: null,
+            connectionSourcePort: null,
+            tempLine: null,
+            hoveredPort: null,
+            
             // ══════════════════════════════════════════════════════════════
             // INITIALIZATION
             // ══════════════════════════════════════════════════════════════
@@ -987,7 +1048,8 @@ CANVAS_UI_HTML = """
             init() {
                 this.setupDragAndDrop();
                 this.setupCanvasDrag();
-                this.logEvent('CANVAS_INITIALIZED', 'V2.0.0 Anchor-Logic Engine ready');
+                this.setupConnectionDrawing();  // V2.1.0: Active-Link
+                this.logEvent('CANVAS_INITIALIZED', 'V2.1.0 Active-Link Engine ready');
             },
             
             // ══════════════════════════════════════════════════════════════
@@ -1089,6 +1151,7 @@ CANVAS_UI_HTML = """
                 
                 this.nodes.set(nodeId, nodeState);
                 this.setupNodeDrag(nodeEl);
+                this.setupPortListeners(nodeEl);  // V2.1.0: Active-Link port detection
                 this.updateNodeCount();
                 
                 // Flash anchor animation
@@ -1202,37 +1265,283 @@ CANVAS_UI_HTML = """
             },
             
             // ══════════════════════════════════════════════════════════════
-            // CONNECTIONS
+            // V2.1.0: ACTIVE-LINK CONNECTION ENGINE
+            // PAC-LINE-ACTIVATION-48: Port-Snapping Vector-Linkage Layer
             // ══════════════════════════════════════════════════════════════
+            
+            setupConnectionDrawing() {
+                const canvas = document.getElementById('canvas');
+                const svg = document.getElementById('connections-svg');
+                
+                // Create temporary line element for drag preview
+                this.tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                this.tempLine.setAttribute('class', 'connection-line dragging');
+                this.tempLine.style.display = 'none';
+                svg.appendChild(this.tempLine);
+                
+                // Global mouse move for connection drawing
+                canvas.addEventListener('mousemove', (e) => {
+                    if (!this.isDrawingConnection) return;
+                    
+                    const canvasRect = canvas.getBoundingClientRect();
+                    const mouseX = e.clientX - canvasRect.left;
+                    const mouseY = e.clientY - canvasRect.top;
+                    
+                    this.updateTempLine(mouseX, mouseY);
+                    this.checkPortProximity(e.clientX, e.clientY);
+                });
+                
+                // Cancel connection on escape or right-click
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.isDrawingConnection) {
+                        this.cancelConnection();
+                    }
+                });
+                
+                canvas.addEventListener('contextmenu', (e) => {
+                    if (this.isDrawingConnection) {
+                        e.preventDefault();
+                        this.cancelConnection();
+                    }
+                });
+                
+                // Cancel if clicking on canvas (not on a port)
+                canvas.addEventListener('mouseup', (e) => {
+                    if (this.isDrawingConnection && !e.target.classList.contains('node-port')) {
+                        this.cancelConnection();
+                    }
+                });
+                
+                this.logEvent('ACTIVE_LINK_READY', 'V2.1.0 Port-Snapping enabled');
+            },
+            
+            setupPortListeners(nodeEl) {
+                const outputPort = nodeEl.querySelector('.node-port.output');
+                const inputPort = nodeEl.querySelector('.node-port.input');
+                
+                if (outputPort) {
+                    outputPort.addEventListener('mousedown', (e) => {
+                        e.stopPropagation();
+                        this.startConnection(nodeEl, 'output', e);
+                    });
+                }
+                
+                if (inputPort) {
+                    inputPort.addEventListener('mouseup', (e) => {
+                        e.stopPropagation();
+                        if (this.isDrawingConnection) {
+                            this.completeConnection(nodeEl);
+                        }
+                    });
+                    
+                    inputPort.addEventListener('mouseenter', () => {
+                        if (this.isDrawingConnection) {
+                            this.hoveredPort = { node: nodeEl, type: 'input' };
+                            inputPort.classList.add('valid-target');
+                        }
+                    });
+                    
+                    inputPort.addEventListener('mouseleave', () => {
+                        inputPort.classList.remove('valid-target');
+                        this.hoveredPort = null;
+                    });
+                }
+            },
+            
+            startConnection(sourceNode, portType, e) {
+                this.isDrawingConnection = true;
+                this.connectionSource = sourceNode;
+                this.connectionSourcePort = portType;
+                
+                const outputPort = sourceNode.querySelector('.node-port.output');
+                outputPort.classList.add('active');
+                
+                // Get port position
+                const canvas = document.getElementById('canvas');
+                const canvasRect = canvas.getBoundingClientRect();
+                const portRect = outputPort.getBoundingClientRect();
+                
+                this.connectionStartX = portRect.left + portRect.width/2 - canvasRect.left;
+                this.connectionStartY = portRect.top + portRect.height/2 - canvasRect.top;
+                
+                this.tempLine.style.display = 'block';
+                this.updateTempLine(this.connectionStartX, this.connectionStartY);
+                
+                const sourceGid = sourceNode.dataset.gid;
+                this.logEvent('CONNECTION_START', `Drawing from ${sourceGid}`);
+            },
+            
+            updateTempLine(mouseX, mouseY) {
+                const x1 = this.connectionStartX;
+                const y1 = this.connectionStartY;
+                const x2 = mouseX;
+                const y2 = mouseY;
+                
+                const midX = (x1 + x2) / 2;
+                this.tempLine.setAttribute('d', `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`);
+            },
+            
+            checkPortProximity(clientX, clientY) {
+                const SNAP_RADIUS = 30;
+                let closestPort = null;
+                let closestDist = SNAP_RADIUS;
+                
+                document.querySelectorAll('.canvas-node').forEach(node => {
+                    if (node === this.connectionSource) return; // Can't connect to self
+                    
+                    const inputPort = node.querySelector('.node-port.input');
+                    if (!inputPort) return;
+                    
+                    const portRect = inputPort.getBoundingClientRect();
+                    const portX = portRect.left + portRect.width/2;
+                    const portY = portRect.top + portRect.height/2;
+                    
+                    const dist = Math.sqrt(Math.pow(clientX - portX, 2) + Math.pow(clientY - portY, 2));
+                    
+                    if (dist < closestDist) {
+                        closestDist = dist;
+                        closestPort = { node, port: inputPort };
+                    }
+                });
+                
+                // Clear all valid-target classes first
+                document.querySelectorAll('.node-port.valid-target').forEach(p => p.classList.remove('valid-target'));
+                
+                if (closestPort) {
+                    closestPort.port.classList.add('valid-target');
+                    this.hoveredPort = { node: closestPort.node, type: 'input' };
+                } else {
+                    this.hoveredPort = null;
+                }
+            },
+            
+            completeConnection(targetNode) {
+                if (!this.connectionSource || this.connectionSource === targetNode) {
+                    this.cancelConnection();
+                    return;
+                }
+                
+                const sourceGid = this.connectionSource.dataset.gid;
+                const targetGid = targetNode.dataset.gid;
+                const sourceId = this.connectionSource.id;
+                const targetId = targetNode.id;
+                
+                // LOGIC VALIDATION: Check if connection is Legal
+                const isLegal = this.validateConnection(sourceGid, targetGid);
+                
+                if (isLegal) {
+                    // Create the connection
+                    this.connections.push({
+                        source: sourceId,
+                        target: targetId,
+                        sourceGid: sourceGid,
+                        targetGid: targetGid,
+                        verified: true,
+                        legal: true,
+                        created_at: new Date().toISOString()
+                    });
+                    
+                    this.updateConnections();
+                    this.logEvent('CONNECTION_LEGAL', `${sourceGid} → ${targetGid} [GLOWING GOLD]`);
+                    
+                    // Flash gold on both nodes
+                    this.connectionSource.classList.add('anchored');
+                    targetNode.classList.add('anchored');
+                    setTimeout(() => {
+                        this.connectionSource.classList.remove('anchored');
+                        targetNode.classList.remove('anchored');
+                    }, 500);
+                    
+                    // Update Strike Console connection count
+                    this.updateConnectionCount();
+                } else {
+                    this.logEvent('CONNECTION_ILLEGAL', `${sourceGid} → ${targetGid} rejected`);
+                    alert(`⚠️ Illegal connection: ${sourceGid} cannot link to ${targetGid}`);
+                }
+                
+                this.cancelConnection();
+            },
+            
+            validateConnection(sourceGid, targetGid) {
+                // V2.1.0 Legal Connection Rules:
+                // 1. Cannot connect to self
+                // 2. Cannot create duplicate connections
+                // 3. Future: Type-based compatibility checks
+                
+                if (sourceGid === targetGid) return false;
+                
+                // Check for duplicate
+                const exists = this.connections.some(c => 
+                    c.sourceGid === sourceGid && c.targetGid === targetGid
+                );
+                if (exists) return false;
+                
+                // All other connections are Legal for now
+                // Future PACs will add type-based validation
+                return true;
+            },
+            
+            cancelConnection() {
+                this.isDrawingConnection = false;
+                this.tempLine.style.display = 'none';
+                
+                // Clear port states
+                document.querySelectorAll('.node-port.active').forEach(p => p.classList.remove('active'));
+                document.querySelectorAll('.node-port.valid-target').forEach(p => p.classList.remove('valid-target'));
+                
+                this.connectionSource = null;
+                this.connectionSourcePort = null;
+                this.hoveredPort = null;
+            },
             
             updateConnections() {
                 const svg = document.getElementById('connections-svg');
-                svg.innerHTML = '';
+                
+                // Remove all existing paths except temp line
+                Array.from(svg.querySelectorAll('path:not(.dragging)')).forEach(p => p.remove());
                 
                 this.connections.forEach(conn => {
                     const sourceEl = document.getElementById(conn.source);
                     const targetEl = document.getElementById(conn.target);
                     
                     if (sourceEl && targetEl) {
-                        const sourceRect = sourceEl.getBoundingClientRect();
-                        const targetRect = targetEl.getBoundingClientRect();
+                        const sourcePort = sourceEl.querySelector('.node-port.output');
+                        const targetPort = targetEl.querySelector('.node-port.input');
                         const canvasRect = document.getElementById('canvas').getBoundingClientRect();
                         
-                        const x1 = sourceRect.right - canvasRect.left;
+                        const sourceRect = sourcePort.getBoundingClientRect();
+                        const targetRect = targetPort.getBoundingClientRect();
+                        
+                        const x1 = sourceRect.left + sourceRect.width/2 - canvasRect.left;
                         const y1 = sourceRect.top + sourceRect.height/2 - canvasRect.top;
-                        const x2 = targetRect.left - canvasRect.left;
+                        const x2 = targetRect.left + targetRect.width/2 - canvasRect.left;
                         const y2 = targetRect.top + targetRect.height/2 - canvasRect.top;
                         
                         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                         const midX = (x1 + x2) / 2;
                         path.setAttribute('d', `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`);
-                        path.setAttribute('class', 'connection-line' + (conn.verified ? ' verified' : ''));
-                        svg.appendChild(path);
+                        
+                        // V2.1.0: Legal connections get GLOWING GOLD
+                        let pathClass = 'connection-line';
+                        if (conn.legal) pathClass += ' legal';
+                        else if (conn.verified) pathClass += ' verified';
+                        path.setAttribute('class', pathClass);
+                        
+                        svg.insertBefore(path, this.tempLine);
                     }
                 });
             },
             
+            updateConnectionCount() {
+                // Update the Strike Console with connection count
+                const countEl = document.getElementById('connection-count');
+                if (countEl) {
+                    countEl.textContent = this.connections.length;
+                }
+            },
+            
             createConnection(sourceId, targetId) {
+                // Legacy method - now handled by completeConnection
                 this.connections.push({ source: sourceId, target: targetId, verified: false });
                 this.updateConnections();
                 this.logEvent('CONNECTION_CREATED', `${sourceId} → ${targetId}`);
@@ -1305,7 +1614,7 @@ CANVAS_UI_HTML = """
             
             exportState() {
                 const state = {
-                    version: '2.0.0',
+                    version: '2.1.0',
                     nodes: Array.from(this.nodes.values()),
                     connections: this.connections,
                     exported_at: new Date().toISOString()
