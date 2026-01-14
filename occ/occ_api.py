@@ -49,6 +49,9 @@ from occ.command_center import (
     OCC_VERSION,
 )
 
+# V2.0.0 Canvas UI with Anchor-Logic (PAC-CANVAS-REPLACEMENT-45)
+from occ.canvas_api import CANVAS_UI_HTML
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # REQUEST MODELS
@@ -872,11 +875,9 @@ def create_occ_app() -> "FastAPI":
     
     @app.get("/occ/canvas", response_class=HTMLResponse)
     async def occ_canvas():
-        """Visual OCC Command Canvas - post-authentication dashboard"""
-        template_path = Path(__file__).parent / "templates" / "canvas.html"
-        if template_path.exists():
-            return HTMLResponse(content=template_path.read_text())
-        return HTMLResponse(content=OCC_DASHBOARD_HTML)
+        """Visual OCC Command Canvas V2.0.0 - Anchor-Logic enabled (PAC-CANVAS-REPLACEMENT-45)"""
+        # V2.0.0: Direct HTML injection with Anchor-Logic - no template fallback
+        return HTMLResponse(content=CANVAS_UI_HTML)
     
     @app.get("/occ/ui", response_class=HTMLResponse)
     async def occ_ui():
