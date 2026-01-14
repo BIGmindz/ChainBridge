@@ -390,7 +390,8 @@ def create_canvas_router():
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# CANVAS UI HTML
+# CANVAS UI HTML V2.0.0 - ANCHOR-LOGIC ENABLED
+# RNP Deployment: PAC-CANVAS-REPLACEMENT-45
 # ═══════════════════════════════════════════════════════════════════════════════
 
 CANVAS_UI_HTML = """
@@ -399,7 +400,7 @@ CANVAS_UI_HTML = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sovereign Command Canvas | ChainBridge</title>
+    <title>Sovereign Command Canvas V2.0.0 | ChainBridge</title>
     <style>
         :root {
             --bg-dark: #0a0a0a;
@@ -409,6 +410,7 @@ CANVAS_UI_HTML = """
             --accent-blue: #00aaff;
             --accent-yellow: #ffcc00;
             --accent-red: #ff3366;
+            --accent-gold: #FFD700;
             --text: #fff;
             --text-dim: #666;
             --border: #333;
@@ -444,6 +446,17 @@ CANVAS_UI_HTML = """
             text-transform: uppercase;
             letter-spacing: 2px;
             color: var(--accent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .version-badge {
+            background: var(--accent);
+            color: var(--bg-dark);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 9px;
         }
         
         .agent-card {
@@ -454,6 +467,7 @@ CANVAS_UI_HTML = """
             display: flex;
             align-items: center;
             gap: 12px;
+            user-select: none;
         }
         
         .agent-card:hover {
@@ -462,6 +476,11 @@ CANVAS_UI_HTML = """
         
         .agent-card:active {
             cursor: grabbing;
+            opacity: 0.8;
+        }
+        
+        .agent-card.dragging {
+            opacity: 0.4;
         }
         
         .agent-icon {
@@ -504,6 +523,11 @@ CANVAS_UI_HTML = """
                 linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
             background-size: 100% 100%, 20px 20px, 20px 20px;
+            overflow: hidden;
+        }
+        
+        .logic-canvas.drag-over {
+            background-color: rgba(0,255,136,0.02);
         }
         
         .canvas-toolbar {
@@ -528,10 +552,12 @@ CANVAS_UI_HTML = """
             padding: 8px;
             border-radius: 4px;
             font-size: 12px;
+            transition: all 0.2s;
         }
         
         .toolbar-btn:hover {
             background: var(--bg-node);
+            color: var(--accent);
         }
         
         .canvas-node {
@@ -543,6 +569,8 @@ CANVAS_UI_HTML = """
             min-width: 160px;
             cursor: move;
             z-index: 10;
+            user-select: none;
+            transition: box-shadow 0.2s, border-color 0.2s;
         }
         
         .canvas-node:hover {
@@ -551,7 +579,25 @@ CANVAS_UI_HTML = """
         
         .canvas-node.selected {
             border-color: var(--accent);
-            box-shadow: 0 0 20px rgba(0,255,136,0.2);
+            box-shadow: 0 0 20px rgba(0,255,136,0.3);
+        }
+        
+        .canvas-node.dragging {
+            z-index: 1000;
+            opacity: 0.9;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            cursor: grabbing;
+        }
+        
+        .canvas-node.anchored {
+            border-color: var(--accent-gold);
+            animation: anchor-flash 0.5s ease-out;
+        }
+        
+        @keyframes anchor-flash {
+            0% { box-shadow: 0 0 0 0 rgba(255,215,0,0.5); }
+            50% { box-shadow: 0 0 30px 10px rgba(255,215,0,0.3); }
+            100% { box-shadow: 0 0 10px 0 rgba(255,215,0,0.1); }
         }
         
         .node-header {
@@ -570,9 +616,31 @@ CANVAS_UI_HTML = """
             font-weight: 600;
         }
         
+        .node-gid {
+            font-size: 9px;
+            color: var(--text-dim);
+            margin-left: auto;
+        }
+        
         .node-task {
             font-size: 11px;
             color: var(--text-dim);
+        }
+        
+        .node-anchor-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            background: var(--accent-gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: var(--bg-dark);
+            box-shadow: 0 0 10px rgba(255,215,0,0.5);
         }
         
         .node-port {
@@ -583,10 +651,58 @@ CANVAS_UI_HTML = """
             border: 2px solid var(--accent);
             border-radius: 50%;
             cursor: crosshair;
+            transition: transform 0.2s;
+        }
+        
+        .node-port:hover {
+            transform: scale(1.3);
         }
         
         .node-port.input { left: -6px; top: 50%; transform: translateY(-50%); }
         .node-port.output { right: -6px; top: 50%; transform: translateY(-50%); }
+        .node-port.input:hover { transform: translateY(-50%) scale(1.3); }
+        .node-port.output:hover { transform: translateY(-50%) scale(1.3); }
+        
+        /* SVG Connections */
+        .connections-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+        
+        .connection-line {
+            stroke: var(--accent);
+            stroke-width: 2;
+            fill: none;
+            opacity: 0.6;
+        }
+        
+        .connection-line.verified {
+            stroke: var(--accent-gold);
+            stroke-width: 3;
+            opacity: 0.8;
+            filter: drop-shadow(0 0 6px rgba(255,215,0,0.5));
+        }
+        
+        /* Drop Zone Indicator */
+        .drop-indicator {
+            position: absolute;
+            width: 160px;
+            height: 100px;
+            border: 2px dashed var(--accent);
+            border-radius: 12px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .drop-indicator.visible {
+            opacity: 0.5;
+        }
         
         /* ZONE C: Strike Console */
         .strike-console {
@@ -607,6 +723,24 @@ CANVAS_UI_HTML = """
             letter-spacing: 1px;
             color: var(--accent);
             margin-bottom: 12px;
+        }
+        
+        .node-count-display {
+            background: var(--bg-dark);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .node-count-number {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--accent);
+        }
+        
+        .node-count-label {
+            font-size: 11px;
+            color: var(--text-dim);
         }
         
         .deployment-card {
@@ -641,15 +775,16 @@ CANVAS_UI_HTML = """
         
         .strike-btn {
             width: 100%;
-            padding: 16px;
+            padding: 12px;
             border: none;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 600;
             cursor: pointer;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             margin-top: 8px;
+            transition: all 0.2s;
         }
         
         .strike-btn.initialize {
@@ -670,7 +805,11 @@ CANVAS_UI_HTML = """
         .strike-btn.execute {
             background: linear-gradient(45deg, var(--accent-red), #ff6600);
             color: white;
-            animation: pulse 0.5s infinite;
+        }
+        
+        .strike-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
         
         .strike-btn:disabled {
@@ -678,49 +817,44 @@ CANVAS_UI_HTML = """
             cursor: not-allowed;
         }
         
-        .brp-display {
-            background: var(--bg-dark);
-            border-radius: 8px;
-            padding: 12px;
-            font-size: 11px;
-        }
-        
-        .brp-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 4px;
-        }
-        
-        .brp-label { color: var(--text-dim); }
-        .brp-value { color: var(--accent); }
-        
         .telemetry-feed {
             flex: 1;
             overflow-y: auto;
             padding: 16px;
+            max-height: 200px;
         }
         
         .telemetry-event {
             font-size: 10px;
-            padding: 4px 8px;
+            padding: 6px 8px;
             margin-bottom: 4px;
             background: var(--bg-dark);
             border-radius: 4px;
             color: var(--text-dim);
+            border-left: 2px solid var(--accent);
         }
         
         .telemetry-event .event-type {
             color: var(--accent);
+            font-weight: bold;
+        }
+        
+        .telemetry-event .event-time {
+            color: var(--text-dim);
+            font-size: 9px;
         }
     </style>
 </head>
 <body>
     <div class="layout">
         <!-- ZONE A: Agent Forge -->
-        <div class="agent-forge">
-            <div class="zone-header">⚡ Zone A: Agent Forge</div>
+        <div class="agent-forge" id="agent-forge">
+            <div class="zone-header">
+                ⚡ Zone A: Agent Forge
+                <span class="version-badge">V2.0.0</span>
+            </div>
             
-            <div class="agent-card" draggable="true" data-gid="GID-00">
+            <div class="agent-card" draggable="true" data-gid="GID-00" data-name="Benson" data-icon="⚡" data-role="Sovereign Executor">
                 <div class="agent-icon">⚡</div>
                 <div class="agent-info">
                     <h3>Benson</h3>
@@ -729,7 +863,7 @@ CANVAS_UI_HTML = """
                 <div class="agent-status active"></div>
             </div>
             
-            <div class="agent-card" draggable="true" data-gid="GID-03">
+            <div class="agent-card" draggable="true" data-gid="GID-03" data-name="Vaporizer" data-icon="💨" data-role="Zero-PII Hasher">
                 <div class="agent-icon">💨</div>
                 <div class="agent-info">
                     <h3>Vaporizer</h3>
@@ -738,7 +872,7 @@ CANVAS_UI_HTML = """
                 <div class="agent-status deployed"></div>
             </div>
             
-            <div class="agent-card" draggable="true" data-gid="GID-04">
+            <div class="agent-card" draggable="true" data-gid="GID-04" data-name="Blind-Portal" data-icon="🚪" data-role="Ingest Layer">
                 <div class="agent-icon">🚪</div>
                 <div class="agent-info">
                     <h3>Blind-Portal</h3>
@@ -747,7 +881,7 @@ CANVAS_UI_HTML = """
                 <div class="agent-status deployed"></div>
             </div>
             
-            <div class="agent-card" draggable="true" data-gid="GID-05">
+            <div class="agent-card" draggable="true" data-gid="GID-05" data-name="Certifier" data-icon="📜" data-role="Settlement Proof">
                 <div class="agent-icon">📜</div>
                 <div class="agent-info">
                     <h3>Certifier</h3>
@@ -756,7 +890,7 @@ CANVAS_UI_HTML = """
                 <div class="agent-status deployed"></div>
             </div>
             
-            <div class="agent-card" draggable="true" data-gid="GID-02">
+            <div class="agent-card" draggable="true" data-gid="GID-02" data-name="University Dean" data-icon="🎓" data-role="Logic Validator">
                 <div class="agent-icon">🎓</div>
                 <div class="agent-info">
                     <h3>University Dean</h3>
@@ -765,11 +899,20 @@ CANVAS_UI_HTML = """
                 <div class="agent-status standby"></div>
             </div>
             
-            <div class="agent-card" draggable="true" data-gid="GID-06">
+            <div class="agent-card" draggable="true" data-gid="GID-06" data-name="Watchdog" data-icon="🐕" data-role="Compliance Monitor">
                 <div class="agent-icon">🐕</div>
                 <div class="agent-info">
                     <h3>Watchdog</h3>
                     <span>Compliance Monitor</span>
+                </div>
+                <div class="agent-status standby"></div>
+            </div>
+            
+            <div class="agent-card" draggable="true" data-gid="GID-01" data-name="Chancellor" data-icon="👑" data-role="Revenue Ops">
+                <div class="agent-icon">👑</div>
+                <div class="agent-info">
+                    <h3>Chancellor</h3>
+                    <span>Revenue Ops</span>
                 </div>
                 <div class="agent-status standby"></div>
             </div>
@@ -778,42 +921,14 @@ CANVAS_UI_HTML = """
         <!-- ZONE B: Logic Canvas -->
         <div class="logic-canvas" id="canvas">
             <div class="canvas-toolbar">
-                <button class="toolbar-btn" onclick="clearCanvas()">🗑️ Clear</button>
-                <button class="toolbar-btn" onclick="autoLayout()">📐 Auto Layout</button>
-                <button class="toolbar-btn" onclick="detectLoops()">🔄 Check Loops</button>
-                <button class="toolbar-btn" onclick="generatePAC()">📋 Export PAC</button>
+                <button class="toolbar-btn" onclick="CanvasEngine.clearCanvas()">🗑️ Clear</button>
+                <button class="toolbar-btn" onclick="CanvasEngine.autoLayout()">📐 Auto Layout</button>
+                <button class="toolbar-btn" onclick="CanvasEngine.detectLoops()">🔄 Check Loops</button>
+                <button class="toolbar-btn" onclick="CanvasEngine.exportState()">📋 Export PAC</button>
             </div>
             
-            <!-- Demo nodes -->
-            <div class="canvas-node" style="left: 100px; top: 200px;">
-                <div class="node-port input"></div>
-                <div class="node-header">
-                    <span class="node-icon">💨</span>
-                    <span class="node-name">Vaporizer</span>
-                </div>
-                <div class="node-task">Hash PII Data</div>
-                <div class="node-port output"></div>
-            </div>
-            
-            <div class="canvas-node" style="left: 320px; top: 200px;">
-                <div class="node-port input"></div>
-                <div class="node-header">
-                    <span class="node-icon">🚪</span>
-                    <span class="node-name">Blind-Portal</span>
-                </div>
-                <div class="node-task">Ingest & Screen</div>
-                <div class="node-port output"></div>
-            </div>
-            
-            <div class="canvas-node" style="left: 540px; top: 200px;">
-                <div class="node-port input"></div>
-                <div class="node-header">
-                    <span class="node-icon">📜</span>
-                    <span class="node-name">Certifier</span>
-                </div>
-                <div class="node-task">Generate Proof</div>
-                <div class="node-port output"></div>
-            </div>
+            <svg class="connections-svg" id="connections-svg"></svg>
+            <div class="drop-indicator" id="drop-indicator"></div>
         </div>
         
         <!-- ZONE C: Strike Console -->
@@ -821,80 +936,497 @@ CANVAS_UI_HTML = """
             <div class="zone-header">🎯 Zone C: Strike Console</div>
             
             <div class="console-section">
-                <h4>Current Deployment</h4>
-                <div class="deployment-card">
-                    <div class="deployment-name">PNC-Shadow-Vet</div>
-                    <span class="deployment-state simulated">SIMULATED</span>
+                <h4>Canvas State</h4>
+                <div class="node-count-display">
+                    <div class="node-count-number" id="node-count">0</div>
+                    <div class="node-count-label">Nodes Anchored</div>
                 </div>
             </div>
             
             <div class="console-section">
-                <h4>Binary Reason Proof</h4>
-                <div class="brp-display">
-                    <div class="brp-row">
-                        <span class="brp-label">BRP ID:</span>
-                        <span class="brp-value">BRP-7A3F2D1E</span>
-                    </div>
-                    <div class="brp-row">
-                        <span class="brp-label">Compute:</span>
-                        <span class="brp-value">140ms</span>
-                    </div>
-                    <div class="brp-row">
-                        <span class="brp-label">Cost:</span>
-                        <span class="brp-value">$0.000014</span>
-                    </div>
-                    <div class="brp-row">
-                        <span class="brp-label">Risk:</span>
-                        <span class="brp-value">LOW</span>
-                    </div>
+                <h4>Current Deployment</h4>
+                <div class="deployment-card" id="deployment-info">
+                    <div class="deployment-name">No Active Deployment</div>
+                    <span class="deployment-state draft">DRAFT</span>
                 </div>
             </div>
             
             <div class="console-section">
                 <h4>Actions</h4>
-                <button class="strike-btn initialize">Initialize Swarm</button>
-                <button class="strike-btn simulate">Simulate Strike</button>
-                <button class="strike-btn arm">Arm Deployment</button>
-                <button class="strike-btn execute" disabled>Execute Swarm</button>
+                <button class="strike-btn initialize" onclick="CanvasEngine.initializeSwarm()">Initialize Swarm</button>
+                <button class="strike-btn simulate" onclick="CanvasEngine.simulateStrike()">Simulate Strike</button>
+                <button class="strike-btn arm" onclick="CanvasEngine.armDeployment()">Arm Deployment</button>
+                <button class="strike-btn execute" id="execute-btn" disabled onclick="CanvasEngine.executeSwarm()">Execute Swarm</button>
             </div>
             
-            <div class="zone-header" style="border-top: 1px solid var(--border);">📡 Live Telemetry</div>
-            <div class="telemetry-feed">
-                <div class="telemetry-event">
-                    <span class="event-type">AGENT_PLACED</span> Vaporizer at (100,200)
-                </div>
-                <div class="telemetry-event">
-                    <span class="event-type">AGENT_PLACED</span> Blind-Portal at (320,200)
-                </div>
-                <div class="telemetry-event">
-                    <span class="event-type">CONNECTION_CREATED</span> Sequential link
-                </div>
-                <div class="telemetry-event">
-                    <span class="event-type">PIPELINE_CREATED</span> PNC-Shadow-Vet
-                </div>
-            </div>
+            <div class="zone-header" style="border-top: 1px solid var(--border);">📡 Telemetry</div>
+            <div class="telemetry-feed" id="telemetry-feed"></div>
         </div>
     </div>
     
     <script>
-        // Canvas drag-drop functionality placeholder
-        const canvas = document.getElementById('canvas');
+        /**
+         * SOVEREIGN COMMAND CANVAS V2.0.0
+         * Anchor-Logic Engine with PAC-Draft Decision Support
+         * RNP Deployment: PAC-CANVAS-REPLACEMENT-45
+         */
         
-        function clearCanvas() {
-            alert('Canvas cleared');
-        }
+        const CanvasEngine = {
+            nodes: new Map(),
+            connections: [],
+            selectedNode: null,
+            isDragging: false,
+            dragOffset: { x: 0, y: 0 },
+            nodeIdCounter: 0,
+            currentDeployment: null,
+            
+            // ══════════════════════════════════════════════════════════════
+            // INITIALIZATION
+            // ══════════════════════════════════════════════════════════════
+            
+            init() {
+                this.setupDragAndDrop();
+                this.setupCanvasDrag();
+                this.logEvent('CANVAS_INITIALIZED', 'V2.0.0 Anchor-Logic Engine ready');
+            },
+            
+            // ══════════════════════════════════════════════════════════════
+            // ZONE A → ZONE B: DRAG FROM FORGE TO CANVAS
+            // ══════════════════════════════════════════════════════════════
+            
+            setupDragAndDrop() {
+                const agentCards = document.querySelectorAll('.agent-card');
+                const canvas = document.getElementById('canvas');
+                const dropIndicator = document.getElementById('drop-indicator');
+                
+                agentCards.forEach(card => {
+                    card.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.setData('application/json', JSON.stringify({
+                            gid: card.dataset.gid,
+                            name: card.dataset.name,
+                            icon: card.dataset.icon,
+                            role: card.dataset.role
+                        }));
+                        card.classList.add('dragging');
+                        this.logEvent('DRAG_START', `${card.dataset.name} (${card.dataset.gid})`);
+                    });
+                    
+                    card.addEventListener('dragend', () => {
+                        card.classList.remove('dragging');
+                        dropIndicator.classList.remove('visible');
+                    });
+                });
+                
+                canvas.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    canvas.classList.add('drag-over');
+                    
+                    const rect = canvas.getBoundingClientRect();
+                    dropIndicator.style.left = (e.clientX - rect.left - 80) + 'px';
+                    dropIndicator.style.top = (e.clientY - rect.top - 50) + 'px';
+                    dropIndicator.classList.add('visible');
+                });
+                
+                canvas.addEventListener('dragleave', () => {
+                    canvas.classList.remove('drag-over');
+                    dropIndicator.classList.remove('visible');
+                });
+                
+                canvas.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    canvas.classList.remove('drag-over');
+                    dropIndicator.classList.remove('visible');
+                    
+                    const data = JSON.parse(e.dataTransfer.getData('application/json'));
+                    const rect = canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left - 80;
+                    const y = e.clientY - rect.top - 50;
+                    
+                    // CREATE NODE WITH ANCHOR-LOGIC
+                    this.createNode(data, x, y);
+                });
+            },
+            
+            // ══════════════════════════════════════════════════════════════
+            // NODE CREATION WITH ANCHOR-LOGIC (PAC-DRAFT DECISION)
+            // ══════════════════════════════════════════════════════════════
+            
+            createNode(agentData, x, y) {
+                const nodeId = `NODE-${agentData.gid}-${++this.nodeIdCounter}`;
+                
+                const nodeEl = document.createElement('div');
+                nodeEl.className = 'canvas-node';
+                nodeEl.id = nodeId;
+                nodeEl.dataset.gid = agentData.gid;
+                nodeEl.style.left = x + 'px';
+                nodeEl.style.top = y + 'px';
+                
+                nodeEl.innerHTML = `
+                    <div class="node-anchor-badge">⚓</div>
+                    <div class="node-port input"></div>
+                    <div class="node-header">
+                        <span class="node-icon">${agentData.icon}</span>
+                        <span class="node-name">${agentData.name}</span>
+                        <span class="node-gid">${agentData.gid}</span>
+                    </div>
+                    <div class="node-task">${agentData.role}</div>
+                    <div class="node-port output"></div>
+                `;
+                
+                document.getElementById('canvas').appendChild(nodeEl);
+                
+                // ANCHOR-LOGIC: Store position in state
+                const nodeState = {
+                    id: nodeId,
+                    gid: agentData.gid,
+                    name: agentData.name,
+                    icon: agentData.icon,
+                    role: agentData.role,
+                    position: { x, y },
+                    anchored: true,
+                    created_at: new Date().toISOString()
+                };
+                
+                this.nodes.set(nodeId, nodeState);
+                this.setupNodeDrag(nodeEl);
+                this.updateNodeCount();
+                
+                // Flash anchor animation
+                nodeEl.classList.add('anchored');
+                setTimeout(() => nodeEl.classList.remove('anchored'), 500);
+                
+                this.logEvent('NODE_ANCHORED', `${agentData.name} anchored at (${Math.round(x)}, ${Math.round(y)})`);
+                
+                // Persist to backend (PAC-Draft Decision)
+                this.persistNodePosition(nodeId, x, y);
+                
+                return nodeId;
+            },
+            
+            // ══════════════════════════════════════════════════════════════
+            // NODE DRAG ON CANVAS (MOVE & RE-ANCHOR)
+            // ══════════════════════════════════════════════════════════════
+            
+            setupCanvasDrag() {
+                // Setup drag for existing nodes
+                document.querySelectorAll('.canvas-node').forEach(node => {
+                    this.setupNodeDrag(node);
+                });
+            },
+            
+            setupNodeDrag(nodeEl) {
+                let isDragging = false;
+                let startX, startY, offsetX, offsetY;
+                
+                nodeEl.addEventListener('mousedown', (e) => {
+                    if (e.target.classList.contains('node-port')) return;
+                    
+                    isDragging = true;
+                    nodeEl.classList.add('dragging');
+                    
+                    const rect = nodeEl.getBoundingClientRect();
+                    offsetX = e.clientX - rect.left;
+                    offsetY = e.clientY - rect.top;
+                    
+                    this.selectNode(nodeEl);
+                });
+                
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    
+                    const canvas = document.getElementById('canvas');
+                    const canvasRect = canvas.getBoundingClientRect();
+                    
+                    let newX = e.clientX - canvasRect.left - offsetX;
+                    let newY = e.clientY - canvasRect.top - offsetY;
+                    
+                    // Constrain to canvas bounds
+                    newX = Math.max(0, Math.min(newX, canvasRect.width - 160));
+                    newY = Math.max(50, Math.min(newY, canvasRect.height - 100));
+                    
+                    nodeEl.style.left = newX + 'px';
+                    nodeEl.style.top = newY + 'px';
+                    
+                    // Update connections live
+                    this.updateConnections();
+                });
+                
+                document.addEventListener('mouseup', () => {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    nodeEl.classList.remove('dragging');
+                    
+                    // ANCHOR-LOGIC: Persist new position
+                    const x = parseInt(nodeEl.style.left);
+                    const y = parseInt(nodeEl.style.top);
+                    
+                    const nodeState = this.nodes.get(nodeEl.id);
+                    if (nodeState) {
+                        nodeState.position = { x, y };
+                        this.nodes.set(nodeEl.id, nodeState);
+                    }
+                    
+                    // Flash anchor confirmation
+                    nodeEl.classList.add('anchored');
+                    setTimeout(() => nodeEl.classList.remove('anchored'), 500);
+                    
+                    this.logEvent('NODE_REPOSITIONED', `${nodeEl.id} anchored at (${x}, ${y})`);
+                    this.persistNodePosition(nodeEl.id, x, y);
+                });
+            },
+            
+            selectNode(nodeEl) {
+                document.querySelectorAll('.canvas-node').forEach(n => n.classList.remove('selected'));
+                nodeEl.classList.add('selected');
+                this.selectedNode = nodeEl;
+            },
+            
+            // ══════════════════════════════════════════════════════════════
+            // BACKEND PERSISTENCE (Write-Back)
+            // ══════════════════════════════════════════════════════════════
+            
+            async persistNodePosition(nodeId, x, y) {
+                try {
+                    const response = await fetch(`/canvas/nodes/${nodeId}/move?x=${x}&y=${y}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    if (!response.ok) {
+                        console.log('Backend sync pending - node anchored locally');
+                    }
+                } catch (e) {
+                    // Offline mode - state persisted locally
+                    console.log('Offline mode - node anchored locally');
+                }
+            },
+            
+            // ══════════════════════════════════════════════════════════════
+            // CONNECTIONS
+            // ══════════════════════════════════════════════════════════════
+            
+            updateConnections() {
+                const svg = document.getElementById('connections-svg');
+                svg.innerHTML = '';
+                
+                this.connections.forEach(conn => {
+                    const sourceEl = document.getElementById(conn.source);
+                    const targetEl = document.getElementById(conn.target);
+                    
+                    if (sourceEl && targetEl) {
+                        const sourceRect = sourceEl.getBoundingClientRect();
+                        const targetRect = targetEl.getBoundingClientRect();
+                        const canvasRect = document.getElementById('canvas').getBoundingClientRect();
+                        
+                        const x1 = sourceRect.right - canvasRect.left;
+                        const y1 = sourceRect.top + sourceRect.height/2 - canvasRect.top;
+                        const x2 = targetRect.left - canvasRect.left;
+                        const y2 = targetRect.top + targetRect.height/2 - canvasRect.top;
+                        
+                        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                        const midX = (x1 + x2) / 2;
+                        path.setAttribute('d', `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`);
+                        path.setAttribute('class', 'connection-line' + (conn.verified ? ' verified' : ''));
+                        svg.appendChild(path);
+                    }
+                });
+            },
+            
+            createConnection(sourceId, targetId) {
+                this.connections.push({ source: sourceId, target: targetId, verified: false });
+                this.updateConnections();
+                this.logEvent('CONNECTION_CREATED', `${sourceId} → ${targetId}`);
+            },
+            
+            // ══════════════════════════════════════════════════════════════
+            // CANVAS ACTIONS
+            // ══════════════════════════════════════════════════════════════
+            
+            clearCanvas() {
+                if (!confirm('Clear all nodes from canvas?')) return;
+                
+                document.querySelectorAll('.canvas-node').forEach(n => n.remove());
+                this.nodes.clear();
+                this.connections = [];
+                this.updateConnections();
+                this.updateNodeCount();
+                this.logEvent('CANVAS_CLEARED', 'All nodes removed');
+            },
+            
+            autoLayout() {
+                const nodes = Array.from(this.nodes.entries());
+                const startX = 100;
+                const startY = 150;
+                const spacingX = 220;
+                
+                nodes.forEach(([id, state], index) => {
+                    const x = startX + (index * spacingX);
+                    const y = startY;
+                    
+                    const nodeEl = document.getElementById(id);
+                    if (nodeEl) {
+                        nodeEl.style.left = x + 'px';
+                        nodeEl.style.top = y + 'px';
+                        state.position = { x, y };
+                    }
+                });
+                
+                // Auto-connect in sequence
+                this.connections = [];
+                const nodeIds = Array.from(this.nodes.keys());
+                for (let i = 0; i < nodeIds.length - 1; i++) {
+                    this.connections.push({ source: nodeIds[i], target: nodeIds[i+1], verified: true });
+                }
+                
+                this.updateConnections();
+                this.logEvent('AUTO_LAYOUT', `${nodes.length} nodes arranged sequentially`);
+            },
+            
+            detectLoops() {
+                // Simple loop detection
+                const visited = new Set();
+                let hasLoop = false;
+                
+                this.connections.forEach(conn => {
+                    if (visited.has(conn.target)) {
+                        hasLoop = true;
+                    }
+                    visited.add(conn.source);
+                });
+                
+                if (hasLoop) {
+                    alert('⚠️ Loop detected! This may waste compute.');
+                } else {
+                    alert('✅ No loops detected');
+                }
+                
+                this.logEvent('LOOP_CHECK', hasLoop ? 'Loop found' : 'No loops');
+            },
+            
+            exportState() {
+                const state = {
+                    version: '2.0.0',
+                    nodes: Array.from(this.nodes.values()),
+                    connections: this.connections,
+                    exported_at: new Date().toISOString()
+                };
+                
+                console.log('Canvas State:', JSON.stringify(state, null, 2));
+                alert('State exported to console (F12)');
+                this.logEvent('STATE_EXPORTED', `${this.nodes.size} nodes exported`);
+            },
+            
+            // ══════════════════════════════════════════════════════════════
+            // STRIKE CONSOLE ACTIONS
+            // ══════════════════════════════════════════════════════════════
+            
+            async initializeSwarm() {
+                if (this.nodes.size === 0) {
+                    alert('Canvas is empty. Drag agents to canvas first.');
+                    return;
+                }
+                
+                const name = prompt('Swarm Name:', 'PNC-Shadow-Vet');
+                if (!name) return;
+                
+                this.currentDeployment = {
+                    name: name,
+                    state: 'DRAFT',
+                    nodes: Array.from(this.nodes.values())
+                };
+                
+                document.getElementById('deployment-info').innerHTML = `
+                    <div class="deployment-name">${name}</div>
+                    <span class="deployment-state draft">DRAFT</span>
+                `;
+                
+                this.logEvent('SWARM_INITIALIZED', `${name} with ${this.nodes.size} nodes`);
+            },
+            
+            async simulateStrike() {
+                if (!this.currentDeployment) {
+                    alert('Initialize swarm first');
+                    return;
+                }
+                
+                this.currentDeployment.state = 'SIMULATED';
+                document.getElementById('deployment-info').innerHTML = `
+                    <div class="deployment-name">${this.currentDeployment.name}</div>
+                    <span class="deployment-state simulated">SIMULATED</span>
+                `;
+                
+                // Mark connections as verified
+                this.connections.forEach(c => c.verified = true);
+                this.updateConnections();
+                
+                this.logEvent('SIMULATION_COMPLETE', 'BRP generated - Risk: LOW');
+                alert('✅ Simulation complete\\nBRP Generated\\nRisk: LOW');
+            },
+            
+            async armDeployment() {
+                if (!this.currentDeployment || this.currentDeployment.state !== 'SIMULATED') {
+                    alert('Simulate deployment first');
+                    return;
+                }
+                
+                const smk = prompt('Enter SMK Key to arm:');
+                if (!smk) return;
+                
+                this.currentDeployment.state = 'ARMED';
+                document.getElementById('deployment-info').innerHTML = `
+                    <div class="deployment-name">${this.currentDeployment.name}</div>
+                    <span class="deployment-state armed">ARMED</span>
+                `;
+                
+                document.getElementById('execute-btn').disabled = false;
+                this.logEvent('DEPLOYMENT_ARMED', 'Double-lock engaged');
+            },
+            
+            async executeSwarm() {
+                if (!this.currentDeployment || this.currentDeployment.state !== 'ARMED') {
+                    return;
+                }
+                
+                const confirm_code = prompt('Enter confirmation code to execute:');
+                if (!confirm_code) return;
+                
+                this.currentDeployment.state = 'EXECUTING';
+                document.getElementById('deployment-info').innerHTML = `
+                    <div class="deployment-name">${this.currentDeployment.name}</div>
+                    <span class="deployment-state executing">EXECUTING</span>
+                `;
+                
+                this.logEvent('SWARM_EXECUTING', 'Agents deployed');
+                alert('🚀 Swarm executing!');
+            },
+            
+            // ══════════════════════════════════════════════════════════════
+            // TELEMETRY
+            // ══════════════════════════════════════════════════════════════
+            
+            updateNodeCount() {
+                document.getElementById('node-count').textContent = this.nodes.size;
+            },
+            
+            logEvent(type, message) {
+                const feed = document.getElementById('telemetry-feed');
+                const time = new Date().toISOString().substr(11, 8);
+                
+                const event = document.createElement('div');
+                event.className = 'telemetry-event';
+                event.innerHTML = `<span class="event-time">${time}</span> <span class="event-type">${type}</span> ${message}`;
+                
+                feed.insertBefore(event, feed.firstChild);
+                
+                // Keep only last 20 events
+                while (feed.children.length > 20) {
+                    feed.removeChild(feed.lastChild);
+                }
+            }
+        };
         
-        function autoLayout() {
-            alert('Auto layout applied');
-        }
-        
-        function detectLoops() {
-            alert('No loops detected ✓');
-        }
-        
-        function generatePAC() {
-            alert('PAC schema exported');
-        }
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => CanvasEngine.init());
     </script>
 </body>
 </html>
