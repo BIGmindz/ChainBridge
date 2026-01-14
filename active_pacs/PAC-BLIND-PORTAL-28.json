@@ -1,0 +1,94 @@
+{
+  "pac_id": "PAC-BLIND-PORTAL-28",
+  "pac_version": "1.0.0",
+  "pac_type": "SECURE_INFRASTRUCTURE_DEPLOYMENT",
+  "pac_class": "ZERO_PII_INGEST_LAYER",
+  "schema_version": "4.0.0",
+  "block_standard": "28-BLIND_PORTAL",
+  "timestamp": "2026-01-14T23:00:00.000Z",
+  "epoch": "EPOCH_001",
+  "issuer": "ARCHITECT-JEFFREY",
+  "executor": "BENSON-GID-00",
+
+  "factual_state": {
+    "vaporizer_status": "DEPLOYED",
+    "zk_bridge_status": "OPERATIONAL",
+    "identity_gates": 2000,
+    "law_gates": 10000,
+    "target": "SECURE_CBH_INGEST_PORTAL"
+  },
+
+  "constitutional_analysis": {
+    "control_autonomy": "Portal enforces Canonical Gateway rules; only .cbh files accepted",
+    "proof_execution": "Portal collects PROOF (P) before DECISION (D) can be triggered",
+    "fail_closed": "Salt-mismatch or invalid HMAC terminates session and logs to PERMANENT_LEDGER"
+  },
+
+  "architecture": {
+    "authentication": "One-time GID token per session",
+    "ingest_mode": "STREAMING_MEMORY_ONLY",
+    "disk_storage": "PROHIBITED",
+    "validation_agents": ["BENSON-GID-00", "DAN-SDR-GID-14"],
+    "bridge_integration": "CONCORDIUM_ZK_BRIDGE"
+  },
+
+  "execution_lanes": {
+    "lane_1": {
+      "lane_id": "LANE-1-PORTAL-SYNTH",
+      "task": "Create api/blind_portal.py with .cbh stream-processing logic",
+      "status": "EXECUTING"
+    },
+    "lane_2": {
+      "lane_id": "LANE-2-ZK-HANDSHAKE",
+      "task": "Link portal to Concordium ZK-Bridge (Job A artifacts)",
+      "status": "QUEUED"
+    },
+    "lane_3": {
+      "lane_id": "LANE-3-PROGRESS-ENGINE",
+      "task": "Build real-time Decision Feed for bank dashboard",
+      "status": "QUEUED"
+    }
+  },
+
+  "gaps_and_risks": [
+    {
+      "risk_id": "RISK-PORTAL-001",
+      "description": "DoS via multi-terabyte upload",
+      "severity": "HIGH",
+      "mitigation": "100MB chunk-limit per PAC-session, Rate-Limiting at Gateway"
+    },
+    {
+      "risk_id": "GAP-PORTAL-001",
+      "description": "JSON response schema for bank system",
+      "resolution": "Define standardized BlindAuditResponse schema"
+    }
+  ],
+
+  "forbidden_actions": [
+    {
+      "prohibition_id": "FORBID-PORTAL-001",
+      "action": "Accept any file type other than .cbh",
+      "enforcement": "HARD_BLOCK"
+    },
+    {
+      "prohibition_id": "FORBID-PORTAL-002",
+      "action": "Write uploaded data to local disk",
+      "enforcement": "HARD_BLOCK"
+    },
+    {
+      "prohibition_id": "FORBID-PORTAL-003",
+      "action": "Process file without HMAC signature validation",
+      "enforcement": "FAIL_CLOSED"
+    }
+  ],
+
+  "security_limits": {
+    "max_file_size_mb": 100,
+    "max_records_per_session": 100000,
+    "rate_limit_requests_per_minute": 10,
+    "session_timeout_seconds": 3600,
+    "max_concurrent_sessions": 5
+  },
+
+  "status": "EXECUTING"
+}
