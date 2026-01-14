@@ -155,3 +155,47 @@ __all__ += [
     "MAX_AGENTS_STANDARD",
     "MAX_AGENTS_CLUSTERED",
 ]
+
+# SxT Prover exports (PAC-SXT-PROVER-UI-40)
+from occ.sxt_prover import (
+    SxTCanvasIntegration,
+    SxTProverClient,
+    VerificationBadgeManager,
+    ProofStreamManager,
+    SxTQueryReceipt,
+    VerificationBadge,
+    VerifiableTunnel,
+    ProofStreamEvent,
+    ProofStatus,
+    BadgeState,
+    CanvasMode,
+    QueryType,
+    launch_sxt_prover_integration,
+    SXT_PROVER_VERSION,
+)
+
+__all__ += [
+    # SxT Prover components
+    "SxTCanvasIntegration",
+    "SxTProverClient",
+    "VerificationBadgeManager",
+    "ProofStreamManager",
+    
+    # SxT data classes
+    "SxTQueryReceipt",
+    "VerificationBadge",
+    "VerifiableTunnel",
+    "ProofStreamEvent",
+    
+    # SxT enums
+    "ProofStatus",
+    "BadgeState",
+    "CanvasMode",
+    "QueryType",
+    
+    # SxT entry point
+    "launch_sxt_prover_integration",
+    
+    # SxT constants
+    "SXT_PROVER_VERSION",
+]

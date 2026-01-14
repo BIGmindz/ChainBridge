@@ -1,0 +1,88 @@
+{
+  "pac_id": "PAC-SXT-PROVER-UI-40",
+  "pac_version": "1.0.0",
+  "pac_type": "VISUAL_DATA_FINALITY",
+  "pac_class": "SXT_PROOF_OF_SQL_INTEGRATION",
+  "schema_version": "4.0.0",
+  "block_standard": "40-SXT_PROVER_UI",
+  "timestamp": "2026-01-15T03:00:00.000Z",
+  "epoch": "EPOCH_001",
+  "issuer": "ARCHITECT-JEFFREY",
+  "executor": "BENSON-GID-00",
+
+  "factual_state": {
+    "canvas_status": "ONLINE",
+    "occ_status": "ONLINE",
+    "arr_current_usd": 13197500.00,
+    "permanent_ledger_entries": 44,
+    "transformation": "Trusting the UI → Verifying the UI"
+  },
+
+  "constitutional_analysis": {
+    "proof_execution": "SXT badges are visual manifestation of Proof - not just green lines but validated cryptographic links",
+    "control_autonomy": "Architect sees SxT Proof-of-SQL badge on each node as authorization proof",
+    "audit_aware": "Every green Proof Badge anchored to PERMANENT_LEDGER"
+  },
+
+  "visual_changes": {
+    "connection_lines": {
+      "before": "Blue standard lines",
+      "after": "Glowing Gold - indicates active SxT Verifiable Tunnel"
+    },
+    "node_badges": {
+      "before": "No verification indicator",
+      "after": "SxT icon - indicates agent submitting Proof of SQL"
+    },
+    "tooltips": {
+      "before": "Basic node info",
+      "after": "SxT Query ID - actual ledger entry for specific action"
+    }
+  },
+
+  "execution_lanes": {
+    "lane_1": {
+      "lane_id": "LANE-1-SXT-CLIENT-INIT",
+      "task": "Initialize SxT-Prover client for verifiable query receipts",
+      "status": "EXECUTING"
+    },
+    "lane_2": {
+      "lane_id": "LANE-2-CANVAS-COMPONENT-UPDATE",
+      "task": "Add VerificationBadge component to React-Flow nodes",
+      "status": "QUEUED"
+    },
+    "lane_3": {
+      "lane_id": "LANE-3-PROOF-STREAMING",
+      "task": "Open WebSocket for SxT finality events to canvas",
+      "status": "QUEUED"
+    }
+  },
+
+  "sxt_integration": {
+    "provider": "Space and Time (SxT)",
+    "protocol": "Proof of SQL",
+    "verification_type": "Zero-Knowledge Cryptographic Proof",
+    "data_warehouse": "Decentralized",
+    "query_finality": "On-chain anchored"
+  },
+
+  "gaps_and_risks": [
+    {
+      "risk_id": "RISK-SXT-001",
+      "description": "UI Overload - too many badges cluttering War Room",
+      "mitigation": "Badges only appear during Active Execution or Audit Replay modes"
+    },
+    {
+      "gap_id": "GAP-SXT-001",
+      "description": "Requires SxT Gateway Secret in environment",
+      "resolution": "Inject via .env or Sovereign Vault"
+    }
+  ],
+
+  "badge_modes": {
+    "active_execution": "Badges visible during swarm execution",
+    "audit_replay": "Badges visible during historical audit review",
+    "idle": "Badges hidden to reduce visual clutter"
+  },
+
+  "status": "EXECUTING"
+}
