@@ -2,6 +2,13 @@
 line-length = 140
 target-version = ["py311"]
 
+[tool.chainbridge]
+# Canonical Python Runtime - CONSTITUTIONAL LAW
+# Updated per PAC-CORRECTIVE-ENV-LOCK-59 Addendum-A
+python-version = "3.11.14"
+zero-drift = true
+fail-closed = true
+
 [tool.isort]
 profile = "black"
 line_length = 140

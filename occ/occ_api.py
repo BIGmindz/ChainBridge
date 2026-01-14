@@ -19,6 +19,31 @@ Authority: ARCHITECT-JEFFREY
 PAC: PAC-OCC-COMMAND-34
 """
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# CONSTITUTIONAL GATEWAY - RUNTIME VERSION LOCK
+# PAC-CORRECTIVE-ENV-LOCK-59 Addendum-A
+# ZERO-DRIFT ENFORCEMENT: Python 3.11.14 REQUIRED
+# ═══════════════════════════════════════════════════════════════════════════════
+import sys
+_REQUIRED_VERSION = (3, 11, 14)
+if sys.version_info[:3] != _REQUIRED_VERSION:
+    print("═" * 72)
+    print("  ██████╗ ██████╗ ███╗   ██╗███████╗████████╗██╗████████╗██╗   ██╗")
+    print(" ██╔════╝██╔═══██╗████╗  ██║██╔════╝╚══██╔══╝██║╚══██╔══╝╚██╗ ██╔╝")
+    print(" ██║     ██║   ██║██╔██╗ ██║███████╗   ██║   ██║   ██║    ╚████╔╝ ")
+    print(" ██║     ██║   ██║██║╚██╗██║╚════██║   ██║   ██║   ██║     ╚██╔╝  ")
+    print(" ╚██████╗╚██████╔╝██║ ╚████║███████║   ██║   ██║   ██║      ██║   ")
+    print("  ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝   ╚═╝      ╚═╝   ")
+    print("              D R I F T   D E T E C T E D")
+    print("═" * 72)
+    print(f"  CRITICAL: CONSTITUTIONAL RUNTIME VIOLATION")
+    print(f"  REQUIRED: Python {'.'.join(map(str, _REQUIRED_VERSION))}")
+    print(f"  DETECTED: Python {'.'.join(map(str, sys.version_info[:3]))}")
+    print(f"  ACTION:   FAIL-CLOSED - Execution halted")
+    print("═" * 72)
+    sys.exit(1)
+# ═══════════════════════════════════════════════════════════════════════════════
+
 import json
 import hmac
 import hashlib
