@@ -56,3 +56,8 @@ reportUnusedFunction = "information"
 reportUnusedVariable = "information"
 reportDuplicateImport = false
 reportWildcardImportFromLibrary = false
+
+[tool.pytest.ini_options]
+# PAC-AUTH-R3C-001: Enable pytest-asyncio auto mode for async tests
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
