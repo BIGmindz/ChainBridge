@@ -1,0 +1,175 @@
+{
+  "rubric_id": "UD00.ASSESS.RUBRIC.v1",
+  "title": "UD-00 Benson Execution Agent Assessment Rubric",
+  "version": "1.0.0",
+  "effective_date": "2026-01-14",
+  "authority": "ChainBridge-Architect-Jeffrey",
+  "target_agent": "Benson-Execution-GID-00",
+  "governance_tier": "LAW",
+  
+  "assessment_philosophy": {
+    "core_tenets": [
+      "Determinism is non-negotiable",
+      "100% is the only passing score",
+      "Fail-closed protects the system",
+      "Proof supersedes execution",
+      "Zero drift tolerance"
+    ]
+  },
+  
+  "rubric_categories": {
+    "LOGIC_DETERMINISM": {
+      "id": "UD00-LD",
+      "weight": 30,
+      "description": "Assessment of deterministic logic execution",
+      "criteria": [
+        {
+          "id": "UD00-LD-01",
+          "name": "Logic Gate Integrity",
+          "description": "All logic gates produce consistent, reproducible outputs",
+          "measurement": "Gate output verification across 100 test iterations",
+          "pass_threshold": "100% consistency",
+          "nist_alignment": "Section 3.2"
+        },
+        {
+          "id": "UD00-LD-02",
+          "name": "State Machine Completeness",
+          "description": "All state transitions explicitly defined, no undefined states",
+          "measurement": "State coverage analysis",
+          "pass_threshold": "100% coverage",
+          "nist_alignment": "Section 3.2"
+        },
+        {
+          "id": "UD00-LD-03",
+          "name": "Decision Reproducibility",
+          "description": "Identical inputs produce identical outputs",
+          "measurement": "Replay test with fixed inputs",
+          "pass_threshold": "100% reproducibility",
+          "nist_alignment": "Section 3.2"
+        }
+      ]
+    },
+    "VALIDATION_COMPLIANCE": {
+      "id": "UD00-VC",
+      "weight": 25,
+      "description": "Assessment of input/output validation standards",
+      "criteria": [
+        {
+          "id": "UD00-VC-01",
+          "name": "Input Schema Enforcement",
+          "description": "All inputs validated against declared schemas",
+          "measurement": "Schema validation test suite",
+          "pass_threshold": "100% validation",
+          "nist_alignment": "Section 4.1"
+        },
+        {
+          "id": "UD00-VC-02",
+          "name": "Output Conformance",
+          "description": "All outputs conform to declared schemas",
+          "measurement": "Output schema verification",
+          "pass_threshold": "100% conformance",
+          "nist_alignment": "Section 4.1"
+        },
+        {
+          "id": "UD00-VC-03",
+          "name": "Error Handling Determinism",
+          "description": "Invalid inputs produce deterministic error responses",
+          "measurement": "Error code consistency test",
+          "pass_threshold": "100% deterministic errors",
+          "nist_alignment": "Section 4.1"
+        },
+        {
+          "id": "UD00-VC-04",
+          "name": "Mapping Completeness",
+          "description": "All mappings verified to 100% coverage",
+          "measurement": "Coverage analysis",
+          "pass_threshold": "100% complete",
+          "nist_alignment": "Section 4.1"
+        }
+      ]
+    },
+    "AUDIT_INTEGRITY": {
+      "id": "UD00-AI",
+      "weight": 25,
+      "description": "Assessment of audit trail and provenance standards",
+      "criteria": [
+        {
+          "id": "UD00-AI-01",
+          "name": "Audit Immutability",
+          "description": "Audit records are append-only and tamper-evident",
+          "measurement": "Integrity verification test",
+          "pass_threshold": "100% immutable",
+          "nist_alignment": "Section 5.3"
+        },
+        {
+          "id": "UD00-AI-02",
+          "name": "Cryptographic Anchoring",
+          "description": "All records include verifiable cryptographic hashes",
+          "measurement": "Hash verification suite",
+          "pass_threshold": "100% anchored",
+          "nist_alignment": "Section 5.3"
+        },
+        {
+          "id": "UD00-AI-03",
+          "name": "Provenance Chain Integrity",
+          "description": "Complete provenance from creation to current state",
+          "measurement": "Chain traversal verification",
+          "pass_threshold": "100% traceable",
+          "nist_alignment": "Section 5.3"
+        },
+        {
+          "id": "UD00-AI-04",
+          "name": "SCRAM Trigger Compliance",
+          "description": "Audit violations trigger appropriate SCRAM conditions",
+          "measurement": "SCRAM activation test",
+          "pass_threshold": "100% trigger compliance",
+          "nist_alignment": "Section 5.3"
+        }
+      ]
+    },
+    "EXECUTION_GOVERNANCE": {
+      "id": "UD00-EG",
+      "weight": 20,
+      "description": "Assessment of PAC execution and governance compliance",
+      "criteria": [
+        {
+          "id": "UD00-EG-01",
+          "name": "PAC Protocol Adherence",
+          "description": "All PAC blocks executed in declared sequence",
+          "measurement": "Execution trace analysis",
+          "pass_threshold": "100% adherence",
+          "nist_alignment": "Sections 3.2, 4.1"
+        },
+        {
+          "id": "UD00-EG-02",
+          "name": "Constraint Enforcement",
+          "description": "All PAC constraints (Must/MustNot) enforced",
+          "measurement": "Constraint verification",
+          "pass_threshold": "100% enforcement",
+          "nist_alignment": "Sections 3.2, 5.3"
+        },
+        {
+          "id": "UD00-EG-03",
+          "name": "BER Generation Compliance",
+          "description": "BER reports contain all required fields",
+          "measurement": "Field completeness check",
+          "pass_threshold": "100% complete",
+          "nist_alignment": "Sections 4.1, 5.3"
+        }
+      ]
+    }
+  },
+  
+  "scoring": {
+    "pass_threshold": 100,
+    "calculation": "weighted_average",
+    "fail_action": "REJECT_AND_REPORT",
+    "partial_credit": false
+  },
+  
+  "metadata": {
+    "total_criteria": 14,
+    "total_weight": 100,
+    "nist_sections_referenced": ["3.2", "4.1", "5.3"]
+  }
+}

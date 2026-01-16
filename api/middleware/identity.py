@@ -25,9 +25,8 @@ import json
 import logging
 import re
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, FrozenSet, List, Optional, Set
+from typing import Any, Dict, FrozenSet, List, Optional
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -60,11 +59,11 @@ class GIDInfo:
     system_type: Optional[str] = None
     has_persona: bool = False
     is_conversational: bool = False
-    
+
     def can_execute_in_lane(self, lane: str) -> bool:
         """Check if GID can execute in a specific lane."""
         return lane.upper() in self.execution_lanes or "ALL" in self.execution_lanes
-    
+
     def has_mode(self, mode: str) -> bool:
         """Check if GID has a specific permitted mode."""
         return mode.upper() in self.permitted_modes
@@ -73,34 +72,34 @@ class GIDInfo:
 class GIDValidator:
     """
     GID Registry validator with HARD FAIL enforcement.
-    
+
     Loads gid_registry.json and validates GID references.
     Unknown GID = HARD FAIL per RULE-GID-002.
     """
-    
+
     def __init__(self, registry_path: Path = GID_REGISTRY_PATH):
         self.registry_path = registry_path
         self._registry: Dict[str, Any] = {}
         self._agents: Dict[str, GIDInfo] = {}
         self._enforcement_rules: Dict[str, str] = {}
         self._load_registry()
-    
+
     def _load_registry(self) -> None:
         """Load GID registry from file."""
         try:
             if self.registry_path.exists():
                 with open(self.registry_path) as f:
                     self._registry = json.load(f)
-                
+
                 self._enforcement_rules = self._registry.get("enforcement_rules", {})
-                
+
                 # Parse agent entries
                 agents_data = self._registry.get("agents", {})
                 for gid, data in agents_data.items():
                     if not self._validate_gid_format(gid):
                         logger.warning(f"Invalid GID format in registry: {gid}")
                         continue
-                    
+
                     self._agents[gid] = GIDInfo(
                         gid=gid,
                         name=data.get("name", ""),
@@ -117,48 +116,48 @@ class GIDValidator:
                         has_persona=data.get("has_persona", False),
                         is_conversational=data.get("is_conversational", False),
                     )
-                
+
                 logger.info(f"Loaded {len(self._agents)} agents from GID registry")
             else:
                 logger.warning(f"GID registry not found: {self.registry_path}")
-        
+
         except Exception as e:
             logger.error(f"Failed to load GID registry: {e}")
-    
+
     def _validate_gid_format(self, gid: str) -> bool:
         """Validate GID format per RULE-GID-003."""
         return bool(GID_PATTERN.match(gid))
-    
+
     def validate_gid(self, gid: str) -> Optional[GIDInfo]:
         """
         Validate a GID against the registry.
-        
+
         Returns GIDInfo if valid, None if invalid (HARD FAIL case).
         Per RULE-GID-002: Unknown GID → immediate rejection.
         """
         if not gid:
             return None
-        
+
         # Validate format
         if not self._validate_gid_format(gid):
             logger.warning(f"RULE-GID-003 violation: Invalid GID format: {gid}")
             return None
-        
+
         # Check registry
         if gid not in self._agents:
             logger.warning(f"RULE-GID-002 violation: Unknown GID: {gid}")
             return None
-        
+
         return self._agents[gid]
-    
+
     def get_agent(self, gid: str) -> Optional[GIDInfo]:
         """Get agent info by GID."""
         return self._agents.get(gid)
-    
+
     def list_agents(self) -> List[GIDInfo]:
         """List all registered agents."""
         return list(self._agents.values())
-    
+
     def get_enforcement_rule(self, rule_id: str) -> Optional[str]:
         """Get an enforcement rule by ID."""
         return self._enforcement_rules.get(rule_id)
@@ -178,20 +177,20 @@ class IdentityContext:
 class IdentityMiddleware(BaseHTTPMiddleware):
     """
     Identity middleware for GID registry binding.
-    
+
     Enforces INV-AUTH-002: GID binding MUST be verified against gid_registry.json.
-    
+
     For requests with a GID claim:
       - Validates GID format (RULE-GID-003)
       - Validates GID exists in registry (RULE-GID-002)
       - Attaches GIDInfo to request state
       - Enforces execution lane permissions
-    
+
     For requests without a GID claim:
       - Allows request if user_id is present (external user)
       - Logs warning for monitoring
     """
-    
+
     def __init__(
         self,
         app,
@@ -203,7 +202,7 @@ class IdentityMiddleware(BaseHTTPMiddleware):
         self.exempt_paths = exempt_paths
         self.require_gid = require_gid
         self.validator = validator or GIDValidator()
-    
+
     def _is_exempt(self, path: str) -> bool:
         """Check if path is exempt from identity validation."""
         if path in self.exempt_paths:
@@ -215,11 +214,11 @@ class IdentityMiddleware(BaseHTTPMiddleware):
             if path.startswith(exempt + "/"):
                 return True
         return False
-    
+
     def _extract_lane_from_path(self, path: str) -> Optional[str]:
         """
         Extract execution lane from request path.
-        
+
         Mapping:
           /api/* -> API
           /v1/transactions/* -> CORE
@@ -227,7 +226,7 @@ class IdentityMiddleware(BaseHTTPMiddleware):
           /docs/* -> (exempt)
         """
         path_lower = path.lower()
-        
+
         if path_lower.startswith("/v1/transaction"):
             return "CORE"
         if path_lower.startswith("/v1/governance"):
@@ -236,33 +235,33 @@ class IdentityMiddleware(BaseHTTPMiddleware):
             return "BACKEND"
         if path_lower.startswith("/api"):
             return "API"
-        
+
         return None
-    
+
     async def dispatch(self, request: Request, call_next):
         """Process identity validation for incoming request."""
         path = request.url.path
-        
+
         # Check exemption
         if self._is_exempt(path):
             return await call_next(request)
-        
+
         # Get auth result from upstream middleware
         auth = getattr(request.state, "auth", None)
         if not auth:
             # No auth context - should have been caught by AuthMiddleware
             return await call_next(request)
-        
+
         # Create identity context
         identity = IdentityContext()
-        
+
         # Check for GID claim
         gid = getattr(request.state, "gid", None) or auth.claims.get("gid")
-        
+
         if gid:
             # Validate GID against registry
             gid_info = self.validator.validate_gid(gid)
-            
+
             if gid_info is None:
                 # HARD FAIL per RULE-GID-002
                 logger.warning(
@@ -277,7 +276,7 @@ class IdentityMiddleware(BaseHTTPMiddleware):
                         "code": "INVALID_GID",
                     },
                 )
-            
+
             # Check execution lane permission
             lane = self._extract_lane_from_path(path)
             if lane and not gid_info.can_execute_in_lane(lane):
@@ -293,13 +292,13 @@ class IdentityMiddleware(BaseHTTPMiddleware):
                         "code": "LANE_DENIED",
                     },
                 )
-            
+
             identity.gid = gid
             identity.gid_info = gid_info
             identity.is_validated = True
             identity.is_system = gid_info.is_system
             identity.execution_lanes = gid_info.execution_lanes
-        
+
         elif self.require_gid:
             # GID required but not present
             logger.warning(f"GID required but not present: path={path}")
@@ -311,12 +310,12 @@ class IdentityMiddleware(BaseHTTPMiddleware):
                     "code": "GID_REQUIRED",
                 },
             )
-        
+
         else:
             # External user without GID - allow but log
             logger.info(f"Request without GID: user_id={auth.user_id} path={path}")
-        
+
         # Attach identity context to request state
         request.state.identity = identity
-        
+
         return await call_next(request)

@@ -1,0 +1,27 @@
+{
+  "_metadata": {
+    "pac_id": "PAC-REGISTRY-PRUNE-03",
+    "schema_version": "4.0.0",
+    "tier": "LAW",
+    "fail_closed": true,
+    "drift_tolerance": "ZERO",
+    "issued_at": "2026-01-14T00:00:00Z",
+    "archived_at": "2026-01-14T21:34:22Z",
+    "canonical_registry": "docs/governance/AGENT_REGISTRY_CANONICAL.json",
+    "note": "All non-canonical registries archived; canonical remains sole authority."
+  },
+  "archived_registries": [
+    {
+      "original_path": "ChainBridge/repo_context_bundle/governance_core_bundle/AGENT_REGISTRY.json",
+      "archived_path": "docs/governance/archive/AGENT_REGISTRY_v4.0.0.json",
+      "sha256": "ba69e84616d50773dae678c518152f8110006f6e9f791f6500e147fa39330daa",
+      "status": "DEPRECATED",
+      "reason": "Superseded by AGENT_REGISTRY_CANONICAL.json (LAW-tier)."
+    }
+  ],
+  "invariants": {
+    "INV-A01": "One GID = One Authority",
+    "INV-A05": "Deprecated registries are non-executable",
+    "INV-G09": "Registry entry required for execution"
+  }
+}

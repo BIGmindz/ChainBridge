@@ -1,0 +1,191 @@
+{
+  "$schema": "https://chainbridge.io/schemas/task-manifest/v1.0.0",
+  "schema_id": "TASK_MANIFEST_SCHEMA_V1",
+  "title": "Canonical Task Manifest Schema for PAC Execution",
+  "description": "Defines the required structure for task declaration in all PAC executions",
+  "pac_reference": "PAC-P746-GOV-TASK-PROGRESSION-VISIBILITY",
+  "classification": "LAW_TIER",
+  "created_at": "2026-01-13T19:40:00Z",
+  "author": "MIRA-R (GID-03)",
+
+  "definitions": {
+    "TaskState": {
+      "type": "string",
+      "enum": ["DECLARED", "IN_PROGRESS", "BLOCKED", "COMPLETE", "FAILED"],
+      "description": "Canonical task state machine states"
+    },
+    
+    "TaskTransition": {
+      "type": "object",
+      "description": "Valid state transitions",
+      "transitions": {
+        "DECLARED": ["IN_PROGRESS", "BLOCKED"],
+        "IN_PROGRESS": ["COMPLETE", "FAILED", "BLOCKED"],
+        "BLOCKED": ["IN_PROGRESS", "FAILED"],
+        "COMPLETE": [],
+        "FAILED": []
+      }
+    },
+    
+    "Task": {
+      "type": "object",
+      "required": ["task_id", "title", "status"],
+      "properties": {
+        "task_id": {
+          "type": "string",
+          "pattern": "^TASK-[0-9]{2,3}$",
+          "description": "Unique task identifier within PAC"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 100,
+          "description": "Human-readable task title"
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed task description"
+        },
+        "status": {
+          "$ref": "#/definitions/TaskState"
+        },
+        "assigned_agent": {
+          "type": "string",
+          "pattern": "^GID-[0-9]{2}$",
+          "description": "Agent assigned to execute task"
+        },
+        "artifact": {
+          "type": "string",
+          "description": "Expected output artifact path"
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Task IDs this task depends on"
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when task entered IN_PROGRESS"
+        },
+        "completed_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when task reached terminal state"
+        },
+        "duration_ms": {
+          "type": "integer",
+          "description": "Execution duration in milliseconds"
+        },
+        "failure_reason": {
+          "type": "string",
+          "description": "Reason for FAILED state"
+        },
+        "blocked_reason": {
+          "type": "string",
+          "description": "Reason for BLOCKED state"
+        }
+      }
+    },
+    
+    "TaskManifest": {
+      "type": "object",
+      "required": ["manifest_id", "pac_id", "tasks", "declared_at"],
+      "properties": {
+        "manifest_id": {
+          "type": "string",
+          "pattern": "^MANIFEST-[A-Z0-9-]+$",
+          "description": "Unique manifest identifier"
+        },
+        "pac_id": {
+          "type": "string",
+          "pattern": "^PAC-P[0-9]+-[A-Z]+-[A-Z0-9-]+$",
+          "description": "PAC this manifest belongs to"
+        },
+        "declared_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when manifest was declared"
+        },
+        "tasks": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/Task"},
+          "minItems": 1,
+          "description": "List of all tasks in execution plan"
+        },
+        "total_tasks": {
+          "type": "integer",
+          "description": "Total number of tasks"
+        },
+        "completed_tasks": {
+          "type": "integer",
+          "description": "Number of COMPLETE tasks"
+        },
+        "failed_tasks": {
+          "type": "integer",
+          "description": "Number of FAILED tasks"
+        },
+        "progress_percent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Overall progress percentage"
+        },
+        "execution_order": {
+          "type": "string",
+          "enum": ["SEQUENTIAL", "PARALLEL", "DEPENDENCY_GRAPH"],
+          "description": "How tasks are executed"
+        }
+      }
+    }
+  },
+  
+  "invariants": {
+    "INV-TM-001": {
+      "name": "Manifest Before Execution",
+      "rule": "Task manifest MUST be declared before any task begins execution"
+    },
+    "INV-TM-002": {
+      "name": "No Hidden Tasks",
+      "rule": "All work MUST be represented as declared tasks"
+    },
+    "INV-TM-003": {
+      "name": "State Machine Compliance",
+      "rule": "Task state transitions MUST follow defined transition rules"
+    },
+    "INV-TM-004": {
+      "name": "Heartbeat Binding",
+      "rule": "Every task state change MUST emit a heartbeat event"
+    },
+    "INV-TM-005": {
+      "name": "Completion Gate",
+      "rule": "PAC cannot close with any tasks in non-terminal states"
+    }
+  },
+  
+  "example": {
+    "manifest_id": "MANIFEST-P746-GOV-TASK-PROGRESSION",
+    "pac_id": "PAC-P746-GOV-TASK-PROGRESSION-VISIBILITY",
+    "declared_at": "2026-01-13T19:35:00Z",
+    "tasks": [
+      {
+        "task_id": "TASK-01",
+        "title": "Define canonical task manifest schema",
+        "status": "COMPLETE",
+        "assigned_agent": "GID-03",
+        "artifact": "schemas/task_manifest.json"
+      },
+      {
+        "task_id": "TASK-02",
+        "title": "Bind task states to heartbeat emitter",
+        "status": "IN_PROGRESS",
+        "assigned_agent": "GID-01",
+        "dependencies": ["TASK-01"]
+      }
+    ],
+    "total_tasks": 4,
+    "completed_tasks": 1,
+    "progress_percent": 25,
+    "execution_order": "DEPENDENCY_GRAPH"
+  }
+}

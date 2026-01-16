@@ -23,14 +23,13 @@ SECURITY:
 """
 
 import base64
-import hashlib
 import hmac
 import json
 import logging
 import secrets
 import struct
 from dataclasses import dataclass, field
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -71,25 +70,25 @@ class BiometricConfig:
     rp_id: str = "chainbridge.io"
     rp_name: str = "ChainBridge"
     rp_origin: str = "https://chainbridge.io"
-    
+
     # Challenge settings
     challenge_length: int = 32
     challenge_timeout_seconds: int = 120
-    
+
     # User verification settings
     require_user_verification: bool = True
     require_resident_key: bool = False
-    
+
     # Attestation settings
     attestation_preference: str = "direct"  # none, indirect, direct, enterprise
     allowed_attestation_types: List[str] = field(default_factory=lambda: [
         "packed", "tpm", "android-key", "apple", "fido-u2f"
     ])
-    
+
     # Algorithm preferences (COSE algorithm identifiers)
     # -7: ES256 (ECDSA w/ SHA-256), -257: RS256 (RSA PKCS#1)
     preferred_algorithms: List[int] = field(default_factory=lambda: [-7, -257])
-    
+
     # Security settings
     max_credentials_per_user: int = 10
     credential_expiry_days: int = 365
@@ -108,7 +107,7 @@ class BiometricCredential:
     created_at: datetime
     last_used_at: Optional[datetime] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "credential_id": self.credential_id,
@@ -122,7 +121,7 @@ class BiometricCredential:
             "last_used_at": self.last_used_at.isoformat() if self.last_used_at else None,
             "metadata": self.metadata,
         }
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "BiometricCredential":
         return cls(
@@ -148,7 +147,7 @@ class BiometricChallenge:
     created_at: datetime
     expires_at: datetime
     allowed_credentials: List[str] = field(default_factory=list)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "challenge": base64.urlsafe_b64encode(self.challenge).decode().rstrip("="),
@@ -168,7 +167,7 @@ class BiometricResult:
     method: Optional[BiometricMethod] = None
     device_name: Optional[str] = None
     error: Optional[str] = None
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "verified": self.verified,
@@ -182,17 +181,17 @@ class BiometricResult:
 class WebAuthnRPHandler:
     """
     WebAuthn Relying Party implementation.
-    
+
     Handles credential registration and assertion verification
     following the W3C WebAuthn specification.
     """
-    
+
     def __init__(self, config: BiometricConfig, redis_client=None):
         self.config = config
         self.redis = redis_client
         self._challenges: Dict[str, BiometricChallenge] = {}
         self._credentials: Dict[str, BiometricCredential] = {}
-    
+
     def generate_registration_options(
         self,
         user_id: str,
@@ -202,12 +201,12 @@ class WebAuthnRPHandler:
     ) -> Dict[str, Any]:
         """
         Generate WebAuthn registration options.
-        
+
         Returns options to be passed to navigator.credentials.create()
         """
         challenge = secrets.token_bytes(self.config.challenge_length)
         now = datetime.now(timezone.utc)
-        
+
         # Store challenge
         bio_challenge = BiometricChallenge(
             challenge=challenge,
@@ -216,9 +215,9 @@ class WebAuthnRPHandler:
             created_at=now,
             expires_at=now + timedelta(seconds=self.config.challenge_timeout_seconds),
         )
-        
+
         self._store_challenge(user_id, bio_challenge)
-        
+
         # Build options
         options = {
             "rp": {
@@ -242,7 +241,7 @@ class WebAuthnRPHandler:
                 "residentKey": "required" if self.config.require_resident_key else "preferred",
             },
         }
-        
+
         # Exclude existing credentials
         if exclude_credentials:
             options["excludeCredentials"] = [
@@ -252,9 +251,9 @@ class WebAuthnRPHandler:
                 }
                 for cred_id in exclude_credentials
             ]
-        
+
         return options
-    
+
     def verify_registration(
         self,
         user_id: str,
@@ -265,45 +264,45 @@ class WebAuthnRPHandler:
     ) -> Tuple[bool, Optional[BiometricCredential], Optional[str]]:
         """
         Verify WebAuthn registration response.
-        
+
         Returns (success, credential, error_message)
         """
         # Retrieve and validate challenge
         challenge = self._get_challenge(user_id)
         if not challenge or not challenge.is_registration:
             return False, None, "Invalid or expired challenge"
-        
+
         if datetime.now(timezone.utc) > challenge.expires_at:
             return False, None, "Challenge expired"
-        
+
         # Parse client data
         try:
             client_data = json.loads(client_data_json)
         except json.JSONDecodeError:
             return False, None, "Invalid client data JSON"
-        
+
         # Verify client data
         if client_data.get("type") != "webauthn.create":
             return False, None, "Invalid operation type"
-        
+
         # Verify challenge
         received_challenge = base64.urlsafe_b64decode(
             client_data.get("challenge", "") + "=="
         )
         if not hmac.compare_digest(received_challenge, challenge.challenge):
             return False, None, "Challenge mismatch"
-        
+
         # Verify origin
         if client_data.get("origin") != self.config.rp_origin:
             logger.warning(f"Origin mismatch: {client_data.get('origin')} != {self.config.rp_origin}")
             # In development, we might allow localhost
-        
+
         # Parse attestation object (simplified - production would use proper CBOR)
         try:
             public_key, algorithm, counter = self._parse_attestation(attestation_object)
         except Exception as e:
             return False, None, f"Failed to parse attestation: {e}"
-        
+
         # Create credential
         credential = BiometricCredential(
             credential_id=credential_id,
@@ -315,17 +314,17 @@ class WebAuthnRPHandler:
             attestation_type=AttestationType.PACKED,  # Simplified
             created_at=datetime.now(timezone.utc),
         )
-        
+
         # Store credential
         self._store_credential(credential)
-        
+
         # Clear challenge
         self._delete_challenge(user_id)
-        
+
         logger.info(f"Biometric credential registered for user {user_id}: {credential_id[:16]}...")
-        
+
         return True, credential, None
-    
+
     def generate_authentication_options(
         self,
         user_id: str,
@@ -333,16 +332,16 @@ class WebAuthnRPHandler:
     ) -> Dict[str, Any]:
         """
         Generate WebAuthn authentication options.
-        
+
         Returns options to be passed to navigator.credentials.get()
         """
         challenge = secrets.token_bytes(self.config.challenge_length)
         now = datetime.now(timezone.utc)
-        
+
         # Get user's credentials if not specified
         if allowed_credentials is None:
             allowed_credentials = self._get_user_credentials(user_id)
-        
+
         # Store challenge
         bio_challenge = BiometricChallenge(
             challenge=challenge,
@@ -352,9 +351,9 @@ class WebAuthnRPHandler:
             expires_at=now + timedelta(seconds=self.config.challenge_timeout_seconds),
             allowed_credentials=allowed_credentials,
         )
-        
+
         self._store_challenge(user_id, bio_challenge)
-        
+
         options = {
             "rpId": self.config.rp_id,
             "challenge": base64.urlsafe_b64encode(challenge).decode().rstrip("="),
@@ -368,9 +367,9 @@ class WebAuthnRPHandler:
                 for cred_id in allowed_credentials
             ],
         }
-        
+
         return options
-    
+
     def verify_authentication(
         self,
         user_id: str,
@@ -386,39 +385,39 @@ class WebAuthnRPHandler:
         challenge = self._get_challenge(user_id)
         if not challenge or challenge.is_registration:
             return BiometricResult(verified=False, error="Invalid or expired challenge")
-        
+
         if datetime.now(timezone.utc) > challenge.expires_at:
             return BiometricResult(verified=False, error="Challenge expired")
-        
+
         # Check credential is allowed
         if credential_id not in challenge.allowed_credentials:
             return BiometricResult(verified=False, error="Credential not allowed")
-        
+
         # Get stored credential
         credential = self._get_credential(credential_id)
         if not credential:
             return BiometricResult(verified=False, error="Unknown credential")
-        
+
         if credential.user_id != user_id:
             return BiometricResult(verified=False, error="Credential user mismatch")
-        
+
         # Parse client data
         try:
             client_data = json.loads(client_data_json)
         except json.JSONDecodeError:
             return BiometricResult(verified=False, error="Invalid client data JSON")
-        
+
         # Verify client data
         if client_data.get("type") != "webauthn.get":
             return BiometricResult(verified=False, error="Invalid operation type")
-        
+
         # Verify challenge
         received_challenge = base64.urlsafe_b64decode(
             client_data.get("challenge", "") + "=="
         )
         if not hmac.compare_digest(received_challenge, challenge.challenge):
             return BiometricResult(verified=False, error="Challenge mismatch")
-        
+
         # Verify signature (simplified - production uses proper crypto)
         if not self._verify_signature(
             credential.public_key,
@@ -428,49 +427,49 @@ class WebAuthnRPHandler:
             signature
         ):
             return BiometricResult(verified=False, error="Signature verification failed")
-        
+
         # Update counter (replay protection)
         auth_counter = self._parse_counter(authenticator_data)
         if auth_counter <= credential.counter:
             logger.warning(f"Possible credential cloning detected for {credential_id}")
             return BiometricResult(verified=False, error="Counter rollback detected")
-        
+
         credential.counter = auth_counter
         credential.last_used_at = datetime.now(timezone.utc)
         self._store_credential(credential)
-        
+
         # Clear challenge
         self._delete_challenge(user_id)
-        
+
         logger.info(f"Biometric authentication successful for user {user_id}")
-        
+
         return BiometricResult(
             verified=True,
             credential_id=credential_id,
             method=BiometricMethod.WEBAUTHN,
             device_name=credential.device_name,
         )
-    
+
     def _parse_attestation(
         self,
         attestation_object: bytes
     ) -> Tuple[bytes, int, int]:
         """
         Parse attestation object to extract public key.
-        
+
         Simplified implementation - production would use CBOR parsing.
         """
         # This is a placeholder - real implementation needs CBOR
         # For now, return dummy values for testing
         return b"dummy_public_key", -7, 0
-    
+
     def _parse_counter(self, authenticator_data: bytes) -> int:
         """Extract counter from authenticator data."""
         if len(authenticator_data) < 37:
             return 0
         # Counter is bytes 33-37 of authenticator data
         return struct.unpack(">I", authenticator_data[33:37])[0]
-    
+
     def _verify_signature(
         self,
         public_key: bytes,
@@ -481,13 +480,13 @@ class WebAuthnRPHandler:
     ) -> bool:
         """
         Verify assertion signature.
-        
+
         Simplified implementation - production uses proper crypto libraries.
         """
         # This is a placeholder - real implementation needs cryptography library
         # For now, return True for testing (NEVER do this in production!)
         return len(signature) > 0
-    
+
     def _store_challenge(self, user_id: str, challenge: BiometricChallenge):
         """Store challenge for verification."""
         key = f"biometric:challenge:{user_id}"
@@ -499,7 +498,7 @@ class WebAuthnRPHandler:
             )
         else:
             self._challenges[user_id] = challenge
-    
+
     def _get_challenge(self, user_id: str) -> Optional[BiometricChallenge]:
         """Retrieve stored challenge."""
         key = f"biometric:challenge:{user_id}"
@@ -516,7 +515,7 @@ class WebAuthnRPHandler:
                     allowed_credentials=d.get("allowed_credentials", []),
                 )
         return self._challenges.get(user_id)
-    
+
     def _delete_challenge(self, user_id: str):
         """Delete stored challenge."""
         key = f"biometric:challenge:{user_id}"
@@ -524,7 +523,7 @@ class WebAuthnRPHandler:
             self.redis.delete(key)
         elif user_id in self._challenges:
             del self._challenges[user_id]
-    
+
     def _store_credential(self, credential: BiometricCredential):
         """Store credential."""
         key = f"biometric:credential:{credential.credential_id}"
@@ -535,7 +534,7 @@ class WebAuthnRPHandler:
             self.redis.sadd(user_key, credential.credential_id)
         else:
             self._credentials[credential.credential_id] = credential
-    
+
     def _get_credential(self, credential_id: str) -> Optional[BiometricCredential]:
         """Retrieve stored credential."""
         key = f"biometric:credential:{credential_id}"
@@ -544,7 +543,7 @@ class WebAuthnRPHandler:
             if data:
                 return BiometricCredential.from_dict(json.loads(data))
         return self._credentials.get(credential_id)
-    
+
     def _get_user_credentials(self, user_id: str) -> List[str]:
         """Get all credential IDs for a user."""
         if self.redis:
@@ -560,10 +559,10 @@ class WebAuthnRPHandler:
 class BiometricMiddleware(BaseHTTPMiddleware):
     """
     Biometric authentication middleware.
-    
+
     Handles WebAuthn/FIDO2 authentication flows.
     """
-    
+
     def __init__(
         self,
         app,
@@ -575,19 +574,19 @@ class BiometricMiddleware(BaseHTTPMiddleware):
         self.config = config or BiometricConfig()
         self.rp_handler = WebAuthnRPHandler(self.config, redis_client)
         self.exempt_paths = exempt_paths
-    
+
     async def dispatch(self, request: Request, call_next):
         """Process biometric authentication requests."""
         path = request.url.path
-        
+
         # Skip exempt paths
         if path in self.exempt_paths:
             return await call_next(request)
-        
+
         # Handle biometric-specific endpoints
         if path.startswith("/auth/biometric/"):
             return await self._handle_biometric_endpoint(request, path)
-        
+
         # Check for biometric token in headers
         biometric_token = request.headers.get("X-Biometric-Token")
         if biometric_token:
@@ -596,9 +595,9 @@ class BiometricMiddleware(BaseHTTPMiddleware):
                 request.state.biometric_verified = True
                 request.state.biometric_method = result.method
                 request.state.biometric_device = result.device_name
-        
+
         return await call_next(request)
-    
+
     async def _handle_biometric_endpoint(
         self,
         request: Request,
@@ -611,7 +610,7 @@ class BiometricMiddleware(BaseHTTPMiddleware):
                 status_code=401,
                 content={"error": "Authentication required"}
             )
-        
+
         if path == "/auth/biometric/register/options":
             # Get registration options
             body = await request.json()
@@ -621,7 +620,7 @@ class BiometricMiddleware(BaseHTTPMiddleware):
                 user_display_name=body.get("display_name", user_id),
             )
             return JSONResponse(content=options)
-        
+
         elif path == "/auth/biometric/register/verify":
             # Verify registration
             body = await request.json()
@@ -632,7 +631,7 @@ class BiometricMiddleware(BaseHTTPMiddleware):
                 client_data_json=base64.b64decode(body.get("client_data_json", "")),
                 device_name=body.get("device_name", "Unknown"),
             )
-            
+
             if success:
                 return JSONResponse(
                     content={
@@ -645,12 +644,12 @@ class BiometricMiddleware(BaseHTTPMiddleware):
                 status_code=400,
                 content={"error": error}
             )
-        
+
         elif path == "/auth/biometric/authenticate/options":
             # Get authentication options
             options = self.rp_handler.generate_authentication_options(user_id)
             return JSONResponse(content=options)
-        
+
         elif path == "/auth/biometric/authenticate/verify":
             # Verify authentication
             body = await request.json()
@@ -661,21 +660,21 @@ class BiometricMiddleware(BaseHTTPMiddleware):
                 client_data_json=base64.b64decode(body.get("client_data_json", "")),
                 signature=base64.b64decode(body.get("signature", "")),
             )
-            
+
             return JSONResponse(
                 status_code=200 if result.verified else 401,
                 content=result.to_dict()
             )
-        
+
         return JSONResponse(
             status_code=404,
             content={"error": "Unknown biometric endpoint"}
         )
-    
+
     def _verify_biometric_token(self, token: str) -> BiometricResult:
         """
         Verify a biometric authentication token.
-        
+
         Tokens are issued after successful WebAuthn authentication.
         """
         # This would validate a signed token containing biometric auth proof

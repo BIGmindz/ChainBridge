@@ -1,0 +1,305 @@
+{
+  "roster_id": "CHAINBRIDGE-MASTER-ROSTER-v1",
+  "name": "ChainBridge Sovereign Swarm Master Roster",
+  "version": "1.0.0",
+  "established": "2026-01-15T18:30:00Z",
+  "authority": "Architect-Jeffrey",
+  "governance_tier": "CONSTITUTIONAL",
+  "total_slots": 23,
+  "active_agents": 14,
+  "standby_agents": 2,
+  "reserved_slots": 7,
+
+  "constitutional_mandate": {
+    "MUST": "Every agent on the roster MUST have a GID-tag and be bound to the University Dean (UD-00)",
+    "IS": "The swarm IS a tiered hierarchy with deterministic execution",
+    "INVARIANT": "Agents are never lost - if not in BER, they are Off-Chain or Standby",
+    "DRIFT_TOLERANCE": "ZERO - roster changes require Constitutional PAC"
+  },
+
+  "roster": {
+    "TIER_0_CONSTITUTIONAL": {
+      "description": "Supreme Authority - The Architect",
+      "agents": [
+        {
+          "gid": "ARCH-00",
+          "name": "Jeffrey",
+          "designation": "ChainBridge Architect",
+          "role": "Constitutional Authority",
+          "status": "SOVEREIGN",
+          "bound_to": "CHAINBRIDGE_CONSTITUTION"
+        }
+      ]
+    },
+
+    "TIER_1_EXECUTION": {
+      "description": "Chief Orchestrator - The Sole Executor",
+      "agents": [
+        {
+          "gid": "GID-00",
+          "name": "Benson",
+          "designation": "Orchestrator",
+          "role": "The Sole Executor",
+          "status": "ACTIVE",
+          "bound_to": "UD-00",
+          "capabilities": ["PAC_EXECUTION", "SWARM_ORCHESTRATION", "BER_GENERATION"]
+        }
+      ]
+    },
+
+    "TIER_2_ATLAS": {
+      "description": "The Neural Backbone - Research, Analysis, Validation, Repair",
+      "agent_count": 11,
+      "agents": [
+        {
+          "gid": "GID-01",
+          "name": "ATLAS-RESEARCH-01",
+          "designation": "Research Agent",
+          "role": "NIST Document Analysis",
+          "status": "ACTIVE",
+          "bound_to": "UD-00"
+        },
+        {
+          "gid": "GID-02",
+          "name": "ATLAS-RESEARCH-02",
+          "designation": "Research Agent",
+          "role": "Rubric Analysis",
+          "status": "ACTIVE",
+          "bound_to": "UD-00"
+        },
+        {
+          "gid": "GID-03",
+          "name": "ATLAS-MAP-01",
+          "designation": "Mapping Agent",
+          "role": "Requirement-to-Criterion Mapping",
+          "status": "ACTIVE",
+          "bound_to": "UD-00",
+          "accelerated_gates": 47
+        },
+        {
+          "gid": "GID-04",
+          "name": "ATLAS-VALIDATE-01",
+          "designation": "Validation Agent",
+          "role": "Completeness Validation",
+          "status": "ACTIVE",
+          "bound_to": "UD-00"
+        },
+        {
+          "gid": "GID-05",
+          "name": "ATLAS-AUDIT-01",
+          "designation": "Audit Agent",
+          "role": "Governance Audit",
+          "status": "ACTIVE",
+          "bound_to": "UD-00"
+        },
+        {
+          "gid": "GID-06",
+          "name": "ATLAS-SENTINEL-01",
+          "designation": "Sentinel Agent",
+          "role": "Parity Monitoring & Killswitch",
+          "status": "HEIGHTENED_ALERT",
+          "bound_to": "UD-00",
+          "monitoring_end": "2026-01-17T15:37:00Z"
+        },
+        {
+          "gid": "GID-07",
+          "name": "ATLAS-ANALYSIS-01",
+          "designation": "Analysis Agent",
+          "role": "Logic Core Bind Audit",
+          "status": "ACTIVE",
+          "bound_to": "UD-00"
+        },
+        {
+          "gid": "GID-08",
+          "name": "ATLAS-FIX-01",
+          "designation": "Fix Agent",
+          "role": "Precision Arithmetic Specialist",
+          "status": "STANDBY",
+          "bound_to": "UD-00"
+        },
+        {
+          "gid": "GID-09",
+          "name": "ATLAS-FIX-02",
+          "designation": "Fix Agent",
+          "role": "Concurrency Safety Specialist",
+          "status": "STANDBY",
+          "bound_to": "UD-00"
+        },
+        {
+          "gid": "GID-10",
+          "name": "ATLAS-FIX-03",
+          "designation": "Fix Agent",
+          "role": "Integration Test Engineer",
+          "status": "STANDBY",
+          "bound_to": "UD-00"
+        },
+        {
+          "gid": "GID-11",
+          "name": "ATLAS-FIX-04",
+          "designation": "Fix Agent",
+          "role": "Regression Analyst",
+          "status": "STANDBY",
+          "bound_to": "UD-00"
+        }
+      ]
+    },
+
+    "TIER_3_ELITE": {
+      "description": "Elite Governance - Financial & Legal Oversight",
+      "agent_count": 2,
+      "agents": [
+        {
+          "gid": "GID-12",
+          "name": "Controller",
+          "designation": "CONTROLLER-ACCTG-01",
+          "role": "Chief Accounting Controller - 2026 GAAP/IFRS Ledger",
+          "status": "ACTIVE",
+          "bound_to": "UD-00",
+          "logic_source": "2026_GAAP_IFRS_SYMBOLIC_MAP",
+          "parity": 1.00
+        },
+        {
+          "gid": "GID-13",
+          "name": "Counsel",
+          "designation": "COUNSEL-LEGAL-01",
+          "role": "Chief Legal Counsel - EU AI Act/NIST Killswitch",
+          "status": "ACTIVE",
+          "bound_to": "UD-00",
+          "logic_source": "NIST_2026_EU_AI_ACT_GATEKEEPER",
+          "killswitch_latency": "1.87ms"
+        }
+      ]
+    },
+
+    "TIER_4_OPERATIONAL": {
+      "description": "Revenue & Fulfillment - The Outcome Layer",
+      "agent_count": 2,
+      "agents": [
+        {
+          "gid": "GID-14",
+          "name": "Dan",
+          "designation": "SDR-SALES-01",
+          "role": "Sales Development Representative - Revenue Generation",
+          "status": "WARM_STANDBY",
+          "bound_to": "UD-00",
+          "awaiting": "PAC-SWARM-WARMUP-01",
+          "capabilities": [
+            "LEAD_QUALIFICATION",
+            "PIPELINE_MANAGEMENT",
+            "FRICTIONLESS_CLOSE",
+            "REVENUE_ATTRIBUTION"
+          ],
+          "target_activation": "Job 03 - Revenue Run"
+        },
+        {
+          "gid": "GID-15",
+          "name": "Maggie",
+          "designation": "OPS-FULFILL-01",
+          "role": "Operations Manager - Fulfillment & Logistics",
+          "status": "WARM_STANDBY",
+          "bound_to": "UD-00",
+          "awaiting": "PAC-SWARM-WARMUP-01",
+          "capabilities": [
+            "ORDER_FULFILLMENT",
+            "LOGISTICS_COORDINATION",
+            "CUSTOMER_SUCCESS",
+            "OPERATIONAL_METRICS"
+          ],
+          "target_activation": "Job 03 - Revenue Run"
+        }
+      ]
+    },
+
+    "TIER_5_BENCH": {
+      "description": "Future Scaling - Reserved Growth Slots",
+      "slot_count": 7,
+      "slots": [
+        {
+          "gid": "GID-16",
+          "designation": "RESERVED",
+          "planned_role": "SDR-SALES-02",
+          "status": "RESERVED",
+          "activation": "Scale Event"
+        },
+        {
+          "gid": "GID-17",
+          "designation": "RESERVED",
+          "planned_role": "HR-TALENT-01",
+          "status": "RESERVED",
+          "activation": "Scale Event"
+        },
+        {
+          "gid": "GID-18",
+          "designation": "RESERVED",
+          "planned_role": "GROWTH-MARKETING-01",
+          "status": "RESERVED",
+          "activation": "Scale Event"
+        },
+        {
+          "gid": "GID-19",
+          "designation": "RESERVED",
+          "planned_role": "CUSTOMER-SUCCESS-01",
+          "status": "RESERVED",
+          "activation": "Scale Event"
+        },
+        {
+          "gid": "GID-20",
+          "designation": "RESERVED",
+          "planned_role": "PRODUCT-MANAGER-01",
+          "status": "RESERVED",
+          "activation": "Scale Event"
+        },
+        {
+          "gid": "GID-21",
+          "designation": "RESERVED",
+          "planned_role": "DATA-ANALYST-01",
+          "status": "RESERVED",
+          "activation": "Scale Event"
+        },
+        {
+          "gid": "GID-22",
+          "designation": "RESERVED",
+          "planned_role": "SECURITY-OPS-01",
+          "status": "RESERVED",
+          "activation": "Scale Event"
+        }
+      ]
+    }
+  },
+
+  "job_status": {
+    "JOB_01": {
+      "name": "The Brain (UD-00)",
+      "focus": "Logic Hardening",
+      "status": "SEALED",
+      "milestone": "Deterministic Logic Core Established"
+    },
+    "JOB_02": {
+      "name": "The Body (Acctg/Legal)",
+      "focus": "Elite Optimization",
+      "status": "SEALED",
+      "milestone": "1.87ms Accelerated Gates Deployed"
+    },
+    "JOB_03": {
+      "name": "The Outcome (Revenue)",
+      "focus": "Dan & Maggie Activation",
+      "status": "ACTIVE",
+      "milestone": "Frictionless Close Revenue Run",
+      "pending_pac": "PAC-SWARM-WARMUP-01"
+    }
+  },
+
+  "swarm_metrics": {
+    "total_slots": 23,
+    "sovereign": 1,
+    "active": 14,
+    "warm_standby": 2,
+    "standby": 4,
+    "reserved": 7,
+    "accelerated_gate_latency": "1.87ms",
+    "logic_integrity": 1.0000,
+    "parity": 1.0000
+  },
+
+  "hash": "SHA256:c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8"
+}

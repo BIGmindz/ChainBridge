@@ -21,16 +21,14 @@ SESSION LIFECYCLE:
 import hashlib
 import json
 import logging
-import os
 import secrets
-import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, FrozenSet, Optional
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from starlette.responses import Response, JSONResponse
+from starlette.responses import Response
 
 # Configure logging
 logger = logging.getLogger("chainbridge.session")
@@ -67,7 +65,7 @@ class SessionData:
     ip_address: Optional[str] = None
     user_agent: Optional[str] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Serialize to dictionary for Redis storage."""
         return {
@@ -81,7 +79,7 @@ class SessionData:
             "user_agent": self.user_agent,
             "metadata": self.metadata,
         }
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "SessionData":
         """Deserialize from dictionary."""
@@ -101,17 +99,17 @@ class SessionData:
 class SessionManager:
     """
     Redis-backed session manager with TTL enforcement.
-    
+
     Provides atomic session operations with guaranteed expiry.
     Falls back to in-memory storage if Redis unavailable.
     """
-    
+
     def __init__(self, config: SessionConfig):
         self.config = config
         self._redis = None
         self._memory_store: Dict[str, SessionData] = {}
         self._connect_redis()
-    
+
     def _connect_redis(self) -> None:
         """Attempt Redis connection."""
         try:
@@ -129,16 +127,16 @@ class SessionManager:
         except Exception as e:
             logger.warning(f"Redis connection failed - using in-memory sessions: {e}")
             self._redis = None
-    
+
     def _generate_session_id(self) -> str:
         """Generate cryptographically secure session ID."""
         random_bytes = secrets.token_bytes(self.config.session_id_bytes)
         return hashlib.sha256(random_bytes).hexdigest()
-    
+
     def _session_key(self, session_id: str) -> str:
         """Generate Redis key for session."""
         return f"chainbridge:session:{session_id}"
-    
+
     async def create_session(
         self,
         user_id: Optional[str] = None,
@@ -151,7 +149,7 @@ class SessionManager:
         session_id = self._generate_session_id()
         now = datetime.now(timezone.utc)
         expires_at = now + timedelta(seconds=self.config.session_ttl)
-        
+
         session = SessionData(
             session_id=session_id,
             user_id=user_id,
@@ -163,12 +161,12 @@ class SessionManager:
             user_agent=user_agent,
             metadata=metadata or {},
         )
-        
+
         await self._store_session(session)
-        
+
         logger.info(f"Created session: id={session_id[:16]}... user={user_id}")
         return session
-    
+
     async def _store_session(self, session: SessionData) -> None:
         """Store session in Redis or memory."""
         if self._redis:
@@ -182,10 +180,10 @@ class SessionManager:
                 return
             except Exception as e:
                 logger.error(f"Redis store failed: {e}")
-        
+
         # Fallback to memory
         self._memory_store[session.session_id] = session
-    
+
     async def get_session(self, session_id: str) -> Optional[SessionData]:
         """Retrieve session by ID."""
         if self._redis:
@@ -196,7 +194,7 @@ class SessionManager:
                     return SessionData.from_dict(json.loads(data))
             except Exception as e:
                 logger.error(f"Redis get failed: {e}")
-        
+
         # Check memory store
         session = self._memory_store.get(session_id)
         if session:
@@ -204,17 +202,17 @@ class SessionManager:
             if session.expires_at and datetime.now(timezone.utc) > session.expires_at:
                 del self._memory_store[session_id]
                 return None
-        
+
         return session
-    
+
     async def refresh_session(self, session_id: str) -> Optional[SessionData]:
         """Refresh session TTL if approaching expiry."""
         session = await self.get_session(session_id)
         if not session:
             return None
-        
+
         now = datetime.now(timezone.utc)
-        
+
         # Check if refresh needed
         if session.expires_at:
             remaining = (session.expires_at - now).total_seconds()
@@ -223,15 +221,15 @@ class SessionManager:
                 session.last_accessed = now
                 await self._store_session(session)
                 return session
-        
+
         # Extend session
         session.last_accessed = now
         session.expires_at = now + timedelta(seconds=self.config.session_ttl)
         await self._store_session(session)
-        
+
         logger.debug(f"Refreshed session: id={session_id[:16]}...")
         return session
-    
+
     async def invalidate_session(self, session_id: str) -> bool:
         """Invalidate a session immediately."""
         if self._redis:
@@ -243,19 +241,19 @@ class SessionManager:
                     return True
             except Exception as e:
                 logger.error(f"Redis delete failed: {e}")
-        
+
         # Remove from memory store
         if session_id in self._memory_store:
             del self._memory_store[session_id]
             logger.info(f"Invalidated session: id={session_id[:16]}...")
             return True
-        
+
         return False
-    
+
     async def invalidate_user_sessions(self, user_id: str) -> int:
         """Invalidate all sessions for a user."""
         invalidated = 0
-        
+
         if self._redis:
             try:
                 # Scan for user's sessions
@@ -274,7 +272,7 @@ class SessionManager:
                         break
             except Exception as e:
                 logger.error(f"Redis scan failed: {e}")
-        
+
         # Check memory store
         to_remove = [
             sid for sid, session in self._memory_store.items()
@@ -283,24 +281,24 @@ class SessionManager:
         for sid in to_remove:
             del self._memory_store[sid]
             invalidated += 1
-        
+
         if invalidated:
             logger.info(f"Invalidated {invalidated} sessions for user: {user_id}")
-        
+
         return invalidated
 
 
 class SessionMiddleware(BaseHTTPMiddleware):
     """
     Session middleware with automatic refresh and tracking.
-    
+
     Enforces INV-AUTH-003: Session state MUST be Redis-backed with TTL enforcement.
-    
+
     Session Extraction Order:
       1. X-Session-ID header
       2. Cookie
     """
-    
+
     def __init__(
         self,
         app,
@@ -312,7 +310,7 @@ class SessionMiddleware(BaseHTTPMiddleware):
         self.exempt_paths = exempt_paths
         self.config = config or SessionConfig(redis_url=redis_url)
         self.manager = SessionManager(self.config)
-    
+
     def _is_exempt(self, path: str) -> bool:
         """Check if path is exempt from session management."""
         if path in self.exempt_paths:
@@ -324,36 +322,36 @@ class SessionMiddleware(BaseHTTPMiddleware):
             if path.startswith(exempt + "/"):
                 return True
         return False
-    
+
     def _extract_session_id(self, request: Request) -> Optional[str]:
         """Extract session ID from request."""
         # Try header first
         session_id = request.headers.get(self.config.session_header)
         if session_id:
             return session_id
-        
+
         # Try cookie
         session_id = request.cookies.get(self.config.session_cookie)
         return session_id
-    
+
     async def dispatch(self, request: Request, call_next):
         """Process session for incoming request."""
         path = request.url.path
-        
+
         # Check exemption
         if self._is_exempt(path):
             return await call_next(request)
-        
+
         # Extract session ID
         session_id = self._extract_session_id(request)
         session = None
-        
+
         if session_id:
             # Validate and refresh existing session
             session = await self.manager.refresh_session(session_id)
             if not session:
                 logger.debug(f"Invalid or expired session: id={session_id[:16]}...")
-        
+
         # Create new session if authenticated but no valid session
         auth = getattr(request.state, "auth", None)
         if not session and auth and auth.authenticated:
@@ -363,14 +361,14 @@ class SessionMiddleware(BaseHTTPMiddleware):
                 ip_address=request.client.host if request.client else None,
                 user_agent=request.headers.get("user-agent"),
             )
-        
+
         # Attach session to request state
         request.state.session = session
         request.state.session_id = session.session_id if session else None
-        
+
         # Process request
         response = await call_next(request)
-        
+
         # Set session cookie in response if new session created
         if session and isinstance(response, Response):
             response.set_cookie(
@@ -381,5 +379,5 @@ class SessionMiddleware(BaseHTTPMiddleware):
                 secure=self.config.secure_cookies,
                 samesite=self.config.same_site,
             )
-        
+
         return response

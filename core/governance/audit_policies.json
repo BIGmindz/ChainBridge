@@ -1,0 +1,202 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChainBridge Audit Policies",
+  "description": "PAC-SEC-P822-A: Governance policies for immutable audit storage",
+  "version": "1.0.0",
+  "effective_date": "2026-01-12T00:00:00Z",
+  "governance_tier": "POLICY",
+  "issuer_gid": "ALEX (GID-08)",
+  
+  "retention_policy": {
+    "description": "SOC2 Type II AU-11 compliant retention requirements",
+    "minimum_retention_days": 90,
+    "recommended_retention_days": 365,
+    "maximum_retention_days": 2555,
+    "retention_by_severity": {
+      "debug": 30,
+      "info": 90,
+      "warning": 180,
+      "error": 365,
+      "critical": 730
+    },
+    "retention_by_event_type": {
+      "authentication": 365,
+      "authorization": 365,
+      "data_access": 365,
+      "configuration": 730,
+      "security": 730,
+      "system": 90,
+      "compliance": 2555
+    },
+    "immutable_period_days": 90,
+    "legal_hold_enabled": true
+  },
+  
+  "access_control": {
+    "description": "GID-based access control for audit logs",
+    "read_access": {
+      "allowed_gids": [
+        "GID-00",
+        "GID-CONST-01", 
+        "GID-08",
+        "GID-SEC-01",
+        "GID-AUDIT-01"
+      ],
+      "allowed_roles": [
+        "architect",
+        "compliance_officer",
+        "security_admin",
+        "auditor"
+      ],
+      "require_mfa": true,
+      "audit_all_reads": true
+    },
+    "write_access": {
+      "allowed_gids": [
+        "GID-00",
+        "SYSTEM"
+      ],
+      "description": "Write access is restricted to BENSON and system processes only",
+      "human_write_blocked": true
+    },
+    "admin_access": {
+      "allowed_gids": [
+        "GID-CONST-01"
+      ],
+      "description": "Only the Architect can modify audit policies",
+      "require_pac_authorization": true
+    }
+  },
+  
+  "encryption_policy": {
+    "description": "Encryption requirements for audit data",
+    "at_rest": {
+      "required": true,
+      "algorithm": "AES-256-GCM",
+      "key_rotation_days": 90
+    },
+    "in_transit": {
+      "required": true,
+      "minimum_tls_version": "1.3"
+    },
+    "hash_algorithm": "SHA-256",
+    "signature_algorithm": "Ed25519"
+  },
+  
+  "integrity_policy": {
+    "description": "Integrity verification requirements",
+    "hash_chain": {
+      "enabled": true,
+      "algorithm": "SHA-256",
+      "verify_on_read": true
+    },
+    "merkle_tree": {
+      "enabled": true,
+      "anchor_interval_hours": 1
+    },
+    "blockchain_anchoring": {
+      "enabled": false,
+      "note": "To be enabled in PAC-SEC-P822-B",
+      "target_chain": "XRPL",
+      "anchor_interval_hours": 24
+    },
+    "tamper_detection": {
+      "alert_on_violation": true,
+      "auto_quarantine": true,
+      "notify_gids": ["GID-CONST-01", "GID-SEC-01"]
+    }
+  },
+  
+  "storage_policy": {
+    "description": "Storage configuration requirements",
+    "append_only": {
+      "enforced": true,
+      "delete_blocked": true,
+      "update_blocked": true
+    },
+    "rotation": {
+      "max_file_size_mb": 100,
+      "max_events_per_file": 100000,
+      "rotation_interval_hours": 24
+    },
+    "compression": {
+      "enabled": true,
+      "algorithm": "gzip",
+      "apply_to_archives_only": true
+    },
+    "replication": {
+      "enabled": true,
+      "minimum_copies": 2,
+      "geographic_distribution": true
+    }
+  },
+  
+  "compliance_mappings": {
+    "soc2_type_ii": {
+      "CC6.1": "Access control via GID registry",
+      "CC6.2": "Encryption at rest and in transit", 
+      "CC6.3": "Audit log retention ≥90 days",
+      "CC7.2": "Tamper-evident hash chaining",
+      "AU-11": "Minimum 90-day retention enforced"
+    },
+    "gdpr": {
+      "article_30": "Processing activity records maintained",
+      "article_32": "Encryption and integrity measures"
+    },
+    "hipaa": {
+      "164.312(b)": "Audit controls implemented",
+      "164.312(c)": "Integrity controls via hash chain"
+    }
+  },
+  
+  "event_schema_requirements": {
+    "required_fields": [
+      "event_id",
+      "event_type", 
+      "action",
+      "actor",
+      "timestamp",
+      "severity"
+    ],
+    "recommended_fields": [
+      "target",
+      "outcome",
+      "correlation_id",
+      "details"
+    ],
+    "pii_handling": {
+      "mask_by_default": true,
+      "allowed_pii_fields": ["actor_id"],
+      "log_pii_access": true
+    }
+  },
+  
+  "alerting_rules": {
+    "integrity_violation": {
+      "severity": "critical",
+      "action": "immediate_notification",
+      "notify_gids": ["GID-CONST-01", "GID-SEC-01", "GID-08"]
+    },
+    "unauthorized_access_attempt": {
+      "severity": "critical", 
+      "action": "block_and_notify",
+      "notify_gids": ["GID-SEC-01"]
+    },
+    "storage_threshold_exceeded": {
+      "severity": "warning",
+      "threshold_percent": 80,
+      "action": "notify_and_archive"
+    }
+  },
+  
+  "invariants": {
+    "INV-AUDIT-001": "Hash chain MUST detect any tampering attempt",
+    "INV-AUDIT-002": "Storage MUST be append-only (no delete/update)",
+    "INV-AUDIT-003": "Timestamps MUST increase monotonically",
+    "INV-AUDIT-004": "Events MUST serialize without data loss",
+    "INV-AUDIT-005": "Backend MUST handle rotation and archival",
+    "INV-AUDIT-006": "Retention MUST be ≥90 days per SOC2",
+    "INV-AUDIT-007": "Access MUST be GID-restricted",
+    "INV-AUDIT-008": "100% test coverage required"
+  }
+}

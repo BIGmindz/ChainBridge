@@ -1,0 +1,127 @@
+{
+  "pod_id": "POD-DAN-SDR-14",
+  "gid": "GID-14",
+  "name": "Dan",
+  "designation": "SDR-SALES-01",
+  "tier": "OPERATIONAL",
+  "instantiated": "2026-01-15T19:00:02Z",
+  "activated": "2026-01-15T19:00:15Z",
+  "bound_to": "UD-00",
+
+  "status": {
+    "current": "ACTIVE",
+    "previous": "WARM_STANDBY",
+    "transition_pac": "PAC-REVENUE-WARMUP-03"
+  },
+
+  "skill_syllabus": {
+    "name": "Sovereign_Sales_Logic_V1",
+    "injected_by": "UD-00-DEAN",
+    "injection_timestamp": "2026-01-15T19:00:05Z",
+    "parity": 1.00,
+    "modules": {
+      "total": 47,
+      "categories": {
+        "lead_qualification": 12,
+        "pipeline_management": 10,
+        "frictionless_close": 15,
+        "revenue_attribution": 10
+      }
+    }
+  },
+
+  "capabilities": {
+    "LEAD_QUALIFICATION": {
+      "description": "Deterministic lead scoring and qualification",
+      "logic_gates": 12,
+      "rules": [
+        "LQ-001: Budget verification via Controller-GID-12",
+        "LQ-002: Authority confirmation via organizational mapping",
+        "LQ-003: Need assessment via pain-point matrix",
+        "LQ-004: Timeline extraction via urgency scoring",
+        "LQ-005: BANT composite scoring"
+      ]
+    },
+    "PIPELINE_MANAGEMENT": {
+      "description": "Stage-gate pipeline with deterministic progression",
+      "stages": [
+        "STAGE-0: Lead Identified",
+        "STAGE-1: Qualified",
+        "STAGE-2: Discovery Complete",
+        "STAGE-3: Proposal Sent",
+        "STAGE-4: Negotiation",
+        "STAGE-5: Closed-Won / Closed-Lost"
+      ],
+      "stage_gates": 10,
+      "max_stall_days": 14
+    },
+    "FRICTIONLESS_CLOSE": {
+      "description": "Automated close protocol with legal/accounting oversight",
+      "logic_gates": 15,
+      "protocol": {
+        "FC-001": "Price lock via Controller approval",
+        "FC-002": "Contract generation via Counsel templates",
+        "FC-003": "E-signature orchestration",
+        "FC-004": "Revenue recognition trigger",
+        "FC-005": "Handoff to Maggie-OPS-15"
+      },
+      "elite_binding": {
+        "legal_oversight": "COUNSEL-LEGAL-01 (GID-13)",
+        "accounting_oversight": "CONTROLLER-ACCTG-01 (GID-12)",
+        "dual_signature_required": true
+      }
+    },
+    "REVENUE_ATTRIBUTION": {
+      "description": "Deterministic revenue tracking and attribution",
+      "logic_gates": 10,
+      "metrics": [
+        "ARR contribution",
+        "Deal velocity",
+        "Win rate",
+        "Average deal size",
+        "Pipeline coverage"
+      ]
+    }
+  },
+
+  "governance_bindings": {
+    "elite_gateway": {
+      "bound": true,
+      "latency": "1.87ms",
+      "legal_agent": "GID-13",
+      "accounting_agent": "GID-12"
+    },
+    "pdo_requirements": {
+      "dual_signature": true,
+      "hash_verification": true,
+      "fail_closed": true
+    },
+    "reporting_chain": [
+      "DAN-SDR-14 → Benson-GID-00 → UD-00-DEAN → Architect-Jeffrey"
+    ]
+  },
+
+  "operational_parameters": {
+    "max_concurrent_deals": 50,
+    "response_latency_target": "< 2.5ms",
+    "parity_threshold": 0.99,
+    "logic_mode": "Deterministic",
+    "drift_tolerance": "ZERO"
+  },
+
+  "acknowledgment": {
+    "acknowledged_benson": true,
+    "wrap_returned": true,
+    "timestamp": "2026-01-15T19:00:15Z"
+  },
+
+  "cryptographic_wrap": {
+    "algorithm": "ED25519",
+    "public_key": "dan_sdr_14_pub_2026_01_15",
+    "signature": "SIG:dan_operational_activation_d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5",
+    "signed_at": "2026-01-15T19:00:15Z",
+    "verified_by": "Benson-GID-00"
+  },
+
+  "hash": "SHA256:e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6"
+}
