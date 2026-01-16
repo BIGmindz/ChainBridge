@@ -1,79 +1,275 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "SCRAM Audit Event Schema",
-  "description": "Schema for SCRAM emergency shutdown audit events (PAC-SEC-P820)",
+  "$id": "https://chainbridge.io/schemas/scram_event.json",
+  "title": "SCRAM Event Schema",
+  "description": "Canonical schema for ChainBridge SCRAM (System Circuit Reduction And Mutation Freeze) events. Enforces INV-SCRAM-001 through INV-SCRAM-006 and INV-GOV-003. PAC-SEC-P820 | LAW-TIER",
+  "version": "1.0.0",
   "type": "object",
   "required": [
     "event_id",
+    "event_type",
     "timestamp",
-    "scram_state",
-    "reason",
-    "operator_key_hash",
-    "architect_key_hash",
-    "execution_paths_terminated",
-    "termination_latency_ms",
-    "invariants_checked",
-    "invariants_passed",
-    "invariants_failed",
-    "hardware_sentinel_ack",
-    "ledger_anchor_hash",
-    "content_hash"
+    "state",
+    "governance_tier",
+    "invariants_enforced"
   ],
   "properties": {
     "event_id": {
       "type": "string",
-      "pattern": "^SCRAM-[0-9]{18}$"
+      "pattern": "^SCRAM-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6}$",
+      "description": "Unique event identifier in format SCRAM-YYYY-MM-DD-NNNNNN"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "SCRAM_ARMED",
+        "SCRAM_ACTIVATING",
+        "SCRAM_ACTIVE",
+        "SCRAM_TERMINATED",
+        "SCRAM_PATH_REGISTER",
+        "SCRAM_KEY_AUTHORIZED",
+        "SCRAM_DUAL_KEY_VERIFIED",
+        "SCRAM_AUDIT_ANCHOR",
+        "SCRAM_HARDWARE_SENTINEL",
+        "SCRAM_ERROR"
+      ],
+      "description": "Type of SCRAM event"
     },
     "timestamp": {
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "description": "ISO 8601 timestamp in UTC"
     },
-    "scram_state": {
+    "state": {
       "type": "string",
-      "enum": ["ARMED", "ACTIVATING", "EXECUTING", "COMPLETE", "FAILED"]
+      "enum": [
+        "ARMED",
+        "ACTIVATING",
+        "ACTIVE",
+        "TERMINATED",
+        "ERROR"
+      ],
+      "description": "Current SCRAM controller state (monotonic progression)"
+    },
+    "governance_tier": {
+      "type": "string",
+      "const": "LAW",
+      "description": "SCRAM is LAW-tier governance (INV-GOV-003)"
+    },
+    "invariants_enforced": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "INV-SYS-002",
+          "INV-SCRAM-001",
+          "INV-SCRAM-002",
+          "INV-SCRAM-003",
+          "INV-SCRAM-004",
+          "INV-SCRAM-005",
+          "INV-SCRAM-006",
+          "INV-GOV-003"
+        ]
+      },
+      "description": "Constitutional invariants enforced by this event"
     },
     "reason": {
-      "type": "string"
-    },
-    "operator_key_hash": {
-      "type": "string"
-    },
-    "architect_key_hash": {
-      "type": "string"
-    },
-    "execution_paths_terminated": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "termination_latency_ms": {
-      "type": "number",
-      "minimum": 0
-    },
-    "invariants_checked": {
-      "type": "array",
-      "items": {"type": "string"}
-    },
-    "invariants_passed": {
-      "type": "array",
-      "items": {"type": "string"}
-    },
-    "invariants_failed": {
-      "type": "array",
-      "items": {"type": "string"}
-    },
-    "hardware_sentinel_ack": {
-      "type": "boolean"
-    },
-    "ledger_anchor_hash": {
       "type": "string",
-      "pattern": "^[a-f0-9]{64}$"
+      "enum": [
+        "OPERATOR_INITIATED",
+        "SYSTEM_CRITICAL",
+        "SECURITY_BREACH",
+        "INVARIANT_VIOLATION",
+        "HARDWARE_FAILURE",
+        "EXTERNAL_SIGNAL"
+      ],
+      "description": "Reason for SCRAM activation (if applicable)"
     },
-    "content_hash": {
-      "type": "string",
-      "pattern": "^[a-f0-9]{64}$"
+    "authorized_keys": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["key_id", "key_type", "authorized_at"],
+        "properties": {
+          "key_id": {
+            "type": "string",
+            "description": "Unique key identifier"
+          },
+          "key_type": {
+            "type": "string",
+            "enum": ["operator", "architect"],
+            "description": "Key type (dual-key requires both)"
+          },
+          "authorized_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Authorization timestamp"
+          },
+          "signature_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "description": "SHA256 signature hash"
+          }
+        }
+      },
+      "description": "Keys authorized for SCRAM activation (INV-SCRAM-002)"
     },
-    "metadata": {
-      "type": "object"
+    "execution_paths": {
+      "type": "object",
+      "properties": {
+        "registered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Execution path IDs registered for termination"
+        },
+        "terminated": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Execution paths successfully terminated"
+        },
+        "failed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Execution paths that failed to terminate"
+        }
+      },
+      "description": "Execution path registry and termination status"
+    },
+    "termination_metrics": {
+      "type": "object",
+      "required": ["deadline_ms", "actual_ms", "deadline_met"],
+      "properties": {
+        "deadline_ms": {
+          "type": "number",
+          "const": 500,
+          "description": "Constitutional deadline (INV-SCRAM-001)"
+        },
+        "actual_ms": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Actual termination time in milliseconds"
+        },
+        "deadline_met": {
+          "type": "boolean",
+          "description": "Whether 500ms deadline was met"
+        },
+        "paths_terminated": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of execution paths terminated"
+        }
+      },
+      "description": "Termination timing and compliance (INV-SCRAM-001)"
+    },
+    "hardware_sentinel": {
+      "type": "object",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "description": "Hardware sentinel status (INV-SCRAM-003)"
+        },
+        "sentinel_path": {
+          "type": "string",
+          "description": "Path to hardware sentinel file"
+        },
+        "notification_sent": {
+          "type": "boolean",
+          "description": "Whether hardware was notified"
+        }
+      },
+      "description": "Hardware binding status (INV-SCRAM-003)"
+    },
+    "audit_trail": {
+      "type": "object",
+      "required": ["immutable", "anchored"],
+      "properties": {
+        "immutable": {
+          "type": "boolean",
+          "const": true,
+          "description": "Audit trail immutability (INV-SCRAM-004)"
+        },
+        "anchored": {
+          "type": "boolean",
+          "description": "Whether event is anchored to permanent ledger"
+        },
+        "ledger_path": {
+          "type": "string",
+          "description": "Path to audit log file"
+        },
+        "event_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA256 hash of event for integrity"
+        }
+      },
+      "description": "Audit trail properties (INV-SCRAM-004)"
+    },
+    "fail_closed": {
+      "type": "object",
+      "required": ["enforced", "error_behavior"],
+      "properties": {
+        "enforced": {
+          "type": "boolean",
+          "const": true,
+          "description": "Fail-closed enforcement (INV-SCRAM-005)"
+        },
+        "error_behavior": {
+          "type": "string",
+          "enum": ["TERMINATE_ALL", "FORCE_SHUTDOWN"],
+          "description": "Behavior on error condition"
+        },
+        "error_message": {
+          "type": "string",
+          "description": "Error message if failure occurred"
+        }
+      },
+      "description": "Fail-closed behavior (INV-SCRAM-005)"
+    },
+    "coverage_metrics": {
+      "type": "object",
+      "properties": {
+        "test_coverage_pct": {
+          "type": "number",
+          "minimum": 100,
+          "maximum": 100,
+          "description": "Required 100% coverage (INV-SCRAM-006)"
+        },
+        "execution_paths_covered": {
+          "type": "boolean",
+          "description": "All execution paths tested"
+        }
+      },
+      "description": "Test coverage enforcement (INV-SCRAM-006)"
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "pac_id": {
+          "type": "string",
+          "pattern": "^PAC-",
+          "description": "Governing PAC identifier"
+        },
+        "operator_id": {
+          "type": "string",
+          "description": "Operator who initiated (if applicable)"
+        },
+        "system_state": {
+          "type": "string",
+          "description": "System state at time of event"
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Additional context metadata"
+        }
+      },
+      "description": "Event context and provenance"
     }
   },
   "additionalProperties": false

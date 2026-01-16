@@ -1,0 +1,192 @@
+{
+  "pac_id": "PAC-JEFFREY-SCRAM-SCHEMA-REPLACEMENT-R2A-001",
+  "version": "1.0.0",
+  "classification": "CONTROL_PLANE_SCHEMA_REPLACEMENT",
+  "governance_tier": "LAW",
+  "status": "EXECUTED_AWAITING_ACCEPTANCE",
+  "issued_by": "JEFFREY",
+  "issuer_role": "STRATEGY_ONLY",
+  "executor": "ATLAS-GID-11",
+  "issued_at": "2026-01-16T00:00:00Z",
+  "executed_at": "2026-01-16T00:00:00Z",
+  
+  "drift_tolerance": "ZERO",
+  "fail_closed": true,
+  "schema_version": "23-BLOCK_STD",
+  
+  "pac_admission": {
+    "criteria": "Replace missing SCRAM schema with canonical governed artifact.",
+    "status": "ADMITTED"
+  },
+  
+  "preflight_loop_closure": {
+    "previous_ber_hash": "SHA256(BER-PAC-JEFFREY-CTRLPLANE-REPLACEMENT-R2-001)",
+    "status": "ACCEPTED",
+    "gate": "OPEN"
+  },
+  
+  "execution_activation": {
+    "executor": "ATLAS",
+    "gid": "GID-11",
+    "command": "Author canonical SCRAM event schema and bind to CI."
+  },
+  
+  "execution_acknowledgment": {
+    "status": "Replacement mandate acknowledged."
+  },
+  
+  "execution_collection": {
+    "target": "schemas/scram_event_schema.json",
+    "logs": ["schema_validation", "ci_pass"]
+  },
+  
+  "runtime_activation": {
+    "commands": [
+      "jsonschema-validate",
+      "github-actions:SCRAM_Python_Validation"
+    ]
+  },
+  
+  "runtime_acknowledgment": {
+    "status": "Schema valid. Workflow unblocked."
+  },
+  
+  "runtime_collection": {
+    "data": ["schema_hash", "validation_logs", "ci_result"]
+  },
+  
+  "governance_activation": {
+    "mode": "SCRAM_EVENT_CANONICALIZATION",
+    "logic": "SCRAM events are first-class governed objects."
+  },
+  
+  "governance_runtime_ack": {
+    "authority": "ALEX",
+    "assertion": "SCRAM schema enforced as canonical."
+  },
+  
+  "governance_collection": {
+    "evidence": ["schema_file", "ci_success"]
+  },
+  
+  "agent_activation": {
+    "lead": "ATLAS",
+    "support": ["SAM", "MIRA-R"],
+    "orchestrator": "BENSON"
+  },
+  
+  "agent_acknowledgment": {
+    "agent": "ATLAS",
+    "response": "Schema authored and validated."
+  },
+  
+  "agent_collection": {
+    "output": "BER-PAC-JEFFREY-SCRAM-SCHEMA-REPLACEMENT-R2A-001.json"
+  },
+  
+  "execution_lane": {
+    "lane": "SCRAM_SCHEMA_CANONICALIZATION"
+  },
+  
+  "context": {
+    "statement": "CI failure revealed missing constitutional artifact."
+  },
+  
+  "goal_state": {
+    "artifact": "Canonical SCRAM Event Schema",
+    "behavior": "Validated, auditable, versioned",
+    "metric": "CI passes without rule relaxation"
+  },
+  
+  "constraints_and_guardrails": {
+    "must_not": ["Stub schema or weaken CI"],
+    "must": ["Declare required SCRAM invariants"]
+  },
+  
+  "invariants_enforced": [
+    "INV-SCRAM-CANONICAL",
+    "INV-SCHEMA-FIRST",
+    "INV-NO-STUB-ARTIFACTS"
+  ],
+  
+  "tasks_and_plan": [
+    {
+      "task_id": "R2A-1",
+      "description": "Author schema",
+      "status": "COMPLETE",
+      "artifact": "schemas/scram_event_schema.json"
+    },
+    {
+      "task_id": "R2A-2",
+      "description": "Validate locally",
+      "status": "COMPLETE"
+    },
+    {
+      "task_id": "R2A-3",
+      "description": "Commit and verify CI",
+      "status": "PENDING"
+    }
+  ],
+  
+  "training_signal": {
+    "reward_weight": 1.0,
+    "vector": "Replace missing governance artifacts, never patch."
+  },
+  
+  "positive_closure": {
+    "final_state": "EXECUTED_AWAITING_ACCEPTANCE",
+    "attestation": "BER-PAC-JEFFREY-SCRAM-SCHEMA-REPLACEMENT-R2A-001"
+  },
+  
+  "closing_the_loop": {
+    "ledger_commit": "ATTEST:PAC-JEFFREY-SCRAM-SCHEMA-REPLACEMENT-R2A-001",
+    "handshake": "SCRAM schema canonicalized."
+  },
+  
+  "schema_properties": {
+    "schema_id": "https://chainbridge.io/schemas/scram_event.json",
+    "version": "1.0.0",
+    "invariants_validated": [
+      "INV-SYS-002",
+      "INV-SCRAM-001",
+      "INV-SCRAM-002",
+      "INV-SCRAM-003",
+      "INV-SCRAM-004",
+      "INV-SCRAM-005",
+      "INV-SCRAM-006",
+      "INV-GOV-003"
+    ],
+    "required_fields": [
+      "event_id",
+      "event_type",
+      "timestamp",
+      "state",
+      "governance_tier",
+      "invariants_enforced"
+    ],
+    "event_types": [
+      "SCRAM_ARMED",
+      "SCRAM_ACTIVATING",
+      "SCRAM_ACTIVE",
+      "SCRAM_TERMINATED",
+      "SCRAM_PATH_REGISTER",
+      "SCRAM_KEY_AUTHORIZED",
+      "SCRAM_DUAL_KEY_VERIFIED",
+      "SCRAM_AUDIT_ANCHOR",
+      "SCRAM_HARDWARE_SENTINEL",
+      "SCRAM_ERROR"
+    ],
+    "states": [
+      "ARMED",
+      "ACTIVATING",
+      "ACTIVE",
+      "TERMINATED",
+      "ERROR"
+    ],
+    "dual_key_types": ["operator", "architect"],
+    "termination_deadline_ms": 500,
+    "governance_tier": "LAW",
+    "fail_closed": true,
+    "immutable_audit": true
+  }
+}
