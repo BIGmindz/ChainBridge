@@ -1,0 +1,66 @@
+{
+  "pac_id": "PAC-LINE-ACTIVATION-48",
+  "type": "INTERFACE_LOGIC_FINALITY",
+  "status": "EXECUTING",
+  "protocol": "RNP (Replace-Not-Patch)",
+  "issued_by": "ARCHITECT-JEFFREY",
+  "executor": "BENSON-GID-00",
+  "issued_at": "2026-01-14T22:00:00Z",
+  
+  "diagnosis": {
+    "symptom": "Canvas nodes anchored but connections cannot be drawn",
+    "state": "PASSIVE-VISUAL - Vector-Linkage Layer offline",
+    "root_cause": "V2.0.0 focused on Node Persistence, missing State-Hook for port-to-port drag detection",
+    "nervous_system_status": "OFFLINE"
+  },
+  
+  "constitutional_analysis": {
+    "control_autonomy": "Cannot draw lines = Cannot define Chain of Command",
+    "system_state": "Safe/Idle until Architect can physically link logic",
+    "fail_closed": "Inability to draw lines is ultimate Fail-Closed - swarm cannot execute unlinked plan",
+    "solution": "Deploy V2.1.0 Connection-Layer with Port-Snapping and Graph-Compilation"
+  },
+  
+  "execution_lanes": {
+    "LANE_1_SVG_LINKER_DEPLOY": {
+      "description": "Replace static canvas background with active SVG Drawing Layer",
+      "target": "occ/canvas_api.py CANVAS_UI_HTML",
+      "action": "Inject live SVG line rendering during port drag"
+    },
+    "LANE_2_PORT_DETECTION": {
+      "description": "Enable Snapping logic - lines auto-lock onto GID input/output ports",
+      "action": "Add port hover detection, dragLine state, snap threshold"
+    },
+    "LANE_3_STRIKE_CONSOLE_SYNC": {
+      "description": "Link drawn lines to Strike Console for real-time BRP calculation",
+      "action": "Wire onConnect handler to deployment state"
+    }
+  },
+  
+  "v2_1_0_features": {
+    "onConnect_handler": {
+      "source_detection": "Identifies sender agent (e.g., GID-03)",
+      "target_detection": "Identifies receiver agent (e.g., GID-04)", 
+      "logic_validation": "Checks if connection is Legal (compatibility check)",
+      "visual_feedback": "Line turns Glowing Gold on successful Legal connection"
+    },
+    "port_snapping": {
+      "snap_radius": "20px",
+      "highlight_on_hover": "Port scales up with glow",
+      "connection_point": "Center of port element"
+    },
+    "drag_line": {
+      "temp_line_class": "connection-line dragging",
+      "follows_cursor": "Real-time SVG path update",
+      "cancellable": "ESC or drop outside port"
+    }
+  },
+  
+  "upgrade_path": "V2.0.0 (Anchor-Logic) → V2.1.0 (Active-Link Engine)",
+  
+  "roadmap": {
+    "current": "PAC-LINE-ACTIVATION-48",
+    "next_1": "SXT-PROVER-UI (Inject badges into nodes)",
+    "next_2": "PILOT-PNC-STRIKE (Execute visual $500k vet)"
+  }
+}

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Union
 import uuid, hashlib, json, os, datetime
 
 from src.security.signing import (
@@ -17,7 +17,7 @@ RUNTIME_DIR = "proofpacks/runtime"
 # ---------- MODELS ----------
 class ProofEvent(BaseModel):
     event_type: str
-    timestamp: datetime.datetime | str
+    timestamp: Union[datetime.datetime, str]
     details: Optional[dict] = None
 
 class ProofPackRequest(BaseModel):

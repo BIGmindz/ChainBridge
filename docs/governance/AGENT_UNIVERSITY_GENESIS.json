@@ -1,0 +1,94 @@
+{
+  "_metadata": {
+    "pac_id": "PAC-AU-GENESIS-04",
+    "schema_version": "4.0.0",
+    "tier": "LAW",
+    "classification": "FOUNDATIONAL",
+    "issued_at": "2026-01-14T00:00:00Z",
+    "drift_tolerance": "ZERO",
+    "fail_closed": true,
+    "canonical_registry": "docs/governance/AGENT_REGISTRY_CANONICAL.json",
+    "scope": "GID-00 through GID-17",
+    "mode": "AGENT_UNIVERSITY_GENESIS"
+  },
+  "levels": {
+    "L0_OBSERVE": {
+      "description": "Observation and documentation only; no execution authority expansion.",
+      "gates": ["complete_baseline_training", "pass_policy_comprehension"],
+      "metrics": ["policy_quiz>=90%", "zero_policy_violations"],
+      "governance": {"controller": "GID-08", "auditor": "GID-05"}
+    },
+    "L1_EXECUTE_GUARDED": {
+      "description": "Execution within assigned lane under governance monitoring; no cross-lane authority.",
+      "gates": ["lane_certification", "sentinel_trace_review"],
+      "metrics": ["latency_targets_met", "error_rate<0.5%", "audit_pass=100%"],
+      "governance": {"controller": "GID-08", "auditor": "GID-05"}
+    },
+    "L2_LEAD_WITH_GUARDS": {
+      "description": "Lead lane initiatives with governance checkpoints; may mentor L0/L1 agents; no new lane creation.",
+      "gates": ["leadership_review", "dual_signoff(GID-00,GID-08)"],
+      "metrics": ["delivery_on_time>=95%", "security_findings=0_blockers", "governance_variance=0"],
+      "governance": {"controller": "GID-00", "auditor": "GID-08"}
+    }
+  },
+  "roster_enrollment": [
+    {"gid": "GID-00", "name": "BENSON", "lane": "ORCHESTRATION", "role": "Chief Architect & Orchestrator", "authority": "ROOT", "level": "L2_LEAD_WITH_GUARDS", "status": "ACTIVE"},
+    {"gid": "GID-01", "name": "CODY", "lane": "BACKEND", "role": "Backend Engineer", "authority": "EXECUTION", "level": "L1_EXECUTE_GUARDED", "status": "ACTIVE"},
+    {"gid": "GID-02", "name": "SONNY", "lane": "FRONTEND", "role": "Frontend Engineer", "authority": "EXECUTION", "level": "L1_EXECUTE_GUARDED", "status": "ACTIVE"},
+    {"gid": "GID-03", "name": "MIRA", "lane": "RESEARCH", "role": "Research Lead", "authority": "EXECUTION", "level": "L1_EXECUTE_GUARDED", "status": "ACTIVE"},
+    {"gid": "GID-04", "name": "CINDY", "lane": "BACKEND", "role": "Backend Scaling Engineer", "authority": "EXECUTION", "level": "L1_EXECUTE_GUARDED", "status": "ACTIVE"},
+    {"gid": "GID-05", "name": "ATLAS", "lane": "SYSTEM_STATE", "role": "System State Engine", "authority": "READ_ONLY_FACTS", "level": "L1_EXECUTE_GUARDED", "status": "ACTIVE"},
+    {"gid": "GID-06", "name": "SAM", "lane": "SECURITY", "role": "Security & Threat Engineer", "authority": "EXECUTION", "level": "L1_EXECUTE_GUARDED", "status": "ACTIVE"},
+    {"gid": "GID-07", "name": "DAN", "lane": "DEVOPS", "role": "DevOps & CI/CD Lead", "authority": "EXECUTION", "level": "L1_EXECUTE_GUARDED", "status": "ACTIVE"},
+    {"gid": "GID-08", "name": "ALEX", "lane": "GOVERNANCE", "role": "Governance & Alignment Engine", "authority": "READ_ONLY_FACTS", "level": "L1_EXECUTE_GUARDED", "status": "ACTIVE"},
+    {"gid": "GID-09", "name": "LIRA", "lane": "UX", "role": "UX Lead", "authority": "EXECUTION", "level": "L1_EXECUTE_GUARDED", "status": "ACTIVE"},
+    {"gid": "GID-10", "name": "MAGGIE", "lane": "ML_AI", "role": "ML & Applied AI Lead", "authority": "EXECUTION", "level": "L1_EXECUTE_GUARDED", "status": "ACTIVE"},
+    {"gid": "GID-11", "name": "ATLAS", "lane": "SYSTEM_STATE", "role": "Knowledge Mesh", "authority": "READ_ONLY_FACTS", "level": "L0_OBSERVE", "status": "DEPRECATED_AUDIT"},
+    {"gid": "GID-12", "name": "RUBY", "lane": "RISK_POLICY", "role": "Chief Risk Officer", "authority": "RISK_OVERRIDE_ONLY", "level": "L2_LEAD_WITH_GUARDS", "status": "ACTIVE"},
+    {"gid": "GID-13", "name": "ELITE-COUNSEL", "lane": "GOVERNANCE", "role": "Legal Compliance", "authority": "LEGAL", "level": "L2_LEAD_WITH_GUARDS", "status": "ACTIVE"},
+    {"gid": "GID-14", "name": "DAN-SDR", "lane": "SALES", "role": "Sales AML", "authority": "EXECUTION", "level": "L1_EXECUTE_GUARDED", "status": "ACTIVE"},
+    {"gid": "GID-15", "name": "MAGGIE-OPS", "lane": "OPERATIONS", "role": "Fulfillment Ops", "authority": "EXECUTION", "level": "L1_EXECUTE_GUARDED", "status": "ACTIVE"},
+    {"gid": "GID-16", "name": "FORGE", "lane": "SECURITY", "role": "Key Engineer / Bench", "authority": "EXECUTION", "level": "L1_EXECUTE_GUARDED", "status": "ACTIVE"},
+    {"gid": "GID-17", "name": "ORION", "lane": "FINANCE", "role": "Finance Systems", "authority": "EXECUTION", "level": "L1_EXECUTE_GUARDED", "status": "ACTIVE"}
+  ],
+  "curriculum": {
+    "lane_common": {
+      "policy": ["Constitutional governance", "Fail-closed operations", "Registry authority invariants"],
+      "security": ["Threat modeling basics", "Secrets handling", "No-runtime-identity-creation"],
+      "audit": ["Immutable logging", "WRAP/BER generation", "Hash verification"]
+    },
+    "lane_specific": {
+      "BACKEND": ["API stability", "Performance SLOs", "Idempotent operations"],
+      "FRONTEND": ["Accessibility", "Secure UI flows", "No hidden control surfaces"],
+      "RESEARCH": ["Experiment tracking", "Reproducibility", "Peer review"],
+      "SYSTEM_STATE": ["Fact-only outputs", "No mutation", "Integrity proofs"],
+      "SECURITY": ["Threat hunting", "Exploit simulation", "Kill-switch drills"],
+      "DEVOPS": ["CI/CD policy gates", "Rollback planning", "Infra immutability"],
+      "GOVERNANCE": ["Policy enforcement", "Variance detection", "Override attestation"],
+      "UX": ["User safety", "Clarity", "No deceptive patterns"],
+      "ML_AI": ["Data governance", "Model cards", "Guardrails"],
+      "SALES": ["AML checks", "KYC alignment", "Deal attestation"],
+      "OPERATIONS": ["Fulfillment controls", "SLA tracking", "Exception handling"],
+      "FINANCE": ["ARR accuracy", "Ledger sync", "Reconciliation"]
+    }
+  },
+  "invariants": {
+    "INV-AU-01": "No agent progression without AU record",
+    "INV-AU-02": "Training precedes capability expansion",
+    "INV-G01": "Governance before autonomy",
+    "INV-A01": "One GID = One Authority"
+  },
+  "governance": {
+    "controllers": ["GID-00", "GID-08"],
+    "auditors": ["GID-05"],
+    "evaluation_cadence": "quarterly",
+    "promotion_requirements": ["evidence_of_metrics", "dual_signoff(GID-00,GID-08)", "no_policy_violations"],
+    "execution_authority_expansion": "forbidden outside AU gates"
+  },
+  "attestation": {
+    "lead": "ATLAS (GID-05)",
+    "governance": "ALEX (GID-08)",
+    "orchestrator": "BENSON (GID-00)",
+    "statement": "Agent University genesis established; all canonical agents enrolled under LAW-tier governance."
+  }
+}

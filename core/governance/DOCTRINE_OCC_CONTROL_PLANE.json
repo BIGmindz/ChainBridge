@@ -1,0 +1,143 @@
+{
+  "$schema": "https://chainbridge.io/schemas/doctrine/v1.0.0",
+  "doctrine_id": "DOCTRINE-OCC-CONTROL-PLANE-001",
+  "classification": "LAW_TIER",
+  "doctrine_type": "CONTROL_PLANE_DESIGNATION",
+  "title": "OCC as Canonical Governance Control Plane",
+  "version": "1.0.0",
+  "created_at": "2026-01-13T14:00:00Z",
+  "pac_authority": "PAC-JEFFREY-ACCEPT-OCC-GOVERNANCE-INTEGRATION-01",
+  "parent_doctrine": "DOCTRINE-FULL-SWARM-EXECUTION-001",
+
+  "designation": {
+    "statement": "The Operations Command Center (OCC) is the sole authoritative governance control plane for ChainBridge.",
+    "scope": "ALL_GOVERNANCE_OPERATIONS",
+    "binding": "ABSOLUTE"
+  },
+
+  "authority_chain": {
+    "level_1": {
+      "role": "Architect",
+      "gid": "JEFFREY",
+      "powers": ["OVERRIDE_ALL", "DOCTRINE_MODIFICATION", "OCC_BYPASS"]
+    },
+    "level_2": {
+      "role": "Orchestrator",
+      "gid": "GID-00",
+      "powers": ["SCRAM_TRIGGER", "AGENT_OVERRIDE", "PAC_EXECUTION"]
+    },
+    "level_3": {
+      "role": "Agent Swarm",
+      "gids": ["GID-01", "GID-02", "GID-03", "GID-04", "GID-05", "GID-06", "GID-07", "GID-08", "GID-09", "GID-10", "GID-11", "GID-12"],
+      "powers": ["TASK_EXECUTION", "WRAP_ATTESTATION"]
+    }
+  },
+
+  "occ_responsibilities": {
+    "RESP-OCC-001": {
+      "name": "Governance State Display",
+      "description": "OCC displays real-time governance state to all operators",
+      "implementation": "/governance/state API + governance_panel.py"
+    },
+    "RESP-OCC-002": {
+      "name": "Enforcement Gate Management",
+      "description": "OCC enforces proof and authority gates on all actions",
+      "implementation": "doctrine_enforcer.py + approval_gates.py"
+    },
+    "RESP-OCC-003": {
+      "name": "Approval Queue Processing",
+      "description": "OCC manages pending approval requests for authority-gated actions",
+      "implementation": "/governance/pending + /governance/approve APIs"
+    },
+    "RESP-OCC-004": {
+      "name": "Audit Trail Maintenance",
+      "description": "OCC maintains immutable audit log of all governance actions",
+      "implementation": "/governance/audit API"
+    }
+  },
+
+  "enforcement_architecture": {
+    "backend_module": "ChainBridge/core/orchestration/governance/doctrine_enforcer.py",
+    "gate_pipeline": "ChainBridge/core/orchestration/governance/approval_gates.py",
+    "api_routes": "ChainBridge/api/routes/governance_routes.py",
+    "ui_panel": "core/ops/governance_panel.py",
+    "enforcement_mode": "HARD",
+    "fail_closed": true
+  },
+
+  "invariants": {
+    "INV-OCC-CTRL-001": {
+      "name": "OCC Exclusivity",
+      "invariant": "No governance execution outside OCC",
+      "violation_action": "REJECT_AND_ALERT"
+    },
+    "INV-OCC-CTRL-002": {
+      "name": "Proof Visibility",
+      "invariant": "All proofs visible to operators via OCC",
+      "violation_action": "BLOCK_ACTION"
+    },
+    "INV-OCC-CTRL-003": {
+      "name": "Authority Chain Enforcement",
+      "invariant": "OCC enforces full authority hierarchy",
+      "violation_action": "REQUIRE_ESCALATION"
+    }
+  },
+
+  "constraints": {
+    "CONS-OCC-CTRL-001": {
+      "constraint": "No non-OCC governance execution permitted",
+      "enforcement": "All governance calls routed through OCC gates",
+      "exception": "JEFFREY direct override only"
+    },
+    "CONS-OCC-CTRL-002": {
+      "constraint": "No OCC bypass without LAW-tier PAC",
+      "enforcement": "Bypass requests require PAC with JEFFREY authority",
+      "exception": "Emergency SCRAM via GID-00"
+    }
+  },
+
+  "api_contract": {
+    "base_path": "/governance",
+    "endpoints": [
+      {"method": "GET", "path": "/state", "purpose": "Governance state query"},
+      {"method": "POST", "path": "/enforce", "purpose": "Action enforcement request"},
+      {"method": "POST", "path": "/approve", "purpose": "Pending action approval"},
+      {"method": "POST", "path": "/reject", "purpose": "Pending action rejection"},
+      {"method": "GET", "path": "/pending", "purpose": "Approval queue query"},
+      {"method": "GET", "path": "/audit", "purpose": "Audit log query"},
+      {"method": "GET", "path": "/health", "purpose": "Subsystem health check"}
+    ],
+    "versioning": "v1",
+    "backward_compatible": true
+  },
+
+  "integration_dependencies": {
+    "parent_doctrines": [
+      "DOCTRINE-FULL-SWARM-EXECUTION-001"
+    ],
+    "source_pacs": [
+      "PAC-JEFFREY-OCC-GOVERNANCE-INTEGRATION-01",
+      "PAC-JEFFREY-ACCEPT-OCC-GOVERNANCE-INTEGRATION-01"
+    ],
+    "source_bers": [
+      "BER-OCC-GOVERNANCE-INTEGRATION-01"
+    ]
+  },
+
+  "modification_policy": {
+    "tier_required": "LAW_TIER",
+    "authority_required": "JEFFREY",
+    "pac_required": true,
+    "dual_approval": true,
+    "cooling_period_hours": 24
+  },
+
+  "attestation": {
+    "created_by": "BENSON (GID-00)",
+    "authorized_by": "JEFFREY (Architect)",
+    "timestamp": "2026-01-13T14:00:00Z",
+    "statement": "DOCTRINE SEALED: OCC is the sole authoritative governance control plane for ChainBridge. All governance operations execute through OCC enforcement gates. This doctrine is LOCKED and requires LAW-tier PAC with JEFFREY authority to modify.",
+    "doctrine_lock": "LOCKED",
+    "sha256_at_lock": "2ca0514d44cfd9da04cac9db0157788a1e97768a5f932683fba369ea70af7190"
+  }
+}

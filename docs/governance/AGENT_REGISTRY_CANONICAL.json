@@ -1,0 +1,306 @@
+{
+  "_metadata": {
+    "version": "1.0.0",
+    "pac_id": "PAC-AGENT-REGISTRY-RATIFICATION-02",
+    "schema_version": "4.0.0",
+    "authority": "Benson (GID-00)",
+    "issuer": "JEFFREY",
+    "tier": "LAW",
+    "status": "RATIFIED",
+    "lock": "FULL_SWARM_GID00_TO_GID17",
+    "drift_tolerance": "ZERO",
+    "fail_closed": true,
+    "source_artifacts": [
+      "ChainBridge/repo_context_bundle/governance_core_bundle/AGENT_REGISTRY.json",
+      "src/core/config/AGENT_PROFILES.json",
+      "data/agents.json",
+      "docs/governance/PERMANENT_LEDGER.json",
+      "docs/governance/AGENT_REGISTRY_CANONICAL.json (consolidation baseline)"
+    ]
+  },
+  "canonical_agents": [
+    {
+      "gid": "GID-00",
+      "name": "BENSON",
+      "role": "Chief Architect & Orchestrator",
+      "lane": "ORCHESTRATION",
+      "authority": "ROOT",
+      "status": "ACTIVE",
+      "source": "AGENT_REGISTRY_v4.0.0",
+      "aliases": ["Benson"],
+      "resolution": {"winner": "BENSON"}
+    },
+    {
+      "gid": "GID-01",
+      "name": "CODY",
+      "role": "Backend Engineer",
+      "lane": "BACKEND",
+      "authority": "EXECUTION",
+      "level": "L2_LEAD_WITH_GUARDS",
+      "status": "ACTIVE",
+      "source": "AGENT_REGISTRY_v4.0.0",
+      "aliases": ["Cody"],
+      "resolution": {"winner": "CODY"}
+    },
+    {
+      "gid": "GID-02",
+      "name": "SONNY",
+      "role": "Frontend Engineer",
+      "lane": "FRONTEND",
+      "authority": "EXECUTION",
+      "status": "ACTIVE",
+      "source": "AGENT_REGISTRY_v4.0.0",
+      "aliases": ["Sonny"],
+      "resolution": {
+        "winner": "SONNY",
+        "defeated": [
+          {"source": "data/agents.json", "name": "ALEX", "role": "Governance & Compliance Analyst", "reason": "runtime mis-map"}
+        ]
+      }
+    },
+    {
+      "gid": "GID-03",
+      "name": "MIRA",
+      "role": "Research Lead",
+      "lane": "RESEARCH",
+      "authority": "EXECUTION",
+      "status": "ACTIVE",
+      "source": "AGENT_REGISTRY_v4.0.0",
+      "aliases": ["Mira"],
+      "resolution": {
+        "winner": "MIRA",
+        "defeated": [
+          {"source": "AGENT_PROFILES.json", "name": "Cindy", "role": "Backend Support"},
+          {"source": "data/agents.json", "name": "NOVA", "role": "Frontend Engineer"}
+        ]
+      }
+    },
+    {
+      "gid": "GID-04",
+      "name": "CINDY",
+      "role": "Backend Scaling Engineer",
+      "lane": "BACKEND",
+      "authority": "EXECUTION",
+      "status": "ACTIVE",
+      "source": "AGENT_REGISTRY_v4.0.0",
+      "aliases": ["Cindy"],
+      "resolution": {
+        "winner": "CINDY",
+        "defeated": [
+          {"source": "AGENT_PROFILES.json", "name": "Lira", "role": "Accessibility Engineer"},
+          {"source": "data/agents.json", "name": "SAGE", "role": "Data Architect"}
+        ]
+      }
+    },
+    {
+      "gid": "GID-05",
+      "name": "ATLAS",
+      "role": "System State Engine",
+      "lane": "SYSTEM_STATE",
+      "authority": "READ_ONLY_FACTS",
+      "status": "ACTIVE",
+      "source": "AGENT_REGISTRY_v4.0.0",
+      "aliases": ["ATLAS"],
+      "resolution": {
+        "winner": "ATLAS",
+        "note": "GID-11 consolidated here per registry v4"
+      }
+    },
+    {
+      "gid": "GID-06",
+      "name": "SAM",
+      "role": "Security & Threat Engineer",
+      "lane": "SECURITY",
+      "authority": "EXECUTION",
+      "status": "ACTIVE",
+      "source": "AGENT_REGISTRY_v4.0.0",
+      "aliases": ["Sam"],
+      "resolution": {
+        "winner": "SAM",
+        "defeated": [
+          {"source": "data/agents.json", "name": "SAM", "role": "DevOps Engineer", "reason": "role drift"}
+        ]
+      }
+    },
+    {
+      "gid": "GID-07",
+      "name": "DAN",
+      "role": "DevOps & CI/CD Lead",
+      "lane": "DEVOPS",
+      "authority": "EXECUTION",
+      "level": "L2_LEAD_WITH_GUARDS",
+      "status": "ACTIVE",
+      "source": "AGENT_REGISTRY_v4.0.0",
+      "aliases": ["Dan"],
+      "resolution": {
+        "winner": "DAN",
+        "defeated": [
+          {"source": "data/agents.json", "name": "RIVER", "role": "Security Analyst"}
+        ]
+      }
+    },
+    {
+      "gid": "GID-08",
+      "name": "ALEX",
+      "role": "Governance & Alignment Engine",
+      "lane": "GOVERNANCE",
+      "authority": "READ_ONLY_FACTS",
+      "status": "ACTIVE",
+      "source": "AGENT_REGISTRY_v4.0.0",
+      "aliases": ["Alex"],
+      "resolution": {
+        "winner": "ALEX",
+        "defeated": [
+          {"source": "data/agents.json", "name": "TAYLOR", "role": "Technical Writer"}
+        ]
+      }
+    },
+    {
+      "gid": "GID-09",
+      "name": "LIRA",
+      "role": "UX Lead",
+      "lane": "UX",
+      "authority": "EXECUTION",
+      "status": "ACTIVE",
+      "source": "AGENT_REGISTRY_v4.0.0",
+      "aliases": ["Lira"],
+      "resolution": {
+        "winner": "LIRA",
+        "defeated": [
+          {"source": "data/agents.json", "name": "JORDAN", "role": "Integration Specialist"}
+        ],
+        "note": "Legal remains on GID-13"
+      }
+    },
+    {
+      "gid": "GID-10",
+      "name": "MAGGIE",
+      "role": "ML & Applied AI Lead",
+      "lane": "ML_AI",
+      "authority": "EXECUTION",
+      "status": "ACTIVE",
+      "source": "AGENT_REGISTRY_v4.0.0",
+      "aliases": ["Maggie"],
+      "resolution": {
+        "winner": "MAGGIE",
+        "defeated": [
+          {"source": "data/agents.json", "name": "CASEY", "role": "Performance Engineer"}
+        ]
+      }
+    },
+    {
+      "gid": "GID-11",
+      "name": "ATLAS",
+      "role": "Knowledge Mesh",
+      "lane": "SYSTEM_STATE",
+      "authority": "READ_ONLY_FACTS",
+      "status": "DEPRECATED",
+      "source": "PERMANENT_LEDGER",
+      "aliases": ["ATLAS"],
+      "resolution": {
+        "winner": "GID-05",
+        "note": "Consolidated to GID-05; identifier retained for audit only"
+      }
+    },
+    {
+      "gid": "GID-12",
+      "name": "RUBY",
+      "role": "Chief Risk Officer",
+      "lane": "RISK_POLICY",
+      "authority": "RISK_OVERRIDE_ONLY",
+      "status": "ACTIVE",
+      "source": "AGENT_REGISTRY_v4.0.0",
+      "aliases": ["Ruby", "ELITE-CONTROLLER"],
+      "resolution": {"winner": "RUBY"}
+    },
+    {
+      "gid": "GID-13",
+      "name": "ELITE-COUNSEL",
+      "role": "Legal Compliance",
+      "lane": "GOVERNANCE",
+      "authority": "LEGAL",
+      "status": "ACTIVE",
+      "source": "PERMANENT_LEDGER",
+      "aliases": ["Lira"],
+      "resolution": {
+        "winner": "ELITE-COUNSEL",
+        "note": "Legal locked to GID-13; UX Lira remains GID-09"
+      }
+    },
+    {
+      "gid": "GID-14",
+      "name": "DAN-SDR",
+      "role": "Sales AML",
+      "lane": "SALES",
+      "authority": "EXECUTION",
+      "status": "ACTIVE",
+      "source": "PERMANENT_LEDGER",
+      "aliases": ["DAN-SDR"],
+      "resolution": {"winner": "DAN-SDR"}
+    },
+    {
+      "gid": "GID-15",
+      "name": "MAGGIE-OPS",
+      "role": "Fulfillment Ops",
+      "lane": "OPERATIONS",
+      "authority": "EXECUTION",
+      "status": "ACTIVE",
+      "source": "PERMANENT_LEDGER",
+      "aliases": ["VERA"],
+      "resolution": {"winner": "MAGGIE-OPS"}
+    },
+    {
+      "gid": "GID-16",
+      "name": "FORGE",
+      "role": "Key Engineer / Bench",
+      "lane": "SECURITY",
+      "authority": "EXECUTION",
+      "status": "ACTIVE",
+      "source": "keys/vault/*",
+      "aliases": ["FORGE"],
+      "resolution": {"winner": "FORGE"}
+    },
+    {
+      "gid": "GID-17",
+      "name": "ORION",
+      "role": "Finance Systems",
+      "lane": "FINANCE",
+      "authority": "EXECUTION",
+      "status": "ACTIVE",
+      "source": "docs/strategy/SERIES_B_BLUEPRINT_V1.json",
+      "aliases": ["ORION"],
+      "resolution": {"winner": "ORION"}
+    }
+  ],
+  "deprecated_or_runtime_only": [
+    {
+      "gid": "GID-98",
+      "name": "System Test Agent",
+      "status": "RUNTIME_ONLY",
+      "action": "EXCLUDE_FROM_CANONICAL",
+      "source": "data/agents.json"
+    },
+    {
+      "gid": "GID-99",
+      "name": "Auth Test Agent",
+      "status": "RUNTIME_ONLY",
+      "action": "EXCLUDE_FROM_CANONICAL",
+      "source": "data/agents.json"
+    }
+  ],
+  "invariants": {
+    "INV-A01": "One GID = One Authority",
+    "INV-A02": "Runtime instances do not create identity",
+    "INV-G09": "Registry entry required for execution",
+    "INV-G12": "Governance agents are non-executing unless explicitly granted"
+  },
+  "audit": {
+    "write_scope": "AGENT_REGISTRY_CANONICAL_ONLY",
+    "attestation": "BER-AGENT-REGISTRY-02",
+    "notes": [
+      "Conflicts resolved per LAW-tier preference order: PERMANENT_LEDGER > ATLAS briefing > Agent University > runtime.",
+      "No new agents created; no GIDs reassigned; PERMANENT_LEDGER locks for GID-13/14/15 preserved.",
+      "Runtime-only and test agents (GID-98/99) excluded from canonical registry."
+    ]
+  }
+}

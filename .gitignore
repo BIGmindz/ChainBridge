@@ -17,6 +17,14 @@ venv/
 logs/
 *.log
 *.json
+
+# Governance JSON files - NOT ignored
+!core/governance/*.json
+!schemas/*.json
+!config/*.json
+!config/**/*.json
+!docs/governance/*.json
+
 benson_metrics.json
 multi_signal_trades.json
 trading_metrics.json

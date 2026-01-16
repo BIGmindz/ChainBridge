@@ -1,0 +1,195 @@
+{
+  "$schema": "../schemas/scram_policy_schema.json",
+  "$id": "https://chainbridge.io/governance/scram_policies.json",
+  "metadata": {
+    "version": "1.0.0",
+    "title": "SCRAM Governance Policy",
+    "description": "Canonical LAW-tier policy artifact for SCRAM operations. Binds SCRAM execution to authority lattice, governance tier, and constitutional invariants.",
+    "pac_reference": "PAC-JEFFREY-SCRAM-POLICY-REPLACEMENT-R2B-001",
+    "supersedes": null,
+    "created_at": "2026-01-16T00:00:00Z",
+    "author_gid": "GID-00",
+    "certified_by": "ALEX",
+    "classification": "LAW_TIER_CONSTITUTIONAL"
+  },
+  "governance": {
+    "tier": "LAW",
+    "drift_tolerance": "ZERO",
+    "fail_closed": true,
+    "bypass_permitted": false,
+    "override_authority": "CONSTITUTIONAL_ONLY"
+  },
+  "authorization": {
+    "dual_key_required": true,
+    "key_types_required": ["operator", "architect"],
+    "minimum_keys": 2,
+    "key_expiration_enforced": true,
+    "authority_lattice_binding": {
+      "enabled": true,
+      "required_coordinates": ["identity", "context", "hardware", "time"],
+      "lattice_version": "1.0.0"
+    },
+    "authorized_principals": {
+      "operators": {
+        "description": "Operators authorized for SCRAM activation",
+        "required_gid_prefix": "GID-OP-",
+        "minimum_certification_level": "CERTIFIED"
+      },
+      "architects": {
+        "description": "Architects authorized for SCRAM confirmation",
+        "required_gid_prefix": "GID-CONST-",
+        "minimum_certification_level": "CONSTITUTIONAL"
+      }
+    }
+  },
+  "termination": {
+    "max_latency_ms": 500,
+    "deadline_enforcement": "HARD",
+    "deadline_violation_action": "LOG_AND_TERMINATE",
+    "coverage_requirement": {
+      "all_execution_paths": true,
+      "minimum_coverage_pct": 100
+    },
+    "state_machine": {
+      "valid_states": ["ARMED", "ACTIVATING", "EXECUTING", "COMPLETE", "FAILED"],
+      "initial_state": "ARMED",
+      "terminal_states": ["COMPLETE", "FAILED"],
+      "monotonic_progression": true
+    }
+  },
+  "fail_closed": {
+    "enabled": true,
+    "error_behavior": "TERMINATE_ALL",
+    "fallback_action": "FORCE_SHUTDOWN",
+    "conditions": [
+      {
+        "trigger": "key_validation_failure",
+        "action": "TERMINATE_WITH_AUDIT"
+      },
+      {
+        "trigger": "deadline_exceeded",
+        "action": "FORCE_SHUTDOWN"
+      },
+      {
+        "trigger": "invariant_violation",
+        "action": "TERMINATE_ALL"
+      },
+      {
+        "trigger": "hardware_sentinel_failure",
+        "action": "LOG_AND_TERMINATE"
+      },
+      {
+        "trigger": "audit_anchor_failure",
+        "action": "TERMINATE_ALL"
+      }
+    ]
+  },
+  "hardware_sentinel": {
+    "enabled": true,
+    "enforcement_level": "SOFT",
+    "sentinel_path": "chainbridge_kernel/src/scram_sentinel.rs",
+    "notification_required": true,
+    "fallback_on_unavailable": "LOG_AND_CONTINUE"
+  },
+  "audit_trail": {
+    "immutable": true,
+    "anchoring_required": true,
+    "ledger_path": "logs/scram_audit.jsonl",
+    "permanent_ledger_sync": true,
+    "event_schema": "schemas/scram_event_schema.json",
+    "hash_algorithm": "SHA256",
+    "retention_policy": "PERMANENT"
+  },
+  "invariants": {
+    "enforced": [
+      {
+        "id": "INV-SYS-002",
+        "name": "No Bypass Permitted",
+        "enforcement": "HARD",
+        "violation_action": "TERMINATE"
+      },
+      {
+        "id": "INV-SCRAM-001",
+        "name": "500ms Deadline",
+        "enforcement": "HARD",
+        "violation_action": "LOG_AND_TERMINATE"
+      },
+      {
+        "id": "INV-SCRAM-002",
+        "name": "Dual-Key Authorization",
+        "enforcement": "HARD",
+        "violation_action": "TERMINATE_WITH_AUDIT"
+      },
+      {
+        "id": "INV-SCRAM-003",
+        "name": "Hardware-Bound Execution",
+        "enforcement": "SOFT",
+        "violation_action": "LOG_AND_CONTINUE"
+      },
+      {
+        "id": "INV-SCRAM-004",
+        "name": "Immutable Audit Trail",
+        "enforcement": "HARD",
+        "violation_action": "TERMINATE"
+      },
+      {
+        "id": "INV-SCRAM-005",
+        "name": "Fail-Closed Behavior",
+        "enforcement": "HARD",
+        "violation_action": "TERMINATE"
+      },
+      {
+        "id": "INV-SCRAM-006",
+        "name": "100% Coverage",
+        "enforcement": "SOFT",
+        "violation_action": "LOG_AND_CONTINUE"
+      },
+      {
+        "id": "INV-GOV-003",
+        "name": "LAW-Tier Compliance",
+        "enforcement": "HARD",
+        "violation_action": "TERMINATE"
+      },
+      {
+        "id": "INV-SCRAM-POLICY-REQUIRED",
+        "name": "Policy Artifact Required",
+        "enforcement": "HARD",
+        "violation_action": "TERMINATE"
+      },
+      {
+        "id": "INV-AUTHORITY-LATTICE",
+        "name": "Authority Lattice Binding",
+        "enforcement": "HARD",
+        "violation_action": "TERMINATE"
+      },
+      {
+        "id": "INV-LAW-TIER-ONLY",
+        "name": "LAW-Tier Operations Only",
+        "enforcement": "HARD",
+        "violation_action": "TERMINATE"
+      },
+      {
+        "id": "INV-FAIL-CLOSED",
+        "name": "Fail-Closed Guarantee",
+        "enforcement": "HARD",
+        "violation_action": "FORCE_SHUTDOWN"
+      }
+    ]
+  },
+  "ci_integration": {
+    "validation_workflow": ".github/workflows/scram-validation.yml",
+    "required_checks": [
+      "scram_policy_validation",
+      "scram_schema_validation",
+      "scram_invariant_tests",
+      "scram_dual_key_tests",
+      "scram_deadline_tests"
+    ],
+    "block_on_failure": true
+  },
+  "policy_hash": {
+    "algorithm": "SHA256",
+    "computed_at": "2026-01-16T00:00:00Z",
+    "note": "Hash computed on policy content excluding this field"
+  }
+}

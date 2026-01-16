@@ -1,0 +1,323 @@
+{
+  "registry_id": "AGENT_UNIVERSITY_LEVEL_REGISTRY",
+  "version": "1.0.0",
+  "classification": "LAW_TIER",
+  "domain": "AGENT_UNIVERSITY",
+  "created": "2026-01-13T00:00:00Z",
+  "pac_reference": "PAC-P753-AU-CONSTITUTION",
+
+  "description": "Authoritative registry of Agent University certification levels, their capabilities, restrictions, and transition requirements.",
+
+  "levels": {
+    "L0": {
+      "level_id": "L0",
+      "name": "OBSERVATION_ONLY",
+      "numeric_rank": 0,
+      "description": "Entry-level certification permitting observation without execution.",
+      "badge_color": "#808080",
+      "badge_icon": "eye",
+
+      "capabilities": {
+        "READ_SYSTEM_STATE": {
+          "description": "May read current system state and historical records",
+          "scope": "NON_SENSITIVE"
+        },
+        "OBSERVE_EXECUTION": {
+          "description": "May observe other agents' execution in real-time",
+          "scope": "AUDIT_TRAIL"
+        },
+        "GENERATE_REPORTS": {
+          "description": "May generate analytical reports from observed data",
+          "scope": "READ_ONLY_DATA"
+        }
+      },
+
+      "restrictions": {
+        "NO_EXECUTION": "Cannot execute any task or operation",
+        "NO_STATE_MODIFICATION": "Cannot modify any system state",
+        "NO_EXTERNAL_CALLS": "Cannot make external API or network calls",
+        "NO_PDO_GENERATION": "Cannot generate Proof/Decision/Outcome records"
+      },
+
+      "supervision_requirement": "NONE",
+      "audit_frequency": "ON_ACCESS",
+
+      "promotion_to_L1": {
+        "minimum_observation_hours": 24,
+        "policy_violations_allowed": 0,
+        "human_approval_required": true,
+        "l2_recommendation_required": false
+      },
+
+      "demotion_triggers": [
+        "POLICY_VIOLATION",
+        "HUMAN_DECISION",
+        "SUSPICIOUS_ACTIVITY"
+      ]
+    },
+
+    "L1": {
+      "level_id": "L1",
+      "name": "EXECUTION_WITH_SUPERVISION",
+      "numeric_rank": 1,
+      "description": "Supervised execution level requiring approval for each action.",
+      "badge_color": "#FFA500",
+      "badge_icon": "user-check",
+
+      "capabilities": {
+        "EXECUTE_SUPERVISED_TASKS": {
+          "description": "May execute tasks with supervisor pre-approval",
+          "scope": "APPROVED_TASKS_ONLY"
+        },
+        "GENERATE_PDO_DRAFT": {
+          "description": "May draft PDO records for supervisor review",
+          "scope": "DRAFT_ONLY"
+        },
+        "PROPOSE_ACTIONS": {
+          "description": "May propose actions for supervisor consideration",
+          "scope": "PROPOSALS_ONLY"
+        },
+        "LIMITED_STATE_READ": {
+          "description": "May read state relevant to assigned tasks",
+          "scope": "TASK_SCOPED"
+        }
+      },
+
+      "restrictions": {
+        "REQUIRES_SUPERVISOR_APPROVAL": "Every execution requires L2+ or human approval",
+        "NO_AUTONOMOUS_EXECUTION": "Cannot execute without explicit approval",
+        "NO_GOVERNANCE_MODIFICATION": "Cannot modify governance artifacts",
+        "NO_FINANCIAL_ACTIONS": "Cannot execute financial operations"
+      },
+
+      "supervision_requirement": "MANDATORY_PER_ACTION",
+      "supervisor_levels": ["L2", "L3", "HUMAN"],
+      "audit_frequency": "PER_ACTION",
+
+      "promotion_to_L2": {
+        "minimum_supervised_tasks": 100,
+        "maximum_error_rate_percent": 1.0,
+        "governance_violations_allowed": 0,
+        "l2_recommendation_required": true,
+        "human_approval_required": true
+      },
+
+      "demotion_to_L0_triggers": [
+        "ERROR_RATE_EXCEEDS_5_PERCENT",
+        "GOVERNANCE_VIOLATION",
+        "HUMAN_DECISION",
+        "SUPERVISOR_REVOCATION"
+      ]
+    },
+
+    "L2": {
+      "level_id": "L2",
+      "name": "INDEPENDENT_EXECUTION_GOVERNED",
+      "numeric_rank": 2,
+      "description": "Independent execution within governance bounds without per-task approval.",
+      "badge_color": "#4169E1",
+      "badge_icon": "shield-check",
+
+      "capabilities": {
+        "AUTONOMOUS_TASK_EXECUTION": {
+          "description": "May execute tasks independently within governance",
+          "scope": "GOVERNED_OPERATIONS"
+        },
+        "PDO_GENERATION": {
+          "description": "May generate and commit PDO records",
+          "scope": "FULL_PDO"
+        },
+        "SHARD_PARTICIPATION": {
+          "description": "May participate in execution shards",
+          "scope": "SHARD_WORKER"
+        },
+        "STATE_MODIFICATION_GOVERNED": {
+          "description": "May modify state within governance constraints",
+          "scope": "GOVERNED_STATE"
+        },
+        "SUPERVISE_L1_AGENTS": {
+          "description": "May supervise and approve L1 agent actions",
+          "scope": "L1_SUPERVISION"
+        }
+      },
+
+      "restrictions": {
+        "GOVERNANCE_BOUNDS_ENFORCED": "All actions must comply with governance",
+        "NO_GOVERNANCE_MODIFICATION": "Cannot modify governance artifacts",
+        "NO_L3_ACTIONS": "Cannot perform swarm coordination",
+        "AUDIT_TRAIL_MANDATORY": "All actions must be audited"
+      },
+
+      "supervision_requirement": "AUDIT_ONLY",
+      "audit_frequency": "CONTINUOUS",
+
+      "promotion_to_L3": {
+        "minimum_independent_tasks": 1000,
+        "maximum_error_rate_percent": 0.1,
+        "governance_violations_allowed": 0,
+        "human_board_approval_required": true,
+        "architect_approval_required": true
+      },
+
+      "demotion_to_L1_triggers": [
+        "ERROR_RATE_EXCEEDS_1_PERCENT",
+        "GOVERNANCE_VIOLATION",
+        "HUMAN_DECISION",
+        "AUDIT_FAILURE"
+      ]
+    },
+
+    "L3": {
+      "level_id": "L3",
+      "name": "SWARM_ELIGIBLE",
+      "numeric_rank": 3,
+      "description": "Highest certification level enabling swarm coordination and high-autonomy operations.",
+      "badge_color": "#FFD700",
+      "badge_icon": "crown",
+
+      "capabilities": {
+        "SWARM_PARTICIPATION": {
+          "description": "May participate in multi-agent swarms",
+          "scope": "FULL_SWARM"
+        },
+        "SWARM_COORDINATION": {
+          "description": "May coordinate swarm execution patterns",
+          "scope": "COORDINATION"
+        },
+        "MULTI_SHARD_ORCHESTRATION": {
+          "description": "May orchestrate multiple execution shards",
+          "scope": "ORCHESTRATION"
+        },
+        "SUPERVISE_L1_L2_AGENTS": {
+          "description": "May supervise L1 and L2 agents",
+          "scope": "FULL_SUPERVISION"
+        },
+        "GOVERNANCE_PROPOSAL_GENERATION": {
+          "description": "May propose governance modifications for human review",
+          "scope": "PROPOSALS_ONLY"
+        },
+        "HIGH_VALUE_OPERATIONS": {
+          "description": "May execute high-value and sensitive operations",
+          "scope": "GOVERNED_HIGH_VALUE"
+        }
+      },
+
+      "restrictions": {
+        "GOVERNANCE_IMMUTABLE": "Cannot modify governance without PAC approval",
+        "HUMAN_OVERRIDE_ALWAYS_ACTIVE": "Human override applies at all times",
+        "CONTINUOUS_AUDIT": "Under continuous audit observation",
+        "NO_SELF_PROMOTION": "Cannot promote self or modify own certification"
+      },
+
+      "supervision_requirement": "CONTINUOUS_AUDIT",
+      "audit_frequency": "REAL_TIME",
+
+      "promotion_path": "N/A - HIGHEST_LEVEL",
+
+      "demotion_to_L2_triggers": [
+        "ANY_GOVERNANCE_VIOLATION",
+        "ERROR_IN_HIGH_VALUE_OPERATION",
+        "HUMAN_DECISION",
+        "AUDIT_ANOMALY"
+      ],
+
+      "emergency_revocation_triggers": [
+        "ATTEMPTED_SELF_MODIFICATION",
+        "GOVERNANCE_BYPASS_ATTEMPT",
+        "AUTHORITY_SPOOFING",
+        "HUMAN_EMERGENCY_OVERRIDE"
+      ]
+    }
+  },
+
+  "transition_matrix": {
+    "L0_to_L1": {
+      "allowed": true,
+      "approvers": ["HUMAN", "L3"],
+      "requirements": "promotion_to_L1"
+    },
+    "L1_to_L2": {
+      "allowed": true,
+      "approvers": ["HUMAN", "GOVERNANCE_BOARD"],
+      "requirements": "promotion_to_L2"
+    },
+    "L2_to_L3": {
+      "allowed": true,
+      "approvers": ["HUMAN", "ARCHITECT"],
+      "requirements": "promotion_to_L3"
+    },
+    "L3_to_L2": {
+      "allowed": true,
+      "approvers": ["HUMAN", "ARCHITECT"],
+      "immediate": true
+    },
+    "L2_to_L1": {
+      "allowed": true,
+      "approvers": ["HUMAN", "L3"],
+      "immediate": true
+    },
+    "L1_to_L0": {
+      "allowed": true,
+      "approvers": ["HUMAN", "L2", "L3"],
+      "immediate": true
+    },
+    "ANY_to_REVOKED": {
+      "allowed": true,
+      "approvers": ["HUMAN"],
+      "immediate": true,
+      "propagation": "ONE_HEARTBEAT"
+    }
+  },
+
+  "special_states": {
+    "SUSPENDED": {
+      "description": "Temporary suspension pending investigation",
+      "execution_permitted": false,
+      "duration": "UNTIL_HUMAN_DECISION",
+      "can_transition_to": ["PREVIOUS_LEVEL", "REVOKED", "DOWNGRADED"]
+    },
+    "REVOKED": {
+      "description": "Permanent revocation of all execution rights",
+      "execution_permitted": false,
+      "duration": "PERMANENT",
+      "can_transition_to": ["L0_WITH_ARCHITECT_APPROVAL"]
+    },
+    "PROBATION": {
+      "description": "Elevated monitoring with restricted capabilities",
+      "execution_permitted": true,
+      "capabilities_reduced": true,
+      "duration": "DEFINED_BY_APPROVER",
+      "can_transition_to": ["FULL_LEVEL", "DOWNGRADED", "REVOKED"]
+    }
+  },
+
+  "audit_requirements": {
+    "L0": {
+      "frequency": "ON_ACCESS",
+      "retention_days": 30,
+      "alert_threshold": "SUSPICIOUS_PATTERN"
+    },
+    "L1": {
+      "frequency": "PER_ACTION",
+      "retention_days": 90,
+      "alert_threshold": "ANY_REJECTION"
+    },
+    "L2": {
+      "frequency": "CONTINUOUS",
+      "retention_days": 365,
+      "alert_threshold": "GOVERNANCE_BOUNDARY"
+    },
+    "L3": {
+      "frequency": "REAL_TIME",
+      "retention_days": 2555,
+      "alert_threshold": "ANY_ANOMALY"
+    }
+  },
+
+  "metadata": {
+    "created_by": "GID-08",
+    "approved_by": "JEFFREY (ARCHITECT)",
+    "effective_date": "2026-01-13T00:00:00Z",
+    "amendment_process": "PAC_REQUIRED"
+  }
+}

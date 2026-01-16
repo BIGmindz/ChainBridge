@@ -1,0 +1,453 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://chainbridge.io/schemas/TRINITY_V1.json",
+  "title": "ChainBridge Trinity Gate Schema v1.0",
+  "description": "Canonical schema for Trinity Gate validation - Biometric, AML, and Customs gates. PAC-ATLAS-INFRA-HARDENING-01",
+  "version": "1.0.0",
+  "governance": {
+    "pac_binding": "PAC-ATLAS-INFRA-HARDENING-01",
+    "governance_tier": "LAW",
+    "invariants_enforced": [
+      "CB-INV-001",
+      "CB-INV-004",
+      "INV-CORE-001",
+      "INV-CORE-002",
+      "INV-INT-001",
+      "INV-INT-002"
+    ],
+    "effective_date": "2026-01-14",
+    "distilled_from": [
+      "/sovereign_server.py",
+      "/modules/core/chainbridge_controller.py",
+      "/modules/chainsense/biometric_gate.py",
+      "/modules/chainpay/aml_gate.py",
+      "/modules/freight/smart_customs.py"
+    ]
+  },
+  "type": "object",
+  "required": ["user_data", "payment_data", "shipment_data"],
+  "additionalProperties": false,
+  "definitions": {
+    "BiometricGate": {
+      "$id": "#/definitions/BiometricGate",
+      "title": "P85 Biometric Gate Schema",
+      "description": "Identity verification - WHO is transacting",
+      "type": "object",
+      "required": ["user_id"],
+      "properties": {
+        "user_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Unique user identifier"
+        },
+        "liveness_score": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "default": 0.95,
+          "description": "Liveness detection score"
+        },
+        "face_similarity": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "default": 0.95,
+          "description": "Face match similarity"
+        },
+        "has_enrolled_template": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether user has enrolled biometric"
+        },
+        "document_type": {
+          "type": "string",
+          "enum": ["PASSPORT", "DRIVERS_LICENSE", "NATIONAL_ID", "RESIDENCE_PERMIT"],
+          "default": "PASSPORT",
+          "description": "Type of ID document"
+        },
+        "is_expired": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether document is expired"
+        },
+        "is_tampered": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether document shows tampering"
+        },
+        "mrz_valid": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether MRZ/barcode is valid"
+        },
+        "is_static_image": {
+          "type": "boolean",
+          "default": false,
+          "description": "Static image attack indicator"
+        },
+        "is_replay": {
+          "type": "boolean",
+          "default": false,
+          "description": "Video replay attack indicator"
+        },
+        "is_deepfake": {
+          "type": "boolean",
+          "default": false,
+          "description": "Deepfake attack indicator"
+        }
+      },
+      "gate_logic": {
+        "decision": "VERIFY | REJECT",
+        "thresholds": {
+          "liveness_min": 0.85,
+          "face_similarity_min": 0.80
+        },
+        "rejection_triggers": [
+          "liveness_score < liveness_min",
+          "face_similarity < face_similarity_min",
+          "is_expired == true",
+          "is_tampered == true",
+          "mrz_valid == false",
+          "is_static_image == true",
+          "is_replay == true",
+          "is_deepfake == true"
+        ]
+      }
+    },
+    "AMLGate": {
+      "$id": "#/definitions/AMLGate",
+      "title": "P65 AML Gate Schema",
+      "description": "Financial compliance - CLEAN money",
+      "type": "object",
+      "required": ["payer_id", "payee_id", "amount"],
+      "properties": {
+        "transaction_id": {
+          "type": "string",
+          "description": "Optional transaction ID"
+        },
+        "payer_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Entity ID of payer"
+        },
+        "payee_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Entity ID of payee"
+        },
+        "payer_country": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 2,
+          "default": "US",
+          "description": "ISO country code"
+        },
+        "payee_country": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 2,
+          "default": "US",
+          "description": "ISO country code"
+        },
+        "amount": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Transaction amount"
+        },
+        "currency": {
+          "type": "string",
+          "default": "USD",
+          "description": "ISO 4217 currency code"
+        },
+        "fee_strategy": {
+          "type": "string",
+          "enum": ["default", "premium", "zero"],
+          "default": "default",
+          "description": "Fee calculation strategy"
+        },
+        "daily_total": {
+          "type": "number",
+          "minimum": 0,
+          "default": 0,
+          "description": "Running daily total for payer"
+        },
+        "is_new_customer": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether payer is new customer"
+        },
+        "off_hours": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether transaction is outside business hours"
+        }
+      },
+      "gate_logic": {
+        "decision": "APPROVE | REVIEW | DENY",
+        "thresholds": {
+          "daily_limit_usd": 50000,
+          "single_tx_limit_usd": 25000,
+          "high_risk_countries": ["KP", "IR", "SY", "CU"]
+        },
+        "rejection_triggers": [
+          "amount > single_tx_limit_usd AND is_new_customer == true",
+          "daily_total + amount > daily_limit_usd",
+          "payer_country IN high_risk_countries",
+          "payee_country IN high_risk_countries"
+        ],
+        "review_triggers": [
+          "amount > 10000 AND off_hours == true",
+          "is_new_customer == true AND amount > 5000"
+        ]
+      }
+    },
+    "CustomsGate": {
+      "$id": "#/definitions/CustomsGate",
+      "title": "P75 Smart Customs Gate Schema",
+      "description": "Logistics compliance - LEGITIMATE goods",
+      "type": "object",
+      "required": ["manifest"],
+      "properties": {
+        "manifest": {
+          "type": "object",
+          "required": ["shipment_id", "declared_weight_kg", "actual_weight_kg"],
+          "properties": {
+            "shipment_id": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Unique shipment identifier"
+            },
+            "seal_intact": {
+              "type": "boolean",
+              "default": true,
+              "description": "Whether container seal is intact"
+            },
+            "declared_weight_kg": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Declared weight in kg"
+            },
+            "actual_weight_kg": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Actual weight in kg"
+            },
+            "bill_of_lading": {
+              "type": "boolean",
+              "default": true,
+              "description": "Bill of lading present"
+            },
+            "commercial_invoice": {
+              "type": "boolean",
+              "default": true,
+              "description": "Commercial invoice present"
+            },
+            "packing_list": {
+              "type": "boolean",
+              "default": true,
+              "description": "Packing list present"
+            }
+          }
+        },
+        "telemetry": {
+          "type": "object",
+          "properties": {
+            "route_deviation_km": {
+              "type": "number",
+              "minimum": 0,
+              "default": 0,
+              "description": "Route deviation in km"
+            },
+            "unscheduled_stops": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "description": "Number of unscheduled stops"
+            },
+            "stop_locations": {
+              "type": "array",
+              "items": { "type": "string" },
+              "default": [],
+              "description": "Stop location descriptions"
+            },
+            "arrival_delay_min": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "description": "Arrival delay in minutes"
+            },
+            "gps_gaps": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "description": "Number of GPS signal gaps"
+            },
+            "gps_gap_duration_min": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "description": "Total GPS gap duration"
+            }
+          }
+        }
+      },
+      "gate_logic": {
+        "decision": "RELEASE | HOLD | REJECT",
+        "thresholds": {
+          "weight_variance_max_pct": 5,
+          "route_deviation_max_km": 50,
+          "unscheduled_stops_max": 2,
+          "gps_gap_max_min": 60
+        },
+        "rejection_triggers": [
+          "seal_intact == false",
+          "abs(declared_weight_kg - actual_weight_kg) / declared_weight_kg > weight_variance_max_pct / 100",
+          "bill_of_lading == false AND commercial_invoice == false"
+        ],
+        "hold_triggers": [
+          "route_deviation_km > route_deviation_max_km",
+          "unscheduled_stops > unscheduled_stops_max",
+          "gps_gap_duration_min > gps_gap_max_min"
+        ]
+      }
+    },
+    "FinancialTrace": {
+      "$id": "#/definitions/FinancialTrace",
+      "title": "P210 Financial Trace Schema",
+      "description": "Financial execution transparency (Invisible Bank output)",
+      "type": "object",
+      "properties": {
+        "settlement_intent_id": {
+          "type": "string",
+          "description": "Unique settlement intent ID"
+        },
+        "settlement_status": {
+          "type": "string",
+          "enum": ["pending", "authorized", "captured", "voided", "refunded"],
+          "description": "Settlement lifecycle status"
+        },
+        "gross_amount": {
+          "type": "string",
+          "description": "Original transaction amount"
+        },
+        "currency": {
+          "type": "string",
+          "description": "Currency code"
+        },
+        "fees": {
+          "type": "object",
+          "properties": {
+            "total": { "type": "string" },
+            "strategy": { "type": "string" },
+            "breakdown": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "amount": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "net_amount": {
+          "type": "string",
+          "description": "Amount after fees"
+        },
+        "payer_account": {
+          "type": "string",
+          "description": "Payer account identifier"
+        },
+        "payee_account": {
+          "type": "string",
+          "description": "Payee account identifier"
+        },
+        "ledger_committed": {
+          "type": "boolean",
+          "description": "Whether ledger entry was committed"
+        }
+      }
+    }
+  },
+  "properties": {
+    "user_data": {
+      "$ref": "#/definitions/BiometricGate"
+    },
+    "payment_data": {
+      "$ref": "#/definitions/AMLGate"
+    },
+    "shipment_data": {
+      "type": "object",
+      "required": ["manifest"],
+      "properties": {
+        "manifest": {
+          "$ref": "#/definitions/CustomsGate/properties/manifest"
+        },
+        "telemetry": {
+          "$ref": "#/definitions/CustomsGate/properties/telemetry"
+        }
+      }
+    }
+  },
+  "trinity_flow": {
+    "description": "Sequential gate execution with fail-fast semantics",
+    "sequence": [
+      {
+        "order": 1,
+        "gate": "BiometricGate",
+        "pac": "P85",
+        "input": "user_data",
+        "on_pass": "proceed_to_aml",
+        "on_fail": "ABORT"
+      },
+      {
+        "order": 2,
+        "gate": "AMLGate",
+        "pac": "P65",
+        "input": "payment_data",
+        "on_pass": "proceed_to_customs",
+        "on_fail": "ABORT"
+      },
+      {
+        "order": 3,
+        "gate": "CustomsGate",
+        "pac": "P75",
+        "input": "shipment_data",
+        "on_pass": "proceed_to_settlement",
+        "on_fail": "ABORT"
+      }
+    ],
+    "financial_execution": {
+      "description": "Invisible Bank execution after all gates pass",
+      "components": [
+        {"order": 1, "component": "FeeEngine", "pac": "P202", "action": "calculate_fees"},
+        {"order": 2, "component": "Ledger", "pac": "P200", "action": "create_entry"},
+        {"order": 3, "component": "SettlementEngine", "pac": "P201", "action": "authorize_capture"},
+        {"order": 4, "component": "CurrencyEngine", "pac": "P203", "action": "convert_if_needed"}
+      ]
+    },
+    "invariants": {
+      "INV-CORE-001": {
+        "name": "Atomic Finality",
+        "description": "No partial sovereign transactions",
+        "enforcement": "All-or-nothing gate execution"
+      },
+      "INV-CORE-002": {
+        "name": "Unified Log",
+        "description": "All decisions in single ledger entry",
+        "enforcement": "Single transaction hash"
+      },
+      "INV-INT-001": {
+        "name": "Gate Supremacy",
+        "description": "Financial execution CANNOT occur if any Gate is closed",
+        "enforcement": "Sequential fail-fast"
+      },
+      "INV-INT-002": {
+        "name": "Ledger Finality",
+        "description": "A successful API response implies a committed Ledger entry",
+        "enforcement": "Post-commit response only"
+      }
+    }
+  }
+}

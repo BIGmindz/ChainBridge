@@ -1,0 +1,227 @@
+{
+  "visual_map_id": "OCC_VISUAL_MAP_V1",
+  "pac_reference": "PAC-OCC-UI-INTEGRATION-13",
+  "classification": "LAW / VISUAL-GOVERNANCE",
+  "version": "1.0.0",
+  "timestamp": "2026-01-14T01:00:00.000Z",
+  "governance_mode": "VISUAL_DETERMINISM",
+  "description": "Operator Control Console Visual Mapping - Binds vASIC kernel, Permanent Ledger, and Atlas Integrity to the OCC Frontend.",
+  
+  "invariants": {
+    "CB-PDO-01": {
+      "name": "Proof of Logic Required",
+      "description": "Every UI render must be backed by a verifiable logic trace",
+      "enforcement": "ACTIVE",
+      "violation_action": "TRIGGER_SCRAM"
+    },
+    "CB-UI-01": {
+      "name": "Zero-Drift Visualization",
+      "description": "Display must equal Data at all times (Display == Data)",
+      "enforcement": "ACTIVE",
+      "violation_action": "TRIGGER_SCRAM",
+      "parity_check_interval_ms": 50
+    }
+  },
+  
+  "ui_components": {
+    "sovereign_ticker": {
+      "component_id": "SOVEREIGN_TICKER_001",
+      "description": "Real-time ARR display bound to Permanent Ledger",
+      "data_source": "/docs/governance/PERMANENT_LEDGER.json",
+      "data_path": "ledger_totals.total_arr",
+      "current_value": "$10,022,500.00",
+      "display_format": "currency_usd",
+      "update_frequency_ms": 50,
+      "milestone_status": "SOVEREIGN_GOAL_ACHIEVED"
+    },
+    "atlas_shield_overlay": {
+      "component_id": "ATLAS_SHIELD_001",
+      "description": "Code integrity and test coverage visualization",
+      "data_sources": [
+        "/reports/atlas_integrity_snapshot.json",
+        "/core/governance/ATLAS_INVARIANT_REGISTRY.json"
+      ],
+      "shield_states": {
+        "GREEN": {
+          "condition": "All tests pass, coverage > 90%, no invariant violations",
+          "ui_action": "NORMAL_OPERATION"
+        },
+        "YELLOW": {
+          "condition": "Coverage 70-90% OR minor warnings detected",
+          "ui_action": "DISPLAY_WARNING_BANNER"
+        },
+        "RED": {
+          "condition": "Test failures OR invariant violation OR coverage < 70%",
+          "ui_action": "LOCK_UI_CONTROLS"
+        }
+      },
+      "current_state": "GREEN",
+      "tests_verified": 432,
+      "coverage_percent": 94.7
+    },
+    "pac_dna_visualizer": {
+      "component_id": "PAC_DNA_001",
+      "description": "23-Block PAC execution trace visualization",
+      "block_schema": "23-BLOCK_STD v4.0.0",
+      "blocks": [
+        {"number": 0, "name": "Block0_Metadata", "color": "#1E90FF"},
+        {"number": 1, "name": "Block1_PAC_Admission", "color": "#32CD32"},
+        {"number": 2, "name": "Block2_PreFlight_Loop_Closure", "color": "#FFD700"},
+        {"number": 3, "name": "Block3_Benson_Execution_Activation", "color": "#FF6347"},
+        {"number": 4, "name": "Block4_Benson_Execution_Acknowledgment", "color": "#FF6347"},
+        {"number": 5, "name": "Block5_Benson_Execution_Collection", "color": "#FF6347"},
+        {"number": 6, "name": "Block6_Runtime_Activation", "color": "#9370DB"},
+        {"number": 7, "name": "Block7_Runtime_Acknowledgment", "color": "#9370DB"},
+        {"number": 8, "name": "Block8_Runtime_Collection", "color": "#9370DB"},
+        {"number": 9, "name": "Block9_Governance_Activation", "color": "#20B2AA"},
+        {"number": 10, "name": "Block10_Governance_Runtime_Acknowledgment", "color": "#20B2AA"},
+        {"number": 11, "name": "Block11_Governance_Runtime_Collection", "color": "#20B2AA"},
+        {"number": 12, "name": "Block12_Agent_Activation", "color": "#FFA500"},
+        {"number": 13, "name": "Block13_Agent_Acknowledgment", "color": "#FFA500"},
+        {"number": 14, "name": "Block14_Agent_Collection", "color": "#FFA500"},
+        {"number": 15, "name": "Block15_Execution_Lane", "color": "#00CED1"},
+        {"number": 16, "name": "Block16_Context", "color": "#BA55D3"},
+        {"number": 17, "name": "Block17_Goal_State", "color": "#3CB371"},
+        {"number": 18, "name": "Block18_Constraints_and_Guardrails", "color": "#DC143C"},
+        {"number": 19, "name": "Block19_Invariants_Enforced", "color": "#4169E1"},
+        {"number": 20, "name": "Block20_Tasks_and_Plan", "color": "#FF69B4"},
+        {"number": 21, "name": "Block21_Training_Signal", "color": "#8B4513"},
+        {"number": 22, "name": "Block22_Positive_Closure", "color": "#228B22"}
+      ],
+      "execution_states": {
+        "PENDING": {"color": "#808080", "animation": "none"},
+        "EXECUTING": {"color": "#FFD700", "animation": "pulse"},
+        "COMPLETE": {"color": "#32CD32", "animation": "none"},
+        "FAILED": {"color": "#FF0000", "animation": "flash"},
+        "SCRAM": {"color": "#8B0000", "animation": "shake"}
+      }
+    },
+    "omni_gateway_heatmap": {
+      "component_id": "GATEWAY_MATRIX_001",
+      "description": "128-gateway status visualization",
+      "total_gateways": 128,
+      "gateway_categories": {
+        "PAYMENT": {
+          "count": 32,
+          "color_active": "#00FF00",
+          "icon": "credit-card"
+        },
+        "SETTLEMENT": {
+          "count": 24,
+          "color_active": "#00BFFF",
+          "icon": "check-circle"
+        },
+        "CRYPTO": {
+          "count": 28,
+          "color_active": "#FFD700",
+          "icon": "bitcoin"
+        },
+        "INTERNATIONAL": {
+          "count": 24,
+          "color_active": "#9370DB",
+          "icon": "globe"
+        },
+        "COMPLIANCE": {
+          "count": 20,
+          "color_active": "#4169E1",
+          "icon": "shield"
+        }
+      },
+      "latency_thresholds": {
+        "optimal": {"max_ms": 0.50, "color": "#00FF00"},
+        "acceptable": {"max_ms": 1.00, "color": "#FFFF00"},
+        "degraded": {"max_ms": 2.00, "color": "#FFA500"},
+        "critical": {"max_ms": null, "color": "#FF0000"}
+      }
+    },
+    "decision_stream": {
+      "component_id": "DECISION_STREAM_001",
+      "description": "Real-time vASIC decision packet visualization",
+      "websocket_endpoint": "ws://sovereign_main:8000/occ/stream",
+      "packet_latency_target_ms": 0.40,
+      "packet_latency_actual_ms": 0.38,
+      "buffer_size": 1000,
+      "display_recent": 10,
+      "fields_displayed": [
+        "packet_id",
+        "timestamp",
+        "decision_type",
+        "latency_ms",
+        "governance_gate",
+        "result"
+      ]
+    },
+    "fiscal_heatmap": {
+      "component_id": "FISCAL_HEATMAP_001",
+      "description": "Clickable logic-trace for every dollar of $10M ARR",
+      "owner_gid": "GID-12 (ELITE-CONTROLLER)",
+      "total_arr": "$10,022,500.00",
+      "clickable_traces": true,
+      "trace_depth": "PAC -> Deal -> Gateway -> Settlement",
+      "drill_down_enabled": true
+    },
+    "faculty_metrics": {
+      "component_id": "FACULTY_METRICS_001",
+      "description": "University metrics - Level 11 Skill Mastery rates",
+      "owner_gid": "GID-00 (UD-00-DEAN)",
+      "metrics_displayed": [
+        "skill_mastery_rates",
+        "level_11_activations",
+        "logic_trace_ingestion_count",
+        "pattern_validation_rate"
+      ]
+    }
+  },
+  
+  "data_bindings": {
+    "ledger_binding": {
+      "source": "/docs/governance/PERMANENT_LEDGER.json",
+      "sync_mode": "REAL_TIME",
+      "sync_interval_ms": 50,
+      "hash_verification": true
+    },
+    "atlas_binding": {
+      "source": "/core/governance/ATLAS_INVARIANT_REGISTRY.json",
+      "sync_mode": "REAL_TIME",
+      "sync_interval_ms": 100,
+      "shield_status_path": "shield_status"
+    },
+    "vasic_binding": {
+      "source": "vASIC_KERNEL_STREAM",
+      "protocol": "WebSocket",
+      "endpoint": "ws://sovereign_main:8000/vasic/decisions",
+      "latency_target_ms": 0.40
+    }
+  },
+  
+  "governance_logic": {
+    "display_truth_check": {
+      "rule": "IF (UI_Display != Ledger_Truth) THEN TRIGGER_SCRAM",
+      "check_frequency_ms": 50,
+      "hash_algorithm": "SHA256"
+    },
+    "atlas_shield_check": {
+      "rule": "IF (Atlas_Shield == RED) THEN LOCK_UI_CONTROLS",
+      "check_frequency_ms": 100
+    },
+    "fail_closed_display": {
+      "rule": "IF (Invariant_Breached) THEN DISPLAY_FAIL_CLOSED_PROMINENTLY",
+      "banner_color": "#FF0000",
+      "banner_text": "FAIL-CLOSED: INVARIANT BREACH DETECTED"
+    }
+  },
+  
+  "performance_targets": {
+    "ui_sync_latency_ms": 50,
+    "decision_packet_latency_ms": 0.40,
+    "websocket_heartbeat_ms": 1000,
+    "hash_verification_interval_ms": 50
+  },
+  
+  "status": {
+    "deployment": "ACTIVE",
+    "version": "1.0.0",
+    "last_updated": "2026-01-14T01:00:00.000Z",
+    "attestation": "MASTER-BER-UI-DEPLOY-13"
+  }
+}

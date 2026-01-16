@@ -1,0 +1,97 @@
+# SCRAM Configuration
+# PAC-SEC-P820 | LAW-TIER | ZERO DRIFT TOLERANCE
+# Constitutional Mandate: PAC-GOV-P45
+
+# ==============================================================================
+# CRITICAL: These settings enforce constitutional SCRAM requirements.
+# Modification of fail-closed or dual-key settings is PROHIBITED.
+# ==============================================================================
+
+scram:
+  # Version tracking
+  version: "1.0.0"
+  pac_id: "PAC-SEC-P820"
+  governance_tier: "LAW"
+  
+  # Termination settings
+  # INV-SCRAM-001: 500ms deadline is constitutional mandate
+  max_termination_ms: 500
+  deadline_enforcement: "HARD"
+  force_terminate_on_deadline: true
+  
+  # Authorization settings
+  # INV-SCRAM-002: Dual-key is constitutional mandate (CANNOT BE DISABLED)
+  require_dual_key: true  # IMMUTABLE - DO NOT MODIFY
+  authorization_timeout_seconds: 30
+  key_types:
+    - operator
+    - architect
+  
+  # Hardware binding
+  # INV-SCRAM-003: Hardware sentinel integration
+  hardware_sentinel_required: true
+  sentinel_path: "/tmp/chainbridge_scram_sentinel"
+  titan_integration: true
+  kernel_notification_enabled: true
+  
+  # Fail-closed settings
+  # INV-SCRAM-005: Fail-closed is constitutional mandate (CANNOT BE DISABLED)
+  fail_closed_on_error: true  # IMMUTABLE - DO NOT MODIFY
+  fail_closed_on_auth_failure: true
+  fail_closed_on_timeout: true
+  
+  # Audit settings
+  # INV-SCRAM-004: Immutable audit trail
+  ledger_anchor_enabled: true
+  audit_log_path: "/var/log/chainbridge/scram.log"
+  content_hashing: "SHA256"
+  event_schema: "schemas/scram_event_schema.json"
+  
+  # State machine
+  initial_state: "ARMED"
+  reset_requires_law_tier: true
+
+# Execution path registration
+execution_paths:
+  auto_register: true
+  discovery_modules:
+    - "core.decisions"
+    - "core.finance"
+    - "core.ledger"
+    - "core.swarm"
+    - "api"
+    - "gateway"
+
+# Signal handling
+signals:
+  handle_sigterm: true
+  handle_sigint: true
+  force_terminate_on_signal: true
+
+# Metrics and monitoring
+metrics:
+  enabled: true
+  prometheus_port: 9190
+  export_latency: true
+  export_state: true
+  export_audit_count: true
+
+# Logging
+logging:
+  level: "CRITICAL"
+  format: "json"
+  include_timestamp: true
+  include_invariants: true
+
+# Environment overrides (restricted)
+# Only non-security settings can be overridden via environment
+environment:
+  allow_override:
+    - audit_log_path
+    - prometheus_port
+    - logging.level
+  deny_override:
+    - require_dual_key
+    - fail_closed_on_error
+    - max_termination_ms
+    - hardware_sentinel_required

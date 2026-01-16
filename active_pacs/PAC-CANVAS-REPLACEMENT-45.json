@@ -1,0 +1,57 @@
+{
+  "pac_id": "PAC-CANVAS-REPLACEMENT-45",
+  "pac_version": "2.0.0",
+  "pac_type": "RNP_EXECUTION",
+  "pac_class": "FULL_SYSTEM_REFRESH",
+  "schema_version": "4.0.0",
+  "block_standard": "45-CANVAS_RNP",
+  "timestamp": "2026-01-15T03:30:00.000Z",
+  "epoch": "EPOCH_001",
+  "issuer": "ARCHITECT-JEFFREY",
+  "executor": "BENSON-GID-00",
+
+  "rnp_protocol": {
+    "definition": "Replace-Not-Patch - Zero-Drift from University Dean specifications",
+    "action": "Full component replacement, not incremental fixes",
+    "security": "Ensures no corrupted logic persists in the stack"
+  },
+
+  "problem_statement": {
+    "symptom": "Node Snap-Back on drag",
+    "root_cause": "Legacy UI lacked Anchor-Logic - treated drag as transient event",
+    "impact": "Architect cannot position agents on canvas grid"
+  },
+
+  "execution_lanes": {
+    "lane_1": {
+      "lane_id": "LANE-1-COMPONENT-PURGE",
+      "task": "Securely delete legacy UI assets",
+      "status": "EXECUTING"
+    },
+    "lane_2": {
+      "lane_id": "LANE-2-V2-DEPLOYMENT",
+      "task": "Deploy Anchor-Aware canvas architecture",
+      "status": "QUEUED"
+    },
+    "lane_3": {
+      "lane_id": "LANE-3-STATE-REHYDRATION",
+      "task": "Re-initialize SMK-session with Write-Back capability",
+      "status": "QUEUED"
+    }
+  },
+
+  "v2_features": {
+    "sovereign_event_listener": "Maps GID drag-events to Permanent Ledger draft state",
+    "drop_as_pac_draft": "Drop event treated as PAC-Draft Decision",
+    "bi_directional_write_back": "Node positions persist to backend state",
+    "anchor_logic": "Nodes stay where placed on grid"
+  },
+
+  "constitutional_compliance": {
+    "rnp": "Full replacement ensures Zero-Drift from specs",
+    "control_autonomy": "System recognizes movement as authorized PAC-Draft",
+    "fail_closed": "Snap-Back was old system failing-closed correctly"
+  },
+
+  "status": "EXECUTING"
+}

@@ -1,0 +1,248 @@
+{
+  "$schema": "https://chainbridge.io/schemas/revenue-validation/v1.0.0",
+  "version": "1.0.0",
+  "created": "2026-01-08T20:00:00Z",
+  "created_by": "PAC-OCC-P62-NETSUITE-SHIELD",
+  "governance_tier": "INSTITUTIONAL_BANKING",
+  
+  "description": "Revenue Validation Schema — Ensures financial integrity between PDO settlements and NetSuite ERP records",
+  
+  "financial_invariants": {
+    "FINANCIAL_INV-001": {
+      "name": "NO_REVENUE_WITHOUT_PROOF",
+      "classification": "BINARY",
+      "statement": "Every financial mutation (Invoice, Payment, Credit) MUST reference a valid, kernel-signed PDO. Anonymous revenue recognition is prohibited.",
+      "enforcement": "Shield validates PDO reference before any NetSuite API call",
+      "violation_action": "MUTATION_REJECTED",
+      "test_vector": "assert mutation.pdo_reference is not None and mutation.pdo_reference.kernel_signature is valid"
+    },
+    "FINANCIAL_INV-002": {
+      "name": "DO_NOT_DOUBLE_BILL",
+      "classification": "BINARY",
+      "statement": "A single PDO can generate at most ONE invoice. Duplicate billing attempts are rejected.",
+      "enforcement": "Shield maintains processed_pdos set for idempotency",
+      "violation_action": "MUTATION_REJECTED",
+      "test_vector": "assert pdo_id not in shield.processed_pdos before invoice creation"
+    },
+    "FINANCIAL_INV-003": {
+      "name": "SETTLEMENT_AMOUNT_MATCH",
+      "classification": "BINARY",
+      "statement": "Invoice amount MUST equal PDO settlement amount within tolerance (±$0.01). Amount mismatch is a critical violation.",
+      "enforcement": "Shield compares amounts before mutation",
+      "violation_action": "SHIELD_LOCKED + MUTATION_REJECTED",
+      "test_vector": "assert abs(invoice_amount - pdo.settlement_amount) <= 0.01"
+    },
+    "FINANCIAL_INV-004": {
+      "name": "FAIL_CLOSED_ON_ERROR",
+      "classification": "BINARY",
+      "statement": "If NetSuite returns an error (5xx, timeout), the PDO is marked as 'Pending/Manual Intervention'. No silent failures.",
+      "enforcement": "Shield catches all NetSuite errors and logs appropriately",
+      "violation_action": "MUTATION_MARKED_PENDING",
+      "test_vector": "assert on_netsuite_error: mutation.result == FAILED_ERP_ERROR"
+    }
+  },
+  
+  "pdo_reference_schema": {
+    "type": "object",
+    "required": ["pdo_id", "settlement_amount", "currency", "customer_id", "shipment_id", "verified_at", "kernel_signature"],
+    "properties": {
+      "pdo_id": {
+        "type": "string",
+        "pattern": "^PDO-[A-Z0-9]{8,32}$",
+        "description": "Unique PDO identifier"
+      },
+      "settlement_amount": {
+        "type": "number",
+        "minimum": 0.01,
+        "description": "Settlement amount in the specified currency"
+      },
+      "currency": {
+        "type": "string",
+        "enum": ["USD", "EUR", "GBP", "CAD", "AUD"],
+        "description": "ISO 4217 currency code"
+      },
+      "customer_id": {
+        "type": "string",
+        "description": "NetSuite customer internal ID"
+      },
+      "shipment_id": {
+        "type": "string",
+        "description": "Reference to the physical shipment"
+      },
+      "verified_at": {
+        "type": "string",
+        "format": "date-time",
+        "description": "ISO 8601 timestamp of PDO verification"
+      },
+      "kernel_signature": {
+        "type": "string",
+        "minLength": 64,
+        "description": "Ed25519 signature from Kernel Identity"
+      }
+    }
+  },
+  
+  "invoice_validation": {
+    "type": "object",
+    "required": ["pdo_reference", "invoice_amount", "line_items"],
+    "properties": {
+      "pdo_reference": {
+        "$ref": "#/pdo_reference_schema"
+      },
+      "invoice_amount": {
+        "type": "number",
+        "minimum": 0.01,
+        "description": "Total invoice amount (must match PDO settlement)"
+      },
+      "line_items": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": ["item", "quantity", "rate"],
+          "properties": {
+            "item": {
+              "type": "string",
+              "description": "NetSuite item internal ID"
+            },
+            "quantity": {
+              "type": "number",
+              "minimum": 1
+            },
+            "rate": {
+              "type": "number",
+              "minimum": 0.01
+            },
+            "amount": {
+              "type": "number",
+              "description": "Line item total (quantity * rate)"
+            },
+            "description": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "memo": {
+        "type": "string",
+        "description": "Invoice memo (should include PDO reference)"
+      }
+    },
+    "validation_rules": [
+      {
+        "rule": "line_items_sum_equals_invoice_amount",
+        "expression": "sum(line_items[*].amount) == invoice_amount",
+        "tolerance": 0.01
+      },
+      {
+        "rule": "invoice_amount_equals_settlement",
+        "expression": "invoice_amount == pdo_reference.settlement_amount",
+        "tolerance": 0.01
+      }
+    ]
+  },
+  
+  "payment_validation": {
+    "type": "object",
+    "required": ["pdo_reference", "payment_amount", "invoice_id", "payment_method"],
+    "properties": {
+      "pdo_reference": {
+        "$ref": "#/pdo_reference_schema"
+      },
+      "payment_amount": {
+        "type": "number",
+        "minimum": 0.01
+      },
+      "invoice_id": {
+        "type": "string",
+        "description": "NetSuite invoice internal ID"
+      },
+      "payment_method": {
+        "type": "string",
+        "enum": ["check", "ach", "wire", "creditCard", "cash"],
+        "description": "Payment method"
+      }
+    }
+  },
+  
+  "mutation_result_codes": {
+    "APPROVED": {
+      "code": "APPROVED",
+      "description": "Mutation passed all invariant checks and was successfully applied to NetSuite"
+    },
+    "REJECTED_NO_PDO": {
+      "code": "REJECTED_NO_PDO",
+      "description": "FINANCIAL_INV-001 violation: No PDO reference provided"
+    },
+    "REJECTED_DUPLICATE": {
+      "code": "REJECTED_DUPLICATE",
+      "description": "FINANCIAL_INV-002 violation: PDO already billed"
+    },
+    "REJECTED_AMOUNT_MISMATCH": {
+      "code": "REJECTED_AMOUNT_MISMATCH",
+      "description": "FINANCIAL_INV-003 violation: Invoice amount does not match PDO settlement"
+    },
+    "REJECTED_SHIELD_LOCKED": {
+      "code": "REJECTED_SHIELD_LOCKED",
+      "description": "Shield is locked due to previous invariant violation"
+    },
+    "FAILED_ERP_ERROR": {
+      "code": "FAILED_ERP_ERROR",
+      "description": "FINANCIAL_INV-004: NetSuite API error, marked for manual intervention"
+    },
+    "ROLLBACK": {
+      "code": "ROLLBACK",
+      "description": "Mutation was rolled back after partial completion"
+    }
+  },
+  
+  "audit_requirements": {
+    "logging": {
+      "location": "logs/netsuite_shield_audit.jsonl",
+      "format": "JSONL (append-only)",
+      "retention": "7 years (SOX compliance)"
+    },
+    "fields_required": [
+      "mutation_id",
+      "timestamp",
+      "pdo_reference",
+      "invoice_amount",
+      "result",
+      "hash"
+    ],
+    "hash_algorithm": "SHA-256"
+  },
+  
+  "netsuite_custom_fields": {
+    "description": "Custom fields required in NetSuite for PDO tracking",
+    "fields": [
+      {
+        "id": "custbody_pdo_reference",
+        "label": "PDO Reference",
+        "type": "text",
+        "required": true,
+        "applies_to": ["invoice", "customerPayment", "creditMemo"]
+      },
+      {
+        "id": "custbody_shipment_id",
+        "label": "Shipment ID",
+        "type": "text",
+        "required": true,
+        "applies_to": ["invoice"]
+      },
+      {
+        "id": "custbody_chainbridge_verified",
+        "label": "ChainBridge Verified",
+        "type": "checkbox",
+        "default": true,
+        "applies_to": ["invoice", "customerPayment"]
+      }
+    ]
+  },
+  
+  "tolerance_settings": {
+    "amount_tolerance_usd": 0.01,
+    "amount_tolerance_percent": 0.0001,
+    "timestamp_tolerance_seconds": 300
+  }
+}

@@ -1,0 +1,280 @@
+# ChainBridge Blockchain Configuration
+# =====================================
+#
+# PAC-SEC-P822-B: BLOCKCHAIN AUDIT ANCHORING
+# Component: Blockchain Configuration
+# Agent: DAN (GID-07)
+#
+# PURPOSE:
+#   Defines blockchain network endpoints, credentials, and anchoring
+#   policies for XRP Ledger and Hedera Consensus Service.
+#
+# SECURITY:
+#   - Never commit credentials to version control
+#   - Use environment variables for sensitive values
+#   - Separate testnet and mainnet configurations
+
+version: "1.0.0"
+pac_id: "PAC-SEC-P822-B"
+last_updated: "2026-01-12T00:00:00Z"
+
+# =============================================================================
+# XRP LEDGER CONFIGURATION
+# =============================================================================
+xrpl:
+  # Active network (testnet, mainnet, devnet)
+  active_network: testnet
+  
+  networks:
+    mainnet:
+      websocket_url: "wss://xrplcluster.com"
+      json_rpc_url: "https://xrplcluster.com"
+      explorer_url: "https://livenet.xrpl.org"
+      network_id: 0
+      # CRITICAL: Use environment variable for mainnet credentials
+      wallet_seed: "${XRPL_MAINNET_WALLET_SEED}"
+      wallet_address: "${XRPL_MAINNET_WALLET_ADDRESS}"
+      
+    testnet:
+      websocket_url: "wss://s.altnet.rippletest.net:51233"
+      json_rpc_url: "https://s.altnet.rippletest.net:51234"
+      explorer_url: "https://testnet.xrpl.org"
+      network_id: 1
+      wallet_seed: "${XRPL_TESTNET_WALLET_SEED}"
+      wallet_address: "${XRPL_TESTNET_WALLET_ADDRESS}"
+      # Testnet faucet available at https://xrpl.org/xrp-testnet-faucet.html
+      
+    devnet:
+      websocket_url: "wss://s.devnet.rippletest.net:51233"
+      json_rpc_url: "https://s.devnet.rippletest.net:51234"
+      explorer_url: "https://devnet.xrpl.org"
+      network_id: 2
+      wallet_seed: "${XRPL_DEVNET_WALLET_SEED}"
+      wallet_address: "${XRPL_DEVNET_WALLET_ADDRESS}"
+  
+  transaction:
+    # Memo configuration for audit anchoring
+    memo_type: "audit/merkle-root"
+    memo_format: "application/json"
+    
+    # Fee settings (in drops, 1 XRP = 1,000,000 drops)
+    max_fee_drops: 20  # 0.00002 XRP max fee
+    min_fee_drops: 10  # 0.00001 XRP min fee
+    
+    # Transaction settings
+    timeout_seconds: 30
+    queue_wait_seconds: 10
+  
+  # Connection settings
+  connection:
+    retry_attempts: 3
+    retry_delay_seconds: 1.0
+    retry_backoff_multiplier: 2.0
+    keepalive_interval_seconds: 30
+    reconnect_on_failure: true
+
+# =============================================================================
+# HEDERA CONSENSUS SERVICE CONFIGURATION
+# =============================================================================
+hedera:
+  # Active network (mainnet, testnet, previewnet)
+  active_network: testnet
+  
+  networks:
+    mainnet:
+      mirror_node_url: "https://mainnet-public.mirrornode.hedera.com"
+      grpc_endpoint: "mainnet.hedera.com:50211"
+      explorer_url: "https://hashscan.io/mainnet"
+      network_name: "mainnet"
+      operator_id: "${HEDERA_MAINNET_OPERATOR_ID}"
+      operator_key: "${HEDERA_MAINNET_OPERATOR_KEY}"
+      topic_id: "${HEDERA_MAINNET_TOPIC_ID}"
+      
+    testnet:
+      mirror_node_url: "https://testnet.mirrornode.hedera.com"
+      grpc_endpoint: "testnet.hedera.com:50211"
+      explorer_url: "https://hashscan.io/testnet"
+      network_name: "testnet"
+      operator_id: "${HEDERA_TESTNET_OPERATOR_ID}"
+      operator_key: "${HEDERA_TESTNET_OPERATOR_KEY}"
+      topic_id: "${HEDERA_TESTNET_TOPIC_ID}"
+      # Testnet account creation: https://portal.hedera.com/
+      
+    previewnet:
+      mirror_node_url: "https://previewnet.mirrornode.hedera.com"
+      grpc_endpoint: "previewnet.hedera.com:50211"
+      explorer_url: "https://hashscan.io/previewnet"
+      network_name: "previewnet"
+      operator_id: "${HEDERA_PREVIEWNET_OPERATOR_ID}"
+      operator_key: "${HEDERA_PREVIEWNET_OPERATOR_KEY}"
+      topic_id: "${HEDERA_PREVIEWNET_TOPIC_ID}"
+  
+  topic:
+    # Topic configuration for audit logging
+    memo: "ChainBridge Audit Log"
+    admin_key_required: true
+    submit_key_required: false
+    auto_renew_period_days: 90
+    
+    # Message settings
+    max_message_size_bytes: 1024  # 1KB limit
+    
+  # Connection settings
+  connection:
+    retry_attempts: 3
+    retry_delay_seconds: 1.0
+    retry_backoff_multiplier: 2.0
+    timeout_seconds: 30
+
+# =============================================================================
+# ANCHOR COORDINATOR CONFIGURATION
+# =============================================================================
+coordinator:
+  # Chain priority: xrpl_primary, hedera_primary, dual_chain
+  priority: xrpl_primary
+  
+  # Anchoring strategy: single_chain, dual_redundant, failover
+  strategy: failover
+  
+  # Batch settings
+  batch:
+    # Anchor when this many events accumulated
+    size: 100
+    
+    # Or anchor after this many seconds (whichever comes first)
+    interval_seconds: 300  # 5 minutes
+    
+    # For critical events, anchor immediately
+    critical_event_immediate: true
+  
+  # Retry policy
+  retry:
+    max_attempts: 3
+    initial_delay_seconds: 1.0
+    backoff_multiplier: 2.0
+    max_delay_seconds: 30.0
+  
+  # Failover behavior
+  failover:
+    # Switch to backup chain after this many failures
+    failure_threshold: 3
+    
+    # Auto-recover to primary after this many seconds
+    recovery_check_seconds: 60
+    
+    # Alert on failover
+    alert_on_failover: true
+  
+  # Performance
+  performance:
+    # Target anchor time (soft limit)
+    target_anchor_ms: 5000
+    
+    # Maximum anchor time (hard limit)
+    max_anchor_ms: 30000
+    
+    # Parallel anchoring for dual_redundant
+    parallel_anchoring: true
+
+# =============================================================================
+# POST-QUANTUM CRYPTOGRAPHY CONFIGURATION
+# =============================================================================
+pqc:
+  # Enable PQC signatures on anchors
+  enabled: true
+  
+  # Algorithm: ML_DSA_65, ML_DSA_44, ML_DSA_87
+  algorithm: ML_DSA_65
+  
+  # Signature mode: pqc_only, classical_only, hybrid
+  mode: hybrid
+  
+  # Key management
+  keys:
+    # Key storage path (relative to config dir)
+    storage_path: "${PQC_KEY_STORAGE_PATH:-./keys/pqc}"
+    
+    # Key rotation interval
+    rotation_days: 90
+    
+    # Backup key retention
+    backup_retention_days: 365
+
+# =============================================================================
+# PROOF GENERATION CONFIGURATION
+# =============================================================================
+proofs:
+  # Hash algorithm for Merkle proofs
+  algorithm: sha256
+  
+  # Include proofs in anchor receipts
+  include_in_receipt: true
+  
+  # Proof export format
+  export_format: json
+  
+  # Third-party verification
+  verification:
+    # Public endpoint for proof verification
+    public_endpoint: "${PROOF_VERIFICATION_ENDPOINT}"
+    
+    # Include verification URL in proofs
+    include_verification_url: true
+
+# =============================================================================
+# LOGGING AND MONITORING
+# =============================================================================
+logging:
+  # Log level for blockchain operations
+  level: INFO
+  
+  # Log all anchor operations
+  log_all_anchors: true
+  
+  # Log transaction details
+  log_transaction_details: true
+  
+  # Metrics export
+  metrics:
+    enabled: true
+    export_interval_seconds: 60
+    include_chain_stats: true
+
+# =============================================================================
+# ALERTING
+# =============================================================================
+alerts:
+  # Alert on anchor failures
+  anchor_failure:
+    enabled: true
+    threshold: 3  # Alert after 3 consecutive failures
+    notify: ["${ALERT_EMAIL}", "${ALERT_WEBHOOK}"]
+  
+  # Alert on high latency
+  high_latency:
+    enabled: true
+    threshold_ms: 10000  # 10 seconds
+    notify: ["${ALERT_EMAIL}"]
+  
+  # Alert on chain disconnection
+  chain_disconnect:
+    enabled: true
+    reconnect_attempts: 5
+    notify: ["${ALERT_EMAIL}", "${ALERT_WEBHOOK}"]
+
+# =============================================================================
+# COMPLIANCE
+# =============================================================================
+compliance:
+  # SOC2 AU-9 protection of audit information
+  soc2_au9:
+    enabled: true
+    require_dual_chain: false  # Recommended for production
+    
+  # Retention requirements
+  retention:
+    # Minimum blockchain anchor retention (enforced by blockchain)
+    blockchain_retention_years: 100  # Effectively permanent
+    
+    # Local proof cache retention
+    proof_cache_days: 365

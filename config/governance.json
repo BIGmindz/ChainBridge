@@ -1,0 +1,135 @@
+{
+  "_meta": {
+    "schema_version": "1.0.0",
+    "pac_id": "PAC-OCC-P34",
+    "created_by": "ALEX (GID-08)",
+    "created_at": "2026-01-06T16:00:00Z",
+    "description": "ChainBridge Governance Configuration — Five Pillars"
+  },
+  "hedera": {
+    "enabled": false,
+    "network": "testnet",
+    "hcs_topic_id": "",
+    "hcs_topic_memo": "ChainBridge OCC Governance",
+    "consensus_threshold": 2,
+    "submit_key_required": true,
+    "admin_key_required": true,
+    "notes": "Topic ID to be provisioned via Hedera Portal or SDK"
+  },
+  "xrpl": {
+    "enabled": false,
+    "network": "testnet",
+    "settlement_wallet": "",
+    "reserve_xrp": 10,
+    "fee_cushion_drops": 12,
+    "notes": "Wallet address for settlement attestations"
+  },
+  "sxt": {
+    "enabled": false,
+    "namespace": "chainbridge",
+    "zk_proof_table": "proof_attestations",
+    "api_endpoint": "",
+    "notes": "Space and Time ZK-proof storage"
+  },
+  "chainlink": {
+    "enabled": false,
+    "functions_router": "",
+    "don_id": "",
+    "subscription_id": "",
+    "notes": "Chainlink Functions for cross-chain bridge"
+  },
+  "seeburger": {
+    "enabled": false,
+    "bis_endpoint": "",
+    "tenant_id": "",
+    "notes": "Seeburger BIS enterprise B2B integration"
+  },
+  "agents": {
+    "GID-00": {
+      "name": "BENSON",
+      "role": "Orchestrator",
+      "permissions": ["commit", "dispatch", "consolidate"]
+    },
+    "GID-01": {
+      "name": "CODY",
+      "role": "Infrastructure Engineer",
+      "permissions": ["code", "adapter", "iron_pattern"]
+    },
+    "GID-02": {
+      "name": "CINDY",
+      "role": "Code Sanitizer",
+      "permissions": ["refactor", "pep8", "naming"]
+    },
+    "GID-04": {
+      "name": "SONNY",
+      "role": "UI Engineer",
+      "permissions": ["ui", "dashboard", "visualization"]
+    },
+    "GID-05": {
+      "name": "MAGGIE",
+      "role": "Analytics Designer",
+      "permissions": ["analytics", "schema", "monitoring"]
+    },
+    "GID-06": {
+      "name": "SAM",
+      "role": "Security Agent",
+      "permissions": ["git-filter", "secret-scrub", "history"]
+    },
+    "GID-08": {
+      "name": "ALEX",
+      "role": "Governance Enforcer",
+      "permissions": ["governance", "rules", "attestation"]
+    },
+    "GID-11": {
+      "name": "ATLAS",
+      "role": "Repo Integrity Engineer",
+      "permissions": ["audit", "integrity", "verification"]
+    },
+    "GID-14": {
+      "name": "SXT_AGENT",
+      "role": "ZK-Proof Generator",
+      "permissions": ["zk-proof", "sxt", "tables"]
+    },
+    "GID-15": {
+      "name": "LINK_AGENT",
+      "role": "Cross-Chain Bridge",
+      "permissions": ["chainlink", "functions", "bridge"]
+    }
+  },
+  "gates": {
+    "G1_SECURITY": {
+      "description": "Branch verification",
+      "enforced": true
+    },
+    "G2_INTEGRITY": {
+      "description": "Clean working tree",
+      "enforced": true
+    },
+    "G3_TOOLING": {
+      "description": "Required tools installed",
+      "enforced": true
+    },
+    "G4_BACKUP": {
+      "description": "External backup verified",
+      "enforced": true
+    },
+    "G5_TESTING": {
+      "description": "All tests pass",
+      "enforced": true
+    },
+    "G6_REVIEW": {
+      "description": "ALEX governance review",
+      "enforced": true
+    },
+    "G7_ATTESTATION": {
+      "description": "Cross-ledger proof",
+      "enforced": false
+    },
+    "G8_GOVERNANCE": {
+      "description": "PAC authorization",
+      "enforced": true
+    }
+  },
+  "fail_closed": true,
+  "attestation_required": true
+}

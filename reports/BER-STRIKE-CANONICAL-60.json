@@ -1,0 +1,50 @@
+{
+  "pac_id": "PAC-STRIKE-RE-RUN-CANONICAL-60",
+  "type": "SHADOW_VET",
+  "runtime": "Python 3.11.14",
+  "commit": "619f7789",
+  "executed_by": "BENSON-GID-00",
+  "executed_at": "2026-01-14T15:59:03.094921",
+  "schema": "TRINITY_V1",
+  "precision": "Decimal_Fixed_Point_50",
+  "portfolio": {
+    "total_submitted": "500000.00",
+    "unit_count": 47
+  },
+  "results": {
+    "verified_count": 45,
+    "verified_value": "478223.40",
+    "rejected_count": 2,
+    "rejected_value": "21776.60"
+  },
+  "rejections": [
+    {
+      "id": "PNC-031",
+      "reason": "PROVENANCE_FAIL",
+      "detail": "Missing issuance certificate and chain-of-custody",
+      "sxt_confidence": "0.12"
+    },
+    {
+      "id": "PNC-044",
+      "reason": "REDUNDANCY_FAIL",
+      "detail": "78% collision with PNC-017, cannot prove unique ownership",
+      "sxt_confidence": "0.23"
+    }
+  ],
+  "ledger": {
+    "pre_strike_arr": "13197500.00",
+    "settlement_value": "478223.40",
+    "post_strike_arr": "13675723.40"
+  },
+  "constitutional_compliance": {
+    "runtime_verified": true,
+    "gateway_active": true,
+    "zero_drift": true,
+    "fail_closed": true
+  },
+  "sxt_attestation": {
+    "proof_schema": "TRINITY_V1",
+    "confidence_threshold": "0.85",
+    "all_verified_above_threshold": true
+  }
+}

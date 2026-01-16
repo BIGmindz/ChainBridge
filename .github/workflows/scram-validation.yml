@@ -1,0 +1,79 @@
+name: scram-validation
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libudev-dev pkg-config
+      - name: Validate Sentinel Module Exists
+        run: |
+          echo "=== INV-SCRAM-003: Hardware Sentinel Validation ==="
+          if [ ! -f "chainbridge_kernel/src/scram_sentinel.rs" ]; then
+            echo "FAIL: scram_sentinel.rs not found"
+            exit 1
+          fi
+          echo "✓ scram_sentinel.rs exists"
+      - name: Validate SCRAM Policy Exists
+        run: |
+          echo "=== INV-SCRAM-POLICY-REQUIRED: Policy Validation ==="
+          if [ ! -f "core/governance/scram_policies.json" ]; then
+            echo "FAIL: scram_policies.json not found"
+            exit 1
+          fi
+          python3 -m json.tool core/governance/scram_policies.json > /dev/null
+          echo "✓ scram_policies.json valid JSON"
+      - name: Validate SCRAM Schema Exists
+        run: |
+          echo "=== SCRAM Schema Validation ==="
+          if [ ! -f "schemas/scram_event_schema.json" ]; then
+            echo "FAIL: scram_event_schema.json not found"
+            exit 1
+          fi
+          python3 -m json.tool schemas/scram_event_schema.json > /dev/null
+          echo "✓ scram_event_schema.json valid JSON"
+      - name: Build Rust Sentinel
+        run: |
+          echo "=== Building SCRAM Sentinel ==="
+          cd chainbridge_kernel
+          cargo build --release
+          echo "✓ Sentinel compiled successfully"
+      - name: Run Sentinel Tests
+        run: |
+          echo "=== Running Sentinel Tests ==="
+          cd chainbridge_kernel
+          cargo test
+          echo "✓ All sentinel tests passed"
+      - name: Validate Python SCRAM Controller
+        run: |
+          echo "=== Python SCRAM Controller Validation ==="
+          python3 scripts/validate_scram_controller.py
+
+      - name: Validate Policy Governance Tier
+        run: |
+          echo "=== Governance Tier Validation ==="
+          python3 scripts/validate_scram_policies.py
+      - name: Summary
+        run: |
+          echo "========================================"
+          echo "  SCRAM VALIDATION COMPLETE"
+          echo "========================================"
+          echo "  ✓ INV-SCRAM-003: Hardware Sentinel"
+          echo "  ✓ INV-SCRAM-POLICY-REQUIRED: Policy"
+          echo "  ✓ SCRAM Schema: Valid"
+          echo "  ✓ Rust Sentinel: Compiled"
+          echo "  ✓ Python Controller: Valid"
+          echo "  ✓ Governance Tier: LAW"
+          echo "========================================"

@@ -1,0 +1,124 @@
+{
+  "$schema": "https://chainbridge.io/schemas/policy/v1.0.0",
+  "policy_id": "TASK_MANIFEST_POLICY_V1",
+  "title": "Mandatory Task Manifest Policy for PAC Execution",
+  "description": "Requires all PACs to declare a complete task manifest before execution begins",
+  "pac_reference": "PAC-P746-GOV-TASK-PROGRESSION-VISIBILITY",
+  "classification": "LAW_TIER",
+  "effective_date": "2026-01-13T19:35:00Z",
+  "authority": "JEFFREY (Architect)",
+  "enforcer": "BENSON (GID-00)",
+  "status": "ACTIVE",
+
+  "scope": {
+    "applies_to": "ALL_PAC_EXECUTIONS",
+    "exceptions": [],
+    "retroactive": false
+  },
+
+  "requirements": {
+    "REQ-TM-001": {
+      "title": "Manifest Declaration",
+      "rule": "Every PAC MUST declare a complete task manifest before any task execution begins",
+      "enforcement": "HARD_BLOCK",
+      "violation_action": "PAC_REJECTED"
+    },
+    "REQ-TM-002": {
+      "title": "Task Completeness",
+      "rule": "All work performed during PAC execution MUST be represented as declared tasks",
+      "enforcement": "HARD_BLOCK",
+      "violation_action": "PAC_INVALIDATED"
+    },
+    "REQ-TM-003": {
+      "title": "State Machine Compliance",
+      "rule": "All task state transitions MUST follow the canonical state machine",
+      "enforcement": "HARD_BLOCK",
+      "violation_action": "TRANSITION_REJECTED"
+    },
+    "REQ-TM-004": {
+      "title": "Heartbeat Binding",
+      "rule": "Every task state transition MUST emit a corresponding heartbeat event",
+      "enforcement": "HARD_BLOCK",
+      "violation_action": "SILENT_WORK_VIOLATION"
+    },
+    "REQ-TM-005": {
+      "title": "Completion Gate",
+      "rule": "PAC CANNOT be closed with any tasks in non-terminal states",
+      "enforcement": "HARD_BLOCK",
+      "violation_action": "PAC_CLOSURE_BLOCKED"
+    },
+    "REQ-TM-006": {
+      "title": "Agent Assignment",
+      "rule": "Every task SHOULD have an assigned agent",
+      "enforcement": "SOFT_WARNING",
+      "violation_action": "WARNING_LOGGED"
+    },
+    "REQ-TM-007": {
+      "title": "Artifact Declaration",
+      "rule": "Every task SHOULD declare an expected artifact",
+      "enforcement": "SOFT_WARNING",
+      "violation_action": "WARNING_LOGGED"
+    }
+  },
+
+  "state_machine": {
+    "states": ["DECLARED", "IN_PROGRESS", "BLOCKED", "COMPLETE", "FAILED"],
+    "terminal_states": ["COMPLETE", "FAILED"],
+    "initial_state": "DECLARED",
+    "transitions": {
+      "DECLARED": ["IN_PROGRESS", "BLOCKED"],
+      "IN_PROGRESS": ["COMPLETE", "FAILED", "BLOCKED"],
+      "BLOCKED": ["IN_PROGRESS", "FAILED"],
+      "COMPLETE": [],
+      "FAILED": []
+    }
+  },
+
+  "validation_rules": {
+    "task_id_pattern": "^TASK-[0-9]{2,3}$",
+    "title_min_length": 5,
+    "title_max_length": 100,
+    "max_tasks_per_pac": 50,
+    "max_in_progress_concurrent": 5
+  },
+
+  "invariants_enforced": [
+    {
+      "id": "INV-TM-001",
+      "name": "Operator Visibility Mandatory",
+      "description": "All work must be visible to operator through task manifest"
+    },
+    {
+      "id": "INV-TM-002",
+      "name": "Proof > Execution",
+      "description": "Task state transitions are proof of execution"
+    },
+    {
+      "id": "INV-TM-003",
+      "name": "No Silent Work",
+      "description": "No work may occur outside declared tasks"
+    }
+  ],
+
+  "audit_requirements": {
+    "manifest_logged": true,
+    "transitions_logged": true,
+    "completion_logged": true,
+    "retention_policy": "PERMANENT"
+  },
+
+  "enforcement_integration": {
+    "heartbeat_binding": "ChainBridge/core/orchestration/heartbeat/",
+    "task_tracker": "ChainBridge/core/orchestration/task_tracker.py",
+    "audit_api": "/api/v1/audit/",
+    "occ_panel": "core/ops/task_progress_panel.py"
+  },
+
+  "attestation": {
+    "author": "JEFFREY (Architect)",
+    "enforcer": "BENSON (GID-00)",
+    "timestamp": "2026-01-13T19:50:00Z",
+    "statement": "Task Manifest Policy established. All PAC executions must declare complete task manifests. No hidden work. No silent state transitions. Operator visibility mandatory.",
+    "signature_hash": "policy_task_manifest_v1_signed"
+  }
+}

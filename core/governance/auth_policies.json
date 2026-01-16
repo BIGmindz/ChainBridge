@@ -1,0 +1,190 @@
+{
+  "policy_version": "1.0.0",
+  "pac_reference": "PAC-SEC-P821",
+  "governance_tier": "POLICY",
+  "description": "Constitutional authentication enforcement rules for ChainBridge APIs",
+  
+  "invariants": {
+    "INV-AUTH-001": {
+      "name": "Fail-Closed Authentication",
+      "description": "All API requests MUST pass authentication. Any error = reject.",
+      "enforcement": "HARD",
+      "scope": "ALL_API_ENDPOINTS"
+    },
+    "INV-AUTH-002": {
+      "name": "GID Registry Binding",
+      "description": "GID claims MUST be verified against gid_registry.json",
+      "enforcement": "HARD",
+      "scope": "AGENT_REQUESTS"
+    },
+    "INV-AUTH-003": {
+      "name": "Session State Persistence",
+      "description": "Session state MUST be Redis-backed with TTL enforcement",
+      "enforcement": "HARD",
+      "scope": "STATEFUL_SESSIONS"
+    },
+    "INV-AUTH-004": {
+      "name": "Sliding Window Rate Limiting",
+      "description": "Rate limiting MUST use sliding window algorithm per endpoint",
+      "enforcement": "HARD",
+      "scope": "ALL_ENDPOINTS"
+    },
+    "INV-AUTH-005": {
+      "name": "Cryptographic Signatures",
+      "description": "Critical endpoints MUST verify cryptographic request signatures",
+      "enforcement": "HARD",
+      "scope": "TRANSACTION_ENDPOINTS"
+    },
+    "INV-AUTH-006": {
+      "name": "Token Expiry Zero Tolerance",
+      "description": "Token expiry MUST be enforced with zero tolerance",
+      "enforcement": "HARD",
+      "scope": "JWT_TOKENS"
+    },
+    "INV-AUTH-007": {
+      "name": "API Key Secure Storage",
+      "description": "API keys MUST be stored as salted hashes",
+      "enforcement": "HARD",
+      "scope": "API_KEY_STORAGE"
+    }
+  },
+  
+  "authentication_methods": {
+    "jwt": {
+      "enabled": true,
+      "algorithm": "HS256",
+      "issuer": "chainbridge",
+      "audience": "chainbridge-api",
+      "max_expiry_seconds": 3600,
+      "header": "Authorization",
+      "scheme": "Bearer"
+    },
+    "api_key": {
+      "enabled": true,
+      "header": "X-API-Key",
+      "hash_algorithm": "sha256",
+      "require_salt": true,
+      "allow_query_param": true,
+      "query_param_name": "api_key"
+    }
+  },
+  
+  "gid_enforcement": {
+    "registry_path": "core/governance/gid_registry.json",
+    "rules": {
+      "RULE-GID-001": "All PACs must reference a valid GID from this registry",
+      "RULE-GID-002": "Unknown GID → immediate rejection (HARD FAIL)",
+      "RULE-GID-003": "GID format must match pattern GID-XX where XX is 00-99",
+      "RULE-GID-004": "GIDs are immutable once assigned",
+      "RULE-GID-005": "No agent may operate without a registered GID",
+      "RULE-GID-006": "System components (system=true) are non-persona, non-conversational",
+      "RULE-GID-007": "Only SYSTEM_ORCHESTRATOR may issue BER"
+    },
+    "lane_permissions": {
+      "enabled": true,
+      "strict_mode": true,
+      "allow_all_override": ["GID-00"]
+    }
+  },
+  
+  "session_policy": {
+    "storage": "redis",
+    "ttl_seconds": 3600,
+    "refresh_threshold_seconds": 300,
+    "id_entropy_bits": 256,
+    "cookie_config": {
+      "httponly": true,
+      "secure": true,
+      "samesite": "lax"
+    }
+  },
+  
+  "rate_limit_policy": {
+    "algorithm": "sliding_window_log",
+    "default_limit": 100,
+    "default_window_seconds": 60,
+    "endpoint_overrides": {
+      "/v1/transaction": {"limit": 10, "window": 60},
+      "/v1/governance": {"limit": 20, "window": 60},
+      "/health": {"limit": 1000, "window": 60}
+    },
+    "tier_multipliers": {
+      "free": 1.0,
+      "basic": 2.0,
+      "pro": 5.0,
+      "enterprise": 10.0
+    }
+  },
+  
+  "signature_policy": {
+    "algorithm": "hmac-sha256",
+    "timestamp_tolerance_seconds": 300,
+    "nonce_replay_protection": true,
+    "nonce_ttl_seconds": 600,
+    "required_endpoints": [
+      "/v1/transaction",
+      "/v1/governance/scram"
+    ],
+    "headers": {
+      "signature": "X-Signature",
+      "timestamp": "X-Timestamp",
+      "nonce": "X-Nonce"
+    }
+  },
+  
+  "exempt_paths": [
+    "/",
+    "/health",
+    "/healthz",
+    "/ready",
+    "/readyz",
+    "/metrics",
+    "/docs",
+    "/redoc",
+    "/openapi.json"
+  ],
+  
+  "audit": {
+    "log_auth_failures": true,
+    "log_rate_limit_exceeded": true,
+    "log_signature_failures": true,
+    "log_gid_violations": true,
+    "include_request_metadata": true,
+    "sensitive_fields_redacted": [
+      "password",
+      "api_key",
+      "token",
+      "secret"
+    ]
+  },
+  
+  "failure_responses": {
+    "unauthorized": {
+      "status": 401,
+      "error": "Unauthorized",
+      "codes": {
+        "AUTH_REQUIRED": "Authentication required",
+        "INVALID_TOKEN": "Invalid or expired token",
+        "INVALID_API_KEY": "Invalid API key",
+        "MISSING_SIGNATURE": "Missing request signature",
+        "INVALID_SIGNATURE": "Invalid request signature"
+      }
+    },
+    "forbidden": {
+      "status": 403,
+      "error": "Forbidden",
+      "codes": {
+        "INVALID_GID": "Invalid agent identity",
+        "GID_REQUIRED": "Agent identity required",
+        "LANE_DENIED": "Agent not permitted in this lane"
+      }
+    },
+    "rate_limited": {
+      "status": 429,
+      "error": "Too Many Requests",
+      "codes": {
+        "RATE_LIMIT_EXCEEDED": "Rate limit exceeded"
+      }
+    }
+  }
+}

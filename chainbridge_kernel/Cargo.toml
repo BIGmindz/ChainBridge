@@ -35,12 +35,37 @@ serde_json = "1.0"
 # Signal handling for graceful shutdown
 ctrlc = "3.4"
 
+# Hex encoding for identity module
+hex = "0.4"
+
+# Tracing infrastructure for observability module
+tracing-appender = "0.2"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Async runtime for gateway modules
+tokio = { version = "1.0", features = ["full"] }
+
+# HTTP framework for gaas_gateway
+axum = "0.7"
+
+# Lazy static initialization for erp_shield constants
+lazy_static = "1.4"
+
+# Tracing core for observability
+tracing = "0.1"
+
+# Ed25519 cryptographic signatures for identity module
+ed25519-dalek = "2.1"
+
 [profile.release]
 opt-level = 3
 lto = true
 codegen-units = 1
 panic = "abort"
 strip = true
+
+[dev-dependencies]
+tempfile = "3.10"
 
 [profile.dev]
 opt-level = 0

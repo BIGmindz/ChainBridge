@@ -1,0 +1,92 @@
+{
+  "pac_id": "PAC-OCC-COMMAND-34",
+  "pac_version": "1.0.0",
+  "pac_type": "ROOT_LEVEL_INTERFACE_ACTIVATION",
+  "pac_class": "OPERATORS_CONTROL_IN_COMMAND",
+  "schema_version": "4.0.0",
+  "block_standard": "34-OCC_COMMAND",
+  "timestamp": "2026-01-15T01:00:00.000Z",
+  "epoch": "EPOCH_001",
+  "issuer": "ARCHITECT-JEFFREY",
+  "executor": "BENSON-GID-00",
+
+  "factual_state": {
+    "arr_current_usd": 13197500.00,
+    "pilot_status": "SETTLED",
+    "infrastructure_status": {
+      "zk_bridge": "OPERATIONAL",
+      "vaporizer": "DEPLOYED",
+      "blind_portal": "OPERATIONAL",
+      "genesis_certifier": "SEALED",
+      "revenue_settlement": "ACTIVE"
+    },
+    "permanent_ledger_entries": 42
+  },
+
+  "constitutional_analysis": {
+    "control_autonomy": "OCC is physical manifestation of Control > Autonomy principle",
+    "fail_closed": "OCC triggers FAIL-CLOSED alert on mesh drift",
+    "audit_aware": "Every toggle signed by Architect Private Key and recorded to PERMANENT_LEDGER"
+  },
+
+  "ui_layout": {
+    "quad_lane_monitor": "Real-time view of Benson's 4 execution lanes with ms latency",
+    "gate_heatmap": "100x100 grid of 10,000 Law-Gates (Green=Compliant, Red=Blocked)",
+    "pdo_ticker": "Scrolling feed of Proof → Decision → Outcome units",
+    "arr_counter": "Live-updating financial odometer"
+  },
+
+  "execution_lanes": {
+    "lane_1": {
+      "lane_id": "LANE-1-MASTER-CONSOLE",
+      "task": "Serve administrative dashboard at /occ/admin",
+      "status": "EXECUTING"
+    },
+    "lane_2": {
+      "lane_id": "LANE-2-SWARM-VISUALIZER",
+      "task": "Connect real-time telemetry from 100-node mesh",
+      "status": "QUEUED"
+    },
+    "lane_3": {
+      "lane_id": "LANE-3-KILL-SWITCH-INIT",
+      "task": "Verify hardware-level STOP command responsive",
+      "status": "QUEUED"
+    }
+  },
+
+  "security_requirements": {
+    "access_control": "Architect encrypted tunnel ONLY",
+    "authentication": "Sovereign Master Key required",
+    "session_signing": "All actions signed with Architect Private Key",
+    "audit_logging": "Full trail to PERMANENT_LEDGER"
+  },
+
+  "gaps_and_risks": [
+    {
+      "risk_id": "RISK-OCC-001",
+      "description": "Unauthorized access to Logic Anchors",
+      "severity": "CRITICAL",
+      "mitigation": "Architect encrypted tunnel, Sovereign Master Key"
+    },
+    {
+      "risk_id": "GAP-OCC-001",
+      "description": "Regulator View vs Command View bifurcation",
+      "resolution": "Separate interfaces - Regulator NEVER sees Kill-Switch"
+    }
+  ],
+
+  "forbidden_actions": [
+    {
+      "prohibition_id": "FORBID-OCC-001",
+      "action": "Expose Kill-Switch to non-Architect users",
+      "enforcement": "HARD_BLOCK"
+    },
+    {
+      "prohibition_id": "FORBID-OCC-002",
+      "action": "Modify Genesis Anchor from UI",
+      "enforcement": "IMMUTABLE"
+    }
+  ],
+
+  "status": "EXECUTING"
+}

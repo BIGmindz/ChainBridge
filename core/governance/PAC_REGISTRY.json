@@ -1,0 +1,159 @@
+{
+  "$schema": "https://chainbridge.io/schemas/pac-registry/v1.0.0",
+  "registry_id": "PAC-REGISTRY-001",
+  "classification": "LAW_TIER",
+  "version": "1.0.0",
+  "created_at": "2026-01-13T16:00:00Z",
+  "pac_authority": "PAC-P743-GOV-PAC-REGISTRY-ENFORCEMENT",
+  "authority": "JEFFREY (Architect)",
+  "orchestrator": "BENSON (GID-00)",
+
+  "numbering_schema": {
+    "format": "PAC-P<NNN>-<DOMAIN>-<INTENT>",
+    "pattern": "^PAC-P[0-9]{1,4}-[A-Z]+-[A-Z0-9-]+$",
+    "description": "All PACs must use global P-series numbering with domain and intent suffixes",
+    "examples": [
+      "PAC-P743-GOV-PAC-REGISTRY-ENFORCEMENT",
+      "PAC-P744-OPS-DEPLOYMENT-GATE",
+      "PAC-P745-STRAT-MARKET-EXPANSION"
+    ]
+  },
+
+  "sequence_state": {
+    "baseline_established_at": "2026-01-13T16:00:00Z",
+    "highest_committed_p_number": 744,
+    "next_available_p_number": 745,
+    "last_updated_by": "PAC-BLCR-GENESIS-17"
+  },
+
+  "domain_codes": {
+    "GOV": "Governance and Constitutional",
+    "OPS": "Operations and Infrastructure",
+    "STRAT": "Strategy and Business",
+    "BIZ": "Business Logic and Rules",
+    "OCC": "Operations Command Center",
+    "SYS": "System and Platform",
+    "RES": "Research and Exploration",
+    "LOG": "Logistics and Integration",
+    "SWARM": "Agent Swarm Operations",
+    "TEST": "Testing and Validation",
+    "EXP": "Experimental"
+  },
+
+  "enforcement_rules": {
+    "RULE-REG-001": {
+      "name": "Monotonic Sequencing",
+      "rule": "P-numbers must be strictly monotonic increasing",
+      "violation_action": "REJECT_PAC"
+    },
+    "RULE-REG-002": {
+      "name": "No Gaps Without Justification",
+      "rule": "Skipping P-numbers requires LAW-tier justification",
+      "violation_action": "REQUIRE_JUSTIFICATION"
+    },
+    "RULE-REG-003": {
+      "name": "No Reuse",
+      "rule": "P-numbers cannot be reused once committed",
+      "violation_action": "REJECT_PAC"
+    },
+    "RULE-REG-004": {
+      "name": "Format Compliance",
+      "rule": "All PACs must match the canonical format pattern",
+      "violation_action": "REJECT_PAC"
+    },
+    "RULE-REG-005": {
+      "name": "Domain Code Validity",
+      "rule": "Domain codes must be from approved list",
+      "violation_action": "REJECT_PAC"
+    }
+  },
+
+  "historical_allocation": {
+    "note": "P-numbers below baseline represent historical PACs with varied naming conventions",
+    "ranges": [
+      {"start": 1, "end": 32, "status": "LEGACY", "domains": ["STRAT", "OCC", "SWARM"]},
+      {"start": 33, "end": 55, "status": "LEGACY", "domains": ["BIZ", "STRAT", "GOV", "OPS", "RES"]},
+      {"start": 56, "end": 82, "status": "LEGACY", "domains": ["OCC", "OPS", "SYS"]},
+      {"start": 83, "end": 150, "status": "LEGACY", "domains": ["LOG", "INT"]},
+      {"start": 151, "end": 742, "status": "RESERVED", "note": "Gap reserved for historical reconciliation"},
+      {"start": 743, "end": 743, "status": "CURRENT", "pac": "PAC-P743-GOV-PAC-REGISTRY-ENFORCEMENT"}
+    ]
+  },
+
+  "legacy_pac_reconciliation": {
+    "policy": "GRANDFATHER_WITH_MAPPING",
+    "description": "Legacy PACs with non-standard naming are grandfathered but mapped to canonical form",
+    "mappings": [
+      {"legacy": "PAC-JEFFREY-*", "canonical_domain": "ARCH", "note": "Architect-authority PACs"},
+      {"legacy": "PAC-TEST-*", "canonical_domain": "TEST", "note": "Test PACs"},
+      {"legacy": "TEST-P*", "canonical_domain": "TEST", "note": "Legacy test prefix"}
+    ],
+    "new_pac_requirement": "All new PACs MUST use canonical format"
+  },
+
+  "invariants": {
+    "INV-REG-001": {
+      "name": "Global Uniqueness",
+      "invariant": "No two PACs may share the same P-number",
+      "violation_action": "FATAL_REJECT"
+    },
+    "INV-REG-002": {
+      "name": "Monotonic Sequence",
+      "invariant": "next_available >= highest_committed + 1",
+      "violation_action": "SEQUENCE_ERROR"
+    },
+    "INV-REG-003": {
+      "name": "Registry Authority",
+      "invariant": "Only BENSON or JEFFREY may update sequence state",
+      "violation_action": "UNAUTHORIZED_MODIFICATION"
+    }
+  },
+
+  "allocation_log": [
+    {
+      "p_number": 743,
+      "pac_id": "PAC-P743-GOV-PAC-REGISTRY-ENFORCEMENT",
+      "allocated_at": "2026-01-13T16:00:00Z",
+      "allocated_by": "BENSON (GID-00)",
+      "authority": "JEFFREY (Architect)",
+      "status": "COMMITTED"
+    },
+    {
+      "p_number": 744,
+      "pac_id": "PAC-BLCR-GENESIS-17",
+      "allocated_at": "2026-01-14T03:00:00Z",
+      "allocated_by": "BENSON (GID-00)",
+      "authority": "JEFFREY (Architect)",
+      "job_id": "BLCR-GENESIS",
+      "classification": "LAW / SOVEREIGNTY-HARDENING",
+      "description": "BLCR Engine Core Injection - Level 11 Sovereignty",
+      "status": "COMMITTED"
+    }
+  ],
+
+  "blcr_state": {
+    "status": "SOVEREIGN_LEVEL_11_LOCKED",
+    "mode": "DETERMINISTIC_SOVEREIGNTY",
+    "latency_target_ms": "0.38",
+    "fail_closed_enabled": true,
+    "constitutional_rules": {
+      "CONTROL_OVER_AUTONOMY": "ENFORCED",
+      "PROOF_OVER_EXECUTION": "ENFORCED",
+      "FAIL_CLOSED": "ENFORCED",
+      "RNP_RESTRICTION": "ENFORCED"
+    },
+    "artifacts": {
+      "blcr_engine": "/core/governance/blcr_engine.py",
+      "canonical_gateway": "/core/governance/canonical_gateway.py"
+    },
+    "agents_at_level_11": ["GID-00", "GID-11", "GID-12", "GID-13", "GID-14", "GID-15"]
+  },
+
+  "attestation": {
+    "created_by": "BENSON (GID-00)",
+    "authorized_by": "JEFFREY (Architect)",
+    "timestamp": "2026-01-13T16:00:00Z",
+    "statement": "PAC Registry established. Global P-series numbering enforced from P743 forward. Legacy PACs grandfathered with mapping. All future PACs must use canonical format PAC-P<NNN>-<DOMAIN>-<INTENT>.",
+    "registry_lock": "ACTIVE"
+  }
+}
