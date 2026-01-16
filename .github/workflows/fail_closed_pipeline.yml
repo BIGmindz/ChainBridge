@@ -1,0 +1,27 @@
+      - name: "Check Pipeline Status"
+        run: |
+          FAILED=false
+          
+          for gate_result in \
+            "${{ needs.preflight.result }}" \
+            "${{ needs.static_analysis.result }}" \
+            "${{ needs.unit_tests.result }}" \
+            "${{ needs.property_tests.result }}" \
+            "${{ needs.security_verification.result }}" \
+            "${{ needs.build.result }}" \
+            "${{ needs.invariant_verification.result }}"
+          do
+            if [ "$gate_result" = "failure" ] || [ "$gate_result" = "cancelled" ]; then
+              FAILED=true
+              break
+            fi
+          done
+          
+          if [ "$FAILED" = "true" ]; then
+            echo "=========================================="
+            echo "PIPELINE FAILED - FAIL-CLOSED ENFORCED"
+            echo "=========================================="
+            exit 1
+          fi
+          
+          echo "✅ PIPELINE PASSED - All gates successful"
