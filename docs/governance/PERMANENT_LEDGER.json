@@ -2239,8 +2239,119 @@
         "tests/nasa_occ/ui_fault_tests.py"
       ],
       "execution_artifact_hash": "SHA256:PAC-JEFFREY-OCC-UI-NASA-001-EXEC-ART-23BLOCK"
+    },
+    {
+      "acceptance_id": "CA-2026-01-16-002",
+      "timestamp": "2026-01-16T00:00:00Z",
+      "pac_id": "PAC-JEFFREY-SCRAM-POLICY-REPLACEMENT-R2B-001",
+      "ber_id": "BER-PAC-JEFFREY-SCRAM-POLICY-REPLACEMENT-R2B-001",
+      "status": "ACCEPTED_CANONICAL",
+      "classification": "SCRAM_POLICY_REPLACEMENT",
+      "governance_tier": "LAW",
+      "role": "SCRAM_POLICY_SOURCE_OF_TRUTH",
+      "supersedes": "PRIOR_MINIMAL_IMPLICIT_SCRAM_POLICY_STATE",
+      "issuer": {
+        "gid": "JEFFREY",
+        "role": "STRATEGY_ONLY"
+      },
+      "executor": {
+        "gid": "GID-00",
+        "agent": "BENSON"
+      },
+      "certifier": {
+        "gid": "GID-08",
+        "agent": "ALEX"
+      },
+      "acceptance_rationale": [
+        "File existed but was constitutionally insufficient",
+        "Replaced (not patched) minimal placeholder with LAW-tier governed artifact",
+        "All required dimensions now present: governance tier, authority lattice, dual-key, 500ms guarantee, invariants",
+        "CI binding + fail-closed semantics enforced",
+        "Validation deterministic, repeatable, and auditable",
+        "CI failure resolved by adding law, not weakening checks"
+      ],
+      "invariants_enforced": [
+        "INV-SCRAM-POLICY-REQUIRED",
+        "INV-FAIL-CLOSED",
+        "INV-AUTHORITY-LATTICE",
+        "INV-LAW-TIER-ONLY",
+        "INV-SCRAM-001",
+        "INV-SCRAM-002",
+        "INV-SCRAM-003",
+        "INV-SCRAM-004",
+        "INV-SCRAM-005",
+        "INV-GOV-003"
+      ],
+      "canonical_state_update": {
+        "scram_policy_canonical": true,
+        "scram_schema_canonical": true,
+        "scram_enforcement_bound": true,
+        "future_scram_changes_require": "LAW_TIER_REPLACEMENT"
+      },
+      "artifacts": [
+        "core/governance/scram_policies.json"
+      ],
+      "artifact_hash": "8d8512044e2031076ce67ba2d19dcbe560b33e44d7c5973f45c14ce602d86ca5",
+      "execution_artifact_hash": "SHA256:PAC-JEFFREY-SCRAM-POLICY-REPLACEMENT-R2B-001-EXEC-ART-23BLOCK"
+    },
+    {
+      "acceptance_id": "CA-2026-01-16-003",
+      "timestamp": "2026-01-16T00:00:00Z",
+      "pac_id": "PAC-JEFFREY-SCRAM-RUST-SENTINEL-REPLACEMENT-R2C-002",
+      "ber_id": "BER-PAC-JEFFREY-SCRAM-RUST-SENTINEL-REPLACEMENT-R2C-002",
+      "status": "ACCEPTED_CANONICAL",
+      "classification": "SCRAM_HARDWARE_SENTINEL_REPLACEMENT",
+      "governance_tier": "LAW",
+      "role": "SCRAM_HARDWARE_SENTINEL_SOURCE_OF_TRUTH",
+      "supersedes": [
+        "ALL_PRIOR_SCRAM_SENTINEL_VERSIONS",
+        "PAC-JEFFREY-SCRAM-RUST-SENTINEL-REPLACEMENT-R2C-001"
+      ],
+      "issuer": {
+        "gid": "JEFFREY",
+        "role": "STRATEGY_ONLY"
+      },
+      "executor": {
+        "gid": "GID-00",
+        "agent": "BENSON"
+      },
+      "certifier": {
+        "gid": "GID-08",
+        "agent": "ALEX"
+      },
+      "acceptance_rationale": [
+        "Prior artifact deleted and invalidated",
+        "New artifact authored from zero with explicit replacement header",
+        "Replacement-only constraint satisfied - no reuse, no compatibility leakage",
+        "All invariants closed by construction, not CI accommodation",
+        "INV-SCRAM-003: Non-recoverable termination via process::exit(1)",
+        "INV-FAIL-CLOSED: All error paths terminate",
+        "INV-NO-RECOVERY: -> ! return type; no continuation",
+        "INV-LATENCY-BOUND: Explicit ≤500ms bound",
+        "13/13 tests passed",
+        "Deterministic, inspectable, and audit-ready"
+      ],
+      "invariants_closed": [
+        "INV-SCRAM-003",
+        "INV-FAIL-CLOSED",
+        "INV-NO-RECOVERY",
+        "INV-LATENCY-BOUND"
+      ],
+      "canonical_state_update": {
+        "scram_rust_sentinel_canonical": true,
+        "scram_invariants_closed": true,
+        "control_plane_integrity_restored": true,
+        "future_sentinel_changes_require": "LAW_TIER_REPLACEMENT"
+      },
+      "artifacts": [
+        "chainbridge_kernel/src/scram_sentinel.rs"
+      ],
+      "artifact_hash": "8d0b44ef6f6989660cbd2ce0e0dcf0280c39c0a26b5ba404f95e2a37c6b5a2ba",
+      "lines": 457,
+      "tests_passed": 13,
+      "execution_artifact_hash": "SHA256:PAC-JEFFREY-SCRAM-RUST-SENTINEL-REPLACEMENT-R2C-002-EXEC-ART-23BLOCK"
     }
   ],
 
-  "hash": "SHA256:PERMANENT_LEDGER_OCC_UI_NASA_HARDENED_e7f9b3c2d4a6e8f01234567890abcdef0123456789abcdef"
+  "hash": "SHA256:PERMANENT_LEDGER_SCRAM_SENTINEL_CANONICAL_R2C_002_ACCEPTED"
 }

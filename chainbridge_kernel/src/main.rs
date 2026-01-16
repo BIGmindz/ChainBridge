@@ -8,6 +8,7 @@
 //! Invariants Enforced:
 //!   INV-HW-001 (Binary Supremacy): Rust master, Python servant
 //!   INV-HW-002 (Physical Binding): Continuous hardware signal required
+//!   INV-SCRAM-003 (Hardware-bound SCRAM): Via scram_sentinel module
 //! 
 //! Behavior:
 //!   1. Check hardware interface (GPIO/Serial/Mock)
@@ -15,6 +16,10 @@
 //!   3. Poll hardware every 50ms
 //!   4. If hardware signal lost -> SIGKILL child -> exit(1)
 //!   5. If child dies unexpectedly -> exit(child_code)
+
+// SCRAM Sentinel Module - Hardware-bound termination primitive
+// PAC-JEFFREY-SCRAM-RUST-SENTINEL-REPLACEMENT-R2C-002
+mod scram_sentinel;
 
 use std::env;
 use std::fs::{self, OpenOptions};

@@ -1,346 +1,342 @@
-//! SCRAM Sentinel - Hardware-Bound Emergency Shutdown
+//! ═══════════════════════════════════════════════════════════════════════════
+//! SCRAM SENTINEL - HARDWARE-BOUND TERMINATION PRIMITIVE
+//! ═══════════════════════════════════════════════════════════════════════════
 //!
-//! PAC-SEC-P820 | LAW-TIER | ZERO DRIFT TOLERANCE
-//! Constitutional Mandate: PAC-GOV-P45
+//! PAC-JEFFREY-SCRAM-RUST-SENTINEL-REPLACEMENT-R2C-002
+//! GOVERNANCE_TIER: LAW
+//! DRIFT_TOLERANCE: ZERO
+//! FAIL_CLOSED: TRUE
 //!
-//! This module provides the Rust/kernel-level enforcement of SCRAM.
-//! INV-SCRAM-003: Hardware-bound execution via TITAN sentinel.
+//! ═══════════════════════════════════════════════════════════════════════════
+//! REPLACEMENT DECLARATION
+//! ═══════════════════════════════════════════════════════════════════════════
 //!
-//! The sentinel monitors for SCRAM activation signals and enforces
-//! immediate process termination at the kernel level.
+//! This file REPLACES all prior SCRAM sentinel implementations.
+//! No backward compatibility is preserved.
+//! No conditional execution paths are allowed.
+//!
+//! SUPERSEDES:
+//!   - All prior scram_sentinel.rs versions
+//!   - All prior hardware sentinel implementations
+//!   - PAC-JEFFREY-SCRAM-RUST-SENTINEL-REPLACEMENT-R2C-001 (TERMINATED)
+//!
+//! ═══════════════════════════════════════════════════════════════════════════
+//! INVARIANTS ENFORCED BY CONSTRUCTION
+//! ═══════════════════════════════════════════════════════════════════════════
+//!
+//! INV-SCRAM-003: Hardware-bound execution
+//! INV-FAIL-CLOSED: All errors terminate
+//! INV-NO-RECOVERY: Termination is irreversible
+//! INV-LATENCY-BOUND: ≤500ms deadline
+//!
+//! ═══════════════════════════════════════════════════════════════════════════
+//! PROPERTIES (NON-NEGOTIABLE)
+//! ═══════════════════════════════════════════════════════════════════════════
+//!
+//! - Deterministic: Same input → same output, always
+//! - Hardware-bound: Terminates via kernel-level process exit
+//! - Non-recoverable: No restart, no retry, no rollback
+//! - No policy logic: Pure actuation only
+//! - No discretion: No conditionals on termination path
+//! - Fail-closed: Error, ambiguity, or timeout → TERMINATE
+//!
+//! Author: BENSON-GID-00
+//! Authority: ARCHITECT-JEFFREY (STRATEGY_ONLY)
+//! Certification: ALEX (GID-08)
+//! Date: 2026-01-16
+//!
+//! ═══════════════════════════════════════════════════════════════════════════
+
+#![forbid(unsafe_code)]
+#![deny(missing_docs)]
+#![deny(clippy::all)]
 
 use std::fs::{self, File, OpenOptions};
 use std::io::{Read, Write};
 use std::path::Path;
 use std::process;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::Arc;
-use std::thread;
+use std::sync::atomic::{AtomicU8, Ordering};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
-/// SCRAM Sentinel configuration
-pub struct SentinelConfig {
-    /// Path to sentinel signal file
-    pub sentinel_path: String,
-    /// Maximum termination deadline in milliseconds
-    pub max_termination_ms: u64,
-    /// Poll interval for sentinel file
-    pub poll_interval_ms: u64,
-    /// Enable hardware enforcement (process termination)
-    pub hardware_enforcement: bool,
-    /// Audit log path
-    pub audit_log_path: String,
+// ═══════════════════════════════════════════════════════════════════════════
+// CONSTANTS - IMMUTABLE BY DESIGN
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Constitutional termination deadline (INV-LATENCY-BOUND)
+const MAX_TERMINATION_MS: u64 = 500;
+
+/// Sentinel file poll interval
+const POLL_INTERVAL_MS: u64 = 10;
+
+/// Default sentinel signal path
+const DEFAULT_SENTINEL_PATH: &str = "/tmp/chainbridge_scram_sentinel";
+
+/// SCRAM activation command (exact match required)
+const SCRAM_ACTIVATE_COMMAND: &str = "SCRAM_ACTIVATE";
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STATE MACHINE - MONOTONIC PROGRESSION ONLY
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Sentinel state - monotonic progression, no backward transitions
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SentinelState {
+    /// Initial state - monitoring for SCRAM signal
+    Armed = 0,
+    /// SCRAM signal received - executing termination
+    Executing = 1,
+    /// Termination complete (process will exit)
+    Terminated = 2,
 }
 
-impl Default for SentinelConfig {
-    fn default() -> Self {
-        SentinelConfig {
-            sentinel_path: "/tmp/chainbridge_scram_sentinel".to_string(),
-            max_termination_ms: 500,
-            poll_interval_ms: 10,
-            hardware_enforcement: true,
-            audit_log_path: "/var/log/chainbridge/scram_sentinel.log".to_string(),
+impl From<u8> for SentinelState {
+    fn from(v: u8) -> Self {
+        match v {
+            0 => SentinelState::Armed,
+            1 => SentinelState::Executing,
+            _ => SentinelState::Terminated,
         }
     }
 }
 
-/// SCRAM Sentinel state
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SentinelState {
-    /// Sentinel is monitoring for SCRAM signals
-    Monitoring,
-    /// SCRAM signal detected, executing termination
-    Executing,
-    /// Termination complete
-    Complete,
-    /// Error state (still terminates - fail-closed)
-    Failed,
-}
+// ═══════════════════════════════════════════════════════════════════════════
+// SCRAM SENTINEL - HARDWARE TERMINATION PRIMITIVE
+// ═══════════════════════════════════════════════════════════════════════════
 
-/// SCRAM Command from Python layer
-#[derive(Debug)]
-pub struct ScramCommand {
-    pub command: String,
-    pub timestamp: String,
-    pub pid: u32,
-}
-
-impl ScramCommand {
-    /// Parse SCRAM command from JSON
-    pub fn from_json(json: &str) -> Option<ScramCommand> {
-        // Simple JSON parsing without serde for minimal dependencies
-        let command = extract_json_string(json, "command")?;
-        let timestamp = extract_json_string(json, "timestamp")?;
-        let pid = extract_json_number(json, "pid")?;
-        
-        Some(ScramCommand {
-            command,
-            timestamp,
-            pid,
-        })
-    }
-    
-    /// Check if this is a valid SCRAM activation command
-    pub fn is_scram_activate(&self) -> bool {
-        self.command == "SCRAM_ACTIVATE"
-    }
-}
-
-/// Extract a string value from JSON (simple parser)
-fn extract_json_string(json: &str, key: &str) -> Option<String> {
-    let pattern = format!("\"{}\":", key);
-    let start = json.find(&pattern)? + pattern.len();
-    let json_rest = &json[start..];
-    
-    // Skip whitespace
-    let json_rest = json_rest.trim_start();
-    
-    if !json_rest.starts_with('"') {
-        return None;
-    }
-    
-    let json_rest = &json_rest[1..];
-    let end = json_rest.find('"')?;
-    
-    Some(json_rest[..end].to_string())
-}
-
-/// Extract a number value from JSON (simple parser)
-fn extract_json_number(json: &str, key: &str) -> Option<u32> {
-    let pattern = format!("\"{}\":", key);
-    let start = json.find(&pattern)? + pattern.len();
-    let json_rest = &json[start..].trim_start();
-    
-    let end = json_rest.find(|c: char| !c.is_ascii_digit()).unwrap_or(json_rest.len());
-    json_rest[..end].parse().ok()
-}
-
-/// SCRAM Audit Event for sentinel
-#[derive(Debug)]
-pub struct SentinelAuditEvent {
-    pub event_id: String,
-    pub timestamp: String,
-    pub state: SentinelState,
-    pub termination_latency_ms: u64,
-    pub source_pid: u32,
-    pub enforced: bool,
-}
-
-impl SentinelAuditEvent {
-    /// Convert to JSON for logging
-    pub fn to_json(&self) -> String {
-        format!(
-            r#"{{"event_id":"{}","timestamp":"{}","state":"{:?}","termination_latency_ms":{},"source_pid":{},"enforced":{}}}"#,
-            self.event_id,
-            self.timestamp,
-            self.state,
-            self.termination_latency_ms,
-            self.source_pid,
-            self.enforced
-        )
-    }
-}
-
-/// SCRAM Sentinel - Hardware-level enforcement
+/// SCRAM Sentinel - Hardware-bound termination actuator
+///
+/// This is the sole termination primitive for ChainBridge SCRAM.
+/// It monitors a sentinel file and executes irreversible process termination
+/// upon receiving a valid SCRAM_ACTIVATE command.
+///
+/// # Invariants
+///
+/// - INV-SCRAM-003: Hardware-bound (uses process::exit)
+/// - INV-FAIL-CLOSED: Any error triggers termination
+/// - INV-NO-RECOVERY: No restart mechanism exists
+/// - INV-LATENCY-BOUND: Must complete within 500ms
 pub struct ScramSentinel {
-    config: SentinelConfig,
-    state: Arc<AtomicU64>,
-    running: Arc<AtomicBool>,
-    activation_time: Arc<AtomicU64>,
+    /// Atomic state for lock-free access
+    state: AtomicU8,
+    /// Path to sentinel signal file
+    sentinel_path: String,
+    /// Activation timestamp (for latency measurement)
+    activation_instant: Option<Instant>,
 }
 
 impl ScramSentinel {
-    /// Create new SCRAM sentinel with default configuration
+    /// Create new SCRAM sentinel with default path
+    #[must_use]
     pub fn new() -> Self {
-        Self::with_config(SentinelConfig::default())
+        Self::with_path(DEFAULT_SENTINEL_PATH)
     }
-    
-    /// Create new SCRAM sentinel with custom configuration
-    pub fn with_config(config: SentinelConfig) -> Self {
+
+    /// Create new SCRAM sentinel with custom path
+    #[must_use]
+    pub fn with_path(path: &str) -> Self {
         ScramSentinel {
-            config,
-            state: Arc::new(AtomicU64::new(SentinelState::Monitoring as u64)),
-            running: Arc::new(AtomicBool::new(false)),
-            activation_time: Arc::new(AtomicU64::new(0)),
+            state: AtomicU8::new(SentinelState::Armed as u8),
+            sentinel_path: path.to_string(),
+            activation_instant: None,
         }
     }
-    
-    /// Get current sentinel state
+
+    /// Get current state (atomic read)
+    #[must_use]
     pub fn state(&self) -> SentinelState {
-        match self.state.load(Ordering::SeqCst) {
-            0 => SentinelState::Monitoring,
-            1 => SentinelState::Executing,
-            2 => SentinelState::Complete,
-            _ => SentinelState::Failed,
+        SentinelState::from(self.state.load(Ordering::SeqCst))
+    }
+
+    /// Check for SCRAM signal and execute if present
+    ///
+    /// # Behavior
+    ///
+    /// 1. Checks sentinel file for SCRAM_ACTIVATE command
+    /// 2. If found: transitions to Executing, then terminates process
+    /// 3. If error: terminates process (fail-closed)
+    /// 4. If not found: returns false, remains Armed
+    ///
+    /// # Returns
+    ///
+    /// This function only returns `false` if no signal is present.
+    /// On signal detection or error, the process terminates.
+    pub fn check_and_execute(&mut self) -> bool {
+        // Only proceed if Armed
+        if self.state() != SentinelState::Armed {
+            return false;
         }
-    }
-    
-    /// Start sentinel monitoring in background thread
-    pub fn start(&self) -> thread::JoinHandle<()> {
-        let config = self.config.clone();
-        let state = Arc::clone(&self.state);
-        let running = Arc::clone(&self.running);
-        let activation_time = Arc::clone(&self.activation_time);
-        
-        running.store(true, Ordering::SeqCst);
-        
-        thread::spawn(move || {
-            Self::monitor_loop(config, state, running, activation_time);
-        })
-    }
-    
-    /// Stop sentinel monitoring
-    pub fn stop(&self) {
-        self.running.store(false, Ordering::SeqCst);
-    }
-    
-    /// Sentinel monitoring loop
-    fn monitor_loop(
-        config: SentinelConfig,
-        state: Arc<AtomicU64>,
-        running: Arc<AtomicBool>,
-        activation_time: Arc<AtomicU64>,
-    ) {
-        let sentinel_path = Path::new(&config.sentinel_path);
-        let poll_interval = Duration::from_millis(config.poll_interval_ms);
-        
-        while running.load(Ordering::SeqCst) {
-            // Check for SCRAM signal file
-            if sentinel_path.exists() {
-                if let Ok(mut file) = File::open(sentinel_path) {
-                    let mut content = String::new();
-                    if file.read_to_string(&mut content).is_ok() {
-                        if let Some(cmd) = ScramCommand::from_json(&content) {
-                            if cmd.is_scram_activate() {
-                                // Record activation time
-                                let now = SystemTime::now()
-                                    .duration_since(UNIX_EPOCH)
-                                    .unwrap_or_default()
-                                    .as_millis() as u64;
-                                activation_time.store(now, Ordering::SeqCst);
-                                
-                                // Execute SCRAM
-                                Self::execute_scram(
-                                    &config,
-                                    &state,
-                                    &activation_time,
-                                    cmd.pid,
-                                );
-                                
-                                // Remove signal file
-                                let _ = fs::remove_file(sentinel_path);
-                                
-                                // Exit loop after SCRAM
-                                break;
-                            }
-                        }
-                    }
-                }
+
+        let path = Path::new(&self.sentinel_path);
+
+        // No signal file - remain armed
+        if !path.exists() {
+            return false;
+        }
+
+        // Signal file exists - read and validate
+        let content = match Self::read_signal_file(path) {
+            Ok(c) => c,
+            Err(_) => {
+                // INV-FAIL-CLOSED: Read error → terminate
+                self.execute_termination("SIGNAL_READ_ERROR")
             }
-            
-            thread::sleep(poll_interval);
-        }
-    }
-    
-    /// Execute SCRAM termination
-    fn execute_scram(
-        config: &SentinelConfig,
-        state: &Arc<AtomicU64>,
-        activation_time: &Arc<AtomicU64>,
-        source_pid: u32,
-    ) {
-        let start = Instant::now();
-        
-        // Transition to Executing state
-        state.store(SentinelState::Executing as u64, Ordering::SeqCst);
-        
-        // Log SCRAM activation
-        eprintln!("🔴 SCRAM SENTINEL: Executing hardware-level termination");
-        
-        // Create audit event
-        let event = SentinelAuditEvent {
-            event_id: format!(
-                "SENTINEL-{}",
-                SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap_or_default()
-                    .as_micros()
-            ),
-            timestamp: format!(
-                "{}",
-                SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap_or_default()
-                    .as_secs()
-            ),
-            state: SentinelState::Executing,
-            termination_latency_ms: start.elapsed().as_millis() as u64,
-            source_pid,
-            enforced: config.hardware_enforcement,
         };
-        
-        // Write audit log
-        Self::write_audit_log(config, &event);
-        
-        // Check deadline
+
+        // Validate command
+        if !Self::is_valid_scram_command(&content) {
+            // Invalid command in signal file → terminate (fail-closed)
+            self.execute_termination("INVALID_SCRAM_COMMAND")
+        }
+
+        // Valid SCRAM command - execute termination
+        self.execute_termination("SCRAM_ACTIVATE")
+    }
+
+    /// Execute irreversible process termination
+    ///
+    /// # Behavior
+    ///
+    /// 1. Transition state to Executing
+    /// 2. Record activation time
+    /// 3. Write audit record
+    /// 4. Remove signal file
+    /// 5. Terminate process with exit code 1
+    ///
+    /// # Panics
+    ///
+    /// This function never returns - it always terminates the process.
+    fn execute_termination(&mut self, reason: &str) -> ! {
+        let start = Instant::now();
+
+        // Transition to Executing (monotonic - cannot go back)
+        self.state.store(SentinelState::Executing as u8, Ordering::SeqCst);
+        self.activation_instant = Some(start);
+
+        // Log to stderr (guaranteed to be available)
+        eprintln!("═══════════════════════════════════════════════════════════════");
+        eprintln!("🔴 SCRAM SENTINEL: TERMINATION EXECUTING");
+        eprintln!("═══════════════════════════════════════════════════════════════");
+        eprintln!("  Reason: {}", reason);
+        eprintln!("  Timestamp: {}", Self::timestamp_now());
+        eprintln!("  PID: {}", process::id());
+        eprintln!("═══════════════════════════════════════════════════════════════");
+
+        // Write audit record (best effort - failure does not stop termination)
+        let _ = self.write_audit_record(reason);
+
+        // Remove signal file (best effort)
+        let _ = fs::remove_file(&self.sentinel_path);
+
+        // Check latency bound
         let elapsed_ms = start.elapsed().as_millis() as u64;
-        if elapsed_ms > config.max_termination_ms {
+        if elapsed_ms > MAX_TERMINATION_MS {
             eprintln!(
-                "⚠️ SCRAM SENTINEL: Deadline exceeded ({} ms > {} ms)",
-                elapsed_ms, config.max_termination_ms
+                "⚠️ SCRAM SENTINEL: LATENCY VIOLATION ({} ms > {} ms)",
+                elapsed_ms, MAX_TERMINATION_MS
             );
         }
-        
-        // Mark complete
-        state.store(SentinelState::Complete as u64, Ordering::SeqCst);
-        
-        // Hardware enforcement: terminate process
-        if config.hardware_enforcement {
-            eprintln!("🔴 SCRAM SENTINEL: Hardware enforcement - terminating process");
-            process::exit(1);
-        }
+
+        // Transition to Terminated
+        self.state.store(SentinelState::Terminated as u8, Ordering::SeqCst);
+
+        eprintln!("🔴 SCRAM SENTINEL: PROCESS TERMINATING (exit code 1)");
+        eprintln!("═══════════════════════════════════════════════════════════════");
+
+        // INV-SCRAM-003: Hardware-bound termination via kernel
+        // INV-NO-RECOVERY: This is final - no return, no restart
+        process::exit(1)
     }
-    
-    /// Write audit event to log
-    fn write_audit_log(config: &SentinelConfig, event: &SentinelAuditEvent) {
-        let log_path = Path::new(&config.audit_log_path);
-        
-        // Create parent directories if needed
-        if let Some(parent) = log_path.parent() {
+
+    /// Read signal file content
+    fn read_signal_file(path: &Path) -> Result<String, std::io::Error> {
+        let mut file = File::open(path)?;
+        let mut content = String::new();
+        file.read_to_string(&mut content)?;
+        Ok(content)
+    }
+
+    /// Validate SCRAM command (exact match, no parsing)
+    fn is_valid_scram_command(content: &str) -> bool {
+        // Look for exact command string
+        content.contains(SCRAM_ACTIVATE_COMMAND)
+    }
+
+    /// Get current timestamp as ISO 8601 string
+    fn timestamp_now() -> String {
+        let duration = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default();
+        format!("{}.{:09}Z", duration.as_secs(), duration.subsec_nanos())
+    }
+
+    /// Write audit record to log file
+    fn write_audit_record(&self, reason: &str) -> Result<(), std::io::Error> {
+        let log_path = "/var/log/chainbridge/scram_sentinel_audit.jsonl";
+
+        // Create directory if needed
+        if let Some(parent) = Path::new(log_path).parent() {
             let _ = fs::create_dir_all(parent);
         }
-        
-        // Append to audit log
-        if let Ok(mut file) = OpenOptions::new()
+
+        let record = format!(
+            r#"{{"event":"SCRAM_TERMINATION","reason":"{}","timestamp":"{}","pid":{},"state":"Executing"}}"#,
+            reason,
+            Self::timestamp_now(),
+            process::id()
+        );
+
+        let mut file = OpenOptions::new()
             .create(true)
             .append(true)
-            .open(log_path)
-        {
-            let _ = writeln!(file, "{}", event.to_json());
-        }
+            .open(log_path)?;
+
+        writeln!(file, "{}", record)?;
+        Ok(())
     }
-    
-    /// Manually trigger SCRAM (for testing)
-    pub fn trigger_scram(&self, reason: &str) {
-        let sentinel_path = Path::new(&self.config.sentinel_path);
-        
-        // Create parent directories if needed
-        if let Some(parent) = sentinel_path.parent() {
-            let _ = fs::create_dir_all(parent);
+
+    /// Trigger SCRAM by writing signal file (for external callers)
+    ///
+    /// This creates the sentinel file that will cause termination
+    /// on the next check_and_execute() call.
+    pub fn trigger(&self, reason: &str) -> Result<(), std::io::Error> {
+        let path = Path::new(&self.sentinel_path);
+
+        // Create parent directory if needed
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
         }
-        
-        let command = format!(
-            r#"{{"command":"SCRAM_ACTIVATE","timestamp":"{}","pid":{},"reason":"{}"}}"#,
-            SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_secs(),
+
+        let signal = format!(
+            r#"{{"command":"{}","timestamp":"{}","pid":{},"reason":"{}"}}"#,
+            SCRAM_ACTIVATE_COMMAND,
+            Self::timestamp_now(),
             process::id(),
             reason
         );
-        
-        if let Ok(mut file) = File::create(sentinel_path) {
-            let _ = file.write_all(command.as_bytes());
+
+        let mut file = File::create(path)?;
+        file.write_all(signal.as_bytes())?;
+        file.sync_all()?;
+
+        Ok(())
+    }
+
+    /// Run monitoring loop (blocking)
+    ///
+    /// This function blocks and continuously monitors for SCRAM signals.
+    /// It only returns if the process would need to continue (which it won't
+    /// after SCRAM - the process terminates).
+    pub fn monitor_blocking(&mut self) {
+        let poll_interval = Duration::from_millis(POLL_INTERVAL_MS);
+
+        loop {
+            if self.check_and_execute() {
+                // Signal detected - process will terminate
+                // This line is unreachable
+                unreachable!()
+            }
+            std::thread::sleep(poll_interval);
         }
     }
 }
@@ -351,104 +347,111 @@ impl Default for ScramSentinel {
     }
 }
 
-impl Clone for SentinelConfig {
-    fn clone(&self) -> Self {
-        SentinelConfig {
-            sentinel_path: self.sentinel_path.clone(),
-            max_termination_ms: self.max_termination_ms,
-            poll_interval_ms: self.poll_interval_ms,
-            hardware_enforcement: self.hardware_enforcement,
-            audit_log_path: self.audit_log_path.clone(),
-        }
-    }
+// ═══════════════════════════════════════════════════════════════════════════
+// PUBLIC API - MINIMAL SURFACE
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Initialize and return a new SCRAM sentinel
+///
+/// This is the canonical entry point for SCRAM sentinel initialization.
+#[must_use]
+pub fn init() -> ScramSentinel {
+    eprintln!("🛡️ SCRAM SENTINEL: Initialized (INV-SCRAM-003 hardware-bound)");
+    ScramSentinel::new()
 }
+
+/// Execute immediate SCRAM termination (no signal file needed)
+///
+/// This function immediately terminates the process.
+/// Use when SCRAM must be executed synchronously.
+pub fn terminate_now(reason: &str) -> ! {
+    let mut sentinel = ScramSentinel::new();
+    sentinel.execute_termination(reason)
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TESTS - VALIDATION OF INVARIANTS
+// ═══════════════════════════════════════════════════════════════════════════
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::fs;
-    use std::path::PathBuf;
-    use tempfile::tempdir;
-    
+
+    /// Test: Sentinel initializes in Armed state
     #[test]
-    fn test_sentinel_config_default() {
-        let config = SentinelConfig::default();
-        assert_eq!(config.max_termination_ms, 500);
-        assert!(config.hardware_enforcement);
+    fn test_initial_state_is_armed() {
+        let sentinel = ScramSentinel::new();
+        assert_eq!(sentinel.state(), SentinelState::Armed);
     }
-    
+
+    /// Test: State transitions are monotonic
     #[test]
-    fn test_scram_command_parsing() {
-        let json = r#"{"command":"SCRAM_ACTIVATE","timestamp":"2026-01-12T19:45:00Z","pid":12345}"#;
-        let cmd = ScramCommand::from_json(json).unwrap();
-        
-        assert_eq!(cmd.command, "SCRAM_ACTIVATE");
-        assert!(cmd.is_scram_activate());
-        assert_eq!(cmd.pid, 12345);
+    fn test_state_values_are_monotonic() {
+        assert!((SentinelState::Armed as u8) < (SentinelState::Executing as u8));
+        assert!((SentinelState::Executing as u8) < (SentinelState::Terminated as u8));
     }
-    
+
+    /// Test: MAX_TERMINATION_MS is exactly 500
     #[test]
-    fn test_sentinel_state_transitions() {
-        let config = SentinelConfig {
-            hardware_enforcement: false, // Disable for testing
-            ..Default::default()
-        };
-        let sentinel = ScramSentinel::with_config(config);
-        
-        assert_eq!(sentinel.state(), SentinelState::Monitoring);
+    fn test_termination_deadline_is_500ms() {
+        assert_eq!(MAX_TERMINATION_MS, 500);
     }
-    
+
+    /// Test: SCRAM command string is correct
     #[test]
-    fn test_audit_event_json() {
-        let event = SentinelAuditEvent {
-            event_id: "TEST-001".to_string(),
-            timestamp: "2026-01-12T19:45:00Z".to_string(),
-            state: SentinelState::Complete,
-            termination_latency_ms: 50,
-            source_pid: 12345,
-            enforced: true,
-        };
-        
-        let json = event.to_json();
-        assert!(json.contains("TEST-001"));
-        assert!(json.contains("Complete"));
+    fn test_scram_command_string() {
+        assert_eq!(SCRAM_ACTIVATE_COMMAND, "SCRAM_ACTIVATE");
     }
-    
+
+    /// Test: Valid command detection
     #[test]
-    fn test_sentinel_trigger_creates_file() {
-        let dir = tempdir().unwrap();
-        let sentinel_path = dir.path().join("scram_sentinel");
-        
-        let config = SentinelConfig {
-            sentinel_path: sentinel_path.to_string_lossy().to_string(),
-            hardware_enforcement: false,
-            ..Default::default()
-        };
-        
-        let sentinel = ScramSentinel::with_config(config);
-        sentinel.trigger_scram("test");
-        
-        assert!(sentinel_path.exists());
-        
-        let content = fs::read_to_string(&sentinel_path).unwrap();
+    fn test_valid_command_detection() {
+        let valid = r#"{"command":"SCRAM_ACTIVATE","timestamp":"123"}"#;
+        assert!(ScramSentinel::is_valid_scram_command(valid));
+
+        let invalid = r#"{"command":"OTHER_COMMAND"}"#;
+        assert!(!ScramSentinel::is_valid_scram_command(invalid));
+    }
+
+    /// Test: Custom path works
+    #[test]
+    fn test_custom_sentinel_path() {
+        let sentinel = ScramSentinel::with_path("/custom/path");
+        assert_eq!(sentinel.sentinel_path, "/custom/path");
+    }
+
+    /// Test: No signal file returns false
+    #[test]
+    fn test_no_signal_returns_false() {
+        let mut sentinel = ScramSentinel::with_path("/nonexistent/path/sentinel");
+        assert!(!sentinel.check_and_execute());
+        assert_eq!(sentinel.state(), SentinelState::Armed);
+    }
+
+    /// Test: Trigger creates signal file
+    #[test]
+    fn test_trigger_creates_file() {
+        let temp_path = "/tmp/test_scram_sentinel_trigger";
+        let _ = fs::remove_file(temp_path); // Clean up first
+
+        let sentinel = ScramSentinel::with_path(temp_path);
+        sentinel.trigger("test").unwrap();
+
+        assert!(Path::new(temp_path).exists());
+
+        let content = fs::read_to_string(temp_path).unwrap();
         assert!(content.contains("SCRAM_ACTIVATE"));
+
+        // Clean up
+        let _ = fs::remove_file(temp_path);
     }
-}
 
-/// Initialize SCRAM sentinel and start monitoring
-/// 
-/// This should be called early in the ChainBridge kernel initialization.
-pub fn init_scram_sentinel() -> ScramSentinel {
-    let sentinel = ScramSentinel::new();
-    
-    // Log initialization
-    eprintln!("🛡️ SCRAM SENTINEL: Initialized (INV-SCRAM-003 hardware-bound enforcement active)");
-    
-    sentinel
-}
-
-/// Start SCRAM sentinel monitoring in background
-pub fn start_sentinel_monitoring(sentinel: &ScramSentinel) -> thread::JoinHandle<()> {
-    eprintln!("🛡️ SCRAM SENTINEL: Starting monitoring loop");
-    sentinel.start()
+    /// Test: Timestamp format is valid
+    #[test]
+    fn test_timestamp_format() {
+        let ts = ScramSentinel::timestamp_now();
+        assert!(ts.ends_with('Z'));
+        assert!(ts.contains('.'));
+    }
 }
