@@ -43,6 +43,8 @@ grpcio==1.75.0
 h11==0.16.0
 h5py==3.14.0
 hmmlearn==0.3.3
+# Required by starlette.testclient for FastAPI tests (PAC-AUTH-R3C-001)
+httpx==0.28.1
 idna==3.10
 importlib_metadata==8.7.0
 importlib_resources==6.5.2
