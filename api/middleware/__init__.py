@@ -121,6 +121,7 @@ def apply_auth_stack(
     enable_signature: bool = True,
     enable_session: bool = True,
     redis_url: str = "redis://localhost:6379/0",
+    auth_config: AuthConfig = None,
 ) -> None:
     """
     Apply the basic authentication middleware stack to a FastAPI application.
@@ -138,6 +139,7 @@ def apply_auth_stack(
         enable_signature: Enable signature verification middleware
         enable_session: Enable Redis session management
         redis_url: Redis connection URL for session storage
+        auth_config: Custom AuthConfig for JWT/API key validation paths
 
     Execution Order (per request):
         1. RateLimitMiddleware (if enabled)
@@ -162,10 +164,11 @@ def apply_auth_stack(
         exempt_paths=exempt_paths,
     )
 
-    # 3. Core authentication
+    # 3. Core authentication (with explicit config if provided)
     app.add_middleware(
         AuthMiddleware,
         exempt_paths=exempt_paths,
+        config=auth_config,
     )
 
     # 2. Signature verification

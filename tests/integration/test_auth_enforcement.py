@@ -33,8 +33,7 @@ from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 
 # Import auth middleware
-from api.middleware import apply_auth_stack
-from api.middleware.auth import AuthConfig
+from api.middleware import apply_auth_stack, AuthConfig
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -138,15 +137,22 @@ def test_app(jwt_secret, signature_secret, tmp_path):
     import api.middleware.identity as identity_module
     identity_module.GID_REGISTRY_PATH = gid_registry
     
+    # Create explicit AuthConfig with test API keys path
+    auth_config = AuthConfig(
+        jwt_secret_key=jwt_secret,
+        api_keys_file=str(api_keys),
+    )
+    
     # Create FastAPI app
     app = FastAPI(title="Auth Integration Test")
     
-    # Apply auth middleware
+    # Apply auth middleware with explicit config
     apply_auth_stack(
         app,
         enable_rate_limit=True,
         enable_signature=False,  # Disable for most tests
         enable_session=False,  # Disable Redis for tests
+        auth_config=auth_config,
     )
     
     @app.get("/")
