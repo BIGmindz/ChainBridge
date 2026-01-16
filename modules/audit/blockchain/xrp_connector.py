@@ -85,7 +85,9 @@ class TransactionReceipt:
     memo_type: str
     status: AnchorStatus
     network: XRPLNetwork
+    merkle_root: str = ""  # The anchored merkle root hash
     explorer_url: str = ""
+    confirmed: bool = True  # Whether the transaction is confirmed
     
     def __post_init__(self):
         """Generate explorer URL."""
@@ -108,7 +110,9 @@ class TransactionReceipt:
             "memo_type": self.memo_type,
             "status": self.status.value,
             "network": self.network.value,
+            "merkle_root": self.merkle_root,
             "explorer_url": self.explorer_url,
+            "confirmed": self.confirmed,
         }
     
     @classmethod
@@ -125,7 +129,9 @@ class TransactionReceipt:
             memo_type=data["memo_type"],
             status=AnchorStatus(data["status"]),
             network=XRPLNetwork(data["network"]),
+            merkle_root=data.get("merkle_root", ""),
             explorer_url=data.get("explorer_url", ""),
+            confirmed=data.get("confirmed", True),
         )
 
 
@@ -320,7 +326,8 @@ class XRPLConnector:
         """
         # Mock implementation for testing
         # In production, would use actual XRPL submission
-        _ = memo_hex  # Will be used in production XRPL transaction
+        # Decode the memo_hex back to JSON string for storage
+        memo_data_str = bytes.fromhex(memo_hex).decode()
         
         now = datetime.now(timezone.utc)
         tx_hash = hashlib.sha256(
@@ -334,10 +341,12 @@ class XRPLConnector:
             timestamp=now.isoformat(),
             sequence=1,
             fee_drops=12,  # 0.000012 XRP
-            memo_data=merkle_root,
+            memo_data=memo_data_str,  # Store structured JSON memo
             memo_type=self.config.memo_type,
             status=AnchorStatus.VALIDATED,
             network=self.config.network,
+            merkle_root=merkle_root,
+            confirmed=True,
         )
         
         logger.info("Anchored merkle root to XRPL: %s", tx_hash)
