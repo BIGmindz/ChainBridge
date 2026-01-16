@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SCRAM Audit Event Schema",
+  "description": "Schema for SCRAM emergency shutdown audit events (PAC-SEC-P820)",
+  "type": "object",
+  "required": [
+    "event_id",
+    "timestamp",
+    "scram_state",
+    "reason",
+    "operator_key_hash",
+    "architect_key_hash",
+    "execution_paths_terminated",
+    "termination_latency_ms",
+    "invariants_checked",
+    "invariants_passed",
+    "invariants_failed",
+    "hardware_sentinel_ack",
+    "ledger_anchor_hash",
+    "content_hash"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "pattern": "^SCRAM-[0-9]{18}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "scram_state": {
+      "type": "string",
+      "enum": ["ARMED", "ACTIVATING", "EXECUTING", "COMPLETE", "FAILED"]
+    },
+    "reason": {
+      "type": "string"
+    },
+    "operator_key_hash": {
+      "type": "string"
+    },
+    "architect_key_hash": {
+      "type": "string"
+    },
+    "execution_paths_terminated": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "termination_latency_ms": {
+      "type": "number",
+      "minimum": 0
+    },
+    "invariants_checked": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "invariants_passed": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "invariants_failed": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "hardware_sentinel_ack": {
+      "type": "boolean"
+    },
+    "ledger_anchor_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "content_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "metadata": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}
