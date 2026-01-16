@@ -24,13 +24,11 @@ SCRAM terminates all execution paths within 500ms guarantee.
 
 from __future__ import annotations
 
-import asyncio
 import hashlib
 import json
 import logging
 import os
 import signal
-import sys
 import threading
 import time
 from dataclasses import dataclass, field
@@ -174,6 +172,9 @@ class SCRAMController:
     
     def __init__(self) -> None:
         """Initialize SCRAM controller in ARMED state."""
+        # Initialize flag before checking to avoid attribute error
+        if not hasattr(self, '_initialized'):
+            self._initialized = False
         if self._initialized:
             return
             
@@ -220,7 +221,7 @@ class SCRAMController:
                     config["fail_closed_on_error"] = True  # Cannot be disabled
                     return config
             except Exception as e:
-                logger.critical(f"Config load failed, using fail-closed defaults: {e}")
+                logger.critical("Config load failed, using fail-closed defaults: %s", e)
         
         return default_config
     
@@ -262,6 +263,12 @@ class SCRAMController:
         """Check if SCRAM has completed."""
         return self.state in (SCRAMState.COMPLETE, SCRAMState.FAILED)
     
+    @property
+    def audit_trail(self) -> List[SCRAMAuditEvent]:
+        """Get immutable copy of audit trail."""
+        with self._state_lock:
+            return self._audit_events.copy()
+    
     def register_execution_path(
         self,
         path_id: str,
@@ -291,13 +298,18 @@ class SCRAMController:
             self._termination_hooks.append(hook)
             return True
     
-    def authorize_key(self, key: SCRAMKey) -> bool:
+    def authorize_key(self, key: Optional[SCRAMKey]) -> bool:
         """
         Authorize a key for SCRAM activation.
         
         Both operator and architect keys must be authorized
         before SCRAM can be activated.
         """
+        # Fail-closed: reject None keys
+        if key is None:
+            logger.warning("Rejected None key - fail-closed enforcement")
+            return False
+        
         if not key.validate():
             logger.warning(f"Invalid key rejected: {key.key_id}")
             return False
@@ -323,7 +335,7 @@ class SCRAMController:
                 missing.append('operator')
             if not architect_key:
                 missing.append('architect')
-            logger.critical(f"Dual-key verification failed: missing {missing}")
+            logger.critical("Dual-key verification failed: missing %s", missing)
             return False, "", ""
         
         if not operator_key.validate() or not architect_key.validate():
@@ -449,7 +461,7 @@ class SCRAMController:
                 failed.append("INV-SCRAM-001")
                 if "INV-SCRAM-001" in passed:
                     passed.remove("INV-SCRAM-001")
-                logger.critical(f"SCRAM deadline exceeded: {termination_ms:.2f}ms > {self.MAX_TERMINATION_MS}ms")
+                logger.critical("SCRAM deadline exceeded: %.2fms > %sms", termination_ms, self.MAX_TERMINATION_MS)
             else:
                 if "INV-SCRAM-001" not in passed:
                     passed.append("INV-SCRAM-001")
@@ -476,12 +488,12 @@ class SCRAMController:
             # Anchor to ledger
             self._anchor_to_ledger(event)
             
-            logger.critical(f"SCRAM complete: {paths_terminated} paths terminated in {termination_ms:.2f}ms")
+            logger.critical("SCRAM complete: %s paths terminated in %.2fms", paths_terminated, termination_ms)
             return event
             
         except Exception as e:
             # Fail-closed: force terminate on any error
-            logger.critical(f"SCRAM error, forcing termination: {e}")
+            logger.critical("SCRAM error, forcing termination: %s", e)
             self._force_terminate(str(e))
             return self._create_error_audit(str(e), reason, metadata)
     
@@ -492,9 +504,9 @@ class SCRAMController:
             try:
                 handler()
                 terminated += 1
-                logger.info(f"Terminated path: {path_id}")
+                logger.info("Terminated path: %s", path_id)
             except Exception as e:
-                logger.error(f"Error terminating path {path_id}: {e}")
+                logger.error("Error terminating path %s: %s", path_id, e)
                 terminated += 1  # Count as terminated (fail-closed)
         return terminated
     
@@ -504,7 +516,7 @@ class SCRAMController:
             try:
                 hook()
             except Exception as e:
-                logger.error(f"Error in termination hook: {e}")
+                logger.error("Error in termination hook: %s", e)
     
     def _notify_hardware_sentinel(self) -> None:
         """Notify Titan hardware sentinel of SCRAM activation."""
@@ -599,7 +611,7 @@ class SCRAMController:
     
     def _force_terminate(self, reason: str) -> None:
         """Force immediate termination (fail-closed)."""
-        logger.critical(f"FORCE TERMINATE: {reason}")
+        logger.critical("FORCE TERMINATE: %s", reason)
         with self._state_lock:
             self._state = SCRAMState.FAILED
         

@@ -1903,6 +1903,15 @@
     }
   ],
 
+  "finance": {
+    "arr_metrics": {
+      "current_arr": "13675723.40",
+      "last_update_pac": "PAC-STRIKE-RE-RUN-CANONICAL-60",
+      "settlement_timestamp": "2026-01-14T16:01:00Z",
+      "status": "SETTLED"
+    }
+  },
+
   "ledger_totals": {
     "total_entries": 39,
     "total_revenue_recognized": "1.00000000000000000000000000000000000000000000000000",
@@ -2092,5 +2101,5 @@
     "timestamp": "2026-01-14T00:45:12.890Z"
   },
 
-  "hash": "SHA256:PERMANENT_LEDGER_b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1"
+  "hash": "SHA256:PERMANENT_LEDGER_2e690442a11d8c446dab2e87c9a625b2e8a13e0c60b51d34c3cb10902c0444b7"
 }
