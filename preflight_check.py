@@ -25,6 +25,11 @@ dependencies = [
     ('sklearn', 'scikit-learn')
 ]
 
+# Optional PQC dependency (non-critical)
+pqc_deps = [
+    ('dilithium', 'dilithium-py (PQC ML-DSA) [OPTIONAL]')
+]
+
 all_deps_ok = True
 for module, name in dependencies:
     try:
@@ -33,6 +38,14 @@ for module, name in dependencies:
     except ImportError:
         print(f"   ❌ {name} (missing)")
         all_deps_ok = False
+
+# Check optional dependencies
+for module, name in pqc_deps:
+    try:
+        __import__(module)
+        print(f"   ✅ {name}")
+    except ImportError:
+        print(f"   ℹ️  {name} (not installed)")
 
 # Check 3: Directory Structure
 print("\n📁 [3/6] Directory Structure")
@@ -49,6 +62,9 @@ config_files = [
     'config/auth_config.yaml',
     'config/blockchain_config.yaml',
     'config/governance.json',
+    'core/governance/auth_policies.json',
+    'core/governance/gid_registry.json',
+    'core/governance/scram_policies.json',
     'pyproject.toml',
     'docker-compose.yml'
 ]
