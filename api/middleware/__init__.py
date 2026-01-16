@@ -35,27 +35,27 @@ STACK ORDER (applied bottom-to-top, 11 middleware layers):
 
 USAGE:
     from api.middleware import apply_auth_stack, apply_enterprise_auth_stack
-    
+
     # Basic stack (6 middleware)
     apply_auth_stack(app)
-    
+
     # Enterprise stack (all 11 middleware)
     apply_enterprise_auth_stack(app)
 """
 
 # Core middleware (v1.0)
-from .auth import AuthMiddleware, AuthConfig
-from .identity import IdentityMiddleware, GIDValidator
-from .session import SessionMiddleware, SessionManager
-from .rate_limit import RateLimitMiddleware, RateLimitConfig
-from .signature import SignatureMiddleware, SignatureVerifier
+from .audit_stream import AuditConfig, AuditEventType, AuditStream, AuditStreamMiddleware
+from .auth import AuthConfig, AuthMiddleware
+from .biometric import BiometricConfig, BiometricMiddleware, WebAuthnRPHandler
+from .hardware_token import HardwareTokenConfig, HardwareTokenMiddleware, HardwareTokenType
+from .identity import GIDValidator, IdentityMiddleware
 
 # Enterprise middleware (v2.0)
-from .mfa import MFAMiddleware, MFAConfig, MFAMethod, TOTPGenerator, OTPManager
-from .risk_based_auth import RiskBasedAuthMiddleware, RiskConfig, RiskScorer, RiskLevel
-from .biometric import BiometricMiddleware, BiometricConfig, WebAuthnRPHandler
-from .hardware_token import HardwareTokenMiddleware, HardwareTokenConfig, HardwareTokenType
-from .audit_stream import AuditStreamMiddleware, AuditConfig, AuditStream, AuditEventType
+from .mfa import MFAConfig, MFAMethod, MFAMiddleware, OTPManager, TOTPGenerator
+from .rate_limit import RateLimitConfig, RateLimitMiddleware
+from .risk_based_auth import RiskBasedAuthMiddleware, RiskConfig, RiskLevel, RiskScorer
+from .session import SessionManager, SessionMiddleware
+from .signature import SignatureMiddleware, SignatureVerifier
 
 __all__ = [
     # Core middleware classes
@@ -124,13 +124,13 @@ def apply_auth_stack(
 ) -> None:
     """
     Apply the basic authentication middleware stack to a FastAPI application.
-    
+
     This applies the core 6-middleware stack for standard authentication.
     For enterprise features, use apply_enterprise_auth_stack().
-    
+
     Middleware is applied in reverse order because FastAPI processes them
     as a LIFO stack (last added = first executed).
-    
+
     Args:
         app: FastAPI application instance
         exempt_paths: Paths that bypass authentication
@@ -138,7 +138,7 @@ def apply_auth_stack(
         enable_signature: Enable signature verification middleware
         enable_session: Enable Redis session management
         redis_url: Redis connection URL for session storage
-    
+
     Execution Order (per request):
         1. RateLimitMiddleware (if enabled)
         2. SignatureMiddleware (if enabled)
@@ -147,7 +147,7 @@ def apply_auth_stack(
         5. SessionMiddleware (if enabled)
     """
     # Apply in reverse order (last added = first executed)
-    
+
     # 5. Session management (last to execute)
     if enable_session:
         app.add_middleware(
@@ -155,26 +155,26 @@ def apply_auth_stack(
             redis_url=redis_url,
             exempt_paths=exempt_paths,
         )
-    
+
     # 4. Identity/GID verification
     app.add_middleware(
         IdentityMiddleware,
         exempt_paths=exempt_paths,
     )
-    
+
     # 3. Core authentication
     app.add_middleware(
         AuthMiddleware,
         exempt_paths=exempt_paths,
     )
-    
+
     # 2. Signature verification
     if enable_signature:
         app.add_middleware(
             SignatureMiddleware,
             exempt_paths=exempt_paths,
         )
-    
+
     # 1. Rate limiting (first to execute)
     if enable_rate_limit:
         app.add_middleware(
@@ -204,7 +204,7 @@ def apply_enterprise_auth_stack(
 ) -> None:
     """
     Apply the full enterprise authentication middleware stack.
-    
+
     This applies all 11 middleware layers for maximum security:
     - Core authentication (JWT, API keys)
     - GID identity binding
@@ -216,7 +216,7 @@ def apply_enterprise_auth_stack(
     - WebAuthn/FIDO2 biometric authentication
     - TPM/HSM hardware token binding
     - Real-time audit event streaming
-    
+
     Args:
         app: FastAPI application instance
         exempt_paths: Paths that bypass authentication
@@ -224,7 +224,7 @@ def apply_enterprise_auth_stack(
         redis_client: Pre-initialized Redis client (optional)
         enable_*: Feature toggles for each middleware
         *_config: Configuration objects for each middleware
-    
+
     Execution Order (per request):
         1. RateLimitMiddleware
         2. AuditStreamMiddleware (captures all requests)
@@ -238,7 +238,7 @@ def apply_enterprise_auth_stack(
         10. HardwareTokenMiddleware
     """
     # Apply in reverse order (last added = first executed)
-    
+
     # 10. Hardware token authentication
     if enable_hardware_token:
         app.add_middleware(
@@ -247,7 +247,7 @@ def apply_enterprise_auth_stack(
             redis_client=redis_client,
             exempt_paths=exempt_paths,
         )
-    
+
     # 9. Biometric authentication
     if enable_biometric:
         app.add_middleware(
@@ -256,7 +256,7 @@ def apply_enterprise_auth_stack(
             redis_client=redis_client,
             exempt_paths=exempt_paths,
         )
-    
+
     # 8. MFA challenges
     if enable_mfa:
         app.add_middleware(
@@ -265,7 +265,7 @@ def apply_enterprise_auth_stack(
             redis_client=redis_client,
             exempt_paths=exempt_paths,
         )
-    
+
     # 7. Session management
     if enable_session:
         app.add_middleware(
@@ -273,19 +273,19 @@ def apply_enterprise_auth_stack(
             redis_url=redis_url,
             exempt_paths=exempt_paths,
         )
-    
+
     # 6. Identity/GID verification
     app.add_middleware(
         IdentityMiddleware,
         exempt_paths=exempt_paths,
     )
-    
+
     # 5. Core authentication
     app.add_middleware(
         AuthMiddleware,
         exempt_paths=exempt_paths,
     )
-    
+
     # 4. Risk-based authentication
     if enable_risk_scoring:
         app.add_middleware(
@@ -294,14 +294,14 @@ def apply_enterprise_auth_stack(
             redis_client=redis_client,
             exempt_paths=exempt_paths,
         )
-    
+
     # 3. Signature verification
     if enable_signature:
         app.add_middleware(
             SignatureMiddleware,
             exempt_paths=exempt_paths,
         )
-    
+
     # 2. Audit stream (captures all requests early)
     if enable_audit_stream:
         app.add_middleware(
@@ -310,7 +310,7 @@ def apply_enterprise_auth_stack(
             redis_client=redis_client,
             exempt_paths=frozenset(),  # Audit everything
         )
-    
+
     # 1. Rate limiting (first to execute)
     if enable_rate_limit:
         app.add_middleware(
