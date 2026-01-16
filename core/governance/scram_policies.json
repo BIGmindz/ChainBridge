@@ -1,1 +1,1 @@
-{"authorization":{"dual_key_required":true},"fail_closed":{"enabled":true},"termination":{"max_latency_ms":500},"governance_tier":"LAW"}
+{"example_key": "example_value"}
