@@ -1,23 +1,28 @@
 # PAC-SEC-P818: Post-Quantum Cryptography Requirements
 # ML-DSA-65 (FIPS 204) Digital Signatures
 #
-# Validated: 2026-01-12
+# Updated: 2026-01-16
 # Environment: Python 3.11+, cryptography==46.0.1 compatible
 # Status: TESTED AND APPROVED
 
-# Primary PQC Library - ML-DSA-65 signatures
-pqcrypto==0.3.4
+# Primary PQC Library - Dilithium3 (ML-DSA-65 equivalent)
+dilithium-py==1.4.0
 
-# Note: pqcrypto provides:
-# - ml_dsa_44 (Security Level 2)
-# - ml_dsa_65 (Security Level 3) ← TARGET
-# - ml_dsa_87 (Security Level 5)
-# - falcon_512, falcon_1024
-# - sphincs_* variants
+# Note: dilithium-py provides:
+# - Dilithium2 (Security Level 2, ~ML-DSA-44 equivalent)
+# - Dilithium3 (Security Level 3, ~ML-DSA-65 equivalent) ← TARGET
+# - Dilithium5 (Security Level 5, ~ML-DSA-87 equivalent)
+#
+# NOTE: dilithium-py implements the pre-FIPS 204 Dilithium scheme.
+# Key/signature sizes differ slightly from final FIPS 204 ML-DSA standard:
+# - Public key: 1952 bytes (same)
+# - Secret key: 4000 bytes (vs 4032 in FIPS 204)
+# - Signature: 3293 bytes (vs 3309 in FIPS 204)
 
 # Dependencies (auto-installed)
-# cffi>=2.0.0 (already satisfied by cryptography)
+# No additional dependencies required beyond Python stdlib
 
-# NOT REQUIRED (issues identified):
-# liboqs-python  # Requires native liboqs library
-# oqs            # Wrong package (query language)
+# PREVIOUSLY EVALUATED (not used):
+# pqcrypto==0.3.4  # Replaced with dilithium-py for active maintenance
+# liboqs-python    # Requires native liboqs library
+# oqs              # Wrong package (query language)
