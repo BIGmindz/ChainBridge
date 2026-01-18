@@ -1,0 +1,81 @@
+{
+  "pac_id": "PAC-SWARM-HARDENING-21",
+  "pac_version": "v1.0.0",
+  "classification": "IDENTITY_AND_AMBIENT_SECURITY",
+  "governance_tier": "LAW",
+  "hunter_gid": "GID-12",
+  "hunter_name": "DRIFT_HUNTER",
+  "authority_level": "KILL_SWITCH",
+  "session": {
+    "session_id": "HUNTER_1768749621",
+    "start_time": "2026-01-18T15:20:21.190494+00:00",
+    "end_time": "2026-01-18T15:20:21.191210+00:00",
+    "duration_seconds": 0.0007178783416748047
+  },
+  "metrics": {
+    "validations_performed": 4,
+    "signatures_verified": 0,
+    "justifications_validated": 2,
+    "violations_detected": 6,
+    "agents_terminated": 4
+  },
+  "violation_log": [
+    {
+      "action": "IMMEDIATE_TERMINATION",
+      "agent_gid": "GID-00",
+      "hunter_gid": "GID-12",
+      "timestamp": "2026-01-18T15:20:21.190789+00:00",
+      "violations": [
+        "[CB-SEC-01] Agent GID-00 signature format invalid"
+      ],
+      "policy": "MUST_NOT_DRIFT",
+      "detection_to_kill_latency_ms": 0.0,
+      "session_id": "HUNTER_1768749621"
+    },
+    {
+      "action": "IMMEDIATE_TERMINATION",
+      "agent_gid": "GID-07",
+      "hunter_gid": "GID-12",
+      "timestamp": "2026-01-18T15:20:21.191023+00:00",
+      "violations": [
+        "[CB-SEC-01] Agent GID-07 signature format invalid"
+      ],
+      "policy": "MUST_NOT_DRIFT",
+      "detection_to_kill_latency_ms": 0.0,
+      "session_id": "HUNTER_1768749621"
+    },
+    {
+      "action": "IMMEDIATE_TERMINATION",
+      "agent_gid": "GID-99",
+      "hunter_gid": "GID-12",
+      "timestamp": "2026-01-18T15:20:21.191048+00:00",
+      "violations": [
+        "[CB-SEC-01] Agent GID-99 not registered in NFI registry",
+        "[CB-LAW-01] Missing architectural justification (CB-LAW-01 violation)"
+      ],
+      "policy": "MUST_NOT_DRIFT",
+      "detection_to_kill_latency_ms": 0.0,
+      "session_id": "HUNTER_1768749621"
+    },
+    {
+      "action": "IMMEDIATE_TERMINATION",
+      "agent_gid": "GID-08",
+      "hunter_gid": "GID-12",
+      "timestamp": "2026-01-18T15:20:21.191070+00:00",
+      "violations": [
+        "[CB-SEC-01] Agent GID-08 signature format invalid",
+        "[CB-LAW-01] Missing architectural justification (CB-LAW-01 violation)"
+      ],
+      "policy": "MUST_NOT_DRIFT",
+      "detection_to_kill_latency_ms": 0.0,
+      "session_id": "HUNTER_1768749621"
+    }
+  ],
+  "invariants_enforced": [
+    "CB-SEC-01: Non-Fungible Identity (NFI) prerequisite for all PDO outputs",
+    "CB-LAW-01: No syntax execution without prior architectural justification",
+    "CB-INV-004: Fail-closed by default (Drift tolerance: 0.0000)"
+  ],
+  "ledger_commit": "AMBIENT_SECURITY_ACTIVE_PL-030",
+  "attestation": "MASTER-BER-SWARM-HARDENING-21"
+}

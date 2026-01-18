@@ -1,0 +1,68 @@
+# Carnegie MultiSense S21 ROS 2 Driver Configuration
+# PAC-HITL-HARDWARE-SYNC-33
+
+# Sensor Platform
+sensor:
+  platform: "Carnegie Robotics MultiSense S21"
+  serial_number: "S21-DEMO-001"
+  firmware_version: "5.2.1"
+
+# ROS 2 Topics
+topics:
+  raw_points: "/carnegie/s21/raw_points"
+  filtered_points: "/carnegie/s21/filtered_points"
+  lidar_scan: "/carnegie/s21/lidar/scan"
+  stereo_left: "/carnegie/s21/stereo/left/image_raw"
+  stereo_right: "/carnegie/s21/stereo/right/image_raw"
+  color_image: "/carnegie/s21/color/image_raw"
+  imu_data: "/carnegie/s21/imu/data"
+  entropy_output: "/dual_engine/entropy"
+  sensor_health: "/carnegie/s21/health"
+
+# Sensor Specifications
+sensors:
+  lidar:
+    type: "Velodyne VLP-16 Equivalent"
+    range_m: 100.0
+    accuracy_cm: 3.0
+    fov_deg: 360
+    scan_rate_hz: 10
+    
+  stereo_camera:
+    resolution: "1920x1200"
+    fps: 30
+    baseline_mm: 70
+    
+  color_camera:
+    resolution: "1920x1080"
+    fps: 30
+    
+  imu:
+    type: "6-axis (accel + gyro)"
+    rate_hz: 100
+
+# Bayesian Filter Configuration
+bayesian_filter:
+  prior_belief: 0.5
+  prob_sensor_correct: 0.9
+  update_frequency_hz: 30
+  
+# Safety Thresholds
+safety:
+  max_entropy: 0.05
+  latency_cap_ms: 1.0
+  belief_range: [0.4, 0.6]
+  
+# Calibration
+calibration:
+  duration_s: 10.0
+  sample_rate_hz: 30.0
+  ambient_noise_threshold: 0.15
+
+# Constitutional Invariants
+invariants:
+  CB-SENSOR-01: "System entropy MUST NOT exceed 0.05"
+  CB-SENSOR-02: "Sensor latency MUST NOT exceed 1.0ms"
+  CB-SENSOR-03: "Bayesian filter MUST maintain prior belief within [0.4, 0.6]"
+  CB-SENSOR-04: "High entropy triggers immediate SAFE_BRAKE via GID-12"
+  CB-SENSOR-05: "All sensor data MUST pass through dual-engine verification"

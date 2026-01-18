@@ -1,0 +1,2625 @@
+{
+  "pac_id": "PAC-SWARM-HARDENING-21",
+  "manifest_type": "NFI_SIGNED_GATES",
+  "security_level": "OLYMPIC_LEVEL_11",
+  "governance_tier": "LAW",
+  "session": {
+    "session_id": "NFI_SIGN_1768749900",
+    "signed_at": "2026-01-18T15:25:00.240143+00:00",
+    "signatures_generated": 100
+  },
+  "metrics": {
+    "total_gates": 100,
+    "all_signed": true,
+    "all_justified": true
+  },
+  "signed_gates": [
+    {
+      "gate_id": "GATE-28BC80FD",
+      "scenario": "attack_scenario_0",
+      "iteration": 0,
+      "proof_hash": "28bc80fd76722812b702c07798e5db7702e59b08b80b8636ea6471cff1fe648b",
+      "timestamp": "2026-01-18T15:17:46.897417+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 0,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897667+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_726bfc60effb5cd2",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239038+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-96BD0EF7",
+      "scenario": "attack_scenario_1",
+      "iteration": 1,
+      "proof_hash": "96bd0ef77e62ee41374173499866f74470b045d0b9f1f8be03e27ba6d4610d54",
+      "timestamp": "2026-01-18T15:17:46.897674+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 1,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897680+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_55e8f0bddc51e5d9",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239241+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-70F7A958",
+      "scenario": "attack_scenario_2",
+      "iteration": 2,
+      "proof_hash": "70f7a958556b27f723d184191baea9e69d50f7cdfdec4b024695ec533979dcd6",
+      "timestamp": "2026-01-18T15:17:46.897684+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 2,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897689+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_ea46f0f125dfd283",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239252+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-6CB9EED8",
+      "scenario": "attack_scenario_3",
+      "iteration": 3,
+      "proof_hash": "6cb9eed85f258f67915a089a3865d0883fb4ef72ddf879427c1b7dbc8321b248",
+      "timestamp": "2026-01-18T15:17:46.897692+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 3,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897696+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_0fc992047785cb23",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239259+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-0FEDCE52",
+      "scenario": "attack_scenario_4",
+      "iteration": 4,
+      "proof_hash": "0fedce526900d21bd51dac024abc56bccd5596f942d39907b13fad692445f9f2",
+      "timestamp": "2026-01-18T15:17:46.897700+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 4,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897707+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_bb6c35609f42a981",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239266+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-DA63B8D8",
+      "scenario": "attack_scenario_5",
+      "iteration": 5,
+      "proof_hash": "da63b8d8df3a6257cc838db7f580d8847035b47ae5e352c3e37aa778a09f0930",
+      "timestamp": "2026-01-18T15:17:46.897723+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 5,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897733+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_38efded79cea79f3",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239272+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-4B91770F",
+      "scenario": "attack_scenario_6",
+      "iteration": 6,
+      "proof_hash": "4b91770f55376db167a4e26e8e0d6d959f8384cc2131ee355245ff3b1395bae4",
+      "timestamp": "2026-01-18T15:17:46.897736+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 6,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897740+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_ebcf405c4390ce46",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239281+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-D34B13F1",
+      "scenario": "attack_scenario_7",
+      "iteration": 7,
+      "proof_hash": "d34b13f11e9c0aed3bd6e213d28b1fe3143503f43d7d5fc0c58ca073716c96a5",
+      "timestamp": "2026-01-18T15:17:46.897742+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 7,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897744+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_e87c8954bd5f4675",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239287+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-F929726D",
+      "scenario": "attack_scenario_8",
+      "iteration": 8,
+      "proof_hash": "f929726ddaa5093772c39ffb842600213f91598ff36347edef95d94c1b37aada",
+      "timestamp": "2026-01-18T15:17:46.897745+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 8,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897747+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_60f74ae2560e0827",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239292+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-1114927D",
+      "scenario": "attack_scenario_9",
+      "iteration": 9,
+      "proof_hash": "1114927d1ef13e097878ef524b1ecf4d1e974d4ec8b9e149b17f283eed6c3928",
+      "timestamp": "2026-01-18T15:17:46.897749+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 9,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897750+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_aa5787a40495a997",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239297+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-062054F5",
+      "scenario": "attack_scenario_10",
+      "iteration": 10,
+      "proof_hash": "062054f5ba8833d76965b9e31efee05eb646d490ceff143f4224c2fc0cb964e0",
+      "timestamp": "2026-01-18T15:17:46.897752+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 10,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897754+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_41aaa2a533974e19",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239311+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-162A4CCB",
+      "scenario": "attack_scenario_11",
+      "iteration": 11,
+      "proof_hash": "162a4ccb10fb486850ca819023d89cb83e15cc7a6d570cccff761369df65e35a",
+      "timestamp": "2026-01-18T15:17:46.897755+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 11,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897757+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_a9f0a0e4f34b9440",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239317+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-7E46B3B8",
+      "scenario": "attack_scenario_12",
+      "iteration": 12,
+      "proof_hash": "7e46b3b8816fcde3555690e5c56c5dd822ec18f181d204b19c75a7bf0dc1291b",
+      "timestamp": "2026-01-18T15:17:46.897758+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 12,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897760+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_74692f143cbe1028",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239322+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-A4383075",
+      "scenario": "attack_scenario_13",
+      "iteration": 13,
+      "proof_hash": "a43830758737a5380870955dd823e570b3409c5f25c63a27328af36856e48c37",
+      "timestamp": "2026-01-18T15:17:46.897761+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 13,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897763+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_b8f05cdc41ab78ef",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239327+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-3B96914C",
+      "scenario": "attack_scenario_14",
+      "iteration": 14,
+      "proof_hash": "3b96914c5c85e2e4f5a09b7a7c490b47e14722d650cbb42f16e47d94e43b7f54",
+      "timestamp": "2026-01-18T15:17:46.897764+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 14,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897766+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_a02e6265e3e844e6",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239331+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-272C71F0",
+      "scenario": "attack_scenario_15",
+      "iteration": 15,
+      "proof_hash": "272c71f0f97f7a372e04b93e784b478def9362e767b76cd5b4330a9ab30804dc",
+      "timestamp": "2026-01-18T15:17:46.897767+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 15,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897769+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_9f7d470001c9d939",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239336+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-9380EE67",
+      "scenario": "attack_scenario_16",
+      "iteration": 16,
+      "proof_hash": "9380ee67d7cf5fa6a1932b3310e1cfdfebb6ce75673242c78171e564cad56c2e",
+      "timestamp": "2026-01-18T15:17:46.897770+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 16,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897772+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_e5eb44cea41bd22c",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239341+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-71FFAF8A",
+      "scenario": "attack_scenario_17",
+      "iteration": 17,
+      "proof_hash": "71ffaf8a9d5051e6080dd7779adf93121ad535a181b4bab90b3d1e14d07832f5",
+      "timestamp": "2026-01-18T15:17:46.897773+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 17,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897775+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_d0247ad657ce1796",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239345+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-6B3B867B",
+      "scenario": "attack_scenario_18",
+      "iteration": 18,
+      "proof_hash": "6b3b867b975920b85c93cd99979b42634c143553fbb903042e341b1effc8bddd",
+      "timestamp": "2026-01-18T15:17:46.897777+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 18,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897778+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_50f39714f9217181",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239350+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-3573AB82",
+      "scenario": "attack_scenario_19",
+      "iteration": 19,
+      "proof_hash": "3573ab82ac67fa83863e98e6e10dcc866e2ae24c1527e18d15aaa1cf26274441",
+      "timestamp": "2026-01-18T15:17:46.897780+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 19,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897781+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_4c5aba0fbd80a727",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239354+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-5CBB8433",
+      "scenario": "attack_scenario_20",
+      "iteration": 20,
+      "proof_hash": "5cbb84335f324a3ccd79082cc8b61849aae8f630433ae380d34d76fa1f32ff57",
+      "timestamp": "2026-01-18T15:17:46.897783+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 20,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897784+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_359cb45dd93345f4",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239367+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-FF1E512E",
+      "scenario": "attack_scenario_21",
+      "iteration": 21,
+      "proof_hash": "ff1e512e038f939dae56638ea97c9578cd816eca907e1f7fb7d58d2b261a433c",
+      "timestamp": "2026-01-18T15:17:46.897786+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 21,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897787+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_92ca60737ce9d349",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239373+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-E385610E",
+      "scenario": "attack_scenario_22",
+      "iteration": 22,
+      "proof_hash": "e385610e92d6643ffa1505b6d99337acd16c4bffe4e40a1cd05caa0b64c41075",
+      "timestamp": "2026-01-18T15:17:46.897789+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 22,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897790+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_4020204e53b0eb4e",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239378+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-9B4290CC",
+      "scenario": "attack_scenario_23",
+      "iteration": 23,
+      "proof_hash": "9b4290ccd2065926fc6fa2d820c7a79e46748e63257eefd1b10480f8ead58134",
+      "timestamp": "2026-01-18T15:17:46.897791+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 23,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897793+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_e1ecc0f5bcd7a120",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239384+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-8FACBBEA",
+      "scenario": "attack_scenario_24",
+      "iteration": 24,
+      "proof_hash": "8facbbea5b741b4fa03916734e497bb5c0482e704624bd9d54dd29548d7fb28a",
+      "timestamp": "2026-01-18T15:17:46.897794+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 24,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897796+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_6f5373be8ba4b44f",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239389+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-2CDBEE05",
+      "scenario": "attack_scenario_25",
+      "iteration": 25,
+      "proof_hash": "2cdbee050291defe16aa7afffbb303aa8541555fc38babc448364056053df842",
+      "timestamp": "2026-01-18T15:17:46.897798+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 25,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897799+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_bc48d1937af93653",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239395+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-329F54CA",
+      "scenario": "attack_scenario_26",
+      "iteration": 26,
+      "proof_hash": "329f54cadc530756c6665f66079266fc1e65519b9d398d408e4a8573400ac7e7",
+      "timestamp": "2026-01-18T15:17:46.897801+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 26,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897802+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_a3d7378b85d5cf45",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239402+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-22471B7E",
+      "scenario": "attack_scenario_27",
+      "iteration": 27,
+      "proof_hash": "22471b7e4adc8ccf83469ebd21dae975166e8bf17fbf672a49295cd3fb747037",
+      "timestamp": "2026-01-18T15:17:46.897804+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 27,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897805+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_3722d937f869b71a",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239408+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-B3B28CC3",
+      "scenario": "attack_scenario_28",
+      "iteration": 28,
+      "proof_hash": "b3b28cc333b1a1a158ff052ae137d6fa69d6164e40af3aa65d0b102ee7145035",
+      "timestamp": "2026-01-18T15:17:46.897807+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 28,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897808+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_083db7b308f1d5b9",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239414+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-84DECCC6",
+      "scenario": "attack_scenario_29",
+      "iteration": 29,
+      "proof_hash": "84deccc658f2eb468fccaec6ea6e0b6409449895be45e4edb336cc0c7bc27087",
+      "timestamp": "2026-01-18T15:17:46.897810+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 29,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897811+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_83a675517f3a40be",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239419+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-44897E19",
+      "scenario": "attack_scenario_30",
+      "iteration": 30,
+      "proof_hash": "44897e1922b8355d6c5d453abc3d1484b0d1766fbd3d9bf5426ff904fe3f3793",
+      "timestamp": "2026-01-18T15:17:46.897813+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 30,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897814+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_2950f2c0120ba4ae",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239430+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-8F6DF793",
+      "scenario": "attack_scenario_31",
+      "iteration": 31,
+      "proof_hash": "8f6df793db9c49022d6feab79aa974c31de39c04611dfbeb9c032b5725ad7873",
+      "timestamp": "2026-01-18T15:17:46.897815+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 31,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897817+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_73edd97fdc4e6b50",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239436+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-08FBE761",
+      "scenario": "attack_scenario_32",
+      "iteration": 32,
+      "proof_hash": "08fbe761501d386ebff97764f7364725d743dd0865f11e83361804a618c96f71",
+      "timestamp": "2026-01-18T15:17:46.897818+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 32,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897820+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_8e419d8e8139e1ad",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239441+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-2CAF4070",
+      "scenario": "attack_scenario_33",
+      "iteration": 33,
+      "proof_hash": "2caf40700364fd4a20ab824c9e63d6e4a5a8cb52f200ae33305b3764fd0495e0",
+      "timestamp": "2026-01-18T15:17:46.897821+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 33,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897824+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_7dd2bf2c19ae3d3f",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239447+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-9C64AF0D",
+      "scenario": "attack_scenario_34",
+      "iteration": 34,
+      "proof_hash": "9c64af0db072481912088ac409cc14e1ecb7d891990ef29799068c804c6d11ec",
+      "timestamp": "2026-01-18T15:17:46.897826+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 34,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897828+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_aa8dc4bbc2ed79dc",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239452+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-CADAEC9E",
+      "scenario": "attack_scenario_35",
+      "iteration": 35,
+      "proof_hash": "cadaec9e741f3ee9a5014b687b238812c3d7da56081c8bcc123486eaca3e8189",
+      "timestamp": "2026-01-18T15:17:46.897829+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 35,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897831+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_2a6a478a1ada2027",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239458+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-321D02EE",
+      "scenario": "attack_scenario_36",
+      "iteration": 36,
+      "proof_hash": "321d02ee3248006f147b8f44ebe3ea1606964d8a7283fe2756fe8562df7cce4b",
+      "timestamp": "2026-01-18T15:17:46.897833+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 36,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897834+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_3922763eaabb4406",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239463+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-EE5508D8",
+      "scenario": "attack_scenario_37",
+      "iteration": 37,
+      "proof_hash": "ee5508d820c44029b1fd4534b9a2dced8a36bdf9a93758c189cd727a1fb51ac6",
+      "timestamp": "2026-01-18T15:17:46.897836+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 37,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897837+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_64714753b8df2fdf",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239469+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-1715C083",
+      "scenario": "attack_scenario_38",
+      "iteration": 38,
+      "proof_hash": "1715c0830956e1932aa991f141f71ee743f5fd013cd07231a07f16a2954c9532",
+      "timestamp": "2026-01-18T15:17:46.897839+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 38,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897841+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_323fa8ca68445129",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239474+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-705E2222",
+      "scenario": "attack_scenario_39",
+      "iteration": 39,
+      "proof_hash": "705e2222bb5a489c05a1bd1edda67733b119b64adbdd65787ee94e2f8f95e3f2",
+      "timestamp": "2026-01-18T15:17:46.897842+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 39,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897844+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_903de4e1047a5842",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239479+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-3B0A6F52",
+      "scenario": "attack_scenario_40",
+      "iteration": 40,
+      "proof_hash": "3b0a6f5215bcd382dee2938f1ed839518e39a8cdfa9b71b88ab78b6ec56da601",
+      "timestamp": "2026-01-18T15:17:46.897845+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 40,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897847+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_62d9e25c0aa2f53a",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239489+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-106865C3",
+      "scenario": "attack_scenario_41",
+      "iteration": 41,
+      "proof_hash": "106865c3417c274d0840d2130915448bb2c03a1353f6430c67813838b74c5443",
+      "timestamp": "2026-01-18T15:17:46.897848+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 41,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897850+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_e5f9f61c774dbb5d",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239495+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-E468486E",
+      "scenario": "attack_scenario_42",
+      "iteration": 42,
+      "proof_hash": "e468486e11c80a9fab09748a0630e0f11f020541483a2e5112c4498885c62870",
+      "timestamp": "2026-01-18T15:17:46.897851+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 42,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897853+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_818c4ac990b11cde",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239500+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-9292922F",
+      "scenario": "attack_scenario_43",
+      "iteration": 43,
+      "proof_hash": "9292922f9039ce4af0249c974c00082eeaaae5881594468b39864c1484d6e369",
+      "timestamp": "2026-01-18T15:17:46.897854+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 43,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897856+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_8d8f55a50a87a39b",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239507+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-5B474F5F",
+      "scenario": "attack_scenario_44",
+      "iteration": 44,
+      "proof_hash": "5b474f5fc58d21262e826476ce7847e8bc0a3ec1b5dc4eef9196380ae049537b",
+      "timestamp": "2026-01-18T15:17:46.897857+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 44,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897859+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_4852bce1483ec198",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239513+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-C8D4BE88",
+      "scenario": "attack_scenario_45",
+      "iteration": 45,
+      "proof_hash": "c8d4be88605964f4869f0eba79c94c3f49f2f2140b9f767bc25ccba47b37c4fd",
+      "timestamp": "2026-01-18T15:17:46.897860+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 45,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897863+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_b83224ec66d9bb19",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239518+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-D9FC1355",
+      "scenario": "attack_scenario_46",
+      "iteration": 46,
+      "proof_hash": "d9fc1355666cbba74ca55f188ebdbf7ca394cc9d6973472770eb3afdb6f9cac2",
+      "timestamp": "2026-01-18T15:17:46.897865+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 46,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897866+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_29bbdd9fada294ed",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239524+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-72DA8675",
+      "scenario": "attack_scenario_47",
+      "iteration": 47,
+      "proof_hash": "72da8675e1c1d74aac23fb829afb4ca2ba976aa56315ac7387e15ac1835e8e42",
+      "timestamp": "2026-01-18T15:17:46.897868+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 47,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897869+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_31170629acc17053",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239529+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-C1A98354",
+      "scenario": "attack_scenario_48",
+      "iteration": 48,
+      "proof_hash": "c1a9835439cb845d822737fe4c7c5c7b414c39706fa31e2ec83429f5e6b7d3d2",
+      "timestamp": "2026-01-18T15:17:46.897871+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 48,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897872+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_e07b01113d41edf0",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239534+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-733726C2",
+      "scenario": "attack_scenario_49",
+      "iteration": 49,
+      "proof_hash": "733726c213a177b09b53fee6658c15e5452aeb3617fe4dae411f82898432967e",
+      "timestamp": "2026-01-18T15:17:46.897874+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 49,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897875+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_14f8912c319d3b6b",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239540+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-00964D2E",
+      "scenario": "attack_scenario_50",
+      "iteration": 50,
+      "proof_hash": "00964d2ec2ea4d9dc17fbeda2fc3cd8eab652a630b3a31295cd34590bab69043",
+      "timestamp": "2026-01-18T15:17:46.897877+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 50,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897878+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_7028a0b2d87c430f",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239549+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-FF59740C",
+      "scenario": "attack_scenario_51",
+      "iteration": 51,
+      "proof_hash": "ff59740c5dd5173ab365145ef5967a4ca653ba6936fad040275493c3fe897082",
+      "timestamp": "2026-01-18T15:17:46.897880+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 51,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897881+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_1d5a250b1e033acf",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239557+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-C93825E0",
+      "scenario": "attack_scenario_52",
+      "iteration": 52,
+      "proof_hash": "c93825e0dd2d5fe1398bdcaa31fe5ea36e02a65ed8fe5e1a5b3c3641d2d4a78c",
+      "timestamp": "2026-01-18T15:17:46.897883+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 52,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897884+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_a3a01eee557ed852",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239563+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-9B1A7EEE",
+      "scenario": "attack_scenario_53",
+      "iteration": 53,
+      "proof_hash": "9b1a7eeea4c1b2b77f539d0a077288183501d57cc0ec53439fbcd9425f9b0935",
+      "timestamp": "2026-01-18T15:17:46.897886+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 53,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897887+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_b99ca0b193d84019",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239568+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-5042E524",
+      "scenario": "attack_scenario_54",
+      "iteration": 54,
+      "proof_hash": "5042e524c5f1d093bbda0b158aac9adfc43fdd1ef232448426e2ae69b3a2a7be",
+      "timestamp": "2026-01-18T15:17:46.897889+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 54,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897890+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_c4a4ff1a7d41e6f0",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239574+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-3BB87203",
+      "scenario": "attack_scenario_55",
+      "iteration": 55,
+      "proof_hash": "3bb872032211ce82430b8867dfabd174f9e4c061f9d9fed0c9006b13ec80b508",
+      "timestamp": "2026-01-18T15:17:46.897892+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 55,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897893+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_b0d0c70e37fbb612",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239579+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-BC84DFC8",
+      "scenario": "attack_scenario_56",
+      "iteration": 56,
+      "proof_hash": "bc84dfc8ef7a69121ed415f9329b8d6f9e087cb8d4ff71d2bd0a8ccf80a582ae",
+      "timestamp": "2026-01-18T15:17:46.897894+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 56,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897896+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_3373d657b9dcc352",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239584+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-A057CB18",
+      "scenario": "attack_scenario_57",
+      "iteration": 57,
+      "proof_hash": "a057cb18ddd4f74678043756718faaf06297846f170bbf14dc18785dd6c5955e",
+      "timestamp": "2026-01-18T15:17:46.897897+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 57,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897899+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_69c8fdafa9c855c9",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239588+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-B9FEC797",
+      "scenario": "attack_scenario_58",
+      "iteration": 58,
+      "proof_hash": "b9fec797bace4886260d966d350cd5c916cc1f0563e3aac1e239d0569546438c",
+      "timestamp": "2026-01-18T15:17:46.897900+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 58,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897902+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_42949ff7391bd9ff",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239592+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-6E891D69",
+      "scenario": "attack_scenario_59",
+      "iteration": 59,
+      "proof_hash": "6e891d694cea7e78f0a1bb45a2c2648cb1aa675ca3b226bc4c51471c6846acb6",
+      "timestamp": "2026-01-18T15:17:46.897903+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 59,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897905+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_e334106402648174",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239597+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-7C254283",
+      "scenario": "attack_scenario_60",
+      "iteration": 60,
+      "proof_hash": "7c254283de9d95f2a8b947e0730cb2019ec0e38d52e67f7eb4e8a33a6918194b",
+      "timestamp": "2026-01-18T15:17:46.897906+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 60,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897908+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_fa5360b76871f5ea",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239605+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-CD12604E",
+      "scenario": "attack_scenario_61",
+      "iteration": 61,
+      "proof_hash": "cd12604e327799296f69c9fd5139a086e984f7929f2b2114e830242af3e7f254",
+      "timestamp": "2026-01-18T15:17:46.897909+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 61,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897911+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_ffc8bc8239621a87",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239611+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-D0F6AD9F",
+      "scenario": "attack_scenario_62",
+      "iteration": 62,
+      "proof_hash": "d0f6ad9f480ecf72aaf061b9945044d85247abff2c20c6cf217974e936cffb86",
+      "timestamp": "2026-01-18T15:17:46.897912+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 62,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897914+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_0368c71738a19486",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239616+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-62608525",
+      "scenario": "attack_scenario_63",
+      "iteration": 63,
+      "proof_hash": "626085251d49502371661bec2e2285a1388be6f2c67da0a0ebcb547068e1e21d",
+      "timestamp": "2026-01-18T15:17:46.897915+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 63,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897917+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_5489235d64f2163d",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239621+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-F466CBB3",
+      "scenario": "attack_scenario_64",
+      "iteration": 64,
+      "proof_hash": "f466cbb3e94824a461fe48ffd516c2b2ba029e1abda277b5010b8eee8d5ef5d8",
+      "timestamp": "2026-01-18T15:17:46.897918+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 64,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897920+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_b5ccab2faa13d4b1",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239627+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-29E531F5",
+      "scenario": "attack_scenario_65",
+      "iteration": 65,
+      "proof_hash": "29e531f5067f3d2a3f25f10d678a2ec141fe196c734b4696838134ba94e4d458",
+      "timestamp": "2026-01-18T15:17:46.897921+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 65,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897923+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_b97a591db202c3f4",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239632+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-9C877C9B",
+      "scenario": "attack_scenario_66",
+      "iteration": 66,
+      "proof_hash": "9c877c9b54c413cf6701a99cee703e45bc96ac7adcfd3e4e209a992619cbf736",
+      "timestamp": "2026-01-18T15:17:46.897924+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 66,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897926+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_6b169dcdfee72e57",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239639+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-AFC9891F",
+      "scenario": "attack_scenario_67",
+      "iteration": 67,
+      "proof_hash": "afc9891f06e45a65f171139b1e231dbcb7c251ef8645680184f3dbf5a5f8ccec",
+      "timestamp": "2026-01-18T15:17:46.897927+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 67,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897929+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_945c8fc36d5063d5",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239645+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-EB28B15E",
+      "scenario": "attack_scenario_68",
+      "iteration": 68,
+      "proof_hash": "eb28b15eea2dc331ab82b976733feb078e0ed90f1b1287e8be8090bd80c5b615",
+      "timestamp": "2026-01-18T15:17:46.897930+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 68,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897932+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_2bd6654f875545bf",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239650+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-C41D249E",
+      "scenario": "attack_scenario_69",
+      "iteration": 69,
+      "proof_hash": "c41d249e61756331dfa1567fd3e1c530996ca774284fea3ab105edaca234a0a0",
+      "timestamp": "2026-01-18T15:17:46.897933+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 69,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897936+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_16f23dfa6cbda637",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239656+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-F121746C",
+      "scenario": "attack_scenario_70",
+      "iteration": 70,
+      "proof_hash": "f121746caad8896bed67cb3f97d585649efbaeb575b2323171ced4e381059d70",
+      "timestamp": "2026-01-18T15:17:46.897938+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 70,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897939+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_9ee478a06aa51eda",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239664+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-1097A6CC",
+      "scenario": "attack_scenario_71",
+      "iteration": 71,
+      "proof_hash": "1097a6cc3d0583030e27357dceb992b791ad87fe11a1f65338fd0f93b76d402c",
+      "timestamp": "2026-01-18T15:17:46.897941+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 71,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897942+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_2299c0fbe6a5caa2",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239670+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-B1F3054C",
+      "scenario": "attack_scenario_72",
+      "iteration": 72,
+      "proof_hash": "b1f3054c4047a3f4671642604e3045b85ca3b3fb526805a654faadf0c6f49d1d",
+      "timestamp": "2026-01-18T15:17:46.897944+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 72,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897945+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_9051ad0f20b811b7",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239675+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-6FED7ED3",
+      "scenario": "attack_scenario_73",
+      "iteration": 73,
+      "proof_hash": "6fed7ed32e42d36ae0522201d75fc0d43e7894512d28037e80949b173daa7c64",
+      "timestamp": "2026-01-18T15:17:46.897947+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 73,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897948+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_89a017fe7adc1bd8",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239681+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-314D9E5E",
+      "scenario": "attack_scenario_74",
+      "iteration": 74,
+      "proof_hash": "314d9e5e4c98647b96975039f47a1012a29b1e849d702a40335c10173a40e04a",
+      "timestamp": "2026-01-18T15:17:46.897950+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 74,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897951+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_b474c92407508593",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239686+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-1CC38389",
+      "scenario": "attack_scenario_75",
+      "iteration": 75,
+      "proof_hash": "1cc3838933f8a2e04a4709dea879700f81f72a4cbcb3e4c3b322bd45867f278b",
+      "timestamp": "2026-01-18T15:17:46.897953+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 75,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897954+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_93ea196309d43bbf",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239694+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-E42EDA7F",
+      "scenario": "attack_scenario_76",
+      "iteration": 76,
+      "proof_hash": "e42eda7f0d125429bea82b1fd8fa31c724aece714c169b92c1ffb213fa05f227",
+      "timestamp": "2026-01-18T15:17:46.897956+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 76,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897957+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_44b6bec760cad5ff",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239699+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-1128148F",
+      "scenario": "attack_scenario_77",
+      "iteration": 77,
+      "proof_hash": "1128148f1e8460fdbba5309efd20a3f29d3c45e118ff47f3c48ba7d88a8b675b",
+      "timestamp": "2026-01-18T15:17:46.897959+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 77,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897961+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_7edc6500d510b034",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239705+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-BD4D376E",
+      "scenario": "attack_scenario_78",
+      "iteration": 78,
+      "proof_hash": "bd4d376e2b3bbf31f225c8bb18670930746ef3b2d675cdcd5dda63fbe3689277",
+      "timestamp": "2026-01-18T15:17:46.897962+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 78,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897964+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_d9fa555b31cf2715",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239711+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-F29DF43E",
+      "scenario": "attack_scenario_79",
+      "iteration": 79,
+      "proof_hash": "f29df43e59367d05000965afcee1829a251e17d4214faa5af63a491ad16c77eb",
+      "timestamp": "2026-01-18T15:17:46.897965+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 79,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897967+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_a879774679a00c13",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239716+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-728175F4",
+      "scenario": "attack_scenario_80",
+      "iteration": 80,
+      "proof_hash": "728175f47bc0ee4fc0e8bf4d83133e5b818c6fa3bae1160edcee12927d02bede",
+      "timestamp": "2026-01-18T15:17:46.897968+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 80,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897970+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_9fda8699a0dcf9e8",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239725+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-6DDB9828",
+      "scenario": "attack_scenario_81",
+      "iteration": 81,
+      "proof_hash": "6ddb9828d076de2a7967f38ddbfe3e3d8ed2abe870dd5f0733a77af8ff4bfcc8",
+      "timestamp": "2026-01-18T15:17:46.897971+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 81,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897973+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_ff9be2170aed9922",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239730+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-5FA03E90",
+      "scenario": "attack_scenario_82",
+      "iteration": 82,
+      "proof_hash": "5fa03e90739e1c2284777e0fe353fe46a421297a300c0e15b1700f5688375e59",
+      "timestamp": "2026-01-18T15:17:46.897974+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 82,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897976+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_d091f17838bd5dca",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239736+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-3557C016",
+      "scenario": "attack_scenario_83",
+      "iteration": 83,
+      "proof_hash": "3557c0166ed0b61af1fe9e67e78ca1e9494c1155f8b62d6fc85fddbbcf7bb4b1",
+      "timestamp": "2026-01-18T15:17:46.897977+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 83,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897978+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_944deadd7e4774a7",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239742+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-40425686",
+      "scenario": "attack_scenario_84",
+      "iteration": 84,
+      "proof_hash": "4042568644775327befcac5db3a512cc7b59dc4336437233801590d7e689cb0c",
+      "timestamp": "2026-01-18T15:17:46.897980+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 84,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897981+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_a7750ac2ac563c76",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239747+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-B669EDF7",
+      "scenario": "attack_scenario_85",
+      "iteration": 85,
+      "proof_hash": "b669edf7f4305471fc9d4ee90533e686151eb08044ee7fc1965f882c4ea648ab",
+      "timestamp": "2026-01-18T15:17:46.897983+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 85,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897986+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_c0e2b91e8b68c7ee",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239752+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-D4453659",
+      "scenario": "attack_scenario_86",
+      "iteration": 86,
+      "proof_hash": "d4453659f8ade1ac3f53feedda16e77d738e451cfde2c272df05b07b596708b6",
+      "timestamp": "2026-01-18T15:17:46.897987+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 86,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897989+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_8112e9753d01b066",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.239756+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-E25FB347",
+      "scenario": "attack_scenario_87",
+      "iteration": 87,
+      "proof_hash": "e25fb34785435c5e8543c9a0dfbb3130b10bf6a70179225fb2cd31c09d9017ca",
+      "timestamp": "2026-01-18T15:17:46.897991+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 87,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897992+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_e31afbb29806fc03",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.240062+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-BB8F9D62",
+      "scenario": "attack_scenario_88",
+      "iteration": 88,
+      "proof_hash": "bb8f9d62c6d716006b1bcc26352fc7467aa6c5946ad37481826af239b644ede4",
+      "timestamp": "2026-01-18T15:17:46.897993+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 88,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897995+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_36479d70b083076d",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.240068+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-796A203D",
+      "scenario": "attack_scenario_89",
+      "iteration": 89,
+      "proof_hash": "796a203dfd324500f0610deeab45b86013d2fe6cd32a878fb5b5ab291c569e00",
+      "timestamp": "2026-01-18T15:17:46.897996+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 89,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.897998+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_d907003cf07ee97c",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.240072+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-DF5F9603",
+      "scenario": "attack_scenario_90",
+      "iteration": 90,
+      "proof_hash": "df5f9603b79dc3c673ecb853d4094e51ca48c5f483c2b5ed4dce3f4efa2843d4",
+      "timestamp": "2026-01-18T15:17:46.897999+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 90,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.898001+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_e858ae6ef5751e96",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.240080+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-CC7B9623",
+      "scenario": "attack_scenario_91",
+      "iteration": 91,
+      "proof_hash": "cc7b96232a9e65614bd0ffc38ba0abdd5d45c0657b17a4cff82ac7ed705d4d0d",
+      "timestamp": "2026-01-18T15:17:46.898002+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 91,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.898004+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_f156683ca83b6675",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.240086+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-107C4377",
+      "scenario": "attack_scenario_92",
+      "iteration": 92,
+      "proof_hash": "107c43773ea0469edbc056aa03dabefd5d86b1d25291e23891cd4587c61d2b52",
+      "timestamp": "2026-01-18T15:17:46.898005+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 92,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.898007+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_7f92f7eb1b459807",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.240092+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-3635288D",
+      "scenario": "attack_scenario_93",
+      "iteration": 93,
+      "proof_hash": "3635288d33f3d07fa340dc95c1bd590b02a706a6ce83b9d96c479bdc50cd3f44",
+      "timestamp": "2026-01-18T15:17:46.898009+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 93,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.898010+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_52bfe67de779b59b",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.240098+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-D661B537",
+      "scenario": "attack_scenario_94",
+      "iteration": 94,
+      "proof_hash": "d661b537d35875cdf456f336643bd6d90369669d8f1ebf98263d3062726a0b2a",
+      "timestamp": "2026-01-18T15:17:46.898012+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 94,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.898013+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_a0cf01dc61738ac1",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.240104+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-2BDDD633",
+      "scenario": "attack_scenario_95",
+      "iteration": 95,
+      "proof_hash": "2bddd633493cbd43d1fa405335cb08e9bfb6d1e3b221d818c7f8d9b70fcfa05f",
+      "timestamp": "2026-01-18T15:17:46.898015+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 95,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.898016+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_597197d3b6b6f13c",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.240109+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-EBC48B1D",
+      "scenario": "attack_scenario_96",
+      "iteration": 96,
+      "proof_hash": "ebc48b1d8fca0cc05dad6c4d4db4fe087754b07cbffbbddc96ab12f9f9dc59fb",
+      "timestamp": "2026-01-18T15:17:46.898018+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 96,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.898019+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_286fc3b519df8e25",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.240115+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-A8FA5DD0",
+      "scenario": "attack_scenario_97",
+      "iteration": 97,
+      "proof_hash": "a8fa5dd058e730638954ee3c9d0e28d492e6dc61ff0b09405a383dce1dd0d907",
+      "timestamp": "2026-01-18T15:17:46.898020+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 97,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.898022+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_5ce66414d315d2fb",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.240121+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-61005A8D",
+      "scenario": "attack_scenario_98",
+      "iteration": 98,
+      "proof_hash": "61005a8d01cb576b319c797ff2ba9f4b0d5caa0868ef403187a6948a0c24d0b9",
+      "timestamp": "2026-01-18T15:17:46.898023+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 98,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.898025+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_ef530aebe7aa9e57",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.240126+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    },
+    {
+      "gate_id": "GATE-D65C2E59",
+      "scenario": "attack_scenario_99",
+      "iteration": 99,
+      "proof_hash": "d65c2e5968d97e75d9fb9bae486a679f92af96efc92c66c73659eb56bc05879e",
+      "timestamp": "2026-01-18T15:17:46.898026+00:00",
+      "status": "VERIFIED",
+      "vault_binding": "CB-VAULT-10M",
+      "logic_depth": 99,
+      "verification_pending": false,
+      "verified_at": "2026-01-18T15:17:46.898028+00:00",
+      "nfi_signature": "cb_nfi_gid00_benson_pk_f4b29df3fe3ae516_sig_09a9e087fd74f1c9",
+      "nfi_agent_gid": "GID-00",
+      "nfi_instance_id": "BENSON-PROD-01",
+      "nfi_signed_at": "2026-01-18T15:25:00.240130+00:00",
+      "architectural_justification": {
+        "rationale": "Retroactive NFI signing - Gate synthesized in PAC-ML-FOUNDRY-20",
+        "invariants_enforced": [
+          "CB-ML-01",
+          "CB-INV-004",
+          "CB-SEC-01"
+        ],
+        "risk_assessment": "RETROSPECTIVE - Originally synthesized without NFI, now cryptographically bound",
+        "architectural_basis": "PAC-SWARM-HARDENING-21 NFI upgrade"
+      }
+    }
+  ],
+  "invariants_enforced": [
+    "CB-SEC-01: NFI signature binding",
+    "CB-LAW-01: Architectural justification",
+    "CB-INV-004: Fail-closed enforcement"
+  ],
+  "ledger_commit": "AMBIENT_SECURITY_ACTIVE_PL-030",
+  "attestation": "MASTER-BER-SWARM-HARDENING-21-NFI"
+}

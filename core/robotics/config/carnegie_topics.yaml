@@ -1,0 +1,125 @@
+# Carnegie Robotics ROS 2 Topic Configuration
+# PAC: PAC-ROS2-DEFENSE-BRIDGE-25
+# Security: DEFENSE_GRADE
+
+ros2_bridge:
+  node_name: "benson_defense_bridge"
+  namespace: "/chainbridge"
+  
+  # GID and NFI Configuration
+  gid: "00"
+  agent_name: "BENSON"
+  nfi_signing: true  # MANDATORY in production
+  security_clearance: "DEFENSE_GRADE"
+  
+  # Carnegie Robotics Topics
+  subscriptions:
+    odometry:
+      topic: "/odom"
+      message_type: "nav_msgs/Odometry"
+      qos_reliability: "RELIABLE"
+      qos_durability: "VOLATILE"
+      queue_size: 10
+      callback_group: "odom_group"
+      
+    lidar_scan:
+      topic: "/scan"
+      message_type: "sensor_msgs/LaserScan"
+      qos_reliability: "BEST_EFFORT"
+      qos_durability: "VOLATILE"
+      queue_size: 10
+      callback_group: "scan_group"
+    
+    # Optional additional sensors
+    imu:
+      topic: "/imu/data"
+      message_type: "sensor_msgs/Imu"
+      enabled: false
+      
+    camera:
+      topic: "/camera/image_raw"
+      message_type: "sensor_msgs/Image"
+      enabled: false
+  
+  # PSV Translation Configuration
+  translation:
+    target_schema: "ProposedStrategicVector"
+    signing_algorithm: "HMAC-SHA512"
+    justification_min_length: 32
+    
+    # Performance targets
+    max_latency_ms: 1.0
+    target_latency_us: 500.0
+    
+    # Payload limits (to prevent memory overflow)
+    max_lidar_points: 1000
+    max_obstacles_tracked: 50
+  
+  # Rust Kernel Integration
+  kernel:
+    endpoint: "tcp://localhost:9000"  # Placeholder for Rust Kernel RPC
+    timeout_ms: 100
+    retry_attempts: 3
+    fail_closed: true  # Default to NO_MOVEMENT on failure
+  
+  # Safety Configuration
+  safety:
+    fail_closed: true
+    require_nfi_signature: true
+    drift_hunter_sampling: 0.25  # 25% minimum
+    
+    # Constitutional invariants
+    invariants:
+      - id: "CB-ROB-01"
+        rule: "No physical movement without signed Kernel Approval"
+      - id: "CB-SEC-01"
+        rule: "Every ROS 2 packet must carry valid NFI signature"
+      - id: "CB-ROB-02"
+        rule: "ROS 2 Bridge has ZERO authority to execute movements"
+  
+  # Logging Configuration
+  logging:
+    psv_submission_trace: "logs/robotics/psv_submission_trace.json"
+    telemetry_log: "logs/robotics/ros2_telemetry.log"
+    kernel_judgment_trace: "logs/robotics/kernel_judgment_trace.json"
+    
+    log_level: "INFO"  # DEBUG, INFO, WARN, ERROR
+    log_rotation: true
+    max_log_size_mb: 100
+  
+  # Monitoring Configuration
+  monitoring:
+    gid_12_drift_hunter: true
+    telemetry_drift_threshold_ms: 0.1
+    performance_stats_interval_s: 60
+    
+    # Alerts
+    alert_on_signature_failure: true
+    alert_on_kernel_timeout: true
+    alert_on_drift_violation: true
+
+# Carnegie Robotics Hardware Specifications
+carnegie_hardware:
+  vendor: "Carnegie Robotics"
+  platform: "MultiSense S21"
+  
+  sensors:
+    lidar:
+      model: "Velodyne VLP-16"
+      range_m: 100.0
+      accuracy_cm: 3.0
+      points_per_second: 300000
+      
+    odometry:
+      source: "Wheel encoders + IMU fusion"
+      update_rate_hz: 50
+      position_accuracy_m: 0.05
+      
+    imu:
+      model: "VectorNav VN-100"
+      update_rate_hz: 200
+      
+  communication:
+    protocol: "ROS 2 DDS"
+    dds_implementation: "Fast-DDS"
+    network: "Gigabit Ethernet"
