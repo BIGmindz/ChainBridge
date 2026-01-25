@@ -365,9 +365,36 @@ def create_occ_router():
     # KEY MANAGEMENT
     # ─────────────────────────────────────────────────────────────────────────
     
+    @router.post("/keys/bootstrap")
+    async def bootstrap_key():
+        """
+        Bootstrap: Generate first Sovereign Master Key - UNAUTHENTICATED
+        Only works when NO active keys exist (first-run protection)
+        """
+        occ = get_occ()
+        
+        # Security: Only allow if no active keys exist
+        if len(occ.key_manager.active_keys) > 0:
+            raise HTTPException(
+                status_code=403, 
+                detail="Bootstrap denied: Active keys already exist. Use /keys/generate with authentication."
+            )
+        
+        raw_key, key_obj = occ.generate_master_key()
+        
+        return {
+            "warning": "🔐 STORE THIS KEY SECURELY - IT WILL NOT BE SHOWN AGAIN",
+            "notice": "This is your ONLY bootstrap key. Use it to authenticate and generate additional keys.",
+            "key_id": key_obj.key_id,
+            "raw_key": raw_key,
+            "expires_at": key_obj.expires_at,
+            "permissions": key_obj.permissions,
+            "usage_example": f'curl -H "X-Sovereign-Key: {raw_key}" http://localhost:8080/occ/admin'
+        }
+    
     @router.post("/keys/generate")
     async def generate_key(auth: bool = Depends(verify_sovereign_key)):
-        """Generate a new Sovereign Master Key"""
+        """Generate a new Sovereign Master Key - REQUIRES AUTHENTICATION"""
         occ = get_occ()
         raw_key, key_obj = occ.generate_master_key()
         
