@@ -99,6 +99,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy TLA+ tools from builder stage
 COPY --from=builder /usr/local/lib/tlaplus /usr/local/lib/tlaplus/
 
+# Copy liboqs from builder stage
+COPY --from=builder /usr/local/lib/liboqs* /usr/local/lib/
+COPY --from=builder /usr/local/include/oqs /usr/local/include/oqs/
+RUN ldconfig
+
 # Create non-root user: `chainbridge`
 # UID/GID: 1000 (standard non-root user)
 # Enforces I-SEC-001: Non-root execution only
