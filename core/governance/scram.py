@@ -144,7 +144,7 @@ class SCRAMController:
     """
     
     _instance: Optional[SCRAMController] = None
-    _lock: threading.Lock = threading.Lock()
+    _lock: threading.RLock = threading.RLock()
     
     # Invariant constants
     MAX_TERMINATION_MS: int = 500
@@ -179,7 +179,7 @@ class SCRAMController:
             return
             
         self._state: SCRAMState = SCRAMState.ARMED
-        self._state_lock: threading.Lock = threading.Lock()
+        self._state_lock: threading.RLock = threading.RLock()
         self._execution_paths: Dict[str, Callable[[], None]] = {}
         self._termination_hooks: List[Callable[[], None]] = []
         self._audit_events: List[SCRAMAuditEvent] = []

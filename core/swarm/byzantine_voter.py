@@ -55,6 +55,7 @@ class ConsensusStatus(Enum):
     LOGIC_DRIFT = "LOGIC_DRIFT_DETECTED"
     BYZANTINE_ATTACK = "BYZANTINE_ATTACK_DETECTED"
     NIST_VIOLATION = "NIST_COMPLIANCE_VIOLATION"
+    SCRAM_ABORT = "SCRAM_ABORT"  # P822: Kill switch active, consensus aborted
 
 
 @dataclass
@@ -188,6 +189,7 @@ class ByzantineVoter:
         Verify Byzantine consensus across agent proofs.
         
         PROTOCOL:
+        0. VOTE-02 (P822): SCRAM pre-flight check - fail-closed if SCRAM active
         1. GATE-08: Verify supermajority quorum (>6,666 valid proofs)
         2. GATE-09: Check diversity parity between logic cores
         3. GATE-10: Validate NIST FIPS 204/203 compliance
@@ -200,6 +202,34 @@ class ByzantineVoter:
         Returns:
             ConsensusResult with verification status
         """
+        # VOTE-02 (P822): SCRAM Pre-Flight Check
+        # Fail-closed: If SCRAM kill switch is ACTIVE, abort consensus verification
+        from core.governance.scram import get_scram_controller
+        scram = get_scram_controller()
+        
+        if scram.is_active or scram.is_complete:
+            # Extract reason from audit trail if available
+            audit_trail = scram.audit_trail
+            scram_reason = "Kill switch activated"
+            if audit_trail and hasattr(audit_trail[-1], 'reason'):
+                # reason is stored as string in audit event
+                reason_value = audit_trail[-1].reason
+                if hasattr(reason_value, 'name'):
+                    scram_reason = reason_value.name
+                else:
+                    scram_reason = str(reason_value)
+            
+            return ConsensusResult(
+                status=ConsensusStatus.SCRAM_ABORT,
+                quorum_count=0,
+                threshold=self.threshold,
+                lattice_votes=0,
+                heuristic_votes=0,
+                diversity_ratio=0.0,
+                nist_compliant=False,
+                reason=f"SCRAM_ABORT: {scram_reason}"
+            )
+        
         self.metrics.total_consensus_attempts += 1
         
         # Count valid approvals

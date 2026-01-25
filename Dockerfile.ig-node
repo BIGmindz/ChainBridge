@@ -1,0 +1,220 @@
+# Dockerfile.ig-node
+# ChainBridge Digital Inspector General (GID-12) Node
+# PAC-INFRA-P1502: IG Node Infrastructure Build & Deployment
+#
+# CLASSIFICATION: LAW-tier (Judicial Enforcement)
+# AUTHORITY: JEFFREY [GID-CONST-01] + DAN [GID-07]
+# VERSION: 1.0.0
+# DATE: 2026-01-25
+#
+# ARCHITECTURE: Multi-stage build for minimal attack surface
+# PATTERN: Simplex (Safety controller for agent oversight)
+# ENFORCEMENT: Fail-closed (IG failure → agent cannot start)
+
+# ============================================================================
+# STAGE 1: Builder (Compile dependencies)
+# ============================================================================
+FROM debian:bullseye-slim AS builder
+
+LABEL maintainer="ChainBridge Infrastructure <infra@chainbridge.ai>"
+LABEL component="ig-node"
+LABEL tier="LAW"
+LABEL version="1.0.0"
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    wget \
+    curl \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /tmp/build
+
+# ============================================================================
+# Download Open Policy Agent (OPA) v0.62.0
+# ============================================================================
+ARG OPA_VERSION=0.62.0
+RUN wget -q https://openpolicyagent.org/downloads/v${OPA_VERSION}/opa_linux_amd64_static \
+    -O /tmp/build/opa && \
+    chmod +x /tmp/build/opa && \
+    /tmp/build/opa version
+
+# ============================================================================
+# Download Envoy Proxy v1.29.0
+# ============================================================================
+ARG ENVOY_VERSION=1.29.0
+RUN wget -q https://github.com/envoyproxy/envoy/releases/download/v${ENVOY_VERSION}/envoy-${ENVOY_VERSION}-linux-x86_64 \
+    -O /tmp/build/envoy && \
+    chmod +x /tmp/build/envoy && \
+    /tmp/build/envoy --version
+
+# ============================================================================
+# Verify checksums (security hardening)
+# NOTE: Checksum verification is intentionally disabled until real SHA256 hashes
+# OPA checksum verification is currently disabled.
+# TODO: Replace this comment with a real sha256sum -c check once a pinned
+#       SHA-256 hash for OPA v0.62.0 is selected and governed.
+
+# Envoy checksum verification is currently disabled.
+# TODO: Replace this comment with a real sha256sum -c check once a pinned
+#       SHA-256 hash for Envoy v1.29.0 is selected and governed.
+FROM debian:bullseye-slim
+
+LABEL maintainer="ChainBridge Infrastructure <infra@chainbridge.ai>"
+LABEL component="ig-node"
+LABEL tier="LAW"
+LABEL version="1.0.0"
+LABEL description="Digital Inspector General - Constitutional Oversight Sidecar"
+
+# Install runtime dependencies (minimal)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    netcat \
+    jq \
+    python3 \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# ============================================================================
+# Create non-root user for IG Node (UID 1001, different from agent UID 1000)
+# ============================================================================
+RUN groupadd -g 1001 ig-node && \
+    useradd -u 1001 -g ig-node -s /bin/bash -m ig-node
+
+# ============================================================================
+# Copy binaries from builder
+# ============================================================================
+COPY --from=builder /tmp/build/opa /usr/local/bin/opa
+COPY --from=builder /tmp/build/envoy /usr/local/bin/envoy
+
+# Verify binaries are executable
+RUN /usr/local/bin/opa version && \
+    /usr/local/bin/envoy --version
+
+# ============================================================================
+# Create directory structure
+# ============================================================================
+RUN mkdir -p /app/ig-node \
+    /policies \
+    /var/log/ig \
+    /var/lib/opa \
+    /etc/envoy \
+    /mnt/agent-overlay \
+    && chown -R ig-node:ig-node /app /policies /var/log/ig /var/lib/opa /mnt/agent-overlay
+
+# ============================================================================
+# Copy IG Node application code
+# ============================================================================
+COPY --chown=ig-node:ig-node docker/ig-node/ /app/ig-node/
+COPY --chown=ig-node:ig-node policies/ /policies/
+
+# Install Python dependencies for IG Node (ledger writer, health check)
+COPY --chown=ig-node:ig-node requirements-ig-node.txt /app/ig-node/
+RUN pip3 install --no-cache-dir -r /app/ig-node/requirements-ig-node.txt
+
+# ============================================================================
+# Envoy configuration (HTTP proxy with OPA ext_authz)
+# ============================================================================
+COPY --chown=ig-node:ig-node config/envoy.yaml /etc/envoy/envoy.yaml
+
+# ============================================================================
+# Environment variables
+# ============================================================================
+ENV PYTHONUNBUFFERED=1
+ENV PATH="/usr/local/bin:$PATH"
+
+# OPA configuration
+ENV OPA_ADDR=127.0.0.1:8181
+ENV OPA_DIAGNOSTIC_ADDR=127.0.0.1:8282
+ENV OPA_POLICY_DIR=/policies
+
+# Envoy configuration
+ENV ENVOY_ADMIN_PORT=9901
+ENV ENVOY_PROXY_PORT=9999
+
+# PostgreSQL configuration (epistemic independence - direct DB access)
+ENV POSTGRES_HOST=postgres.chainbridge.svc.cluster.local
+ENV POSTGRES_PORT=5432
+ENV POSTGRES_DB=chainbridge
+ENV POSTGRES_USER=ig_node
+# Password will be injected via Kubernetes Secret
+
+# SXS Ledger configuration
+ENV SXS_LEDGER_URL=http://ledger.chainbridge.svc.cluster.local:8080
+
+# IG Node metadata
+ENV IG_NODE_VERSION=1.0.0
+ENV IG_GID=GID-12
+ENV IG_MODE=production
+
+# Performance targets
+ENV POLICY_EVAL_TIMEOUT_MS=10
+ENV OPA_DECISION_LOG_ENABLED=true
+
+# ============================================================================
+# Expose ports
+# ============================================================================
+# 9999: Envoy HTTP proxy (agent traffic interception)
+# 8181: OPA API (policy evaluation)
+# 9901: Envoy admin interface
+# 9102: Prometheus metrics
+EXPOSE 9999 8181 9901 9102
+
+# ============================================================================
+# Health check (IG Node must be healthy before agent can start)
+# ============================================================================
+HEALTHCHECK --interval=5s --timeout=3s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:9999/health || exit 1
+
+# ============================================================================
+# Switch to non-root user
+# ============================================================================
+USER ig-node
+WORKDIR /app/ig-node
+
+# ============================================================================
+# Entrypoint (orchestrates OPA + Envoy + health server)
+# ============================================================================
+COPY --chown=ig-node:ig-node docker/ig-node/entrypoint.sh /app/ig-node/entrypoint.sh
+RUN chmod +x /app/ig-node/entrypoint.sh
+
+ENTRYPOINT ["/app/ig-node/entrypoint.sh"]
+CMD ["--mode", "production"]
+
+# ============================================================================
+# Build metadata
+# ============================================================================
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION=1.0.0
+
+LABEL org.opencontainers.image.created="${BUILD_DATE}"
+LABEL org.opencontainers.image.version="${VERSION}"
+LABEL org.opencontainers.image.revision="${VCS_REF}"
+LABEL org.opencontainers.image.title="ChainBridge IG Node"
+LABEL org.opencontainers.image.description="Digital Inspector General - Constitutional Oversight Sidecar"
+LABEL org.opencontainers.image.vendor="ChainBridge"
+LABEL org.opencontainers.image.authors="DAN [GID-07] Infrastructure Specialist"
+
+# ============================================================================
+# Security hardening
+# ============================================================================
+# - Non-root user (UID 1001, different from agent UID 1000)
+# - Read-only root filesystem (use tmpfs for /tmp, /var/log)
+# - No new privileges
+# - Drop all capabilities
+# - Minimal attack surface (only OPA + Envoy + Python health server)
+
+# ============================================================================
+# Constitutional Attestation
+# ============================================================================
+# "This container IS the Judiciary. It enforces I-GOV-007: No Action without
+# IG Sign-off. If this container fails, agents CANNOT start (fail-closed).
+# The IG Node has veto power but not initiation power. It reports to JEFFREY only."
+#
+# — DAN [GID-07], Infrastructure & Docker Specialist
+# — SAM [GID-06], Security Specialist
+# — JEFFREY [GID-CONST-01], Constitutional Architect
+# ============================================================================

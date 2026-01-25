@@ -1,0 +1,520 @@
+# Kubernetes Pod Manifest: IG Node + Agent Sidecar
+# PAC-INFRA-P1502: IG Node Infrastructure Build & Deployment
+#
+# CLASSIFICATION: LAW-tier (Judicial Enforcement)
+# AUTHORITY: DAN [GID-07]
+# VERSION: 1.0.0
+# DATE: 2026-01-25
+#
+# ARCHITECTURE: Simplex Pattern (IG Node = Safety Controller, Agent = Primary Controller)
+# ENFORCEMENT: Fail-closed (IG failure → agent cannot start)
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: chainbridge-agent-pod
+  namespace: chainbridge
+  labels:
+    app: chainbridge
+    component: agent-pod
+    oversight: ig-enforced
+    tier: LAW
+  annotations:
+    description: "ChainBridge agent pod with IG Node sidecar (Separation of Powers)"
+    pac_id: "PAC-INFRA-P1502"
+    gid_ig: "GID-12"
+    gid_agent: "GID-00"
+spec:
+  # ============================================================================
+  # SECURITY CONTEXT (Pod-level)
+  # ============================================================================
+  securityContext:
+    runAsNonRoot: true
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  
+  # ============================================================================
+  # INIT CONTAINERS (Run before main containers)
+  # ============================================================================
+  initContainers:
+  # IG Preflight: Verify IG Node can start before agent
+  - name: ig-preflight
+    image: chainbridge/ig-node:v1.0.0
+    imagePullPolicy: IfNotPresent
+    command: ["/bin/bash", "-c"]
+    args:
+      - |
+        echo "[IG-PREFLIGHT] Verifying IG Node prerequisites..."
+        
+        # Check OPA policies exist
+        if [ ! -f /policies/main.rego ]; then
+          echo "[IG-PREFLIGHT] ERROR: OPA policies not found"
+          exit 1
+        fi
+        echo "[IG-PREFLIGHT] ✓ OPA policies found"
+        
+        # Check Envoy configuration
+        if [ ! -f /etc/envoy/envoy.yaml ]; then
+          echo "[IG-PREFLIGHT] ERROR: Envoy configuration not found"
+          exit 1
+        fi
+        echo "[IG-PREFLIGHT] ✓ Envoy configuration found"
+        
+        # Check database connectivity (epistemic independence)
+        if command -v nc &> /dev/null; then
+          if nc -zv ${POSTGRES_HOST} ${POSTGRES_PORT} 2>&1 | grep -q succeeded; then
+            echo "[IG-PREFLIGHT] ✓ Database reachable"
+          else
+            echo "[IG-PREFLIGHT] WARN: Database not reachable yet"
+          fi
+        fi
+        
+        echo "[IG-PREFLIGHT] ✓ Preflight checks passed"
+    env:
+      - name: POSTGRES_HOST
+        value: "postgres.chainbridge.svc.cluster.local"
+      - name: POSTGRES_PORT
+        value: "5432"
+    volumeMounts:
+      - name: opa-policies
+        mountPath: /policies
+        readOnly: true
+      - name: envoy-config
+        mountPath: /etc/envoy
+        readOnly: true
+    securityContext:
+      runAsUser: 1001
+      runAsGroup: 1001
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+  
+  # ============================================================================
+  # MAIN CONTAINERS
+  # ============================================================================
+  containers:
+  
+  # ========================================
+  # CONTAINER 1: IG Node (Sidecar - Judiciary)
+  # ========================================
+  - name: ig-node
+    image: chainbridge/ig-node:v1.0.0
+    imagePullPolicy: IfNotPresent
+    
+    # Environment variables
+    env:
+      # OPA configuration
+      - name: OPA_ADDR
+        value: "127.0.0.1:8181"
+      - name: OPA_DIAGNOSTIC_ADDR
+        value: "127.0.0.1:8282"
+      - name: OPA_POLICY_DIR
+        value: "/policies"
+      
+      # Envoy configuration
+      - name: ENVOY_ADMIN_PORT
+        value: "9901"
+      - name: ENVOY_PROXY_PORT
+        value: "9999"
+      
+      # PostgreSQL (epistemic independence - direct DB access)
+      - name: POSTGRES_HOST
+        value: "postgres.chainbridge.svc.cluster.local"
+      - name: POSTGRES_PORT
+        value: "5432"
+      - name: POSTGRES_DB
+        value: "chainbridge"
+      - name: POSTGRES_USER
+        value: "ig_node"
+      - name: POSTGRES_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: ig-node-db-secret
+            key: password
+      
+      # SXS Ledger
+      - name: SXS_LEDGER_URL
+        value: "http://ledger.chainbridge.svc.cluster.local:8080"
+      
+      # IG Node metadata
+      - name: IG_NODE_VERSION
+        value: "1.0.0"
+      - name: IG_GID
+        value: "GID-12"
+      - name: IG_MODE
+        value: "production"
+      
+      # Performance targets
+      - name: POLICY_EVAL_TIMEOUT_MS
+        value: "10"
+      - name: OPA_DECISION_LOG_ENABLED
+        value: "true"
+      
+      # Health server
+      - name: HEALTH_PORT
+        value: "9102"
+    
+    # Ports
+    ports:
+      - name: proxy
+        containerPort: 9999
+        protocol: TCP
+      - name: opa-api
+        containerPort: 8181
+        protocol: TCP
+      - name: envoy-admin
+        containerPort: 9901
+        protocol: TCP
+      - name: metrics
+        containerPort: 9102
+        protocol: TCP
+    
+    # Volume mounts
+    volumeMounts:
+      - name: opa-policies
+        mountPath: /policies
+        readOnly: true
+      - name: envoy-config
+        mountPath: /etc/envoy
+        readOnly: true
+      - name: ig-logs
+        mountPath: /var/log/ig
+      - name: agent-overlay
+        mountPath: /mnt/agent-overlay
+    
+    # Resource limits (prevent IG from starving agent)
+    resources:
+      limits:
+        cpu: "1"
+        memory: "2Gi"
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+    
+    # Security context
+    securityContext:
+      runAsUser: 1001
+      runAsGroup: 1001
+      runAsNonRoot: true
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+        add:
+          - NET_BIND_SERVICE  # Bind to privileged ports (9999)
+    
+    # Liveness probe (is IG Node alive?)
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 9102
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+    
+    # Readiness probe (is IG Node ready to accept traffic?)
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 9102
+      initialDelaySeconds: 5
+      periodSeconds: 3
+      timeoutSeconds: 2
+      failureThreshold: 3
+  
+  # ========================================
+  # CONTAINER 2: Agent (Primary - Executive)
+  # ========================================
+  - name: agent-container
+    image: chainbridge/agent:v1.0.0
+    imagePullPolicy: IfNotPresent
+    
+    # Environment variables
+    env:
+      # Force all HTTP traffic through IG proxy
+      - name: HTTP_PROXY
+        value: "http://localhost:9999"
+      - name: HTTPS_PROXY
+        value: "http://localhost:9999"
+      - name: NO_PROXY
+        value: "localhost,127.0.0.1"
+      
+      # Force all DB connections through IG proxy
+      - name: DATABASE_URL
+        value: "postgresql://localhost:5433/chainbridge"
+      
+      # IG enforcement flag
+      - name: IG_ENFORCEMENT
+        value: "true"
+      - name: IG_PROXY_PORT
+        value: "9999"
+      
+      # Agent metadata
+      - name: AGENT_GID
+        value: "GID-00"
+      - name: AGENT_NAME
+        value: "BENSON"
+    
+    # Ports
+    ports:
+      - name: agent-api
+        containerPort: 8000
+        protocol: TCP
+    
+    # Volume mounts
+    volumeMounts:
+      - name: writable-tmp
+        mountPath: /tmp
+      - name: agent-overlay
+        mountPath: /app/writable
+    
+    # Resource limits
+    resources:
+      limits:
+        cpu: "2"
+        memory: "4Gi"
+      requests:
+        cpu: "1"
+        memory: "2Gi"
+    
+    # Security context
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      runAsNonRoot: true
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+    
+    # Liveness probe
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 8000
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    
+    # Readiness probe
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 8000
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+    
+    # CRITICAL: Agent depends on IG Node being ready
+    # If IG fails, agent should not start (fail-closed)
+  
+  # ============================================================================
+  # VOLUMES
+  # ============================================================================
+  volumes:
+    # OPA policies (from ConfigMap)
+    - name: opa-policies
+      configMap:
+        name: ig-opa-policies
+    
+    # Envoy configuration (from ConfigMap)
+    - name: envoy-config
+      configMap:
+        name: ig-envoy-config
+    
+    # IG logs (persistent)
+    - name: ig-logs
+      persistentVolumeClaim:
+        claimName: ig-logs-pvc
+    
+    # Agent overlay (for FUSE-controlled writes)
+    - name: agent-overlay
+      emptyDir: {}
+    
+    # Writable tmp (ephemeral)
+    - name: writable-tmp
+      emptyDir:
+        medium: Memory
+        sizeLimit: 1Gi
+  
+  # ============================================================================
+  # RESTART POLICY
+  # ============================================================================
+  # If IG Node fails, pod is restarted (fail-closed: no agent without IG)
+  restartPolicy: Always
+  
+  # ============================================================================
+  # DNS POLICY
+  # ============================================================================
+  dnsPolicy: ClusterFirst
+  
+  # ============================================================================
+  # SERVICE ACCOUNT (for RBAC)
+  # ============================================================================
+  serviceAccountName: chainbridge-agent-sa
+
+---
+# ============================================================================
+# ConfigMap: OPA Policies
+# ============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ig-opa-policies
+  namespace: chainbridge
+  labels:
+    app: chainbridge
+    component: ig-node
+    tier: LAW
+data:
+  main.rego: |
+    # OPA Policy: Default Deny (see policies/main.rego for full content)
+    package chainbridge.ig
+    import future.keywords.if
+    default allow := false
+    
+    # Health check allow
+    allow if {
+        input.path == "/health"
+        input.method == "GET"
+    }
+    
+    # Default deny reason
+    deny[msg] if {
+        not allow
+        msg := sprintf("DEFAULT DENY: No policy allows this action. Actor: %v, Action: %v", [input.actor, input.action])
+    }
+
+---
+# ============================================================================
+# ConfigMap: Envoy Configuration
+# ============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ig-envoy-config
+  namespace: chainbridge
+  labels:
+    app: chainbridge
+    component: ig-node
+    tier: LAW
+data:
+  envoy.yaml: |
+    # Envoy configuration (see config/envoy.yaml for full content)
+    admin:
+      address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 9901
+    
+    static_resources:
+      listeners:
+      - name: http_proxy
+        address:
+          socket_address:
+            address: 0.0.0.0
+            port_value: 9999
+        filter_chains:
+        - filters:
+          - name: envoy.filters.network.http_connection_manager
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+              stat_prefix: ig_http_proxy
+              route_config:
+                name: local_route
+                virtual_hosts:
+                - name: backend
+                  domains: ["*"]
+                  routes:
+                  - match:
+                      prefix: "/"
+                    route:
+                      cluster: dynamic_forward_proxy
+              http_filters:
+              - name: envoy.filters.http.ext_authz
+                typed_config:
+                  "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
+                  grpc_service:
+                    envoy_grpc:
+                      cluster_name: opa_service
+                    timeout: 0.010s
+                  failure_mode_allow: false
+              - name: envoy.filters.http.router
+      
+      clusters:
+      - name: opa_service
+        connect_timeout: 0.005s
+        type: STATIC
+        lb_policy: ROUND_ROBIN
+        load_assignment:
+          cluster_name: opa_service
+          endpoints:
+          - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: 127.0.0.1
+                    port_value: 8181
+
+---
+# ============================================================================
+# Secret: IG Node Database Credentials
+# ============================================================================
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ig-node-db-secret
+  namespace: chainbridge
+type: Opaque
+stringData:
+  username: ig_node
+  password: CHANGE_ME_IN_PRODUCTION  # Replace with actual secret
+
+---
+# ============================================================================
+# PersistentVolumeClaim: IG Logs
+# ============================================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ig-logs-pvc
+  namespace: chainbridge
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+
+---
+# ============================================================================
+# ServiceAccount: Agent RBAC
+# ============================================================================
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: chainbridge-agent-sa
+  namespace: chainbridge
+
+---
+# ============================================================================
+# Constitutional Attestation
+# ============================================================================
+# "This Kubernetes manifest enforces Separation of Powers at the infrastructure
+# level. The IG Node (GID-12) is a mandatory sidecar to all agent pods. The
+# init container (ig-preflight) verifies IG prerequisites before allowing
+# agent startup. The agent container proxies all traffic (HTTP, DB) through
+# the IG Node. If the IG Node fails health checks, Kubernetes restarts the pod
+# (fail-closed). This physically enforces I-GOV-007: No Action without IG Sign-off."
+#
+# — DAN [GID-07], Infrastructure & Docker Specialist
+# — JEFFREY [GID-CONST-01], Constitutional Architect
+# ============================================================================

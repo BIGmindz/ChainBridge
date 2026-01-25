@@ -36,10 +36,10 @@ if sys.version_info[:3] != _REQUIRED_VERSION:
     print("  ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝   ╚═╝      ╚═╝   ")
     print("              D R I F T   D E T E C T E D")
     print("═" * 72)
-    print(f"  CRITICAL: CONSTITUTIONAL RUNTIME VIOLATION")
+    print("  CRITICAL: CONSTITUTIONAL RUNTIME VIOLATION")
     print(f"  REQUIRED: Python {'.'.join(map(str, _REQUIRED_VERSION))}")
     print(f"  DETECTED: Python {'.'.join(map(str, sys.version_info[:3]))}")
-    print(f"  ACTION:   FAIL-CLOSED - Execution halted")
+    print("  ACTION:   FAIL-CLOSED - Execution halted")
     print("═" * 72)
     sys.exit(1)
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -155,13 +155,13 @@ def create_occ_router():
         }
     
     @router.get("/admin")
-    async def admin_dashboard(auth: bool = Depends(verify_sovereign_key)):
+    async def admin_dashboard(_auth: bool = Depends(verify_sovereign_key)):
         """Main admin dashboard data"""
         occ = get_occ()
         return occ.get_dashboard_state()
     
     @router.get("/command-center")
-    async def command_center(auth: bool = Depends(verify_sovereign_key)):
+    async def command_center(_auth: bool = Depends(verify_sovereign_key)):
         """Full command center state"""
         occ = get_occ()
         state = occ.get_dashboard_state()
@@ -169,7 +169,7 @@ def create_occ_router():
         return state
     
     @router.get("/command-center/ascii")
-    async def command_center_ascii(auth: bool = Depends(verify_sovereign_key)):
+    async def command_center_ascii(_auth: bool = Depends(verify_sovereign_key)):
         """ASCII dashboard for terminal display"""
         occ = get_occ()
         return HTMLResponse(
@@ -182,13 +182,13 @@ def create_occ_router():
     # ─────────────────────────────────────────────────────────────────────────
     
     @router.get("/lanes")
-    async def get_lanes(auth: bool = Depends(verify_sovereign_key)):
+    async def get_lanes(_auth: bool = Depends(verify_sovereign_key)):
         """Get Quad-Lane Monitor snapshot"""
         occ = get_occ()
         return occ.quad_lane.get_snapshot()
     
     @router.post("/lanes/simulate")
-    async def simulate_lanes(auth: bool = Depends(verify_sovereign_key)):
+    async def simulate_lanes(_auth: bool = Depends(verify_sovereign_key)):
         """Simulate lane activity for testing"""
         occ = get_occ()
         occ.quad_lane.simulate_activity()
@@ -199,20 +199,20 @@ def create_occ_router():
     # ─────────────────────────────────────────────────────────────────────────
     
     @router.get("/gates")
-    async def get_gates(auth: bool = Depends(verify_sovereign_key)):
+    async def get_gates(_auth: bool = Depends(verify_sovereign_key)):
         """Get Gate Heatmap snapshot"""
         occ = get_occ()
         return occ.gate_heatmap.get_snapshot()
     
     @router.get("/gates/ascii")
-    async def get_gates_ascii(auth: bool = Depends(verify_sovereign_key)):
+    async def get_gates_ascii(_auth: bool = Depends(verify_sovereign_key)):
         """Get ASCII heatmap"""
         occ = get_occ()
         ascii_map = occ.gate_heatmap.get_ascii_heatmap(40)
         return {"ascii": ascii_map, "stats": occ.gate_heatmap.gate_stats}
     
     @router.post("/gates/{gate_id}/trigger")
-    async def trigger_gate(gate_id: int, auth: bool = Depends(verify_sovereign_key)):
+    async def trigger_gate(gate_id: int, _auth: bool = Depends(verify_sovereign_key)):
         """Trigger a specific gate (mark as blocked)"""
         occ = get_occ()
         if gate_id < 0 or gate_id >= 10000:
@@ -222,7 +222,7 @@ def create_occ_router():
         return {"gate_id": gate_id, "triggered": success}
     
     @router.post("/gates/{gate_id}/reset")
-    async def reset_gate(gate_id: int, auth: bool = Depends(verify_sovereign_key)):
+    async def reset_gate(gate_id: int, _auth: bool = Depends(verify_sovereign_key)):
         """Reset a gate to compliant"""
         occ = get_occ()
         if gate_id < 0 or gate_id >= 10000:
@@ -236,7 +236,7 @@ def create_occ_router():
     # ─────────────────────────────────────────────────────────────────────────
     
     @router.get("/ticker")
-    async def get_ticker(count: int = 10, auth: bool = Depends(verify_sovereign_key)):
+    async def get_ticker(count: int = 10, _auth: bool = Depends(verify_sovereign_key)):
         """Get recent PDO units"""
         occ = get_occ()
         return {
@@ -245,7 +245,7 @@ def create_occ_router():
         }
     
     @router.get("/ticker/stats")
-    async def get_ticker_stats(auth: bool = Depends(verify_sovereign_key)):
+    async def get_ticker_stats(_auth: bool = Depends(verify_sovereign_key)):
         """Get PDO ticker statistics"""
         occ = get_occ()
         return occ.pdo_ticker.get_stats()
@@ -255,13 +255,13 @@ def create_occ_router():
     # ─────────────────────────────────────────────────────────────────────────
     
     @router.get("/arr")
-    async def get_arr(auth: bool = Depends(verify_sovereign_key)):
+    async def get_arr(_auth: bool = Depends(verify_sovereign_key)):
         """Get ARR Counter display"""
         occ = get_occ()
         return occ.arr_counter.get_display()
     
     @router.get("/arr/history")
-    async def get_arr_history(auth: bool = Depends(verify_sovereign_key)):
+    async def get_arr_history(_auth: bool = Depends(verify_sovereign_key)):
         """Get ARR update history"""
         occ = get_occ()
         return {
@@ -274,7 +274,7 @@ def create_occ_router():
     # ─────────────────────────────────────────────────────────────────────────
     
     @router.get("/kill-switch")
-    async def get_kill_switch(auth: bool = Depends(verify_sovereign_key)):
+    async def get_kill_switch(_auth: bool = Depends(verify_sovereign_key)):
         """Get Kill Switch status"""
         occ = get_occ()
         status = occ.kill_switch.get_status()
@@ -284,7 +284,7 @@ def create_occ_router():
     @router.post("/kill-switch/arm")
     async def arm_kill_switch(
         request: KillSwitchArmRequest,
-        auth: bool = Depends(verify_sovereign_key)
+        _auth: bool = Depends(verify_sovereign_key)
     ):
         """Arm the Kill Switch - requires authorization code"""
         occ = get_occ()
@@ -297,7 +297,7 @@ def create_occ_router():
         return {"success": True, "message": message, "status": occ.kill_switch.get_status()}
     
     @router.post("/kill-switch/safe")
-    async def safe_kill_switch(auth: bool = Depends(verify_sovereign_key)):
+    async def safe_kill_switch(_auth: bool = Depends(verify_sovereign_key)):
         """Return Kill Switch to safe state"""
         occ = get_occ()
         success, message = occ.kill_switch.safe("ARCHITECT-JEFFREY")
@@ -310,7 +310,7 @@ def create_occ_router():
     @router.post("/kill-switch/trigger")
     async def trigger_kill_switch(
         request: KillSwitchTriggerRequest,
-        auth: bool = Depends(verify_sovereign_key)
+        _auth: bool = Depends(verify_sovereign_key)
     ):
         """Trigger Kill Switch - EMERGENCY STOP - requires confirmation code"""
         occ = get_occ()
@@ -327,7 +327,7 @@ def create_occ_router():
     # ─────────────────────────────────────────────────────────────────────────
     
     @router.get("/alerts")
-    async def get_alerts(auth: bool = Depends(verify_sovereign_key)):
+    async def get_alerts(_auth: bool = Depends(verify_sovereign_key)):
         """Get all alerts"""
         occ = get_occ()
         return {
@@ -337,20 +337,20 @@ def create_occ_router():
         }
     
     @router.post("/alerts")
-    async def create_alert(request: AlertRequest, auth: bool = Depends(verify_sovereign_key)):
+    async def create_alert(request: AlertRequest, _auth: bool = Depends(verify_sovereign_key)):
         """Create a new alert"""
         occ = get_occ()
         
         try:
             level = AlertLevel[request.level.upper()]
-        except KeyError:
-            raise HTTPException(status_code=400, detail="Invalid alert level")
+        except KeyError as exc:
+            raise HTTPException(status_code=400, detail="Invalid alert level") from exc
         
         alert = occ.add_alert(level, request.source, request.message)
         return alert.to_dict()
     
     @router.post("/alerts/{alert_id}/acknowledge")
-    async def acknowledge_alert(alert_id: str, auth: bool = Depends(verify_sovereign_key)):
+    async def acknowledge_alert(alert_id: str, _auth: bool = Depends(verify_sovereign_key)):
         """Acknowledge an alert"""
         occ = get_occ()
         
@@ -393,7 +393,7 @@ def create_occ_router():
         }
     
     @router.post("/keys/generate")
-    async def generate_key(auth: bool = Depends(verify_sovereign_key)):
+    async def generate_key(_auth: bool = Depends(verify_sovereign_key)):
         """Generate a new Sovereign Master Key - REQUIRES AUTHENTICATION"""
         occ = get_occ()
         raw_key, key_obj = occ.generate_master_key()
@@ -407,7 +407,7 @@ def create_occ_router():
         }
     
     @router.get("/keys/active")
-    async def list_active_keys(auth: bool = Depends(verify_sovereign_key)):
+    async def list_active_keys(_auth: bool = Depends(verify_sovereign_key)):
         """List active key IDs (not raw keys)"""
         occ = get_occ()
         return {
@@ -880,7 +880,7 @@ def create_occ_app() -> "FastAPI":
             gates_compliant=gate_stats.get("compliant", 9950),
             gates_blocked=gate_stats.get("blocked", 50),
             gates_total=10000,
-            lanes_active=sum(1 for l in dashboard.get("lanes", []) if l.get("status") == "EXECUTING"),
+            lanes_active=sum(1 for lane in dashboard.get("lanes", []) if lane.get("status") == "EXECUTING"),
             epoch="EPOCH_001"
         )
     

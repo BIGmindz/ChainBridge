@@ -226,7 +226,7 @@ class TestExecutionManifest(BaseModel):
             64-character hex-encoded SHA-256 hash
         """
         # Exclude signature field from hash computation (signature signs the hash)
-        manifest_dict = self.model_dump(exclude={"signature"})
+        manifest_dict = self.model_dump(exclude={"signature"}, mode='json')
         
         # Canonical JSON serialization (sorted keys, no whitespace)
         canonical_json = json.dumps(manifest_dict, sort_keys=True, separators=(',', ':'))
@@ -234,7 +234,7 @@ class TestExecutionManifest(BaseModel):
         # SHA-256 hash
         return hashlib.sha256(canonical_json.encode('utf-8')).hexdigest()
 
-    def verify_signature(self, _public_key_hex: str) -> bool:
+    def verify_signature(self, public_key_hex: str) -> bool:
         """
         Verify the Ed25519 signature of this manifest.
         
@@ -244,24 +244,30 @@ class TestExecutionManifest(BaseModel):
         Returns:
             True if signature is valid, False otherwise
             
-        Note:
-            This is a placeholder. Full implementation requires nacl/cryptography library.
-            See: core/security/signature_verification.py
+        Raises:
+            ValueError: If public_key_hex is not 64 hex characters
         """
-        # TODO: Implement with Ed25519 verification
-        # from nacl.signing import VerifyKey
-        # from nacl.exceptions import BadSignatureError
-        #
-        # try:
-        #     verify_key = VerifyKey(bytes.fromhex(public_key_hex))
-        #     message = self.compute_canonical_hash().encode('utf-8')
-        #     verify_key.verify(message, bytes.fromhex(self.signature))
-        #     return True
-        # except BadSignatureError:
-        #     return False
-        
-        # Placeholder: Always return False until implemented
-        return False
+        try:
+            from nacl.signing import VerifyKey
+            from nacl.exceptions import BadSignatureError
+            
+            # Validate public key format
+            if len(public_key_hex) != 64:
+                raise ValueError(f"Invalid public key length: {len(public_key_hex)} (expected 64)")
+            
+            # Verify signature
+            verify_key = VerifyKey(bytes.fromhex(public_key_hex))
+            message = self.compute_canonical_hash().encode('utf-8')
+            verify_key.verify(message, bytes.fromhex(self.signature))
+            return True
+            
+        except BadSignatureError:
+            return False
+        except (ValueError, ImportError) as e:
+            # Log error and return False for missing library or invalid format
+            # In production, this should log to audit trail
+            print(f"Signature verification failed: {e}")
+            return False
 
     def adjudicate(self) -> JudgmentState:
         """
@@ -295,16 +301,18 @@ class TestExecutionManifest(BaseModel):
         if self.coverage.mcdc_percentage < 100.0:
             return JudgmentState.REJECTED
         
-        # Check signature validity (placeholder - will reject until implemented)
-        # if not self.verify_signature(public_key_hex):
-        #     return JudgmentState.REJECTED
-        
-        # TODO: Remove this block when signature verification is implemented
-        # For now, we'll approve if tests pass and coverage is 100%
-        # SECURITY WARNING: This is NOT production-ready without signature verification
-        if self.tests_failed == 0 and self.coverage.mcdc_percentage == 100.0:
-            return JudgmentState.APPROVED
-        
+        # NOTE: Signature verification is now implemented but requires nacl library.
+        # In LAW-tier governance, signature verification MUST NOT be bypassed in code.
+        # When verify_signature() is available in this context, it should be invoked here
+        # and its failure MUST result in JudgmentState.REJECTED (fail-closed).
+        #
+        # Example (to be implemented when keys/context are available):
+        #     if not verify_signature(self.signature):
+        #         return JudgmentState.REJECTED
+        #     return JudgmentState.APPROVED
+        #
+        # Until a concrete verify_signature() implementation is wired in, manifests that
+        # reach this point are rejected by default to maintain fail-closed security.
         return JudgmentState.REJECTED
 
     def to_audit_log_entry(self) -> dict:
@@ -528,11 +536,9 @@ class SemanticJudge:
         Args:
             output_path: Path to write JSONL audit log
         """
-        import json as json_lib
-        
         with open(output_path, 'w', encoding='utf-8') as f:
-            for entry in self.judgment_log:
-                f.write(json_lib.dumps(entry, sort_keys=True) + '\n')
+            for log_entry in self.judgment_log:
+                f.write(json.dumps(log_entry, sort_keys=True) + '\n')
 
 
 # ============================================================================
@@ -582,7 +588,9 @@ if __name__ == "__main__":
             mcdc_percentage=100.0  # CRITICAL: Must be 100.0
         ),
         merkle_root="b" * 64,
-        signature="c" * 128
+        signature="c" * 128,
+        test_suite_version="1.0.0",
+        execution_duration_seconds=12.5
     )
     
     judgment = judge.adjudicate(valid_manifest)
@@ -605,6 +613,7 @@ if __name__ == "__main__":
             tests_executed=100,
             tests_passed=100,
             tests_failed=0,
+            test_suite_version="1.0.0",
             coverage=CoverageMetrics(
                 line_coverage=96.0,
                 branch_coverage=94.0,

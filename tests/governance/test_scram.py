@@ -50,7 +50,7 @@ from core.governance.scram import (
 def reset_singleton():
     """Reset SCRAM singleton before each test."""
     SCRAMController._instance = None
-    SCRAMController._lock = threading.Lock()
+    SCRAMController._lock = threading.RLock()
     yield
     # Cleanup
     SCRAMController._instance = None
