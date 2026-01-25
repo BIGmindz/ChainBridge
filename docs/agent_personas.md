@@ -36,6 +36,12 @@ ChainBridge operates as a **multi-agent system** with specialized personas coord
 | GID-10 | SONNY | Test & Coverage Specialist | Test writing, MCDC verification | BENSON + GID-12 |
 | GID-11+ | (Future) | Reserved | Future specializations | BENSON + GID-12 |
 
+### Red Team Agents (Adversarial Testing Only)
+
+| GID | Name | Role | Primary Responsibility | Reports To |
+|-----|------|------|------------------------|------------|
+| RED-01 | RAVEN | Red Team Adversarial Agent | Psychological ops, attack simulation | GID-12 (for audit) |
+
 ---
 
 ## GID-CONST-01: JEFFREY (Constitutional Architect)
