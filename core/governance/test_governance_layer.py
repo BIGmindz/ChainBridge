@@ -474,13 +474,13 @@ class SemanticJudge:
         """
         # Verify agent is authorized (has public key on file)
         if manifest.agent_gid not in self.agent_public_keys:
-            judgment = JudgmentState.REJECTED
+            final_judgment = JudgmentState.REJECTED
             reason = f"Agent {manifest.agent_gid} not authorized (no public key registered)"
         else:
             # Execute manifest's own adjudication logic
-            judgment = manifest.adjudicate()
+            final_judgment = manifest.adjudicate()
             
-            if judgment == JudgmentState.APPROVED:
+            if final_judgment == JudgmentState.APPROVED:
                 reason = "All invariants satisfied"
             else:
                 # Detailed rejection reasons
@@ -498,13 +498,13 @@ class SemanticJudge:
             "timestamp": datetime.utcnow().isoformat(),
             "agent_gid": manifest.agent_gid,
             "git_commit_hash": manifest.git_commit_hash,
-            "judgment": judgment.value,
+            "judgment": final_judgment.value,
             "reason": reason,
             "audit_log": manifest.to_audit_log_entry()
         }
         self.judgment_log.append(judgment_entry)
         
-        return judgment
+        return final_judgment
     
     def get_judgment_history(self, agent_gid: Optional[str] = None) -> List[dict]:
         """
@@ -528,11 +528,11 @@ class SemanticJudge:
         Args:
             output_path: Path to write JSONL audit log
         """
-        import json
+        import json as json_lib
         
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             for entry in self.judgment_log:
-                f.write(json.dumps(entry, sort_keys=True) + '\n')
+                f.write(json_lib.dumps(entry, sort_keys=True) + '\n')
 
 
 # ============================================================================

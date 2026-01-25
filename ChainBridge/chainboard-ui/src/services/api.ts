@@ -25,8 +25,9 @@ import {
   ProofPackResponse,
   CreateProofPackPayload,
 } from "../types";
-import type { GlobalSummary, CorridorMetrics } from "../lib/metrics";
-import type { IoTHealthSummary, ShipmentIoTSnapshot } from "../lib/iot";
+// Metrics and IoT types available for future use
+// import type { GlobalSummary, CorridorMetrics } from "../lib/metrics";
+// import type { IoTHealthSummary, ShipmentIoTSnapshot } from "../lib/iot";
 import { realApiClient } from "./realApiClient";
 import { config } from "../config/env";
 
