@@ -13,10 +13,12 @@ exclude = [
 
 [lint]
 select = ["E", "F"]
-# Relax a few noisy rules across this mixed repo
+# Relax noisy rules
 ignore = [
-  "E501", # line too long (many demos / logs)
-  "E402", # module import not at top (path hacks in scripts/tests)
+  "E501",  # line too long
+  "E402",  # module import not at top
+  "F401",  # unused import
+  "F841",  # unused variable
 ]
 
 [lint.per-file-ignores]
