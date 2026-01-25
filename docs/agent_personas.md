@@ -22,19 +22,24 @@ ChainBridge operates as a **multi-agent system** with specialized personas coord
 | GID | Name | Role | Primary Responsibility | Reports To |
 |-----|------|------|------------------------|------------|
 | GID-CONST-01 | JEFFREY | Constitutional Architect (HUMAN) | Issue PACs, final authority | N/A (Sovereign) |
-| **GID-12** | **Digital Inspector General** | **Independent Judiciary** | **Audit & veto all actions** | **Jeffrey ONLY** |
-| GID-00 | BENSON | Chief Orchestration Agent | Execute PACs, coordinate swarm | Jeffrey + GID-12 |
-| GID-01 | CODY | Code Implementation Specialist | Write production code | BENSON + GID-12 |
-| GID-02 | TBD | Reserved | TBD | BENSON + GID-12 |
-| GID-03 | TBD | Reserved | TBD | BENSON + GID-12 |
-| GID-04 | CINDY | Formal Specification Specialist | TLA+ specs, architecture | BENSON + GID-12 |
-| GID-05 | TBD | Reserved | TBD | BENSON + GID-12 |
-| GID-06 | SAM | Security Specialist | Threat modeling, audits | BENSON + GID-12 |
-| GID-07 | DAN | Infrastructure & Docker Specialist | DevOps, containers | BENSON + GID-12 |
-| GID-08 | ALEX | Governance & Compliance AI | Policy drafting, BER review | BENSON + GID-12 |
-| GID-09 | ATLAS | Deployment & Release Engineer | Production deployment | BENSON + GID-12 |
-| GID-10 | SONNY | Test & Coverage Specialist | Test writing, MCDC verification | BENSON + GID-12 |
-| GID-11+ | (Future) | Reserved | Future specializations | BENSON + GID-12 |
+| **GID-00** | **BENSON** | **CTO / Chief Orchestrator** | **Execute PACs, coordinate swarm, issue BERs** | **Jeffrey ONLY** |
+| GID-01 | CODY | Senior Backend Engineer | Write production code (core, governance, API) | BENSON |
+| GID-02 | SONNY | Senior Frontend Engineer | Frontend, UI, visualization | BENSON |
+| GID-03 | MIRA-R | Research & Competitive Intelligence | Research, analysis, market intelligence | BENSON |
+| GID-04 | CINDY | Senior Backend Engineer | Core backend, scale systems | BENSON |
+| GID-05 | PAX | Product & Smart Contract Strategy | Product strategy, contracts, roadmap | BENSON |
+| GID-06 | SAM | Security & Threat Engineer | Security audits, threat modeling, compliance | BENSON |
+| GID-07 | DAN | DevOps & CI/CD Lead | Infrastructure, DevOps, deployment | BENSON |
+| GID-08 | ALEX | Governance & Alignment Engine | Policy enforcement, constitutional compliance | BENSON |
+| GID-09 | LIRA | Frontend / ChainBoard Experience | UX, ChainBoard interface | BENSON |
+| GID-10 | MAGGIE | ML & Applied AI Lead | Machine learning, ChainIQ, risk models | BENSON |
+| GID-11 | ATLAS | Build / Repair & Refactor Agent | Code refactoring, build systems, repairs | BENSON |
+| GID-12 | DIGGI | Documentation & Integration Guide | Technical docs, integration guides | BENSON |
+| **GID-13** | **SCRAM** | **Emergency Shutdown Controller** | **Constitutional kill-switch, emergency halt** | **Jeffrey ONLY** |
+| GID-14 | SAGE | Strategic Financial Modeling Lead | Valuation, financial modeling, investor materials | BENSON |
+| GID-15 | ORACLE | Data Analytics & Market Research | TAM/SAM/SOM analysis, competitive intelligence | BENSON |
+| GID-16 | ARBITER | Legal & IP Valuation Counsel | IP portfolio, regulatory compliance, legal analysis | BENSON |
+| GID-17 | SCRIBE | Content & Materials Production | Investor decks, executive summaries, visualization | BENSON |
 
 ### Red Team Agents (Adversarial Testing Only)
 
