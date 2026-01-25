@@ -473,13 +473,13 @@ export type ApiClientType = IApiClient;
  */
 export function getApiClient(): ApiClientType {
   if (config.useMocks) {
-    if ((import.meta as any).env?.DEV) {
+    if (config.isDevelopment) {
       console.log("🎭 Using mock API client (VITE_USE_MOCKS=true)");
     }
     return mockApiClient;
   }
 
-  if ((import.meta as any).env?.DEV) {
+  if (config.isDevelopment) {
     console.log(`🔌 Using real API client (${config.apiBaseUrl})`);
   }
   return realApiClient as unknown as ApiClientType;

@@ -89,8 +89,8 @@ def create_and_sign_manifest(
     # Compute canonical hash using manifest's method
     canonical_hash = manifest.compute_canonical_hash().encode('utf-8')
     
-    # Sign the hash
-    signed = agent_signing_key.sign(hashlib.sha256(canonical_hash).digest())
+    # Sign the canonical hash directly (no double hashing)
+    signed = agent_signing_key.sign(canonical_hash)
     signature_hex = signed.signature.hex()
     
     # Create new manifest with real signature

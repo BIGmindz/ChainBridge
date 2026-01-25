@@ -10,6 +10,19 @@
  * - VITE_ENVIRONMENT_LABEL: Environment badge label
  */
 
+// Type augmentation for Vite's import.meta
+interface ImportMetaEnv {
+  readonly VITE_API_BASE_URL?: string;
+  readonly VITE_USE_MOCKS?: string;
+  readonly VITE_ENVIRONMENT_LABEL?: string;
+  readonly DEV: boolean;
+  readonly PROD: boolean;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
 /**
  * Get the API base URL from environment.
  *

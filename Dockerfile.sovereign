@@ -83,7 +83,9 @@ RUN ls -la /usr/local/lib/liboqs* && \
 # ============================================================================
 # STAGE 2: Runtime Image (Minimal, Hermetic)
 # ============================================================================
-, Java for TLA+)
+FROM debian:bullseye-slim AS runtime
+
+# Install runtime dependencies (Python 3.9, minimal system tools)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.9 \
     python3-pip \
@@ -95,14 +97,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy TLA+ tools from builder stage
-COPY --from=builder /usr/local/lib/tlaplus /usr/local/lib/tlaplusthon 3.9, minimal system tools)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3.9 \
-    python3-pip \
-    python3-venv \
-    libssl1.1 \
-    ca-certificates \
-    git \
+COPY --from=builder /usr/local/lib/tlaplus /usr/local/lib/tlaplus/
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user: `chainbridge`

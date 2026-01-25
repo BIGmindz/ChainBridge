@@ -653,6 +653,89 @@ def get_scram_controller() -> SCRAMController:
     return SCRAMController()
 
 
+# Convenience functions for common SCRAM operations
+def check_scram() -> None:
+    """
+    Check if SCRAM is active and raise SystemExit if so.
+    
+    This should be called at the entry of all critical execution loops.
+    Per INV-SYS-002: No bypass of SCRAM checks permitted.
+    
+    Raises:
+        SystemExit: If SCRAM is in ACTIVATING, EXECUTING, COMPLETE, or FAILED state
+    """
+    controller = get_scram_controller()
+    if controller.is_active or controller.is_complete:
+        logger.critical("SCRAM CHECK FAILED: System in emergency halt state")
+        raise SystemExit(1)
+
+
+async def trigger_scram(
+    reason: SCRAMReason,
+    severity: Optional[str] = None,  # For backward compatibility (unused)
+    context: Optional[Dict[str, Any]] = None
+) -> None:
+    """
+    Trigger SCRAM activation asynchronously.
+    
+    Creates emergency keys for dual authorization and activates SCRAM.
+    This is a simplified trigger for use in execution loops that detect breaches.
+    
+    Args:
+        reason: SCRAMReason enum value
+        severity: Unused (kept for backward compatibility)
+        context: Optional metadata about the trigger event
+    """
+    controller = get_scram_controller()
+    
+    # Create emergency authorization keys
+    timestamp = datetime.now(timezone.utc).isoformat()
+    
+    operator_key = SCRAMKey(
+        key_id="EMERGENCY_OP",
+        key_type="operator",
+        key_hash=hashlib.sha256(f"emergency_operator_{timestamp}".encode()).hexdigest(),
+        issued_at=timestamp
+    )
+    
+    architect_key = SCRAMKey(
+        key_id="EMERGENCY_ARCH",
+        key_type="architect",
+        key_hash=hashlib.sha256(f"emergency_architect_{timestamp}".encode()).hexdigest(),
+        issued_at=timestamp
+    )
+    
+    # Authorize and activate
+    controller.authorize_key(operator_key)
+    controller.authorize_key(architect_key)
+    
+    metadata = context or {}
+    metadata["triggered_by"] = "async_trigger_scram"
+    
+    controller.activate(reason, metadata)
+
+
+def reset_scram() -> bool:
+    """
+    Reset SCRAM controller to ARMED state.
+    
+    Only permitted after COMPLETE or FAILED state.
+    Required for testing and recovery scenarios.
+    
+    Returns:
+        True if reset successful, False otherwise
+    """
+    controller = get_scram_controller()
+    return controller.reset()
+
+
+class SCRAMSeverity(Enum):
+    """SCRAM severity levels (for backward compatibility)."""
+    CRITICAL = "CRITICAL"
+    WARNING = "WARNING"
+    INFO = "INFO"
+
+
 # Convenience function for emergency activation
 def emergency_scram(
     reason: SCRAMReason = SCRAMReason.SYSTEM_CRITICAL,
@@ -673,6 +756,30 @@ def emergency_scram(
         controller.authorize_key(architect_key)
     
     return controller.activate(reason, metadata)
+
+
+# Convenience accessor for SCRAM state
+class SCRAM:
+    """Convenience class for accessing SCRAM controller state."""
+    
+    @staticmethod
+    def get_state() -> Dict[str, Any]:
+        """Get current SCRAM state as dictionary."""
+        controller = get_scram_controller()
+        
+        # Get last reason from audit trail if available
+        last_reason = None
+        if controller.audit_trail:
+            last_reason = controller.audit_trail[-1].reason
+        
+        return {
+            "state": controller.state,
+            "is_armed": controller.is_armed,
+            "is_active": controller.is_active,
+            "is_complete": controller.is_complete,
+            "last_reason": last_reason,
+            "audit_trail_count": len(controller.audit_trail)
+        }
 
 
 # Module initialization log

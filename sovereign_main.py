@@ -313,6 +313,7 @@ app = create_sovereign_app()
 
 if __name__ == "__main__":
     import uvicorn
+    import asyncio
     
     logger.info("═" * 70)
     logger.info("CHAINBRIDGE SOVEREIGN MAIN v1.0")
@@ -320,6 +321,28 @@ if __name__ == "__main__":
     logger.info("PDO Middleware: ACTIVE")
     logger.info("Invariants: CB-INV-001, CB-INV-004, INV-MAIN-001")
     logger.info("═" * 70)
+    
+    # ──────────────────────────────────────────────────────────────────────────
+    # PAC-P824: Start Inspector General (IG) Node Monitoring
+    # ──────────────────────────────────────────────────────────────────────────
+    try:
+        from core.governance.inspector_general import start_inspector_general_monitoring
+        
+        async def startup_ig():
+            """Launch IG monitoring in background task."""
+            ig = await start_inspector_general_monitoring()
+            logger.info("🔍 Inspector General (IG) Node monitoring ACTIVE")
+            logger.info("    IG watching: logs/governance/tgl_audit_trail.jsonl")
+            logger.info("    IG invariants: IG-01 (SCRAM on REJECTED), IG-02 (Read-Only)")
+        
+        # Run IG startup in event loop
+        asyncio.run(startup_ig())
+        logger.info("✅ PAC-P824: IG Node Deployment Complete")
+        
+    except ImportError as e:
+        logger.warning("⚠️ Inspector General (IG) Node not available: %s", e)
+    except Exception as e:
+        logger.error("❌ IG Node startup failed: %s", e)
     
     uvicorn.run(
         "sovereign_main:app",
