@@ -15,11 +15,12 @@ If the evidence is insufficient, the change is rejected with prejudice.
 """
 
 from pydantic import BaseModel, Field, StrictStr, StrictInt, StrictFloat, StrictBool, field_validator
-from typing import List, Literal, Optional
-from datetime import datetime
+from typing import List, Optional
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 import hashlib
 import json
+import uuid
 
 
 __version__ = "1.0.0"
