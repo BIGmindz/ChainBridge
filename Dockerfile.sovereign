@@ -85,7 +85,7 @@ RUN ls -la /usr/local/lib/liboqs* && \
 # ============================================================================
 FROM debian:bullseye-slim AS runtime
 
-# Install runtime dependencies (Python 3.9, minimal system tools)
+# Install runtime dependencies (Python 3.11+, minimal system tools)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.9 \
     python3-pip \
@@ -98,7 +98,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy TLA+ tools from builder stage
 COPY --from=builder /usr/local/lib/tlaplus /usr/local/lib/tlaplus/
-    && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user: `chainbridge`
 # UID/GID: 1000 (standard non-root user)
