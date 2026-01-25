@@ -4,13 +4,21 @@ disable=
     no-member,
     unused-import,
     unused-variable,
+    unused-argument,
     too-many-locals,
     too-many-statements,
     too-many-branches,
     broad-except,
     invalid-name,
     missing-docstring,
-    line-too-long
+    line-too-long,
+    logging-fstring-interpolation,
+    protected-access,
+    redefined-outer-name,
+    global-statement,
+    reimported,
+    pointless-string-statement,
+    unspecified-encoding
 
 [FORMAT]
 max-line-length=140

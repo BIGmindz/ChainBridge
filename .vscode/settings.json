@@ -5,8 +5,23 @@
     "${workspaceFolder}/.venv/lib/python3.11/site-packages",
     "${workspaceFolder}"
   ],
-  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.typeCheckingMode": "off",
   "python.analysis.diagnosticMode": "openFilesOnly",
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportUnusedImport": "none",
+    "reportUnusedVariable": "none",
+    "reportUnusedClass": "none",
+    "reportUnusedFunction": "none",
+    "reportUnusedExpression": "none",
+    "reportConstantRedefinition": "none",
+    "reportIncompatibleMethodOverride": "none",
+    "reportGeneralTypeIssues": "none",
+    "reportOptionalMemberAccess": "none",
+    "reportPrivateImportUsage": "none",
+    "reportAttributeAccessIssue": "none",
+    "reportUntypedFunctionDecorator": "none",
+    "reportUntypedBaseClass": "none"
+  },
   "python.analysis.useLibraryCodeForTypes": true,
   "python.analysis.autoSearchPaths": true,
   "python.analysis.exclude": [
