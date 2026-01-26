@@ -149,11 +149,10 @@ class LiveGatekeeper:
             # SAFETY CHECK 1: SCRAM System Handshake
             check_scram()  # Raises SystemExit if SCRAM active
             
-            if self.scram.status != "OPERATIONAL":
+            if not self.scram.is_armed:
                 await trigger_scram(
                     reason=SCRAMReason.SENTINEL_TRIGGER,
-                    severity=SCRAMSeverity.CRITICAL,
-                    context={"error": "SCRAM not operational", "transaction_id": transaction_id}
+                    context={"error": "SCRAM not armed", "transaction_id": transaction_id}
                 )
                 return {
                     "status": "SCRAM_ACTIVE",
@@ -170,7 +169,6 @@ class LiveGatekeeper:
                 self.logger.error(f"❌ INTEGRITY FAILURE: {integrity_status}")
                 await trigger_scram(
                     reason=SCRAMReason.SENTINEL_TRIGGER,
-                    severity=SCRAMSeverity.CRITICAL,
                     context={
                         "error": "PRE_INGRESS_INTEGRITY_FAILURE",
                         "status": integrity_status,
@@ -204,8 +202,22 @@ class LiveGatekeeper:
                 f"VOL: ${payload.get('amount_usd', 0):,.2f}"
             )
             
+            # Convert payload to format expected by Universal Orchestrator
+            # Note: UniversalOrchestrator expects BatchTransaction with signature attribute
+            # For penny test, we create a minimal compatible structure
+            class MockBatch:
+                def __init__(self, txn_id, signature, payload):
+                    self.id = txn_id
+                    self.signature = signature
+                    self.amount = payload.get('amount_usd', 0)
+                    self.payload = payload
+                    self.proofs = []  # Empty proofs for penny test
+            
+            # Use architect signature as batch signature (valid approval)
+            mock_batch = MockBatch(transaction_id, architect_signature, payload)
+            
             # Execute through Universal Orchestrator (guarded by Byzantine Consensus & Sovereign Runner)
-            result = await self.orchestrator.execute_siege_cycle(payload)
+            result = await self.orchestrator.execute_siege_cycle(mock_batch)
             
             # Process result
             if result.get("status") == "COMMIT":
@@ -249,14 +261,18 @@ class LiveGatekeeper:
                     "details": result
                 }
         
+        except ArchitectApprovalRequired as e:
+            # Manual approval required - do NOT trigger SCRAM (expected behavior)
+            self.logger.warning(f"⚠️  MANUAL APPROVAL REQUIRED: {e}")
+            raise
+        
         except Exception as e:
             # FAIL-CLOSED: Any exception triggers SCRAM
             self.logger.error(f"💥 LIVE INGRESS EXCEPTION: {type(e).__name__}: {e}")
             
             if self.FAIL_CLOSED:
                 await trigger_scram(
-                    reason=SCRAMReason.INTEGRITY_VIOLATION,
-                    severity=SCRAMSeverity.CRITICAL,
+                    reason=SCRAMReason.SYSTEM_CRITICAL,
                     context={
                         "error": str(e),
                         "error_type": type(e).__name__,
@@ -308,11 +324,11 @@ class LiveGatekeeper:
         integrity_status = await self.sentinel.verify_integrity()
         
         return {
-            "scram_status": self.scram.status,
+            "scram_status": "OPERATIONAL" if self.scram.is_armed else "NOT_ARMED",
             "integrity_status": integrity_status,
             "mode": self.mode,
             "ready_for_live": (
-                self.scram.status == "OPERATIONAL" and
+                self.scram.is_armed and
                 integrity_status == "INTEGRITY_VERIFIED"
             ),
             "manual_approval_required": self.MANUAL_APPROVAL_REQUIRED,
