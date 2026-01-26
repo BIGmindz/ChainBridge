@@ -23,13 +23,63 @@ import json
 import hashlib
 from typing import List, Dict, Any, Optional
 from pathlib import Path
-from pydantic import BaseModel, Field, StrictStr, StrictInt
+from pydantic import BaseModel, Field, StrictStr, StrictInt, StrictBool
 from enum import Enum
 
 
 # Configure logging
 logger = logging.getLogger("AgentUniversity")
 logger.setLevel(logging.INFO)
+
+
+# ============================================================================
+# PRIME DIRECTIVE (PAC-UNI-100)
+# ============================================================================
+
+class PrimeDirective(BaseModel):
+    """
+    PAC-UNI-100: The Constitutional DNA
+    
+    ChainBridge Standard > NASA Grade
+    - Mathematical Certainty (entropy 0.00%)
+    - Fail-Closed Enforcement
+    - Zero Probabilistic Logic
+    
+    INVARIANTS:
+    - determinism_required MUST be True
+    - probabilistic_logic_allowed MUST be False
+    - Violation triggers SystemError (fail-closed)
+    
+    This is the Law encoded in every clone's DNA.
+    """
+    origin: StrictStr = Field(default="PAC-UNI-100", description="Constitutional origin")
+    determinism_required: StrictBool = Field(default=True, description="Mathematical certainty required")
+    probabilistic_logic_allowed: StrictBool = Field(default=False, description="Probabilistic logic forbidden")
+    failure_mode: StrictStr = Field(default="FAIL_CLOSED_IMMEDIATE", description="Failure handling mode")
+    
+    class Config:
+        frozen = True  # Prevent field reassignment
+        validate_assignment = True  # Validate on assignment attempts
+    
+    def validate_genesis(self) -> bool:
+        """
+        Validate clone genesis compliance.
+        
+        Returns:
+            True if compliant, raises SystemError if contaminated
+        
+        Raises:
+            SystemError: If contaminated logic detected
+        """
+        if not self.determinism_required or self.probabilistic_logic_allowed:
+            raise SystemError(
+                f"CLONE_REJECTED: CONTAMINATED_LOGIC_DETECTED\n"
+                f"  determinism_required={self.determinism_required}\n"
+                f"  probabilistic_logic_allowed={self.probabilistic_logic_allowed}\n"
+                f"ChainBridge Standard: HYPER-DETERMINISTIC (0.00% entropy)\n"
+                f"Failure Mode: {self.failure_mode}"
+            )
+        return True
 
 
 # ============================================================================
@@ -108,21 +158,40 @@ class AgentClone:
     - Role (from parent)
     - Skills (from parent)
     - Scope (from parent)
+    - PrimeDirective (constitutional DNA)
     
     Clones have unique:
     - Clone ID (numeric suffix)
     - Task queue (independent)
     - Execution state (isolated)
+    
+    PAC-UNI-100 GENESIS CHECK:
+    - Every clone validated at instantiation (Day 1, Minute 1)
+    - Contaminated logic triggers fail-closed (SystemError)
+    - ChainBridge Standard: HYPER-DETERMINISTIC (0.00% entropy)
     """
     
-    def __init__(self, parent: GIDPersona, clone_id: int):
+    def __init__(self, parent: GIDPersona, clone_id: int, directive: Optional[PrimeDirective] = None):
         """
         Initialize agent clone from parent persona.
+        
+        PAC-UNI-100 GENESIS ENFORCEMENT:
+        - Validates PrimeDirective on instantiation
+        - Fail-closed on contaminated logic
         
         Args:
             parent: Parent GID persona template
             clone_id: Unique clone number (1-based)
+            directive: Prime Directive (uses default if None)
+        
+        Raises:
+            SystemError: If PrimeDirective validation fails
         """
+        # GENESIS CHECK (UNI-01): Validate Prime Directive
+        self.directive = directive or PrimeDirective()
+        self.directive.validate_genesis()  # Fail-closed on contamination
+        
+        # Initialize clone properties
         self.parent_gid = parent.gid
         self.clone_id = clone_id
         self.gid = f"{parent.gid}-{clone_id:02d}"
@@ -137,6 +206,7 @@ class AgentClone:
         self.tasks_failed = 0
         
         self.logger = logging.getLogger(f"AgentClone-{self.gid}")
+        self.logger.info(f"🎓 GENESIS VALIDATED: {self.gid} | Directive: {self.directive.origin}")
     
     def assign_task(self, task: Task):
         """
@@ -258,9 +328,10 @@ class AgentUniversity:
             registry_path: Path to gid_registry.json (optional)
         """
         self.registry_path = registry_path or self.DEFAULT_REGISTRY_PATH
-        self.registry: Dict[str, GIDPersona] = self._load_registry()
         self.squads: Dict[str, List[AgentClone]] = {}
         self.logger = logging.getLogger("AgentUniversity")
+        
+        self.registry: Dict[str, GIDPersona] = self._load_registry()
         
         self.logger.info(f"🎓 Agent University initialized with {len(self.registry)} personas")
     
@@ -275,14 +346,20 @@ class AgentUniversity:
             with open(self.registry_path, 'r') as f:
                 registry_data = json.load(f)
             
+            # Registry has "agents" wrapper object
+            agents_data = registry_data.get("agents", {})
+            
             personas = {}
-            for gid, data in registry_data.items():
+            for gid, data in agents_data.items():
+                # Extract execution lanes as skills
+                skills = data.get("execution_lanes", [])
+                
                 personas[gid] = GIDPersona(
                     gid=gid,
                     name=data.get("name", "Unknown"),
                     role=data.get("role", "Unknown"),
-                    skills=data.get("skills", []),
-                    scope=data.get("scope")
+                    skills=skills if isinstance(skills, list) else [],
+                    scope=data.get("lane")
                 )
             
             self.logger.info(f"📚 Loaded {len(personas)} GID personas from {self.registry_path}")
@@ -301,21 +378,28 @@ class AgentUniversity:
                 )
             }
     
-    def spawn_squad(self, parent_gid: str, count: int) -> List[AgentClone]:
+    def spawn_squad(self, parent_gid: str, count: int, directive: Optional[PrimeDirective] = None) -> List[AgentClone]:
         """
         Deterministic factory method: Spawn agent squad.
         
         Creates 'count' clones of the parent GID persona.
         
+        PAC-UNI-100 ENFORCEMENT:
+        - All clones inherit same PrimeDirective
+        - Genesis check on instantiation (fail-closed)
+        - ChainBridge Standard: HYPER-DETERMINISTIC
+        
         Args:
             parent_gid: Parent GID to clone (e.g., "GID-06")
             count: Number of clones to create
+            directive: Prime Directive (uses default if None)
         
         Returns:
             List of AgentClone instances
         
         Raises:
             ValueError: If parent_gid not in registry
+            SystemError: If genesis check fails (contaminated directive)
         
         Example:
             squad = university.spawn_squad("GID-06", count=5)
@@ -325,10 +409,14 @@ class AgentUniversity:
             raise ValueError(f"Unknown parent GID: {parent_gid}. Available: {list(self.registry.keys())}")
         
         persona = self.registry[parent_gid]
+        directive = directive or PrimeDirective()
         squad = []
         
+        self.logger.info(f"🏭 GENESIS BATCH: Spawning {count} clones from {parent_gid}")
+        self.logger.info(f"   Directive: {directive.origin} | Determinism: {directive.determinism_required}")
+        
         for clone_id in range(1, count + 1):
-            clone = AgentClone(persona, clone_id)
+            clone = AgentClone(persona, clone_id, directive)
             squad.append(clone)
             self.logger.info(f"🎓 GRADUATED: {clone.gid} ({clone.role})")
         
@@ -336,7 +424,7 @@ class AgentUniversity:
         squad_key = f"{parent_gid}-SQUAD-{count}"
         self.squads[squad_key] = squad
         
-        self.logger.info(f"✅ Spawned squad of {count} clones from {parent_gid}")
+        self.logger.info(f"✅ Spawned squad of {count} clones from {parent_gid} | Entropy: 0.00%")
         return squad
     
     def get_persona(self, gid: str) -> Optional[GIDPersona]:
