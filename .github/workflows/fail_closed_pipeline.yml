@@ -12,7 +12,6 @@ jobs:
     name: Preflight
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - name: Preflight checks
         run: echo "✅ Preflight complete"
 
@@ -20,7 +19,6 @@ jobs:
     name: Static Analysis
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - name: Static analysis
         run: echo "✅ Static analysis complete"
 
@@ -28,7 +26,6 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - name: Unit tests
         run: echo "✅ Unit tests complete"
 
@@ -36,7 +33,6 @@ jobs:
     name: Property Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - name: Property tests
         run: echo "✅ Property tests complete"
 
@@ -44,7 +40,6 @@ jobs:
     name: Security Verification
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - name: Security verification
         run: echo "✅ Security verification complete"
 
@@ -52,7 +47,6 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - name: Build
         run: echo "✅ Build complete"
 
@@ -60,7 +54,6 @@ jobs:
     name: Invariant Verification
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - name: Invariant verification
         run: echo "✅ Invariant verification complete"
 
@@ -90,7 +83,7 @@ jobs:
             "${{ needs.build.result }}" \
             "${{ needs.invariant_verification.result }}"
           do
-            if [ "$gate_result" = "failure" ] || [ "$gate_result" = "cancelled" ]; then
+            if [ "$gate_result" = "failure" ] || [ "$gate_result" = "cancelled" ] || [ "$gate_result" = "skipped" ]; then
               FAILED=true
               break
             fi
