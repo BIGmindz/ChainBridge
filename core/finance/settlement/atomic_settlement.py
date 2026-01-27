@@ -90,16 +90,40 @@ LEDGER_FILE = "core/finance/settlement/global_ledger.json"
 # DECIMAL ENFORCEMENT
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def validate_decimal(value: Any, name: str) -> Decimal:
+def validate_decimal(value: Any, name: str, allow_negative: bool = False) -> Decimal:
     """
     INV-FIN-001: Enforce Decimal type for all currency values.
-    Fail-closed on any non-Decimal input.
+    INV-FIN-NEG-001: Reject negative amounts (CODY GID-01 hardening).
+    Fail-closed on any non-Decimal input or negative value.
+    
+    Args:
+        value: Value to validate
+        name: Field name for error messages
+        allow_negative: If False (default), reject negative values per protocol
+        
+    Returns:
+        Validated and quantized Decimal
+        
+    Raises:
+        TypeError: If value is float (precision drift prevention)
+        ValueError: If value is negative (when allow_negative=False)
     """
     if isinstance(value, float):
         raise TypeError(f"INV-FIN-001 VIOLATION: {name} is float. Use Decimal.")
     if isinstance(value, Decimal):
-        return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-    return Decimal(str(value)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        result = value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    else:
+        result = Decimal(str(value)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    
+    # CODY GID-01: CRITICAL - Negative amount hardening
+    # Per NEGATIVE_AMOUNT_VALIDATION_FIX protocol, all settlement amounts must be >= 0
+    if not allow_negative and result < Decimal("0"):
+        raise ValueError(
+            f"INV-FIN-NEG-001 VIOLATION: {name} cannot be negative: {result}. "
+            f"Settlement amounts must be >= 0. For refunds, use REFUND transaction type."
+        )
+    
+    return result
 
 
 def format_currency(amount: Decimal) -> str:

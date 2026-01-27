@@ -35,7 +35,6 @@ import uuid
 
 class LedgerError(Exception):
     """Base exception for all ledger errors."""
-    pass
 
 
 class InsufficientFundsError(LedgerError):
@@ -54,11 +53,11 @@ class InsufficientFundsError(LedgerError):
 class BalanceViolationError(LedgerError):
     """Raised when a transaction would violate the conservation of value."""
     
-    def __init__(self, debits: Decimal, credits: Decimal):
+    def __init__(self, debits: Decimal, credit_amount: Decimal):
         self.debits = debits
-        self.credits = credits
+        self.credits = credit_amount
         super().__init__(
-            f"Balance violation: debits ({debits}) != credits ({credits}). "
+            f"Balance violation: debits ({debits}) != credits ({credit_amount}). "
             f"INV-FIN-001 violated."
         )
 
@@ -257,7 +256,7 @@ class Transaction:
     metadata: Dict = field(default_factory=dict)
     
     def add_entry(self, account_id: str, amount: Decimal, is_debit: bool, 
-                  description: str = "", metadata: Dict = None) -> Entry:
+                  description: str = "", metadata: Optional[Dict] = None) -> Entry:
         """Add an entry to this transaction."""
         if self.status == TransactionStatus.POSTED:
             raise ImmutabilityViolationError(self.transaction_id)
@@ -275,12 +274,12 @@ class Transaction:
         return entry
     
     def debit(self, account_id: str, amount: Decimal, 
-              description: str = "", metadata: Dict = None) -> Entry:
+              description: str = "", metadata: Optional[Dict] = None) -> Entry:
         """Convenience method to add a debit entry."""
         return self.add_entry(account_id, amount, True, description, metadata)
     
     def credit(self, account_id: str, amount: Decimal,
-               description: str = "", metadata: Dict = None) -> Entry:
+               description: str = "", metadata: Optional[Dict] = None) -> Entry:
         """Convenience method to add a credit entry."""
         return self.add_entry(account_id, amount, False, description, metadata)
     
@@ -356,7 +355,7 @@ class Ledger:
     - INV-FIN-002: Posted entries are immutable
     """
     
-    def __init__(self, ledger_id: str = None):
+    def __init__(self, ledger_id: Optional[str] = None):
         """Initialize a new ledger."""
         self.ledger_id = ledger_id or str(uuid.uuid4())
         self.accounts: Dict[str, Account] = {}
@@ -390,9 +389,9 @@ class Ledger:
         name: str,
         account_type: AccountType,
         currency: str = "USD",
-        account_id: str = None,
+        account_id: Optional[str] = None,
         allow_negative: bool = False,
-        metadata: Dict = None,
+        metadata: Optional[Dict] = None,
     ) -> Account:
         """
         Create a new account in the ledger.
@@ -443,7 +442,7 @@ class Ledger:
         self,
         description: str = "",
         reference: str = "",
-        metadata: Dict = None,
+        metadata: Optional[Dict] = None,
     ) -> Transaction:
         """
         Create a new pending transaction.
@@ -575,7 +574,7 @@ class Ledger:
         amount: Decimal,
         description: str = "",
         reference: str = "",
-        metadata: Dict = None,
+        metadata: Optional[Dict] = None,
     ) -> Transaction:
         """
         Convenience method: Create and post a simple A→B transfer.
@@ -636,7 +635,7 @@ class Ledger:
             raise LedgerError(f"Transaction {transaction_id} not found")
         
         if original.status != TransactionStatus.POSTED:
-            raise LedgerError(f"Can only reverse posted transactions")
+            raise LedgerError("Can only reverse posted transactions")
         
         if original.status == TransactionStatus.REVERSED:
             raise LedgerError(f"Transaction {transaction_id} already reversed")
