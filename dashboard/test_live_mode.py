@@ -47,7 +47,7 @@ print()
 # Test 3: Latency requirement validation
 print("[TEST 3/3] Latency requirement validation...")
 latency_ok = query_time < 50
-print(f"   Requirement: <50ms")
+print("   Requirement: <50ms")
 print(f"   Actual: {query_time:.2f}ms")
 print(f"   Status: {'✅ PASS' if latency_ok else '❌ FAIL'}")
 print()
