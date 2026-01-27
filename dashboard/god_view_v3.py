@@ -37,7 +37,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 try:
     from dashboard.components.kinetic_swarm_mesh import KineticSwarmMesh
     from dashboard.components.entropy_waterfall import DilithiumEntropyWaterfall
-    from dashboard.components.scram_killswitch_ui import SCRAMKillswitchUI, SCRAMMode
+    from dashboard.components.scram_killswitch_ui import SCRAMKillswitchUI, SCRAMMode  # type: ignore[assignment]
     from dashboard.components.visual_state_validator import VisualStateValidator
     COMPONENTS_AVAILABLE = True
 except ImportError as e:
@@ -447,12 +447,15 @@ class GodViewDashboardV3:
             return False
         
         # Initiate SCRAM via UI component
-        success = self.scram_killswitch.initiate_scram(
+        result = self.scram_killswitch.initiate_scram(
             scram_mode=scram_mode,
             hardware_fingerprint_hash=hardware_fingerprint,
             architect_signature_hex=architect_signature,
             architect_public_key_hex=""  # Placeholder for now
         )
+        
+        # Extract success status from result dict
+        success = result.get("success", False) if isinstance(result, dict) else False
         
         # SCRAM GID-13: If live mode, trigger kernel SCRAM controller
         if success and self.is_live and self.scram_controller:
