@@ -446,9 +446,16 @@ class GodViewDashboardV3:
             logger.error("SCRAM killswitch not available")
             return False
         
+        # Convert string to SCRAMMode enum
+        try:
+            mode_enum = getattr(SCRAMMode, scram_mode) if isinstance(scram_mode, str) else scram_mode
+        except AttributeError:
+            logger.error(f"Invalid SCRAM mode: {scram_mode}")
+            return False
+        
         # Initiate SCRAM via UI component
         result = self.scram_killswitch.initiate_scram(
-            scram_mode=scram_mode,
+            scram_mode=mode_enum,
             hardware_fingerprint_hash=hardware_fingerprint,
             architect_signature_hex=architect_signature,
             architect_public_key_hex=""  # Placeholder for now
@@ -484,8 +491,13 @@ class GodViewDashboardV3:
             logger.error("SCRAM killswitch not available")
             return False
         
-        result = self.scram_killswitch.cancel_scram()
-        return result if result is not None else False
+        # cancel_scram returns None, so treat absence of exception as success
+        try:
+            self.scram_killswitch.cancel_scram()
+            return True
+        except Exception as e:
+            logger.error(f"Failed to cancel SCRAM: {e}")
+            return False
     
     def get_telemetry_stats(self) -> Dict[str, Any]:
         """
