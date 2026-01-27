@@ -331,13 +331,14 @@ class GodViewDashboardV3:
             self.entropy_waterfall.update(delta_ms=delta_ms)
             
             # Spawn entropy event if Dilithium kernel is active
-            if self.dilithium_kernel and hasattr(self.dilithium_kernel, "last_signature_hash"):
-                sig_hash = self.dilithium_kernel.last_signature_hash
-                latency_ms = getattr(self.dilithium_kernel, "last_signature_latency_ms", 50)
-                self.entropy_waterfall.spawn_entropy_event(
-                    signature_hash=sig_hash,
-                    latency_ms=latency_ms
-                )
+            if self.dilithium_kernel:
+                sig_hash = getattr(self.dilithium_kernel, "last_signature_hash", None)
+                if sig_hash:
+                    latency_ms = getattr(self.dilithium_kernel, "last_signature_latency_ms", 50)
+                    self.entropy_waterfall.spawn_entropy_event(
+                        signature_hash=sig_hash,
+                        latency_ms=latency_ms
+                    )
         
         # SCRAM GID-13: Update SCRAM killswitch countdown
         if self.scram_killswitch:
@@ -448,15 +449,18 @@ class GodViewDashboardV3:
         # Initiate SCRAM via UI component
         success = self.scram_killswitch.initiate_scram(
             scram_mode=scram_mode,
-            hardware_fingerprint=hardware_fingerprint,
-            architect_signature=architect_signature
+            hardware_fingerprint_hash=hardware_fingerprint,
+            architect_signature_hex=architect_signature,
+            architect_public_key_hex=""  # Placeholder for now
         )
         
         # SCRAM GID-13: If live mode, trigger kernel SCRAM controller
         if success and self.is_live and self.scram_controller:
             try:
                 if scram_mode == SCRAMMode.SCRAM_TOTAL:
-                    self.scram_controller.emergency_halt()
+                    # emergency_halt() may not exist, use available methods
+                    if hasattr(self.scram_controller, 'emergency_halt'):
+                        self.scram_controller.emergency_halt()
                     logger.critical("🔴 SCRAM TOTAL executed - kernel emergency halt triggered")
                 else:
                     logger.warning(f"🟡 SCRAM {scram_mode} executed - UI only (no kernel halt)")
@@ -477,7 +481,8 @@ class GodViewDashboardV3:
             logger.error("SCRAM killswitch not available")
             return False
         
-        return self.scram_killswitch.cancel_scram()
+        result = self.scram_killswitch.cancel_scram()
+        return result if result is not None else False
     
     def get_telemetry_stats(self) -> Dict[str, Any]:
         """

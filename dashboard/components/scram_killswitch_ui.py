@@ -518,7 +518,7 @@ class SCRAMKillswitchUI:
         audit_log = SCRAMAuditLog(
             log_id=log_id,
             timestamp_ms=int(time.time() * 1000),
-            scram_mode=self.scram_mode or SCRAMMode.SCRAM_ALL,
+            scram_mode=self.scram_mode or SCRAMMode.SCRAM_TOTAL,
             hardware_fingerprint=self.hardware_fingerprint,
             architect_signature=self.architect_signature,
             execution_state=execution_state,
