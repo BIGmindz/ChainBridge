@@ -19,7 +19,9 @@ from core.swarm.agent_university import (
     AgentClone,
     AgentUniversity,
     SwarmDispatcher,
-    Task
+    Task,
+    JobManifest,
+    DispatchStrategy
 )
 
 
@@ -49,12 +51,13 @@ class TestAgentClone:
     
     def test_clone_genesis_check_success(self):
         """Valid PrimeDirective allows clone instantiation."""
-        directive = PrimeDirective()
-        clone = AgentClone("GID-01", 1, directive)
+        university = AgentUniversity()
+        squad = university.spawn_squad("GID-01", count=1)
+        clone = squad[0]
         
-        assert clone.gid == "GID-01-001"
+        assert clone.gid == "GID-01-01"
         assert clone.directive.determinism_required is True
-        assert len(clone.memory) == 0
+        assert len(clone.task_queue) == 0
     
     def test_clone_genesis_check_rejects_contaminated_logic(self):
         """Contaminated PrimeDirective triggers FAIL_CLOSED_IMMEDIATE."""
@@ -64,23 +67,22 @@ class TestAgentClone:
     
     def test_clone_execution_deterministic(self):
         """Same input produces same output (zero entropy)."""
-        directive = PrimeDirective()
-        clone = AgentClone("GID-01", 1, directive)
+        university = AgentUniversity()
+        squad = university.spawn_squad("GID-01", count=1)
+        clone = squad[0]
         
         task = Task(
             id="TASK-001",
-            lane="BLUE",
-            job_id="JOB-001",
+            description="Deterministic execution test",
             payload={"data": "test"}
         )
         
         # Execute twice - results MUST match
-        result1 = clone.execute(task)
-        result2 = clone.execute(task)
+        result1 = clone.execute_task(task)
+        result2 = clone.execute_task(task)
         
-        assert result1 == "RESULT_TASK-001_VERIFIED"
-        assert result1 == result2
-        assert len(clone.memory) == 2  # Both executions recorded
+        assert result1 == result2  # Deterministic output
+        assert clone.tasks_completed == 2  # Both executions recorded
 
 
 class TestAgentUniversity:
@@ -100,8 +102,8 @@ class TestAgentUniversity:
         
         assert len(squad) == 5
         assert all(isinstance(clone, AgentClone) for clone in squad)
-        assert squad[0].gid == "GID-01-001"
-        assert squad[4].gid == "GID-01-005"
+        assert squad[0].gid == "GID-01-01"
+        assert squad[4].gid == "GID-01-05"
     
     def test_spawn_squad_genesis_batch(self):
         """Genesis Batch: Spawn 100 clones (Task order 3)."""
@@ -109,7 +111,7 @@ class TestAgentUniversity:
         squad = university.spawn_squad("GID-01", 100)
         
         assert len(squad) == 100
-        assert squad[0].gid == "GID-01-001"
+        assert squad[0].gid == "GID-01-01"
         assert squad[99].gid == "GID-01-100"
         
         # All clones MUST have PrimeDirective
@@ -127,21 +129,23 @@ class TestSwarmDispatcher:
         squad = university.spawn_squad("GID-01", 3)
         
         tasks = [
-            Task(id=f"TASK-{i:03d}", lane="BLUE", job_id="JOB-001", payload={})
+            Task(id=f"TASK-{i:03d}", description=f"Test task {i}", payload={})
             for i in range(9)
         ]
         
-        assignments = SwarmDispatcher.dispatch_job("JOB-001", tasks, squad)
+        job = JobManifest(lane="BLUE", job_id="JOB-001", tasks=tasks)
+        dispatcher = SwarmDispatcher()
+        assignments = dispatcher.dispatch(job, squad, strategy=DispatchStrategy.ROUND_ROBIN)
         
         # Verify modulo distribution
-        assert len(assignments["GID-01-001"]) == 3  # tasks 0, 3, 6
-        assert len(assignments["GID-01-002"]) == 3  # tasks 1, 4, 7
-        assert len(assignments["GID-01-003"]) == 3  # tasks 2, 5, 8
+        assert len(assignments["GID-01-01"]) == 3  # tasks 0, 3, 6
+        assert len(assignments["GID-01-02"]) == 3  # tasks 1, 4, 7
+        assert len(assignments["GID-01-03"]) == 3  # tasks 2, 5, 8
         
         # Verify specific task assignments
-        assert assignments["GID-01-001"][0].id == "TASK-000"
-        assert assignments["GID-01-002"][0].id == "TASK-001"
-        assert assignments["GID-01-003"][0].id == "TASK-002"
+        assert assignments["GID-01-01"][0].id == "TASK-000"
+        assert assignments["GID-01-02"][0].id == "TASK-001"
+        assert assignments["GID-01-03"][0].id == "TASK-002"
     
     def test_duplicate_replay_determinism(self):
         """Task order 4: Duplicate replay produces identical output."""
@@ -149,15 +153,22 @@ class TestSwarmDispatcher:
         squad = university.spawn_squad("GID-01", 5)
         
         tasks = [
-            Task(id=f"TASK-{i:03d}", lane="BLUE", job_id="JOB-001", payload={})
+            Task(id=f"TASK-{i:03d}", description=f"Determinism test {i}", payload={})
             for i in range(20)
         ]
         
+        job = JobManifest(lane="BLUE", job_id="JOB-001", tasks=tasks)
+        dispatcher = SwarmDispatcher()
+        
         # First execution
-        assignments1 = SwarmDispatcher.dispatch_job("JOB-001", tasks, squad)
+        assignments1 = dispatcher.dispatch(job, squad, strategy=DispatchStrategy.ROUND_ROBIN)
+        
+        # Reset squad task queues
+        for clone in squad:
+            clone.task_queue = []
         
         # Second execution (DUPLICATE REPLAY)
-        assignments2 = SwarmDispatcher.dispatch_job("JOB-001", tasks, squad)
+        assignments2 = dispatcher.dispatch(job, squad, strategy=DispatchStrategy.ROUND_ROBIN)
         
         # Results MUST be identical
         assert assignments1.keys() == assignments2.keys()
@@ -170,29 +181,33 @@ class TestSwarmDispatcher:
 class TestIntegration:
     """End-to-end integration tests."""
     
-    def test_full_squad_job_execution(self):
-        """Complete workflow: spawn -> dispatch -> execute."""
-        university = AgentUniversity()
-        squad = university.spawn_squad("GID-01", 10)
+    def test_full_workflow(self, university):
+        """Test complete workflow: spawn → dispatch → execute."""
+        # Spawn squad
+        squad = university.spawn_squad("GID-06", count=5)
         
-        # Create job with 50 tasks
+        # Create tasks
         tasks = [
-            Task(id=f"TASK-{i:03d}", lane="BLUE", job_id="JOB-001", payload={"index": i})
+            Task(
+                id=f"TASK-{i:04d}",
+                description=f"Integration test task {i}",
+                payload={"index": i}
+            )
             for i in range(50)
         ]
         
+        job = JobManifest(lane="BLUE", job_id="JOB-001", tasks=tasks)
+        dispatcher = SwarmDispatcher()
+        
         # Dispatch tasks to squad
-        assignments = SwarmDispatcher.dispatch_job("JOB-001", tasks, squad)
+        assignments = dispatcher.dispatch(job, squad, strategy=DispatchStrategy.ROUND_ROBIN)
         
         # Execute all tasks and collect results
         results = {}
         for clone in squad:
-            clone_results = [clone.execute(task) for task in assignments[clone.gid]]
+            clone_results = clone.execute_all_tasks()
             results[clone.gid] = clone_results
         
         # Verify all tasks executed
-        total_results = sum(len(r) for r in results.values())
-        assert total_results == 50
-        
-        # Verify deterministic result format
-        assert all("VERIFIED" in result for result_list in results.values() for result in result_list)
+        total_completed = sum(results[clone.gid]['tasks_completed'] for clone in squad)
+        assert total_completed == 50

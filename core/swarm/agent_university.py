@@ -150,9 +150,9 @@ class AgentClone:
 
     Clone Naming Convention:
     - Parent: GID-06 (SAM - Security Auditor)
-    - Clone 1: GID-06-01
-    - Clone 2: GID-06-02
-    - Clone N: GID-06-{N:02d}
+    - Clone 1: GID-06-001
+    - Clone 2: GID-06-002
+    - Clone N: GID-06-{N:03d}
 
     Clones inherit:
     - Role (from parent)
@@ -194,8 +194,8 @@ class AgentClone:
         # Initialize clone properties
         self.parent_gid = parent.gid
         self.clone_id = clone_id
-        self.gid = f"{parent.gid}-{clone_id:02d}"
-        self.name = f"{parent.name}-{clone_id:02d}"
+        self.gid = f"{parent.gid}-{clone_id:03d}"
+        self.name = f"{parent.name}-{clone_id:03d}"
         self.role = parent.role
         self.skills = parent.skills.copy()
         self.scope = parent.scope
@@ -379,7 +379,7 @@ class AgentUniversity:
     Usage:
         university = AgentUniversity()
         sam_squad = university.spawn_squad("GID-06", count=10)
-        # Creates: GID-06-01, GID-06-02, ..., GID-06-10
+        # Creates: GID-06-001, GID-06-002, ..., GID-06-010
     """
 
     DEFAULT_REGISTRY_PATH = "core/governance/gid_registry.json"
@@ -467,7 +467,7 @@ class AgentUniversity:
 
         Example:
             squad = university.spawn_squad("GID-06", count=5)
-            # Returns: [GID-06-01, GID-06-02, GID-06-03, GID-06-04, GID-06-05]
+            # Returns: [GID-06-001, GID-06-002, GID-06-003, GID-06-004, GID-06-005]
         """
         if parent_gid not in self.registry:
             raise ValueError(f"Unknown parent GID: {parent_gid}. Available: {list(self.registry.keys())}")

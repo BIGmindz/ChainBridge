@@ -10,7 +10,16 @@ print("="*70 + "\n")
 
 # Check 1: Python Environment
 print("📦 [1/6] Python Environment")
-print(f"   ✅ Python {sys.version.split()[0]}")
+py_version = sys.version.split()[0]
+py_major, py_minor = map(int, py_version.split('.')[:2])
+REQUIRED_MAJOR = 3
+REQUIRED_MINOR = 11
+if py_major >= REQUIRED_MAJOR and py_minor >= REQUIRED_MINOR:
+    print(f"   ✅ Python {py_version} (>= {REQUIRED_MAJOR}.{REQUIRED_MINOR} required)")
+else:
+    print(f"   ❌ Python {py_version} INSUFFICIENT - {REQUIRED_MAJOR}.{REQUIRED_MINOR}+ REQUIRED")
+    print(f"   ⚠️  CRITICAL: ChainBridge requires Python {REQUIRED_MAJOR}.{REQUIRED_MINOR} or higher")
+    all_deps_ok = False
 print(f"   ✅ Platform: {sys.platform}")
 
 # Check 2: Core Dependencies

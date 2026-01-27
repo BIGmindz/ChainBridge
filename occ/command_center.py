@@ -44,8 +44,10 @@ from core.zk.concordium_bridge import SovereignSalt
 # CONSTANTS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-GENESIS_ANCHOR = "GENESIS-SOVEREIGN-2026-01-14"
-GENESIS_BLOCK_HASH = "aa1bf8d47493e6bfc7435ce39b24a63e"
+# GENESIS ANCHORS: Environment-injected for sovereignty (PAC-FIX-CB-2026-01-27)
+# Fallbacks provided for local development only - production MUST set these
+GENESIS_ANCHOR = os.getenv("GENESIS_ANCHOR", "GENESIS-SOVEREIGN-2026-01-14")
+GENESIS_BLOCK_HASH = os.getenv("GENESIS_BLOCK_HASH", "aa1bf8d47493e6bfc7435ce39b24a63e")
 EPOCH_001 = "EPOCH_001"
 OCC_VERSION = "1.0.0"
 
@@ -346,12 +348,12 @@ class QuadLaneMonitor:
     
     def get_snapshot(self) -> Dict[str, Any]:
         """Get current snapshot of all lanes"""
-        total_latency = sum(l.latency_ms for l in self.lanes.values())
-        active_lanes = sum(1 for l in self.lanes.values() if l.status == LaneStatus.EXECUTING)
+        total_latency = sum(lane.latency_ms for lane in self.lanes.values())
+        active_lanes = sum(1 for lane in self.lanes.values() if lane.status == LaneStatus.EXECUTING)
         
         return {
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "lanes": [l.to_dict() for l in self.lanes.values()],
+            "lanes": [lane.to_dict() for lane in self.lanes.values()],
             "summary": {
                 "total_latency_ms": round(total_latency, 3),
                 "active_lanes": active_lanes,
