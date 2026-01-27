@@ -191,7 +191,7 @@ class GodViewDashboardV3:
             
             self.visual_validator = VisualStateValidator()
             
-            logger.info(f"✅ All 4 UI components initialized (mesh, waterfall, scram, validator)")
+            logger.info("✅ All 4 UI components initialized (mesh, waterfall, scram, validator)")
         else:
             # Mock components for standalone testing
             self.kinetic_mesh = None
@@ -540,7 +540,7 @@ def run_self_test():
     print("[TEST 1/5] Mock mode initialization...")
     try:
         dashboard_mock = GodViewDashboardV3(is_live=False)
-        assert dashboard_mock.is_live == False
+        assert dashboard_mock.is_live is False
         assert dashboard_mock.frame_count == 0
         print("✅ PASS: Mock mode initialized successfully")
     except Exception as e:
@@ -577,7 +577,7 @@ def run_self_test():
     try:
         state = dashboard_mock.render()
         assert isinstance(state, DashboardState)
-        assert state.is_live == False
+        assert state.is_live is False
         assert state.frame_count == 3
         print(f"✅ PASS: State snapshot rendered (live={state.is_live}, frames={state.frame_count})")
     except Exception as e:

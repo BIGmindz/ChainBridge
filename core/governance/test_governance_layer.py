@@ -620,6 +620,7 @@ if __name__ == "__main__":
             tests_passed=100,
             tests_failed=0,
             test_suite_version="1.0.0",
+            execution_duration_seconds=45.2,
             coverage=CoverageMetrics(
                 line_coverage=96.0,
                 branch_coverage=94.0,
@@ -647,6 +648,8 @@ if __name__ == "__main__":
             tests_executed=200,
             tests_passed=199,
             tests_failed=1,  # INVALID: Must be 0
+            test_suite_version="1.0.0",
+            execution_duration_seconds=62.8,
             coverage=CoverageMetrics(
                 line_coverage=99.0,
                 branch_coverage=98.0,

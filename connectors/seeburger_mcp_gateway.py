@@ -202,7 +202,7 @@ class SeeburgerMCPGateway:
             
         except ET.ParseError as e:
             logger.error(f"XML parsing failed: {e}")
-            raise ValueError(f"Invalid ISO 20022 XML: {e}")
+            raise ValueError(f"Invalid ISO 20022 XML: {e}") from e
     
     def _detect_message_type(self, root: ET.Element) -> MessageType:
         """Detect ISO 20022 message type from XML root."""

@@ -24,10 +24,10 @@ import logging
 
 try:
     from dilithium_py.dilithium import Dilithium3  # ML-DSA-65
-except ImportError:
+except ImportError as exc:
     raise ImportError(
         "dilithium-py not installed. Run: pip install dilithium-py==1.4.0"
-    )
+    ) from exc
 
 
 logger = logging.getLogger("DilithiumKernel")
@@ -97,12 +97,9 @@ class DilithiumKernel:
         
         start_time = time.time()
         
-        if self.seed:
-            # Deterministic generation from seed
-            pk, sk = Dilithium3.keygen(seed=self.seed)
-        else:
-            # Random generation
-            pk, sk = Dilithium3.keygen()
+        # Note: Dilithium3.keygen() doesn't support seed parameter in current API
+        # Deterministic generation requires custom implementation if needed
+        pk, sk = Dilithium3.keygen()
         
         self._key_generation_time_ms = (time.time() - start_time) * 1000
         self._public_key = pk

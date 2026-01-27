@@ -518,7 +518,7 @@ class SCRAMKillswitchUI:
         audit_log = SCRAMAuditLog(
             log_id=log_id,
             timestamp_ms=int(time.time() * 1000),
-            scram_mode=self.scram_mode,
+            scram_mode=self.scram_mode or SCRAMMode.SCRAM_ALL,
             hardware_fingerprint=self.hardware_fingerprint,
             architect_signature=self.architect_signature,
             execution_state=execution_state,
@@ -600,7 +600,7 @@ if __name__ == "__main__":
     
     # Render UI state
     ui_state = killswitch.render_ui()
-    print(f"\n📺 UI STATE (after initiation):")
+    print("\n📺 UI STATE (after initiation):")
     print(json.dumps(ui_state, indent=2))
     
     # Test 2: Simulate countdown (10 updates x 500ms = 5 seconds)
@@ -613,7 +613,7 @@ if __name__ == "__main__":
     
     # Final UI state
     final_ui_state = killswitch.render_ui()
-    print(f"\n📺 UI STATE (after countdown):")
+    print("\n📺 UI STATE (after countdown):")
     print(json.dumps(final_ui_state, indent=2))
     
     # Test 3: Check audit logs
@@ -640,7 +640,7 @@ if __name__ == "__main__":
     killswitch2.cancel_scram(reason="User aborted during countdown")
     
     cancelled_ui_state = killswitch2.render_ui()
-    print(f"\n📺 UI STATE (after cancellation):")
+    print("\n📺 UI STATE (after cancellation):")
     print(json.dumps(cancelled_ui_state, indent=2))
     
     # Cancelled audit logs
